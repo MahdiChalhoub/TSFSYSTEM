@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { prisma } from "@/lib/db";
 
+export const dynamic = 'force-dynamic';
+
 async function getProducts() {
     return await prisma.product.findMany({
         include: {
