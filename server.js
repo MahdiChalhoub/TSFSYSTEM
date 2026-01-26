@@ -12,6 +12,10 @@ const handle = app.getRequestHandler();
 
 app.prepare().then(() => {
     createServer(async (req, res) => {
+        // Set request timeout (30 seconds for Hostinger shared hosting)
+        req.setTimeout(30000);
+        res.setTimeout(30000);
+
         try {
             const parsedUrl = parse(req.url, true);
             await handle(req, res, parsedUrl);
@@ -27,5 +31,6 @@ app.prepare().then(() => {
         })
         .listen(port, () => {
             console.log(`> Ready on http://${hostname}:${port}`);
+            console.log(`> Environment: ${dev ? 'development' : 'production'}`);
         });
 });

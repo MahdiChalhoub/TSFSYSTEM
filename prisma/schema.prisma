@@ -97,6 +97,10 @@ model Product {
   inventory   Inventory[]
   batches     StockBatch[]
   orderLines  OrderLine[]
+  
+  // Performance Indexes for POS search
+  @@index([name]) // Fast search by name
+  @@index([categoryId]) // Fast filtering by category  
 }
 
 model Category {
