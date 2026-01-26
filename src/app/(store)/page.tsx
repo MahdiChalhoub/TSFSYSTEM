@@ -1,6 +1,7 @@
-
 import Image from "next/image";
 import { prisma } from "@/lib/db";
+
+export const dynamic = 'force-dynamic';
 
 async function getFeaturedProducts() {
   // Fetch products from DB
