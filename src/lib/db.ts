@@ -4,13 +4,24 @@ const globalForPrisma = globalThis as unknown as {
     prisma: PrismaClient | undefined
 }
 
+// Get DATABASE_URL with fallback for build time
+const getDatabaseUrl = () => {
+    // During build, use a dummy URL if DATABASE_URL is not set
+    // This prevents build errors on Hostinger
+    if (!process.env.DATABASE_URL) {
+        console.warn('[Prisma] DATABASE_URL not found, using fallback for build');
+        return 'file:./dev.db';
+    }
+    return process.env.DATABASE_URL;
+};
+
 // Production-ready Prisma configuration with timeouts and connection pooling
 export const prisma = globalForPrisma.prisma ?? new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
     // Query timeout configuration for Hostinger shared hosting
     datasources: {
         db: {
-            url: process.env.DATABASE_URL,
+            url: getDatabaseUrl(),
         },
     },
 })
