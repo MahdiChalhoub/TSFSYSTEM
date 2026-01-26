@@ -1,0 +1,206 @@
+// This is the TSF Master Schema (v1.0)
+// Designed to support: ERP, Store, POS, HR, CRM, and Audit
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite" // We switch this to "mysql" for Hostinger
+  url      = env("DATABASE_URL")
+}
+
+// =========================================================
+// MODULE A: PEOPLE & SECURITY
+// =========================================================
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String   // Hashed
+  name      String
+  role      String   // 'OWNER', 'MANAGER', 'CASHIER', 'WAREHOUSE', 'SHELF'
+  isActive  Boolean  @default(true)
+  
+  // Relations
+  tasks     Task[]
+  audits    AuditLog[]
+  orders    Order[]  // Orders processed by this user
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// "The Black Box" - Track everything
+model AuditLog {
+  id          BigInt   @id @default(autoincrement())
+  action      String   // 'CREATE', 'UPDATE', 'DELETE'
+  entity      String   // 'Product', 'Price', 'Order'
+  entityId    String   // ID of the changed item
+  field       String?  // Which field changed
+  oldValue    String?
+  newValue    String?
+  
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  timestamp   DateTime @default(now())
+}
+
+// =========================================================
+// MODULE B: CRM (Contacts)
+// =========================================================
+
+model Contact {
+  id        Int      @id @default(autoincrement())
+  type      String   // 'SUPPLIER', 'CUSTOMER'
+  name      String
+  email     String?
+  phone     String?
+  address   String?
+  
+  // Financials
+  balance       Decimal  @default(0.00) // + We owe them, - They owe us
+  creditLimit   Decimal  @default(0.00)
+  loyaltyPoints Int      @default(0)
+  
+  orders    Order[]
+}
+
+// =========================================================
+// MODULE C: INVENTORY & PRODUCTS
+// =========================================================
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  sku         String   @unique // Internal ID
+  barcode     String?  @unique // Scan Code
+  name        String
+  description String?
+  
+  // Pricing Strategy
+  costPrice   Decimal  @default(0.00) // Moving Average Cost
+  basePrice   Decimal  @default(0.00) // Standard Retail Price
+  minPrice    Decimal  @default(0.00) // Lowest allowed price
+  
+  // Tax / TVA Configuration
+  taxRate     Decimal  @default(0.00) // e.g., 0.11 for 11%
+  isTaxIncluded Boolean @default(true) // Does basePrice include the tax?
+  
+  // Settings
+  isExpiryTracked Boolean @default(false)
+  minStockLevel   Int     @default(10) // Reorder point
+  
+  // Relations
+  category    Category? @relation(fields: [categoryId], references: [id])
+  categoryId  Int?
+  
+  inventory   Inventory[]
+  batches     StockBatch[]
+  orderLines  OrderLine[]
+}
+
+model Category {
+  id       Int       @id @default(autoincrement())
+  name     String
+  products Product[]
+}
+
+model Warehouse {
+  id        Int         @id @default(autoincrement())
+  name      String      // "Main", "Store", "Damaged"
+  type      String      // 'PHYSICAL', 'VIRTUAL', 'STORE'
+  inventory Inventory[]
+}
+
+// Specific batch of items (e.g., Milk expiring 2026-10-10)
+model StockBatch {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+  batchCode String   // Auto-generated or Supplier Batch
+  
+  expiryDate DateTime?
+  costPrice  Decimal   // Cost of this specific batch
+  
+  inventory Inventory[]
+}
+
+// The breakdown of stock: Product X, Batch Y, at Warehouse Z
+model Inventory {
+  id          Int      @id @default(autoincrement())
+  warehouseId Int
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+  
+  productId   Int
+  product     Product   @relation(fields: [productId], references: [id])
+  
+  batchId     Int?
+  batch       StockBatch? @relation(fields: [batchId], references: [id])
+  
+  quantity    Decimal  @default(0)
+  
+  @@unique([warehouseId, productId, batchId])
+}
+
+// =========================================================
+// MODULE D: COMMERCIAL (Orders & Transations)
+// =========================================================
+
+model Order {
+  id          Int      @id @default(autoincrement())
+  type        String   // 'SALE', 'PURCHASE', 'TRANSFER', 'ADJUSTMENT'
+  status      String   // 'DRAFT', 'PENDING_APPROVAL', 'COMPLETED', 'CANCELLED'
+  
+  // Participants
+  contactId   Int?     // Supplier or Customer
+  contact     Contact? @relation(fields: [contactId], references: [id])
+  
+  userId      Int      // Staff who processed it
+  user        User     @relation(fields: [userId], references: [id])
+  
+  // Data
+  totalAmount Decimal  @default(0.00)
+  taxAmount   Decimal  @default(0.00)
+  discount    Decimal  @default(0.00)
+  notes       String?
+  
+  lines       OrderLine[]
+  createdAt   DateTime @default(now())
+}
+
+model OrderLine {
+  id        Int     @id @default(autoincrement())
+  orderId   Int
+  order     Order   @relation(fields: [orderId], references: [id])
+  
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+  
+  quantity  Decimal
+  unitPrice Decimal // At moment of sale/purchase
+  taxRate   Decimal @default(0.00) // Snapshot of tax rate at time of sale
+  total     Decimal
+  
+  // For fulfillment
+  batchId   Int?    // Which batch was picked?
+}
+
+// =========================================================
+// MODULE E & F: HR, TASKS & AUTOMATION
+// =========================================================
+
+model Task {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  type        String   // 'GENERAL', 'COUNT', 'EXPIRY_CHECK', 'LABEL_PRINT'
+  
+  status      String   // 'TODO', 'IN_PROGRESS', 'REVIEW', 'DONE'
+  priority    String   // 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'
+  
+  assignedToId Int?
+  assignedTo   User?    @relation(fields: [assignedToId], references: [id])
+  
+  dueDate      DateTime?
+  completedAt  DateTime?
+}

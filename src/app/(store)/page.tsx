@@ -1,6 +1,19 @@
-import Image from "next/image";
 
-export default function Home() {
+import Image from "next/image";
+import { prisma } from "@/lib/db";
+
+async function getFeaturedProducts() {
+  // Fetch products from DB
+  const products = await prisma.product.findMany({
+    take: 8,
+    orderBy: { id: 'desc' }
+  });
+  return products;
+}
+
+export default async function Home() {
+  const products = await getFeaturedProducts();
+
   return (
     <main>
       {/* Hero Section */}
@@ -91,19 +104,15 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              { name: "Organic Bananas", price: "$1.29 / lb", emoji: "🍌", tag: "Organic", bg: "#FEF9C3" },
-              { name: "Farm Fresh Milk", price: "$3.49", emoji: "🥛", tag: "Local", bg: "#DBEAFE" },
-              { name: "Artisan Bread", price: "$4.99", emoji: "🥖", tag: "Fresh", bg: "#FFEDD5" },
-              { name: "Ripe Avocados", price: "$1.50 ea", emoji: "🥑", tag: "Superfood", bg: "#DCFCE7" },
-              { name: "Red Apples", price: "$2.99 / lb", emoji: "🍎", tag: "Crisp", bg: "#FFE4E6" },
-              { name: "Free Range Eggs", price: "$5.99", emoji: "🥚", tag: "Free Range", bg: "#F3F4F6" },
-              { name: "Olive Oil", price: "$12.99", emoji: "🫒", tag: "Imported", bg: "#FEF3C7" },
-              { name: "Whole Chicken", price: "$9.99 / lb", emoji: "🍗", tag: "All Natural", bg: "#FEE2E2" }
-            ].map((product, i) => (
-              <div key={i} className="card" style={{ padding: '0', overflow: 'hidden', border: 'none' }}>
-                <div style={{ height: '220px', background: product.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '6rem', position: 'relative' }}>
-                  <span style={{ filter: 'drop-shadow(0 10px 10px rgba(0,0,0,0.1))', transition: 'transform 0.3s' }} className="product-emoji">{product.emoji}</span>
+            {products.length === 0 && <p>No products found in the database. Run seed!</p>}
+
+            {products.map((product) => (
+              <div key={product.id} className="card" style={{ padding: '0', overflow: 'hidden', border: 'none' }}>
+                <div style={{ height: '220px', background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '6rem', position: 'relative' }}>
+                  <span style={{ filter: 'drop-shadow(0 10px 10px rgba(0,0,0,0.1))', transition: 'transform 0.3s' }} className="product-emoji">
+                    {/* Fallback emoji based on ID since we don't have images yet */}
+                    {product.name.includes('Apple') ? '🍎' : product.name.includes('Milk') ? '🥛' : '📦'}
+                  </span>
                   <button style={{
                     position: 'absolute', bottom: '1rem', right: '1rem',
                     width: '40px', height: '40px', borderRadius: '50%',
@@ -117,12 +126,16 @@ export default function Home() {
                 </div>
                 <div style={{ padding: '1.5rem' }}>
                   <div className="flex justify-between items-start" style={{ marginBottom: '0.5rem' }}>
-                    <span className="badge" style={{ background: 'var(--background)', fontSize: '0.75rem' }}>{product.tag}</span>
-                    <span style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '1.1rem' }}>{product.price}</span>
+                    <span className="badge" style={{ background: 'var(--background)', fontSize: '0.75rem' }}>
+                      {product.isTaxIncluded ? 'Tax Inc' : '+Tax'}
+                    </span>
+                    <span style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '1.1rem' }}>
+                      ${Number(product.basePrice).toFixed(2)}
+                    </span>
                   </div>
                   <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>{product.name}</h3>
                   <div className="flex gap-1">
-                    {'⭐'.repeat(5)} <span style={{ fontSize: '0.8rem', color: '#9CA3AF' }}>(24)</span>
+                    {'⭐'.repeat(5)} <span style={{ fontSize: '0.8rem', color: '#9CA3AF' }}>(New)</span>
                   </div>
                 </div>
               </div>
@@ -159,3 +172,4 @@ export default function Home() {
     </main>
   );
 }
+
