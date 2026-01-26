@@ -14,7 +14,7 @@
 /coverage
 
 # next.js
-/.next/
+# /.next/  # Commented out for shared hosting - commit built files
 /out/
 
 # production

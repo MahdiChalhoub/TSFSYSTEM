@@ -1,0 +1,36 @@
+{
+  "node": {
+    "60821eb0ef6cc3bc4b0745dd3682c3e1f33ea66fd5": {
+      "workers": {
+        "app/admin/products/new/page": {
+          "moduleId": 87779,
+          "async": false,
+          "exportedName": "createProduct",
+          "filename": "src/app/admin/products/actions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/products/new/page": "action-browser"
+      },
+      "filename": "src/app/admin/products/actions.ts",
+      "exportedName": "createProduct"
+    },
+    "40d9468aed15a9d41eed2240db5f6e61eb6c8462a8": {
+      "workers": {
+        "app/admin/sales/page": {
+          "moduleId": 76532,
+          "async": false,
+          "exportedName": "getPosProducts",
+          "filename": "src/app/admin/sales/actions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/sales/page": "action-browser"
+      },
+      "filename": "src/app/admin/sales/actions.ts",
+      "exportedName": "getPosProducts"
+    }
+  },
+  "edge": {},
+  "encryptionKey": "oUIcyZEVGt1zIqB0nZ07y5qxfrr/4/RKqlJA3P6oAd8="
+}

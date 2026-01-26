@@ -1,0 +1,11 @@
+{
+  "/(store)/page": "/",
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/admin/[...not_found]/page": "/admin/[...not_found]",
+  "/admin/page": "/admin",
+  "/admin/products/new/page": "/admin/products/new",
+  "/admin/products/page": "/admin/products",
+  "/admin/sales/page": "/admin/sales",
+  "/favicon.ico/route": "/favicon.ico"
+}
