@@ -1,12 +1,18 @@
 'use client';
 
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
 import { createProduct } from '../actions';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import type { ProductNamingRule } from '@/app/actions/settings';
+import { getBrandsByCategory } from '@/app/actions/brands';
+import { getAttributesByCategory } from '@/app/actions/attributes';
 
-export default function AddProductForm() {
+import { CategorySelector } from '@/components/admin/CategorySelector';
+
+export default function AddProductForm({ categories, units, brands, countries, namingRule }: { categories: any[], units: any[], brands: any[], countries: any[], namingRule: ProductNamingRule }) {
     const initialState = { message: '', errors: {} };
-    const [state, dispatch] = useFormState(createProduct, initialState);
+    // useActionState returns [state, formAction, isPending]
+    const [state, formAction, isPending] = useActionState(createProduct, initialState);
     const [autoSku, setAutoSku] = useState(true);
 
     const generateSku = () => {
@@ -14,13 +20,81 @@ export default function AddProductForm() {
         return `PRD-${timestamp}`;
     };
 
+    const [selectedBrandId, setSelectedBrandId] = useState('');
+
+    // Filtered brands based on selected category
+    const [filteredBrands, setFilteredBrands] = useState(brands);
+    const [loadingBrands, setLoadingBrands] = useState(false);
+
+    const filteredCountries = (() => {
+        const selectedBrand = brands.find(b => String(b.id) === String(selectedBrandId));
+        return (selectedBrand?.countries?.length)
+            ? countries.filter(c => selectedBrand.countries.some((bc: any) => bc.id === c.id))
+            : countries;
+    })();
+
+    // Category & Parfum Logic
+    const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+    const [filteredAttributes, setFilteredAttributes] = useState<any[]>([]);
+
+    // Filter brands and attributes when category changes
+    useEffect(() => {
+        const filterData = async () => {
+            if (!selectedCategoryId) {
+                setFilteredAttributes([]); // Or fetch all if needed, but for attributes typically filtered is better
+                // For brands, we reset to all (passed via props), handled below:
+                setFilteredBrands(brands);
+                return;
+            }
+
+            setLoadingBrands(true);
+            try {
+                // Fetch both Brands and Attributes in parallel
+                const [filteredBrandList, filteredAttributeList] = await Promise.all([
+                    getBrandsByCategory(selectedCategoryId),
+                    getAttributesByCategory(selectedCategoryId)
+                ]);
+
+                setFilteredBrands(filteredBrandList);
+                setFilteredAttributes(filteredAttributeList);
+
+                // Reset brand if not in filtered list
+                if (selectedBrandId && !filteredBrandList.find(b => String(b.id) === selectedBrandId)) {
+                    setSelectedBrandId('');
+                    const brandSelect = document.getElementById('brand-select') as HTMLSelectElement;
+                    if (brandSelect) brandSelect.value = '';
+                }
+            } catch (error) {
+                console.error('Error filtering data:', error);
+                setFilteredBrands(brands); // Fallback
+                setFilteredAttributes([]);
+            } finally {
+                setLoadingBrands(false);
+            }
+        };
+
+        filterData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedCategoryId]);
+
+
+
     return (
-        <form action={dispatch} className="max-w-4xl mx-auto space-y-6">
+        <form action={formAction} className="max-w-4xl mx-auto space-y-6">
 
             {/* Error Message Global */}
             {state.message && (
-                <div className="bg-red-50 text-red-600 p-4 rounded-lg border border-red-200">
-                    {state.message}
+                <div className={`p-4 rounded-lg border flex flex-col gap-2 ${state.errors ? 'bg-red-50 text-red-600 border-red-200' : 'bg-green-50 text-green-600 border-green-200'}`}>
+                    <p className="font-semibold">{state.message}</p>
+                    {state.errors && Object.keys(state.errors).length > 0 && (
+                        <ul className="list-disc pl-5 text-sm space-y-1">
+                            {Object.entries(state.errors).map(([field, messages]) => (
+                                <li key={field}>
+                                    <span className="font-medium capitalize">{field}:</span> {(messages as string[]).join(', ')}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
                 </div>
             )}
 
@@ -31,25 +105,177 @@ export default function AddProductForm() {
                     <h3 className="text-lg font-semibold mb-4 text-gray-800">Basic Information</h3>
 
                     <div className="space-y-4">
+                        {/* Step 1: Category FIRST */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">1️⃣ Category</label>
+                            <CategorySelector categories={categories} onChange={(id) => setSelectedCategoryId(id)} />
+                            <input type="hidden" name="categoryId" value={selectedCategoryId || ''} />
+                            <p className="text-xs text-gray-500 mt-1">💡 This will filter available brands</p>
+                        </div>
+
+                        {/* Step 2: Brand SECOND (filtered by category) */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">2️⃣ Brand</label>
+                            <select
+                                name="brandId"
+                                id="brand-select"
+                                className="w-full input-field"
+                                onChange={(e) => setSelectedBrandId(e.target.value)}
+                                disabled={loadingBrands}
+                            >
+                                <option value="">Select Brand...</option>
+                                {loadingBrands ? (
+                                    <option disabled>Loading brands...</option>
+                                ) : filteredBrands.length === 0 ? (
+                                    <option disabled>No brands available for this category</option>
+                                ) : (
+                                    filteredBrands.map(b => (
+                                        <option key={b.id} value={b.id} data-short={b.name.substring(0, 3).toUpperCase()}>
+                                            {b.name}
+                                        </option>
+                                    ))
+                                )}
+                            </select>
+                            {selectedCategoryId && filteredBrands.length > 0 && (
+                                <p className="text-xs text-emerald-600 mt-1">
+                                    ✓ Showing {filteredBrands.length} brand(s) for selected category
+                                </p>
+                            )}
+                            {!selectedCategoryId && (
+                                <p className="text-xs text-amber-600 mt-1">
+                                    ⚠ Select a category first to filter brands
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Step 3: Country */}
+                        {/* Step 3: Country */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">3️⃣ Origin Country</label>
+                            <select name="countryId" id="country-select" className="w-full input-field">
+                                <option value="">Select Country...</option>
+                                {filteredCountries.map(c => (
+                                    <option key={c.id} value={c.id} data-code={c.code}>
+                                        {c.name} ({c.code})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Product Family (Attribute)</label>
+                            <div className="flex gap-2">
+                                <input
+                                    list="parfums-list"
+                                    name="parfumName"
+                                    className="w-full input-field"
+                                    placeholder="e.g. Citron, Vanilla, Classic..."
+                                    autoComplete="off"
+                                />
+                                <datalist id="parfums-list">
+                                    {filteredAttributes.map((p: any) => (
+                                        <option key={p.id} value={p.name} />
+                                    ))}
+                                </datalist>
+                            </div>
+                            {selectedCategoryId && filteredAttributes.length > 0 && (
+                                <p className="text-xs text-emerald-600 mt-1">
+                                    ✓ Showing {filteredAttributes.length} suggestion(s) for selected category
+                                </p>
+                            )}
+                            <p className="text-xs text-gray-400 mt-1">Products with same Brand + Family will be auto-grouped.</p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Emballage (Packaging)</label>
+                                <div className="flex gap-2">
+                                    <input
+                                        name="size"
+                                        type="number"
+                                        step="0.1"
+                                        className="w-full input-field"
+                                        placeholder="Value (e.g. 400)"
+                                    />
+                                    <select name="sizeUnitId" className="w-24 input-field bg-gray-50 text-sm">
+                                        <option value="">Unit</option>
+                                        {units.map(u => <option key={u.id} value={u.id}>{u.shortName || u.name}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Stock Unit (Accounting)</label>
+                                <select name="unitId" id="unit-select" className="w-full input-field" required>
+                                    <option value="">Select Unit...</option>
+                                    {units.map(u => (
+                                        <option key={u.id} value={u.id} data-short={u.shortName || u.name}>
+                                            {u.name} ({u.type})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div className="flex justify-between">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
+                                <button type="button" onClick={() => {
+                                    // Dynamic Smart Auto-Namer using configured naming rule
+                                    const brandSelect = document.getElementById('brand-select') as HTMLSelectElement;
+                                    const countrySelect = document.getElementById('country-select') as HTMLSelectElement;
+
+                                    // Collect all possible component values
+                                    const componentValues: Record<string, any> = {
+                                        category: {
+                                            short: categories.find(c => c.id === selectedCategoryId)?.shortName || '',
+                                            full: categories.find(c => c.id === selectedCategoryId)?.name || ''
+                                        },
+                                        brand: {
+                                            short: brandSelect.options[brandSelect.selectedIndex]?.getAttribute('data-short') || '',
+                                            full: brandSelect.options[brandSelect.selectedIndex]?.text || ''
+                                        },
+                                        family: {
+                                            short: (document.getElementsByName('parfumName')[0] as HTMLInputElement).value || '',
+                                            full: (document.getElementsByName('parfumName')[0] as HTMLInputElement).value || ''
+                                        },
+                                        emballage: {
+                                            short: (() => {
+                                                const sizeInput = document.getElementsByName('size')[0] as HTMLInputElement;
+                                                const sizeUnitSelect = document.getElementsByName('sizeUnitId')[0] as HTMLSelectElement;
+                                                const sizeVal = sizeInput.value;
+                                                const sizeUnitText = sizeUnitSelect.options[sizeUnitSelect.selectedIndex]?.text || '';
+                                                return sizeVal && sizeUnitText !== 'Unit' ? `${sizeVal}${sizeUnitText}` : (sizeVal || '');
+                                            })(),
+                                            full: (() => {
+                                                const sizeInput = document.getElementsByName('size')[0] as HTMLInputElement;
+                                                const sizeUnitSelect = document.getElementsByName('sizeUnitId')[0] as HTMLSelectElement;
+                                                const sizeVal = sizeInput.value;
+                                                const sizeUnitText = sizeUnitSelect.options[sizeUnitSelect.selectedIndex]?.text || '';
+                                                return sizeVal && sizeUnitText !== 'Unit' ? `${sizeVal}${sizeUnitText}` : (sizeVal || '');
+                                            })()
+                                        },
+                                        country: {
+                                            short: countrySelect.options[countrySelect.selectedIndex]?.getAttribute('data-code') || '',
+                                            full: countrySelect.options[countrySelect.selectedIndex]?.text || ''
+                                        }
+                                    };
+
+                                    // Build name based on naming rule
+                                    const parts = namingRule.components
+                                        .filter(c => c.enabled)
+                                        .map(c => {
+                                            const value = componentValues[c.id];
+                                            return c.useShortName ? value?.short : value?.full;
+                                        })
+                                        .filter(Boolean);
+
+                                    const finalName = parts.join(namingRule.separator);
+                                    const nameInput = document.getElementsByName('name')[0] as HTMLInputElement;
+                                    nameInput.value = finalName;
+                                }} className="text-xs text-blue-600 font-medium hover:underline">Auto-Format</button>
+                            </div>
                             <input name="name" type="text" className="w-full input-field" placeholder="e.g. Organic Bananas" required />
                             {state.errors?.name && <p className="text-red-500 text-xs mt-1">{state.errors.name}</p>}
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                            <textarea name="description" className="w-full input-field" rows={3} placeholder="Product details..."></textarea>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                            <select name="categoryId" className="w-full input-field">
-                                <option value="">Select Category...</option>
-                                <option value="1">Fresh Produce</option>
-                                <option value="2">Dairy & Eggs</option>
-                                {/* We will fetch these dynamically later */}
-                            </select>
                         </div>
                     </div>
                 </div>
@@ -136,8 +362,15 @@ export default function AddProductForm() {
 
             <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
                 <button type="button" className="px-6 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50">Cancel</button>
-                <button type="submit" className="px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 shadow-md transition-all">Create Product</button>
+                <button
+                    type="submit"
+                    disabled={isPending}
+                    className="px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                    {isPending && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>}
+                    {isPending ? 'Creating...' : 'Create Product'}
+                </button>
             </div>
-        </form>
+        </form >
     );
 }

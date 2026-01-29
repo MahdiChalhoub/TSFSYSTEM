@@ -7,12 +7,12 @@ export function TopHeader() {
     const { toggleSidebar } = useAdmin();
 
     return (
-        <header className="h-18 glass sticky top-0 z-40 flex items-center justify-between px-6 shrink-0 transition-all">
+        <header className="h-20 glass sticky top-0 z-40 flex items-center justify-between px-8 shrink-0 transition-all">
             <div className="flex items-center gap-4">
                 <button onClick={toggleSidebar} className="p-2.5 hover:bg-gray-100/50 hover:scale-105 active:scale-95 rounded-xl text-gray-600 transition-all duration-200">
                     <Menu size={22} className="text-gray-700" />
                 </button>
-                <div className="hidden md:flex items-center gap-2 text-sm text-gray-600 bg-white/50 backdrop-blur-sm border border-gray-200/50 px-4 py-2 rounded-xl shadow-sm hover:shadow-md transition-all cursor-default">
+                <div className="hidden md:flex items-center gap-2 text-sm text-gray-600 bg-white/50 backdrop-blur-sm border border-gray-200/50 px-4 py-2.5 rounded-xl shadow-sm hover:shadow-md transition-all cursor-default">
                     <MapPin size={16} className="text-emerald-600" />
                     <span className="font-medium">TSF City Market (Marcory)</span>
                 </div>
@@ -20,11 +20,11 @@ export function TopHeader() {
 
             <div className="flex-1 max-w-xl mx-8 hidden sm:block">
                 <div className="relative group">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-500 transition-colors pointer-events-none" size={18} />
                     <input
                         type="text"
                         placeholder="Search products, orders, or customers (Ctrl+K)"
-                        className="w-full pl-12 pr-4 py-2.5 bg-gray-100/50 border border-transparent focus:bg-white focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 rounded-2xl text-sm outline-none transition-all placeholder:text-gray-400"
+                        className="w-full pl-12 pr-4 py-3 bg-gray-100/50 border border-transparent focus:bg-white focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 rounded-2xl text-sm outline-none transition-all placeholder:text-gray-400"
                     />
                 </div>
             </div>

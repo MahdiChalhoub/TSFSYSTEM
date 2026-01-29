@@ -1,0 +1,50 @@
+{
+  "node": {
+    "40ce637e5c9ae44c7465461ac81cec813aa9330517": {
+      "workers": {
+        "app/admin/inventory/units/page": {
+          "moduleId": "[project]/.next-internal/server/app/admin/inventory/units/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/actions/inventory.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "deleteUnit",
+          "filename": "src/app/actions/inventory.ts"
+        }
+      },
+      "layer": {
+        "app/admin/inventory/units/page": "action-browser"
+      },
+      "exportedName": "deleteUnit",
+      "filename": "src/app/actions/inventory.ts"
+    },
+    "6039a627cd5099fe581bb5ee21f1edc67d4c7d72ba": {
+      "workers": {
+        "app/admin/inventory/units/page": {
+          "moduleId": "[project]/.next-internal/server/app/admin/inventory/units/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/actions/inventory.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "createUnit",
+          "filename": "src/app/actions/inventory.ts"
+        }
+      },
+      "layer": {
+        "app/admin/inventory/units/page": "action-browser"
+      },
+      "exportedName": "createUnit",
+      "filename": "src/app/actions/inventory.ts"
+    },
+    "70985d21e121d87bd7c0a39d41e9c9168f3c4b6c4e": {
+      "workers": {
+        "app/admin/inventory/units/page": {
+          "moduleId": "[project]/.next-internal/server/app/admin/inventory/units/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/actions/inventory.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "updateUnit",
+          "filename": "src/app/actions/inventory.ts"
+        }
+      },
+      "layer": {
+        "app/admin/inventory/units/page": "action-browser"
+      },
+      "exportedName": "updateUnit",
+      "filename": "src/app/actions/inventory.ts"
+    }
+  },
+  "edge": {}
+}

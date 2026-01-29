@@ -1,397 +1,105 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
-
 @import "tailwindcss";
 
 @theme {
-  /* Premium Color Palette */
+  /* Premium Brand Colors */
   --color-primary: #10B981;
-  /* More vibrant Emerald */
+  /* Emerald 500 */
   --color-primary-dark: #059669;
+  /* Emerald 600 */
   --color-primary-light: #6EE7B7;
+  /* Emerald 300 */
 
   --color-secondary: #0F172A;
-  /* Slate 900 - Deep Blue/Black */
+  /* Slate 900 */
   --color-accent: #F59E0B;
-  /* Amber */
+  /* Amber 500 */
 
-  --color-background: #F0F9FF;
-  /* Very light blueish tint */
+  --color-background: #F8FAFC;
+  /* Slate 50 */
   --color-surface: #FFFFFF;
 
   --color-text-main: #0F172A;
   --color-text-muted: #64748B;
 
-  /* Admin Theme Colors - Deep & Rich */
-  --color-admin-sidebar: #0F172A;
-  /* Dark Slate */
-  --color-admin-sidebar-hover: #1E293B;
-  /* Slightly lighter slate */
-  --color-admin-sidebar-text: #E2E8F0;
-  --color-admin-sidebar-text-muted: #94A3B8;
-
-  --color-admin-header: rgba(255, 255, 255, 0.8);
-  /* Glass effect base */
-  --color-admin-bg: #F1F5F9;
-  /* Slate 100 */
-
   /* Status Colors */
-  --color-status-success-bg: #DCFCE7;
-  --color-status-success-text: #166534;
-  --color-status-warning-bg: #FEF3C7;
-  --color-status-warning-text: #92400E;
-  --color-status-error-bg: #FEE2E2;
-  --color-status-error-text: #B91C1C;
-  --color-status-info-bg: #DBEAFE;
-  --color-status-info-text: #1E40AF;
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-error: #EF4444;
+  --color-info: #3B82F6;
 
-  /* Spacing & Layout */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 20px;
-  --radius-xl: 24px;
-  --width-container: 1400px;
-  /* Wider for dashboard */
+  /* Font Scaling */
+  --font-sans: 'Outfit', ui-sans-serif, system-ui, sans-serif;
 
-  /* Shadows - Soft & Premium */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  --shadow-glow: 0 0 15px rgba(16, 185, 129, 0.4);
+  /* Border Radius */
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
 
-  /* Font */
-  --font-sans: 'Outfit', sans-serif;
+  /* Shadows */
+  --shadow-glow: 0 0 20px -5px rgba(16, 185, 129, 0.3);
 }
 
-:root {
-  /* Keep standard vars for legacy/direct usage if needed, mapping to theme */
-  --primary: var(--color-primary);
-  --primary-dark: var(--color-primary-dark);
-  --secondary: var(--color-secondary);
-  --accent: var(--color-accent);
-  --background: var(--color-background);
-  --surface: var(--color-surface);
-  --text-main: var(--color-text-main);
-  --text-muted: var(--color-text-muted);
-}
+/* Custom Utilities layer */
+@layer utilities {
+  .glass {
+    @apply bg-white/70 backdrop-blur-md border border-white/50;
+  }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+  .card-premium {
+    @apply bg-white/80 backdrop-blur-sm rounded-2xl border border-white/60 shadow-lg transition-all duration-300;
+  }
 
-body {
-  background-color: var(--color-background);
-  color: var(--color-text-main);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-  background-image:
-    radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.05) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(59, 130, 246, 0.05) 0px, transparent 50%);
-  background-attachment: fixed;
-}
+  .card-premium:hover {
+    @apply -translate-y-1 shadow-xl border-emerald-500/20;
+  }
 
-@utility glass {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-}
+  .input-field {
+    @apply w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all;
+  }
 
-/* Hover state for card-premium is handled by the base utility using nesting or JS-driven classes if needed. 
-   Tailwind 4 @utility does not support pseudo-classes in the name directly like this. 
-   We will move the hover styles into the main utility block.
-*/
+  /* Custom Scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
 
-@utility card-premium {
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  border-radius: var(--radius-xl);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: var(--shadow-lg);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
 
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-xl);
-    border-color: rgba(16, 185, 129, 0.3);
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded-full hover:bg-gray-400;
+  }
+
+  /* Hide scrollbar but allow scroll */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }
 
-/* Scrollbar Styling */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #94A3B8;
-}
-
-a {
-  text-decoration: none;
-  color: inherit;
-  transition: color 0.2s;
-}
-
-ul {
-  list-style: none;
-}
-
-/* Typography */
-/* Typography is handled by Tailwind classes */
-
-/* Utility Classes */
-/* Utility Classes should be handled by Tailwind directly. 
-   Only keep custom container if needed, but Tailwind has a container plugin too.
-   For now, we remove the manual spacing/flex/grid overrides.
-*/
-
-.text-center {
-  text-align: center;
-}
-
-/* Components */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 28px;
-  border-radius: var(--radius-md);
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: none;
-  font-size: 1rem;
-}
-
-.btn-primary {
-  background: var(--primary);
-  color: white;
-  box-shadow: var(--shadow-md);
-}
-
-.btn-primary:hover {
-  background: var(--primary-dark);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-glow);
-}
-
-.btn-outline {
-  background: transparent;
-  border: 2px solid var(--primary);
-  color: var(--primary);
-}
-
-.btn-outline:hover {
-  background: var(--primary);
-  color: white;
-}
-
-.card {
-  background: var(--surface);
-  border-radius: var(--radius-lg);
-  padding: 2rem;
-  box-shadow: var(--shadow-sm);
-  transition: all 0.3s ease;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-lg);
-}
-
-.badge {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 99px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  background: #ECFDF5;
-  color: var(--primary);
-}
-
-/* Admin variables are now in @theme */
-
-.admin-layout {
-  display: flex;
-  min-height: 100vh;
-  background-color: var(--admin-bg);
-  font-family: 'Inter', system-ui, sans-serif;
-  /* Cleaner font for data */
-}
-
-.admin-sidebar {
-  width: 280px;
-  background-color: var(--admin-sidebar);
-  color: #E5E7EB;
-  display: flex;
-  flex-direction: column;
-  padding: 1.5rem;
-  flex-shrink: 0;
-}
-
-.admin-nav-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
-  color: #9CA3AF;
-  font-weight: 500;
-  transition: all 0.2s;
-  text-decoration: none;
-  margin-bottom: 0.25rem;
-}
-
-.admin-nav-item:hover,
-.admin-nav-item.active {
-  background-color: var(--admin-sidebar-hover);
-  color: white;
-}
-
-.admin-nav-section {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  color: #6B7280;
-  letter-spacing: 0.05em;
-  margin-top: 2rem;
-  margin-bottom: 0.75rem;
-  padding-left: 1rem;
-}
-
-.admin-header {
-  height: 64px;
-  background: var(--admin-header);
-  border-bottom: 1px solid #E5E7EB;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 2rem;
-}
-
-.admin-content {
-  flex: 1;
-  padding: 2rem;
-  overflow-y: auto;
-}
-
-/* Admin Tables */
-.data-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  background: white;
-  border-radius: 0.5rem;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.data-table th {
-  background: #F9FAFB;
-  padding: 0.75rem 1.5rem;
-  text-align: left;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  color: #6B7280;
-  letter-spacing: 0.05em;
-  border-bottom: 1px solid #E5E7EB;
-}
-
-.data-table td {
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid #F3F4F6;
-  font-size: 0.875rem;
-  color: #111827;
-}
-
-.data-table tr:last-child td {
-  border-bottom: none;
-}
-
-.data-table tr:hover td {
-  background: #F9FAFB;
-}
-
-/* Status Badges */
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.status-success {
-  background: var(--status-success-bg);
-  color: var(--status-success-text);
-}
-
-.status-warning {
-  background: var(--status-warning-bg);
-  color: var(--status-warning-text);
-}
-
-.status-error {
-  background: var(--status-error-bg);
-  color: var(--status-error-text);
-}
-
-/* Animations */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
+/* Global Base Styles */
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900 font-sans antialiased;
+    /* Subtle background pattern */
+    background-image:
+      radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.03) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(59, 130, 246, 0.03) 0px, transparent 50%);
+    background-attachment: fixed;
   }
 
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  /* Reset */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply tracking-tight;
   }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.8s ease-out forwards;
-}
-
-.delay-100 {
-  animation-delay: 0.1s;
-}
-
-.delay-200 {
-  animation-delay: 0.2s;
-}
-
-/* Forms */
-.input-field {
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.375rem;
-  /* rounded-md */
-  border: 1px solid #D1D5DB;
-  /* gray-300 */
-  background-color: #F9FAFB;
-  /* gray-50 */
-  color: #111827;
-  font-size: 0.875rem;
-  transition: all 0.2s;
-}
-
-.input-field:focus {
-  outline: none;
-  background-color: white;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
 }

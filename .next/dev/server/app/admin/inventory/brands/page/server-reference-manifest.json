@@ -1,0 +1,50 @@
+{
+  "node": {
+    "409e9958d6c0755814323016895c6cdc031c87dfd8": {
+      "workers": {
+        "app/admin/inventory/brands/page": {
+          "moduleId": "[project]/.next-internal/server/app/admin/inventory/brands/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/actions/brands.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getBrandHierarchy",
+          "filename": "src/app/actions/brands.ts"
+        }
+      },
+      "layer": {
+        "app/admin/inventory/brands/page": "action-browser"
+      },
+      "exportedName": "getBrandHierarchy",
+      "filename": "src/app/actions/brands.ts"
+    },
+    "607787aeb5cedbf4484aa0ff10850b99e970c18dec": {
+      "workers": {
+        "app/admin/inventory/brands/page": {
+          "moduleId": "[project]/.next-internal/server/app/admin/inventory/brands/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/actions/brands.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "createBrand",
+          "filename": "src/app/actions/brands.ts"
+        }
+      },
+      "layer": {
+        "app/admin/inventory/brands/page": "action-browser"
+      },
+      "exportedName": "createBrand",
+      "filename": "src/app/actions/brands.ts"
+    },
+    "70ee33d3cfe76c1ba392b8fa27bbc51275c6f139b5": {
+      "workers": {
+        "app/admin/inventory/brands/page": {
+          "moduleId": "[project]/.next-internal/server/app/admin/inventory/brands/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/actions/brands.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "updateBrand",
+          "filename": "src/app/actions/brands.ts"
+        }
+      },
+      "layer": {
+        "app/admin/inventory/brands/page": "action-browser"
+      },
+      "exportedName": "updateBrand",
+      "filename": "src/app/actions/brands.ts"
+    }
+  },
+  "edge": {}
+}

@@ -13,13 +13,75 @@ datasource db {
 // =========================================================
 // MODULE A: PEOPLE & SECURITY
 // =========================================================
+// SQLite Compatible (No Enums)
+
+model Country {
+  id    Int    @id @default(autoincrement())
+  code  String @unique // LB, US, FR
+  name  String 
+  
+  brands   Brand[]
+  products Product[] // Origin
+}
+
+model Unit {
+  id    Int    @id @default(autoincrement())
+  code  String @unique // PC, BOX
+  name  String // Piece, Box
+  
+  // Attributes requested by User
+  shortName     String?
+  type          String @default("COUNT") // 'COUNT', 'WEIGHT', 'VOLUME'
+  allowFraction Boolean @default(false)
+  needsBalance  Boolean @default(false)
+  balanceCodeStructure String? // e.g. "6,3,3" for [Barcode(6)][Weight(3)][Dec(3)]
+  
+  // Hierarchy & Conversion
+  baseUnitId Int?
+  baseUnit   Unit? @relation("UnitHierarchy", fields: [baseUnitId], references: [id])
+  children   Unit[] @relation("UnitHierarchy")
+  
+  conversionFactor Decimal @default(1) // e.g. 12 if 1 Box = 12 Pieces (where base is Piece)
+  
+  products Product[]
+  productsWithSize Product[] @relation("SizeUnit")
+}
+
+
+
+model FinancialAccount {
+  id       Int     @id @default(autoincrement())
+  name     String  // "Cash Drawer 1", "Bank Audi"
+  type     String  // 'CASH', 'BANK', 'MOBILE'
+  currency String  @default("USD")
+  balance  Decimal @default(0.00)
+  
+  transactions Transaction[]
+}
+
+model Transaction {
+  id          Int      @id @default(autoincrement())
+  accountId   Int
+  account     FinancialAccount @relation(fields: [accountId], references: [id])
+  
+  amount      Decimal
+  type        String   // 'DEBIT', 'CREDIT'
+  description String?
+  referenceId String?  // Link to Order ID or Expense ID
+  
+  createdAt   DateTime @default(now())
+}
+// PaymentMethod: CASH, CARD, MOBILE_MONEY, CREDIT
+// Role: OWNER, MANAGER, CASHIER, WAREHOUSE, SHELF
+// ProductStatus: ACTIVE, DISCONTINUED, LIQUIDATION, DRAFT
+// UnitType: PC, KG, BOX, PACK, LITER, METER
 
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
   password  String   // Hashed
   name      String
-  role      String   // 'OWNER', 'MANAGER', 'CASHIER', 'WAREHOUSE', 'SHELF'
+  role      String   // Using String instead of Enum
   isActive  Boolean  @default(true)
   
   // Relations
@@ -64,12 +126,16 @@ model Contact {
   loyaltyPoints Int      @default(0)
   
   orders    Order[]
+  
+  // Products where this contact is the primary supplier
+  suppliedProducts Product[] @relation("ProductSupplier")
 }
 
 // =========================================================
 // MODULE C: INVENTORY & PRODUCTS
 // =========================================================
 
+// ...
 model Product {
   id          Int      @id @default(autoincrement())
   sku         String   @unique // Internal ID
@@ -77,10 +143,36 @@ model Product {
   name        String
   description String?
   
+  // Grouping (New)
+  productGroupId Int?
+  productGroup   ProductGroup? @relation(fields: [productGroupId], references: [id])
+  
+  // Dimensions / Size (New)
+  size           Decimal? // e.g., 300
+  sizeUnitId     Int?
+  sizeUnit       Unit?    @relation("SizeUnit", fields: [sizeUnitId], references: [id])
+  
   // Pricing Strategy
   costPrice   Decimal  @default(0.00) // Moving Average Cost
   basePrice   Decimal  @default(0.00) // Standard Retail Price
   minPrice    Decimal  @default(0.00) // Lowest allowed price
+  
+  // Advanced Classification
+  brand       Brand?   @relation(fields: [brandId], references: [id])
+  brandId     Int?
+  
+  country     Country? @relation(fields: [countryId], references: [id])
+  countryId   Int?     // Origin Country
+  
+  unit        Unit?    @relation(fields: [unitId], references: [id])
+  unitId      Int?
+
+
+  
+  status      String   @default("ACTIVE")
+  
+  supplier    Contact? @relation("ProductSupplier", fields: [supplierId], references: [id])
+  supplierId  Int?
   
   // Tax / TVA Configuration
   taxRate     Decimal  @default(0.00) // e.g., 0.11 for 11%
@@ -94,6 +186,9 @@ model Product {
   category    Category? @relation(fields: [categoryId], references: [id])
   categoryId  Int?
   
+  parfumId    Int?
+  parfum      Parfum? @relation(fields: [parfumId], references: [id])
+  
   inventory   Inventory[]
   batches     StockBatch[]
   orderLines  OrderLine[]
@@ -101,12 +196,72 @@ model Product {
   // Performance Indexes for POS search
   @@index([name]) // Fast search by name
   @@index([categoryId]) // Fast filtering by category  
+  @@index([productGroupId])
+}
+
+model ProductGroup {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  image       String?
+  
+  brandId     Int?
+  brand       Brand?    @relation(fields: [brandId], references: [id])
+  
+  categoryId  Int?
+  category    Category? @relation(fields: [categoryId], references: [id])
+  
+  parfumId    Int?
+  parfum      Parfum?   @relation(fields: [parfumId], references: [id])
+  
+  products    Product[]
+  
+
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model Category {
   id       Int       @id @default(autoincrement())
   name     String
+  code     String?   @unique // Internal Code for barcode generation
+  shortName String?  // Abbreviation for nomenclature
+
+  parentId Int?      // For Sub-categories
+  parent   Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryHierarchy")
+  
+  brands   Brand[]   // Many-to-Many: Brands available in this category
+  
   products Product[]
+
+  productGroups ProductGroup[]
+  parfums         Parfum[]
+}
+
+model Brand {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  shortName String?  // Abbreviation
+  logo     String?   // URL to logo
+  
+  countries  Country[]  // Many-to-Many: Brand operates in these countries
+  categories Category[] // Many-to-Many: Categories where this brand applies
+  
+  products Product[]
+  productGroups ProductGroup[]
+}
+
+model Parfum {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  shortName String?
+  
+  categories Category[] // Many-to-Many: Parfums available in these categories
+  
+  products Product[]
+  productGroups ProductGroup[]
 }
 
 model Warehouse {
@@ -169,7 +324,13 @@ model Order {
   notes       String?
   
   lines       OrderLine[]
+  
+  // Payment Info
+  paymentMethod String? 
+  refCode       String? 
+  
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt 
 }
 
 model OrderLine {
@@ -208,3 +369,17 @@ model Task {
   dueDate      DateTime?
   completedAt  DateTime?
 }
+
+// =========================================================
+// MODULE G: SYSTEM SETTINGS
+// =========================================================
+
+model SystemSettings {
+  id    Int    @id @default(autoincrement())
+  key   String @unique // e.g., "product_naming_rule"
+  value String // JSON stringified value
+  
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
+

@@ -15,7 +15,7 @@ export default function AdminLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="en">
+        <html lang="en" suppressHydrationWarning>
             <body className={outfit.className}>
                 <AdminProvider>
                     <div className="flex h-screen bg-gray-50 overflow-hidden font-sans text-gray-900">
@@ -31,8 +31,10 @@ export default function AdminLayout({
                             <TabNavigator />
 
                             {/* 3. The Page Content */}
-                            <main className="flex-1 overflow-auto p-6 relative">
-                                {children}
+                            <main className="flex-1 overflow-auto p-8 relative">
+                                <div className="max-w-[1600px] mx-auto">
+                                    {children}
+                                </div>
                             </main>
                         </div>
                     </div>

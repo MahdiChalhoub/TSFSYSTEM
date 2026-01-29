@@ -30,7 +30,20 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         const saved = localStorage.getItem('tsf_tabs');
         if (saved) {
-            setOpenTabs(JSON.parse(saved));
+            try {
+                const parsed = JSON.parse(saved);
+                // Deduplicate loaded tabs
+                const uniqueTabs = parsed.reduce((acc: Tab[], current: Tab) => {
+                    if (!acc.find(t => t.id === current.id)) {
+                        acc.push(current);
+                    }
+                    return acc;
+                }, []);
+                setOpenTabs(uniqueTabs);
+            } catch (e) {
+                console.error("Failed to parse tabs", e);
+                setOpenTabs([{ id: 'dashboard', title: 'Dashboard', path: '/admin' }]);
+            }
         } else {
             // Default Dashboard tab
             setOpenTabs([{ id: 'dashboard', title: 'Dashboard', path: '/admin' }]);
@@ -53,12 +66,13 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
     const openTab = (title: string, path: string) => {
-        const id = path; // Simple ID strategy: path is unique
-        const exists = openTabs.find(t => t.id === id);
+        const id = path;
 
-        if (!exists) {
-            setOpenTabs(prev => [...prev, { id, title, path }]);
-        }
+        setOpenTabs(prev => {
+            if (prev.find(t => t.id === id)) return prev;
+            return [...prev, { id, title, path }];
+        });
+
         router.push(path);
     };
 

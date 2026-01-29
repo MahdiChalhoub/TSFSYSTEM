@@ -1,0 +1,80 @@
+{
+  "node": {
+    "00a807184c497eeda9c5e8cf6990b6a6e4c89a0c88": {
+      "workers": {
+        "app/admin/products/new/page": {
+          "moduleId": "[project]/.next-internal/server/app/admin/products/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/actions/settings.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/app/admin/products/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/actions/brands.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/actions/attributes.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getProductNamingRule",
+          "filename": "src/app/actions/settings.ts"
+        }
+      },
+      "layer": {
+        "app/admin/products/new/page": "rsc"
+      },
+      "exportedName": "getProductNamingRule",
+      "filename": "src/app/actions/settings.ts"
+    },
+    "402b2083a724232a7d5b2af74dd31fd492a1eb67e8": {
+      "workers": {
+        "app/admin/products/new/page": {
+          "moduleId": "[project]/.next-internal/server/app/admin/products/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/actions/settings.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/app/admin/products/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/actions/brands.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/actions/attributes.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "saveProductNamingRule",
+          "filename": "src/app/actions/settings.ts"
+        }
+      },
+      "layer": {
+        "app/admin/products/new/page": "rsc"
+      },
+      "exportedName": "saveProductNamingRule",
+      "filename": "src/app/actions/settings.ts"
+    },
+    "60ff500afa3acb861f398fb73f4eaae81e10821e6e": {
+      "workers": {
+        "app/admin/products/new/page": {
+          "moduleId": "[project]/.next-internal/server/app/admin/products/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/actions/settings.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/app/admin/products/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/actions/brands.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/actions/attributes.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "createProduct",
+          "filename": "src/app/admin/products/actions.ts"
+        }
+      },
+      "layer": {
+        "app/admin/products/new/page": "action-browser"
+      },
+      "exportedName": "createProduct",
+      "filename": "src/app/admin/products/actions.ts"
+    },
+    "409714094e6ebe47cc2f212977bed6c0295d53f040": {
+      "workers": {
+        "app/admin/products/new/page": {
+          "moduleId": "[project]/.next-internal/server/app/admin/products/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/actions/settings.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/app/admin/products/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/actions/brands.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/actions/attributes.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getBrandsByCategory",
+          "filename": "src/app/actions/brands.ts"
+        }
+      },
+      "layer": {
+        "app/admin/products/new/page": "action-browser"
+      },
+      "exportedName": "getBrandsByCategory",
+      "filename": "src/app/actions/brands.ts"
+    },
+    "404acc875d246d504e68a98dad4a192c23bf4923bf": {
+      "workers": {
+        "app/admin/products/new/page": {
+          "moduleId": "[project]/.next-internal/server/app/admin/products/new/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/actions/settings.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/app/admin/products/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE2 => \"[project]/src/app/actions/brands.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE3 => \"[project]/src/app/actions/attributes.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getAttributesByCategory",
+          "filename": "src/app/actions/attributes.ts"
+        }
+      },
+      "layer": {
+        "app/admin/products/new/page": "action-browser"
+      },
+      "exportedName": "getAttributesByCategory",
+      "filename": "src/app/actions/attributes.ts"
+    }
+  },
+  "edge": {}
+}

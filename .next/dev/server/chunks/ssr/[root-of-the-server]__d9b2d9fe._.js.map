@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 22, "column": 0}, "map": {"version":3,"sources":["file:///C:/tsfci/src/app/admin/%5B...not_found%5D/page.tsx"],"sourcesContent":["import { notFound } from 'next/navigation';\r\n\r\nexport default function NotFoundCatchAll() {\r\n    notFound();\r\n}\r\n"],"names":[],"mappings":";;;;AAAA;AAAA;;AAEe,SAAS;IACpB,IAAA,iMAAQ;AACZ"}}]
+}
