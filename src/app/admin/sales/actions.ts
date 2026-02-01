@@ -2,20 +2,13 @@
 
 import { prisma } from "@/lib/db";
 
+import { getCurrentSiteId } from "@/app/actions/context";
+
 // Cache for frequently accessed data (server-side)
 let productsCache: any[] | null = null;
 let cacheTimestamp: number = 0;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache
 
-/**
- * Get POS products with advanced optimization for 1000+ products
- * Features:
- * - Server-side caching (5 min TTL)
- * - Pagination support
- * - Search filtering
- * - Timeout protection
- * - Error handling
- */
 export async function getPosProducts(options: {
     search?: string;
     limit?: number;
@@ -23,15 +16,9 @@ export async function getPosProducts(options: {
     categoryId?: number;
 } = {}) {
     const { search = '', limit = 100, offset = 0, categoryId } = options;
+    const currentSiteId = await getCurrentSiteId();
 
     try {
-        // Check cache first (only for non-search queries to keep search fresh)
-        const now = Date.now();
-        if (!search && productsCache && (now - cacheTimestamp) < CACHE_TTL) {
-            console.log('[getPosProducts] Returning cached data');
-            return productsCache.slice(offset, offset + limit);
-        }
-
         // Build where clause for filtering
         const where: any = {};
 
@@ -52,15 +39,17 @@ export async function getPosProducts(options: {
         // Execute query with timeout protection
         const fetchPromise = prisma.product.findMany({
             where,
-            select: {
-                id: true,
-                name: true,
-                basePrice: true,
-                sku: true,
-                taxRate: true,
-                isTaxIncluded: true,
-                categoryId: true,
-                barcode: true,
+            include: {
+                inventory: {
+                    where: {
+                        warehouse: {
+                            siteId: currentSiteId
+                        }
+                    },
+                    select: {
+                        quantity: true
+                    }
+                }
             },
             orderBy: { name: 'asc' },
             take: limit,
@@ -75,31 +64,29 @@ export async function getPosProducts(options: {
         const products = await Promise.race([fetchPromise, timeoutPromise]) as any[];
 
         // Convert Decimals to numbers for JSON serialization
-        const serializedProducts = products.map(p => ({
-            ...p,
-            basePrice: Number(p.basePrice),
-            taxRate: Number(p.taxRate)
-        }));
-
-        // Update cache if this was a full fetch (no search)
-        if (!search && offset === 0) {
-            productsCache = serializedProducts;
-            cacheTimestamp = now;
-        }
+        // And calculate local stock level
+        const serializedProducts = products.map(p => {
+            const localStock = p.inventory.reduce((sum: number, item: any) => sum + Number(item.quantity), 0);
+            return {
+                ...p,
+                costPrice: Number(p.costPrice),
+                costPriceHT: Number(p.costPriceHT),
+                costPriceTTC: Number(p.costPriceTTC),
+                tvaRate: Number(p.tvaRate),
+                sellingPriceHT: Number(p.sellingPriceHT),
+                sellingPriceTTC: Number(p.sellingPriceTTC),
+                basePrice: Number(p.basePrice),
+                minPrice: Number(p.minPrice),
+                taxRate: Number(p.taxRate),
+                stock: localStock,
+                inventory: undefined // Don't leak full relations
+            };
+        });
 
         return serializedProducts;
 
     } catch (error) {
         console.error('[getPosProducts] Database error:', error);
-
-        // Return cached data as fallback if available
-        if (productsCache && productsCache.length > 0) {
-            console.warn('[getPosProducts] Returning stale cache due to error');
-            return productsCache.slice(offset, offset + limit);
-        }
-
-        // Last resort: return empty array to prevent app crash
-        console.error('[getPosProducts] No cache available, returning empty array');
         return [];
     }
 }

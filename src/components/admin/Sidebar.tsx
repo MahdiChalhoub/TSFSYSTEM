@@ -34,43 +34,63 @@ const MENU_ITEMS = [
         title: 'Inventory',
         icon: Box,
         children: [
-            { title: 'Units & Packaging', path: '/admin/inventory/units' },
-            { title: 'Countries', path: '/admin/inventory/countries' },
-            { title: 'Categories', path: '/admin/inventory/categories' },
-            { title: 'Brands', path: '/admin/inventory/brands' },
-            { title: 'Attributes', path: '/admin/inventory/attributes' },
             { title: 'Product Master', path: '/admin/products' },
-            { title: 'Stock Adjustment', path: '/admin/inventory/adjust' },
-            { title: 'Stock Transfer', path: '/admin/inventory/transfer' },
-            { title: 'Stock Movement Report', path: '/admin/reports/stock' },
-            { title: 'Expiry Date Alert', path: '/admin/inventory/expiry' },
-            { title: 'Printing Labels', path: '/admin/inventory/labels' },
-        ]
-    },
-    {
-        title: 'Purchases',
-        icon: Briefcase,
-        children: [
-            { title: 'Purchase Request', path: '/admin/purchases/request' },
-            { title: 'Purchase Order', path: '/admin/purchases/order' },
-            { title: 'Goods Received', path: '/admin/purchases/grn' },
-        ]
-    },
-    {
-        title: 'HR & Users',
-        icon: Users,
-        children: [
-            { title: 'Employees', path: '/admin/hr/employees' },
-            { title: 'Tasks Management', path: '/admin/hr/tasks' },
+            { title: 'Warehouses & Zones', path: '/admin/inventory/warehouses' },
+            { title: 'Global Inventory', path: '/admin/inventory/global' },
+            { title: 'Categories', path: '/admin/inventory/categories' },
+            { title: 'Units & Packaging', path: '/admin/inventory/units' },
+            { title: 'Brands', path: '/admin/inventory/brands' },
+            { title: 'Countries', path: '/admin/inventory/countries' },
+            { title: 'Attributes', path: '/admin/inventory/attributes' },
+            { title: 'System Maintenance', path: '/admin/inventory/maintenance' },
         ]
     },
     {
         title: 'Finance',
         icon: FileText,
         children: [
-            { title: 'Accounts', path: '/admin/finance/accounts' },
-            { title: 'Expenses', path: '/admin/finance/expenses' },
-            { title: 'Profit & Loss', path: '/admin/finance/pl' },
+            { title: 'Performance Dashboard', path: '/admin/finance/dashboard' },
+            { title: 'Chart of Accounts', path: '/admin/finance/chart-of-accounts' },
+            { title: 'General Ledger', path: '/admin/finance/ledger' },
+            { title: 'Trial Balance', path: '/admin/finance/reports/trial-balance' },
+            { title: 'Profit & Loss', path: '/admin/finance/reports/pnl' },
+            { title: 'Balance Sheet', path: '/admin/finance/reports/balance-sheet' },
+            { title: 'Fiscal Years', path: '/admin/finance/fiscal-years' },
+            { title: 'Pricing Engine', path: '/admin/finance/pricing' },
+            { title: 'Loan Contracts', path: '/admin/finance/loans' },
+            { title: 'Financial Events', path: '/admin/finance/events' },
+            { title: 'Financial Settings', path: '/admin/finance/settings' },
+            { title: '— Capital Injections', path: '/admin/finance/events?type=PARTNER_CAPITAL_INJECTION' },
+            { title: '— Partner Loans', path: '/admin/finance/events?type=PARTNER_LOAN' },
+            { title: '— Partner Withdrawals', path: '/admin/finance/events?type=PARTNER_WITHDRAWAL' },
+            { title: '— Refunds Received', path: '/admin/finance/events?type=REFUND_RECEIVED' },
+        ]
+    },
+    {
+        title: 'CRM',
+        icon: Users,
+        children: [
+            { title: 'Contact Center', path: '/admin/crm/contacts' },
+            { title: 'Customer Loyalty', path: '/admin/crm/loyalty' },
+            { title: 'Supplier Portals', path: '/admin/crm/suppliers' },
+        ]
+    },
+    {
+        title: 'HR & Teams',
+        icon: ShieldCheck,
+        children: [
+            { title: 'Employee Manager', path: '/admin/hr/employees' },
+            { title: 'Payroll & Accruals', path: '/admin/hr/payroll' },
+            { title: 'Access Control (Roles)', path: '/admin/hr/roles' },
+        ]
+    },
+    {
+        title: 'System Settings',
+        icon: Settings,
+        children: [
+            { title: 'Sites & Branches', path: '/admin/settings/sites' },
+            { title: 'Barcode Configuration', path: '/admin/settings/barcode' },
+            { title: 'Transaction Numbering', path: '/admin/settings/sequences' },
         ]
     },
 ];

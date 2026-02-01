@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 
 const globalForPrisma = globalThis as unknown as {
-    prisma: PrismaClient | undefined
+    prismaMain: PrismaClient | undefined
 }
 
 // Get DATABASE_URL with fallback for build time
@@ -15,22 +15,23 @@ const getDatabaseUrl = () => {
     return process.env.DATABASE_URL;
 };
 
-// Production-ready Prisma configuration with timeouts and connection pooling
-export const prisma = globalForPrisma.prisma ?? new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
-    // Query timeout configuration for Hostinger shared hosting
-    datasources: {
-        db: {
-            url: getDatabaseUrl(),
+export const prisma =
+    globalForPrisma.prismaMain ||
+    new PrismaClient({
+        log: ['query', 'error', 'warn'],
+        // Query timeout configuration for Hostinger shared hosting
+        datasources: {
+            db: {
+                url: getDatabaseUrl(),
+            },
         },
-    },
-})
+    })
 
 // Connection pool timeout management
 // Note: SQLite doesn't support connection pooling, but MySQL does
 // When you migrate to MySQL, these settings will take effect
 if (process.env.NODE_ENV !== 'production') {
-    globalForPrisma.prisma = prisma
+    globalForPrisma.prismaMain = prisma
 }
 
 // Graceful shutdown

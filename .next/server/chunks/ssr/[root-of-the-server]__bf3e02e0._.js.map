@@ -1,1 +1,0 @@
-{"version":3,"sources":["../../../../src/app/admin/%5B...not_found%5D/page.tsx"],"sourcesContent":["import { notFound } from 'next/navigation';\r\n\r\nexport default function NotFoundCatchAll() {\r\n    notFound();\r\n}\r\n"],"names":[],"mappings":"gWAAA,EAAA,CAAA,CAAA,OAAA,IAAA,EAAA,EAAA,CAAA,CAAA,OAEe,SAAS,IACpB,CAAA,EAAA,EAAA,QAAA,AAAQ,GACZ"}

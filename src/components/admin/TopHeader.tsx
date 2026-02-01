@@ -1,9 +1,10 @@
 'use client';
 
 import { useAdmin } from '@/context/AdminContext';
-import { Bell, MapPin, Search, User, Menu } from 'lucide-react';
+import { Bell, Search, User, Menu } from 'lucide-react';
+import { SiteSwitcher } from './SiteSwitcher';
 
-export function TopHeader() {
+export function TopHeader({ sites }: { sites: any[] }) {
     const { toggleSidebar } = useAdmin();
 
     return (
@@ -12,10 +13,7 @@ export function TopHeader() {
                 <button onClick={toggleSidebar} className="p-2.5 hover:bg-gray-100/50 hover:scale-105 active:scale-95 rounded-xl text-gray-600 transition-all duration-200">
                     <Menu size={22} className="text-gray-700" />
                 </button>
-                <div className="hidden md:flex items-center gap-2 text-sm text-gray-600 bg-white/50 backdrop-blur-sm border border-gray-200/50 px-4 py-2.5 rounded-xl shadow-sm hover:shadow-md transition-all cursor-default">
-                    <MapPin size={16} className="text-emerald-600" />
-                    <span className="font-medium">TSF City Market (Marcory)</span>
-                </div>
+                <SiteSwitcher sites={sites} />
             </div>
 
             <div className="flex-1 max-w-xl mx-8 hidden sm:block">

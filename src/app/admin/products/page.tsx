@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { prisma } from "@/lib/db";
-import { Plus, Search, Filter, Package, Tag, Barcode, Layers, Globe, ChevronLeft, ChevronRight, Edit2 } from 'lucide-react';
+import { Plus, Search, Filter, Package, Tag, Barcode, Layers, Globe, ChevronLeft, ChevronRight, Edit2, Copy } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -211,7 +211,22 @@ function ProductRow({ product }: { product: any }) {
                 </span>
             </td>
             <td className="py-6 px-8 text-right">
-                {/* Actions */}
+                <div className="flex items-center justify-end gap-2">
+                    <Link
+                        href={`/admin/products/new?cloneId=${product.id}`}
+                        className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                        title="Clone Product"
+                    >
+                        <Copy size={18} />
+                    </Link>
+                    <Link
+                        href={`/admin/products/${product.id}/edit`}
+                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                        title="Edit Product"
+                    >
+                        <Edit2 size={18} />
+                    </Link>
+                </div>
             </td>
         </tr>
     );

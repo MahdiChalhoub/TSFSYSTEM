@@ -6,14 +6,17 @@ import { TopHeader } from '@/components/admin/TopHeader';
 import { TabNavigator } from '@/components/admin/TabNavigator';
 
 import { Outfit } from 'next/font/google';
+import { getSites } from '@/app/actions/sites';
 
 const outfit = Outfit({ subsets: ['latin'] });
 
-export default function AdminLayout({
+export default async function AdminLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
+    const sites = await getSites();
+
     return (
         <html lang="en" suppressHydrationWarning>
             <body className={outfit.className}>
@@ -25,7 +28,7 @@ export default function AdminLayout({
                         {/* Right Panel: Content */}
                         <div className="flex-1 flex flex-col min-w-0">
                             {/* 1. Global Header (Search, Profile) */}
-                            <TopHeader />
+                            <TopHeader sites={sites} />
 
                             {/* 2. Tab Navigation Bar */}
                             <TabNavigator />

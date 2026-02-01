@@ -9,7 +9,7 @@ import { getAttributesByCategory } from '@/app/actions/attributes';
 
 import { CategorySelector } from '@/components/admin/CategorySelector';
 
-export default function AddProductForm({ categories, units, brands, countries, namingRule }: { categories: any[], units: any[], brands: any[], countries: any[], namingRule: ProductNamingRule }) {
+export default function AddProductForm({ categories, units, brands, countries, namingRule, initialData }: { categories: any[], units: any[], brands: any[], countries: any[], namingRule: ProductNamingRule, initialData?: any }) {
     const initialState = { message: '', errors: {} };
     // useActionState returns [state, formAction, isPending]
     const [state, formAction, isPending] = useActionState(createProduct, initialState);
@@ -20,7 +20,15 @@ export default function AddProductForm({ categories, units, brands, countries, n
         return `PRD-${timestamp}`;
     };
 
-    const [selectedBrandId, setSelectedBrandId] = useState('');
+    const [selectedBrandId, setSelectedBrandId] = useState(initialData?.brandId ? String(initialData.brandId) : '');
+    const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(initialData?.categoryId || null);
+
+    // Initial effect to populate form if cloning
+    useEffect(() => {
+        if (initialData) {
+            // We might need to manually trigger some DOM updates if components are uncontrolled
+        }
+    }, [initialData]);
 
     // Filtered brands based on selected category
     const [filteredBrands, setFilteredBrands] = useState(brands);
@@ -34,7 +42,6 @@ export default function AddProductForm({ categories, units, brands, countries, n
     })();
 
     // Category & Parfum Logic
-    const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
     const [filteredAttributes, setFilteredAttributes] = useState<any[]>([]);
 
     // Filter brands and attributes when category changes
@@ -274,7 +281,7 @@ export default function AddProductForm({ categories, units, brands, countries, n
                                     nameInput.value = finalName;
                                 }} className="text-xs text-blue-600 font-medium hover:underline">Auto-Format</button>
                             </div>
-                            <input name="name" type="text" className="w-full input-field" placeholder="e.g. Organic Bananas" required />
+                            <input name="name" type="text" className="w-full input-field" placeholder="e.g. Organic Bananas" required defaultValue={initialData?.name} />
                             {state.errors?.name && <p className="text-red-500 text-xs mt-1">{state.errors.name}</p>}
                         </div>
                     </div>
@@ -293,15 +300,37 @@ export default function AddProductForm({ categories, units, brands, countries, n
                                     input.value = generateSku();
                                 }} className="text-xs text-blue-600 font-medium">Auto-Generate</button>
                             </div>
-                            <input name="sku" type="text" className="w-full input-field font-mono" placeholder="PRD-000123" required />
+                            <input name="sku" type="text" className="w-full input-field font-mono" placeholder="PRD-000123" required defaultValue={initialData?.sku} />
                             {state.errors?.sku && <p className="text-red-500 text-xs mt-1">{state.errors.sku}</p>}
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Barcode</label>
                             <div className="flex gap-2">
-                                <input name="barcode" type="text" className="w-full input-field font-mono" placeholder="Scan barcode..." />
-                                <button type="button" className="px-3 py-2 bg-gray-100 rounded-lg text-gray-600">📷</button>
+                                <input name="barcode" type="text" className="w-full input-field font-mono" placeholder="Scan barcode..." defaultValue={initialData?.barcode} />
+                                <button
+                                    type="button"
+                                    onClick={async () => {
+                                        const btn = document.getElementById('gen-btn');
+                                        if (btn) btn.innerText = '...';
+
+                                        // Dynamic import or call action
+                                        const { generateNewBarcodeAction } = await import('@/app/actions/barcode-settings');
+                                        const res = await generateNewBarcodeAction();
+
+                                        if (res.success && res.code) {
+                                            const input = document.getElementsByName('barcode')[0] as HTMLInputElement;
+                                            input.value = res.code;
+                                        } else {
+                                            alert('Failed to generate: ' + res.error);
+                                        }
+                                        if (btn) btn.innerText = 'Generate';
+                                    }}
+                                    id="gen-btn"
+                                    className="px-3 py-2 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-semibold hover:bg-emerald-200 transition-colors"
+                                >
+                                    Generate
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -314,25 +343,25 @@ export default function AddProductForm({ categories, units, brands, countries, n
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Cost Price ($)</label>
-                            <input name="costPrice" type="number" step="0.01" className="w-full input-field" defaultValue="0.00" />
+                            <input name="costPrice" type="number" step="0.01" className="w-full input-field" defaultValue={initialData?.costPrice || "0.00"} />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Selling Price ($)</label>
-                            <input name="basePrice" type="number" step="0.01" className="w-full input-field font-bold text-green-700" defaultValue="0.00" />
+                            <input name="basePrice" type="number" step="0.01" className="w-full input-field font-bold text-green-700" defaultValue={initialData?.basePrice || "0.00"} />
                         </div>
                     </div>
 
                     <div className="mt-4 grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Tax Rate</label>
-                            <select name="taxRate" className="w-full input-field">
+                            <select name="taxRate" className="w-full input-field" defaultValue={initialData?.taxRate || "0"}>
                                 <option value="0">0% (Exempt)</option>
                                 <option value="0.11">11% (Standard)</option>
                                 <option value="0.18">18% (Luxury)</option>
                             </select>
                         </div>
                         <div className="flex items-center mt-6">
-                            <input type="checkbox" name="isTaxIncluded" id="taxInc" className="w-4 h-4 text-green-600 rounded" defaultChecked />
+                            <input type="checkbox" name="isTaxIncluded" id="taxInc" className="w-4 h-4 text-green-600 rounded" defaultChecked={initialData?.isTaxIncluded ?? true} />
                             <label htmlFor="taxInc" className="ml-2 text-sm text-gray-700">Tax Included in Price?</label>
                         </div>
                     </div>
@@ -345,12 +374,12 @@ export default function AddProductForm({ categories, units, brands, countries, n
                     <div className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Min Stock Level (Alert)</label>
-                            <input name="minStockLevel" type="number" className="w-full input-field" defaultValue="10" />
+                            <input name="minStockLevel" type="number" className="w-full input-field" defaultValue={initialData?.minStockLevel || "10"} />
                         </div>
 
                         <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-100">
                             <div className="flex items-center">
-                                <input type="checkbox" name="isExpiryTracked" id="exp" className="w-4 h-4 text-yellow-600 rounded" />
+                                <input type="checkbox" name="isExpiryTracked" id="exp" className="w-4 h-4 text-yellow-600 rounded" defaultChecked={initialData?.isExpiryTracked} />
                                 <label htmlFor="exp" className="ml-2 text-sm font-medium text-gray-800">Track Expiry Dates?</label>
                             </div>
                             <p className="text-xs text-gray-500 mt-1 ml-6">Enabling this checks dates on every receipt/transfer.</p>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Plus, Search, Filter, X, Edit2, ChevronDown, ChevronRight, LayoutGrid, LayoutList, Factory, Sparkles, Globe } from "lucide-react";
 import { getAttributeHierarchy } from '@/app/actions/attributes';
 import { AttributeFormModal } from './AttributeFormModal';
@@ -46,13 +47,22 @@ export function AttributeManager({ attributes, categories }: AttributeManagerPro
                     <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-2">Attributes</h1>
                     <p className="text-gray-500">Manage scents, flavors, and other variant attributes.</p>
                 </div>
-                <button
-                    onClick={handleCreate}
-                    className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-emerald-900/20 hover:-translate-y-0.5 transition-all flex items-center gap-2"
-                >
-                    <Plus size={20} />
-                    <span>Add Attribute</span>
-                </button>
+                <div className="flex gap-3">
+                    <Link
+                        href="/admin/inventory/maintenance?tab=attribute"
+                        className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-emerald-600 px-4 py-3 rounded-xl font-semibold shadow-sm transition-all flex items-center gap-2"
+                    >
+                        <Edit2 size={20} />
+                        <span>Reorganize</span>
+                    </Link>
+                    <button
+                        onClick={handleCreate}
+                        className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-emerald-900/20 hover:-translate-y-0.5 transition-all flex items-center gap-2"
+                    >
+                        <Plus size={20} />
+                        <span>Add Attribute</span>
+                    </button>
+                </div>
             </div>
 
             <div className="card-premium p-6">
