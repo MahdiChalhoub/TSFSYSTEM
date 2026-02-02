@@ -1,7 +1,7 @@
 'use server';
 
-import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { erpFetch } from "@/lib/erp-api"
 
 export type UnitState = {
     message?: string;
@@ -18,7 +18,6 @@ export async function createUnit(prevState: UnitState, formData: FormData): Prom
     const baseUnitId = formData.get('baseUnitId') ? parseInt(formData.get('baseUnitId') as string) : null;
     const conversionFactor = formData.get('conversionFactor') ? parseFloat(formData.get('conversionFactor') as string) : 1.0;
 
-    // New Fields
     const shortName = (formData.get('shortName') as string) || null;
     const type = (formData.get('type') as string) || 'COUNT';
     const allowFraction = formData.get('allowFraction') === 'on';
@@ -40,31 +39,33 @@ export async function createUnit(prevState: UnitState, formData: FormData): Prom
     }
 
     try {
-        await prisma.unit.create({
-            data: {
+        await erpFetch('units/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
                 name,
                 code: code.toUpperCase(),
-                baseUnitId,
-                conversionFactor,
-                shortName,
+                base_unit: baseUnitId,
+                conversion_factor: conversionFactor,
+                short_name: shortName,
                 type,
-                allowFraction,
-                needsBalance,
-                balanceCodeStructure
-            }
+                allow_fraction: allowFraction,
+                needs_balance: needsBalance,
+                balance_code_structure: balanceCodeStructure
+            })
         });
 
         revalidatePath('/admin/inventory/units');
         return { message: 'success' };
-    } catch (e) {
-        return { message: 'Database Error: Failed to create unit.' };
+    } catch (e: any) {
+        return { message: 'Database Error: ' + (e.message || 'Failed to create unit.') };
     }
 }
 
 export async function deleteUnit(id: number) {
     try {
-        await prisma.unit.delete({
-            where: { id }
+        await erpFetch(`units/${id}/`, {
+            method: 'DELETE'
         });
         revalidatePath('/admin/inventory/units');
         return { success: true };
@@ -79,7 +80,6 @@ export async function updateUnit(id: number, prevState: UnitState, formData: For
     const conversionFactor = formData.get('conversionFactor') ? parseFloat(formData.get('conversionFactor') as string) : 1.0;
     const baseUnitId = formData.get('baseUnitId') ? parseInt(formData.get('baseUnitId') as string) : null;
 
-    // New Fields
     const shortName = (formData.get('shortName') as string) || null;
     const type = (formData.get('type') as string) || 'COUNT';
     const allowFraction = formData.get('allowFraction') === 'on';
@@ -94,19 +94,20 @@ export async function updateUnit(id: number, prevState: UnitState, formData: For
     }
 
     try {
-        await prisma.unit.update({
-            where: { id },
-            data: {
+        await erpFetch(`units/${id}/`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
                 name,
                 code: code.toUpperCase(),
-                conversionFactor,
-                baseUnitId,
-                shortName,
+                conversion_factor: conversionFactor,
+                base_unit: baseUnitId,
+                short_name: shortName,
                 type,
-                allowFraction,
-                needsBalance,
-                balanceCodeStructure
-            }
+                allow_fraction: allowFraction,
+                needs_balance: needsBalance,
+                balance_code_structure: balanceCodeStructure
+            })
         });
         revalidatePath('/admin/inventory/units');
         return { message: 'success' };

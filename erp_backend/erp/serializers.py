@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import (
     Organization, Site, FinancialAccount, FiscalYear, 
     FiscalPeriod, JournalEntry, JournalEntryLine, ChartOfAccount,
-    Product, Warehouse, Inventory, InventoryMovement
+    Product, Warehouse, Inventory, InventoryMovement, Unit
 )
 
 class OrganizationSerializer(serializers.ModelSerializer):
@@ -76,4 +76,9 @@ class JournalEntrySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = JournalEntry
+        fields = '__all__'
+
+class UnitSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Unit
         fields = '__all__'
