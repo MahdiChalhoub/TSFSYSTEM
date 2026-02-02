@@ -1,54 +1,62 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest, NextResponse } from 'next/server';
+
+const DJANGO_URL = process.env.DJANGO_URL || 'http://localhost:8000';
 
 /**
- * API GATEWAY PROXY
- * Redirects ERP requests to the Django backend while handling authentication and tenant context.
+ * Next.js ERP Proxy
+ * Forwards requests to the Django Backend and injects tenant context.
  */
-export async function POST(req: NextRequest) {
-    const { pathname, search } = new URL(req.url)
-    const djangoUrl = process.env.DJANGO_API_URL || 'http://localhost:8000'
-
-    // Extract endpoint from proxy path
-    // e.g. /api/erp/proxy/finance/ledger -> finance/ledger
-    const endpoint = pathname.replace('/api/erp/proxy/', '')
-
-    const body = await req.json()
-
-    try {
-        const response = await fetch(`${djangoUrl}/api/${endpoint}${search}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                // Future: Add JWT or internal token from NextAuth session
-                'X-Tenant-Slug': body.tenantSlug || 'default'
-            },
-            body: JSON.stringify(body)
-        })
-
-        const data = await response.json()
-        return NextResponse.json(data, { status: response.status })
-    } catch (error) {
-        console.error("ERP Proxy Error:", error)
-        return NextResponse.json({ error: "Failed to connect to ERP Core" }, { status: 502 })
-    }
+export async function GET(req: NextRequest, { params }: { params: { path: string[] } }) {
+    return proxyRequest(req, params.path);
 }
 
-export async function GET(req: NextRequest) {
-    const { pathname, search } = new URL(req.url)
-    const djangoUrl = process.env.DJANGO_API_URL || 'http://localhost:8000'
-    const endpoint = pathname.replace('/api/erp/proxy/', '')
+export async function POST(req: NextRequest, { params }: { params: { path: string[] } }) {
+    return proxyRequest(req, params.path);
+}
+
+export async function PUT(req: NextRequest, { params }: { params: { path: string[] } }) {
+    return proxyRequest(req, params.path);
+}
+
+export async function PATCH(req: NextRequest, { params }: { params: { path: string[] } }) {
+    return proxyRequest(req, params.path);
+}
+
+export async function DELETE(req: NextRequest, { params }: { params: { path: string[] } }) {
+    return proxyRequest(req, params.path);
+}
+
+async function proxyRequest(req: NextRequest, pathParts: string[]) {
+    const apiPath = pathParts.join('/');
+    const searchParams = req.nextUrl.searchParams.toString();
+    const targetUrl = `${DJANGO_URL}/api/${apiPath}${searchParams ? `?${searchParams}` : ''}`;
+
+    // Extract tenant context from headers (injected by middleware or previous logic)
+    const tenantId = req.headers.get('x-tenant-id');
+    const tenantSlug = req.headers.get('x-tenant-slug');
+
+    const headers = new Headers(req.headers);
+    headers.set('Host', new URL(DJANGO_URL).host);
+
+    // Inject tenant info for Django isolation
+    if (tenantId) headers.set('X-Tenant-Id', tenantId);
+    if (tenantSlug) headers.set('X-Tenant-Slug', tenantSlug);
 
     try {
-        const response = await fetch(`${djangoUrl}/api/${endpoint}${search}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
+        const response = await fetch(targetUrl, {
+            method: req.method,
+            headers: headers,
+            body: req.method !== 'GET' ? await req.blob() : undefined,
+        });
 
-        const data = await response.json()
-        return NextResponse.json(data, { status: response.status })
+        const data = await response.blob();
+
+        return new NextResponse(data, {
+            status: response.status,
+            headers: response.headers,
+        });
     } catch (error) {
-        return NextResponse.json({ error: "Failed to connect to ERP Core" }, { status: 502 })
+        console.error('[ERP_PROXY] Forwarding failed:', error);
+        return NextResponse.json({ error: 'ERP_BACKEND_UNREACHABLE' }, { status: 502 });
     }
 }
