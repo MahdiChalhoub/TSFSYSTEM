@@ -331,6 +331,10 @@ class JournalEntryLine(TenantModel):
         db_table = 'JournalEntryLine'
 
 class Transaction(TenantModel):
+    TRANSACTION_TYPES = (
+        ('IN', 'Inbound/Deposit'),
+        ('OUT', 'Outbound/Withdrawal'),
+    )
     account = models.ForeignKey(FinancialAccount, on_delete=models.CASCADE, related_name='transactions')
     site = models.ForeignKey(Site, on_delete=models.CASCADE, null=True, blank=True)
     amount = models.DecimalField(max_digits=15, decimal_places=2)

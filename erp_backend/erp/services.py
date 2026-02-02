@@ -1,9 +1,3 @@
-from .models import (
-    FinancialAccount, ChartOfAccount, Site, JournalEntry, 
-    JournalEntryLine, FiscalYear, FiscalPeriod, Inventory, 
-    Warehouse, InventoryMovement, Product, Organization,
-    SystemSettings
-)
 from django.db import transaction
 from django.utils import timezone
 from django.core.exceptions import ValidationError
@@ -15,6 +9,7 @@ import json
 class ConfigurationService:
     @staticmethod
     def get_posting_rules(organization):
+        from .models import SystemSettings
         """
         Loads the finance_posting_rules from SystemSettings.
         """
@@ -46,6 +41,7 @@ class ConfigurationService:
 class InventoryService:
     @staticmethod
     def receive_stock(organization, product, warehouse, quantity, cost_price_ht, reference="RECEPTION"):
+        from .models import Inventory, InventoryMovement
         """
         Receives stock, updates AMC, and creates Journal Entry.
         """
@@ -54,7 +50,6 @@ class InventoryService:
         inbound_value = inbound_qty * inbound_cost
 
         with transaction.atomic():
-            # ... (AMC logic)
             # 1. AMC
             current_total_qty = Inventory.objects.filter(
                 organization=organization,
@@ -97,6 +92,7 @@ class InventoryService:
             susp_acc = rules.get('suspense', {}).get('reception')
 
             if inv_acc and susp_acc:
+                from .services import LedgerService
                 LedgerService.create_journal_entry(
                     organization=organization,
                     transaction_date=timezone.now(),
@@ -124,6 +120,7 @@ class InventoryService:
 
     @staticmethod
     def adjust_stock(organization, product, warehouse, quantity, reason, reference=None):
+        from .models import Inventory, InventoryMovement
         """
         Manual adjustment.
         """
@@ -137,10 +134,6 @@ class InventoryService:
                 product=product
             )
             
-            if adj_qty < 0 and (inventory.quantity + adj_qty) < 0:
-                # Optional: Strict check for negative stock
-                pass
-
             inventory.quantity += adj_qty
             inventory.save()
 
@@ -161,6 +154,7 @@ class LedgerService:
     @staticmethod
     def create_journal_entry(organization, transaction_date, description, lines, reference=None, 
                              status='DRAFT', scope='OFFICIAL', site_id=None):
+        from .models import FiscalPeriod, JournalEntry, JournalEntryLine
         """
         Creates a JournalEntry with multiple lines.
         Ensures total debit equals total credit.
@@ -227,7 +221,6 @@ class LedgerService:
                 account = line.account
                 
                 account.balance += net_change
-                # If we add balance_official later, we update it here if scope == 'OFFICIAL'
                 account.save()
 
             entry.status = 'POSTED'
@@ -235,11 +228,13 @@ class LedgerService:
             entry.save()
             
         return True
+
+class FinancialAccountService:
     @staticmethod
     def create_account(organization, name, type, currency, site_id=None):
+        from .models import ChartOfAccount, FinancialAccount
         """
         Creates a FinancialAccount and its corresponding ChartOfAccount (Ledger).
-        Replicates logic from Next.js actions.ts
         """
         # 1. Find Parent COA by sub_type
         parent = ChartOfAccount.objects.filter(
@@ -278,7 +273,7 @@ class LedgerService:
                 organization=organization,
                 code=next_code,
                 name=name,
-                type='ASSET', # Root type for Financial Accounts
+                type='ASSET',
                 parent=parent,
                 is_system_only=True,
                 is_active=True,
