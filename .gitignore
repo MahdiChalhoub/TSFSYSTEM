@@ -41,3 +41,21 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# database
+/pg_data/
+*.sqlite
+*.sqlite-journal
+
+# django migrations (optional, usually kept, but for this project we might want to ignore local ones if they conflict)
+# actually, keep migrations but ignore __pycache__
+__pycache__/
+*.py[cod]
+*$py.class
+
+# local development
+.agent/
+.gemini/
+scripts/*.js
+scripts/*.ts
+!scripts/test_*.ts
