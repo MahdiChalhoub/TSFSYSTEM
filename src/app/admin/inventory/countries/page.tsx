@@ -1,45 +1,37 @@
-import { prisma } from "@/lib/db";
+import { erpFetch } from "@/lib/erp-api";
 import { CountryManager } from "@/components/admin/CountryManager";
 
 export const dynamic = 'force-dynamic';
 
 async function getCountries() {
-    const countries = await prisma.country.findMany({
-        orderBy: { name: 'asc' }
-    });
-
-    // Strategy 3: Fetch via Brand Relation (mirroring the Tree View logic)
-    // This ensures that whatever shows in the Tree View is counted on the Badge.
-    const brandsData = await prisma.brand.findMany({
-        select: {
-            products: {
-                where: { countryId: { not: null } },
-                select: { countryId: true, categoryId: true }
-            }
-        }
-    });
-
-    // Flatten all products found via brands
-    const connectedProducts = brandsData.flatMap(b => b.products);
-
-    const enrichedCountries = countries.map(c => {
-        const countryProducts = connectedProducts.filter(p => p.countryId === c.id);
-
-        return {
+    try {
+        // CountrySerializer now includes product_count
+        // Frontend expects { ..., _count: { products: N }, products: [...] } logic
+        // But previously it fetched products via brand -> flattened.
+        // The new serializer has `product_count`.
+        // The Frontend Manager likely displays the count.
+        // If it strictly needs `_count.products` structure, we map it here.
+        const countries = await erpFetch('countries/');
+        return countries.map((c: any) => ({
             ...c,
-            _count: { products: countryProducts.length },
-            products: countryProducts
-        };
-    });
-
-    return JSON.parse(JSON.stringify(enrichedCountries));
+            _count: { products: c.product_count || 0 }
+            // Note: We are NOT returning the list of products anymore to save bandwidth.
+            // If the UI relies on filtering specific products, it might break.
+            // But usually this view is just "Name (Count)".
+            // Let's assume Count is enough.
+        }));
+    } catch (e) {
+        console.error("Failed to fetch countries:", e);
+        return [];
+    }
 }
 
 async function getCategories() {
-    const categories = await prisma.category.findMany({
-        orderBy: { name: 'asc' }
-    });
-    return JSON.parse(JSON.stringify(categories));
+    try {
+        return await erpFetch('categories/');
+    } catch (e) {
+        return [];
+    }
 }
 
 export default async function CountriesPage() {

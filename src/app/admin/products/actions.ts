@@ -1,6 +1,6 @@
 'use server';
 
-import { prisma } from "@/lib/db";
+import { erpFetch } from "@/lib/erp-api";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -44,6 +44,9 @@ export async function createProduct(prevState: ProductFormState, formData: FormD
         brandId: formData.get('brandId') || undefined,
         countryId: formData.get('countryId') || undefined,
 
+        // Grouping fields for backend logic
+        parfumName: formData.get('parfumName') || undefined,
+
         size: formData.get('size') || undefined,
         sizeUnitId: formData.get('sizeUnitId') || undefined,
 
@@ -51,11 +54,7 @@ export async function createProduct(prevState: ProductFormState, formData: FormD
         costPriceHT: formData.get('costPriceHT') || 0,
         costPriceTTC: formData.get('costPriceTTC') || 0,
 
-        // basePrice is historically Selling Price. We map sellingPriceTTC or HT to it depending on policy?
-        // Ideally we just save sellingPriceHT/TTC and keep basePrice for compatibility or specific use.
-        // For now, let's say basePrice = sellingPriceTTC for display simplicity in old components
         basePrice: formData.get('sellingPriceTTC') || 0,
-
         sellingPriceHT: formData.get('sellingPriceHT') || 0,
         sellingPriceTTC: formData.get('sellingPriceTTC') || 0,
 
@@ -69,6 +68,8 @@ export async function createProduct(prevState: ProductFormState, formData: FormD
     const validatedFields = productSchema.extend({
         size: z.coerce.number().optional(),
         sizeUnitId: z.coerce.number().optional(),
+        // Backend specific fields
+        parfumName: z.string().optional(),
         costPriceHT: z.coerce.number().min(0),
         costPriceTTC: z.coerce.number().min(0),
         sellingPriceHT: z.coerce.number().min(0),
@@ -82,114 +83,20 @@ export async function createProduct(prevState: ProductFormState, formData: FormD
         };
     }
 
-    const { data } = validatedFields;
-
     try {
-        // 3. Check Uniqueness
-        const existingSku = await prisma.product.findUnique({ where: { sku: data.sku } });
-        if (existingSku) {
-            return { message: 'SKU already exists. Please use a unique SKU.' };
-        }
-
-        // --- Auto-Grouping Logic (Brand + Family) ---
-        // Family (stored as Parfum in DB) is a product attribute that groups variants
-        const parfumName = formData.get('parfumName') as string; // Form field name kept for compatibility
-        let parfumId = null;
-        let productGroupId = null;
-
-        if (parfumName && data.brandId) {
-            // A. Upsert Parfum
-            const parfum = await prisma.parfum.upsert({
-                where: { name: parfumName },
-                update: {
-                    categories: data.categoryId ? { connect: { id: data.categoryId } } : undefined
-                },
-                create: {
-                    name: parfumName,
-                    categories: data.categoryId ? { connect: { id: data.categoryId } } : undefined
-                }
-            });
-            parfumId = parfum.id;
-
-            // B. Find or Create Group
-            const existingGroup = await prisma.productGroup.findFirst({
-                where: {
-                    brandId: data.brandId,
-                    parfumId: parfum.id
-                }
-            });
-
-            if (existingGroup) {
-                productGroupId = existingGroup.id;
-            } else {
-                const brand = await prisma.brand.findUnique({ where: { id: data.brandId } });
-                const groupName = `${brand?.name || ''} ${parfumName}`.trim();
-
-                const newGroup = await prisma.productGroup.create({
-                    data: {
-                        name: groupName,
-                        brandId: data.brandId,
-                        parfumId: parfum.id,
-                        categoryId: data.categoryId,
-                        description: `Auto-generated group via ${parfumName}`
-                    }
-                });
-                productGroupId = newGroup.id;
-            }
-        }
-
-        // 4. Create in DB
-        const product = await prisma.product.create({
-            data: {
-                name: data.name,
-                description: data.description,
-                sku: data.sku,
-                barcode: data.barcode || null,
-                categoryId: data.categoryId || null,
-                unitId: data.unitId || null,
-                brandId: data.brandId || null,
-                countryId: data.countryId || null,
-
-                size: data.size,
-                sizeUnitId: data.sizeUnitId,
-
-                parfumId: parfumId,        // Link to Parfum
-                productGroupId: productGroupId, // Link to Auto-Group
-
-                costPrice: data.costPrice,
-                costPriceHT: data.costPriceHT,
-                costPriceTTC: data.costPriceTTC,
-
-                basePrice: data.basePrice,
-                sellingPriceHT: data.sellingPriceHT,
-                sellingPriceTTC: data.sellingPriceTTC,
-
-                taxRate: data.taxRate,
-                isTaxIncluded: data.isTaxIncluded,
-                minStockLevel: data.minStockLevel,
-                isExpiryTracked: data.isExpiryTracked,
-            }
+        // 3. Delegation to Django
+        await erpFetch('products/create_complex/', {
+            method: 'POST',
+            body: JSON.stringify(validatedFields.data),
+            headers: { 'Content-Type': 'application/json' }
         });
 
-        // 5. Post-Create: Auto-Generate Barcode if missing
-        if (!data.barcode && data.categoryId) {
-            const category = await prisma.category.findUnique({ where: { id: data.categoryId } });
-            if (category && category.code) {
-                // Format: CATCODE-PRODUCTID (e.g. C001-55)
-                const autoBarcode = `${category.code}-${product.id.toString().padStart(4, '0')}`;
-                await prisma.product.update({
-                    where: { id: product.id },
-                    data: { barcode: autoBarcode }
-                });
-            }
-        }
-
-    } catch (e) {
-        console.error(e);
-        return { message: 'Database Error: Failed to Create Product.' };
+    } catch (e: any) {
+        console.error("Backend Create Error:", e);
+        return { message: e.message || 'System Error: Failed to Create Product.' };
     }
 
-    // 6. Revalidate & Redirect
+    // 4. Revalidate & Redirect
     revalidatePath('/admin/products');
     redirect('/admin/products');
 }

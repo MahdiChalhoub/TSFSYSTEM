@@ -1,20 +1,16 @@
-import { prisma } from "@/lib/db";
+import { erpFetch } from "@/lib/erp-api";
 import WarehouseManager from "./manager";
 
 export const dynamic = 'force-dynamic';
 
 async function getWarehouses() {
-    return await prisma.warehouse.findMany({
-        include: {
-            _count: {
-                select: { inventory: true }
-            },
-            site: {
-                select: { name: true }
-            }
-        },
-        orderBy: { name: 'asc' }
-    });
+    try {
+        // WarehouseSerializer now includes site_name and inventory_count
+        return await erpFetch('warehouses/');
+    } catch (error) {
+        console.error("Failed to fetch warehouses:", error);
+        return [];
+    }
 }
 
 export default async function WarehousesPage() {

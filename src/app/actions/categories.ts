@@ -1,6 +1,6 @@
 'use server';
 
-import { prisma } from "@/lib/db";
+import { erpFetch } from "@/lib/erp-api";
 import { revalidatePath } from "next/cache";
 
 export type CategoryState = {
@@ -21,19 +21,22 @@ export async function createCategory(prevState: CategoryState, formData: FormDat
     }
 
     try {
-        await prisma.category.create({
-            data: {
+        await erpFetch('categories/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
                 name,
-                parentId,
+                parent: parentId, // DRF expects PK of FK. Field name 'parent' in model.
                 code,
-                shortName
-            }
+                short_name: shortName
+            })
         });
 
         revalidatePath('/admin/inventory/categories');
         return { message: 'success' };
     } catch (e: any) {
-        if (e.code === 'P2002') {
+        // Map Django error to frontend friendly
+        if (e.message?.includes("code")) { // Simple heuristic
             return { message: 'Category code must be unique' };
         }
         return { message: 'Failed to create category' };
@@ -47,34 +50,32 @@ export async function updateCategory(id: number, prevState: CategoryState, formD
     const shortName = (formData.get('shortName') as string) || null;
 
     try {
-        // Prevent setting parent to itself
         if (parentId === id) {
             return { message: 'Category cannot be its own parent' };
         }
 
-        await prisma.category.update({
-            where: { id },
-            data: {
+        await erpFetch(`categories/${id}/`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
                 name,
-                parentId,
+                parent: parentId,
                 code,
-                shortName
-            }
+                short_name: shortName
+            })
         });
+
         revalidatePath('/admin/inventory/categories');
         return { message: 'success' };
     } catch (e: any) {
-        if (e.code === 'P2002') {
-            return { message: 'Category code must be unique' };
-        }
         return { message: 'Failed to update category' };
     }
 }
 
 export async function deleteCategory(id: number) {
     try {
-        await prisma.category.delete({
-            where: { id }
+        await erpFetch(`categories/${id}/`, {
+            method: 'DELETE'
         });
         revalidatePath('/admin/inventory/categories');
         return { success: true };
@@ -84,25 +85,18 @@ export async function deleteCategory(id: number) {
 }
 
 export async function getCategoryWithCounts() {
-    return await prisma.category.findMany({
-        orderBy: { name: 'asc' },
-        include: {
-            _count: {
-                select: { products: true }
-            }
-        }
-    });
+    return await erpFetch('categories/with_counts/');
 }
 
 export async function moveProducts(productIds: number[], targetCategoryId: number) {
     try {
-        await prisma.product.updateMany({
-            where: {
-                id: { in: productIds }
-            },
-            data: {
-                categoryId: targetCategoryId
-            }
+        await erpFetch('categories/move_products/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                productIds,
+                targetCategoryId
+            })
         });
 
         revalidatePath('/admin/inventory/categories/maintenance');
