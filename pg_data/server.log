@@ -316,3 +316,5 @@
 2026-02-02 12:01:44.116 GMT [22240] ERROR:  column Order.totalAmount does not exist at character 40
 2026-02-02 12:01:44.116 GMT [22240] HINT:  Perhaps you meant to reference the column "Order.total_amount".
 2026-02-02 12:01:44.116 GMT [22240] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 12:03:51.196 GMT [16036] LOG:  checkpoint starting: time
+2026-02-02 12:03:58.967 GMT [16036] LOG:  checkpoint complete: wrote 72 buffers (0.4%), wrote 2 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=7.683 s, sync=0.070 s, total=7.772 s; sync files=64, longest=0.004 s, average=0.002 s; distance=179 kB, estimate=1634 kB; lsn=0/2145BC8, redo lsn=0/2145B38

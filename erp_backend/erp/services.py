@@ -317,4 +317,98 @@ class FinancialAccountService:
             suffix = (int(last.code.split('.')[-1]) + 1) if last else 1
             code = f"{parent.code}.{str(suffix).zfill(3)}"
             acc = ChartOfAccount.objects.create(organization=organization, code=code, name=name, type='ASSET', parent=parent, is_system_only=True, is_active=True, balance=Decimal('0.00'))
-            return FinancialAccount.objects.create(organization=organization, name=name, type=type, currency=currency, site_id=site_id, ledger_account=acc)
+            return FinancialAccount.objects.create(
+                organization=organization, name=name, type=type, currency=currency,
+                site_id=site_id, ledger_account=acc
+            )
+
+class PurchaseService:
+    @staticmethod
+    def authorize_po(organization, order_id):
+        from .models import Order
+        with transaction.atomic():
+            order = Order.objects.get(id=order_id, organization=organization, type='PURCHASE')
+            if order.status != 'DRAFT':
+                raise ValidationError(f"Cannot authorize order in status {order.status}")
+            order.status = 'AUTHORIZED'
+            order.save()
+            return order
+
+    @staticmethod
+    def receive_po(organization, order_id, warehouse_id, is_tax_recoverable=True):
+        from .models import Order, Warehouse
+        """
+        Processes physical reception of all items in the PO.
+        Updates stock and creates Accrued Reception ledger entries.
+        """
+        with transaction.atomic():
+            order = Order.objects.get(id=order_id, organization=organization, type='PURCHASE')
+            warehouse = Warehouse.objects.get(id=warehouse_id, organization=organization)
+            
+            if order.status not in ['AUTHORIZED', 'PARTIAL_RECEIVED']:
+                raise ValidationError(f"Order status {order.status} is not eligible for reception.")
+
+            for line in order.lines.all():
+                InventoryService.receive_stock(
+                    organization=organization,
+                    product=line.product,
+                    warehouse=warehouse,
+                    quantity=line.quantity,
+                    cost_price_ht=line.unit_price, # We assume unit_price in PO is the HT cost
+                    is_tax_recoverable=is_tax_recoverable,
+                    reference=f"PO-REC-{order.id}"
+                )
+            
+            order.status = 'RECEIVED'
+            order.save()
+            return order
+
+    @staticmethod
+    def invoice_po(organization, order_id, invoice_number, invoice_date=None):
+        from .models import Order
+        """
+        Converts the 'Accrued Reception' liability into a formal 'Accounts Payable'.
+        """
+        with transaction.atomic():
+            order = Order.objects.get(id=order_id, organization=organization, type='PURCHASE')
+            if order.status != 'RECEIVED':
+                raise ValidationError("Order must be RECEIVED before it can be INVOICED.")
+
+            rules = ConfigurationService.get_posting_rules(organization)
+            susp_acc = rules.get('suspense', {}).get('reception')
+            ap_acc = rules.get('purchases', {}).get('payable')
+
+            if not susp_acc or not ap_acc:
+                raise ValidationError("Finance mapping missing: Accrued Reception or Accounts Payable not configured.")
+
+            # Total amount to move from Suspense to AP
+            total_invoice = order.total_amount
+
+            LedgerService.create_journal_entry(
+                organization=organization,
+                transaction_date=invoice_date or timezone.now(),
+                description=f"Purchase Invoice: {invoice_number} (PO #{order.id})",
+                reference=invoice_number,
+                status='POSTED',
+                scope='OFFICIAL', # Invoices are usually official
+                site_id=order.site_id,
+                lines=[
+                    {
+                        "account_id": susp_acc,
+                        "debit": total_invoice,
+                        "credit": Decimal('0'),
+                        "description": "Clearing Accrued Reception"
+                    },
+                    {
+                        "account_id": ap_acc,
+                        "debit": Decimal('0'),
+                        "credit": total_invoice,
+                        "description": "Establishing Accounts Payable"
+                    }
+                ]
+            )
+
+            order.status = 'INVOICED'
+            order.notes = f"{order.notes or ''}\nInvoice ref: {invoice_number}".strip()
+            order.save()
+            return order
