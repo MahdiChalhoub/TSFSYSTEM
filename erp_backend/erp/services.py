@@ -236,6 +236,40 @@ class InventoryService:
         result = Inventory.objects.filter(organization=organization).aggregate(total_value=Sum(F('quantity') * F('product__cost_price')))
         return {"total_value": Decimal(str(result['total_value'] or '0')), "item_count": Inventory.objects.filter(organization=organization).count(), "timestamp": timezone.now()}
 
+    @staticmethod
+    def reduce_stock(organization, product, warehouse, quantity, reference=None):
+        from .models import Inventory, InventoryMovement
+        """
+        Reduces stock and captures AMC for COGS booking.
+        """
+        qty_to_reduce = Decimal(str(quantity))
+        current_amc = Decimal(str(product.cost_price))
+        
+        with transaction.atomic():
+            inventory = Inventory.objects.filter(
+                organization=organization,
+                warehouse=warehouse,
+                product=product
+            ).first()
+            
+            if not inventory or inventory.quantity < qty_to_reduce:
+                raise ValidationError(f"Insufficient stock for {product.name} in {warehouse.name}")
+            
+            inventory.quantity = Decimal(str(inventory.quantity)) - qty_to_reduce
+            inventory.save()
+            
+            InventoryMovement.objects.create(
+                organization=organization,
+                product=product,
+                warehouse=warehouse,
+                type='OUT',
+                quantity=qty_to_reduce,
+                cost_price=current_amc,
+                reference=reference or f"SALE-{uuid.uuid4().hex[:6].upper()}"
+            )
+            
+            return current_amc
+
 class LedgerService:
     @staticmethod
     def create_journal_entry(organization, transaction_date, description, lines, reference=None, status='DRAFT', scope='OFFICIAL', site_id=None):
@@ -411,4 +445,95 @@ class PurchaseService:
             order.status = 'INVOICED'
             order.notes = f"{order.notes or ''}\nInvoice ref: {invoice_number}".strip()
             order.save()
+            return order
+
+class POSService:
+    @staticmethod
+    def checkout(organization, user, warehouse, payment_account_id, items):
+        from .models import Order, OrderLine, Product
+        """
+        items: list of {'product_id': id, 'quantity': q, 'unit_price': p}
+        """
+        with transaction.atomic():
+            total_amount = Decimal('0')
+            total_tax = Decimal('0')
+            total_cogs = Decimal('0')
+            
+            order = Order.objects.create(
+                organization=organization,
+                user=user,
+                site=warehouse.site,
+                type='SALE',
+                status='COMPLETED'
+            )
+            
+            for item in items:
+                product = Product.objects.get(id=item['product_id'], organization=organization)
+                qty = Decimal(str(item['quantity']))
+                price = Decimal(str(item['unit_price']))
+                
+                # 1. Reduce Stock and get COGS base (AMC)
+                amc = InventoryService.reduce_stock(
+                    organization=organization,
+                    product=product,
+                    warehouse=warehouse,
+                    quantity=qty,
+                    reference=f"POS-{order.id}"
+                )
+                
+                # 2. Financial Calcs
+                tax_rate = Decimal(str(product.tva_rate))
+                item_total = qty * price
+                item_tax = item_total * tax_rate
+                item_cogs = qty * amc
+                
+                total_amount += (item_total + item_tax)
+                total_tax += item_tax
+                total_cogs += item_cogs
+                
+                # 3. Create Order Line
+                OrderLine.objects.create(
+                    organization=organization,
+                    order=order,
+                    product=product,
+                    quantity=qty,
+                    unit_price=price,
+                    tax_rate=tax_rate,
+                    total=(item_total + item_tax),
+                    unit_cost_ht=amc, # Capture current AMC
+                    effective_cost=amc
+                )
+            
+            order.total_amount = total_amount
+            order.tax_amount = total_tax
+            order.save()
+            
+            # 4. Accounting (Atomic Entry)
+            rules = ConfigurationService.get_posting_rules(organization)
+            rev_acc = rules.get('sales', {}).get('revenue')
+            inv_acc = rules.get('sales', {}).get('inventory')
+            cogs_acc = rules.get('sales', {}).get('cogs')
+            tax_acc = rules.get('purchases', {}).get('tax') # VAT Payable (often same as tax rule for simplicity here)
+
+            if not all([rev_acc, inv_acc, cogs_acc]):
+                raise ValidationError("Missing sales posting rules mapping.")
+
+            LedgerService.create_journal_entry(
+                organization=organization,
+                transaction_date=timezone.now(),
+                description=f"POS Sale #{order.id}",
+                reference=f"POS-{order.id}",
+                status='POSTED',
+                scope='INTERNAL', # POS sales update Internal but often we sync to Official too. 
+                                   # For now, let's keep consistency.
+                site_id=warehouse.site_id,
+                lines=[
+                    {"account_id": payment_account_id, "debit": total_amount, "credit": Decimal('0')}, # Dr Cash
+                    {"account_id": rev_acc, "debit": Decimal('0'), "credit": (total_amount - total_tax)}, # Cr Revenue
+                    {"account_id": tax_acc or rev_acc, "debit": Decimal('0'), "credit": total_tax}, # Cr VAT
+                    {"account_id": cogs_acc, "debit": total_cogs, "credit": Decimal('0')}, # Dr COGS
+                    {"account_id": inv_acc, "debit": Decimal('0'), "credit": total_cogs}, # Cr Inventory
+                ]
+            )
+            
             return order

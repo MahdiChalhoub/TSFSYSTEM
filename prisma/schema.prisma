@@ -9,18 +9,31 @@ datasource db {
 }
 
 model Organization {
-  id             String           @id @default(uuid()) @db.Uuid
-  name           String           @db.VarChar(255)
-  slug           String           @unique @db.VarChar(50)
-  isActive       Boolean          @map("is_active")
-  createdAt      DateTime         @map("created_at") @db.Timestamptz(6)
-  updatedAt      DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
-  contacts       Contact[]
-  Employee       Employee[]
-  InventoryLevel InventoryLevel[]
-  order          Order[]
-  orderLine      OrderLine[]
-  stockBatch     StockBatch[]
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @db.VarChar(255)
+  slug      String   @unique @db.VarChar(50)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  sites               Site[]
+  users               User[]
+  products            Product[]
+  contacts            Contact[]
+  employees           Employee[]     @relation("OrgEmployees")
+  orders              Order[]
+  stockBatches        StockBatch[]
+  inventoryLevels     InventoryLevel[]
+  orderLines          OrderLine[]
+  productGroups       ProductGroup[]
+  categories          Category[]
+  brands              Brand[]
+  parfums             Parfum[]
+  warehouses          Warehouse[]
+  roles               Role[]
+  financialAccounts   FinancialAccount[]
+  transactions        Transaction[]
+  journalEntries      JournalEntry[]
 
   @@index([slug], map: "Organization_slug_06169c56_like")
 }
@@ -34,46 +47,55 @@ model Country {
 }
 
 model Unit {
-  id                BigInt  @id @default(autoincrement())
-  code              String  @db.VarChar(50)
-  name              String  @db.VarChar(100)
-  conversion_factor Decimal @db.Decimal(15, 5)
-  organizationId    String  @map("organization_id") @db.Uuid
+  id               BigInt       @id @default(autoincrement())
+  code             String       @db.VarChar(50)
+  name             String       @db.VarChar(100)
+  conversionFactor Decimal      @map("conversion_factor") @db.Decimal(15, 5)
+  organizationId   String       @map("organization_id") @db.Uuid
+  organization     Organization @relation(fields: [organizationId], references: [id])
+  products         Product[]
 
   @@unique([code, organizationId], map: "Unit_code_organization_id_f2c47683_uniq")
   @@index([organizationId], map: "Unit_organization_id_f6938226")
 }
 
 model FinancialAccount {
-  id                BigInt  @id @default(autoincrement())
-  name              String  @db.VarChar(255)
-  type              String  @db.VarChar(20)
-  currency          String  @db.VarChar(10)
-  balance           Decimal @db.Decimal(15, 2)
-  ledger_account_id BigInt? @unique
-  organizationId    String  @map("organization_id") @db.Uuid
-  site_id           BigInt?
+  id              BigInt          @id @default(autoincrement())
+  name            String          @db.VarChar(255)
+  type            String          @db.VarChar(20)
+  currency        String          @db.VarChar(10)
+  balance         Decimal         @db.Decimal(15, 2)
+  ledgerAccountId BigInt?         @unique @map("ledger_account_id")
+  ledgerAccount   ChartOfAccount? @relation("FinancialToLedger", fields: [ledgerAccountId], references: [id])
+  organizationId  String          @map("organization_id") @db.Uuid
+  organization    Organization    @relation(fields: [organizationId], references: [id])
+  siteId          BigInt?         @map("site_id")
+  site            Site?           @relation(fields: [siteId], references: [id])
+  transactions    Transaction[]
 
-  @@unique([name, organizationId, site_id], map: "FinancialAccount_name_organization_id_site_id_f9b170ac_uniq")
+  @@unique([name, organizationId, siteId], map: "FinancialAccount_name_organization_id_site_id_f9b170ac_uniq")
   @@index([organizationId], map: "FinancialAccount_organization_id_4590eee8")
-  @@index([site_id], map: "FinancialAccount_site_id_a753dd62")
+  @@index([siteId], map: "FinancialAccount_site_id_a753dd62")
 }
 
 model Transaction {
-  id             BigInt   @id @default(autoincrement())
-  amount         Decimal  @db.Decimal(15, 2)
-  type           String   @db.VarChar(10)
+  id             BigInt       @id @default(autoincrement())
+  amount         Decimal      @db.Decimal(15, 2)
+  type           String       @db.VarChar(10)
   description    String?
-  reference_id   String?  @db.VarChar(100)
-  scope          String   @db.VarChar(20)
-  createdAt      DateTime @map("created_at") @db.Timestamptz(6)
-  account_id     BigInt
-  organizationId String   @map("organization_id") @db.Uuid
-  site_id        BigInt?
+  referenceId    String?      @map("reference_id") @db.VarChar(100)
+  scope          String       @db.VarChar(20)
+  createdAt      DateTime     @map("created_at") @db.Timestamptz(6)
+  accountId      BigInt       @map("account_id")
+  account        FinancialAccount @relation(fields: [accountId], references: [id])
+  organizationId String       @map("organization_id") @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  siteId         BigInt?      @map("site_id")
+  site           Site?        @relation(fields: [siteId], references: [id])
 
-  @@index([account_id], map: "Transaction_account_id_88a389e9")
+  @@index([accountId], map: "Transaction_account_id_88a389e9")
   @@index([organizationId], map: "Transaction_organization_id_fff4577a")
-  @@index([site_id], map: "Transaction_site_id_ac463c03")
+  @@index([siteId], map: "Transaction_site_id_ac463c03")
 }
 
 model User {
@@ -389,69 +411,80 @@ model FiscalPeriod {
 }
 
 model ChartOfAccount {
-  id                    BigInt    @id @default(autoincrement())
-  code                  String    @db.VarChar(50)
-  name                  String    @db.VarChar(255)
-  type                  String    @db.VarChar(20)
-  sub_type              String?   @db.VarChar(50)
-  is_system_only        Boolean
-  isActive              Boolean   @map("is_active")
-  balance               Decimal   @db.Decimal(15, 2)
-  createdAt             DateTime  @map("created_at") @db.Timestamptz(6)
-  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
-  parent_id             BigInt?
-  organizationId        String    @map("organization_id") @db.Uuid
-  balance_official      Decimal   @db.Decimal(15, 2)
-  description           String?
-  is_hidden             Boolean
-  requires_zero_balance Boolean
-  syscohada_class       String?   @db.VarChar(100)
-  syscohada_code        String?   @db.VarChar(50)
-  linkedContact         Contact?  @relation("ContactAccount")
-  linkedEmployee        Employee? @relation("EmployeeAccount")
+  id                  BigInt    @id @default(autoincrement())
+  code                String    @db.VarChar(50)
+  name                String    @db.VarChar(255)
+  type                String    @db.VarChar(20)
+  subType             String?   @map("sub_type") @db.VarChar(50)
+  isSystemOnly        Boolean   @map("is_system_only")
+  isActive            Boolean   @map("is_active")
+  balance             Decimal   @db.Decimal(15, 2)
+  createdAt           DateTime  @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  parentId            BigInt?   @map("parent_id")
+  parent              ChartOfAccount? @relation("AccountHierarchy", fields: [parentId], references: [id])
+  children            ChartOfAccount[] @relation("AccountHierarchy")
+  organizationId      String    @map("organization_id") @db.Uuid
+  organization        Organization @relation(fields: [organizationId], references: [id])
+  balanceOfficial     Decimal   @map("balance_official") @db.Decimal(15, 2)
+  description         String?
+  isHidden            Boolean   @map("is_hidden")
+  requiresZeroBalance Boolean   @map("requires_zero_balance")
+  syscohadaClass      String?   @map("syscohada_class") @db.VarChar(100)
+  syscohadaCode       String?   @map("syscohada_code") @db.VarChar(50)
+  linkedContact       Contact?  @relation("ContactAccount")
+  linkedEmployee      Employee? @relation("EmployeeAccount")
+  financialAccount    FinancialAccount? @relation("FinancialToLedger")
+  journalEntryLines   JournalEntryLine[]
 
   @@unique([code, organizationId], map: "ChartOfAccount_code_organization_id_e65686b1_uniq")
   @@index([organizationId], map: "ChartOfAccount_organization_id_5169a865")
-  @@index([parent_id], map: "ChartOfAccount_parent_id_9bd2a2f4")
+  @@index([parentId], map: "ChartOfAccount_parent_id_9bd2a2f4")
 }
 
 model JournalEntry {
-  id               BigInt    @id @default(autoincrement())
-  transaction_date DateTime  @db.Timestamptz(6)
-  description      String
-  reference        String    @unique @db.VarChar(100)
-  status           String    @db.VarChar(20)
-  scope            String    @db.VarChar(20)
-  is_verified      Boolean
-  is_locked        Boolean
-  posted_at        DateTime? @db.Timestamptz(6)
-  createdAt        DateTime  @map("created_at") @db.Timestamptz(6)
-  updated_at       DateTime  @db.Timestamptz(6)
-  fiscal_period_id BigInt
-  fiscal_year_id   BigInt
-  organizationId   String    @map("organization_id") @db.Uuid
-  site_id          BigInt?
+  id              BigInt    @id @default(autoincrement())
+  transactionDate DateTime  @map("transaction_date") @db.Timestamptz(6)
+  description     String
+  reference       String    @unique @db.VarChar(100)
+  status          String    @db.VarChar(20)
+  scope           String    @db.VarChar(20)
+  isVerified      Boolean   @map("is_verified")
+  isLocked        Boolean   @map("is_locked")
+  postedAt        DateTime? @map("posted_at") @db.Timestamptz(6)
+  createdAt       DateTime  @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime  @map("updated_at") @db.Timestamptz(6)
+  fiscalPeriodId  BigInt    @map("fiscal_period_id")
+  fiscalYearId    BigInt    @map("fiscal_year_id")
+  organizationId  String    @map("organization_id") @db.Uuid
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  siteId          BigInt?   @map("site_id")
+  site            Site?     @relation(fields: [siteId], references: [id])
+  lines           JournalEntryLine[]
 
-  @@index([fiscal_period_id], map: "JournalEntry_fiscal_period_id_2d7114e1")
-  @@index([fiscal_year_id], map: "JournalEntry_fiscal_year_id_fcb54137")
+  @@index([fiscalPeriodId], map: "JournalEntry_fiscal_period_id_2d7114e1")
+  @@index([fiscalYearId], map: "JournalEntry_fiscal_year_id_fcb54137")
   @@index([organizationId], map: "JournalEntry_organization_id_89470a53")
   @@index([reference], map: "JournalEntry_reference_cf7e4abf_like")
-  @@index([site_id], map: "JournalEntry_site_id_c57ed51a")
+  @@index([siteId], map: "JournalEntry_site_id_c57ed51a")
 }
 
 model JournalEntryLine {
-  id               BigInt  @id @default(autoincrement())
-  debit            Decimal @db.Decimal(15, 2)
-  credit           Decimal @db.Decimal(15, 2)
-  description      String?
-  contact_id       Int?
-  employee_id      Int?
-  account_id       BigInt
-  journal_entry_id BigInt
-  organizationId   String  @map("organization_id") @db.Uuid
+  id             BigInt       @id @default(autoincrement())
+  debit          Decimal      @db.Decimal(15, 2)
+  credit         Decimal      @db.Decimal(15, 2)
+  description    String?
+  contactId      Int?         @map("contact_id")
+  employeeId     Int?         @map("employee_id")
+  accountId      BigInt       @map("account_id")
+  account        ChartOfAccount @relation(fields: [accountId], references: [id])
+  journalEntryId BigInt       @map("journal_entry_id")
+  journalEntry   JournalEntry @relation(fields: [journalEntryId], references: [id])
+  organizationId String       @map("organization_id") @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
-  @@index([account_id], map: "JournalEntryLine_account_id_bf54cf4a")
-  @@index([journal_entry_id], map: "JournalEntryLine_journal_entry_id_f2c9b50c")
+  @@index([accountId], map: "JournalEntryLine_account_id_bf54cf4a")
+  @@index([journalEntryId], map: "JournalEntryLine_journal_entry_id_f2c9b50c")
   @@index([organizationId], map: "JournalEntryLine_organization_id_27d631d5")
 }
 
