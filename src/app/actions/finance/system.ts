@@ -82,7 +82,7 @@ export async function seedTestData() {
             where: { code: '1000', organizationId: organization.id }
         })
 
-        const cashAccount = await tx.chartOfAccount.upsert({
+        const cashAccount = await (tx.chartOfAccount as any).upsert({
             where: { code: '5701', organizationId: organization.id },
             update: {},
             create: {
@@ -95,7 +95,7 @@ export async function seedTestData() {
             }
         })
 
-        const bankAccount = await tx.chartOfAccount.upsert({
+        const bankAccount = await (tx.chartOfAccount as any).upsert({
             where: { code: '5121', organizationId: organization.id },
             update: {},
             create: {
@@ -148,28 +148,28 @@ export async function seedTestData() {
         ]
         const createdCountries: Record<string, any> = {}
         for (const c of countries) {
-            createdCountries[c.code] = await tx.country.upsert({
+            createdCountries[c.code] = await (tx.country as any).upsert({
                 where: { code: c.code },
                 update: {},
-                organizationId: organization.id
+                create: { ...c }
             })
         }
 
         // 2. Categories with Hierarchy
-        const food = await tx.category.create({ data: { name: 'Food', code: 'FOOD', organizationId: organization.id } })
-        const beverages = await tx.category.create({ data: { name: 'Beverages', code: 'BEV', parentId: food.id, organizationId: organization.id } })
-        const snacks = await tx.category.create({ data: { name: 'Snacks', code: 'SNC', parentId: food.id, organizationId: organization.id } })
-        const dairy = await tx.category.create({ data: { name: 'Dairy & Eggs', code: 'DAI', parentId: food.id, organizationId: organization.id } })
+        const food = await (tx.category as any).create({ data: { name: 'Food', code: 'FOOD', organizationId: organization.id } })
+        const beverages = await (tx.category as any).create({ data: { name: 'Beverages', code: 'BEV', parentId: food.id, organizationId: organization.id } })
+        const snacks = await (tx.category as any).create({ data: { name: 'Snacks', code: 'SNC', parentId: food.id, organizationId: organization.id } })
+        const dairy = await (tx.category as any).create({ data: { name: 'Dairy & Eggs', code: 'DAI', parentId: food.id, organizationId: organization.id } })
 
         // 3. Brands linked to Countries and Categories
-        const brandCoca = await tx.brand.create({
+        const brandCoca = await (tx.brand as any).create({
             data: {
                 name: 'Coca-Cola',
                 countries: { connect: [{ id: createdCountries['US'].id }, { id: createdCountries['CI'].id }] },
                 categories: { connect: [{ id: beverages.id }] }
             }
         })
-        const brandNestle = await tx.brand.create({
+        const brandNestle = await (tx.brand as any).create({
             data: {
                 name: 'Nestlé',
                 countries: { connect: [{ id: createdCountries['FR'].id }, { id: createdCountries['CI'].id }] },
@@ -186,21 +186,21 @@ export async function seedTestData() {
         })
 
         // 4. Attributes (Parfums) linked to Categories
-        const attrOriginal = await tx.parfum.create({
+        const attrOriginal = await (tx.parfum as any).create({
             data: {
                 name: 'Original',
                 shortName: 'ORG',
                 categories: { connect: [{ id: beverages.id }, { id: snacks.id }] }
             }
         })
-        const attrVanilla = await tx.parfum.create({
+        const attrVanilla = await (tx.parfum as any).create({
             data: {
                 name: 'Vanilla',
                 shortName: 'VAN',
                 categories: { connect: [{ id: dairy.id }, { id: snacks.id }] }
             }
         })
-        const attrStrawberry = await tx.parfum.create({
+        const attrStrawberry = await (tx.parfum as any).create({
             data: {
                 name: 'Strawberry',
                 shortName: 'STR',
@@ -216,20 +216,22 @@ export async function seedTestData() {
         })
 
         // 6. Contacts
-        const supplier = await tx.contact.create({
+        const supplier = await (tx.contact as any).create({
             data: {
                 type: 'SUPPLIER',
                 name: 'Global Foods Distribution',
                 email: 'contact@globalfoods.com',
-                phone: '+123456789'
+                phone: '+123456789',
+                organizationId: organization.id
             }
         })
 
-        const customer = await tx.contact.create({
+        const customer = await (tx.contact as any).create({
             data: {
                 type: 'CUSTOMER',
                 name: 'Walk-in Customer',
-                email: 'customer@test.com'
+                email: 'customer@test.com',
+                organizationId: organization.id
             }
         })
 
