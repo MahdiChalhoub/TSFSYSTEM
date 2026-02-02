@@ -1,6 +1,23 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 import uuid
+from .middleware import get_current_tenant_id
+
+class TenantManager(models.Manager):
+    def get_queryset(self):
+        tenant_id = get_current_tenant_id()
+        if tenant_id:
+            return super().get_queryset().filter(organization_id=tenant_id)
+        return super().get_queryset()
+
+class TenantModel(models.Model):
+    organization = models.ForeignKey('Organization', on_delete=models.CASCADE)
+
+    objects = TenantManager()
+    original_objects = models.Manager() # Fallback for cross-tenant logic if needed
+
+    class Meta:
+        abstract = True
 
 class Organization(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -16,8 +33,7 @@ class Organization(models.Model):
     def __str__(self):
         return self.name
 
-class Site(models.Model):
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='sites')
+class Site(TenantModel):
     name = models.CharField(max_length=255)
     code = models.CharField(max_length=50, null=True, blank=True)
     address = models.TextField(null=True, blank=True)
@@ -48,8 +64,7 @@ class Permission(models.Model):
     def __str__(self):
         return self.name
 
-class Role(models.Model):
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='roles')
+class Role(TenantModel):
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
     permissions = models.ManyToManyField(Permission, related_name='roles')
@@ -63,8 +78,7 @@ class Role(models.Model):
     def __str__(self):
         return f"{self.name} ({self.organization.name})"
 
-class Category(models.Model):
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='categories')
+class Category(TenantModel):
     name = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -72,8 +86,7 @@ class Category(models.Model):
         db_table = 'Category'
         unique_together = ('name', 'organization')
 
-class Brand(models.Model):
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='brands')
+class Brand(TenantModel):
     name = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -81,8 +94,7 @@ class Brand(models.Model):
         db_table = 'Brand'
         unique_together = ('name', 'organization')
 
-class Unit(models.Model):
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='units')
+class Unit(TenantModel):
     code = models.CharField(max_length=50) # 'KG', 'PC'
     name = models.CharField(max_length=100)
     conversion_factor = models.DecimalField(max_digits=15, decimal_places=5, default=1.0)
@@ -91,8 +103,7 @@ class Unit(models.Model):
         db_table = 'Unit'
         unique_together = ('code', 'organization')
 
-class Product(models.Model):
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='products')
+class Product(TenantModel):
     sku = models.CharField(max_length=100)
     barcode = models.CharField(max_length=100, null=True, blank=True)
     name = models.CharField(max_length=255)
@@ -112,15 +123,7 @@ class Product(models.Model):
         db_table = 'Product'
         unique_together = (('sku', 'organization'), ('barcode', 'organization'))
 
-class ChartOfAccount(models.Model):
-    ACCOUNT_TYPES = (
-        ('ASSET', 'Asset'),
-        ('LIABILITY', 'Liability'),
-        ('EQUITY', 'Equity'),
-        ('REVENUE', 'Revenue'),
-        ('EXPENSE', 'Expense'),
-    )
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='ledger')
+class ChartOfAccount(TenantModel):
     code = models.CharField(max_length=50)
     name = models.CharField(max_length=255)
     type = models.CharField(max_length=20, choices=ACCOUNT_TYPES)
@@ -133,13 +136,7 @@ class ChartOfAccount(models.Model):
         db_table = 'ChartOfAccount'
         unique_together = ('code', 'organization')
 
-class FinancialAccount(models.Model):
-    ACCOUNT_TYPES = (
-        ('CASH', 'Cash'),
-        ('BANK', 'Bank'),
-        ('MOBILE', 'Mobile'),
-    )
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='financial_accounts')
+class FinancialAccount(TenantModel):
     site = models.ForeignKey(Site, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=255)
     type = models.CharField(max_length=20, choices=ACCOUNT_TYPES)
@@ -151,12 +148,7 @@ class FinancialAccount(models.Model):
         db_table = 'FinancialAccount'
         unique_together = ('name', 'organization', 'site')
 
-class Transaction(models.Model):
-    TRANSACTION_TYPES = (
-        ('DEBIT', 'Debit'),
-        ('CREDIT', 'Credit'),
-    )
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='transactions')
+class Transaction(TenantModel):
     account = models.ForeignKey(FinancialAccount, on_delete=models.CASCADE, related_name='transactions')
     site = models.ForeignKey(Site, on_delete=models.CASCADE, null=True, blank=True)
     amount = models.DecimalField(max_digits=15, decimal_places=2)
