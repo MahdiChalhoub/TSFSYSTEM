@@ -89,7 +89,7 @@ function AccountCard({ account, onDelete, onRefresh }: { account: any, onDelete:
     // Check Config Health
     const isConfigured = !!account.ledgerAccount
 
-    const Icon = icon as any
+    const Icon = icon[account.type] || Wallet
 
     return (
         <Card className="relative group">
@@ -138,7 +138,7 @@ function AccountCard({ account, onDelete, onRefresh }: { account: any, onDelete:
                         <AssignUserDialog accountId={account.id} onAssign={onRefresh} />
                     </div>
                     <div className="flex flex-wrap gap-2">
-                        {account.assignedUsers.length > 0 ? (
+                        {account.assignedUsers && account.assignedUsers.length > 0 ? (
                             account.assignedUsers.map((u: any) => (
                                 <Badge key={u.id} variant="secondary" className="flex items-center gap-1 pr-1">
                                     <UserIcon className="h-3 w-3" />

@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, serializers
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, action
 from .middleware import get_current_tenant_id
@@ -270,6 +270,13 @@ class ChartOfAccountViewSet(viewsets.ModelViewSet):
 class FiscalYearViewSet(viewsets.ModelViewSet):
     queryset = FiscalYear.objects.all()
     serializer_class = FiscalYearSerializer
+
+    def perform_create(self, serializer):
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            raise serializers.ValidationError("No organization context")
+        organization = Organization.objects.get(id=organization_id)
+        serializer.save(organization=organization)
 
 class FiscalPeriodViewSet(viewsets.ModelViewSet):
     queryset = FiscalPeriod.objects.all()
@@ -1082,6 +1089,83 @@ class DashboardViewSet(viewsets.ViewSet):
             "totalProducts": total_products,
             "totalCustomers": total_customers,
             "latestSales": latest_sales_data
+        })
+
+    @action(detail=False, methods=['get'])
+    def financial_stats(self, request):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "No tenant context"}, status=400)
+        
+        organization = Organization.objects.get(id=organization_id)
+        scope = request.query_params.get('scope', 'INTERNAL')
+        
+        from .services import LedgerService, InventoryService
+        
+        # 1. Cash Position
+        cash_accounts = FinancialAccount.objects.filter(organization=organization)
+        total_cash = sum(acc.balance for acc in cash_accounts)
+        
+        # 2. P&L (Monthly) - Simplified Logic for now
+        # Ideally we fetch this from LedgerService.get_income_statement
+        # For dashboard, we might want current month's performance
+        
+        # Mocking or extracting simple aggregates from JournalEntries
+        # Income = Credit sum on INCOME accounts
+        # Expense = Debit sum on EXPENSE accounts
+        
+        # Let's use a simpler approach: Sum of JournalEntries in current month
+        from django.utils import timezone
+        now = timezone.now()
+        start_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        
+        income = JournalEntryLine.objects.filter(
+            journal_entry__organization=organization,
+            journal_entry__transaction_date__gte=start_month,
+            account__type='INCOME',
+            journal_entry__status='POSTED'
+        ).distinct()
+        
+        if scope == 'OFFICIAL':
+             income = income.filter(journal_entry__scope='OFFICIAL')
+             
+        monthly_income = sum(line.credit - line.debit for line in income) # Income is Credit normal
+        
+        expense = JournalEntryLine.objects.filter(
+            journal_entry__organization=organization,
+            journal_entry__transaction_date__gte=start_month,
+            account__type='EXPENSE',
+            journal_entry__status='POSTED'
+        ).distinct()
+        
+        if scope == 'OFFICIAL':
+             expense = expense.filter(journal_entry__scope='OFFICIAL')
+             
+        monthly_expense = sum(line.debit - line.credit for line in expense) # Expense is Debit normal
+
+        # 3. Trends (Last 6 months Income/Expense)
+        trends = []
+        for i in range(5, -1, -1):
+            # Calculate logic for 6 months... excluding for brevity to keep specific scope
+            # Placeholder
+            trends.append({
+                "month": (now.replace(day=1) - timezone.timedelta(days=30*i)).strftime("%b"),
+                "income": 0,
+                "expense": 0
+            })
+
+        # 4. Inventory Value
+        inv_status = InventoryService.get_inventory_financial_status(organization)
+        
+        return Response({
+            "totalCash": float(total_cash),
+            "monthlyIncome": float(monthly_income),
+            "monthlyExpense": float(monthly_expense),
+            "netProfit": float(monthly_income - monthly_expense),
+            "totalAR": 0, # To implement with AR/AP
+            "totalAP": 0,
+            "trends": trends,
+            "recentEntries": [],
+            "inventoryStatus": inv_status
         })
 
 class RoleViewSet(viewsets.ModelViewSet):
