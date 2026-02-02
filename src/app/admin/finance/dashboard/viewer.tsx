@@ -19,12 +19,39 @@ import {
 import { syncInventoryValueToLedger } from '@/app/actions/finance/inventory-integration'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { getFinancialDashboardStats } from '@/app/actions/finance/dashboard'
+import { useAdmin } from '@/context/AdminContext'
+import { useTransition, useEffect } from 'react'
+import clsx from 'clsx'
 
 export default function FinanceDashboardViewer({ initialStats }: { initialStats: any }) {
-    const [stats] = useState(initialStats)
+    const { viewScope } = useAdmin()
+    const [stats, setStats] = useState(initialStats)
+    const [isPending, startTransition] = useTransition()
+
+    // Sync with global sidebar scope
+    useEffect(() => {
+        startTransition(async () => {
+            const newStats = await getFinancialDashboardStats(viewScope)
+            setStats(newStats)
+        })
+    }, [viewScope])
+
+    const isLoading = isPending
 
     return (
-        <div className="space-y-10">
+        <div className={`space-y-10 transition-opacity duration-300 ${isLoading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+
+            {/* View Mode Indicator */}
+            <div className="flex items-center gap-3">
+                <div className={clsx(
+                    "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border",
+                    viewScope === 'OFFICIAL' ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-stone-50 border-stone-200 text-stone-500"
+                )}>
+                    {viewScope === 'OFFICIAL' ? 'Official View (Tax)' : 'Total View (Management)'}
+                </div>
+                {isLoading && <RefreshCw size={14} className="animate-spin text-stone-400" />}
+            </div>
             {/* Primary Metrics Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <MetricCard

@@ -9,7 +9,23 @@ import { getAttributesByCategory } from '@/app/actions/attributes';
 
 import { CategorySelector } from '@/components/admin/CategorySelector';
 
-export default function AddProductForm({ categories, units, brands, countries, namingRule, initialData }: { categories: any[], units: any[], brands: any[], countries: any[], namingRule: ProductNamingRule, initialData?: any }) {
+export default function AddProductForm({
+    categories,
+    units,
+    brands,
+    countries,
+    namingRule,
+    initialData,
+    worksInTTC = true
+}: {
+    categories: any[],
+    units: any[],
+    brands: any[],
+    countries: any[],
+    namingRule: ProductNamingRule,
+    initialData?: any,
+    worksInTTC?: boolean
+}) {
     const initialState = { message: '', errors: {} };
     // useActionState returns [state, formAction, isPending]
     const [state, formAction, isPending] = useActionState(createProduct, initialState);

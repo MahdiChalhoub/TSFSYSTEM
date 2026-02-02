@@ -182,3 +182,127 @@ export async function receiveStock(
         return { success: false, message: "Error: " + e.message };
     }
 }
+
+/**
+ * Performs a Manual Stock Adjustment (Gain or Loss).
+ * - Positive Quantity: Found Stock (Increases Inventory, Income/Gain)
+ * - Negative Quantity: Lost/Damaged Stock (Decreases Inventory, Expense/Loss)
+ */
+export async function adjustStock(
+    productId: number,
+    warehouseId: number,
+    quantity: number,
+    reason: string,
+    notes?: string
+): Promise<StockMovementState> {
+    try {
+        if (quantity === 0) return { success: false, message: "Quantity cannot be zero." };
+
+        const product = await prisma.product.findUnique({
+            where: { id: productId },
+            include: { inventory: true }
+        });
+
+        if (!product) return { success: false, message: "Product not found" };
+
+        const warehouse = await prisma.warehouse.findUnique({
+            where: { id: warehouseId },
+            // @ts-ignore
+            include: { site: true }
+        });
+
+        if (!warehouse) return { success: false, message: "Warehouse not found" };
+
+        const adjQty = new Decimal(quantity.toString());
+        const costPrice = new Decimal(product.costPrice.toString());
+        const adjustmentValue = adjQty.abs().mul(costPrice);
+
+        await prisma.$transaction(async (tx) => {
+            // A. Update Inventory
+            const existingStock = await tx.inventory.findFirst({
+                where: {
+                    warehouseId,
+                    productId,
+                    batchId: null
+                }
+            });
+
+            if (existingStock) {
+                // Prevent negative stock if wanted, but generally allow for now
+                // Check if new quantity will be negative?
+                // const current = new Decimal(existingStock.quantity);
+                // if (current.add(adjQty).isNegative()) throw new Error("Insufficient stock for adjustment.");
+
+                await tx.inventory.update({
+                    where: { id: existingStock.id },
+                    data: { quantity: { increment: adjQty } }
+                });
+            } else {
+                if (quantity < 0) throw new Error("Cannot deduce stock from empty inventory.");
+                await tx.inventory.create({
+                    data: {
+                        warehouseId,
+                        productId,
+                        quantity: adjQty,
+                        batchId: null
+                    }
+                });
+            }
+
+            // B. Financial Journal
+            const rules = await getPostingRules(tx);
+            if (rules.sales.inventory) {
+                const isGain = quantity > 0;
+
+                // Using suspense/reception as the contra-account for adjustments for now
+                const targetAccount = rules.suspense.reception || rules.sales.inventory;
+
+                if (targetAccount) {
+                    await createJournalEntry({
+                        transactionDate: new Date(),
+                        description: `Stock Adjustment (${reason}): ${product.name} (${quantity})`,
+                        reference: "ADJ-" + new Date().getTime(),
+                        status: "POSTED",
+                        // @ts-ignore
+                        siteId: (warehouse as any).siteId,
+                        lines: [
+                            {
+                                accountId: rules.sales.inventory,
+                                debit: isGain ? adjustmentValue.toNumber() : 0,
+                                credit: isGain ? 0 : adjustmentValue.toNumber(),
+                                description: `Inventory ${isGain ? 'Gain' : 'Shrinkage'}`
+                            },
+                            {
+                                accountId: targetAccount,
+                                debit: isGain ? 0 : adjustmentValue.toNumber(),
+                                credit: isGain ? adjustmentValue.toNumber() : 0,
+                                description: `Adjustment: ${reason}`
+                            }
+                        ]
+                    }, tx);
+                }
+            }
+
+            // C. Audit Log (Simplified - implicitly tracked via Journal or explicit log)
+            await tx.auditLog.create({
+                data: {
+                    action: 'UPDATE',
+                    entity: 'Inventory',
+                    entityId: productId.toString(),
+                    field: 'quantity',
+                    oldValue: '?',
+                    newValue: quantity.toString(),
+                    userId: 1, // FAST FIX: Need real user ID from context
+                }
+            });
+        });
+
+        revalidatePath('/admin/inventory');
+        return { success: true, message: `Successfully adjusted stock by ${quantity}.` };
+
+    } catch (e: any) {
+        console.error("Adjustment Error:", e);
+        return { success: false, message: "Error: " + e.message };
+    }
+}
+

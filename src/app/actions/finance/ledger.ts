@@ -39,9 +39,11 @@ export async function createJournalEntry(data: {
     fiscalPeriodId?: number
     lines: JournalLineInput[]
     status?: 'DRAFT' | 'POSTED'
+    scope?: 'OFFICIAL' | 'INTERNAL'
     siteId?: number | null
 }, tx?: Prisma.TransactionClient) {
     const status = data.status || 'DRAFT'
+    const scope = data.scope || 'OFFICIAL'
 
     // Auto-generate reference if missing
     let reference = data.reference
@@ -87,10 +89,11 @@ export async function createJournalEntry(data: {
             data: {
                 transactionDate: data.transactionDate,
                 description: data.description,
-                reference: reference, // Use generated reference
+                reference: reference,
                 fiscalYearId: fyId,
                 fiscalPeriodId: periodId,
                 status: status,
+                scope: scope,
                 siteId: data.siteId,
                 postedAt: status === 'POSTED' ? new Date() : null,
                 lines: {
@@ -103,7 +106,7 @@ export async function createJournalEntry(data: {
                         description: l.description || data.description
                     }))
                 }
-            } as any,
+            },
             include: { lines: true }
         }) as any
 
@@ -111,9 +114,18 @@ export async function createJournalEntry(data: {
         if (status === 'POSTED') {
             for (const line of entry.lines) {
                 const netChange = Number(line.debit) - Number(line.credit)
+
+                const updateData: any = {
+                    balance: { increment: netChange } // Real balance always updated
+                }
+
+                if (scope === 'OFFICIAL') {
+                    updateData.balanceOfficial = { increment: netChange }
+                }
+
                 await ctx.chartOfAccount.update({
                     where: { id: line.accountId },
-                    data: { balance: { increment: netChange } }
+                    data: updateData
                 })
             }
         }
@@ -135,8 +147,10 @@ export async function createJournalEntry(data: {
     }
 }
 
-export async function getLedgerEntries(filters?: { status?: string, q?: string }) {
+export async function getLedgerEntries(scope: 'OFFICIAL' | 'INTERNAL' = 'INTERNAL', filters?: { status?: string, q?: string }) {
     const where: any = {}
+    if (scope === 'OFFICIAL') where.scope = 'OFFICIAL'
+
     if (filters?.status) where.status = filters.status
     if (filters?.q) {
         where.OR = [
@@ -154,8 +168,8 @@ export async function getLedgerEntries(filters?: { status?: string, q?: string }
             fiscalYear: true,
             reversalOf: true,
             reversedBy: true
-        } as any
-    }) as any
+        }
+    })
 }
 
 export const getJournalEntries = getLedgerEntries;
@@ -179,9 +193,18 @@ export async function postJournalEntry(id: number) {
         // 2. Update balances
         for (const line of entry.lines) {
             const netChange = Number(line.debit) - Number(line.credit)
+
+            const updateData: any = {
+                balance: { increment: netChange }
+            }
+
+            if (entry.scope === 'OFFICIAL') {
+                updateData.balanceOfficial = { increment: netChange }
+            }
+
             await tx.chartOfAccount.update({
                 where: { id: line.accountId },
-                data: { balance: { increment: netChange } }
+                data: updateData
             })
         }
 
@@ -200,7 +223,6 @@ export async function reverseJournalEntry(id: number) {
         if (entry.status !== 'POSTED') throw new Error("Only posted entries can be reversed")
 
         // 1. Reversal Entry (Standard Accounting Practice)
-        // Instead of deleting, we create a negative or reversed entry
         const reversalLines: JournalLineInput[] = entry.lines.map((l: any) => ({
             accountId: l.accountId,
             debit: Number(l.credit),
@@ -213,16 +235,16 @@ export async function reverseJournalEntry(id: number) {
             description: `Reversal of Entry #${entry.id} (${entry.reference})`,
             reference: `REV-${entry.id}`,
             status: 'POSTED',
+            scope: entry.scope, // Keep same scope
             lines: reversalLines
         }, tx)
 
-        // 2. Mark original as voided (or Reversed)
+        // 2. Mark original as voided
         await tx.journalEntry.update({
             where: { id },
             data: {
-                status: 'REVERSED',
-                reversedBy: { connect: { id: entry.id } } // This might need a new link logic but for now REVERSED status is key
-            } as any
+                status: 'REVERSED'
+            }
         })
 
         return { success: true }
@@ -231,30 +253,36 @@ export async function reverseJournalEntry(id: number) {
 
 export const voidJournalEntry = reverseJournalEntry;
 
-/**
- * MAINTENANCE: Rebuilds account balances from the ground up based on ledger history.
- * Useful if balances ever get out of sync due to manual DB edits or bugs.
- */
 export async function recalculateAccountBalances() {
     return await prisma.$transaction(async (tx) => {
         // 1. Reset all balances to zero
         await tx.chartOfAccount.updateMany({
-            data: { balance: 0 }
+            data: { balance: 0, balanceOfficial: 0 }
         })
 
         // 2. Fetch all POSTED journal entry lines
         const lines = await tx.journalEntryLine.findMany({
             where: {
                 journalEntry: { status: 'POSTED' }
-            }
+            },
+            include: { journalEntry: true }
         })
 
         // 3. Apply each line to the balance
         for (const line of lines) {
             const netChange = Number(line.debit) - Number(line.credit)
+
+            const updateData: any = {
+                balance: { increment: netChange }
+            }
+
+            if (line.journalEntry.scope === 'OFFICIAL') {
+                updateData.balanceOfficial = { increment: netChange }
+            }
+
             await tx.chartOfAccount.update({
                 where: { id: line.accountId },
-                data: { balance: { increment: netChange } }
+                data: updateData
             })
         }
 
@@ -263,21 +291,13 @@ export async function recalculateAccountBalances() {
     }, { maxWait: 10000, timeout: 60000 })
 }
 
-/**
- * DANGER ZONE: Clears all accounting history for a fresh start.
- */
 export async function clearAllJournalEntries() {
     return await prisma.$transaction(async (tx) => {
-        // 1. Delete all lines and entries
         await tx.journalEntryLine.deleteMany({})
         await tx.journalEntry.deleteMany({})
-
-        // 2. Delete money movements (Transactions)
         await tx.transaction.deleteMany({})
-
-        // 3. Reset balances to zero
         await tx.chartOfAccount.updateMany({
-            data: { balance: 0 }
+            data: { balance: 0, balanceOfficial: 0 }
         })
 
         revalidatePath('/admin/finance/ledger')
@@ -285,4 +305,3 @@ export async function clearAllJournalEntries() {
         return { success: true }
     })
 }
-

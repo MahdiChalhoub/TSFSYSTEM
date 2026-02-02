@@ -1,6 +1,7 @@
 import AddProductForm from './form';
 import { prisma } from '@/lib/db';
 import { getProductNamingRule } from '@/app/actions/settings';
+import { getFinancialSettings } from '@/app/actions/finance/settings';
 import { serializeDecimals } from '@/lib/utils/serialization';
 
 export const dynamic = 'force-dynamic';
@@ -50,12 +51,13 @@ export default async function NewProductPage(props: { searchParams: Promise<{ cl
         }
     }
 
-    const [categories, units, brands, countries, namingRule] = await Promise.all([
+    const [categories, units, brands, countries, namingRule, financialSettings] = await Promise.all([
         getCategories(),
         getUnits(),
         getBrands(),
         getCountries(),
-        getProductNamingRule()
+        getProductNamingRule(),
+        getFinancialSettings()
     ]);
 
     return (
@@ -76,6 +78,7 @@ export default async function NewProductPage(props: { searchParams: Promise<{ cl
                 countries={serializeDecimals(countries)}
                 namingRule={serializeDecimals(namingRule)}
                 initialData={clonedProduct ? serializeDecimals(clonedProduct) : null}
+                worksInTTC={financialSettings.worksInTTC}
             />
         </div>
     );

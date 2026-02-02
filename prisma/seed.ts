@@ -161,11 +161,12 @@ async function main() {
     if (!settings) {
         await prisma.financialSettings.create({
             data: {
-                companyType: 'REGULAR',
+                companyType: 'MIXED',
                 currency: 'USD',
                 defaultTaxRate: 0.11,
                 worksInTTC: true,
-                allowHTEntryForTTC: false
+                allowHTEntryForTTC: false,
+                dualView: true
             }
         })
         console.log('⚙️ Default Financial Settings Created')
@@ -189,11 +190,11 @@ async function main() {
     // Assets (1000), Liabilities (2000), Equity (3000), Revenue (4000), Expenses (5000)
 
     // Helper to create account if missing
-    const upsertAccount = async (code: string, name: string, type: string, parentId?: number) => {
+    const upsertAccount = async (code: string, name: string, type: string, parentId?: number, subType?: string) => {
         const acc = await prisma.chartOfAccount.upsert({
             where: { code },
-            update: {},
-            create: { code, name, type, parentId }
+            update: { subType },
+            create: { code, name, type, parentId, subType }
         })
         return acc
     }
@@ -207,7 +208,12 @@ async function main() {
 
     // Assets Detail
     await upsertAccount('1100', 'Current Assets', 'ASSET', assets.id)
-    await upsertAccount('1101', 'Cash & Cash Equivalents', 'ASSET')
+    await upsertAccount('1101', 'Cash & Cash Equivalents', 'ASSET') // General category
+
+    // Automation Roots (SYSCOHADA Standard Defaults)
+    const cashRoot = await upsertAccount('5700', 'Cash Accounts', 'ASSET', assets.id, 'CASH')
+    const bankRoot = await upsertAccount('5120', 'Bank Accounts', 'ASSET', assets.id, 'BANK')
+    const mobileRoot = await upsertAccount('5121', 'Mobile Wallets', 'ASSET', assets.id, 'MOBILE')
     await upsertAccount('1110', 'Accounts Receivable', 'ASSET', assets.id)
     await upsertAccount('1120', 'Inventory', 'ASSET', assets.id)
 

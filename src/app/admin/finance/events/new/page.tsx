@@ -181,7 +181,11 @@ export default function NewFinancialEventPage() {
 
                                 <div className="space-y-2">
                                     <FinanceAccountSelector
-                                        label="Source/Target Account"
+                                        label={
+                                            selectedType === 'PARTNER_WITHDRAWAL'
+                                                ? "Withdraw From Account (Source)"
+                                                : "Deposit To Account (Target)"
+                                        }
                                         value={formData.targetAccountId}
                                         onChange={val => setFormData({ ...formData, targetAccountId: val })}
                                     />

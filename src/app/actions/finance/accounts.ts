@@ -2,10 +2,11 @@
 
 import { prisma } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
+import { serialize } from '@/lib/utils'
 
 export type AccountType = 'ASSET' | 'LIABILITY' | 'EQUITY' | 'INCOME' | 'EXPENSE'
 
-export async function getChartOfAccounts(includeInactive: boolean = false) {
+export async function getChartOfAccounts(includeInactive: boolean = false, scope: 'OFFICIAL' | 'INTERNAL' = 'INTERNAL') {
     const accounts = await (prisma.chartOfAccount as any).findMany({
         orderBy: { code: 'asc' },
         where: {
@@ -17,6 +18,8 @@ export async function getChartOfAccounts(includeInactive: boolean = false) {
         }
     })
 
+    const balanceField = scope === 'OFFICIAL' ? 'balanceOfficial' : 'balance'
+
     // 2. Build Hierarchy & Calculate Rollup Balances
     const accountMap = new Map<number, any>()
 
@@ -24,7 +27,7 @@ export async function getChartOfAccounts(includeInactive: boolean = false) {
     accounts.forEach((acc: any) => {
         accountMap.set(acc.id, {
             ...acc,
-            balance: Number(acc.balance),
+            balance: Number(acc[balanceField]),
             children: []
         })
     })
@@ -67,7 +70,7 @@ export async function getChartOfAccounts(includeInactive: boolean = false) {
 
     // Return FLAT list with updated balances (preserving original order)
     // This ensures dropdowns and other lists see ALL accounts, not just roots.
-    return accounts.map((acc: any) => accountMap.get(acc.id))
+    return serialize(accounts.map((acc: any) => accountMap.get(acc.id)))
 }
 
 export async function getInactiveAccounts() {
@@ -75,10 +78,10 @@ export async function getInactiveAccounts() {
         where: { isActive: false },
         orderBy: { code: 'asc' }
     })
-    return accounts.map((acc: any) => ({
+    return serialize(accounts.map((acc: any) => ({
         ...acc,
         balance: Number(acc.balance)
-    }))
+    })))
 }
 
 export async function createAccount(data: {
@@ -167,7 +170,7 @@ export async function updateAccount(data: {
     return { success: true }
 }
 
-export async function getAccountStatement(accountId: number, filter?: { startDate?: Date, endDate?: Date }) {
+export async function getAccountStatement(accountId: number, filter?: { startDate?: Date, endDate?: Date }, scope: 'OFFICIAL' | 'INTERNAL' = 'INTERNAL') {
     // 1. Get Account Info
     const account = await prisma.chartOfAccount.findUnique({
         where: { id: accountId }
@@ -184,7 +187,8 @@ export async function getAccountStatement(accountId: number, filter?: { startDat
                 accountId: accountId,
                 journalEntry: {
                     status: 'POSTED',
-                    transactionDate: { lt: filter.startDate }
+                    transactionDate: { lt: filter.startDate },
+                    ...(scope === 'OFFICIAL' ? { scope: 'OFFICIAL' } : {})
                 }
             },
             _sum: { debit: true, credit: true }
@@ -209,7 +213,10 @@ export async function getAccountStatement(accountId: number, filter?: { startDat
     // 4. Get Transactions in Range
     const whereClause: any = {
         accountId: accountId,
-        journalEntry: { status: 'POSTED' }
+        journalEntry: {
+            status: 'POSTED',
+            ...(scope === 'OFFICIAL' ? { scope: 'OFFICIAL' } : {})
+        }
     }
 
     if (filter?.startDate) {
@@ -235,7 +242,7 @@ export async function getAccountStatement(accountId: number, filter?: { startDat
         }
     })
 
-    return {
+    return serialize({
         account: {
             ...account,
             balance: Number(account.balance)
@@ -246,10 +253,10 @@ export async function getAccountStatement(accountId: number, filter?: { startDat
             debit: Number(line.debit),
             credit: Number(line.credit)
         }))
-    }
+    })
 }
 
-export async function getTrialBalanceReport(asOfDate?: Date, legalReport: boolean = false) {
+export async function getTrialBalanceReport(asOfDate?: Date, legalReport: boolean = false, scope: 'OFFICIAL' | 'INTERNAL' = 'INTERNAL') {
     // 1. Get All Accounts
     const accounts = await (prisma.chartOfAccount as any).findMany({
         orderBy: { code: 'asc' },
@@ -266,7 +273,8 @@ export async function getTrialBalanceReport(asOfDate?: Date, legalReport: boolea
     // 2. Fetch Aggregated Balances up to Date
     const where: any = {
         journalEntry: {
-            status: 'POSTED'
+            status: 'POSTED',
+            ...(scope === 'OFFICIAL' ? { scope: 'OFFICIAL' } : {})
         }
     }
     if (asOfDate) {
@@ -315,10 +323,10 @@ export async function getTrialBalanceReport(asOfDate?: Date, legalReport: boolea
 
     rootAccounts.forEach(root => calculateRollup(root))
 
-    return Array.from(accountMap.values())
+    return serialize(Array.from(accountMap.values()))
 }
 
-export async function getProfitAndLossReport(startDate: Date, endDate: Date) {
+export async function getProfitAndLossReport(startDate: Date, endDate: Date, scope: 'OFFICIAL' | 'INTERNAL' = 'INTERNAL') {
     // 1. Get Income & Expense Accounts
     const accounts = await (prisma.chartOfAccount as any).findMany({
         where: {
@@ -335,7 +343,8 @@ export async function getProfitAndLossReport(startDate: Date, endDate: Date) {
         where: {
             journalEntry: {
                 status: 'POSTED',
-                transactionDate: { gte: startDate, lte: endDate }
+                transactionDate: { gte: startDate, lte: endDate },
+                ...(scope === 'OFFICIAL' ? { scope: 'OFFICIAL' } : {})
             },
             account: { type: { in: ['INCOME', 'EXPENSE'] } }
         },
@@ -386,10 +395,10 @@ export async function getProfitAndLossReport(startDate: Date, endDate: Date) {
 
     rootAccounts.forEach(root => calculateRollup(root))
 
-    return Array.from(accountMap.values())
+    return serialize(Array.from(accountMap.values()))
 }
 
-export async function getBalanceSheetReport(asOfDate: Date) {
+export async function getBalanceSheetReport(asOfDate: Date, scope: 'OFFICIAL' | 'INTERNAL' = 'INTERNAL') {
     // 1. Get A-L-E Accounts
     const accounts = await (prisma.chartOfAccount as any).findMany({
         where: {
@@ -406,7 +415,8 @@ export async function getBalanceSheetReport(asOfDate: Date) {
         where: {
             journalEntry: {
                 status: 'POSTED',
-                transactionDate: { lte: asOfDate }
+                transactionDate: { lte: asOfDate },
+                ...(scope === 'OFFICIAL' ? { scope: 'OFFICIAL' } : {})
             },
             account: { type: { in: ['ASSET', 'LIABILITY', 'EQUITY'] } }
         },
@@ -430,7 +440,8 @@ export async function getBalanceSheetReport(asOfDate: Date) {
         where: {
             journalEntry: {
                 status: 'POSTED',
-                transactionDate: { lte: asOfDate }
+                transactionDate: { lte: asOfDate },
+                ...(scope === 'OFFICIAL' ? { scope: 'OFFICIAL' } : {})
             },
             account: { type: { in: ['INCOME', 'EXPENSE'] } }
         },
@@ -471,10 +482,10 @@ export async function getBalanceSheetReport(asOfDate: Date) {
 
     rootAccounts.forEach(root => calculateRollup(root))
 
-    return {
+    return serialize({
         accounts: Array.from(accountMap.values()),
         netProfit
-    }
+    })
 }
 export async function reactivateChartOfAccount(id: number) {
     await (prisma.chartOfAccount as any).update({

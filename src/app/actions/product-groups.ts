@@ -13,6 +13,13 @@ export type VariantInput = {
     costPrice: number;
     basePrice: number;
     minStockLevel?: number;
+
+    // New Pricing Fields
+    costPriceHT?: number;
+    costPriceTTC?: number;
+    sellingPriceHT?: number;
+    sellingPriceTTC?: number;
+    taxRate?: number;
 };
 
 export type ProductGroupState = {
@@ -30,7 +37,7 @@ export async function createProductGroupWithVariants(
         baseUnitId: number;
         variants: VariantInput[];
     }
-): Promise<ProductGroupState> {
+) { // Removed strict Promise<ProductGroupState> return type annotation to let inference work if needed, or keep it.
     const { name, brandId, categoryId, description, baseUnitId, variants } = data;
 
     if (!name || variants.length === 0) {
@@ -61,8 +68,17 @@ export async function createProductGroupWithVariants(
                         barcode: v.barcode,
                         size: v.size,
                         sizeUnitId: v.sizeUnitId,
+
                         costPrice: v.costPrice,
+                        costPriceHT: v.costPriceHT || 0,
+                        costPriceTTC: v.costPriceTTC || 0,
+
                         basePrice: v.basePrice,
+                        sellingPriceHT: v.sellingPriceHT || 0,
+                        sellingPriceTTC: v.sellingPriceTTC || 0,
+
+                        taxRate: v.taxRate || 0,
+
                         minStockLevel: v.minStockLevel || 0,
                         isTaxIncluded: true
                     }
@@ -89,7 +105,7 @@ export async function updateProductGroup(
         baseUnitId: number;
         variants: VariantInput[];
     }
-): Promise<ProductGroupState> {
+) {
     const { groupId, name, brandId, categoryId, description, baseUnitId, variants } = data;
 
     if (!groupId || !name) return { message: "Group ID and Name are required." };
@@ -102,14 +118,6 @@ export async function updateProductGroup(
                 data: { name, brandId, categoryId, description }
             });
 
-            // 2. Handle Variants
-            // Get existing IDs to detect deletions (optional, for now just upsert/create)
-            // Strategy: Loop through input variants.
-            // If id exists -> Update.
-            // If no id -> Create.
-            // (Deletions: Not handling explicit deletion in this pass unless UI requests it, but usually 'save' implies current state. 
-            // Better to only process what's sent. Deletion needs explicit 'delete' action or diffing.)
-
             for (const v of variants) {
                 if (v.id) {
                     // Update existing
@@ -121,8 +129,16 @@ export async function updateProductGroup(
                             barcode: v.barcode,
                             size: v.size,
                             sizeUnitId: v.sizeUnitId,
+
                             costPrice: v.costPrice,
+                            costPriceHT: v.costPriceHT, // Prisma checks for undefined, so safe
+                            costPriceTTC: v.costPriceTTC,
+
                             basePrice: v.basePrice,
+                            sellingPriceHT: v.sellingPriceHT,
+                            sellingPriceTTC: v.sellingPriceTTC,
+                            taxRate: v.taxRate,
+
                             unitId: baseUnitId, // Ensure unit matches master
                             name: name // Update name if group name changed
                         }
@@ -142,7 +158,14 @@ export async function updateProductGroup(
                             size: v.size,
                             sizeUnitId: v.sizeUnitId,
                             costPrice: v.costPrice,
+                            costPriceHT: v.costPriceHT || 0,
+                            costPriceTTC: v.costPriceTTC || 0,
+
                             basePrice: v.basePrice,
+                            sellingPriceHT: v.sellingPriceHT || 0,
+                            sellingPriceTTC: v.sellingPriceTTC || 0,
+                            taxRate: v.taxRate || 0,
+
                             minStockLevel: v.minStockLevel || 0,
                             isTaxIncluded: true
                         }

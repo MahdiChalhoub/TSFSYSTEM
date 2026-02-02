@@ -1,10 +1,13 @@
 import Link from 'next/link';
-import { ShoppingCart, Package, TrendingUp, Users, ArrowRight, Plus, DollarSign, Activity, ChevronRight, Clock } from 'lucide-react';
+import { ShoppingCart, Package, TrendingUp, Users, Plus, DollarSign, Activity, ChevronRight, Clock } from 'lucide-react';
 import clsx from 'clsx';
+import { getAdminDashboardStats } from '@/app/actions/finance/dashboard';
 
-export default function AdminDashboard() {
+export default async function AdminDashboard() {
+    const statsData = await getAdminDashboardStats();
+
     return (
-        <div className="space-y-12 animate-in fade-in duration-500 pb-10">
+        <div className="space-y-12 animate-in fade-in duration-500 pb-10 px-8">
 
             {/* Welcome Section */}
             <div className="flex flex-col gap-2">
@@ -19,12 +22,12 @@ export default function AdminDashboard() {
             {/* Stats Overview */}
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
                 {[
-                    { label: 'Total Sales', value: '$12,450', icon: DollarSign, color: 'text-emerald-600', gradient: 'from-emerald-400/20 to-emerald-600/20' },
-                    { label: 'Active Orders', value: '14', icon: ShoppingCart, color: 'text-blue-600', gradient: 'from-blue-400/20 to-blue-600/20' },
-                    { label: 'Total Products', value: '1,234', icon: Package, color: 'text-violet-600', gradient: 'from-violet-400/20 to-violet-600/20' },
-                    { label: 'Total Customers', value: '890', icon: Users, color: 'text-amber-600', gradient: 'from-amber-400/20 to-amber-600/20' },
+                    { label: 'Total Sales', value: `$${statsData.totalSales.toLocaleString()}`, icon: DollarSign, color: 'text-emerald-600', gradient: 'from-emerald-400/20 to-emerald-600/20' },
+                    { label: 'Active Orders', value: statsData.activeOrders.toString(), icon: ShoppingCart, color: 'text-blue-600', gradient: 'from-blue-400/20 to-blue-600/20' },
+                    { label: 'Total Products', value: statsData.totalProducts.toString(), icon: Package, color: 'text-violet-600', gradient: 'from-violet-400/20 to-violet-600/20' },
+                    { label: 'Total Customers', value: statsData.totalCustomers.toString(), icon: Users, color: 'text-amber-600', gradient: 'from-amber-400/20 to-amber-600/20' },
                 ].map((stat, i) => (
-                    <div key={i} className="card-premium p-6 flex flex-col justify-between group cursor-default min-h-[160px] relative overflow-hidden">
+                    <div key={i} className="card-premium p-6 flex flex-col justify-between group cursor-default min-h-[160px] relative overflow-hidden bg-white rounded-2xl border border-gray-100 shadow-sm">
                         <div className="flex justify-between items-start z-10">
                             <div>
                                 <p className="text-sm font-medium text-gray-500 mb-2">{stat.label}</p>
@@ -36,7 +39,7 @@ export default function AdminDashboard() {
                         </div>
                         <div className="mt-4 flex items-center text-sm text-emerald-600 font-medium z-10">
                             <TrendingUp size={16} className="mr-1.5" />
-                            <span>+12.5% from last month</span>
+                            <span>Real-time tracking</span>
                         </div>
                         {/* Decorative Background Blob */}
                         <div className={clsx("absolute -bottom-4 -right-4 w-24 h-24 rounded-full opacity-10 blur-2xl", stat.color.replace('text-', 'bg-'))}></div>
@@ -72,15 +75,13 @@ export default function AdminDashboard() {
                                     <ChevronRight size={24} />
                                 </div>
                             </div>
-
-                            {/* Background Pattern */}
                             <div className="absolute top-0 right-0 h-full w-1/2 bg-gradient-to-l from-white/10 to-transparent"></div>
                             <div className="absolute -bottom-24 -right-24 w-64 h-64 rounded-full bg-white/10 blur-3xl"></div>
                         </div>
                     </Link>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <Link href="/admin/products/new" className="card-premium p-6 hover:border-emerald-500/30 transition-all group flex items-start justify-between min-h-[140px]">
+                        <Link href="/admin/products/new" className="card-premium p-6 hover:border-emerald-500/30 transition-all group flex items-start justify-between min-h-[140px] bg-white rounded-2xl border border-gray-100 shadow-sm">
                             <div>
                                 <h3 className="font-bold text-gray-900 text-lg group-hover:text-emerald-700 transition-colors">Add Product</h3>
                                 <p className="text-sm text-gray-500 mt-1">Create new items in inventory</p>
@@ -90,7 +91,7 @@ export default function AdminDashboard() {
                             </div>
                         </Link>
 
-                        <Link href="/admin/products" className="card-premium p-6 hover:border-emerald-500/30 transition-all group flex items-start justify-between min-h-[140px]">
+                        <Link href="/admin/products" className="card-premium p-6 hover:border-emerald-500/30 transition-all group flex items-start justify-between min-h-[140px] bg-white rounded-2xl border border-gray-100 shadow-sm">
                             <div>
                                 <h3 className="font-bold text-gray-900 text-lg group-hover:text-emerald-700 transition-colors">Inventory</h3>
                                 <p className="text-sm text-gray-500 mt-1">Manage stock levels & prices</p>
@@ -109,33 +110,38 @@ export default function AdminDashboard() {
                         Recent Activity
                     </h2>
 
-                    <div className="card-premium p-0 overflow-hidden h-full min-h-[400px] flex flex-col">
+                    <div className="card-premium p-0 overflow-hidden h-full min-h-[400px] flex flex-col bg-white rounded-2xl border border-gray-100 shadow-sm">
                         <div className="p-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
                             <span className="font-bold text-gray-700 text-sm">Latest Sales</span>
-                            <Link href="/admin/sales/history" className="text-xs font-medium text-blue-600 hover:underline">View All</Link>
                         </div>
 
                         <div className="overflow-y-auto p-2 space-y-1">
-                            {[1, 2, 3, 4, 5].map((_, i) => (
+                            {statsData.latestSales.map((sale: any, i: number) => (
                                 <div key={i} className="flex items-center justify-between p-3 hovering rounded-xl group cursor-pointer hover:bg-gray-50 transition-colors">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-xs group-hover:scale-110 transition-transform">
-                                            #{1024 + i}
+                                            #{sale.id}
                                         </div>
                                         <div>
-                                            <p className="text-sm font-bold text-gray-900">Walk-in Customer</p>
-                                            <p className="text-xs text-gray-500">2 mins ago</p>
+                                            <p className="text-sm font-bold text-gray-900">{sale.contact?.name || 'Walk-in Customer'}</p>
+                                            <p className="text-xs text-gray-500">{new Date(sale.createdAt).toLocaleTimeString()}</p>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-sm font-bold text-gray-900">$24.50</p>
+                                        <p className="text-sm font-bold text-gray-900">${Number(sale.totalAmount).toFixed(2)}</p>
                                         <div className="flex items-center gap-1 text-[10px] text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded ml-auto w-fit font-medium">
                                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                                            PAID
+                                            {sale.status}
                                         </div>
                                     </div>
                                 </div>
                             ))}
+
+                            {statsData.latestSales.length === 0 && (
+                                <div className="text-center py-10 text-gray-400 text-sm">
+                                    No recent sales recorded.
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

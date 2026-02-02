@@ -15,6 +15,7 @@ export type FinancialSettingsState = {
     declareTVA?: boolean
     dualView?: boolean
     customTaxRules?: string
+    pricingCostBasis?: string
 }
 
 export async function getSettingsLockStatus() {
@@ -67,7 +68,9 @@ export async function updateFinancialSettings(data: FinancialSettingsState) {
         current.companyType !== data.companyType ||
         current.currency !== data.currency ||
         current.worksInTTC !== data.worksInTTC ||
-        current.declareTVA !== data.declareTVA
+        current.declareTVA !== data.declareTVA ||
+        // @ts-ignore
+        current.pricingCostBasis !== data.pricingCostBasis
 
     if (lock.isLocked && isStructuralChange) {
         throw new Error(`CRITICAL VIOLATION: ${lock.reason}`)
@@ -88,6 +91,8 @@ export async function updateFinancialSettings(data: FinancialSettingsState) {
             allowHTEntryForTTC: data.allowHTEntryForTTC,
             declareTVA: data.declareTVA,
             dualView: data.dualView,
+            // @ts-ignore
+            pricingCostBasis: data.pricingCostBasis,
 
             customTaxRules: data.customTaxRules
         }

@@ -16,6 +16,8 @@ type AdminContextType = {
     activeTab: string;
     openTab: (title: string, path: string) => void;
     closeTab: (id: string) => void;
+    viewScope: 'OFFICIAL' | 'INTERNAL';
+    setViewScope: (scope: 'OFFICIAL' | 'INTERNAL') => void;
 };
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
@@ -23,16 +25,16 @@ const AdminContext = createContext<AdminContextType | undefined>(undefined);
 export function AdminProvider({ children }: { children: React.ReactNode }) {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [openTabs, setOpenTabs] = useState<Tab[]>([]);
+    const [viewScope, setViewScope] = useState<'OFFICIAL' | 'INTERNAL'>('INTERNAL');
     const pathname = usePathname();
     const router = useRouter();
 
-    // Load tabs from localStorage on mount
+    // Load tabs and viewScope from localStorage on mount
     useEffect(() => {
-        const saved = localStorage.getItem('tsf_tabs');
-        if (saved) {
+        const savedTabs = localStorage.getItem('tsf_tabs');
+        if (savedTabs) {
             try {
-                const parsed = JSON.parse(saved);
-                // Deduplicate loaded tabs
+                const parsed = JSON.parse(savedTabs);
                 const uniqueTabs = parsed.reduce((acc: Tab[], current: Tab) => {
                     if (!acc.find(t => t.id === current.id)) {
                         acc.push(current);
@@ -45,16 +47,27 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
                 setOpenTabs([{ id: 'dashboard', title: 'Dashboard', path: '/admin' }]);
             }
         } else {
-            // Default Dashboard tab
             setOpenTabs([{ id: 'dashboard', title: 'Dashboard', path: '/admin' }]);
+        }
+
+        const savedScope = localStorage.getItem('tsf_view_scope');
+        if (savedScope === 'OFFICIAL' || savedScope === 'INTERNAL') {
+            setViewScope(savedScope);
         }
     }, []);
 
-    // Sync active tab with URL
+    // Save viewScope to localStorage and Cookies
     useEffect(() => {
-        // If current path isn't in openTabs, we could add it automatically? 
-        // For now, we trust the 'openTab' call to add it.
-    }, [pathname]);
+        localStorage.setItem('tsf_view_scope', viewScope);
+        // Set cookie for server-side awareness (valid for 1 year)
+        document.cookie = `tsf_view_scope=${viewScope}; path=/; max-age=31536000; SameSite=Lax`;
+    }, [viewScope]);
+
+    const handleSetViewScope = (scope: 'OFFICIAL' | 'INTERNAL') => {
+        setViewScope(scope);
+        // Trigger server components refresh
+        router.refresh();
+    };
 
     // Save tabs to localStorage
     useEffect(() => {
@@ -89,7 +102,16 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <AdminContext.Provider value={{ sidebarOpen, toggleSidebar, openTabs, activeTab: pathname, openTab, closeTab }}>
+        <AdminContext.Provider value={{
+            sidebarOpen,
+            toggleSidebar,
+            openTabs,
+            activeTab: pathname,
+            openTab,
+            closeTab,
+            viewScope,
+            setViewScope: handleSetViewScope
+        }}>
             {children}
         </AdminContext.Provider>
     );

@@ -48,7 +48,17 @@ export async function createProduct(prevState: ProductFormState, formData: FormD
         sizeUnitId: formData.get('sizeUnitId') || undefined,
 
         costPrice: formData.get('costPrice') || 0,
-        basePrice: formData.get('basePrice') || 0,
+        costPriceHT: formData.get('costPriceHT') || 0,
+        costPriceTTC: formData.get('costPriceTTC') || 0,
+
+        // basePrice is historically Selling Price. We map sellingPriceTTC or HT to it depending on policy?
+        // Ideally we just save sellingPriceHT/TTC and keep basePrice for compatibility or specific use.
+        // For now, let's say basePrice = sellingPriceTTC for display simplicity in old components
+        basePrice: formData.get('sellingPriceTTC') || 0,
+
+        sellingPriceHT: formData.get('sellingPriceHT') || 0,
+        sellingPriceTTC: formData.get('sellingPriceTTC') || 0,
+
         taxRate: formData.get('taxRate') || 0,
         isTaxIncluded: formData.get('isTaxIncluded') === 'on',
         minStockLevel: formData.get('minStockLevel') || 0,
@@ -59,6 +69,10 @@ export async function createProduct(prevState: ProductFormState, formData: FormD
     const validatedFields = productSchema.extend({
         size: z.coerce.number().optional(),
         sizeUnitId: z.coerce.number().optional(),
+        costPriceHT: z.coerce.number().min(0),
+        costPriceTTC: z.coerce.number().min(0),
+        sellingPriceHT: z.coerce.number().min(0),
+        sellingPriceTTC: z.coerce.number().min(0),
     }).safeParse(rawData);
 
     if (!validatedFields.success) {
@@ -143,7 +157,13 @@ export async function createProduct(prevState: ProductFormState, formData: FormD
                 productGroupId: productGroupId, // Link to Auto-Group
 
                 costPrice: data.costPrice,
+                costPriceHT: data.costPriceHT,
+                costPriceTTC: data.costPriceTTC,
+
                 basePrice: data.basePrice,
+                sellingPriceHT: data.sellingPriceHT,
+                sellingPriceTTC: data.sellingPriceTTC,
+
                 taxRate: data.taxRate,
                 isTaxIncluded: data.isTaxIncluded,
                 minStockLevel: data.minStockLevel,

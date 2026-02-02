@@ -2,13 +2,18 @@ import { getProfitAndLossReport } from '@/app/actions/finance/accounts'
 import { getFiscalYears } from '@/app/actions/finance/fiscal-year'
 import PnlViewer from '@/app/admin/finance/reports/pnl/viewer'
 
+import { cookies } from 'next/headers'
+
 export default async function ProfitAndLossPage() {
+    const cookieStore = await cookies()
+    const scope = (cookieStore.get('tsf_view_scope')?.value as 'OFFICIAL' | 'INTERNAL') || 'INTERNAL'
+
     // Default to current month
     const now = new Date()
     const start = new Date(now.getFullYear(), now.getMonth(), 1)
     const end = new Date(now.getFullYear(), now.getMonth() + 1, 0)
 
-    const initialData = await getProfitAndLossReport(start, end)
+    const initialData = await getProfitAndLossReport(start, end, scope)
     const fiscalYears = await getFiscalYears()
 
     return (

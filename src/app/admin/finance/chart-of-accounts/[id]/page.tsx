@@ -3,6 +3,8 @@ import AccountStatementView from './statement'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 
+import { cookies } from 'next/headers'
+
 export default async function AccountStatementPage({
     params,
     searchParams
@@ -10,6 +12,9 @@ export default async function AccountStatementPage({
     params: Promise<{ id: string }>,
     searchParams: Promise<{ start?: string, end?: string }>
 }) {
+    const cookieStore = await cookies()
+    const scope = (cookieStore.get('tsf_view_scope')?.value as 'OFFICIAL' | 'INTERNAL') || 'INTERNAL'
+
     const resolvedParams = await params
     const resolvedSearchParams = await searchParams
 
@@ -26,7 +31,7 @@ export default async function AccountStatementPage({
     const data = await getAccountStatement(accountId, {
         startDate,
         endDate
-    })
+    }, scope)
 
     return (
         <div className="p-6 max-w-5xl mx-auto">

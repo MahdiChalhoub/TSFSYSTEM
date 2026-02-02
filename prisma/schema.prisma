@@ -57,7 +57,14 @@ model FinancialAccount {
   siteId Int? // Nullable for Global accounts (e.g. Main Bank)
   site   Site? @relation(fields: [siteId], references: [id])
 
+  // STRICT LEDGER LINK
+  ledgerAccountId Int? @unique // Must be set to allow transactions
+  ledgerAccount   ChartOfAccount? @relation("FinancialToLedger", fields: [ledgerAccountId], references: [id])
+
   transactions Transaction[]
+  
+  // Assigned (Cashiers/Users) who use this account
+  assignedUsers User[] @relation("UserCashRegister")
 }
 
 model Transaction {
@@ -72,7 +79,8 @@ model Transaction {
   type        String // 'DEBIT', 'CREDIT'
   description String?
   referenceId String? // Link to Order ID or Expense ID
-
+  scope       String @default("OFFICIAL") // 'OFFICIAL', 'INTERNAL', 'PENDING'
+  
   createdAt DateTime @default(now())
   
   financialEvent FinancialEvent?
@@ -98,6 +106,10 @@ model User {
   homeSiteId Int?
   homeSite   Site? @relation("HomeSite", fields: [homeSiteId], references: [id])
 
+  // Financial Assignment
+  cashRegisterId Int?
+  cashRegister   FinancialAccount? @relation("UserCashRegister", fields: [cashRegisterId], references: [id])
+
   // HR Link
   employeeId Int?      @unique
   employee   Employee? @relation(fields: [employeeId], references: [id])
@@ -105,6 +117,7 @@ model User {
   // Financial Link (Sub-ledger account for employee payroll/expenses)
   linkedAccountId Int?            @unique
   linkedAccount   ChartOfAccount? @relation("UserAccount", fields: [linkedAccountId], references: [id])
+
 
   // Relations
   tasks  Task[]
@@ -449,6 +462,10 @@ model Order {
   siteId Int? // Where the sale/purchase happened
   site   Site?  @relation(fields: [siteId], references: [id])
 
+  // Effective Cost Engine Flags
+  invoicePriceType String  @default("HT") // 'HT', 'TTC'
+  vatRecoverable   Boolean @default(true)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -468,6 +485,12 @@ model OrderLine {
 
   // For fulfillment
   batchId Int? // Which batch was picked?
+
+  // Effective Cost Engine Fields (Calculated and Persisted)
+  unitCostHT     Decimal @default(0.00)
+  unitCostTTC    Decimal @default(0.00)
+  vatAmount      Decimal @default(0.00)
+  effectiveCost  Decimal @default(0.00)
 }
 
 // =========================================================
@@ -566,6 +589,9 @@ model FinancialSettings {
   allowHTEntryForTTC   Boolean @default(false) // Allow entering HT invoice in TTC company
   declareTVA           Boolean @default(false)
   dualView             Boolean @default(false) // Official vs Internal
+  
+  // Cost Engine Global Policy
+  pricingCostBasis     String @default("AUTO") // 'AUTO', 'FORCE_HT', 'FORCE_TTC'
 }
 
 model FiscalYear {
@@ -611,7 +637,8 @@ model ChartOfAccount {
   subType String? // 'CASH', 'BANK', 'RECEIVABLE', 'PAYABLE' for automation
   isActive Boolean @default(true)
 
-  balance Decimal @default(0.00) // Cached balance
+  balance Decimal @default(0.00) // Consolidated (Real) balance
+  balanceOfficial Decimal @default(0.00) // Official (Declared) balance
 
   // Regulatory Mapping (Reporting-only)
   syscohadaCode  String? // e.g. "57" for Cash
@@ -632,6 +659,9 @@ model ChartOfAccount {
   linkedContact  Contact?  @relation("ContactAccount")
   linkedUser     User?     @relation("UserAccount")
   linkedEmployee Employee? @relation("EmployeeAccount")
+  
+  // Reverse Link for Strict Financial Accounts
+  financialAccount FinancialAccount? @relation("FinancialToLedger")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

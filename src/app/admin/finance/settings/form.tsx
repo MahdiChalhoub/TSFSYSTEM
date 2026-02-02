@@ -236,23 +236,23 @@ export default function FinancialSettingsForm({ settings, lock }: Props) {
 
                     <div className="bg-rose-50 border border-rose-100 rounded-md p-4 flex items-center justify-between">
                         <div>
-                            <h3 className="text-sm font-bold text-rose-900 uppercase tracking-wider">CRITICAL: Reset Ledger for Testing</h3>
+                            <h3 className="text-sm font-bold text-rose-900 uppercase tracking-wider">CRITICAL: Fresh Version (Wipe All Data)</h3>
                             <p className="text-xs text-rose-700 mt-1 font-medium">
-                                DELETES all Journal Entries and RESETS all account balances to ZERO.
-                                <br /> Use this only to restart testing from scratch.
+                                DELETES all Products, Orders, Ledger entries, CRM, and Inventory.
+                                <br /> Use this to completely reset the system to a clean state.
                             </p>
                         </div>
                         <button
                             type="button"
                             onClick={async () => {
-                                if (!confirm("DANGER: This will delete ALL Journal entries and lines. This cannot be undone. Are you sure?")) return
-                                if (!confirm("LAST WARNING: Clear all data and reset balances to zero?")) return
+                                if (!confirm("ULTIMATE DANGER: This will delete EVERYTHING (Products, Orders, Ledger, Contacts). This cannot be undone. Proceed?")) return
+                                if (!confirm("TOTAL WIPE CONFIRMATION: Start with a Fresh Version?")) return
 
                                 startTransition(async () => {
                                     try {
-                                        const { clearAllJournalEntries } = await import('@/app/actions/finance/ledger')
-                                        await clearAllJournalEntries()
-                                        alert("Ledger has been completely cleared.")
+                                        const { wipeAllOperationalData } = await import('@/app/actions/finance/system')
+                                        await wipeAllOperationalData()
+                                        alert("System has been completely wiped to a Fresh Version.")
                                         router.refresh()
                                     } catch (e: any) {
                                         alert("Error: " + e.message)
@@ -262,7 +262,38 @@ export default function FinancialSettingsForm({ settings, lock }: Props) {
                             disabled={isPending}
                             className="bg-rose-600 border border-rose-700 text-white hover:bg-rose-700 px-4 py-2 rounded text-xs font-black shadow-lg"
                         >
-                            {isPending ? 'Wiping...' : 'RESET LEDGER'}
+                            {isPending ? 'Wiping...' : 'FRESH VERSION'}
+                        </button>
+                    </div>
+
+                    <div className="bg-emerald-50 border border-emerald-100 rounded-md p-4 flex items-center justify-between">
+                        <div>
+                            <h3 className="text-sm font-bold text-emerald-900 uppercase tracking-wider">Fill Real Data (Seed System)</h3>
+                            <p className="text-xs text-emerald-700 mt-1 font-medium">
+                                Fills the database with test products, suppliers, and initial stock.
+                                <br /> Use this to quickly test system functionality.
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={async () => {
+                                if (!confirm("Populate database with test records?")) return
+
+                                startTransition(async () => {
+                                    try {
+                                        const { seedTestData } = await import('@/app/actions/finance/system')
+                                        await seedTestData()
+                                        alert("Test data has been successfully seeded!")
+                                        router.refresh()
+                                    } catch (e: any) {
+                                        alert("Error: " + e.message)
+                                    }
+                                })
+                            }}
+                            disabled={isPending}
+                            className="bg-emerald-600 border border-emerald-700 text-white hover:bg-emerald-700 px-4 py-2 rounded text-xs font-black shadow-lg"
+                        >
+                            {isPending ? 'Seeding...' : 'FILL REAL DATA'}
                         </button>
                     </div>
                 </div>

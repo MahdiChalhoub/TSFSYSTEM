@@ -4,10 +4,12 @@ import { prisma } from '@/lib/db'
 import { serializeDecimals } from '@/lib/utils/serialization'
 import { getInventoryFinancialStatus } from './inventory-integration'
 
-export async function getFinancialDashboardStats() {
+export async function getFinancialDashboardStats(scope: 'OFFICIAL' | 'INTERNAL' = 'INTERNAL') {
     const now = new Date()
     const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
     const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+
+    const balanceField = scope === 'OFFICIAL' ? 'balanceOfficial' : 'balance'
 
     // 1. Cash Position (Bank + Cash accounts)
     const cashAccounts = await prisma.chartOfAccount.findMany({
@@ -18,14 +20,15 @@ export async function getFinancialDashboardStats() {
             ]
         }
     })
-    const totalCash = cashAccounts.reduce((sum: number, acc: any) => sum + Number(acc.balance), 0)
+    const totalCash = cashAccounts.reduce((sum: number, acc: any) => sum + Number(acc[balanceField]), 0)
 
     // 2. Precise Monthly P&L
     const lines = await prisma.journalEntryLine.findMany({
         where: {
             journalEntry: {
                 status: 'POSTED',
-                transactionDate: { gte: currentMonthStart, lte: currentMonthEnd }
+                transactionDate: { gte: currentMonthStart, lte: currentMonthEnd },
+                ...(scope === 'OFFICIAL' ? { scope: 'OFFICIAL' } : {})
             },
             account: { type: { in: ['INCOME', 'EXPENSE'] } }
         },
@@ -43,8 +46,8 @@ export async function getFinancialDashboardStats() {
     const arAccounts = await (prisma.chartOfAccount as any).findMany({ where: { subType: 'RECEIVABLE' } })
     const apAccounts = await (prisma.chartOfAccount as any).findMany({ where: { subType: 'PAYABLE' } })
 
-    const totalAR = arAccounts.reduce((sum: number, a: any) => sum + Number(a.balance), 0)
-    const totalAP = Math.abs(apAccounts.reduce((sum: number, a: any) => sum + Number(a.balance), 0))
+    const totalAR = arAccounts.reduce((sum: number, a: any) => sum + Number(a[balanceField]), 0)
+    const totalAP = Math.abs(apAccounts.reduce((sum: number, a: any) => sum + Number(a[balanceField]), 0))
 
     // 4. Trend Data (Last 6 Months)
     const trends = []
@@ -57,7 +60,8 @@ export async function getFinancialDashboardStats() {
             where: {
                 journalEntry: {
                     status: 'POSTED',
-                    transactionDate: { gte: monthStart, lte: monthEnd }
+                    transactionDate: { gte: monthStart, lte: monthEnd },
+                    ...(scope === 'OFFICIAL' ? { scope: 'OFFICIAL' } : {})
                 },
                 account: { type: { in: ['INCOME', 'EXPENSE'] } }
             },
@@ -82,11 +86,14 @@ export async function getFinancialDashboardStats() {
     // 5. Recent Activity
     const recentEntries = await prisma.journalEntry.findMany({
         take: 5,
+        where: {
+            ...(scope === 'OFFICIAL' ? { scope: 'OFFICIAL' } : {})
+        },
         orderBy: { transactionDate: 'desc' },
         include: {
             lines: {
                 include: { account: true },
-                take: 2 // Only preview a couple of lines per entry
+                take: 2
             }
         }
     })
@@ -117,4 +124,37 @@ export async function getFinancialDashboardStats() {
     }
 
     return serializeDecimals(stats)
+}
+export async function getAdminDashboardStats() {
+    const totalSales = await prisma.order.aggregate({
+        where: { type: 'SALE', status: 'COMPLETED' },
+        _sum: { totalAmount: true }
+    })
+
+    const activeOrders = await prisma.order.count({
+        where: { status: 'PENDING_APPROVAL' }
+    })
+
+    const totalProducts = await prisma.product.count({
+        where: { status: 'ACTIVE' }
+    })
+
+    const totalCustomers = await prisma.contact.count({
+        where: { type: 'CUSTOMER' }
+    })
+
+    const latestSales = await prisma.order.findMany({
+        where: { type: 'SALE' },
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        include: { contact: true }
+    })
+
+    return serializeDecimals({
+        totalSales: Number(totalSales._sum.totalAmount || 0),
+        activeOrders,
+        totalProducts,
+        totalCustomers,
+        latestSales
+    })
 }

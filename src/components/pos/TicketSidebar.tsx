@@ -1,13 +1,18 @@
 'use client';
 
-import { Trash2, Plus, Minus, CreditCard, ShoppingCart } from 'lucide-react';
+import { Trash2, Plus, Minus, CreditCard, ShoppingCart, Loader2, CheckCircle } from 'lucide-react';
 import { CartItem } from '@/types/pos';
+import { useTransition, useState } from 'react';
+import { toast } from 'sonner';
+import { processSale } from '@/app/admin/sales/actions';
 
 export function TicketSidebar({ cart, onUpdateQuantity, onClear }: {
     cart: CartItem[],
     onUpdateQuantity: (id: number, delta: number) => void,
     onClear: () => void
 }) {
+    const [isPending, startTransition] = useTransition();
+    const [scope, setScope] = useState<'OFFICIAL' | 'INTERNAL'>('OFFICIAL');
 
     // Calculations
     const subtotal = cart.reduce((acc, item) => {
@@ -29,15 +34,51 @@ export function TicketSidebar({ cart, onUpdateQuantity, onClear }: {
 
     const total = subtotal + taxTotal;
 
+    const handleCharge = () => {
+        if (cart.length === 0) return;
+
+        startTransition(async () => {
+            try {
+                const result = await processSale({
+                    cart,
+                    paymentMethod: 'CASH', // Hardcoded for now, ideal to have selector
+                    totalAmount: total,
+                    scope: scope
+                });
+
+                if (result.success) {
+                    toast.success(`Order Processed! Ref: ${result.ref}`);
+                    onClear();
+                }
+            } catch (error) {
+                console.error(error);
+                toast.error("Failed to process order. Check Ledger Settings.");
+            }
+        });
+    };
+
     return (
         <div className="flex flex-col h-full bg-white border-l border-gray-100 shadow-2xl relative z-30">
             {/* Header */}
             <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0">
                 <div>
                     <h2 className="text-xl font-bold text-gray-900 tracking-tight">Current Order</h2>
-                    <p className="text-sm text-gray-500 font-medium">Ticket #1024</p>
+                    <div className="flex gap-1.5 mt-1">
+                        <button
+                            onClick={() => setScope('OFFICIAL')}
+                            className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest border transition-all ${scope === 'OFFICIAL' ? 'bg-emerald-500 border-emerald-600 text-white shadow-sm' : 'bg-gray-50 border-gray-200 text-gray-400'}`}
+                        >
+                            Declared
+                        </button>
+                        <button
+                            onClick={() => setScope('INTERNAL')}
+                            className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest border transition-all ${scope === 'INTERNAL' ? 'bg-amber-500 border-amber-600 text-white shadow-sm' : 'bg-gray-50 border-gray-200 text-gray-400'}`}
+                        >
+                            Internal
+                        </button>
+                    </div>
                 </div>
-                <button onClick={onClear} className="px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-xs font-semibold uppercase tracking-wide transition-colors flex items-center gap-1.5">
+                <button onClick={onClear} disabled={isPending} className="px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-xs font-semibold uppercase tracking-wide transition-colors flex items-center gap-1.5 disabled:opacity-50">
                     <Trash2 size={14} /> Clear
                 </button>
             </div>
@@ -67,9 +108,9 @@ export function TicketSidebar({ cart, onUpdateQuantity, onClear }: {
                         <div className="flex flex-col items-end gap-2">
                             <div className="font-bold text-gray-900 text-lg">${(item.price * item.quantity).toFixed(2)}</div>
                             <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl p-1 shadow-sm">
-                                <button onClick={() => onUpdateQuantity(item.productId, -1)} className="w-7 h-7 flex items-center justify-center hover:bg-gray-100 rounded-lg text-gray-600 transition-colors"><Minus size={14} strokeWidth={3} /></button>
+                                <button onClick={() => onUpdateQuantity(item.productId, -1)} disabled={isPending} className="w-7 h-7 flex items-center justify-center hover:bg-gray-100 rounded-lg text-gray-600 transition-colors disabled:opacity-50"><Minus size={14} strokeWidth={3} /></button>
                                 <span className="w-6 text-center font-bold text-sm">{item.quantity}</span>
-                                <button onClick={() => onUpdateQuantity(item.productId, 1)} className="w-7 h-7 flex items-center justify-center hover:bg-gray-100 rounded-lg text-gray-600 transition-colors"><Plus size={14} strokeWidth={3} /></button>
+                                <button onClick={() => onUpdateQuantity(item.productId, 1)} disabled={isPending} className="w-7 h-7 flex items-center justify-center hover:bg-gray-100 rounded-lg text-gray-600 transition-colors disabled:opacity-50"><Plus size={14} strokeWidth={3} /></button>
                             </div>
                         </div>
                     </div>
@@ -103,9 +144,22 @@ export function TicketSidebar({ cart, onUpdateQuantity, onClear }: {
                     </div>
                 </div>
 
-                <button className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-xl rounded-2xl shadow-lg shadow-emerald-900/10 hover:shadow-emerald-900/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3">
-                    <CreditCard size={24} />
-                    <span>Charge Order</span>
+                <button
+                    onClick={handleCharge}
+                    disabled={isPending || cart.length === 0}
+                    className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-xl rounded-2xl shadow-lg shadow-emerald-900/10 hover:shadow-emerald-900/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-70 disabled:grayscale"
+                >
+                    {isPending ? (
+                        <>
+                            <Loader2 size={24} className="animate-spin" />
+                            <span>Processing...</span>
+                        </>
+                    ) : (
+                        <>
+                            <CreditCard size={24} />
+                            <span>Charge Order</span>
+                        </>
+                    )}
                 </button>
             </div>
         </div>

@@ -1,8 +1,12 @@
 import { getFinancialDashboardStats } from '@/app/actions/finance/dashboard'
 import FinanceDashboardViewer from '@/app/admin/finance/dashboard/viewer'
 
+import { cookies } from 'next/headers'
+
 export default async function FinanceDashboardPage() {
-    const stats = await getFinancialDashboardStats()
+    const cookieStore = await cookies()
+    const scope = (cookieStore.get('tsf_view_scope')?.value as 'OFFICIAL' | 'INTERNAL') || 'INTERNAL'
+    const stats = await getFinancialDashboardStats(scope)
 
     return (
         <div className="p-8 max-w-7xl mx-auto">

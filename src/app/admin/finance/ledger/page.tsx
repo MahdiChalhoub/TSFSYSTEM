@@ -2,8 +2,12 @@ import { getLedgerEntries } from '@/app/actions/finance/ledger'
 import { LedgerEntryActions } from './ledger-actions'
 import Link from 'next/link'
 
+import { cookies } from 'next/headers'
+
 export default async function GeneralLedgerPage() {
-    const entries = await getLedgerEntries()
+    const cookieStore = await cookies()
+    const scope = (cookieStore.get('tsf_view_scope')?.value as 'OFFICIAL' | 'INTERNAL') || 'INTERNAL'
+    const entries = await getLedgerEntries(scope)
 
     return (
         <div className="p-6 max-w-6xl mx-auto">

@@ -12,7 +12,10 @@ import {
     ChevronDown,
     LayoutDashboard,
     Settings,
-    LogOut
+    LogOut,
+    ShoppingCart,
+    Layers,
+    BarChart3
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import clsx from 'clsx';
@@ -26,16 +29,23 @@ const MENU_ITEMS = [
         path: '/admin'
     },
     {
-        title: 'POS System',
+        title: 'Commercial',
         icon: ShoppingBag,
-        path: '/admin/sales'
+        children: [
+            { title: 'POS System (Mobile)', path: '/admin/sales' },
+            { title: 'Purchase Registry', path: '/admin/purchases' },
+            { title: 'New Purchase invoice', path: '/admin/purchases/new' },
+        ]
     },
     {
         title: 'Inventory',
         icon: Box,
         children: [
             { title: 'Product Master', path: '/admin/products' },
+            { title: 'Product Groups', path: '/admin/products?view=grouped' },
+            { title: 'New Product Group', path: '/admin/products/create-group' },
             { title: 'Warehouses & Zones', path: '/admin/inventory/warehouses' },
+            { title: 'Stock Adjustments', path: '/admin/inventory/adjustments' },
             { title: 'Global Inventory', path: '/admin/inventory/global' },
             { title: 'Categories', path: '/admin/inventory/categories' },
             { title: 'Units & Packaging', path: '/admin/inventory/units' },
@@ -50,8 +60,10 @@ const MENU_ITEMS = [
         icon: FileText,
         children: [
             { title: 'Performance Dashboard', path: '/admin/finance/dashboard' },
+            { title: 'Accounts & Drawers', path: '/admin/finance/accounts' },
             { title: 'Chart of Accounts', path: '/admin/finance/chart-of-accounts' },
             { title: 'General Ledger', path: '/admin/finance/ledger' },
+            { title: 'Account Statement', path: '/admin/finance/reports/statement' },
             { title: 'Trial Balance', path: '/admin/finance/reports/trial-balance' },
             { title: 'Profit & Loss', path: '/admin/finance/reports/pnl' },
             { title: 'Balance Sheet', path: '/admin/finance/reports/balance-sheet' },
@@ -96,13 +108,12 @@ const MENU_ITEMS = [
 ];
 
 export function Sidebar() {
-    const { sidebarOpen, openTab, activeTab } = useAdmin();
+    const { sidebarOpen, openTab, activeTab, viewScope, setViewScope } = useAdmin();
 
     if (!sidebarOpen) return null;
 
     return (
         <aside className="w-80 bg-[#0F172A] border-r border-gray-800 flex flex-col shrink-0 overflow-y-auto h-full text-gray-300 shadow-2xl relative z-30 transition-all duration-300">
-            {/* Logo Section */}
             <div className="p-8 border-b border-gray-800/50 flex items-center gap-4">
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-900/20 text-white font-bold text-xl">
                     T
@@ -111,6 +122,34 @@ export function Sidebar() {
                     <h1 className="text-xl font-bold text-white tracking-tight leading-none">TSF City</h1>
                     <p className="text-xs text-emerald-400 font-medium mt-1.5">Marcory Branch</p>
                 </div>
+            </div>
+
+            {/* View Scope Switcher */}
+            <div className="mx-6 mt-6 p-1.5 bg-[#0B1120] rounded-2xl border border-gray-800 flex gap-1">
+                <button
+                    onClick={() => setViewScope('OFFICIAL')}
+                    className={clsx(
+                        "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
+                        viewScope === 'OFFICIAL'
+                            ? "bg-emerald-600 text-white shadow-lg shadow-emerald-900/40"
+                            : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
+                    )}
+                >
+                    <Layers size={14} />
+                    Declared
+                </button>
+                <button
+                    onClick={() => setViewScope('INTERNAL')}
+                    className={clsx(
+                        "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
+                        viewScope === 'INTERNAL'
+                            ? "bg-gray-700 text-white shadow-lg"
+                            : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
+                    )}
+                >
+                    <BarChart3 size={14} />
+                    Both
+                </button>
             </div>
 
             <div className="p-6 space-y-2 flex-1">
