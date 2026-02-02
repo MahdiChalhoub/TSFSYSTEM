@@ -29,12 +29,37 @@ model Organization {
   ledger   ChartOfAccount[]
   contacts Contact[]
   audits   AuditLog[]
+  unit        Unit[]
+  warehouse   Warehouse[]
+  order       Order[]
+  task        Task[]
+  pricingRule PricingRule[]
+  priceList   PriceList[]
+  brand       Brand[]
+  category    Category[]
+  parfum      Parfum[]
+  country     Country[]
+  fiscalYear  FiscalYear[]
+  fiscalPeriod FiscalPeriod[]
+  journalEntry JournalEntry[]
+  journalEntryLine JournalEntryLine[]
+  productImage ProductImage[]
+  transactionSequence TransactionSequence[]
+  barcodeSettings BarcodeSettings[]
+  systemSettings SystemSettings[]
+  inventory Inventory[]
+  stockBatch StockBatch[]
+  orderLine OrderLine[]
 }
 
 model Country {
   id   Int    @id @default(autoincrement())
   code String @unique // LB, US, FR
   name String
+
+  // SaaS Context
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   brands   Brand[]
   products Product[] // Origin
@@ -44,6 +69,10 @@ model Unit {
   id   Int    @id @default(autoincrement())
   code String @unique // PC, BOX
   name String // Piece, Box
+
+  // SaaS Context
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   // Attributes requested by User
   shortName            String?
@@ -96,6 +125,10 @@ model Transaction {
   description String?
   referenceId String? // Link to Order ID or Expense ID
   scope       String  @default("OFFICIAL") // 'OFFICIAL', 'INTERNAL', 'PENDING'
+
+  // SaaS Context
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   createdAt DateTime @default(now())
 
@@ -187,8 +220,8 @@ model AuditLog {
   user      User     @relation(fields: [userId], references: [id])
   timestamp DateTime @default(now())
 
-  organizationId String??
-  organization   Organization?? @relation(fields: [organizationId], references: [id])
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 }
 
 // =========================================================
@@ -376,44 +409,59 @@ model ProductGroup {
 model Category {
   id        Int     @id @default(autoincrement())
   name      String
-  code      String? @unique // Internal Code for barcode generation
-  shortName String? // Abbreviation for nomenclature
+  code      String? // Internal Code
+  shortName String? // Abbreviation
+  
+  // SaaS Context
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   parentId Int? // For Sub-categories
   parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
   children Category[] @relation("CategoryHierarchy")
 
-  brands Brand[] // Many-to-Many: Brands available in this category
-
+  brands Brand[] // Many-to-Many
   products Product[]
-
   productGroups ProductGroup[]
   parfums       Parfum[]
   PricingRule   PricingRule[]
+
+  @@unique([code, organizationId])
 }
 
 model Brand {
   id        Int     @id @default(autoincrement())
-  name      String  @unique
+  name      String 
   shortName String? // Abbreviation
   logo      String? // URL to logo
 
-  countries  Country[] // Many-to-Many: Brand operates in these countries
-  categories Category[] // Many-to-Many: Categories where this brand applies
+  // SaaS Context
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  countries  Country[] // Many-to-Many
+  categories Category[] // Many-to-Many
 
   products      Product[]
   productGroups ProductGroup[]
+
+  @@unique([name, organizationId])
 }
 
 model Parfum {
   id        Int     @id @default(autoincrement())
-  name      String  @unique
+  name      String 
   shortName String?
 
-  categories Category[] // Many-to-Many: Parfums available in these categories
+  // SaaS Context
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
+  categories Category[] // Many-to-Many
   products      Product[]
   productGroups ProductGroup[]
+
+  @@unique([name, organizationId])
 }
 
 model Warehouse {
@@ -426,10 +474,16 @@ model Warehouse {
   city     String?
   isActive Boolean @default(true)
 
+  // SaaS Context
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
   siteId Int?
   site   Site? @relation(fields: [siteId], references: [id])
 
   inventory Inventory[]
+  
+  @@unique([code, organizationId])
 }
 
 // Specific batch of items (e.g., Milk expiring 2026-10-10)
@@ -438,6 +492,10 @@ model StockBatch {
   productId Int
   product   Product @relation(fields: [productId], references: [id])
   batchCode String // Auto-generated or Supplier Batch
+
+  // SaaS Context
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   expiryDate DateTime?
   costPrice  Decimal // Cost of this specific batch
@@ -459,7 +517,11 @@ model Inventory {
 
   quantity Decimal @default(0)
 
-  @@unique([warehouseId, productId, batchId])
+  // SaaS Context
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([warehouseId, productId, batchId, organizationId])
 }
 
 // =========================================================
@@ -470,6 +532,10 @@ model Order {
   id     Int    @id @default(autoincrement())
   type   String // 'SALE', 'PURCHASE', 'TRANSFER', 'ADJUSTMENT'
   status String // 'DRAFT', 'PENDING_APPROVAL', 'COMPLETED', 'CANCELLED'
+
+  // SaaS Context
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   // Participants
   contactId Int? // Supplier or Customer
@@ -522,6 +588,10 @@ model OrderLine {
   taxRate   Decimal @default(0.00) // Snapshot of tax rate at time of sale
   total     Decimal
 
+  // SaaS Context
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
   // For fulfillment
   batchId Int? // Which batch was picked?
 
@@ -545,6 +615,10 @@ model Task {
   status   String // 'TODO', 'IN_PROGRESS', 'REVIEW', 'DONE'
   priority String // 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'
 
+  // SaaS Context
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
   assignedToId Int?
   assignedTo   User? @relation(fields: [assignedToId], references: [id])
 
@@ -562,11 +636,17 @@ model Task {
 
 model SystemSettings {
   id    Int    @id @default(autoincrement())
-  key   String @unique // e.g., "product_naming_rule"
+  key   String // e.g., "product_naming_rule"
   value String // JSON stringified value
+
+  // SaaS Context
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   updatedAt DateTime @updatedAt
   createdAt DateTime @default(now())
+
+  @@unique([key, organizationId])
 }
 
 model BarcodeSettings {
@@ -578,18 +658,28 @@ model BarcodeSettings {
 
   isEnabled Boolean @default(true)
 
+  // SaaS Context
+  organizationId String @unique
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
   updatedAt DateTime @updatedAt
 }
 
 model TransactionSequence {
   id         Int     @id @default(autoincrement())
-  type       String  @unique // 'INVOICE', 'LOAN', 'JOURNAL', 'PAYMENT', 'CAPITAL', 'WITHDRAWAL'
+  type       String  // 'INVOICE', 'LOAN', 'JOURNAL', 'PAYMENT', 'CAPITAL', 'WITHDRAWAL'
   prefix     String? // e.g., "INV-"
   suffix     String? // e.g., "/2024"
   nextNumber Int     @default(1)
   padding    Int     @default(5) // e.g., 5 -> 00001
 
+  // SaaS Context
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
   updatedAt DateTime @updatedAt
+
+  @@unique([type, organizationId])
 }
 
 model ProductImage {
@@ -599,6 +689,10 @@ model ProductImage {
 
   productId Int
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // SaaS Context
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   createdAt DateTime @default(now())
 }
@@ -644,12 +738,18 @@ model FiscalYear {
   endDate   DateTime
   status    String   @default("OPEN") // 'OPEN', 'CLOSED', 'LOCKED'
 
+  // SaaS Context
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
   isLocked      Boolean   @default(false)
   isHardLocked  Boolean   @default(false) // Cannot be reopened easily
   autoCloseDate DateTime?
 
   periods        FiscalPeriod[]
   journalEntries JournalEntry[]
+
+  @@unique([name, organizationId])
 }
 
 model FiscalPeriod {
@@ -663,6 +763,10 @@ model FiscalPeriod {
   startDate DateTime
   endDate   DateTime
   status    String   @default("OPEN")
+
+  // SaaS Context
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   journalEntries JournalEntry[]
 }
@@ -723,6 +827,10 @@ model JournalEntry {
   description String?
   reference   String? // Invoice #, Payment Ref
 
+  // SaaS Context
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
   fiscalYearId Int
   fiscalYear   FiscalYear @relation(fields: [fiscalYearId], references: [id])
 
@@ -772,6 +880,10 @@ model JournalEntryLine {
   credit Decimal @default(0.00)
 
   description String?
+
+  // SaaS Context
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 }
 
 // =========================================================
@@ -780,14 +892,20 @@ model JournalEntryLine {
 
 model PriceList {
   id        Int     @id @default(autoincrement())
-  name      String // "Retail Standard", "Wholesale A"
+  name      String  // "Retail Standard", "Wholesale A"
   currency  String  @default("USD")
   isDefault Boolean @default(false)
+
+  // SaaS Context
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   rules PricingRule[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([name, organizationId])
 }
 
 model PricingRule {
@@ -802,6 +920,13 @@ model PricingRule {
   categoryId Int?
   category   Category? @relation(fields: [categoryId], references: [id])
 
+  productGroupId Int?
+  productGroup   ProductGroup? @relation(fields: [productGroupId], references: [id])
+
+  // SaaS Context
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
   // Rule
   adjustmentType String // 'PERCENTAGE', 'FIXED_PRICE', 'FIXED_DISCOUNT'
   value          Decimal
@@ -809,8 +934,6 @@ model PricingRule {
   minQuantity Int @default(1) // For quantity breaks
 
   priority       Int           @default(0) // Higher priority wins
-  ProductGroup   ProductGroup? @relation(fields: [productGroupId], references: [id])
-  productGroupId Int?
 }
 
 // =========================================================
