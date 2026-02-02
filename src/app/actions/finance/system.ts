@@ -176,7 +176,7 @@ export async function seedTestData() {
                 categories: { connect: [{ id: dairy.id }, { id: snacks.id }] }
             }
         })
-        const brandPringles = await tx.brand.create({
+        const brandPringles = await (tx.brand as any).create({
             data: {
                 name: 'Pringles',
                 countries: { connect: [{ id: createdCountries['US'].id }] },
@@ -209,10 +209,10 @@ export async function seedTestData() {
         })
 
         // 5. Units
-        const unitPc = await tx.unit.upsert({
+        const unitPc = await (tx.unit as any).upsert({
             where: { code: 'PC' },
             update: {},
-            create: { code: 'PC', name: 'Piece' }
+            create: { code: 'PC', name: 'Piece', organizationId: organization.id }
         })
 
         // 6. Contacts
@@ -260,7 +260,7 @@ export async function seedTestData() {
         ]
 
         for (const p of products) {
-            await tx.product.create({
+            await (tx.product as any).create({
                 data: {
                     sku: p.sku,
                     barcode: p.barcode,
@@ -285,13 +285,14 @@ export async function seedTestData() {
         // 8. Initial Stock
         const warehouse = await tx.warehouse.findFirst()
         if (warehouse) {
-            const allProducts = await tx.product.findMany()
+            const allProducts = await (tx.product as any).findMany({ where: { organizationId: organization.id } })
             for (const p of allProducts) {
-                await tx.inventory.create({
+                await (tx.inventory as any).create({
                     data: {
                         warehouseId: warehouse.id,
                         productId: p.id,
-                        quantity: 100
+                        quantity: 100,
+                        organizationId: organization.id
                     }
                 })
             }
