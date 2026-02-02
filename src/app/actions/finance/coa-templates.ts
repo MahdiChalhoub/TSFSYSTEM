@@ -291,7 +291,7 @@ export async function importChartOfAccountsTemplate(templateKey: keyof typeof TE
 
     try {
         const { erpFetch } = await import('@/lib/erp-api')
-        await erpFetch('/api/coa/apply_template/', {
+        await erpFetch('coa/apply_template/', {
             method: 'POST',
             body: JSON.stringify({
                 template_key: templateKey,
