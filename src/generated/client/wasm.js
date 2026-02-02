@@ -300,6 +300,7 @@ exports.Prisma.ProductGroupScalarFieldEnum = {
   brandId: 'brandId',
   categoryId: 'categoryId',
   parfumId: 'parfumId',
+  organizationId: 'organizationId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };

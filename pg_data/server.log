@@ -186,3 +186,65 @@
 2026-02-02 11:16:58.428 GMT [20044] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
 2026-02-02 11:16:59.258 GMT [20044] ERROR:  relation "public.Order" does not exist at character 76
 2026-02-02 11:16:59.258 GMT [20044] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:19:34.510 GMT [11300] ERROR:  relation "public.Employee" does not exist at character 524
+2026-02-02 11:19:34.510 GMT [11300] STATEMENT:  SELECT "public"."Employee"."id", "public"."Employee"."employeeId", "public"."Employee"."firstName", "public"."Employee"."lastName", "public"."Employee"."idNumber", "public"."Employee"."phone", "public"."Employee"."email", "public"."Employee"."jobTitle", "public"."Employee"."department", "public"."Employee"."hireDate", "public"."Employee"."salary", "public"."Employee"."status", "public"."Employee"."homeSiteId", "public"."Employee"."linkedAccountId", "public"."Employee"."createdAt", "public"."Employee"."updatedAt" FROM "public"."Employee" WHERE 1=1 ORDER BY "public"."Employee"."lastName" ASC OFFSET $1
+2026-02-02 11:19:37.373 GMT [11300] ERROR:  relation "public.Order" does not exist at character 76
+2026-02-02 11:19:37.373 GMT [11300] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:20:52.566 GMT [11300] ERROR:  relation "public.Order" does not exist at character 76
+2026-02-02 11:20:52.566 GMT [11300] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:21:56.826 GMT [11300] ERROR:  relation "public.Order" does not exist at character 76
+2026-02-02 11:21:56.826 GMT [11300] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:25:48.124 GMT [21744] ERROR:  relation "public.Order" does not exist at character 76
+2026-02-02 11:25:48.124 GMT [21744] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:26:49.534 GMT [32048] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 11:26:49.534 GMT [32048] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 11:26:49.534 GMT [32048] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:28:51.390 GMT [16036] LOG:  checkpoint starting: time
+2026-02-02 11:29:09.046 GMT [16036] LOG:  checkpoint complete: wrote 164 buffers (1.0%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 1 recycled; write=17.521 s, sync=0.114 s, total=17.657 s; sync files=104, longest=0.012 s, average=0.002 s; distance=1115 kB, estimate=2654 kB; lsn=0/2086D40, redo lsn=0/2086CB0
+2026-02-02 11:29:16.688 GMT [32048] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 11:29:16.688 GMT [32048] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 11:29:16.688 GMT [32048] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:29:16.736 GMT [32048] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 11:29:16.736 GMT [32048] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 11:29:16.736 GMT [32048] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:29:18.515 GMT [32048] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 11:29:18.515 GMT [32048] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 11:29:18.515 GMT [32048] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:33:05.768 GMT [27540] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 11:33:05.768 GMT [27540] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 11:33:05.768 GMT [27540] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:33:05.833 GMT [27540] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 11:33:05.833 GMT [27540] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 11:33:05.833 GMT [27540] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:33:07.465 GMT [27540] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 11:33:07.465 GMT [27540] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 11:33:07.465 GMT [27540] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:33:07.999 GMT [27540] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 11:33:07.999 GMT [27540] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 11:33:07.999 GMT [27540] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:33:22.087 GMT [27540] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 11:33:22.087 GMT [27540] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 11:33:22.087 GMT [27540] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:33:26.502 GMT [27540] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 11:33:26.502 GMT [27540] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 11:33:26.502 GMT [27540] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:33:51.063 GMT [16036] LOG:  checkpoint starting: time
+2026-02-02 11:33:51.301 GMT [16036] LOG:  checkpoint complete: wrote 2 buffers (0.0%), wrote 0 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=0.221 s, sync=0.006 s, total=0.239 s; sync files=2, longest=0.005 s, average=0.003 s; distance=10 kB, estimate=2390 kB; lsn=0/2089770, redo lsn=0/2089718
+2026-02-02 11:35:10.805 GMT [27540] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 11:35:10.805 GMT [27540] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 11:35:10.805 GMT [27540] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:36:22.082 GMT [27540] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 11:36:22.082 GMT [27540] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 11:36:22.082 GMT [27540] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:40:01.919 GMT [13492] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 11:40:01.919 GMT [13492] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 11:40:01.919 GMT [13492] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:40:36.449 GMT [20188] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 11:40:36.449 GMT [20188] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 11:40:36.449 GMT [20188] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:40:37.518 GMT [20188] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 11:40:37.518 GMT [20188] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 11:40:37.518 GMT [20188] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:40:38.928 GMT [20188] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 11:40:38.928 GMT [20188] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 11:40:38.928 GMT [20188] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"

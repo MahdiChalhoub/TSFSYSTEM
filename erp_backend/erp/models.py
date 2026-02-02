@@ -183,6 +183,10 @@ class Product(TenantModel):
     selling_price_ht = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
     selling_price_ttc = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
     
+    # Matching Prisma Fields
+    status = models.CharField(max_length=20, default='ACTIVE')
+    supplier = models.ForeignKey('Contact', on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
+
     is_expiry_tracked = models.BooleanField(default=False)
     min_stock_level = models.IntegerField(default=10)
     
@@ -228,6 +232,49 @@ class ChartOfAccount(TenantModel):
         db_table = 'ChartOfAccount'
         unique_together = ('code', 'organization')
 
+class Contact(TenantModel):
+    TYPES = (
+        ('SUPPLIER', 'Supplier'),
+        ('CUSTOMER', 'Customer'),
+        ('LEAD', 'Lead')
+    )
+    type = models.CharField(max_length=20, choices=TYPES)
+    name = models.CharField(max_length=255)
+    email = models.CharField(max_length=255, null=True, blank=True)
+    phone = models.CharField(max_length=50, null=True, blank=True)
+    address = models.TextField(null=True, blank=True)
+    vat_id = models.CharField(max_length=100, null=True, blank=True)
+    
+    balance = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+    credit_limit = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+    
+    linked_account = models.OneToOneField(ChartOfAccount, on_delete=models.SET_NULL, null=True, blank=True, related_name='contact')
+    home_site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True, related_name='contacts')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'Contact'
+
+class Employee(TenantModel):
+    employee_id = models.CharField(max_length=100, unique=True)
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    phone = models.CharField(max_length=50, null=True, blank=True)
+    email = models.EmailField(null=True, blank=True)
+    job_title = models.CharField(max_length=100, null=True, blank=True)
+    salary = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
+    
+    linked_account = models.OneToOneField(ChartOfAccount, on_delete=models.SET_NULL, null=True, blank=True, related_name='employee')
+    user = models.OneToOneField('User', on_delete=models.SET_NULL, null=True, blank=True, related_name='employee')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'Employee'
+
 class Warehouse(TenantModel):
     site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name='warehouses')
     name = models.CharField(max_length=255) # "Main", "Damaged"
@@ -240,16 +287,79 @@ class Warehouse(TenantModel):
         db_table = 'Warehouse'
         unique_together = ('name', 'site')
 
+class StockBatch(TenantModel):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='batches')
+    batch_code = models.CharField(max_length=100)
+    expiry_date = models.DateTimeField(null=True, blank=True)
+    cost_price = models.DecimalField(max_digits=15, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'StockBatch'
+
+class InventoryLevel(TenantModel):
+    site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name='inventory_levels')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='site_levels')
+    quantity = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+
+    class Meta:
+        db_table = 'InventoryLevel'
+        unique_together = ('site', 'product', 'organization')
+
 class Inventory(TenantModel):
     warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE, related_name='inventory')
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='inventory')
+    batch = models.ForeignKey(StockBatch, on_delete=models.SET_NULL, null=True, blank=True, related_name='inventory')
     quantity = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
-    
-    # We will add StockBatch tracking later if needed
     
     class Meta:
         db_table = 'Inventory'
-        unique_together = ('warehouse', 'product')
+        unique_together = ('warehouse', 'product', 'batch', 'organization')
+
+class Order(TenantModel):
+    TYPES = (
+        ('SALE', 'Sale'),
+        ('PURCHASE', 'Purchase'),
+        ('TRANSFER', 'Transfer'),
+        ('ADJUSTMENT', 'Adjustment')
+    )
+    type = models.CharField(max_length=20, choices=TYPES)
+    status = models.CharField(max_length=20, default='DRAFT') # 'DRAFT', 'COMPLETED', etc.
+    
+    contact = models.ForeignKey(Contact, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
+    user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='orders')
+    site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
+    
+    total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+    tax_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+    discount = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+    
+    is_verified = models.BooleanField(default=False)
+    is_locked = models.BooleanField(default=False)
+    
+    notes = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'Order'
+
+class OrderLine(TenantModel):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='lines')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='order_lines')
+    batch = models.ForeignKey(StockBatch, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    quantity = models.DecimalField(max_digits=15, decimal_places=2)
+    unit_price = models.DecimalField(max_digits=15, decimal_places=2)
+    tax_rate = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+    total = models.DecimalField(max_digits=15, decimal_places=2)
+    
+    # Cost capture
+    unit_cost_ht = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+    effective_cost = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+
+    class Meta:
+        db_table = 'OrderLine'
 
 class InventoryMovement(TenantModel):
     MOVEMENT_TYPES = (
