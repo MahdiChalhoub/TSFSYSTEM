@@ -2,6 +2,8 @@
 
 import { prisma } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
+import { getTenantContext } from '@/lib/erp-api'
+import { applySmartPostingRules } from './posting-rules'
 
 type TemplateAccount = {
     code: string
@@ -285,75 +287,93 @@ const TEMPLATES = {
 }
 
 export async function importChartOfAccountsTemplate(templateKey: keyof typeof TEMPLATES, options?: { reset?: boolean }) {
+    console.log(`[COA_TEMPLATE] Starting import for ${templateKey}, reset=${options?.reset}`)
+    const tenant = await getTenantContext()
+    if (!tenant) {
+        console.error(`[COA_TEMPLATE] No tenant context found!`)
+        throw new Error("No organization context found")
+    }
+    console.log(`[COA_TEMPLATE] Tenant found: ${tenant.slug} (${tenant.id})`)
+
     const template = TEMPLATES[templateKey]
-    if (!template) throw new Error("Template not found")
+    if (!template) {
+        console.error(`[COA_TEMPLATE] Template ${templateKey} not found!`)
+        throw new Error("Template not found")
+    }
 
-    return await prisma.$transaction(async (tx) => {
-        if (options?.reset) {
-            // Check for transactions first!
-            const entryCount = await tx.journalEntry.count()
-            if (entryCount > 0) {
-                throw new Error("Cannot reset Chart of Accounts: Transactions already exist in the system. Please delete all transactions first or import manually.")
-            }
-            // Delete all existing accounts
-            await (tx.chartOfAccount as any).deleteMany({})
-        }
-
-        async function createRecursive(items: TemplateAccount[], parentId?: number) {
-            for (const item of items) {
-                // Check if account already exists by code to prevent unique constraint error
-                let existing = await (tx.chartOfAccount as any).findUnique({
-                    where: { code: item.code }
+    try {
+        await prisma.$transaction(async (tx) => {
+            if (options?.reset) {
+                // Check for transactions first!
+                const entryCount = await tx.journalEntry.count({
+                    where: { organizationId: tenant.id }
                 })
-
-                let created
-                if (existing) {
-                    // Update existing account to ensure it's active and has correct metadata
-                    created = await (tx.chartOfAccount as any).update({
-                        where: { id: existing.id },
-                        data: {
-                            name: item.name,
-                            type: item.type,
-                            subType: item.subType || null,
-                            isActive: true,
-                            syscohadaCode: item.syscohadaCode || null,
-                            syscohadaClass: item.syscohadaClass || null,
-                            // Only update parent if it doesn't have one to preserve custom structures
-                            parentId: existing.parentId || parentId || null,
-                            isSystemOnly: item.isSystemOnly || false,
-                            isHidden: item.isHidden || false,
-                            requiresZeroBalance: item.requiresZeroBalance || false
-                        }
-                    })
-                } else {
-                    created = await (tx.chartOfAccount as any).create({
-                        data: {
-                            code: item.code,
-                            name: item.name,
-                            type: item.type,
-                            subType: item.subType || null,
-                            isActive: true,
-                            parentId: parentId || null,
-                            syscohadaCode: item.syscohadaCode || null,
-                            syscohadaClass: item.syscohadaClass || null,
-                            isSystemOnly: item.isSystemOnly || false,
-                            isHidden: item.isHidden || false,
-                            requiresZeroBalance: item.requiresZeroBalance || false
-                        }
-                    })
+                if (entryCount > 0) {
+                    throw new Error("Cannot reset Chart of Accounts: Transactions already exist in the system. Please delete all transactions first or import manually.")
                 }
+                // Delete all existing accounts
+                await tx.chartOfAccount.deleteMany({
+                    where: { organizationId: tenant.id }
+                })
+            }
 
-                if (item.children && item.children.length > 0) {
-                    await createRecursive(item.children, created.id)
+            async function createRecursive(items: TemplateAccount[], parentId?: number) {
+                if (!tenant) return; // Should not happen due to top-level check
+                for (const item of items) {
+                    // Check if account already exists by code and organization to prevent unique constraint error
+                    let existing = await tx.chartOfAccount.findFirst({
+                        where: { code: item.code, organizationId: tenant.id }
+                    })
+
+                    let created
+                    if (existing) {
+                        // Update existing account to ensure it's active and has correct metadata
+                        created = await tx.chartOfAccount.update({
+                            where: { id: existing.id },
+                            data: {
+                                name: item.name,
+                                type: item.type,
+                                subType: item.subType || null,
+                                isActive: true,
+                                syscohadaCode: item.syscohadaCode || null,
+                                syscohadaClass: item.syscohadaClass || null,
+                                // Only update parent if it doesn't have one to preserve custom structures
+                                parentId: existing.parentId || parentId || null,
+                                isSystemOnly: item.isSystemOnly || false,
+                                isHidden: item.isHidden || false,
+                                requiresZeroBalance: item.requiresZeroBalance || false
+                            }
+                        })
+                    } else {
+                        created = await tx.chartOfAccount.create({
+                            data: {
+                                code: item.code,
+                                name: item.name,
+                                type: item.type,
+                                subType: item.subType || null,
+                                isActive: true,
+                                organizationId: tenant.id,
+                                parentId: parentId || null,
+                                syscohadaCode: item.syscohadaCode || null,
+                                syscohadaClass: item.syscohadaClass || null,
+                                isSystemOnly: item.isSystemOnly || false,
+                                isHidden: item.isHidden || false,
+                                requiresZeroBalance: item.requiresZeroBalance || false
+                            }
+                        })
+                    }
+
+                    if (item.children && item.children.length > 0) {
+                        await createRecursive(item.children, created.id)
+                    }
                 }
             }
-        }
 
-        await createRecursive(template)
+            await createRecursive(template)
+        }, { maxWait: 15000, timeout: 60000 })
 
-        // Auto-wire the posting rules based on the new accounts
-        const { applySmartPostingRules } = await import('./posting-rules')
-        await applySmartPostingRules(tx)
+        // Auto-wire the posting rules based on the new accounts (AFTER commit)
+        await applySmartPostingRules()
 
         try {
             revalidatePath('/admin/finance/chart-of-accounts')
@@ -361,7 +381,10 @@ export async function importChartOfAccountsTemplate(templateKey: keyof typeof TE
             // Ignore
         }
         return { success: true }
-    }, { maxWait: 10000, timeout: 30000 })
+    } catch (error) {
+        console.error(`[COA_TEMPLATE] Import failed:`, error)
+        throw error
+    }
 }
 
 export async function getAllTemplates() {
@@ -380,187 +403,213 @@ export async function migrateBalances(data: {
     mappings: { sourceId: number; targetId: number }[]
     description: string
 }) {
-    return await prisma.$transaction(async (tx) => {
-        // 1. Get current balances of all source accounts
-        const sourceIds = data.mappings.map(m => m.sourceId)
-        const sources = await tx.chartOfAccount.findMany({
-            where: { id: { in: sourceIds } }
-        })
+    console.log(`[COA_MIGRATE] Starting migration: ${data.description}`)
+    const tenant = await getTenantContext()
+    if (!tenant) throw new Error("No organization context found")
 
-        const journalLines: any[] = []
-
-        for (const mapping of data.mappings) {
-            const source = sources.find(s => s.id === mapping.sourceId)
-            if (!source) continue
-            const balance = Number(source.balance)
-
-            if (Math.abs(balance) < 0.0001) continue // Skip zero balance accounts
-
-            // Create Reclassification Move
-            // To zero out Source: 
-            // If Source has Debit (positive), we Credit it and Debit the Target.
-            journalLines.push({
-                accountId: mapping.sourceId,
-                debit: balance > 0 ? 0 : Math.abs(balance),
-                credit: balance > 0 ? balance : 0,
-                description: `Migration: Clearing ${source.code}`
+    try {
+        return await prisma.$transaction(async (tx) => {
+            // 1. Get current balances of all source accounts
+            const sourceIds = data.mappings.map(m => m.sourceId)
+            const sources = await tx.chartOfAccount.findMany({
+                where: { id: { in: sourceIds } }
             })
 
-            journalLines.push({
-                accountId: mapping.targetId,
-                debit: balance > 0 ? balance : 0,
-                credit: balance > 0 ? 0 : Math.abs(balance),
-                description: `Migration: Transfer from ${source.code}`
-            })
-        }
+            const journalLines: any[] = []
 
-        if (journalLines.length === 0) {
-            throw new Error("No non-zero balances found to migrate.")
-        }
+            for (const mapping of data.mappings) {
+                const source = sources.find(s => s.id === mapping.sourceId)
+                if (!source) continue
+                const balance = Number(source.balance)
 
-        // 2. Find Fiscal Year & Period
-        const now = new Date()
-        const fy = await tx.fiscalYear.findFirst({
-            where: { startDate: { lte: now }, endDate: { gte: now } }
-        })
-        if (!fy) throw new Error("No active Fiscal Year found for migration.")
+                if (Math.abs(balance) < 0.0001) continue // Skip zero balance accounts
 
-        const period = await tx.fiscalPeriod.findFirst({
-            where: { fiscalYearId: fy.id, startDate: { lte: now }, endDate: { gte: now } }
-        })
+                // Create Reclassification Move
+                // To zero out Source: 
+                // If Source has Debit (positive), we Credit it and Debit the Target.
+                journalLines.push({
+                    accountId: mapping.sourceId,
+                    debit: balance > 0 ? 0 : Math.abs(balance),
+                    credit: balance > 0 ? balance : 0,
+                    description: `Migration: Clearing ${source.code}`,
+                    organizationId: tenant.id
+                })
 
-        // 3. Create the Migration Journal Entry
-        const entry = await tx.journalEntry.create({
-            data: {
-                transactionDate: now,
-                description: data.description || "COA Layout Migration",
-                reference: "MIGRATION",
-                status: "POSTED",
-                postedAt: now,
-                fiscalYearId: fy.id,
-                fiscalPeriodId: period?.id || null,
-                lines: {
-                    create: journalLines
-                }
-            },
-            include: { lines: true }
-        })
-
-        // 4. Update Account Balances in DB (Direct precision)
-        for (const line of entry.lines) {
-            const netChange = Number(line.debit) - Number(line.credit)
-            await tx.chartOfAccount.update({
-                where: { id: line.accountId },
-                data: { balance: { increment: netChange } }
-            })
-        }
-
-        // 5. Deactivate migrated source accounts
-        await (tx.chartOfAccount as any).updateMany({
-            where: { id: { in: sourceIds } },
-            data: { isActive: false }
-        })
-
-        // 6. Update Posting Rules to point to new Target IDs
-        const setting = await tx.systemSettings.findUnique({ where: { key: 'finance_posting_rules' } })
-        if (setting) {
-            let config = JSON.parse(setting.value)
-            let changed = false
-
-            // Deep traversal to replace Source IDs with Target IDs
-            const updateIds = (obj: any) => {
-                for (const k in obj) {
-                    if (typeof obj[k] === 'number') {
-                        const match = data.mappings.find(m => m.sourceId === obj[k])
-                        if (match) {
-                            obj[k] = match.targetId
-                            changed = true
-                        }
-                    } else if (typeof obj[k] === 'object' && obj[k] !== null) {
-                        updateIds(obj[k])
-                    }
-                }
-            }
-
-            updateIds(config)
-            if (changed) {
-                await tx.systemSettings.update({
-                    where: { key: 'finance_posting_rules' },
-                    data: { value: JSON.stringify(config) }
+                journalLines.push({
+                    accountId: mapping.targetId,
+                    debit: balance > 0 ? balance : 0,
+                    credit: balance > 0 ? 0 : Math.abs(balance),
+                    description: `Migration: Transfer from ${source.code}`,
+                    organizationId: tenant.id
                 })
             }
-        }
 
-        revalidatePath('/admin/finance/chart-of-accounts')
-        revalidatePath('/admin/finance/ledger')
-        revalidatePath('/admin/finance/settings/posting-rules')
-        return { success: true, entryId: entry.id }
-    }, { maxWait: 10000, timeout: 30000 })
+            if (journalLines.length === 0) {
+                throw new Error("No non-zero balances found to migrate.")
+            }
+
+            // 2. Find Fiscal Year & Period
+            const now = new Date()
+            const fy = await tx.fiscalYear.findFirst({
+                where: { startDate: { lte: now }, endDate: { gte: now } }
+            })
+            if (!fy) throw new Error("No active Fiscal Year found for migration.")
+
+            const period = await tx.fiscalPeriod.findFirst({
+                where: { fiscalYearId: fy.id, startDate: { lte: now }, endDate: { gte: now } }
+            })
+
+            // 3. Create the Migration Journal Entry
+            const entry = await tx.journalEntry.create({
+                data: {
+                    transactionDate: now,
+                    description: data.description || "COA Layout Migration",
+                    reference: "MIGRATION",
+                    status: "POSTED",
+                    postedAt: now,
+                    organizationId: tenant.id,
+                    fiscalYearId: fy.id,
+                    fiscalPeriodId: period?.id || null,
+                    lines: {
+                        create: journalLines
+                    }
+                },
+                include: { lines: true }
+            })
+
+            // 4. Update Account Balances in DB (Direct precision)
+            for (const line of entry.lines) {
+                const netChange = Number(line.debit) - Number(line.credit)
+                await tx.chartOfAccount.update({
+                    where: { id: line.accountId },
+                    data: { balance: { increment: netChange } }
+                })
+            }
+
+            // 5. Deactivate migrated source accounts
+            await (tx.chartOfAccount as any).updateMany({
+                where: { id: { in: sourceIds } },
+                data: { isActive: false }
+            })
+
+            // 6. Update Posting Rules to point to new Target IDs
+            const setting = await tx.systemSettings.findFirst({
+                where: { key: 'finance_posting_rules', organizationId: tenant.id }
+            })
+            if (setting) {
+                let config = JSON.parse(setting.value)
+                let changed = false
+
+                // Deep traversal to replace Source IDs with Target IDs
+                const updateIds = (obj: any) => {
+                    for (const k in obj) {
+                        if (typeof obj[k] === 'number') {
+                            const match = data.mappings.find(m => m.sourceId === obj[k])
+                            if (match) {
+                                obj[k] = match.targetId
+                                changed = true
+                            }
+                        } else if (typeof obj[k] === 'object' && obj[k] !== null) {
+                            updateIds(obj[k])
+                        }
+                    }
+                }
+
+                updateIds(config)
+                if (changed && setting) {
+                    await tx.systemSettings.update({
+                        where: { id: setting.id },
+                        data: { value: JSON.stringify(config) }
+                    })
+                }
+            }
+
+            revalidatePath('/admin/finance/chart-of-accounts')
+            revalidatePath('/admin/finance/ledger')
+            revalidatePath('/admin/finance/settings/posting-rules')
+            return { success: true, entryId: entry.id }
+        }, { maxWait: 15000, timeout: 60000 })
+    } catch (error) {
+        console.error(`[COA_MIGRATE] Migration failed:`, error)
+        throw error
+    }
 }
+
 export async function sweepInactiveBalances(mapping: Record<number, number>) {
-    return await prisma.$transaction(async (tx) => {
-        const sourceIds = Object.keys(mapping).map(Number)
-        const sources = await tx.chartOfAccount.findMany({
-            where: { id: { in: sourceIds } }
-        })
+    const tenant = await getTenantContext()
+    if (!tenant) throw new Error("No organization context found")
 
-        const journalLines: any[] = []
-        const now = new Date()
-
-        for (const [sourceIdStr, targetId] of Object.entries(mapping)) {
-            const sourceId = Number(sourceIdStr)
-            const source = sources.find(s => s.id === sourceId)
-            if (!source) continue
-
-            const balance = Number(source.balance)
-            if (Math.abs(balance) < 0.01) continue
-
-            // Debit/Credit to zero out source
-            journalLines.push({
-                accountId: sourceId,
-                debit: balance > 0 ? 0 : Math.abs(balance),
-                credit: balance > 0 ? balance : 0,
-                description: "Residual Balance Sweep (Cleanup)"
+    try {
+        return await prisma.$transaction(async (tx) => {
+            const sourceIds = Object.keys(mapping).map(Number)
+            const sources = await tx.chartOfAccount.findMany({
+                where: { id: { in: sourceIds } }
             })
 
-            // Transfer to target
-            journalLines.push({
-                accountId: targetId,
-                debit: balance > 0 ? balance : 0,
-                credit: balance > 0 ? 0 : Math.abs(balance),
-                description: `Residual transfer from ${source.code}`
+            const journalLines: any[] = []
+            const now = new Date()
+
+            for (const [sourceIdStr, targetId] of Object.entries(mapping)) {
+                const sourceId = Number(sourceIdStr)
+                const source = sources.find(s => s.id === sourceId)
+                if (!source) continue
+
+                const balance = Number(source.balance)
+                if (Math.abs(balance) < 0.01) continue
+
+                // Debit/Credit to zero out source
+                journalLines.push({
+                    accountId: sourceId,
+                    debit: balance > 0 ? 0 : Math.abs(balance),
+                    credit: balance > 0 ? balance : 0,
+                    description: "Residual Balance Sweep (Cleanup)",
+                    organizationId: tenant.id
+                })
+
+                // Transfer to target
+                journalLines.push({
+                    accountId: targetId,
+                    debit: balance > 0 ? balance : 0,
+                    credit: balance > 0 ? 0 : Math.abs(balance),
+                    description: `Residual transfer from ${source.code}`,
+                    organizationId: tenant.id
+                })
+            }
+
+            if (journalLines.length === 0) return { success: true, message: "No balances found to sweep." }
+
+            // Find Period
+            const fy = await tx.fiscalYear.findFirst({ where: { status: 'OPEN', organizationId: tenant.id } })
+            if (!fy) throw new Error("No open Fiscal Year")
+
+            const entry = await tx.journalEntry.create({
+                data: {
+                    transactionDate: now,
+                    description: "Residual Balance Sweep Cleanup",
+                    reference: "CLEANUP",
+                    status: "POSTED",
+                    postedAt: now,
+                    organizationId: tenant.id,
+                    fiscalYearId: fy.id,
+                    lines: { create: journalLines }
+                },
+                include: { lines: true }
             })
-        }
 
-        if (journalLines.length === 0) return { success: true, message: "No balances found to sweep." }
+            // Force cache update
+            for (const line of entry.lines) {
+                const netChange = Number(line.debit) - Number(line.credit)
+                await tx.chartOfAccount.update({
+                    where: { id: line.accountId },
+                    data: { balance: { increment: netChange } }
+                })
+            }
 
-        // Find Period
-        const fy = await tx.fiscalYear.findFirst({ where: { status: 'OPEN' } })
-        if (!fy) throw new Error("No open Fiscal Year")
-
-        const entry = await tx.journalEntry.create({
-            data: {
-                transactionDate: now,
-                description: "Residual Balance Sweep Cleanup",
-                reference: "CLEANUP",
-                status: "POSTED",
-                postedAt: now,
-                fiscalYearId: fy.id,
-                lines: { create: journalLines }
-            },
-            include: { lines: true }
-        })
-
-        // Force cache update
-        for (const line of entry.lines) {
-            const netChange = Number(line.debit) - Number(line.credit)
-            await tx.chartOfAccount.update({
-                where: { id: line.accountId },
-                data: { balance: { increment: netChange } }
-            })
-        }
-
-        revalidatePath('/admin/finance/reports/balance-sheet')
-        return { success: true }
-    }, { maxWait: 10000, timeout: 30000 })
+            revalidatePath('/admin/finance/reports/balance-sheet')
+            return { success: true }
+        }, { maxWait: 15000, timeout: 60000 })
+    } catch (error) {
+        console.error(`[COA_SWEEP] Sweep failed:`, error)
+        throw error
+    }
 }
