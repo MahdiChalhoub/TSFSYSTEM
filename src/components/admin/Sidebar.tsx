@@ -111,6 +111,7 @@ const MENU_ITEMS = [
         children: [
             { title: 'Master Dashboard', path: '/admin/saas/dashboard' },
             { title: 'Organizations', path: '/admin/saas/organizations' },
+            { title: 'Instance Switcher', path: '/admin/saas/switcher' },
             { title: 'Platform Health', path: '/admin/saas/health' },
         ]
     },
