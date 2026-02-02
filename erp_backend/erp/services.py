@@ -1,7 +1,8 @@
 from .models import (
     FinancialAccount, ChartOfAccount, Site, JournalEntry, 
     JournalEntryLine, FiscalYear, FiscalPeriod, Inventory, 
-    Warehouse, InventoryMovement, Product, Organization
+    Warehouse, InventoryMovement, Product, Organization,
+    SystemSettings
 )
 from django.db import transaction
 from django.utils import timezone
@@ -9,6 +10,38 @@ from django.core.exceptions import ValidationError
 from decimal import Decimal
 from django.db.models import Sum
 import uuid
+import json
+
+class ConfigurationService:
+    @staticmethod
+    def get_posting_rules(organization):
+        """
+        Loads the finance_posting_rules from SystemSettings.
+        """
+        setting = SystemSettings.objects.filter(
+            organization=organization,
+            key='finance_posting_rules'
+        ).first()
+
+        default_config = {
+            "sales": {"receivable": None, "revenue": None, "cogs": None, "inventory": None},
+            "purchases": {"payable": None, "inventory": None, "tax": None},
+            "inventory": {"adjustment": None, "transfer": None},
+            "suspense": {"reception": None}
+        }
+
+        if not setting:
+            return default_config
+        
+        try:
+            stored = json.loads(setting.value)
+            # Merge with defaults
+            for key in default_config:
+                if key in stored:
+                    default_config[key].update(stored[key])
+            return default_config
+        except:
+            return default_config
 
 class InventoryService:
     @staticmethod
@@ -21,8 +54,8 @@ class InventoryService:
         inbound_value = inbound_qty * inbound_cost
 
         with transaction.atomic():
-            # 1. Calculate New AMC
-            # Get current total quantity across all warehouses for this product
+            # ... (AMC logic)
+            # 1. AMC
             current_total_qty = Inventory.objects.filter(
                 organization=organization,
                 product=product
@@ -36,12 +69,10 @@ class InventoryService:
             if new_total_qty > 0:
                 new_amc = (current_total_value + inbound_value) / new_total_qty
 
-            # 2. Update Product Cost
             product.cost_price = new_amc
             product.cost_price_ht = inbound_cost
             product.save()
 
-            # 3. Update Inventory Level (Warehouse specific)
             inventory, created = Inventory.objects.get_or_create(
                 organization=organization,
                 warehouse=warehouse,
@@ -50,7 +81,6 @@ class InventoryService:
             inventory.quantity += inbound_qty
             inventory.save()
 
-            # 4. Record Movement
             InventoryMovement.objects.create(
                 organization=organization,
                 product=product,
@@ -61,10 +91,34 @@ class InventoryService:
                 reference=reference
             )
 
-            # 5. Financial Integration (Optional: requires posting rules logic)
-            # For now, we replicate the Next.js logic of creating a journal if accounts are known
-            # Note: In a real system, these would be fetched from a 'PostingRules' model
-            # For this demo, we assume standard accounts or skip if not found
+            # 5. Financial Integration
+            rules = ConfigurationService.get_posting_rules(organization)
+            inv_acc = rules.get('sales', {}).get('inventory')
+            susp_acc = rules.get('suspense', {}).get('reception')
+
+            if inv_acc and susp_acc:
+                LedgerService.create_journal_entry(
+                    organization=organization,
+                    transaction_date=timezone.now(),
+                    description=f"Stock Reception: {product.name} ({quantity})",
+                    reference=reference,
+                    status='POSTED',
+                    site_id=warehouse.site_id,
+                    lines=[
+                        {
+                            "account_id": inv_acc,
+                            "debit": inbound_value,
+                            "credit": 0,
+                            "description": "Inventory Increase"
+                        },
+                        {
+                            "account_id": susp_acc,
+                            "debit": 0,
+                            "credit": inbound_value,
+                            "description": "Accrued Liability for Reception"
+                        }
+                    ]
+                )
             
             return inventory
 

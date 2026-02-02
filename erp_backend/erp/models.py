@@ -33,6 +33,17 @@ class Organization(models.Model):
     def __str__(self):
         return self.name
 
+class SystemSettings(TenantModel):
+    key = models.CharField(max_length=100)
+    value = models.TextField() # JSON stored as string
+    
+    class Meta:
+        db_table = 'SystemSettings'
+        unique_together = ('key', 'organization')
+
+    def __str__(self):
+        return f"{self.key} ({self.organization.name})"
+
 class Site(TenantModel):
     name = models.CharField(max_length=255)
     code = models.CharField(max_length=50, null=True, blank=True)
