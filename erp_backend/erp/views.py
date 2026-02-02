@@ -5,15 +5,17 @@ from .models import (
     Organization, Site, FinancialAccount, ChartOfAccount,
     FiscalYear, FiscalPeriod, JournalEntry, Product, 
     Warehouse, Inventory, InventoryMovement, Unit,
-    Brand, Category, Parfum, ProductGroup, Country
+    Brand, Category, Parfum, ProductGroup, Country,
+    Contact, Employee, Role
 )
 from .serializers import (
     OrganizationSerializer, SiteSerializer, FinancialAccountSerializer,
     ChartOfAccountSerializer, FiscalYearSerializer, FiscalPeriodSerializer,
     JournalEntrySerializer, ProductSerializer, WarehouseSerializer,
     InventorySerializer, InventoryMovementSerializer, UnitSerializer,
-    ProductCreateSerializer, BrandSerializer, CategorySerializer, 
-    ParfumSerializer, ProductGroupSerializer, CountrySerializer
+    ProductCreateSerializer, BrandSerializer, BrandDetailSerializer, CategorySerializer, 
+    ParfumSerializer, ProductGroupSerializer, CountrySerializer,
+    ContactSerializer, EmployeeSerializer, RoleSerializer
 )
 from .services import FinancialAccountService, LedgerService, InventoryService, ProvisioningService, ConfigurationService, POSService, PurchaseService
 
@@ -709,7 +711,11 @@ class PurchaseViewSet(viewsets.ViewSet):
 
 class BrandViewSet(viewsets.ModelViewSet):
     queryset = Brand.objects.all()
-    serializer_class = BrandSerializer
+    
+    def get_serializer_class(self):
+        if self.action == 'retrieve':
+            return BrandDetailSerializer
+        return BrandSerializer
 
     @action(detail=False, methods=['get'])
     def by_category(self, request):
@@ -851,3 +857,16 @@ class ProductGroupViewSet(viewsets.ModelViewSet):
 class CountryViewSet(viewsets.ModelViewSet):
     queryset = Country.objects.all()
     serializer_class = CountrySerializer
+
+class ContactViewSet(viewsets.ModelViewSet):
+    queryset = Contact.objects.all()
+    serializer_class = ContactSerializer
+
+class EmployeeViewSet(viewsets.ModelViewSet):
+    queryset = Employee.objects.all()
+    serializer_class = EmployeeSerializer
+
+class RoleViewSet(viewsets.ModelViewSet):
+    queryset = Role.objects.all()
+    serializer_class = RoleSerializer
+
