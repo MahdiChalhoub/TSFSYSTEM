@@ -15,62 +15,60 @@ export default function LandingLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="en" className="dark scroll-smooth">
-            <body className={`${outfit.className} bg-[#020617] text-slate-100 min-h-screen flex flex-col`}>
-                <header className="fixed top-0 w-full z-50 bg-slate-950/50 backdrop-blur-xl border-b border-slate-800/50">
-                    <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                            <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                                <span className="text-white font-black text-xl">T</span>
-                            </div>
-                            <span className="text-2xl font-black tracking-tighter">TSF<span className="text-emerald-500">CITY</span></span>
+        <div className="bg-[#020617] text-slate-100 min-h-screen flex flex-col">
+            <header className="fixed top-0 w-full z-50 bg-slate-950/50 backdrop-blur-xl border-b border-slate-800/50">
+                <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                            <span className="text-white font-black text-xl">T</span>
                         </div>
-
-                        <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-400">
-                            <a href="#features" className="hover:text-white transition-colors">Features</a>
-                            <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
-                            <a href="#register" className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-full transition-all shadow-lg shadow-emerald-900/40">
-                                Get Started
-                            </a>
-                        </nav>
+                        <span className="text-2xl font-black tracking-tighter">TSF<span className="text-emerald-500">CITY</span></span>
                     </div>
-                </header>
 
-                <main className="flex-1 pt-20">
-                    {children}
-                </main>
+                    <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-400">
+                        <a href="#features" className="hover:text-white transition-colors">Features</a>
+                        <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
+                        <a href="#register" className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-full transition-all shadow-lg shadow-emerald-900/40">
+                            Get Started
+                        </a>
+                    </nav>
+                </div>
+            </header>
 
-                <footer className="bg-slate-950 border-t border-slate-900 py-20">
-                    <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12 text-slate-400">
-                        <div className="col-span-2">
-                            <span className="text-2xl font-black text-white tracking-tighter mb-4 block">TSF<span className="text-emerald-500">CITY</span></span>
-                            <p className="max-w-xs leading-relaxed">
-                                The ultimate SaaS platform for modern business management.
-                                Unified ERP, POS, Finance and Inventory scaling with you.
-                            </p>
-                        </div>
-                        <div>
-                            <h4 className="text-white font-bold mb-4 uppercase text-xs tracking-widest">Platform</h4>
-                            <ul className="space-y-3 text-sm">
-                                <li><a href="#" className="hover:text-emerald-400">Features</a></li>
-                                <li><a href="#" className="hover:text-emerald-400">Pricing</a></li>
-                                <li><a href="#" className="hover:text-emerald-400">Roadmap</a></li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h4 className="text-white font-bold mb-4 uppercase text-xs tracking-widest">Company</h4>
-                            <ul className="space-y-3 text-sm">
-                                <li><a href="#" className="hover:text-emerald-400">About Us</a></li>
-                                <li><a href="#" className="hover:text-emerald-400">Privacy Policy</a></li>
-                                <li><a href="#" className="hover:text-emerald-400">Contact Support</a></li>
-                            </ul>
-                        </div>
+            <main className="flex-1 pt-20">
+                {children}
+            </main>
+
+            <footer className="bg-slate-950 border-t border-slate-900 py-20">
+                <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12 text-slate-400">
+                    <div className="col-span-2">
+                        <span className="text-2xl font-black text-white tracking-tighter mb-4 block">TSF<span className="text-emerald-500">CITY</span></span>
+                        <p className="max-w-xs leading-relaxed">
+                            The ultimate SaaS platform for modern business management.
+                            Unified ERP, POS, Finance and Inventory scaling with you.
+                        </p>
                     </div>
-                    <div className="max-w-7xl mx-auto px-6 mt-20 pt-8 border-t border-slate-900 text-center text-xs text-slate-600">
-                        &copy; 2026 TSF Global. All rights reserved.
+                    <div>
+                        <h4 className="text-white font-bold mb-4 uppercase text-xs tracking-widest">Platform</h4>
+                        <ul className="space-y-3 text-sm">
+                            <li><a href="#" className="hover:text-emerald-400">Features</a></li>
+                            <li><a href="#" className="hover:text-emerald-400">Pricing</a></li>
+                            <li><a href="#" className="hover:text-emerald-400">Roadmap</a></li>
+                        </ul>
                     </div>
-                </footer>
-            </body>
-        </html>
+                    <div>
+                        <h4 className="text-white font-bold mb-4 uppercase text-xs tracking-widest">Company</h4>
+                        <ul className="space-y-3 text-sm">
+                            <li><a href="#" className="hover:text-emerald-400">About Us</a></li>
+                            <li><a href="#" className="hover:text-emerald-400">Privacy Policy</a></li>
+                            <li><a href="#" className="hover:text-emerald-400">Contact Support</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div className="max-w-7xl mx-auto px-6 mt-20 pt-8 border-t border-slate-900 text-center text-xs text-slate-600">
+                    &copy; 2026 TSF Global. All rights reserved.
+                </div>
+            </footer>
+        </div>
     );
 }
