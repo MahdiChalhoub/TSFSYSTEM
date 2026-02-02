@@ -151,15 +151,15 @@ export async function seedTestData() {
             createdCountries[c.code] = await tx.country.upsert({
                 where: { code: c.code },
                 update: {},
-                create: c
+                organizationId: organization.id
             })
         }
 
         // 2. Categories with Hierarchy
-        const food = await tx.category.create({ data: { name: 'Food', code: 'FOOD' } })
-        const beverages = await tx.category.create({ data: { name: 'Beverages', code: 'BEV', parentId: food.id } })
-        const snacks = await tx.category.create({ data: { name: 'Snacks', code: 'SNC', parentId: food.id } })
-        const dairy = await tx.category.create({ data: { name: 'Dairy & Eggs', code: 'DAI', parentId: food.id } })
+        const food = await tx.category.create({ data: { name: 'Food', code: 'FOOD', organizationId: organization.id } })
+        const beverages = await tx.category.create({ data: { name: 'Beverages', code: 'BEV', parentId: food.id, organizationId: organization.id } })
+        const snacks = await tx.category.create({ data: { name: 'Snacks', code: 'SNC', parentId: food.id, organizationId: organization.id } })
+        const dairy = await tx.category.create({ data: { name: 'Dairy & Eggs', code: 'DAI', parentId: food.id, organizationId: organization.id } })
 
         // 3. Brands linked to Countries and Categories
         const brandCoca = await tx.brand.create({
@@ -180,7 +180,8 @@ export async function seedTestData() {
             data: {
                 name: 'Pringles',
                 countries: { connect: [{ id: createdCountries['US'].id }] },
-                categories: { connect: [{ id: snacks.id }] }
+                categories: { connect: [{ id: snacks.id }] },
+                organizationId: organization.id
             }
         })
 
@@ -273,7 +274,8 @@ export async function seedTestData() {
                     sellingPriceTTC: p.selling,
                     tvaRate: 0.11,
                     status: 'ACTIVE',
-                    supplierId: supplier.id
+                    supplierId: supplier.id,
+                    organizationId: organization.id
                 }
             })
         }

@@ -7,7 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite" // We switch this to "mysql" for Hostinger
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -22,13 +22,13 @@ model Organization {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  sites     Site[]
-  users     User[]
-  products  Product[]
-  settings  FinancialSettings[]
-  ledger    ChartOfAccount[]
-  contacts  Contact[]
-  audits    AuditLog[]
+  sites    Site[]
+  users    User[]
+  products Product[]
+  settings FinancialSettings[]
+  ledger   ChartOfAccount[]
+  contacts Contact[]
+  audits   AuditLog[]
 }
 
 model Country {
@@ -74,11 +74,11 @@ model FinancialAccount {
   site   Site? @relation(fields: [siteId], references: [id])
 
   // STRICT LEDGER LINK
-  ledgerAccountId Int? @unique // Must be set to allow transactions
+  ledgerAccountId Int?            @unique // Must be set to allow transactions
   ledgerAccount   ChartOfAccount? @relation("FinancialToLedger", fields: [ledgerAccountId], references: [id])
 
   transactions Transaction[]
-  
+
   // Assigned (Cashiers/Users) who use this account
   assignedUsers User[] @relation("UserCashRegister")
 }
@@ -95,10 +95,10 @@ model Transaction {
   type        String // 'DEBIT', 'CREDIT'
   description String?
   referenceId String? // Link to Order ID or Expense ID
-  scope       String @default("OFFICIAL") // 'OFFICIAL', 'INTERNAL', 'PENDING'
-  
+  scope       String  @default("OFFICIAL") // 'OFFICIAL', 'INTERNAL', 'PENDING'
+
   createdAt DateTime @default(now())
-  
+
   financialEvent FinancialEvent?
 }
 
@@ -114,9 +114,9 @@ model User {
   name     String
   isActive Boolean @default(true)
 
-  // SaaS Context
-  organizationId String?
-  organization   Organization? @relation(fields: [organizationId], references: [id])
+  // SaaS Context (Mandatory for SaaS)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   // Advanced RBAC
   roleId Int?
@@ -138,12 +138,11 @@ model User {
   linkedAccountId Int?            @unique
   linkedAccount   ChartOfAccount? @relation("UserAccount", fields: [linkedAccountId], references: [id])
 
-
   // Relations
-  tasks  Task[]
-  audits AuditLog[]
-  orders Order[] @relation("StaffOrders")
-  verifiedOrders Order[] @relation("VerifiedOrders")
+  tasks           Task[]
+  audits          AuditLog[]
+  orders          Order[]        @relation("StaffOrders")
+  verifiedOrders  Order[]        @relation("VerifiedOrders")
   verifiedEntries JournalEntry[] @relation("VerifiedEntries")
 
   createdAt DateTime @default(now())
@@ -206,8 +205,8 @@ model Contact {
   vatId   String? // Tax ID for suppliers/companies
 
   // SaaS Context
-  organizationId String?
-  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   // Home Site (Master Data - Registration/Base)
   homeSiteId Int?
@@ -222,8 +221,8 @@ model Contact {
   linkedAccountId Int?            @unique
   linkedAccount   ChartOfAccount? @relation("ContactAccount", fields: [linkedAccountId], references: [id])
 
-  orders        Order[]
-  transactions  JournalEntryLine[]
+  orders       Order[]
+  transactions JournalEntryLine[]
 
   // Products where this contact is the primary supplier
   suppliedProducts Product[] @relation("ProductSupplier")
@@ -236,18 +235,18 @@ model Contact {
 }
 
 model Employee {
-  id          Int       @id @default(autoincrement())
-  employeeId  String    @unique // Internal ID like EMP-001
-  firstName   String
-  lastName    String
-  idNumber    String?   @unique // National ID / Passport
-  phone       String?
-  email       String?
-  jobTitle    String?
-  department  String?
-  hireDate    DateTime?
-  salary      Decimal?
-  status      String    @default("ACTIVE") // 'ACTIVE', 'ON_LEAVE', 'TERMINATED'
+  id         Int       @id @default(autoincrement())
+  employeeId String    @unique // Internal ID like EMP-001
+  firstName  String
+  lastName   String
+  idNumber   String?   @unique // National ID / Passport
+  phone      String?
+  email      String?
+  jobTitle   String?
+  department String?
+  hireDate   DateTime?
+  salary     Decimal?
+  status     String    @default("ACTIVE") // 'ACTIVE', 'ON_LEAVE', 'TERMINATED'
 
   // Home Site (Master Data - Base Branch)
   homeSiteId Int?
@@ -272,14 +271,14 @@ model Employee {
 // ...
 model Product {
   id          Int     @id @default(autoincrement())
-  sku         String  @unique // Internal ID
-  barcode     String? @unique // Scan Code
+  sku         String // SKU is unique PER organization
+  barcode     String?
   name        String
   description String?
 
   // SaaS Context
-  organizationId String?
-  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   // Grouping (New)
   productGroupId Int?
@@ -295,11 +294,11 @@ model Product {
 
   // Explicit Pricing Fields (Financial Module)
   inventoryLevels InventoryLevel[]
-  costPriceHT     Decimal @default(0.00)
-  costPriceTTC    Decimal @default(0.00)
-  tvaRate         Decimal @default(0.00)
-  sellingPriceHT  Decimal @default(0.00)
-  sellingPriceTTC Decimal @default(0.00)
+  costPriceHT     Decimal          @default(0.00)
+  costPriceTTC    Decimal          @default(0.00)
+  tvaRate         Decimal          @default(0.00)
+  sellingPriceHT  Decimal          @default(0.00)
+  sellingPriceTTC Decimal          @default(0.00)
 
   basePrice Decimal @default(0.00) // Keep for backward compatibility/reference
   minPrice  Decimal @default(0.00) // Lowest allowed price
@@ -341,6 +340,8 @@ model Product {
   images      ProductImage[]
   PricingRule PricingRule[]
 
+  @@unique([sku, organizationId])
+  @@unique([barcode, organizationId])
   // Performance Indexes for POS search
   @@index([name]) // Fast search by name
   @@index([categoryId]) // Fast filtering by category  
@@ -416,14 +417,14 @@ model Parfum {
 }
 
 model Warehouse {
-  id        Int         @id @default(autoincrement())
-  name      String // "Main", "Store", "Damaged"
-  code      String? // e.g., WH01, ST01
-  type      String      @default("PHYSICAL") // 'PHYSICAL', 'VIRTUAL'
-  canSell   Boolean     @default(false) // If true, it acts as a Store (Point of Sale)
-  address   String?
-  city      String?
-  isActive  Boolean     @default(true)
+  id       Int     @id @default(autoincrement())
+  name     String // "Main", "Store", "Damaged"
+  code     String? // e.g., WH01, ST01
+  type     String  @default("PHYSICAL") // 'PHYSICAL', 'VIRTUAL'
+  canSell  Boolean @default(false) // If true, it acts as a Store (Point of Sale)
+  address  String?
+  city     String?
+  isActive Boolean @default(true)
 
   siteId Int?
   site   Site? @relation(fields: [siteId], references: [id])
@@ -477,10 +478,10 @@ model Order {
   userId Int // Staff who processed it
   user   User @relation("StaffOrders", fields: [userId], references: [id])
 
-  isVerified     Boolean @default(false)
-  verifiedById   Int?
-  verifiedBy     User? @relation("VerifiedOrders", fields: [verifiedById], references: [id])
-  isLocked       Boolean @default(false)
+  isVerified   Boolean @default(false)
+  verifiedById Int?
+  verifiedBy   User?   @relation("VerifiedOrders", fields: [verifiedById], references: [id])
+  isLocked     Boolean @default(false)
 
   // Data
   totalAmount Decimal @default(0.00)
@@ -498,7 +499,7 @@ model Order {
   refCode       String?
 
   siteId Int? // Where the sale/purchase happened
-  site   Site?  @relation(fields: [siteId], references: [id])
+  site   Site? @relation(fields: [siteId], references: [id])
 
   // Effective Cost Engine Flags
   invoicePriceType String  @default("HT") // 'HT', 'TTC'
@@ -525,10 +526,10 @@ model OrderLine {
   batchId Int? // Which batch was picked?
 
   // Effective Cost Engine Fields (Calculated and Persisted)
-  unitCostHT     Decimal @default(0.00)
-  unitCostTTC    Decimal @default(0.00)
-  vatAmount      Decimal @default(0.00)
-  effectiveCost  Decimal @default(0.00)
+  unitCostHT    Decimal @default(0.00)
+  unitCostTTC   Decimal @default(0.00)
+  vatAmount     Decimal @default(0.00)
+  effectiveCost Decimal @default(0.00)
 }
 
 // =========================================================
@@ -610,9 +611,9 @@ model FinancialSettings {
   id          Int    @id @default(autoincrement())
   companyType String @default(value: "REGULAR") // 'REGULAR', 'MICRO', 'REAL', 'MIXED'
 
-  // SaaS Context
-  organizationId String? @unique
-  organization   Organization? @relation(fields: [organizationId], references: [id])
+  // SaaS Context (1 set of settings per Org)
+  organizationId String       @unique
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   // For Micro Companies
   salesTaxPercentage    Decimal @default(0.00)
@@ -625,15 +626,15 @@ model FinancialSettings {
   currency       String  @default("USD")
 
   updatedAt DateTime @updatedAt
-  
+
   // Custom Company Flags
-  worksInTTC           Boolean @default(true) // Cost Effective Basis
-  allowHTEntryForTTC   Boolean @default(false) // Allow entering HT invoice in TTC company
-  declareTVA           Boolean @default(false)
-  dualView             Boolean @default(false) // Official vs Internal
-  
+  worksInTTC         Boolean @default(true) // Cost Effective Basis
+  allowHTEntryForTTC Boolean @default(false) // Allow entering HT invoice in TTC company
+  declareTVA         Boolean @default(false)
+  dualView           Boolean @default(false) // Official vs Internal
+
   // Cost Engine Global Policy
-  pricingCostBasis     String @default("AUTO") // 'AUTO', 'FORCE_HT', 'FORCE_TTC'
+  pricingCostBasis String @default("AUTO") // 'AUTO', 'FORCE_HT', 'FORCE_TTC'
 }
 
 model FiscalYear {
@@ -671,19 +672,19 @@ model FiscalPeriod {
 // =========================================================
 
 model ChartOfAccount {
-  id      Int     @id @default(autoincrement())
-  code    String  @unique // "1000", "5100"
-  name    String
+  id          Int     @id @default(autoincrement())
+  code        String // Code is unique PER organization
+  name        String
   description String?
-  type    String // 'ASSET', 'LIABILITY', 'EQUITY', 'INCOME', 'EXPENSE'
-  subType String? // 'CASH', 'BANK', 'RECEIVABLE', 'PAYABLE' for automation
-  isActive Boolean @default(true)
+  type        String // 'ASSET', 'LIABILITY', 'EQUITY', 'INCOME', 'EXPENSE'
+  subType     String? // 'CASH', 'BANK', 'RECEIVABLE', 'PAYABLE' for automation
+  isActive    Boolean @default(true)
 
   // SaaS Context
-  organizationId String?
-  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
-  balance Decimal @default(0.00) // Consolidated (Real) balance
+  balance         Decimal @default(0.00) // Consolidated (Real) balance
   balanceOfficial Decimal @default(0.00) // Official (Declared) balance
 
   // Regulatory Mapping (Reporting-only)
@@ -705,12 +706,14 @@ model ChartOfAccount {
   linkedContact  Contact?  @relation("ContactAccount")
   linkedUser     User?     @relation("UserAccount")
   linkedEmployee Employee? @relation("EmployeeAccount")
-  
+
   // Reverse Link for Strict Financial Accounts
   financialAccount FinancialAccount? @relation("FinancialToLedger")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([code, organizationId])
 }
 
 model JournalEntry {
@@ -732,10 +735,10 @@ model JournalEntry {
   siteId Int? // Dimension for P&L per site
   site   Site? @relation(fields: [siteId], references: [id])
 
-  isVerified     Boolean @default(false)
-  verifiedById   Int?
-  verifiedBy     User? @relation("VerifiedEntries", fields: [verifiedById], references: [id])
-  isLocked       Boolean @default(false)
+  isVerified   Boolean @default(false)
+  verifiedById Int?
+  verifiedBy   User?   @relation("VerifiedEntries", fields: [verifiedById], references: [id])
+  isLocked     Boolean @default(false)
 
   lines JournalEntryLine[]
 
@@ -817,7 +820,7 @@ model PricingRule {
 model Site {
   id        Int     @id @default(autoincrement())
   name      String
-  code      String? @unique
+  code      String?
   address   String?
   city      String?
   phone     String?
@@ -826,8 +829,8 @@ model Site {
   isActive Boolean @default(true)
 
   // SaaS Context
-  organizationId String?
-  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   warehouses        Warehouse[]
   users             User[]             @relation("HomeSite")
@@ -842,19 +845,21 @@ model Site {
   updatedAt DateTime @updatedAt
 
   inventoryLevels InventoryLevel[]
+
+  @@unique([code, organizationId])
 }
 
 model InventoryLevel {
-  id        Int      @id @default(autoincrement())
-  
-  siteId    Int
-  site      Site     @relation(fields: [siteId], references: [id])
-  
+  id Int @id @default(autoincrement())
+
+  siteId Int
+  site   Site @relation(fields: [siteId], references: [id])
+
   productId Int
-  product   Product  @relation(fields: [productId], references: [id])
-  
-  quantity  Decimal  @default(0)
-  
+  product   Product @relation(fields: [productId], references: [id])
+
+  quantity Decimal @default(0)
+
   updatedAt DateTime @updatedAt
 
   @@unique([siteId, productId])
@@ -865,9 +870,9 @@ model InventoryLevel {
 // =========================================================
 
 model FinancialEvent {
-  id        Int      @id @default(autoincrement())
+  id        Int    @id @default(autoincrement())
   eventType String // 'PARTNER_CAPITAL_INJECTION', 'PARTNER_LOAN', 'PARTNER_WITHDRAWAL', 'REFUND_RECEIVED'
-  status    String   @default("DRAFT") // 'DRAFT', 'OPEN', 'SETTLED', 'CANCELLED'
+  status    String @default("DRAFT") // 'DRAFT', 'OPEN', 'SETTLED', 'CANCELLED'
 
   amount    Decimal
   currency  String   @default("USD")
@@ -880,15 +885,15 @@ model FinancialEvent {
   contact   Contact? @relation(fields: [contactId], references: [id])
 
   // Linked Accounting
-  transactionId Int? @unique // The Money Movement (Voucher)
+  transactionId Int?         @unique // The Money Movement (Voucher)
   transaction   Transaction? @relation(fields: [transactionId], references: [id])
 
-  journalEntryId Int? @unique // The Accounting Record (GL)
+  journalEntryId Int?          @unique // The Accounting Record (GL)
   journalEntry   JournalEntry? @relation(fields: [journalEntryId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   // Link to Loan
   loanId Int?
   loan   Loan? @relation(fields: [loanId], references: [id])
@@ -900,7 +905,7 @@ model FinancialEvent {
 
 model Loan {
   id Int @id @default(autoincrement())
-  
+
   contractNumber String? @unique // e.g., "LOAN-00001"
 
   // Borrower/Lender (Usually a Partner)
@@ -909,18 +914,18 @@ model Loan {
 
   // Terms
   principalAmount Decimal
-  interestRate    Decimal   @default(0) // Percentage (e.g., 5.0 for 5%)
-  interestType    String    @default("NONE") // 'NONE', 'SIMPLE', 'COMPOUND'
-  termMonths      Int?      // e.g., 12 months
+  interestRate    Decimal  @default(0) // Percentage (e.g., 5.0 for 5%)
+  interestType    String   @default("NONE") // 'NONE', 'SIMPLE', 'COMPOUND'
+  termMonths      Int? // e.g., 12 months
   startDate       DateTime
-  
+
   // Repayment Configuration
-  paymentFrequency String   @default("MONTHLY") // 'MONTHLY', 'QUARTERLY'
-  
+  paymentFrequency String @default("MONTHLY") // 'MONTHLY', 'QUARTERLY'
+
   status String @default("ACTIVE") // 'DRAFT', 'ACTIVE', 'PAID', 'DEFAULTED'
 
-  installments     LoanInstallment[]
-  financialEvents  FinancialEvent[]
+  installments    LoanInstallment[]
+  financialEvents FinancialEvent[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -932,13 +937,13 @@ model LoanInstallment {
   loanId Int
   loan   Loan @relation(fields: [loanId], references: [id], onDelete: Cascade)
 
-  dueDate         DateTime
-  
+  dueDate DateTime
+
   // Amounts
   principalAmount Decimal
   interestAmount  Decimal @default(0)
   totalAmount     Decimal
-  
+
   // Status Tracking
   paidAmount Decimal @default(0)
   status     String  @default("PENDING") // 'PENDING', 'PAID', 'PARTIAL', 'OVERDUE', 'RESCHEDULED'

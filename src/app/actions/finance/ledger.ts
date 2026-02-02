@@ -2,8 +2,9 @@
 
 import { prisma } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
-import { Prisma } from '@prisma/client'
+import { Prisma } from '@/generated/client'
 import { generateTransactionNumber } from '@/lib/sequences'
+import { logAuditAction } from '@/lib/audit'
 
 export type JournalLineInput = {
     accountId: number
@@ -41,6 +42,7 @@ export async function createJournalEntry(data: {
     status?: 'DRAFT' | 'POSTED'
     scope?: 'OFFICIAL' | 'INTERNAL'
     siteId?: number | null
+    userId?: number
 }, tx?: Prisma.TransactionClient) {
     const status = data.status || 'DRAFT'
     const scope = data.scope || 'OFFICIAL'
@@ -130,6 +132,15 @@ export async function createJournalEntry(data: {
             }
         }
 
+        // 4. Audit Trail
+        await logAuditAction({
+            userId: data.userId || 1, // TODO: Auth
+            action: 'CREATE',
+            entity: 'JournalEntry',
+            entityId: entry.id.toString(),
+            newValue: JSON.stringify({ reference, totalDebit, status })
+        }, ctx)
+
         return entry
     }
 
@@ -207,6 +218,64 @@ export async function postJournalEntry(id: number) {
                 data: updateData
             })
         }
+
+        // 3. Audit Trail
+        await logAuditAction({
+            userId: 1, // TODO: Auth
+            action: 'POST',
+            entity: 'JournalEntry',
+            entityId: id.toString(),
+            newValue: 'POSTED'
+        }, tx)
+
+        return { success: true }
+    })
+}
+
+/**
+ * Verification Layer: Confirms the entry is correct before it can be posted or locked.
+ */
+export async function verifyJournalEntry(id: number, userId: number) {
+    return await prisma.$transaction(async (tx) => {
+        const entry = await tx.journalEntry.findUnique({ where: { id } })
+        if (!entry) throw new Error("Entry not found")
+        if (entry.status === 'POSTED') throw new Error("Cannot verify a posted entry")
+
+        await tx.journalEntry.update({
+            where: { id },
+            data: { isVerified: true, verifiedById: userId }
+        })
+
+        await logAuditAction({
+            userId,
+            action: 'VERIFY',
+            entity: 'JournalEntry',
+            entityId: id.toString(),
+            newValue: 'VERIFIED'
+        }, tx)
+
+        return { success: true }
+    })
+}
+
+/**
+ * Locking Layer: Final seal that prevents even reversal without administrative unlock.
+ */
+export async function lockJournalEntry(id: number, userId: number) {
+    return await prisma.$transaction(async (tx) => {
+        await tx.journalEntry.update({
+            where: { id },
+            data: { isLocked: true }
+        })
+
+        await logAuditAction({
+            userId,
+            action: 'UPDATE',
+            entity: 'JournalEntry',
+            entityId: id.toString(),
+            field: 'isLocked',
+            newValue: 'true'
+        }, tx)
 
         return { success: true }
     })

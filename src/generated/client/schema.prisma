@@ -7,7 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite" // We switch this to "mysql" for Hostinger
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -114,9 +114,9 @@ model User {
   name     String
   isActive Boolean @default(true)
 
-  // SaaS Context
-  organizationId String?
-  organization   Organization? @relation(fields: [organizationId], references: [id])
+  // SaaS Context (Mandatory for SaaS)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   // Advanced RBAC
   roleId Int?
@@ -205,8 +205,8 @@ model Contact {
   vatId   String? // Tax ID for suppliers/companies
 
   // SaaS Context
-  organizationId String?
-  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   // Home Site (Master Data - Registration/Base)
   homeSiteId Int?
@@ -271,14 +271,14 @@ model Employee {
 // ...
 model Product {
   id          Int     @id @default(autoincrement())
-  sku         String  @unique // Internal ID
-  barcode     String? @unique // Scan Code
+  sku         String // SKU is unique PER organization
+  barcode     String?
   name        String
   description String?
 
   // SaaS Context
-  organizationId String?
-  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   // Grouping (New)
   productGroupId Int?
@@ -340,6 +340,8 @@ model Product {
   images      ProductImage[]
   PricingRule PricingRule[]
 
+  @@unique([sku, organizationId])
+  @@unique([barcode, organizationId])
   // Performance Indexes for POS search
   @@index([name]) // Fast search by name
   @@index([categoryId]) // Fast filtering by category  
@@ -609,9 +611,9 @@ model FinancialSettings {
   id          Int    @id @default(autoincrement())
   companyType String @default(value: "REGULAR") // 'REGULAR', 'MICRO', 'REAL', 'MIXED'
 
-  // SaaS Context
-  organizationId String?       @unique
-  organization   Organization? @relation(fields: [organizationId], references: [id])
+  // SaaS Context (1 set of settings per Org)
+  organizationId String       @unique
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   // For Micro Companies
   salesTaxPercentage    Decimal @default(0.00)
@@ -671,7 +673,7 @@ model FiscalPeriod {
 
 model ChartOfAccount {
   id          Int     @id @default(autoincrement())
-  code        String  @unique // "1000", "5100"
+  code        String // Code is unique PER organization
   name        String
   description String?
   type        String // 'ASSET', 'LIABILITY', 'EQUITY', 'INCOME', 'EXPENSE'
@@ -679,8 +681,8 @@ model ChartOfAccount {
   isActive    Boolean @default(true)
 
   // SaaS Context
-  organizationId String?
-  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   balance         Decimal @default(0.00) // Consolidated (Real) balance
   balanceOfficial Decimal @default(0.00) // Official (Declared) balance
@@ -710,6 +712,8 @@ model ChartOfAccount {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([code, organizationId])
 }
 
 model JournalEntry {
@@ -816,7 +820,7 @@ model PricingRule {
 model Site {
   id        Int     @id @default(autoincrement())
   name      String
-  code      String? @unique
+  code      String?
   address   String?
   city      String?
   phone     String?
@@ -825,8 +829,8 @@ model Site {
   isActive Boolean @default(true)
 
   // SaaS Context
-  organizationId String?
-  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   warehouses        Warehouse[]
   users             User[]             @relation("HomeSite")
@@ -841,6 +845,8 @@ model Site {
   updatedAt DateTime @updatedAt
 
   inventoryLevels InventoryLevel[]
+
+  @@unique([code, organizationId])
 }
 
 model InventoryLevel {

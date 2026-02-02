@@ -6109,6 +6109,7 @@ export namespace Prisma {
      * The data used to create many Organizations.
      */
     data: OrganizationCreateManyInput | OrganizationCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -6123,6 +6124,7 @@ export namespace Prisma {
      * The data used to create many Organizations.
      */
     data: OrganizationCreateManyInput | OrganizationCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -7189,6 +7191,7 @@ export namespace Prisma {
      * The data used to create many Countries.
      */
     data: CountryCreateManyInput | CountryCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -7203,6 +7206,7 @@ export namespace Prisma {
      * The data used to create many Countries.
      */
     data: CountryCreateManyInput | CountryCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -8272,6 +8276,7 @@ export namespace Prisma {
      * The data used to create many Units.
      */
     data: UnitCreateManyInput | UnitCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -8286,6 +8291,7 @@ export namespace Prisma {
      * The data used to create many Units.
      */
     data: UnitCreateManyInput | UnitCreateManyInput[]
+    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -9364,6 +9370,7 @@ export namespace Prisma {
      * The data used to create many FinancialAccounts.
      */
     data: FinancialAccountCreateManyInput | FinancialAccountCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -9378,6 +9385,7 @@ export namespace Prisma {
      * The data used to create many FinancialAccounts.
      */
     data: FinancialAccountCreateManyInput | FinancialAccountCreateManyInput[]
+    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -10469,6 +10477,7 @@ export namespace Prisma {
      * The data used to create many Transactions.
      */
     data: TransactionCreateManyInput | TransactionCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -10483,6 +10492,7 @@ export namespace Prisma {
      * The data used to create many Transactions.
      */
     data: TransactionCreateManyInput | TransactionCreateManyInput[]
+    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -10863,7 +10873,7 @@ export namespace Prisma {
     password: string
     name: string
     isActive: boolean
-    organizationId: string | null
+    organizationId: string
     roleId: number | null
     homeSiteId: number | null
     cashRegisterId: number | null
@@ -10906,7 +10916,7 @@ export namespace Prisma {
     linkedAccountId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    organization?: boolean | User$organizationArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     role?: boolean | User$roleArgs<ExtArgs>
     homeSite?: boolean | User$homeSiteArgs<ExtArgs>
     cashRegister?: boolean | User$cashRegisterArgs<ExtArgs>
@@ -10934,7 +10944,7 @@ export namespace Prisma {
     linkedAccountId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    organization?: boolean | User$organizationArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     role?: boolean | User$roleArgs<ExtArgs>
     homeSite?: boolean | User$homeSiteArgs<ExtArgs>
     cashRegister?: boolean | User$cashRegisterArgs<ExtArgs>
@@ -10959,7 +10969,7 @@ export namespace Prisma {
   }
 
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    organization?: boolean | User$organizationArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     role?: boolean | User$roleArgs<ExtArgs>
     homeSite?: boolean | User$homeSiteArgs<ExtArgs>
     cashRegister?: boolean | User$cashRegisterArgs<ExtArgs>
@@ -10973,7 +10983,7 @@ export namespace Prisma {
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    organization?: boolean | User$organizationArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     role?: boolean | User$roleArgs<ExtArgs>
     homeSite?: boolean | User$homeSiteArgs<ExtArgs>
     cashRegister?: boolean | User$cashRegisterArgs<ExtArgs>
@@ -10984,7 +10994,7 @@ export namespace Prisma {
   export type $UserPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "User"
     objects: {
-      organization: Prisma.$OrganizationPayload<ExtArgs> | null
+      organization: Prisma.$OrganizationPayload<ExtArgs>
       role: Prisma.$RolePayload<ExtArgs> | null
       homeSite: Prisma.$SitePayload<ExtArgs> | null
       cashRegister: Prisma.$FinancialAccountPayload<ExtArgs> | null
@@ -11002,7 +11012,7 @@ export namespace Prisma {
       password: string
       name: string
       isActive: boolean
-      organizationId: string | null
+      organizationId: string
       roleId: number | null
       homeSiteId: number | null
       cashRegisterId: number | null
@@ -11374,7 +11384,7 @@ export namespace Prisma {
    */
   export interface Prisma__UserClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    organization<T extends User$organizationArgs<ExtArgs> = {}>(args?: Subset<T, User$organizationArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
+    organization<T extends OrganizationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OrganizationDefaultArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
     role<T extends User$roleArgs<ExtArgs> = {}>(args?: Subset<T, User$roleArgs<ExtArgs>>): Prisma__RoleClient<$Result.GetResult<Prisma.$RolePayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
     homeSite<T extends User$homeSiteArgs<ExtArgs> = {}>(args?: Subset<T, User$homeSiteArgs<ExtArgs>>): Prisma__SiteClient<$Result.GetResult<Prisma.$SitePayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
     cashRegister<T extends User$cashRegisterArgs<ExtArgs> = {}>(args?: Subset<T, User$cashRegisterArgs<ExtArgs>>): Prisma__FinancialAccountClient<$Result.GetResult<Prisma.$FinancialAccountPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
@@ -11632,6 +11642,7 @@ export namespace Prisma {
      * The data used to create many Users.
      */
     data: UserCreateManyInput | UserCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -11646,6 +11657,7 @@ export namespace Prisma {
      * The data used to create many Users.
      */
     data: UserCreateManyInput | UserCreateManyInput[]
+    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -11740,21 +11752,6 @@ export namespace Prisma {
      * Filter which Users to delete
      */
     where?: UserWhereInput
-  }
-
-  /**
-   * User.organization
-   */
-  export type User$organizationArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Organization
-     */
-    select?: OrganizationSelect<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: OrganizationInclude<ExtArgs> | null
-    where?: OrganizationWhereInput
   }
 
   /**
@@ -12790,6 +12787,7 @@ export namespace Prisma {
      * The data used to create many Roles.
      */
     data: RoleCreateManyInput | RoleCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -12804,6 +12802,7 @@ export namespace Prisma {
      * The data used to create many Roles.
      */
     data: RoleCreateManyInput | RoleCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -13802,6 +13801,7 @@ export namespace Prisma {
      * The data used to create many Permissions.
      */
     data: PermissionCreateManyInput | PermissionCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -13816,6 +13816,7 @@ export namespace Prisma {
      * The data used to create many Permissions.
      */
     data: PermissionCreateManyInput | PermissionCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -14853,6 +14854,7 @@ export namespace Prisma {
      * The data used to create many AuditLogs.
      */
     data: AuditLogCreateManyInput | AuditLogCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -14867,6 +14869,7 @@ export namespace Prisma {
      * The data used to create many AuditLogs.
      */
     data: AuditLogCreateManyInput | AuditLogCreateManyInput[]
+    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -15246,7 +15249,7 @@ export namespace Prisma {
     phone: string | null
     address: string | null
     vatId: string | null
-    organizationId: string | null
+    organizationId: string
     homeSiteId: number | null
     balance: Decimal
     creditLimit: Decimal
@@ -15291,7 +15294,7 @@ export namespace Prisma {
     linkedAccountId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    organization?: boolean | Contact$organizationArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     homeSite?: boolean | Contact$homeSiteArgs<ExtArgs>
     linkedAccount?: boolean | Contact$linkedAccountArgs<ExtArgs>
     orders?: boolean | Contact$ordersArgs<ExtArgs>
@@ -15318,7 +15321,7 @@ export namespace Prisma {
     linkedAccountId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    organization?: boolean | Contact$organizationArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     homeSite?: boolean | Contact$homeSiteArgs<ExtArgs>
     linkedAccount?: boolean | Contact$linkedAccountArgs<ExtArgs>
   }, ExtArgs["result"]["contact"]>
@@ -15342,7 +15345,7 @@ export namespace Prisma {
   }
 
   export type ContactInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    organization?: boolean | Contact$organizationArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     homeSite?: boolean | Contact$homeSiteArgs<ExtArgs>
     linkedAccount?: boolean | Contact$linkedAccountArgs<ExtArgs>
     orders?: boolean | Contact$ordersArgs<ExtArgs>
@@ -15353,7 +15356,7 @@ export namespace Prisma {
     _count?: boolean | ContactCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type ContactIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    organization?: boolean | Contact$organizationArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     homeSite?: boolean | Contact$homeSiteArgs<ExtArgs>
     linkedAccount?: boolean | Contact$linkedAccountArgs<ExtArgs>
   }
@@ -15361,7 +15364,7 @@ export namespace Prisma {
   export type $ContactPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Contact"
     objects: {
-      organization: Prisma.$OrganizationPayload<ExtArgs> | null
+      organization: Prisma.$OrganizationPayload<ExtArgs>
       homeSite: Prisma.$SitePayload<ExtArgs> | null
       linkedAccount: Prisma.$ChartOfAccountPayload<ExtArgs> | null
       orders: Prisma.$OrderPayload<ExtArgs>[]
@@ -15378,7 +15381,7 @@ export namespace Prisma {
       phone: string | null
       address: string | null
       vatId: string | null
-      organizationId: string | null
+      organizationId: string
       homeSiteId: number | null
       balance: Prisma.Decimal
       creditLimit: Prisma.Decimal
@@ -15750,7 +15753,7 @@ export namespace Prisma {
    */
   export interface Prisma__ContactClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    organization<T extends Contact$organizationArgs<ExtArgs> = {}>(args?: Subset<T, Contact$organizationArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
+    organization<T extends OrganizationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OrganizationDefaultArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
     homeSite<T extends Contact$homeSiteArgs<ExtArgs> = {}>(args?: Subset<T, Contact$homeSiteArgs<ExtArgs>>): Prisma__SiteClient<$Result.GetResult<Prisma.$SitePayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
     linkedAccount<T extends Contact$linkedAccountArgs<ExtArgs> = {}>(args?: Subset<T, Contact$linkedAccountArgs<ExtArgs>>): Prisma__ChartOfAccountClient<$Result.GetResult<Prisma.$ChartOfAccountPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
     orders<T extends Contact$ordersArgs<ExtArgs> = {}>(args?: Subset<T, Contact$ordersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OrderPayload<ExtArgs>, T, "findMany"> | Null>
@@ -16007,6 +16010,7 @@ export namespace Prisma {
      * The data used to create many Contacts.
      */
     data: ContactCreateManyInput | ContactCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -16021,6 +16025,7 @@ export namespace Prisma {
      * The data used to create many Contacts.
      */
     data: ContactCreateManyInput | ContactCreateManyInput[]
+    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -16115,21 +16120,6 @@ export namespace Prisma {
      * Filter which Contacts to delete
      */
     where?: ContactWhereInput
-  }
-
-  /**
-   * Contact.organization
-   */
-  export type Contact$organizationArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Organization
-     */
-    select?: OrganizationSelect<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: OrganizationInclude<ExtArgs> | null
-    where?: OrganizationWhereInput
   }
 
   /**
@@ -17277,6 +17267,7 @@ export namespace Prisma {
      * The data used to create many Employees.
      */
     data: EmployeeCreateManyInput | EmployeeCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -17291,6 +17282,7 @@ export namespace Prisma {
      * The data used to create many Employees.
      */
     data: EmployeeCreateManyInput | EmployeeCreateManyInput[]
+    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -17852,7 +17844,7 @@ export namespace Prisma {
     barcode: string | null
     name: string
     description: string | null
-    organizationId: string | null
+    organizationId: string
     productGroupId: number | null
     size: Decimal | null
     sizeUnitId: number | null
@@ -17925,7 +17917,7 @@ export namespace Prisma {
     minStockLevel?: boolean
     categoryId?: boolean
     parfumId?: boolean
-    organization?: boolean | Product$organizationArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     productGroup?: boolean | Product$productGroupArgs<ExtArgs>
     sizeUnit?: boolean | Product$sizeUnitArgs<ExtArgs>
     inventoryLevels?: boolean | Product$inventoryLevelsArgs<ExtArgs>
@@ -17972,7 +17964,7 @@ export namespace Prisma {
     minStockLevel?: boolean
     categoryId?: boolean
     parfumId?: boolean
-    organization?: boolean | Product$organizationArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     productGroup?: boolean | Product$productGroupArgs<ExtArgs>
     sizeUnit?: boolean | Product$sizeUnitArgs<ExtArgs>
     brand?: boolean | Product$brandArgs<ExtArgs>
@@ -18015,7 +18007,7 @@ export namespace Prisma {
   }
 
   export type ProductInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    organization?: boolean | Product$organizationArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     productGroup?: boolean | Product$productGroupArgs<ExtArgs>
     sizeUnit?: boolean | Product$sizeUnitArgs<ExtArgs>
     inventoryLevels?: boolean | Product$inventoryLevelsArgs<ExtArgs>
@@ -18033,7 +18025,7 @@ export namespace Prisma {
     _count?: boolean | ProductCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type ProductIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    organization?: boolean | Product$organizationArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     productGroup?: boolean | Product$productGroupArgs<ExtArgs>
     sizeUnit?: boolean | Product$sizeUnitArgs<ExtArgs>
     brand?: boolean | Product$brandArgs<ExtArgs>
@@ -18047,7 +18039,7 @@ export namespace Prisma {
   export type $ProductPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Product"
     objects: {
-      organization: Prisma.$OrganizationPayload<ExtArgs> | null
+      organization: Prisma.$OrganizationPayload<ExtArgs>
       productGroup: Prisma.$ProductGroupPayload<ExtArgs> | null
       sizeUnit: Prisma.$UnitPayload<ExtArgs> | null
       inventoryLevels: Prisma.$InventoryLevelPayload<ExtArgs>[]
@@ -18069,7 +18061,7 @@ export namespace Prisma {
       barcode: string | null
       name: string
       description: string | null
-      organizationId: string | null
+      organizationId: string
       productGroupId: number | null
       size: Prisma.Decimal | null
       sizeUnitId: number | null
@@ -18456,7 +18448,7 @@ export namespace Prisma {
    */
   export interface Prisma__ProductClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    organization<T extends Product$organizationArgs<ExtArgs> = {}>(args?: Subset<T, Product$organizationArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
+    organization<T extends OrganizationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OrganizationDefaultArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
     productGroup<T extends Product$productGroupArgs<ExtArgs> = {}>(args?: Subset<T, Product$productGroupArgs<ExtArgs>>): Prisma__ProductGroupClient<$Result.GetResult<Prisma.$ProductGroupPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
     sizeUnit<T extends Product$sizeUnitArgs<ExtArgs> = {}>(args?: Subset<T, Product$sizeUnitArgs<ExtArgs>>): Prisma__UnitClient<$Result.GetResult<Prisma.$UnitPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
     inventoryLevels<T extends Product$inventoryLevelsArgs<ExtArgs> = {}>(args?: Subset<T, Product$inventoryLevelsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InventoryLevelPayload<ExtArgs>, T, "findMany"> | Null>
@@ -18733,6 +18725,7 @@ export namespace Prisma {
      * The data used to create many Products.
      */
     data: ProductCreateManyInput | ProductCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -18747,6 +18740,7 @@ export namespace Prisma {
      * The data used to create many Products.
      */
     data: ProductCreateManyInput | ProductCreateManyInput[]
+    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -18841,21 +18835,6 @@ export namespace Prisma {
      * Filter which Products to delete
      */
     where?: ProductWhereInput
-  }
-
-  /**
-   * Product.organization
-   */
-  export type Product$organizationArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Organization
-     */
-    select?: OrganizationSelect<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: OrganizationInclude<ExtArgs> | null
-    where?: OrganizationWhereInput
   }
 
   /**
@@ -20035,6 +20014,7 @@ export namespace Prisma {
      * The data used to create many ProductGroups.
      */
     data: ProductGroupCreateManyInput | ProductGroupCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -20049,6 +20029,7 @@ export namespace Prisma {
      * The data used to create many ProductGroups.
      */
     data: ProductGroupCreateManyInput | ProductGroupCreateManyInput[]
+    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -21115,6 +21096,7 @@ export namespace Prisma {
      * The data used to create many Categories.
      */
     data: CategoryCreateManyInput | CategoryCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -21129,6 +21111,7 @@ export namespace Prisma {
      * The data used to create many Categories.
      */
     data: CategoryCreateManyInput | CategoryCreateManyInput[]
+    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -22214,6 +22197,7 @@ export namespace Prisma {
      * The data used to create many Brands.
      */
     data: BrandCreateManyInput | BrandCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -22228,6 +22212,7 @@ export namespace Prisma {
      * The data used to create many Brands.
      */
     data: BrandCreateManyInput | BrandCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -23238,6 +23223,7 @@ export namespace Prisma {
      * The data used to create many Parfums.
      */
     data: ParfumCreateManyInput | ParfumCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -23252,6 +23238,7 @@ export namespace Prisma {
      * The data used to create many Parfums.
      */
     data: ParfumCreateManyInput | ParfumCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -24317,6 +24304,7 @@ export namespace Prisma {
      * The data used to create many Warehouses.
      */
     data: WarehouseCreateManyInput | WarehouseCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -24331,6 +24319,7 @@ export namespace Prisma {
      * The data used to create many Warehouses.
      */
     data: WarehouseCreateManyInput | WarehouseCreateManyInput[]
+    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -25331,6 +25320,7 @@ export namespace Prisma {
      * The data used to create many StockBatches.
      */
     data: StockBatchCreateManyInput | StockBatchCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -25345,6 +25335,7 @@ export namespace Prisma {
      * The data used to create many StockBatches.
      */
     data: StockBatchCreateManyInput | StockBatchCreateManyInput[]
+    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -26344,6 +26335,7 @@ export namespace Prisma {
      * The data used to create many Inventories.
      */
     data: InventoryCreateManyInput | InventoryCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -26358,6 +26350,7 @@ export namespace Prisma {
      * The data used to create many Inventories.
      */
     data: InventoryCreateManyInput | InventoryCreateManyInput[]
+    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -27556,6 +27549,7 @@ export namespace Prisma {
      * The data used to create many Orders.
      */
     data: OrderCreateManyInput | OrderCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -27570,6 +27564,7 @@ export namespace Prisma {
      * The data used to create many Orders.
      */
     data: OrderCreateManyInput | OrderCreateManyInput[]
+    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -28720,6 +28715,7 @@ export namespace Prisma {
      * The data used to create many OrderLines.
      */
     data: OrderLineCreateManyInput | OrderLineCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -28734,6 +28730,7 @@ export namespace Prisma {
      * The data used to create many OrderLines.
      */
     data: OrderLineCreateManyInput | OrderLineCreateManyInput[]
+    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -29737,6 +29734,7 @@ export namespace Prisma {
      * The data used to create many Tasks.
      */
     data: TaskCreateManyInput | TaskCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -29751,6 +29749,7 @@ export namespace Prisma {
      * The data used to create many Tasks.
      */
     data: TaskCreateManyInput | TaskCreateManyInput[]
+    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -30682,6 +30681,7 @@ export namespace Prisma {
      * The data used to create many SystemSettings.
      */
     data: SystemSettingsCreateManyInput | SystemSettingsCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -30696,6 +30696,7 @@ export namespace Prisma {
      * The data used to create many SystemSettings.
      */
     data: SystemSettingsCreateManyInput | SystemSettingsCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -31612,6 +31613,7 @@ export namespace Prisma {
      * The data used to create many BarcodeSettings.
      */
     data: BarcodeSettingsCreateManyInput | BarcodeSettingsCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -31626,6 +31628,7 @@ export namespace Prisma {
      * The data used to create many BarcodeSettings.
      */
     data: BarcodeSettingsCreateManyInput | BarcodeSettingsCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -32554,6 +32557,7 @@ export namespace Prisma {
      * The data used to create many TransactionSequences.
      */
     data: TransactionSequenceCreateManyInput | TransactionSequenceCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -32568,6 +32572,7 @@ export namespace Prisma {
      * The data used to create many TransactionSequences.
      */
     data: TransactionSequenceCreateManyInput | TransactionSequenceCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -33503,6 +33508,7 @@ export namespace Prisma {
      * The data used to create many ProductImages.
      */
     data: ProductImageCreateManyInput | ProductImageCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -33517,6 +33523,7 @@ export namespace Prisma {
      * The data used to create many ProductImages.
      */
     data: ProductImageCreateManyInput | ProductImageCreateManyInput[]
+    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -33862,7 +33869,7 @@ export namespace Prisma {
   export type FinancialSettingsGroupByOutputType = {
     id: number
     companyType: string
-    organizationId: string | null
+    organizationId: string
     salesTaxPercentage: Decimal
     purchaseTaxPercentage: Decimal
     customTaxRules: string | null
@@ -33910,7 +33917,7 @@ export namespace Prisma {
     declareTVA?: boolean
     dualView?: boolean
     pricingCostBasis?: boolean
-    organization?: boolean | FinancialSettings$organizationArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["financialSettings"]>
 
   export type FinancialSettingsSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -33928,7 +33935,7 @@ export namespace Prisma {
     declareTVA?: boolean
     dualView?: boolean
     pricingCostBasis?: boolean
-    organization?: boolean | FinancialSettings$organizationArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["financialSettings"]>
 
   export type FinancialSettingsSelectScalar = {
@@ -33949,21 +33956,21 @@ export namespace Prisma {
   }
 
   export type FinancialSettingsInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    organization?: boolean | FinancialSettings$organizationArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
   }
   export type FinancialSettingsIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    organization?: boolean | FinancialSettings$organizationArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
   }
 
   export type $FinancialSettingsPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "FinancialSettings"
     objects: {
-      organization: Prisma.$OrganizationPayload<ExtArgs> | null
+      organization: Prisma.$OrganizationPayload<ExtArgs>
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
       companyType: string
-      organizationId: string | null
+      organizationId: string
       salesTaxPercentage: Prisma.Decimal
       purchaseTaxPercentage: Prisma.Decimal
       customTaxRules: string | null
@@ -34339,7 +34346,7 @@ export namespace Prisma {
    */
   export interface Prisma__FinancialSettingsClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    organization<T extends FinancialSettings$organizationArgs<ExtArgs> = {}>(args?: Subset<T, FinancialSettings$organizationArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
+    organization<T extends OrganizationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OrganizationDefaultArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -34588,6 +34595,7 @@ export namespace Prisma {
      * The data used to create many FinancialSettings.
      */
     data: FinancialSettingsCreateManyInput | FinancialSettingsCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -34602,6 +34610,7 @@ export namespace Prisma {
      * The data used to create many FinancialSettings.
      */
     data: FinancialSettingsCreateManyInput | FinancialSettingsCreateManyInput[]
+    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -34696,21 +34705,6 @@ export namespace Prisma {
      * Filter which FinancialSettings to delete
      */
     where?: FinancialSettingsWhereInput
-  }
-
-  /**
-   * FinancialSettings.organization
-   */
-  export type FinancialSettings$organizationArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Organization
-     */
-    select?: OrganizationSelect<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: OrganizationInclude<ExtArgs> | null
-    where?: OrganizationWhereInput
   }
 
   /**
@@ -35607,6 +35601,7 @@ export namespace Prisma {
      * The data used to create many FiscalYears.
      */
     data: FiscalYearCreateManyInput | FiscalYearCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -35621,6 +35616,7 @@ export namespace Prisma {
      * The data used to create many FiscalYears.
      */
     data: FiscalYearCreateManyInput | FiscalYearCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -36658,6 +36654,7 @@ export namespace Prisma {
      * The data used to create many FiscalPeriods.
      */
     data: FiscalPeriodCreateManyInput | FiscalPeriodCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -36672,6 +36669,7 @@ export namespace Prisma {
      * The data used to create many FiscalPeriods.
      */
     data: FiscalPeriodCreateManyInput | FiscalPeriodCreateManyInput[]
+    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -37066,7 +37064,7 @@ export namespace Prisma {
     type: string
     subType: string | null
     isActive: boolean
-    organizationId: string | null
+    organizationId: string
     balance: Decimal
     balanceOfficial: Decimal
     syscohadaCode: string | null
@@ -37117,7 +37115,7 @@ export namespace Prisma {
     parentId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    organization?: boolean | ChartOfAccount$organizationArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     parent?: boolean | ChartOfAccount$parentArgs<ExtArgs>
     children?: boolean | ChartOfAccount$childrenArgs<ExtArgs>
     journalLines?: boolean | ChartOfAccount$journalLinesArgs<ExtArgs>
@@ -37147,7 +37145,7 @@ export namespace Prisma {
     parentId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    organization?: boolean | ChartOfAccount$organizationArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     parent?: boolean | ChartOfAccount$parentArgs<ExtArgs>
   }, ExtArgs["result"]["chartOfAccount"]>
 
@@ -37173,7 +37171,7 @@ export namespace Prisma {
   }
 
   export type ChartOfAccountInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    organization?: boolean | ChartOfAccount$organizationArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     parent?: boolean | ChartOfAccount$parentArgs<ExtArgs>
     children?: boolean | ChartOfAccount$childrenArgs<ExtArgs>
     journalLines?: boolean | ChartOfAccount$journalLinesArgs<ExtArgs>
@@ -37184,14 +37182,14 @@ export namespace Prisma {
     _count?: boolean | ChartOfAccountCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type ChartOfAccountIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    organization?: boolean | ChartOfAccount$organizationArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     parent?: boolean | ChartOfAccount$parentArgs<ExtArgs>
   }
 
   export type $ChartOfAccountPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "ChartOfAccount"
     objects: {
-      organization: Prisma.$OrganizationPayload<ExtArgs> | null
+      organization: Prisma.$OrganizationPayload<ExtArgs>
       parent: Prisma.$ChartOfAccountPayload<ExtArgs> | null
       children: Prisma.$ChartOfAccountPayload<ExtArgs>[]
       journalLines: Prisma.$JournalEntryLinePayload<ExtArgs>[]
@@ -37208,7 +37206,7 @@ export namespace Prisma {
       type: string
       subType: string | null
       isActive: boolean
-      organizationId: string | null
+      organizationId: string
       balance: Prisma.Decimal
       balanceOfficial: Prisma.Decimal
       syscohadaCode: string | null
@@ -37583,7 +37581,7 @@ export namespace Prisma {
    */
   export interface Prisma__ChartOfAccountClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    organization<T extends ChartOfAccount$organizationArgs<ExtArgs> = {}>(args?: Subset<T, ChartOfAccount$organizationArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
+    organization<T extends OrganizationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OrganizationDefaultArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
     parent<T extends ChartOfAccount$parentArgs<ExtArgs> = {}>(args?: Subset<T, ChartOfAccount$parentArgs<ExtArgs>>): Prisma__ChartOfAccountClient<$Result.GetResult<Prisma.$ChartOfAccountPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
     children<T extends ChartOfAccount$childrenArgs<ExtArgs> = {}>(args?: Subset<T, ChartOfAccount$childrenArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChartOfAccountPayload<ExtArgs>, T, "findMany"> | Null>
     journalLines<T extends ChartOfAccount$journalLinesArgs<ExtArgs> = {}>(args?: Subset<T, ChartOfAccount$journalLinesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$JournalEntryLinePayload<ExtArgs>, T, "findMany"> | Null>
@@ -37843,6 +37841,7 @@ export namespace Prisma {
      * The data used to create many ChartOfAccounts.
      */
     data: ChartOfAccountCreateManyInput | ChartOfAccountCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -37857,6 +37856,7 @@ export namespace Prisma {
      * The data used to create many ChartOfAccounts.
      */
     data: ChartOfAccountCreateManyInput | ChartOfAccountCreateManyInput[]
+    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -37951,21 +37951,6 @@ export namespace Prisma {
      * Filter which ChartOfAccounts to delete
      */
     where?: ChartOfAccountWhereInput
-  }
-
-  /**
-   * ChartOfAccount.organization
-   */
-  export type ChartOfAccount$organizationArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Organization
-     */
-    select?: OrganizationSelect<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: OrganizationInclude<ExtArgs> | null
-    where?: OrganizationWhereInput
   }
 
   /**
@@ -39132,6 +39117,7 @@ export namespace Prisma {
      * The data used to create many JournalEntries.
      */
     data: JournalEntryCreateManyInput | JournalEntryCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -39146,6 +39132,7 @@ export namespace Prisma {
      * The data used to create many JournalEntries.
      */
     data: JournalEntryCreateManyInput | JournalEntryCreateManyInput[]
+    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -40285,6 +40272,7 @@ export namespace Prisma {
      * The data used to create many JournalEntryLines.
      */
     data: JournalEntryLineCreateManyInput | JournalEntryLineCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -40299,6 +40287,7 @@ export namespace Prisma {
      * The data used to create many JournalEntryLines.
      */
     data: JournalEntryLineCreateManyInput | JournalEntryLineCreateManyInput[]
+    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -41291,6 +41280,7 @@ export namespace Prisma {
      * The data used to create many PriceLists.
      */
     data: PriceListCreateManyInput | PriceListCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -41305,6 +41295,7 @@ export namespace Prisma {
      * The data used to create many PriceLists.
      */
     data: PriceListCreateManyInput | PriceListCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -42366,6 +42357,7 @@ export namespace Prisma {
      * The data used to create many PricingRules.
      */
     data: PricingRuleCreateManyInput | PricingRuleCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -42380,6 +42372,7 @@ export namespace Prisma {
      * The data used to create many PricingRules.
      */
     data: PricingRuleCreateManyInput | PricingRuleCreateManyInput[]
+    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -42746,7 +42739,7 @@ export namespace Prisma {
     phone: string | null
     vatNumber: string | null
     isActive: boolean
-    organizationId: string | null
+    organizationId: string
     createdAt: Date
     updatedAt: Date
     _count: SiteCountAggregateOutputType | null
@@ -42782,7 +42775,7 @@ export namespace Prisma {
     organizationId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    organization?: boolean | Site$organizationArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     warehouses?: boolean | Site$warehousesArgs<ExtArgs>
     users?: boolean | Site$usersArgs<ExtArgs>
     contacts?: boolean | Site$contactsArgs<ExtArgs>
@@ -42807,7 +42800,7 @@ export namespace Prisma {
     organizationId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    organization?: boolean | Site$organizationArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["site"]>
 
   export type SiteSelectScalar = {
@@ -42825,7 +42818,7 @@ export namespace Prisma {
   }
 
   export type SiteInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    organization?: boolean | Site$organizationArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     warehouses?: boolean | Site$warehousesArgs<ExtArgs>
     users?: boolean | Site$usersArgs<ExtArgs>
     contacts?: boolean | Site$contactsArgs<ExtArgs>
@@ -42838,13 +42831,13 @@ export namespace Prisma {
     _count?: boolean | SiteCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type SiteIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    organization?: boolean | Site$organizationArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
   }
 
   export type $SitePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Site"
     objects: {
-      organization: Prisma.$OrganizationPayload<ExtArgs> | null
+      organization: Prisma.$OrganizationPayload<ExtArgs>
       warehouses: Prisma.$WarehousePayload<ExtArgs>[]
       users: Prisma.$UserPayload<ExtArgs>[]
       contacts: Prisma.$ContactPayload<ExtArgs>[]
@@ -42864,7 +42857,7 @@ export namespace Prisma {
       phone: string | null
       vatNumber: string | null
       isActive: boolean
-      organizationId: string | null
+      organizationId: string
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["site"]>
@@ -43231,7 +43224,7 @@ export namespace Prisma {
    */
   export interface Prisma__SiteClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    organization<T extends Site$organizationArgs<ExtArgs> = {}>(args?: Subset<T, Site$organizationArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
+    organization<T extends OrganizationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OrganizationDefaultArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
     warehouses<T extends Site$warehousesArgs<ExtArgs> = {}>(args?: Subset<T, Site$warehousesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WarehousePayload<ExtArgs>, T, "findMany"> | Null>
     users<T extends Site$usersArgs<ExtArgs> = {}>(args?: Subset<T, Site$usersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findMany"> | Null>
     contacts<T extends Site$contactsArgs<ExtArgs> = {}>(args?: Subset<T, Site$contactsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ContactPayload<ExtArgs>, T, "findMany"> | Null>
@@ -43486,6 +43479,7 @@ export namespace Prisma {
      * The data used to create many Sites.
      */
     data: SiteCreateManyInput | SiteCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -43500,6 +43494,7 @@ export namespace Prisma {
      * The data used to create many Sites.
      */
     data: SiteCreateManyInput | SiteCreateManyInput[]
+    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -43594,21 +43589,6 @@ export namespace Prisma {
      * Filter which Sites to delete
      */
     where?: SiteWhereInput
-  }
-
-  /**
-   * Site.organization
-   */
-  export type Site$organizationArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Organization
-     */
-    select?: OrganizationSelect<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: OrganizationInclude<ExtArgs> | null
-    where?: OrganizationWhereInput
   }
 
   /**
@@ -44664,6 +44644,7 @@ export namespace Prisma {
      * The data used to create many InventoryLevels.
      */
     data: InventoryLevelCreateManyInput | InventoryLevelCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -44678,6 +44659,7 @@ export namespace Prisma {
      * The data used to create many InventoryLevels.
      */
     data: InventoryLevelCreateManyInput | InventoryLevelCreateManyInput[]
+    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -45775,6 +45757,7 @@ export namespace Prisma {
      * The data used to create many FinancialEvents.
      */
     data: FinancialEventCreateManyInput | FinancialEventCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -45789,6 +45772,7 @@ export namespace Prisma {
      * The data used to create many FinancialEvents.
      */
     data: FinancialEventCreateManyInput | FinancialEventCreateManyInput[]
+    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -46910,6 +46894,7 @@ export namespace Prisma {
      * The data used to create many Loans.
      */
     data: LoanCreateManyInput | LoanCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -46924,6 +46909,7 @@ export namespace Prisma {
      * The data used to create many Loans.
      */
     data: LoanCreateManyInput | LoanCreateManyInput[]
+    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -47995,6 +47981,7 @@ export namespace Prisma {
      * The data used to create many LoanInstallments.
      */
     data: LoanInstallmentCreateManyInput | LoanInstallmentCreateManyInput[]
+    skipDuplicates?: boolean
   }
 
   /**
@@ -48009,6 +47996,7 @@ export namespace Prisma {
      * The data used to create many LoanInstallments.
      */
     data: LoanInstallmentCreateManyInput | LoanInstallmentCreateManyInput[]
+    skipDuplicates?: boolean
     /**
      * Choose, which related nodes to fetch as well
      */
@@ -48125,6 +48113,9 @@ export namespace Prisma {
    */
 
   export const TransactionIsolationLevel: {
+    ReadUncommitted: 'ReadUncommitted',
+    ReadCommitted: 'ReadCommitted',
+    RepeatableRead: 'RepeatableRead',
     Serializable: 'Serializable'
   };
 
@@ -48744,6 +48735,14 @@ export namespace Prisma {
   export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
+  export const QueryMode: {
+    default: 'default',
+    insensitive: 'insensitive'
+  };
+
+  export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
   export const NullsOrder: {
     first: 'first',
     last: 'last'
@@ -48765,6 +48764,13 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'String[]'
+   */
+  export type ListStringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String[]'>
+    
+
+
+  /**
    * Reference to a field of type 'Boolean'
    */
   export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
@@ -48779,9 +48785,23 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'DateTime[]'
+   */
+  export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
+    
+
+
+  /**
    * Reference to a field of type 'Int'
    */
   export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
+    
+
+
+  /**
+   * Reference to a field of type 'Int[]'
+   */
+  export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
     
 
 
@@ -48793,6 +48813,13 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'Decimal[]'
+   */
+  export type ListDecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal[]'>
+    
+
+
+  /**
    * Reference to a field of type 'BigInt'
    */
   export type BigIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BigInt'>
@@ -48800,9 +48827,23 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'BigInt[]'
+   */
+  export type ListBigIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BigInt[]'>
+    
+
+
+  /**
    * Reference to a field of type 'Float'
    */
   export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+  /**
+   * Reference to a field of type 'Float[]'
+   */
+  export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
     
   /**
    * Deep Input Types
@@ -49196,7 +49237,7 @@ export namespace Prisma {
     password?: StringFilter<"User"> | string
     name?: StringFilter<"User"> | string
     isActive?: BoolFilter<"User"> | boolean
-    organizationId?: StringNullableFilter<"User"> | string | null
+    organizationId?: StringFilter<"User"> | string
     roleId?: IntNullableFilter<"User"> | number | null
     homeSiteId?: IntNullableFilter<"User"> | number | null
     cashRegisterId?: IntNullableFilter<"User"> | number | null
@@ -49204,7 +49245,7 @@ export namespace Prisma {
     linkedAccountId?: IntNullableFilter<"User"> | number | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
-    organization?: XOR<OrganizationNullableRelationFilter, OrganizationWhereInput> | null
+    organization?: XOR<OrganizationRelationFilter, OrganizationWhereInput>
     role?: XOR<RoleNullableRelationFilter, RoleWhereInput> | null
     homeSite?: XOR<SiteNullableRelationFilter, SiteWhereInput> | null
     cashRegister?: XOR<FinancialAccountNullableRelationFilter, FinancialAccountWhereInput> | null
@@ -49223,7 +49264,7 @@ export namespace Prisma {
     password?: SortOrder
     name?: SortOrder
     isActive?: SortOrder
-    organizationId?: SortOrderInput | SortOrder
+    organizationId?: SortOrder
     roleId?: SortOrderInput | SortOrder
     homeSiteId?: SortOrderInput | SortOrder
     cashRegisterId?: SortOrderInput | SortOrder
@@ -49255,13 +49296,13 @@ export namespace Prisma {
     password?: StringFilter<"User"> | string
     name?: StringFilter<"User"> | string
     isActive?: BoolFilter<"User"> | boolean
-    organizationId?: StringNullableFilter<"User"> | string | null
+    organizationId?: StringFilter<"User"> | string
     roleId?: IntNullableFilter<"User"> | number | null
     homeSiteId?: IntNullableFilter<"User"> | number | null
     cashRegisterId?: IntNullableFilter<"User"> | number | null
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
-    organization?: XOR<OrganizationNullableRelationFilter, OrganizationWhereInput> | null
+    organization?: XOR<OrganizationRelationFilter, OrganizationWhereInput>
     role?: XOR<RoleNullableRelationFilter, RoleWhereInput> | null
     homeSite?: XOR<SiteNullableRelationFilter, SiteWhereInput> | null
     cashRegister?: XOR<FinancialAccountNullableRelationFilter, FinancialAccountWhereInput> | null
@@ -49280,7 +49321,7 @@ export namespace Prisma {
     password?: SortOrder
     name?: SortOrder
     isActive?: SortOrder
-    organizationId?: SortOrderInput | SortOrder
+    organizationId?: SortOrder
     roleId?: SortOrderInput | SortOrder
     homeSiteId?: SortOrderInput | SortOrder
     cashRegisterId?: SortOrderInput | SortOrder
@@ -49304,7 +49345,7 @@ export namespace Prisma {
     password?: StringWithAggregatesFilter<"User"> | string
     name?: StringWithAggregatesFilter<"User"> | string
     isActive?: BoolWithAggregatesFilter<"User"> | boolean
-    organizationId?: StringNullableWithAggregatesFilter<"User"> | string | null
+    organizationId?: StringWithAggregatesFilter<"User"> | string
     roleId?: IntNullableWithAggregatesFilter<"User"> | number | null
     homeSiteId?: IntNullableWithAggregatesFilter<"User"> | number | null
     cashRegisterId?: IntNullableWithAggregatesFilter<"User"> | number | null
@@ -49532,7 +49573,7 @@ export namespace Prisma {
     phone?: StringNullableFilter<"Contact"> | string | null
     address?: StringNullableFilter<"Contact"> | string | null
     vatId?: StringNullableFilter<"Contact"> | string | null
-    organizationId?: StringNullableFilter<"Contact"> | string | null
+    organizationId?: StringFilter<"Contact"> | string
     homeSiteId?: IntNullableFilter<"Contact"> | number | null
     balance?: DecimalFilter<"Contact"> | Decimal | DecimalJsLike | number | string
     creditLimit?: DecimalFilter<"Contact"> | Decimal | DecimalJsLike | number | string
@@ -49540,7 +49581,7 @@ export namespace Prisma {
     linkedAccountId?: IntNullableFilter<"Contact"> | number | null
     createdAt?: DateTimeFilter<"Contact"> | Date | string
     updatedAt?: DateTimeFilter<"Contact"> | Date | string
-    organization?: XOR<OrganizationNullableRelationFilter, OrganizationWhereInput> | null
+    organization?: XOR<OrganizationRelationFilter, OrganizationWhereInput>
     homeSite?: XOR<SiteNullableRelationFilter, SiteWhereInput> | null
     linkedAccount?: XOR<ChartOfAccountNullableRelationFilter, ChartOfAccountWhereInput> | null
     orders?: OrderListRelationFilter
@@ -49558,7 +49599,7 @@ export namespace Prisma {
     phone?: SortOrderInput | SortOrder
     address?: SortOrderInput | SortOrder
     vatId?: SortOrderInput | SortOrder
-    organizationId?: SortOrderInput | SortOrder
+    organizationId?: SortOrder
     homeSiteId?: SortOrderInput | SortOrder
     balance?: SortOrder
     creditLimit?: SortOrder
@@ -49588,14 +49629,14 @@ export namespace Prisma {
     phone?: StringNullableFilter<"Contact"> | string | null
     address?: StringNullableFilter<"Contact"> | string | null
     vatId?: StringNullableFilter<"Contact"> | string | null
-    organizationId?: StringNullableFilter<"Contact"> | string | null
+    organizationId?: StringFilter<"Contact"> | string
     homeSiteId?: IntNullableFilter<"Contact"> | number | null
     balance?: DecimalFilter<"Contact"> | Decimal | DecimalJsLike | number | string
     creditLimit?: DecimalFilter<"Contact"> | Decimal | DecimalJsLike | number | string
     loyaltyPoints?: IntFilter<"Contact"> | number
     createdAt?: DateTimeFilter<"Contact"> | Date | string
     updatedAt?: DateTimeFilter<"Contact"> | Date | string
-    organization?: XOR<OrganizationNullableRelationFilter, OrganizationWhereInput> | null
+    organization?: XOR<OrganizationRelationFilter, OrganizationWhereInput>
     homeSite?: XOR<SiteNullableRelationFilter, SiteWhereInput> | null
     linkedAccount?: XOR<ChartOfAccountNullableRelationFilter, ChartOfAccountWhereInput> | null
     orders?: OrderListRelationFilter
@@ -49613,7 +49654,7 @@ export namespace Prisma {
     phone?: SortOrderInput | SortOrder
     address?: SortOrderInput | SortOrder
     vatId?: SortOrderInput | SortOrder
-    organizationId?: SortOrderInput | SortOrder
+    organizationId?: SortOrder
     homeSiteId?: SortOrderInput | SortOrder
     balance?: SortOrder
     creditLimit?: SortOrder
@@ -49639,7 +49680,7 @@ export namespace Prisma {
     phone?: StringNullableWithAggregatesFilter<"Contact"> | string | null
     address?: StringNullableWithAggregatesFilter<"Contact"> | string | null
     vatId?: StringNullableWithAggregatesFilter<"Contact"> | string | null
-    organizationId?: StringNullableWithAggregatesFilter<"Contact"> | string | null
+    organizationId?: StringWithAggregatesFilter<"Contact"> | string
     homeSiteId?: IntNullableWithAggregatesFilter<"Contact"> | number | null
     balance?: DecimalWithAggregatesFilter<"Contact"> | Decimal | DecimalJsLike | number | string
     creditLimit?: DecimalWithAggregatesFilter<"Contact"> | Decimal | DecimalJsLike | number | string
@@ -49779,7 +49820,7 @@ export namespace Prisma {
     barcode?: StringNullableFilter<"Product"> | string | null
     name?: StringFilter<"Product"> | string
     description?: StringNullableFilter<"Product"> | string | null
-    organizationId?: StringNullableFilter<"Product"> | string | null
+    organizationId?: StringFilter<"Product"> | string
     productGroupId?: IntNullableFilter<"Product"> | number | null
     size?: DecimalNullableFilter<"Product"> | Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: IntNullableFilter<"Product"> | number | null
@@ -49802,7 +49843,7 @@ export namespace Prisma {
     minStockLevel?: IntFilter<"Product"> | number
     categoryId?: IntNullableFilter<"Product"> | number | null
     parfumId?: IntNullableFilter<"Product"> | number | null
-    organization?: XOR<OrganizationNullableRelationFilter, OrganizationWhereInput> | null
+    organization?: XOR<OrganizationRelationFilter, OrganizationWhereInput>
     productGroup?: XOR<ProductGroupNullableRelationFilter, ProductGroupWhereInput> | null
     sizeUnit?: XOR<UnitNullableRelationFilter, UnitWhereInput> | null
     inventoryLevels?: InventoryLevelListRelationFilter
@@ -49825,7 +49866,7 @@ export namespace Prisma {
     barcode?: SortOrderInput | SortOrder
     name?: SortOrder
     description?: SortOrderInput | SortOrder
-    organizationId?: SortOrderInput | SortOrder
+    organizationId?: SortOrder
     productGroupId?: SortOrderInput | SortOrder
     size?: SortOrderInput | SortOrder
     sizeUnitId?: SortOrderInput | SortOrder
@@ -49867,14 +49908,16 @@ export namespace Prisma {
 
   export type ProductWhereUniqueInput = Prisma.AtLeast<{
     id?: number
-    sku?: string
-    barcode?: string
+    sku_organizationId?: ProductSkuOrganizationIdCompoundUniqueInput
+    barcode_organizationId?: ProductBarcodeOrganizationIdCompoundUniqueInput
     AND?: ProductWhereInput | ProductWhereInput[]
     OR?: ProductWhereInput[]
     NOT?: ProductWhereInput | ProductWhereInput[]
+    sku?: StringFilter<"Product"> | string
+    barcode?: StringNullableFilter<"Product"> | string | null
     name?: StringFilter<"Product"> | string
     description?: StringNullableFilter<"Product"> | string | null
-    organizationId?: StringNullableFilter<"Product"> | string | null
+    organizationId?: StringFilter<"Product"> | string
     productGroupId?: IntNullableFilter<"Product"> | number | null
     size?: DecimalNullableFilter<"Product"> | Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: IntNullableFilter<"Product"> | number | null
@@ -49897,7 +49940,7 @@ export namespace Prisma {
     minStockLevel?: IntFilter<"Product"> | number
     categoryId?: IntNullableFilter<"Product"> | number | null
     parfumId?: IntNullableFilter<"Product"> | number | null
-    organization?: XOR<OrganizationNullableRelationFilter, OrganizationWhereInput> | null
+    organization?: XOR<OrganizationRelationFilter, OrganizationWhereInput>
     productGroup?: XOR<ProductGroupNullableRelationFilter, ProductGroupWhereInput> | null
     sizeUnit?: XOR<UnitNullableRelationFilter, UnitWhereInput> | null
     inventoryLevels?: InventoryLevelListRelationFilter
@@ -49912,7 +49955,7 @@ export namespace Prisma {
     orderLines?: OrderLineListRelationFilter
     images?: ProductImageListRelationFilter
     PricingRule?: PricingRuleListRelationFilter
-  }, "id" | "sku" | "barcode">
+  }, "id" | "sku_organizationId" | "barcode_organizationId">
 
   export type ProductOrderByWithAggregationInput = {
     id?: SortOrder
@@ -49920,7 +49963,7 @@ export namespace Prisma {
     barcode?: SortOrderInput | SortOrder
     name?: SortOrder
     description?: SortOrderInput | SortOrder
-    organizationId?: SortOrderInput | SortOrder
+    organizationId?: SortOrder
     productGroupId?: SortOrderInput | SortOrder
     size?: SortOrderInput | SortOrder
     sizeUnitId?: SortOrderInput | SortOrder
@@ -49959,7 +50002,7 @@ export namespace Prisma {
     barcode?: StringNullableWithAggregatesFilter<"Product"> | string | null
     name?: StringWithAggregatesFilter<"Product"> | string
     description?: StringNullableWithAggregatesFilter<"Product"> | string | null
-    organizationId?: StringNullableWithAggregatesFilter<"Product"> | string | null
+    organizationId?: StringWithAggregatesFilter<"Product"> | string
     productGroupId?: IntNullableWithAggregatesFilter<"Product"> | number | null
     size?: DecimalNullableWithAggregatesFilter<"Product"> | Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: IntNullableWithAggregatesFilter<"Product"> | number | null
@@ -51022,7 +51065,7 @@ export namespace Prisma {
     NOT?: FinancialSettingsWhereInput | FinancialSettingsWhereInput[]
     id?: IntFilter<"FinancialSettings"> | number
     companyType?: StringFilter<"FinancialSettings"> | string
-    organizationId?: StringNullableFilter<"FinancialSettings"> | string | null
+    organizationId?: StringFilter<"FinancialSettings"> | string
     salesTaxPercentage?: DecimalFilter<"FinancialSettings"> | Decimal | DecimalJsLike | number | string
     purchaseTaxPercentage?: DecimalFilter<"FinancialSettings"> | Decimal | DecimalJsLike | number | string
     customTaxRules?: StringNullableFilter<"FinancialSettings"> | string | null
@@ -51034,13 +51077,13 @@ export namespace Prisma {
     declareTVA?: BoolFilter<"FinancialSettings"> | boolean
     dualView?: BoolFilter<"FinancialSettings"> | boolean
     pricingCostBasis?: StringFilter<"FinancialSettings"> | string
-    organization?: XOR<OrganizationNullableRelationFilter, OrganizationWhereInput> | null
+    organization?: XOR<OrganizationRelationFilter, OrganizationWhereInput>
   }
 
   export type FinancialSettingsOrderByWithRelationInput = {
     id?: SortOrder
     companyType?: SortOrder
-    organizationId?: SortOrderInput | SortOrder
+    organizationId?: SortOrder
     salesTaxPercentage?: SortOrder
     purchaseTaxPercentage?: SortOrder
     customTaxRules?: SortOrderInput | SortOrder
@@ -51073,13 +51116,13 @@ export namespace Prisma {
     declareTVA?: BoolFilter<"FinancialSettings"> | boolean
     dualView?: BoolFilter<"FinancialSettings"> | boolean
     pricingCostBasis?: StringFilter<"FinancialSettings"> | string
-    organization?: XOR<OrganizationNullableRelationFilter, OrganizationWhereInput> | null
+    organization?: XOR<OrganizationRelationFilter, OrganizationWhereInput>
   }, "id" | "organizationId">
 
   export type FinancialSettingsOrderByWithAggregationInput = {
     id?: SortOrder
     companyType?: SortOrder
-    organizationId?: SortOrderInput | SortOrder
+    organizationId?: SortOrder
     salesTaxPercentage?: SortOrder
     purchaseTaxPercentage?: SortOrder
     customTaxRules?: SortOrderInput | SortOrder
@@ -51104,7 +51147,7 @@ export namespace Prisma {
     NOT?: FinancialSettingsScalarWhereWithAggregatesInput | FinancialSettingsScalarWhereWithAggregatesInput[]
     id?: IntWithAggregatesFilter<"FinancialSettings"> | number
     companyType?: StringWithAggregatesFilter<"FinancialSettings"> | string
-    organizationId?: StringNullableWithAggregatesFilter<"FinancialSettings"> | string | null
+    organizationId?: StringWithAggregatesFilter<"FinancialSettings"> | string
     salesTaxPercentage?: DecimalWithAggregatesFilter<"FinancialSettings"> | Decimal | DecimalJsLike | number | string
     purchaseTaxPercentage?: DecimalWithAggregatesFilter<"FinancialSettings"> | Decimal | DecimalJsLike | number | string
     customTaxRules?: StringNullableWithAggregatesFilter<"FinancialSettings"> | string | null
@@ -51279,7 +51322,7 @@ export namespace Prisma {
     type?: StringFilter<"ChartOfAccount"> | string
     subType?: StringNullableFilter<"ChartOfAccount"> | string | null
     isActive?: BoolFilter<"ChartOfAccount"> | boolean
-    organizationId?: StringNullableFilter<"ChartOfAccount"> | string | null
+    organizationId?: StringFilter<"ChartOfAccount"> | string
     balance?: DecimalFilter<"ChartOfAccount"> | Decimal | DecimalJsLike | number | string
     balanceOfficial?: DecimalFilter<"ChartOfAccount"> | Decimal | DecimalJsLike | number | string
     syscohadaCode?: StringNullableFilter<"ChartOfAccount"> | string | null
@@ -51290,7 +51333,7 @@ export namespace Prisma {
     parentId?: IntNullableFilter<"ChartOfAccount"> | number | null
     createdAt?: DateTimeFilter<"ChartOfAccount"> | Date | string
     updatedAt?: DateTimeFilter<"ChartOfAccount"> | Date | string
-    organization?: XOR<OrganizationNullableRelationFilter, OrganizationWhereInput> | null
+    organization?: XOR<OrganizationRelationFilter, OrganizationWhereInput>
     parent?: XOR<ChartOfAccountNullableRelationFilter, ChartOfAccountWhereInput> | null
     children?: ChartOfAccountListRelationFilter
     journalLines?: JournalEntryLineListRelationFilter
@@ -51308,7 +51351,7 @@ export namespace Prisma {
     type?: SortOrder
     subType?: SortOrderInput | SortOrder
     isActive?: SortOrder
-    organizationId?: SortOrderInput | SortOrder
+    organizationId?: SortOrder
     balance?: SortOrder
     balanceOfficial?: SortOrder
     syscohadaCode?: SortOrderInput | SortOrder
@@ -51331,16 +51374,17 @@ export namespace Prisma {
 
   export type ChartOfAccountWhereUniqueInput = Prisma.AtLeast<{
     id?: number
-    code?: string
+    code_organizationId?: ChartOfAccountCodeOrganizationIdCompoundUniqueInput
     AND?: ChartOfAccountWhereInput | ChartOfAccountWhereInput[]
     OR?: ChartOfAccountWhereInput[]
     NOT?: ChartOfAccountWhereInput | ChartOfAccountWhereInput[]
+    code?: StringFilter<"ChartOfAccount"> | string
     name?: StringFilter<"ChartOfAccount"> | string
     description?: StringNullableFilter<"ChartOfAccount"> | string | null
     type?: StringFilter<"ChartOfAccount"> | string
     subType?: StringNullableFilter<"ChartOfAccount"> | string | null
     isActive?: BoolFilter<"ChartOfAccount"> | boolean
-    organizationId?: StringNullableFilter<"ChartOfAccount"> | string | null
+    organizationId?: StringFilter<"ChartOfAccount"> | string
     balance?: DecimalFilter<"ChartOfAccount"> | Decimal | DecimalJsLike | number | string
     balanceOfficial?: DecimalFilter<"ChartOfAccount"> | Decimal | DecimalJsLike | number | string
     syscohadaCode?: StringNullableFilter<"ChartOfAccount"> | string | null
@@ -51351,7 +51395,7 @@ export namespace Prisma {
     parentId?: IntNullableFilter<"ChartOfAccount"> | number | null
     createdAt?: DateTimeFilter<"ChartOfAccount"> | Date | string
     updatedAt?: DateTimeFilter<"ChartOfAccount"> | Date | string
-    organization?: XOR<OrganizationNullableRelationFilter, OrganizationWhereInput> | null
+    organization?: XOR<OrganizationRelationFilter, OrganizationWhereInput>
     parent?: XOR<ChartOfAccountNullableRelationFilter, ChartOfAccountWhereInput> | null
     children?: ChartOfAccountListRelationFilter
     journalLines?: JournalEntryLineListRelationFilter
@@ -51359,7 +51403,7 @@ export namespace Prisma {
     linkedUser?: XOR<UserNullableRelationFilter, UserWhereInput> | null
     linkedEmployee?: XOR<EmployeeNullableRelationFilter, EmployeeWhereInput> | null
     financialAccount?: XOR<FinancialAccountNullableRelationFilter, FinancialAccountWhereInput> | null
-  }, "id" | "code">
+  }, "id" | "code_organizationId">
 
   export type ChartOfAccountOrderByWithAggregationInput = {
     id?: SortOrder
@@ -51369,7 +51413,7 @@ export namespace Prisma {
     type?: SortOrder
     subType?: SortOrderInput | SortOrder
     isActive?: SortOrder
-    organizationId?: SortOrderInput | SortOrder
+    organizationId?: SortOrder
     balance?: SortOrder
     balanceOfficial?: SortOrder
     syscohadaCode?: SortOrderInput | SortOrder
@@ -51398,7 +51442,7 @@ export namespace Prisma {
     type?: StringWithAggregatesFilter<"ChartOfAccount"> | string
     subType?: StringNullableWithAggregatesFilter<"ChartOfAccount"> | string | null
     isActive?: BoolWithAggregatesFilter<"ChartOfAccount"> | boolean
-    organizationId?: StringNullableWithAggregatesFilter<"ChartOfAccount"> | string | null
+    organizationId?: StringWithAggregatesFilter<"ChartOfAccount"> | string
     balance?: DecimalWithAggregatesFilter<"ChartOfAccount"> | Decimal | DecimalJsLike | number | string
     balanceOfficial?: DecimalWithAggregatesFilter<"ChartOfAccount"> | Decimal | DecimalJsLike | number | string
     syscohadaCode?: StringNullableWithAggregatesFilter<"ChartOfAccount"> | string | null
@@ -51785,10 +51829,10 @@ export namespace Prisma {
     phone?: StringNullableFilter<"Site"> | string | null
     vatNumber?: StringNullableFilter<"Site"> | string | null
     isActive?: BoolFilter<"Site"> | boolean
-    organizationId?: StringNullableFilter<"Site"> | string | null
+    organizationId?: StringFilter<"Site"> | string
     createdAt?: DateTimeFilter<"Site"> | Date | string
     updatedAt?: DateTimeFilter<"Site"> | Date | string
-    organization?: XOR<OrganizationNullableRelationFilter, OrganizationWhereInput> | null
+    organization?: XOR<OrganizationRelationFilter, OrganizationWhereInput>
     warehouses?: WarehouseListRelationFilter
     users?: UserListRelationFilter
     contacts?: ContactListRelationFilter
@@ -51809,7 +51853,7 @@ export namespace Prisma {
     phone?: SortOrderInput | SortOrder
     vatNumber?: SortOrderInput | SortOrder
     isActive?: SortOrder
-    organizationId?: SortOrderInput | SortOrder
+    organizationId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     organization?: OrganizationOrderByWithRelationInput
@@ -51826,20 +51870,21 @@ export namespace Prisma {
 
   export type SiteWhereUniqueInput = Prisma.AtLeast<{
     id?: number
-    code?: string
+    code_organizationId?: SiteCodeOrganizationIdCompoundUniqueInput
     AND?: SiteWhereInput | SiteWhereInput[]
     OR?: SiteWhereInput[]
     NOT?: SiteWhereInput | SiteWhereInput[]
     name?: StringFilter<"Site"> | string
+    code?: StringNullableFilter<"Site"> | string | null
     address?: StringNullableFilter<"Site"> | string | null
     city?: StringNullableFilter<"Site"> | string | null
     phone?: StringNullableFilter<"Site"> | string | null
     vatNumber?: StringNullableFilter<"Site"> | string | null
     isActive?: BoolFilter<"Site"> | boolean
-    organizationId?: StringNullableFilter<"Site"> | string | null
+    organizationId?: StringFilter<"Site"> | string
     createdAt?: DateTimeFilter<"Site"> | Date | string
     updatedAt?: DateTimeFilter<"Site"> | Date | string
-    organization?: XOR<OrganizationNullableRelationFilter, OrganizationWhereInput> | null
+    organization?: XOR<OrganizationRelationFilter, OrganizationWhereInput>
     warehouses?: WarehouseListRelationFilter
     users?: UserListRelationFilter
     contacts?: ContactListRelationFilter
@@ -51849,7 +51894,7 @@ export namespace Prisma {
     journalEntries?: JournalEntryListRelationFilter
     financialAccounts?: FinancialAccountListRelationFilter
     inventoryLevels?: InventoryLevelListRelationFilter
-  }, "id" | "code">
+  }, "id" | "code_organizationId">
 
   export type SiteOrderByWithAggregationInput = {
     id?: SortOrder
@@ -51860,7 +51905,7 @@ export namespace Prisma {
     phone?: SortOrderInput | SortOrder
     vatNumber?: SortOrderInput | SortOrder
     isActive?: SortOrder
-    organizationId?: SortOrderInput | SortOrder
+    organizationId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: SiteCountOrderByAggregateInput
@@ -51882,7 +51927,7 @@ export namespace Prisma {
     phone?: StringNullableWithAggregatesFilter<"Site"> | string | null
     vatNumber?: StringNullableWithAggregatesFilter<"Site"> | string | null
     isActive?: BoolWithAggregatesFilter<"Site"> | boolean
-    organizationId?: StringNullableWithAggregatesFilter<"Site"> | string | null
+    organizationId?: StringWithAggregatesFilter<"Site"> | string
     createdAt?: DateTimeWithAggregatesFilter<"Site"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Site"> | Date | string
   }
@@ -52639,7 +52684,7 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutUsersInput
+    organization: OrganizationCreateNestedOneWithoutUsersInput
     role?: RoleCreateNestedOneWithoutUsersInput
     homeSite?: SiteCreateNestedOneWithoutUsersInput
     cashRegister?: FinancialAccountCreateNestedOneWithoutAssignedUsersInput
@@ -52658,7 +52703,7 @@ export namespace Prisma {
     password: string
     name: string
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     roleId?: number | null
     homeSiteId?: number | null
     cashRegisterId?: number | null
@@ -52680,7 +52725,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutUsersNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutUsersNestedInput
     role?: RoleUpdateOneWithoutUsersNestedInput
     homeSite?: SiteUpdateOneWithoutUsersNestedInput
     cashRegister?: FinancialAccountUpdateOneWithoutAssignedUsersNestedInput
@@ -52699,7 +52744,7 @@ export namespace Prisma {
     password?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     roleId?: NullableIntFieldUpdateOperationsInput | number | null
     homeSiteId?: NullableIntFieldUpdateOperationsInput | number | null
     cashRegisterId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -52720,7 +52765,7 @@ export namespace Prisma {
     password: string
     name: string
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     roleId?: number | null
     homeSiteId?: number | null
     cashRegisterId?: number | null
@@ -52745,7 +52790,7 @@ export namespace Prisma {
     password?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     roleId?: NullableIntFieldUpdateOperationsInput | number | null
     homeSiteId?: NullableIntFieldUpdateOperationsInput | number | null
     cashRegisterId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -52981,7 +53026,7 @@ export namespace Prisma {
     loyaltyPoints?: number
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutContactsInput
+    organization: OrganizationCreateNestedOneWithoutContactsInput
     homeSite?: SiteCreateNestedOneWithoutContactsInput
     linkedAccount?: ChartOfAccountCreateNestedOneWithoutLinkedContactInput
     orders?: OrderCreateNestedManyWithoutContactInput
@@ -52999,7 +53044,7 @@ export namespace Prisma {
     phone?: string | null
     address?: string | null
     vatId?: string | null
-    organizationId?: string | null
+    organizationId: string
     homeSiteId?: number | null
     balance?: Decimal | DecimalJsLike | number | string
     creditLimit?: Decimal | DecimalJsLike | number | string
@@ -53026,7 +53071,7 @@ export namespace Prisma {
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutContactsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutContactsNestedInput
     homeSite?: SiteUpdateOneWithoutContactsNestedInput
     linkedAccount?: ChartOfAccountUpdateOneWithoutLinkedContactNestedInput
     orders?: OrderUpdateManyWithoutContactNestedInput
@@ -53044,7 +53089,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     address?: NullableStringFieldUpdateOperationsInput | string | null
     vatId?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     homeSiteId?: NullableIntFieldUpdateOperationsInput | number | null
     balance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     creditLimit?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -53067,7 +53112,7 @@ export namespace Prisma {
     phone?: string | null
     address?: string | null
     vatId?: string | null
-    organizationId?: string | null
+    organizationId: string
     homeSiteId?: number | null
     balance?: Decimal | DecimalJsLike | number | string
     creditLimit?: Decimal | DecimalJsLike | number | string
@@ -53099,7 +53144,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     address?: NullableStringFieldUpdateOperationsInput | string | null
     vatId?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     homeSiteId?: NullableIntFieldUpdateOperationsInput | number | null
     balance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     creditLimit?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -53264,7 +53309,7 @@ export namespace Prisma {
     isTaxIncluded?: boolean
     isExpiryTracked?: boolean
     minStockLevel?: number
-    organization?: OrganizationCreateNestedOneWithoutProductsInput
+    organization: OrganizationCreateNestedOneWithoutProductsInput
     productGroup?: ProductGroupCreateNestedOneWithoutProductsInput
     sizeUnit?: UnitCreateNestedOneWithoutProductsWithSizeInput
     inventoryLevels?: InventoryLevelCreateNestedManyWithoutProductInput
@@ -53287,7 +53332,7 @@ export namespace Prisma {
     barcode?: string | null
     name: string
     description?: string | null
-    organizationId?: string | null
+    organizationId: string
     productGroupId?: number | null
     size?: Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: number | null
@@ -53337,7 +53382,7 @@ export namespace Prisma {
     isTaxIncluded?: BoolFieldUpdateOperationsInput | boolean
     isExpiryTracked?: BoolFieldUpdateOperationsInput | boolean
     minStockLevel?: IntFieldUpdateOperationsInput | number
-    organization?: OrganizationUpdateOneWithoutProductsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutProductsNestedInput
     productGroup?: ProductGroupUpdateOneWithoutProductsNestedInput
     sizeUnit?: UnitUpdateOneWithoutProductsWithSizeNestedInput
     inventoryLevels?: InventoryLevelUpdateManyWithoutProductNestedInput
@@ -53360,7 +53405,7 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     productGroupId?: NullableIntFieldUpdateOperationsInput | number | null
     size?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -53397,7 +53442,7 @@ export namespace Prisma {
     barcode?: string | null
     name: string
     description?: string | null
-    organizationId?: string | null
+    organizationId: string
     productGroupId?: number | null
     size?: Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: number | null
@@ -53449,7 +53494,7 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     productGroupId?: NullableIntFieldUpdateOperationsInput | number | null
     size?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -54522,13 +54567,13 @@ export namespace Prisma {
     declareTVA?: boolean
     dualView?: boolean
     pricingCostBasis?: string
-    organization?: OrganizationCreateNestedOneWithoutSettingsInput
+    organization: OrganizationCreateNestedOneWithoutSettingsInput
   }
 
   export type FinancialSettingsUncheckedCreateInput = {
     id?: number
     companyType?: string
-    organizationId?: string | null
+    organizationId: string
     salesTaxPercentage?: Decimal | DecimalJsLike | number | string
     purchaseTaxPercentage?: Decimal | DecimalJsLike | number | string
     customTaxRules?: string | null
@@ -54555,13 +54600,13 @@ export namespace Prisma {
     declareTVA?: BoolFieldUpdateOperationsInput | boolean
     dualView?: BoolFieldUpdateOperationsInput | boolean
     pricingCostBasis?: StringFieldUpdateOperationsInput | string
-    organization?: OrganizationUpdateOneWithoutSettingsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutSettingsNestedInput
   }
 
   export type FinancialSettingsUncheckedUpdateInput = {
     id?: IntFieldUpdateOperationsInput | number
     companyType?: StringFieldUpdateOperationsInput | string
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     salesTaxPercentage?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     purchaseTaxPercentage?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     customTaxRules?: NullableStringFieldUpdateOperationsInput | string | null
@@ -54578,7 +54623,7 @@ export namespace Prisma {
   export type FinancialSettingsCreateManyInput = {
     id?: number
     companyType?: string
-    organizationId?: string | null
+    organizationId: string
     salesTaxPercentage?: Decimal | DecimalJsLike | number | string
     purchaseTaxPercentage?: Decimal | DecimalJsLike | number | string
     customTaxRules?: string | null
@@ -54610,7 +54655,7 @@ export namespace Prisma {
   export type FinancialSettingsUncheckedUpdateManyInput = {
     id?: IntFieldUpdateOperationsInput | number
     companyType?: StringFieldUpdateOperationsInput | string
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     salesTaxPercentage?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     purchaseTaxPercentage?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     customTaxRules?: NullableStringFieldUpdateOperationsInput | string | null
@@ -54799,7 +54844,7 @@ export namespace Prisma {
     requiresZeroBalance?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutLedgerInput
+    organization: OrganizationCreateNestedOneWithoutLedgerInput
     parent?: ChartOfAccountCreateNestedOneWithoutChildrenInput
     children?: ChartOfAccountCreateNestedManyWithoutParentInput
     journalLines?: JournalEntryLineCreateNestedManyWithoutAccountInput
@@ -54817,7 +54862,7 @@ export namespace Prisma {
     type: string
     subType?: string | null
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     balance?: Decimal | DecimalJsLike | number | string
     balanceOfficial?: Decimal | DecimalJsLike | number | string
     syscohadaCode?: string | null
@@ -54852,7 +54897,7 @@ export namespace Prisma {
     requiresZeroBalance?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutLedgerNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutLedgerNestedInput
     parent?: ChartOfAccountUpdateOneWithoutChildrenNestedInput
     children?: ChartOfAccountUpdateManyWithoutParentNestedInput
     journalLines?: JournalEntryLineUpdateManyWithoutAccountNestedInput
@@ -54870,7 +54915,7 @@ export namespace Prisma {
     type?: StringFieldUpdateOperationsInput | string
     subType?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     balance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     balanceOfficial?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     syscohadaCode?: NullableStringFieldUpdateOperationsInput | string | null
@@ -54897,7 +54942,7 @@ export namespace Prisma {
     type: string
     subType?: string | null
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     balance?: Decimal | DecimalJsLike | number | string
     balanceOfficial?: Decimal | DecimalJsLike | number | string
     syscohadaCode?: string | null
@@ -54936,7 +54981,7 @@ export namespace Prisma {
     type?: StringFieldUpdateOperationsInput | string
     subType?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     balance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     balanceOfficial?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     syscohadaCode?: NullableStringFieldUpdateOperationsInput | string | null
@@ -55307,7 +55352,7 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutSitesInput
+    organization: OrganizationCreateNestedOneWithoutSitesInput
     warehouses?: WarehouseCreateNestedManyWithoutSiteInput
     users?: UserCreateNestedManyWithoutHomeSiteInput
     contacts?: ContactCreateNestedManyWithoutHomeSiteInput
@@ -55328,7 +55373,7 @@ export namespace Prisma {
     phone?: string | null
     vatNumber?: string | null
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     createdAt?: Date | string
     updatedAt?: Date | string
     warehouses?: WarehouseUncheckedCreateNestedManyWithoutSiteInput
@@ -55352,7 +55397,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutSitesNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutSitesNestedInput
     warehouses?: WarehouseUpdateManyWithoutSiteNestedInput
     users?: UserUpdateManyWithoutHomeSiteNestedInput
     contacts?: ContactUpdateManyWithoutHomeSiteNestedInput
@@ -55373,7 +55418,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     vatNumber?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     warehouses?: WarehouseUncheckedUpdateManyWithoutSiteNestedInput
@@ -55396,7 +55441,7 @@ export namespace Prisma {
     phone?: string | null
     vatNumber?: string | null
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -55422,7 +55467,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     vatNumber?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -55788,8 +55833,8 @@ export namespace Prisma {
 
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
-    in?: string[]
-    notIn?: string[]
+    in?: string[] | ListStringFieldRefInput<$PrismaModel>
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
     lt?: string | StringFieldRefInput<$PrismaModel>
     lte?: string | StringFieldRefInput<$PrismaModel>
     gt?: string | StringFieldRefInput<$PrismaModel>
@@ -55797,6 +55842,7 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
     not?: NestedStringFilter<$PrismaModel> | string
   }
 
@@ -55807,8 +55853,8 @@ export namespace Prisma {
 
   export type DateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[]
-    notIn?: Date[] | string[]
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
@@ -55915,8 +55961,8 @@ export namespace Prisma {
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
-    in?: string[]
-    notIn?: string[]
+    in?: string[] | ListStringFieldRefInput<$PrismaModel>
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
     lt?: string | StringFieldRefInput<$PrismaModel>
     lte?: string | StringFieldRefInput<$PrismaModel>
     gt?: string | StringFieldRefInput<$PrismaModel>
@@ -55924,6 +55970,7 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
     not?: NestedStringWithAggregatesFilter<$PrismaModel> | string
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedStringFilter<$PrismaModel>
@@ -55940,8 +55987,8 @@ export namespace Prisma {
 
   export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[]
-    notIn?: Date[] | string[]
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
@@ -55954,8 +56001,8 @@ export namespace Prisma {
 
   export type IntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[]
-    notIn?: number[]
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
@@ -56001,8 +56048,8 @@ export namespace Prisma {
 
   export type IntWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[]
-    notIn?: number[]
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
@@ -56017,8 +56064,8 @@ export namespace Prisma {
 
   export type StringNullableFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | null
-    notIn?: string[] | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
     lt?: string | StringFieldRefInput<$PrismaModel>
     lte?: string | StringFieldRefInput<$PrismaModel>
     gt?: string | StringFieldRefInput<$PrismaModel>
@@ -56026,13 +56073,14 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
   export type IntNullableFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | null
-    notIn?: number[] | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
@@ -56042,8 +56090,8 @@ export namespace Prisma {
 
   export type DecimalFilter<$PrismaModel = never> = {
     equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    in?: Decimal[] | DecimalJsLike[] | number[] | string[]
-    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[]
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel>
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel>
     lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
     lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
     gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
@@ -56124,8 +56172,8 @@ export namespace Prisma {
 
   export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | null
-    notIn?: string[] | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
     lt?: string | StringFieldRefInput<$PrismaModel>
     lte?: string | StringFieldRefInput<$PrismaModel>
     gt?: string | StringFieldRefInput<$PrismaModel>
@@ -56133,6 +56181,7 @@ export namespace Prisma {
     contains?: string | StringFieldRefInput<$PrismaModel>
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
     not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedStringNullableFilter<$PrismaModel>
@@ -56141,8 +56190,8 @@ export namespace Prisma {
 
   export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | null
-    notIn?: number[] | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
@@ -56157,8 +56206,8 @@ export namespace Prisma {
 
   export type DecimalWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    in?: Decimal[] | DecimalJsLike[] | number[] | string[]
-    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[]
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel>
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel>
     lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
     lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
     gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
@@ -56295,9 +56344,9 @@ export namespace Prisma {
     amount?: SortOrder
   }
 
-  export type OrganizationNullableRelationFilter = {
-    is?: OrganizationWhereInput | null
-    isNot?: OrganizationWhereInput | null
+  export type OrganizationRelationFilter = {
+    is?: OrganizationWhereInput
+    isNot?: OrganizationWhereInput
   }
 
   export type RoleNullableRelationFilter = {
@@ -56500,8 +56549,8 @@ export namespace Prisma {
 
   export type BigIntFilter<$PrismaModel = never> = {
     equals?: bigint | number | BigIntFieldRefInput<$PrismaModel>
-    in?: bigint[] | number[]
-    notIn?: bigint[] | number[]
+    in?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel>
+    notIn?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel>
     lt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
     lte?: bigint | number | BigIntFieldRefInput<$PrismaModel>
     gt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
@@ -56512,6 +56561,11 @@ export namespace Prisma {
   export type UserRelationFilter = {
     is?: UserWhereInput
     isNot?: UserWhereInput
+  }
+
+  export type OrganizationNullableRelationFilter = {
+    is?: OrganizationWhereInput | null
+    isNot?: OrganizationWhereInput | null
   }
 
   export type AuditLogCountOrderByAggregateInput = {
@@ -56565,8 +56619,8 @@ export namespace Prisma {
 
   export type BigIntWithAggregatesFilter<$PrismaModel = never> = {
     equals?: bigint | number | BigIntFieldRefInput<$PrismaModel>
-    in?: bigint[] | number[]
-    notIn?: bigint[] | number[]
+    in?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel>
+    notIn?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel>
     lt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
     lte?: bigint | number | BigIntFieldRefInput<$PrismaModel>
     gt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
@@ -56683,8 +56737,8 @@ export namespace Prisma {
 
   export type DateTimeNullableFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
-    in?: Date[] | string[] | null
-    notIn?: Date[] | string[] | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
@@ -56694,8 +56748,8 @@ export namespace Prisma {
 
   export type DecimalNullableFilter<$PrismaModel = never> = {
     equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
-    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | null
-    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | null
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
     lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
     lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
     gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
@@ -56781,8 +56835,8 @@ export namespace Prisma {
 
   export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
-    in?: Date[] | string[] | null
-    notIn?: Date[] | string[] | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
@@ -56795,8 +56849,8 @@ export namespace Prisma {
 
   export type DecimalNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
-    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | null
-    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | null
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
     lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
     lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
     gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
@@ -56897,6 +56951,16 @@ export namespace Prisma {
 
   export type PricingRuleOrderByRelationAggregateInput = {
     _count?: SortOrder
+  }
+
+  export type ProductSkuOrganizationIdCompoundUniqueInput = {
+    sku: string
+    organizationId: string
+  }
+
+  export type ProductBarcodeOrganizationIdCompoundUniqueInput = {
+    barcode: string
+    organizationId: string
   }
 
   export type ProductCountOrderByAggregateInput = {
@@ -57890,6 +57954,11 @@ export namespace Prisma {
     number?: SortOrder
   }
 
+  export type ChartOfAccountCodeOrganizationIdCompoundUniqueInput = {
+    code: string
+    organizationId: string
+  }
+
   export type ChartOfAccountCountOrderByAggregateInput = {
     id?: SortOrder
     code?: SortOrder
@@ -58248,6 +58317,11 @@ export namespace Prisma {
 
   export type FinancialAccountOrderByRelationAggregateInput = {
     _count?: SortOrder
+  }
+
+  export type SiteCodeOrganizationIdCompoundUniqueInput = {
+    code: string
+    organizationId: string
   }
 
   export type SiteCountOrderByAggregateInput = {
@@ -59405,12 +59479,10 @@ export namespace Prisma {
     connect?: JournalEntryWhereUniqueInput | JournalEntryWhereUniqueInput[]
   }
 
-  export type OrganizationUpdateOneWithoutUsersNestedInput = {
+  export type OrganizationUpdateOneRequiredWithoutUsersNestedInput = {
     create?: XOR<OrganizationCreateWithoutUsersInput, OrganizationUncheckedCreateWithoutUsersInput>
     connectOrCreate?: OrganizationCreateOrConnectWithoutUsersInput
     upsert?: OrganizationUpsertWithoutUsersInput
-    disconnect?: OrganizationWhereInput | boolean
-    delete?: OrganizationWhereInput | boolean
     connect?: OrganizationWhereUniqueInput
     update?: XOR<XOR<OrganizationUpdateToOneWithWhereWithoutUsersInput, OrganizationUpdateWithoutUsersInput>, OrganizationUncheckedUpdateWithoutUsersInput>
   }
@@ -59849,12 +59921,10 @@ export namespace Prisma {
     connect?: LoanWhereUniqueInput | LoanWhereUniqueInput[]
   }
 
-  export type OrganizationUpdateOneWithoutContactsNestedInput = {
+  export type OrganizationUpdateOneRequiredWithoutContactsNestedInput = {
     create?: XOR<OrganizationCreateWithoutContactsInput, OrganizationUncheckedCreateWithoutContactsInput>
     connectOrCreate?: OrganizationCreateOrConnectWithoutContactsInput
     upsert?: OrganizationUpsertWithoutContactsInput
-    disconnect?: OrganizationWhereInput | boolean
-    delete?: OrganizationWhereInput | boolean
     connect?: OrganizationWhereUniqueInput
     update?: XOR<XOR<OrganizationUpdateToOneWithWhereWithoutContactsInput, OrganizationUpdateWithoutContactsInput>, OrganizationUncheckedUpdateWithoutContactsInput>
   }
@@ -60275,12 +60345,10 @@ export namespace Prisma {
     connect?: PricingRuleWhereUniqueInput | PricingRuleWhereUniqueInput[]
   }
 
-  export type OrganizationUpdateOneWithoutProductsNestedInput = {
+  export type OrganizationUpdateOneRequiredWithoutProductsNestedInput = {
     create?: XOR<OrganizationCreateWithoutProductsInput, OrganizationUncheckedCreateWithoutProductsInput>
     connectOrCreate?: OrganizationCreateOrConnectWithoutProductsInput
     upsert?: OrganizationUpsertWithoutProductsInput
-    disconnect?: OrganizationWhereInput | boolean
-    delete?: OrganizationWhereInput | boolean
     connect?: OrganizationWhereUniqueInput
     update?: XOR<XOR<OrganizationUpdateToOneWithWhereWithoutProductsInput, OrganizationUpdateWithoutProductsInput>, OrganizationUncheckedUpdateWithoutProductsInput>
   }
@@ -61533,12 +61601,10 @@ export namespace Prisma {
     connect?: OrganizationWhereUniqueInput
   }
 
-  export type OrganizationUpdateOneWithoutSettingsNestedInput = {
+  export type OrganizationUpdateOneRequiredWithoutSettingsNestedInput = {
     create?: XOR<OrganizationCreateWithoutSettingsInput, OrganizationUncheckedCreateWithoutSettingsInput>
     connectOrCreate?: OrganizationCreateOrConnectWithoutSettingsInput
     upsert?: OrganizationUpsertWithoutSettingsInput
-    disconnect?: OrganizationWhereInput | boolean
-    delete?: OrganizationWhereInput | boolean
     connect?: OrganizationWhereUniqueInput
     update?: XOR<XOR<OrganizationUpdateToOneWithWhereWithoutSettingsInput, OrganizationUpdateWithoutSettingsInput>, OrganizationUncheckedUpdateWithoutSettingsInput>
   }
@@ -61771,12 +61837,10 @@ export namespace Prisma {
     connect?: FinancialAccountWhereUniqueInput
   }
 
-  export type OrganizationUpdateOneWithoutLedgerNestedInput = {
+  export type OrganizationUpdateOneRequiredWithoutLedgerNestedInput = {
     create?: XOR<OrganizationCreateWithoutLedgerInput, OrganizationUncheckedCreateWithoutLedgerInput>
     connectOrCreate?: OrganizationCreateOrConnectWithoutLedgerInput
     upsert?: OrganizationUpsertWithoutLedgerInput
-    disconnect?: OrganizationWhereInput | boolean
-    delete?: OrganizationWhereInput | boolean
     connect?: OrganizationWhereUniqueInput
     update?: XOR<XOR<OrganizationUpdateToOneWithWhereWithoutLedgerInput, OrganizationUpdateWithoutLedgerInput>, OrganizationUncheckedUpdateWithoutLedgerInput>
   }
@@ -62407,12 +62471,10 @@ export namespace Prisma {
     connect?: InventoryLevelWhereUniqueInput | InventoryLevelWhereUniqueInput[]
   }
 
-  export type OrganizationUpdateOneWithoutSitesNestedInput = {
+  export type OrganizationUpdateOneRequiredWithoutSitesNestedInput = {
     create?: XOR<OrganizationCreateWithoutSitesInput, OrganizationUncheckedCreateWithoutSitesInput>
     connectOrCreate?: OrganizationCreateOrConnectWithoutSitesInput
     upsert?: OrganizationUpsertWithoutSitesInput
-    disconnect?: OrganizationWhereInput | boolean
-    delete?: OrganizationWhereInput | boolean
     connect?: OrganizationWhereUniqueInput
     update?: XOR<XOR<OrganizationUpdateToOneWithWhereWithoutSitesInput, OrganizationUpdateWithoutSitesInput>, OrganizationUncheckedUpdateWithoutSitesInput>
   }
@@ -62875,8 +62937,8 @@ export namespace Prisma {
 
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
-    in?: string[]
-    notIn?: string[]
+    in?: string[] | ListStringFieldRefInput<$PrismaModel>
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
     lt?: string | StringFieldRefInput<$PrismaModel>
     lte?: string | StringFieldRefInput<$PrismaModel>
     gt?: string | StringFieldRefInput<$PrismaModel>
@@ -62894,8 +62956,8 @@ export namespace Prisma {
 
   export type NestedDateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[]
-    notIn?: Date[] | string[]
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
@@ -62905,8 +62967,8 @@ export namespace Prisma {
 
   export type NestedStringWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
-    in?: string[]
-    notIn?: string[]
+    in?: string[] | ListStringFieldRefInput<$PrismaModel>
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
     lt?: string | StringFieldRefInput<$PrismaModel>
     lte?: string | StringFieldRefInput<$PrismaModel>
     gt?: string | StringFieldRefInput<$PrismaModel>
@@ -62922,8 +62984,8 @@ export namespace Prisma {
 
   export type NestedIntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[]
-    notIn?: number[]
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
@@ -62941,8 +63003,8 @@ export namespace Prisma {
 
   export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[]
-    notIn?: Date[] | string[]
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
@@ -62955,8 +63017,8 @@ export namespace Prisma {
 
   export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[]
-    notIn?: number[]
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
@@ -62971,8 +63033,8 @@ export namespace Prisma {
 
   export type NestedFloatFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[]
-    notIn?: number[]
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
     lt?: number | FloatFieldRefInput<$PrismaModel>
     lte?: number | FloatFieldRefInput<$PrismaModel>
     gt?: number | FloatFieldRefInput<$PrismaModel>
@@ -62982,8 +63044,8 @@ export namespace Prisma {
 
   export type NestedStringNullableFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | null
-    notIn?: string[] | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
     lt?: string | StringFieldRefInput<$PrismaModel>
     lte?: string | StringFieldRefInput<$PrismaModel>
     gt?: string | StringFieldRefInput<$PrismaModel>
@@ -62996,8 +63058,8 @@ export namespace Prisma {
 
   export type NestedIntNullableFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | null
-    notIn?: number[] | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
@@ -63007,8 +63069,8 @@ export namespace Prisma {
 
   export type NestedDecimalFilter<$PrismaModel = never> = {
     equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    in?: Decimal[] | DecimalJsLike[] | number[] | string[]
-    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[]
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel>
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel>
     lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
     lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
     gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
@@ -63018,8 +63080,8 @@ export namespace Prisma {
 
   export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | null
-    notIn?: string[] | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
     lt?: string | StringFieldRefInput<$PrismaModel>
     lte?: string | StringFieldRefInput<$PrismaModel>
     gt?: string | StringFieldRefInput<$PrismaModel>
@@ -63035,8 +63097,8 @@ export namespace Prisma {
 
   export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | null
-    notIn?: number[] | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
     lt?: number | IntFieldRefInput<$PrismaModel>
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
@@ -63051,8 +63113,8 @@ export namespace Prisma {
 
   export type NestedFloatNullableFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel> | null
-    in?: number[] | null
-    notIn?: number[] | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
     lt?: number | FloatFieldRefInput<$PrismaModel>
     lte?: number | FloatFieldRefInput<$PrismaModel>
     gt?: number | FloatFieldRefInput<$PrismaModel>
@@ -63062,8 +63124,8 @@ export namespace Prisma {
 
   export type NestedDecimalWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    in?: Decimal[] | DecimalJsLike[] | number[] | string[]
-    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[]
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel>
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel>
     lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
     lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
     gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
@@ -63078,8 +63140,8 @@ export namespace Prisma {
 
   export type NestedBigIntFilter<$PrismaModel = never> = {
     equals?: bigint | number | BigIntFieldRefInput<$PrismaModel>
-    in?: bigint[] | number[]
-    notIn?: bigint[] | number[]
+    in?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel>
+    notIn?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel>
     lt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
     lte?: bigint | number | BigIntFieldRefInput<$PrismaModel>
     gt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
@@ -63089,8 +63151,8 @@ export namespace Prisma {
 
   export type NestedBigIntWithAggregatesFilter<$PrismaModel = never> = {
     equals?: bigint | number | BigIntFieldRefInput<$PrismaModel>
-    in?: bigint[] | number[]
-    notIn?: bigint[] | number[]
+    in?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel>
+    notIn?: bigint[] | number[] | ListBigIntFieldRefInput<$PrismaModel>
     lt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
     lte?: bigint | number | BigIntFieldRefInput<$PrismaModel>
     gt?: bigint | number | BigIntFieldRefInput<$PrismaModel>
@@ -63105,8 +63167,8 @@ export namespace Prisma {
 
   export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
-    in?: Date[] | string[] | null
-    notIn?: Date[] | string[] | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
@@ -63116,8 +63178,8 @@ export namespace Prisma {
 
   export type NestedDecimalNullableFilter<$PrismaModel = never> = {
     equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
-    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | null
-    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | null
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
     lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
     lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
     gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
@@ -63127,8 +63189,8 @@ export namespace Prisma {
 
   export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
-    in?: Date[] | string[] | null
-    notIn?: Date[] | string[] | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
     lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
@@ -63141,8 +63203,8 @@ export namespace Prisma {
 
   export type NestedDecimalNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
-    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | null
-    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | null
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | ListDecimalFieldRefInput<$PrismaModel> | null
     lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
     lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
     gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
@@ -63205,6 +63267,7 @@ export namespace Prisma {
 
   export type SiteCreateManyOrganizationInputEnvelope = {
     data: SiteCreateManyOrganizationInput | SiteCreateManyOrganizationInput[]
+    skipDuplicates?: boolean
   }
 
   export type UserCreateWithoutOrganizationInput = {
@@ -63253,6 +63316,7 @@ export namespace Prisma {
 
   export type UserCreateManyOrganizationInputEnvelope = {
     data: UserCreateManyOrganizationInput | UserCreateManyOrganizationInput[]
+    skipDuplicates?: boolean
   }
 
   export type ProductCreateWithoutOrganizationInput = {
@@ -63333,6 +63397,7 @@ export namespace Prisma {
 
   export type ProductCreateManyOrganizationInputEnvelope = {
     data: ProductCreateManyOrganizationInput | ProductCreateManyOrganizationInput[]
+    skipDuplicates?: boolean
   }
 
   export type FinancialSettingsCreateWithoutOrganizationInput = {
@@ -63373,6 +63438,7 @@ export namespace Prisma {
 
   export type FinancialSettingsCreateManyOrganizationInputEnvelope = {
     data: FinancialSettingsCreateManyOrganizationInput | FinancialSettingsCreateManyOrganizationInput[]
+    skipDuplicates?: boolean
   }
 
   export type ChartOfAccountCreateWithoutOrganizationInput = {
@@ -63433,6 +63499,7 @@ export namespace Prisma {
 
   export type ChartOfAccountCreateManyOrganizationInputEnvelope = {
     data: ChartOfAccountCreateManyOrganizationInput | ChartOfAccountCreateManyOrganizationInput[]
+    skipDuplicates?: boolean
   }
 
   export type ContactCreateWithoutOrganizationInput = {
@@ -63485,6 +63552,7 @@ export namespace Prisma {
 
   export type ContactCreateManyOrganizationInputEnvelope = {
     data: ContactCreateManyOrganizationInput | ContactCreateManyOrganizationInput[]
+    skipDuplicates?: boolean
   }
 
   export type AuditLogCreateWithoutOrganizationInput = {
@@ -63518,6 +63586,7 @@ export namespace Prisma {
 
   export type AuditLogCreateManyOrganizationInputEnvelope = {
     data: AuditLogCreateManyOrganizationInput | AuditLogCreateManyOrganizationInput[]
+    skipDuplicates?: boolean
   }
 
   export type SiteUpsertWithWhereUniqueWithoutOrganizationInput = {
@@ -63548,7 +63617,7 @@ export namespace Prisma {
     phone?: StringNullableFilter<"Site"> | string | null
     vatNumber?: StringNullableFilter<"Site"> | string | null
     isActive?: BoolFilter<"Site"> | boolean
-    organizationId?: StringNullableFilter<"Site"> | string | null
+    organizationId?: StringFilter<"Site"> | string
     createdAt?: DateTimeFilter<"Site"> | Date | string
     updatedAt?: DateTimeFilter<"Site"> | Date | string
   }
@@ -63578,7 +63647,7 @@ export namespace Prisma {
     password?: StringFilter<"User"> | string
     name?: StringFilter<"User"> | string
     isActive?: BoolFilter<"User"> | boolean
-    organizationId?: StringNullableFilter<"User"> | string | null
+    organizationId?: StringFilter<"User"> | string
     roleId?: IntNullableFilter<"User"> | number | null
     homeSiteId?: IntNullableFilter<"User"> | number | null
     cashRegisterId?: IntNullableFilter<"User"> | number | null
@@ -63613,7 +63682,7 @@ export namespace Prisma {
     barcode?: StringNullableFilter<"Product"> | string | null
     name?: StringFilter<"Product"> | string
     description?: StringNullableFilter<"Product"> | string | null
-    organizationId?: StringNullableFilter<"Product"> | string | null
+    organizationId?: StringFilter<"Product"> | string
     productGroupId?: IntNullableFilter<"Product"> | number | null
     size?: DecimalNullableFilter<"Product"> | Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: IntNullableFilter<"Product"> | number | null
@@ -63660,7 +63729,7 @@ export namespace Prisma {
     NOT?: FinancialSettingsScalarWhereInput | FinancialSettingsScalarWhereInput[]
     id?: IntFilter<"FinancialSettings"> | number
     companyType?: StringFilter<"FinancialSettings"> | string
-    organizationId?: StringNullableFilter<"FinancialSettings"> | string | null
+    organizationId?: StringFilter<"FinancialSettings"> | string
     salesTaxPercentage?: DecimalFilter<"FinancialSettings"> | Decimal | DecimalJsLike | number | string
     purchaseTaxPercentage?: DecimalFilter<"FinancialSettings"> | Decimal | DecimalJsLike | number | string
     customTaxRules?: StringNullableFilter<"FinancialSettings"> | string | null
@@ -63701,7 +63770,7 @@ export namespace Prisma {
     type?: StringFilter<"ChartOfAccount"> | string
     subType?: StringNullableFilter<"ChartOfAccount"> | string | null
     isActive?: BoolFilter<"ChartOfAccount"> | boolean
-    organizationId?: StringNullableFilter<"ChartOfAccount"> | string | null
+    organizationId?: StringFilter<"ChartOfAccount"> | string
     balance?: DecimalFilter<"ChartOfAccount"> | Decimal | DecimalJsLike | number | string
     balanceOfficial?: DecimalFilter<"ChartOfAccount"> | Decimal | DecimalJsLike | number | string
     syscohadaCode?: StringNullableFilter<"ChartOfAccount"> | string | null
@@ -63741,7 +63810,7 @@ export namespace Prisma {
     phone?: StringNullableFilter<"Contact"> | string | null
     address?: StringNullableFilter<"Contact"> | string | null
     vatId?: StringNullableFilter<"Contact"> | string | null
-    organizationId?: StringNullableFilter<"Contact"> | string | null
+    organizationId?: StringFilter<"Contact"> | string
     homeSiteId?: IntNullableFilter<"Contact"> | number | null
     balance?: DecimalFilter<"Contact"> | Decimal | DecimalJsLike | number | string
     creditLimit?: DecimalFilter<"Contact"> | Decimal | DecimalJsLike | number | string
@@ -63826,7 +63895,7 @@ export namespace Prisma {
     isTaxIncluded?: boolean
     isExpiryTracked?: boolean
     minStockLevel?: number
-    organization?: OrganizationCreateNestedOneWithoutProductsInput
+    organization: OrganizationCreateNestedOneWithoutProductsInput
     productGroup?: ProductGroupCreateNestedOneWithoutProductsInput
     sizeUnit?: UnitCreateNestedOneWithoutProductsWithSizeInput
     inventoryLevels?: InventoryLevelCreateNestedManyWithoutProductInput
@@ -63848,7 +63917,7 @@ export namespace Prisma {
     barcode?: string | null
     name: string
     description?: string | null
-    organizationId?: string | null
+    organizationId: string
     productGroupId?: number | null
     size?: Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: number | null
@@ -63885,6 +63954,7 @@ export namespace Prisma {
 
   export type ProductCreateManyCountryInputEnvelope = {
     data: ProductCreateManyCountryInput | ProductCreateManyCountryInput[]
+    skipDuplicates?: boolean
   }
 
   export type BrandUpsertWithWhereUniqueWithoutCountriesInput = {
@@ -63999,6 +64069,7 @@ export namespace Prisma {
 
   export type UnitCreateManyBaseUnitInputEnvelope = {
     data: UnitCreateManyBaseUnitInput | UnitCreateManyBaseUnitInput[]
+    skipDuplicates?: boolean
   }
 
   export type ProductCreateWithoutUnitInput = {
@@ -64020,7 +64091,7 @@ export namespace Prisma {
     isTaxIncluded?: boolean
     isExpiryTracked?: boolean
     minStockLevel?: number
-    organization?: OrganizationCreateNestedOneWithoutProductsInput
+    organization: OrganizationCreateNestedOneWithoutProductsInput
     productGroup?: ProductGroupCreateNestedOneWithoutProductsInput
     sizeUnit?: UnitCreateNestedOneWithoutProductsWithSizeInput
     inventoryLevels?: InventoryLevelCreateNestedManyWithoutProductInput
@@ -64042,7 +64113,7 @@ export namespace Prisma {
     barcode?: string | null
     name: string
     description?: string | null
-    organizationId?: string | null
+    organizationId: string
     productGroupId?: number | null
     size?: Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: number | null
@@ -64079,6 +64150,7 @@ export namespace Prisma {
 
   export type ProductCreateManyUnitInputEnvelope = {
     data: ProductCreateManyUnitInput | ProductCreateManyUnitInput[]
+    skipDuplicates?: boolean
   }
 
   export type ProductCreateWithoutSizeUnitInput = {
@@ -64100,7 +64172,7 @@ export namespace Prisma {
     isTaxIncluded?: boolean
     isExpiryTracked?: boolean
     minStockLevel?: number
-    organization?: OrganizationCreateNestedOneWithoutProductsInput
+    organization: OrganizationCreateNestedOneWithoutProductsInput
     productGroup?: ProductGroupCreateNestedOneWithoutProductsInput
     inventoryLevels?: InventoryLevelCreateNestedManyWithoutProductInput
     brand?: BrandCreateNestedOneWithoutProductsInput
@@ -64122,7 +64194,7 @@ export namespace Prisma {
     barcode?: string | null
     name: string
     description?: string | null
-    organizationId?: string | null
+    organizationId: string
     productGroupId?: number | null
     size?: Decimal | DecimalJsLike | number | string | null
     costPrice?: Decimal | DecimalJsLike | number | string
@@ -64159,6 +64231,7 @@ export namespace Prisma {
 
   export type ProductCreateManySizeUnitInputEnvelope = {
     data: ProductCreateManySizeUnitInput | ProductCreateManySizeUnitInput[]
+    skipDuplicates?: boolean
   }
 
   export type UnitUpsertWithoutChildrenInput = {
@@ -64275,7 +64348,7 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutSitesInput
+    organization: OrganizationCreateNestedOneWithoutSitesInput
     warehouses?: WarehouseCreateNestedManyWithoutSiteInput
     users?: UserCreateNestedManyWithoutHomeSiteInput
     contacts?: ContactCreateNestedManyWithoutHomeSiteInput
@@ -64295,7 +64368,7 @@ export namespace Prisma {
     phone?: string | null
     vatNumber?: string | null
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     createdAt?: Date | string
     updatedAt?: Date | string
     warehouses?: WarehouseUncheckedCreateNestedManyWithoutSiteInput
@@ -64329,7 +64402,7 @@ export namespace Prisma {
     requiresZeroBalance?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutLedgerInput
+    organization: OrganizationCreateNestedOneWithoutLedgerInput
     parent?: ChartOfAccountCreateNestedOneWithoutChildrenInput
     children?: ChartOfAccountCreateNestedManyWithoutParentInput
     journalLines?: JournalEntryLineCreateNestedManyWithoutAccountInput
@@ -64346,7 +64419,7 @@ export namespace Prisma {
     type: string
     subType?: string | null
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     balance?: Decimal | DecimalJsLike | number | string
     balanceOfficial?: Decimal | DecimalJsLike | number | string
     syscohadaCode?: string | null
@@ -64399,6 +64472,7 @@ export namespace Prisma {
 
   export type TransactionCreateManyAccountInputEnvelope = {
     data: TransactionCreateManyAccountInput | TransactionCreateManyAccountInput[]
+    skipDuplicates?: boolean
   }
 
   export type UserCreateWithoutCashRegisterInput = {
@@ -64408,7 +64482,7 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutUsersInput
+    organization: OrganizationCreateNestedOneWithoutUsersInput
     role?: RoleCreateNestedOneWithoutUsersInput
     homeSite?: SiteCreateNestedOneWithoutUsersInput
     employee?: EmployeeCreateNestedOneWithoutUserInput
@@ -64426,7 +64500,7 @@ export namespace Prisma {
     password: string
     name: string
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     roleId?: number | null
     homeSiteId?: number | null
     employeeId?: number | null
@@ -64447,6 +64521,7 @@ export namespace Prisma {
 
   export type UserCreateManyCashRegisterInputEnvelope = {
     data: UserCreateManyCashRegisterInput | UserCreateManyCashRegisterInput[]
+    skipDuplicates?: boolean
   }
 
   export type SiteUpsertWithoutFinancialAccountsInput = {
@@ -64470,7 +64545,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutSitesNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutSitesNestedInput
     warehouses?: WarehouseUpdateManyWithoutSiteNestedInput
     users?: UserUpdateManyWithoutHomeSiteNestedInput
     contacts?: ContactUpdateManyWithoutHomeSiteNestedInput
@@ -64490,7 +64565,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     vatNumber?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     warehouses?: WarehouseUncheckedUpdateManyWithoutSiteNestedInput
@@ -64530,7 +64605,7 @@ export namespace Prisma {
     requiresZeroBalance?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutLedgerNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutLedgerNestedInput
     parent?: ChartOfAccountUpdateOneWithoutChildrenNestedInput
     children?: ChartOfAccountUpdateManyWithoutParentNestedInput
     journalLines?: JournalEntryLineUpdateManyWithoutAccountNestedInput
@@ -64547,7 +64622,7 @@ export namespace Prisma {
     type?: StringFieldUpdateOperationsInput | string
     subType?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     balance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     balanceOfficial?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     syscohadaCode?: NullableStringFieldUpdateOperationsInput | string | null
@@ -64648,7 +64723,7 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutSitesInput
+    organization: OrganizationCreateNestedOneWithoutSitesInput
     warehouses?: WarehouseCreateNestedManyWithoutSiteInput
     users?: UserCreateNestedManyWithoutHomeSiteInput
     contacts?: ContactCreateNestedManyWithoutHomeSiteInput
@@ -64668,7 +64743,7 @@ export namespace Prisma {
     phone?: string | null
     vatNumber?: string | null
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     createdAt?: Date | string
     updatedAt?: Date | string
     warehouses?: WarehouseUncheckedCreateNestedManyWithoutSiteInput
@@ -64775,7 +64850,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutSitesNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutSitesNestedInput
     warehouses?: WarehouseUpdateManyWithoutSiteNestedInput
     users?: UserUpdateManyWithoutHomeSiteNestedInput
     contacts?: ContactUpdateManyWithoutHomeSiteNestedInput
@@ -64795,7 +64870,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     vatNumber?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     warehouses?: WarehouseUncheckedUpdateManyWithoutSiteNestedInput
@@ -64917,7 +64992,7 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutSitesInput
+    organization: OrganizationCreateNestedOneWithoutSitesInput
     warehouses?: WarehouseCreateNestedManyWithoutSiteInput
     contacts?: ContactCreateNestedManyWithoutHomeSiteInput
     employees?: EmployeeCreateNestedManyWithoutHomeSiteInput
@@ -64937,7 +65012,7 @@ export namespace Prisma {
     phone?: string | null
     vatNumber?: string | null
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     createdAt?: Date | string
     updatedAt?: Date | string
     warehouses?: WarehouseUncheckedCreateNestedManyWithoutSiteInput
@@ -65041,7 +65116,7 @@ export namespace Prisma {
     requiresZeroBalance?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutLedgerInput
+    organization: OrganizationCreateNestedOneWithoutLedgerInput
     parent?: ChartOfAccountCreateNestedOneWithoutChildrenInput
     children?: ChartOfAccountCreateNestedManyWithoutParentInput
     journalLines?: JournalEntryLineCreateNestedManyWithoutAccountInput
@@ -65058,7 +65133,7 @@ export namespace Prisma {
     type: string
     subType?: string | null
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     balance?: Decimal | DecimalJsLike | number | string
     balanceOfficial?: Decimal | DecimalJsLike | number | string
     syscohadaCode?: string | null
@@ -65109,6 +65184,7 @@ export namespace Prisma {
 
   export type TaskCreateManyAssignedToInputEnvelope = {
     data: TaskCreateManyAssignedToInput | TaskCreateManyAssignedToInput[]
+    skipDuplicates?: boolean
   }
 
   export type AuditLogCreateWithoutUserInput = {
@@ -65142,6 +65218,7 @@ export namespace Prisma {
 
   export type AuditLogCreateManyUserInputEnvelope = {
     data: AuditLogCreateManyUserInput | AuditLogCreateManyUserInput[]
+    skipDuplicates?: boolean
   }
 
   export type OrderCreateWithoutUserInput = {
@@ -65196,6 +65273,7 @@ export namespace Prisma {
 
   export type OrderCreateManyUserInputEnvelope = {
     data: OrderCreateManyUserInput | OrderCreateManyUserInput[]
+    skipDuplicates?: boolean
   }
 
   export type OrderCreateWithoutVerifiedByInput = {
@@ -65250,6 +65328,7 @@ export namespace Prisma {
 
   export type OrderCreateManyVerifiedByInputEnvelope = {
     data: OrderCreateManyVerifiedByInput | OrderCreateManyVerifiedByInput[]
+    skipDuplicates?: boolean
   }
 
   export type JournalEntryCreateWithoutVerifiedByInput = {
@@ -65300,6 +65379,7 @@ export namespace Prisma {
 
   export type JournalEntryCreateManyVerifiedByInputEnvelope = {
     data: JournalEntryCreateManyVerifiedByInput | JournalEntryCreateManyVerifiedByInput[]
+    skipDuplicates?: boolean
   }
 
   export type OrganizationUpsertWithoutUsersInput = {
@@ -65392,7 +65472,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutSitesNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutSitesNestedInput
     warehouses?: WarehouseUpdateManyWithoutSiteNestedInput
     contacts?: ContactUpdateManyWithoutHomeSiteNestedInput
     employees?: EmployeeUpdateManyWithoutHomeSiteNestedInput
@@ -65412,7 +65492,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     vatNumber?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     warehouses?: WarehouseUncheckedUpdateManyWithoutSiteNestedInput
@@ -65534,7 +65614,7 @@ export namespace Prisma {
     requiresZeroBalance?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutLedgerNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutLedgerNestedInput
     parent?: ChartOfAccountUpdateOneWithoutChildrenNestedInput
     children?: ChartOfAccountUpdateManyWithoutParentNestedInput
     journalLines?: JournalEntryLineUpdateManyWithoutAccountNestedInput
@@ -65551,7 +65631,7 @@ export namespace Prisma {
     type?: StringFieldUpdateOperationsInput | string
     subType?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     balance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     balanceOfficial?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     syscohadaCode?: NullableStringFieldUpdateOperationsInput | string | null
@@ -65741,7 +65821,7 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutUsersInput
+    organization: OrganizationCreateNestedOneWithoutUsersInput
     homeSite?: SiteCreateNestedOneWithoutUsersInput
     cashRegister?: FinancialAccountCreateNestedOneWithoutAssignedUsersInput
     employee?: EmployeeCreateNestedOneWithoutUserInput
@@ -65759,7 +65839,7 @@ export namespace Prisma {
     password: string
     name: string
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     homeSiteId?: number | null
     cashRegisterId?: number | null
     employeeId?: number | null
@@ -65780,6 +65860,7 @@ export namespace Prisma {
 
   export type UserCreateManyRoleInputEnvelope = {
     data: UserCreateManyRoleInput | UserCreateManyRoleInput[]
+    skipDuplicates?: boolean
   }
 
   export type PermissionUpsertWithWhereUniqueWithoutRolesInput = {
@@ -65882,7 +65963,7 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutUsersInput
+    organization: OrganizationCreateNestedOneWithoutUsersInput
     role?: RoleCreateNestedOneWithoutUsersInput
     homeSite?: SiteCreateNestedOneWithoutUsersInput
     cashRegister?: FinancialAccountCreateNestedOneWithoutAssignedUsersInput
@@ -65900,7 +65981,7 @@ export namespace Prisma {
     password: string
     name: string
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     roleId?: number | null
     homeSiteId?: number | null
     cashRegisterId?: number | null
@@ -65972,7 +66053,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutUsersNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutUsersNestedInput
     role?: RoleUpdateOneWithoutUsersNestedInput
     homeSite?: SiteUpdateOneWithoutUsersNestedInput
     cashRegister?: FinancialAccountUpdateOneWithoutAssignedUsersNestedInput
@@ -65990,7 +66071,7 @@ export namespace Prisma {
     password?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     roleId?: NullableIntFieldUpdateOperationsInput | number | null
     homeSiteId?: NullableIntFieldUpdateOperationsInput | number | null
     cashRegisterId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -66090,7 +66171,7 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutSitesInput
+    organization: OrganizationCreateNestedOneWithoutSitesInput
     warehouses?: WarehouseCreateNestedManyWithoutSiteInput
     users?: UserCreateNestedManyWithoutHomeSiteInput
     employees?: EmployeeCreateNestedManyWithoutHomeSiteInput
@@ -66110,7 +66191,7 @@ export namespace Prisma {
     phone?: string | null
     vatNumber?: string | null
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     createdAt?: Date | string
     updatedAt?: Date | string
     warehouses?: WarehouseUncheckedCreateNestedManyWithoutSiteInput
@@ -66144,7 +66225,7 @@ export namespace Prisma {
     requiresZeroBalance?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutLedgerInput
+    organization: OrganizationCreateNestedOneWithoutLedgerInput
     parent?: ChartOfAccountCreateNestedOneWithoutChildrenInput
     children?: ChartOfAccountCreateNestedManyWithoutParentInput
     journalLines?: JournalEntryLineCreateNestedManyWithoutAccountInput
@@ -66161,7 +66242,7 @@ export namespace Prisma {
     type: string
     subType?: string | null
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     balance?: Decimal | DecimalJsLike | number | string
     balanceOfficial?: Decimal | DecimalJsLike | number | string
     syscohadaCode?: string | null
@@ -66236,6 +66317,7 @@ export namespace Prisma {
 
   export type OrderCreateManyContactInputEnvelope = {
     data: OrderCreateManyContactInput | OrderCreateManyContactInput[]
+    skipDuplicates?: boolean
   }
 
   export type JournalEntryLineCreateWithoutContactInput = {
@@ -66264,6 +66346,7 @@ export namespace Prisma {
 
   export type JournalEntryLineCreateManyContactInputEnvelope = {
     data: JournalEntryLineCreateManyContactInput | JournalEntryLineCreateManyContactInput[]
+    skipDuplicates?: boolean
   }
 
   export type ProductCreateWithoutSupplierInput = {
@@ -66285,7 +66368,7 @@ export namespace Prisma {
     isTaxIncluded?: boolean
     isExpiryTracked?: boolean
     minStockLevel?: number
-    organization?: OrganizationCreateNestedOneWithoutProductsInput
+    organization: OrganizationCreateNestedOneWithoutProductsInput
     productGroup?: ProductGroupCreateNestedOneWithoutProductsInput
     sizeUnit?: UnitCreateNestedOneWithoutProductsWithSizeInput
     inventoryLevels?: InventoryLevelCreateNestedManyWithoutProductInput
@@ -66307,7 +66390,7 @@ export namespace Prisma {
     barcode?: string | null
     name: string
     description?: string | null
-    organizationId?: string | null
+    organizationId: string
     productGroupId?: number | null
     size?: Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: number | null
@@ -66344,6 +66427,7 @@ export namespace Prisma {
 
   export type ProductCreateManySupplierInputEnvelope = {
     data: ProductCreateManySupplierInput | ProductCreateManySupplierInput[]
+    skipDuplicates?: boolean
   }
 
   export type FinancialEventCreateWithoutContactInput = {
@@ -66384,6 +66468,7 @@ export namespace Prisma {
 
   export type FinancialEventCreateManyContactInputEnvelope = {
     data: FinancialEventCreateManyContactInput | FinancialEventCreateManyContactInput[]
+    skipDuplicates?: boolean
   }
 
   export type LoanCreateWithoutContactInput = {
@@ -66424,6 +66509,7 @@ export namespace Prisma {
 
   export type LoanCreateManyContactInputEnvelope = {
     data: LoanCreateManyContactInput | LoanCreateManyContactInput[]
+    skipDuplicates?: boolean
   }
 
   export type OrganizationUpsertWithoutContactsInput = {
@@ -66488,7 +66574,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutSitesNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutSitesNestedInput
     warehouses?: WarehouseUpdateManyWithoutSiteNestedInput
     users?: UserUpdateManyWithoutHomeSiteNestedInput
     employees?: EmployeeUpdateManyWithoutHomeSiteNestedInput
@@ -66508,7 +66594,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     vatNumber?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     warehouses?: WarehouseUncheckedUpdateManyWithoutSiteNestedInput
@@ -66548,7 +66634,7 @@ export namespace Prisma {
     requiresZeroBalance?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutLedgerNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutLedgerNestedInput
     parent?: ChartOfAccountUpdateOneWithoutChildrenNestedInput
     children?: ChartOfAccountUpdateManyWithoutParentNestedInput
     journalLines?: JournalEntryLineUpdateManyWithoutAccountNestedInput
@@ -66565,7 +66651,7 @@ export namespace Prisma {
     type?: StringFieldUpdateOperationsInput | string
     subType?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     balance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     balanceOfficial?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     syscohadaCode?: NullableStringFieldUpdateOperationsInput | string | null
@@ -66725,7 +66811,7 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutSitesInput
+    organization: OrganizationCreateNestedOneWithoutSitesInput
     warehouses?: WarehouseCreateNestedManyWithoutSiteInput
     users?: UserCreateNestedManyWithoutHomeSiteInput
     contacts?: ContactCreateNestedManyWithoutHomeSiteInput
@@ -66745,7 +66831,7 @@ export namespace Prisma {
     phone?: string | null
     vatNumber?: string | null
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     createdAt?: Date | string
     updatedAt?: Date | string
     warehouses?: WarehouseUncheckedCreateNestedManyWithoutSiteInput
@@ -66770,7 +66856,7 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutUsersInput
+    organization: OrganizationCreateNestedOneWithoutUsersInput
     role?: RoleCreateNestedOneWithoutUsersInput
     homeSite?: SiteCreateNestedOneWithoutUsersInput
     cashRegister?: FinancialAccountCreateNestedOneWithoutAssignedUsersInput
@@ -66788,7 +66874,7 @@ export namespace Prisma {
     password: string
     name: string
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     roleId?: number | null
     homeSiteId?: number | null
     cashRegisterId?: number | null
@@ -66823,7 +66909,7 @@ export namespace Prisma {
     requiresZeroBalance?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutLedgerInput
+    organization: OrganizationCreateNestedOneWithoutLedgerInput
     parent?: ChartOfAccountCreateNestedOneWithoutChildrenInput
     children?: ChartOfAccountCreateNestedManyWithoutParentInput
     journalLines?: JournalEntryLineCreateNestedManyWithoutAccountInput
@@ -66840,7 +66926,7 @@ export namespace Prisma {
     type: string
     subType?: string | null
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     balance?: Decimal | DecimalJsLike | number | string
     balanceOfficial?: Decimal | DecimalJsLike | number | string
     syscohadaCode?: string | null
@@ -66889,6 +66975,7 @@ export namespace Prisma {
 
   export type JournalEntryLineCreateManyEmployeeInputEnvelope = {
     data: JournalEntryLineCreateManyEmployeeInput | JournalEntryLineCreateManyEmployeeInput[]
+    skipDuplicates?: boolean
   }
 
   export type SiteUpsertWithoutEmployeesInput = {
@@ -66912,7 +66999,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutSitesNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutSitesNestedInput
     warehouses?: WarehouseUpdateManyWithoutSiteNestedInput
     users?: UserUpdateManyWithoutHomeSiteNestedInput
     contacts?: ContactUpdateManyWithoutHomeSiteNestedInput
@@ -66932,7 +67019,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     vatNumber?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     warehouses?: WarehouseUncheckedUpdateManyWithoutSiteNestedInput
@@ -66963,7 +67050,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutUsersNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutUsersNestedInput
     role?: RoleUpdateOneWithoutUsersNestedInput
     homeSite?: SiteUpdateOneWithoutUsersNestedInput
     cashRegister?: FinancialAccountUpdateOneWithoutAssignedUsersNestedInput
@@ -66981,7 +67068,7 @@ export namespace Prisma {
     password?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     roleId?: NullableIntFieldUpdateOperationsInput | number | null
     homeSiteId?: NullableIntFieldUpdateOperationsInput | number | null
     cashRegisterId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -67022,7 +67109,7 @@ export namespace Prisma {
     requiresZeroBalance?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutLedgerNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutLedgerNestedInput
     parent?: ChartOfAccountUpdateOneWithoutChildrenNestedInput
     children?: ChartOfAccountUpdateManyWithoutParentNestedInput
     journalLines?: JournalEntryLineUpdateManyWithoutAccountNestedInput
@@ -67039,7 +67126,7 @@ export namespace Prisma {
     type?: StringFieldUpdateOperationsInput | string
     subType?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     balance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     balanceOfficial?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     syscohadaCode?: NullableStringFieldUpdateOperationsInput | string | null
@@ -67192,6 +67279,7 @@ export namespace Prisma {
 
   export type InventoryLevelCreateManyProductInputEnvelope = {
     data: InventoryLevelCreateManyProductInput | InventoryLevelCreateManyProductInput[]
+    skipDuplicates?: boolean
   }
 
   export type BrandCreateWithoutProductsInput = {
@@ -67282,7 +67370,7 @@ export namespace Prisma {
     loyaltyPoints?: number
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutContactsInput
+    organization: OrganizationCreateNestedOneWithoutContactsInput
     homeSite?: SiteCreateNestedOneWithoutContactsInput
     linkedAccount?: ChartOfAccountCreateNestedOneWithoutLinkedContactInput
     orders?: OrderCreateNestedManyWithoutContactInput
@@ -67299,7 +67387,7 @@ export namespace Prisma {
     phone?: string | null
     address?: string | null
     vatId?: string | null
-    organizationId?: string | null
+    organizationId: string
     homeSiteId?: number | null
     balance?: Decimal | DecimalJsLike | number | string
     creditLimit?: Decimal | DecimalJsLike | number | string
@@ -67388,6 +67476,7 @@ export namespace Prisma {
 
   export type InventoryCreateManyProductInputEnvelope = {
     data: InventoryCreateManyProductInput | InventoryCreateManyProductInput[]
+    skipDuplicates?: boolean
   }
 
   export type StockBatchCreateWithoutProductInput = {
@@ -67412,6 +67501,7 @@ export namespace Prisma {
 
   export type StockBatchCreateManyProductInputEnvelope = {
     data: StockBatchCreateManyProductInput | StockBatchCreateManyProductInput[]
+    skipDuplicates?: boolean
   }
 
   export type OrderLineCreateWithoutProductInput = {
@@ -67448,6 +67538,7 @@ export namespace Prisma {
 
   export type OrderLineCreateManyProductInputEnvelope = {
     data: OrderLineCreateManyProductInput | OrderLineCreateManyProductInput[]
+    skipDuplicates?: boolean
   }
 
   export type ProductImageCreateWithoutProductInput = {
@@ -67470,6 +67561,7 @@ export namespace Prisma {
 
   export type ProductImageCreateManyProductInputEnvelope = {
     data: ProductImageCreateManyProductInput | ProductImageCreateManyProductInput[]
+    skipDuplicates?: boolean
   }
 
   export type PricingRuleCreateWithoutProductInput = {
@@ -67500,6 +67592,7 @@ export namespace Prisma {
 
   export type PricingRuleCreateManyProductInputEnvelope = {
     data: PricingRuleCreateManyProductInput | PricingRuleCreateManyProductInput[]
+    skipDuplicates?: boolean
   }
 
   export type OrganizationUpsertWithoutProductsInput = {
@@ -67763,7 +67856,7 @@ export namespace Prisma {
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutContactsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutContactsNestedInput
     homeSite?: SiteUpdateOneWithoutContactsNestedInput
     linkedAccount?: ChartOfAccountUpdateOneWithoutLinkedContactNestedInput
     orders?: OrderUpdateManyWithoutContactNestedInput
@@ -67780,7 +67873,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     address?: NullableStringFieldUpdateOperationsInput | string | null
     vatId?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     homeSiteId?: NullableIntFieldUpdateOperationsInput | number | null
     balance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     creditLimit?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -68104,6 +68197,7 @@ export namespace Prisma {
 
   export type PricingRuleCreateManyProductGroupInputEnvelope = {
     data: PricingRuleCreateManyProductGroupInput | PricingRuleCreateManyProductGroupInput[]
+    skipDuplicates?: boolean
   }
 
   export type ProductCreateWithoutProductGroupInput = {
@@ -68125,7 +68219,7 @@ export namespace Prisma {
     isTaxIncluded?: boolean
     isExpiryTracked?: boolean
     minStockLevel?: number
-    organization?: OrganizationCreateNestedOneWithoutProductsInput
+    organization: OrganizationCreateNestedOneWithoutProductsInput
     sizeUnit?: UnitCreateNestedOneWithoutProductsWithSizeInput
     inventoryLevels?: InventoryLevelCreateNestedManyWithoutProductInput
     brand?: BrandCreateNestedOneWithoutProductsInput
@@ -68147,7 +68241,7 @@ export namespace Prisma {
     barcode?: string | null
     name: string
     description?: string | null
-    organizationId?: string | null
+    organizationId: string
     size?: Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: number | null
     costPrice?: Decimal | DecimalJsLike | number | string
@@ -68184,6 +68278,7 @@ export namespace Prisma {
 
   export type ProductCreateManyProductGroupInputEnvelope = {
     data: ProductCreateManyProductGroupInput | ProductCreateManyProductGroupInput[]
+    skipDuplicates?: boolean
   }
 
   export type BrandUpsertWithoutProductGroupsInput = {
@@ -68372,6 +68467,7 @@ export namespace Prisma {
 
   export type CategoryCreateManyParentInputEnvelope = {
     data: CategoryCreateManyParentInput | CategoryCreateManyParentInput[]
+    skipDuplicates?: boolean
   }
 
   export type BrandCreateWithoutCategoriesInput = {
@@ -68417,7 +68513,7 @@ export namespace Prisma {
     isTaxIncluded?: boolean
     isExpiryTracked?: boolean
     minStockLevel?: number
-    organization?: OrganizationCreateNestedOneWithoutProductsInput
+    organization: OrganizationCreateNestedOneWithoutProductsInput
     productGroup?: ProductGroupCreateNestedOneWithoutProductsInput
     sizeUnit?: UnitCreateNestedOneWithoutProductsWithSizeInput
     inventoryLevels?: InventoryLevelCreateNestedManyWithoutProductInput
@@ -68439,7 +68535,7 @@ export namespace Prisma {
     barcode?: string | null
     name: string
     description?: string | null
-    organizationId?: string | null
+    organizationId: string
     productGroupId?: number | null
     size?: Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: number | null
@@ -68476,6 +68572,7 @@ export namespace Prisma {
 
   export type ProductCreateManyCategoryInputEnvelope = {
     data: ProductCreateManyCategoryInput | ProductCreateManyCategoryInput[]
+    skipDuplicates?: boolean
   }
 
   export type ProductGroupCreateWithoutCategoryInput = {
@@ -68510,6 +68607,7 @@ export namespace Prisma {
 
   export type ProductGroupCreateManyCategoryInputEnvelope = {
     data: ProductGroupCreateManyCategoryInput | ProductGroupCreateManyCategoryInput[]
+    skipDuplicates?: boolean
   }
 
   export type ParfumCreateWithoutCategoriesInput = {
@@ -68560,6 +68658,7 @@ export namespace Prisma {
 
   export type PricingRuleCreateManyCategoryInputEnvelope = {
     data: PricingRuleCreateManyCategoryInput | PricingRuleCreateManyCategoryInput[]
+    skipDuplicates?: boolean
   }
 
   export type CategoryUpsertWithoutChildrenInput = {
@@ -68796,7 +68895,7 @@ export namespace Prisma {
     isTaxIncluded?: boolean
     isExpiryTracked?: boolean
     minStockLevel?: number
-    organization?: OrganizationCreateNestedOneWithoutProductsInput
+    organization: OrganizationCreateNestedOneWithoutProductsInput
     productGroup?: ProductGroupCreateNestedOneWithoutProductsInput
     sizeUnit?: UnitCreateNestedOneWithoutProductsWithSizeInput
     inventoryLevels?: InventoryLevelCreateNestedManyWithoutProductInput
@@ -68818,7 +68917,7 @@ export namespace Prisma {
     barcode?: string | null
     name: string
     description?: string | null
-    organizationId?: string | null
+    organizationId: string
     productGroupId?: number | null
     size?: Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: number | null
@@ -68855,6 +68954,7 @@ export namespace Prisma {
 
   export type ProductCreateManyBrandInputEnvelope = {
     data: ProductCreateManyBrandInput | ProductCreateManyBrandInput[]
+    skipDuplicates?: boolean
   }
 
   export type ProductGroupCreateWithoutBrandInput = {
@@ -68889,6 +68989,7 @@ export namespace Prisma {
 
   export type ProductGroupCreateManyBrandInputEnvelope = {
     data: ProductGroupCreateManyBrandInput | ProductGroupCreateManyBrandInput[]
+    skipDuplicates?: boolean
   }
 
   export type CountryUpsertWithWhereUniqueWithoutBrandsInput = {
@@ -69013,7 +69114,7 @@ export namespace Prisma {
     isTaxIncluded?: boolean
     isExpiryTracked?: boolean
     minStockLevel?: number
-    organization?: OrganizationCreateNestedOneWithoutProductsInput
+    organization: OrganizationCreateNestedOneWithoutProductsInput
     productGroup?: ProductGroupCreateNestedOneWithoutProductsInput
     sizeUnit?: UnitCreateNestedOneWithoutProductsWithSizeInput
     inventoryLevels?: InventoryLevelCreateNestedManyWithoutProductInput
@@ -69035,7 +69136,7 @@ export namespace Prisma {
     barcode?: string | null
     name: string
     description?: string | null
-    organizationId?: string | null
+    organizationId: string
     productGroupId?: number | null
     size?: Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: number | null
@@ -69072,6 +69173,7 @@ export namespace Prisma {
 
   export type ProductCreateManyParfumInputEnvelope = {
     data: ProductCreateManyParfumInput | ProductCreateManyParfumInput[]
+    skipDuplicates?: boolean
   }
 
   export type ProductGroupCreateWithoutParfumInput = {
@@ -69106,6 +69208,7 @@ export namespace Prisma {
 
   export type ProductGroupCreateManyParfumInputEnvelope = {
     data: ProductGroupCreateManyParfumInput | ProductGroupCreateManyParfumInput[]
+    skipDuplicates?: boolean
   }
 
   export type CategoryUpsertWithWhereUniqueWithoutParfumsInput = {
@@ -69166,7 +69269,7 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutSitesInput
+    organization: OrganizationCreateNestedOneWithoutSitesInput
     users?: UserCreateNestedManyWithoutHomeSiteInput
     contacts?: ContactCreateNestedManyWithoutHomeSiteInput
     employees?: EmployeeCreateNestedManyWithoutHomeSiteInput
@@ -69186,7 +69289,7 @@ export namespace Prisma {
     phone?: string | null
     vatNumber?: string | null
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     createdAt?: Date | string
     updatedAt?: Date | string
     users?: UserUncheckedCreateNestedManyWithoutHomeSiteInput
@@ -69224,6 +69327,7 @@ export namespace Prisma {
 
   export type InventoryCreateManyWarehouseInputEnvelope = {
     data: InventoryCreateManyWarehouseInput | InventoryCreateManyWarehouseInput[]
+    skipDuplicates?: boolean
   }
 
   export type SiteUpsertWithoutWarehousesInput = {
@@ -69247,7 +69351,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutSitesNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutSitesNestedInput
     users?: UserUpdateManyWithoutHomeSiteNestedInput
     contacts?: ContactUpdateManyWithoutHomeSiteNestedInput
     employees?: EmployeeUpdateManyWithoutHomeSiteNestedInput
@@ -69267,7 +69371,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     vatNumber?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     users?: UserUncheckedUpdateManyWithoutHomeSiteNestedInput
@@ -69315,7 +69419,7 @@ export namespace Prisma {
     isTaxIncluded?: boolean
     isExpiryTracked?: boolean
     minStockLevel?: number
-    organization?: OrganizationCreateNestedOneWithoutProductsInput
+    organization: OrganizationCreateNestedOneWithoutProductsInput
     productGroup?: ProductGroupCreateNestedOneWithoutProductsInput
     sizeUnit?: UnitCreateNestedOneWithoutProductsWithSizeInput
     inventoryLevels?: InventoryLevelCreateNestedManyWithoutProductInput
@@ -69337,7 +69441,7 @@ export namespace Prisma {
     barcode?: string | null
     name: string
     description?: string | null
-    organizationId?: string | null
+    organizationId: string
     productGroupId?: number | null
     size?: Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: number | null
@@ -69392,6 +69496,7 @@ export namespace Prisma {
 
   export type InventoryCreateManyBatchInputEnvelope = {
     data: InventoryCreateManyBatchInput | InventoryCreateManyBatchInput[]
+    skipDuplicates?: boolean
   }
 
   export type ProductUpsertWithoutBatchesInput = {
@@ -69424,7 +69529,7 @@ export namespace Prisma {
     isTaxIncluded?: BoolFieldUpdateOperationsInput | boolean
     isExpiryTracked?: BoolFieldUpdateOperationsInput | boolean
     minStockLevel?: IntFieldUpdateOperationsInput | number
-    organization?: OrganizationUpdateOneWithoutProductsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutProductsNestedInput
     productGroup?: ProductGroupUpdateOneWithoutProductsNestedInput
     sizeUnit?: UnitUpdateOneWithoutProductsWithSizeNestedInput
     inventoryLevels?: InventoryLevelUpdateManyWithoutProductNestedInput
@@ -69446,7 +69551,7 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     productGroupId?: NullableIntFieldUpdateOperationsInput | number | null
     size?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -69539,7 +69644,7 @@ export namespace Prisma {
     isTaxIncluded?: boolean
     isExpiryTracked?: boolean
     minStockLevel?: number
-    organization?: OrganizationCreateNestedOneWithoutProductsInput
+    organization: OrganizationCreateNestedOneWithoutProductsInput
     productGroup?: ProductGroupCreateNestedOneWithoutProductsInput
     sizeUnit?: UnitCreateNestedOneWithoutProductsWithSizeInput
     inventoryLevels?: InventoryLevelCreateNestedManyWithoutProductInput
@@ -69561,7 +69666,7 @@ export namespace Prisma {
     barcode?: string | null
     name: string
     description?: string | null
-    organizationId?: string | null
+    organizationId: string
     productGroupId?: number | null
     size?: Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: number | null
@@ -69680,7 +69785,7 @@ export namespace Prisma {
     isTaxIncluded?: BoolFieldUpdateOperationsInput | boolean
     isExpiryTracked?: BoolFieldUpdateOperationsInput | boolean
     minStockLevel?: IntFieldUpdateOperationsInput | number
-    organization?: OrganizationUpdateOneWithoutProductsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutProductsNestedInput
     productGroup?: ProductGroupUpdateOneWithoutProductsNestedInput
     sizeUnit?: UnitUpdateOneWithoutProductsWithSizeNestedInput
     inventoryLevels?: InventoryLevelUpdateManyWithoutProductNestedInput
@@ -69702,7 +69807,7 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     productGroupId?: NullableIntFieldUpdateOperationsInput | number | null
     size?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -69770,7 +69875,7 @@ export namespace Prisma {
     loyaltyPoints?: number
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutContactsInput
+    organization: OrganizationCreateNestedOneWithoutContactsInput
     homeSite?: SiteCreateNestedOneWithoutContactsInput
     linkedAccount?: ChartOfAccountCreateNestedOneWithoutLinkedContactInput
     transactions?: JournalEntryLineCreateNestedManyWithoutContactInput
@@ -69787,7 +69892,7 @@ export namespace Prisma {
     phone?: string | null
     address?: string | null
     vatId?: string | null
-    organizationId?: string | null
+    organizationId: string
     homeSiteId?: number | null
     balance?: Decimal | DecimalJsLike | number | string
     creditLimit?: Decimal | DecimalJsLike | number | string
@@ -69813,7 +69918,7 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutUsersInput
+    organization: OrganizationCreateNestedOneWithoutUsersInput
     role?: RoleCreateNestedOneWithoutUsersInput
     homeSite?: SiteCreateNestedOneWithoutUsersInput
     cashRegister?: FinancialAccountCreateNestedOneWithoutAssignedUsersInput
@@ -69831,7 +69936,7 @@ export namespace Prisma {
     password: string
     name: string
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     roleId?: number | null
     homeSiteId?: number | null
     cashRegisterId?: number | null
@@ -69857,7 +69962,7 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutUsersInput
+    organization: OrganizationCreateNestedOneWithoutUsersInput
     role?: RoleCreateNestedOneWithoutUsersInput
     homeSite?: SiteCreateNestedOneWithoutUsersInput
     cashRegister?: FinancialAccountCreateNestedOneWithoutAssignedUsersInput
@@ -69875,7 +69980,7 @@ export namespace Prisma {
     password: string
     name: string
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     roleId?: number | null
     homeSiteId?: number | null
     cashRegisterId?: number | null
@@ -69928,6 +70033,7 @@ export namespace Prisma {
 
   export type OrderLineCreateManyOrderInputEnvelope = {
     data: OrderLineCreateManyOrderInput | OrderLineCreateManyOrderInput[]
+    skipDuplicates?: boolean
   }
 
   export type SiteCreateWithoutOrdersInput = {
@@ -69940,7 +70046,7 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutSitesInput
+    organization: OrganizationCreateNestedOneWithoutSitesInput
     warehouses?: WarehouseCreateNestedManyWithoutSiteInput
     users?: UserCreateNestedManyWithoutHomeSiteInput
     contacts?: ContactCreateNestedManyWithoutHomeSiteInput
@@ -69960,7 +70066,7 @@ export namespace Prisma {
     phone?: string | null
     vatNumber?: string | null
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     createdAt?: Date | string
     updatedAt?: Date | string
     warehouses?: WarehouseUncheckedCreateNestedManyWithoutSiteInput
@@ -70001,7 +70107,7 @@ export namespace Prisma {
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutContactsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutContactsNestedInput
     homeSite?: SiteUpdateOneWithoutContactsNestedInput
     linkedAccount?: ChartOfAccountUpdateOneWithoutLinkedContactNestedInput
     transactions?: JournalEntryLineUpdateManyWithoutContactNestedInput
@@ -70018,7 +70124,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     address?: NullableStringFieldUpdateOperationsInput | string | null
     vatId?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     homeSiteId?: NullableIntFieldUpdateOperationsInput | number | null
     balance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     creditLimit?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -70050,7 +70156,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutUsersNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutUsersNestedInput
     role?: RoleUpdateOneWithoutUsersNestedInput
     homeSite?: SiteUpdateOneWithoutUsersNestedInput
     cashRegister?: FinancialAccountUpdateOneWithoutAssignedUsersNestedInput
@@ -70068,7 +70174,7 @@ export namespace Prisma {
     password?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     roleId?: NullableIntFieldUpdateOperationsInput | number | null
     homeSiteId?: NullableIntFieldUpdateOperationsInput | number | null
     cashRegisterId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -70100,7 +70206,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutUsersNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutUsersNestedInput
     role?: RoleUpdateOneWithoutUsersNestedInput
     homeSite?: SiteUpdateOneWithoutUsersNestedInput
     cashRegister?: FinancialAccountUpdateOneWithoutAssignedUsersNestedInput
@@ -70118,7 +70224,7 @@ export namespace Prisma {
     password?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     roleId?: NullableIntFieldUpdateOperationsInput | number | null
     homeSiteId?: NullableIntFieldUpdateOperationsInput | number | null
     cashRegisterId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -70169,7 +70275,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutSitesNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutSitesNestedInput
     warehouses?: WarehouseUpdateManyWithoutSiteNestedInput
     users?: UserUpdateManyWithoutHomeSiteNestedInput
     contacts?: ContactUpdateManyWithoutHomeSiteNestedInput
@@ -70189,7 +70295,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     vatNumber?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     warehouses?: WarehouseUncheckedUpdateManyWithoutSiteNestedInput
@@ -70271,7 +70377,7 @@ export namespace Prisma {
     isTaxIncluded?: boolean
     isExpiryTracked?: boolean
     minStockLevel?: number
-    organization?: OrganizationCreateNestedOneWithoutProductsInput
+    organization: OrganizationCreateNestedOneWithoutProductsInput
     productGroup?: ProductGroupCreateNestedOneWithoutProductsInput
     sizeUnit?: UnitCreateNestedOneWithoutProductsWithSizeInput
     inventoryLevels?: InventoryLevelCreateNestedManyWithoutProductInput
@@ -70293,7 +70399,7 @@ export namespace Prisma {
     barcode?: string | null
     name: string
     description?: string | null
-    organizationId?: string | null
+    organizationId: string
     productGroupId?: number | null
     size?: Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: number | null
@@ -70414,7 +70520,7 @@ export namespace Prisma {
     isTaxIncluded?: BoolFieldUpdateOperationsInput | boolean
     isExpiryTracked?: BoolFieldUpdateOperationsInput | boolean
     minStockLevel?: IntFieldUpdateOperationsInput | number
-    organization?: OrganizationUpdateOneWithoutProductsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutProductsNestedInput
     productGroup?: ProductGroupUpdateOneWithoutProductsNestedInput
     sizeUnit?: UnitUpdateOneWithoutProductsWithSizeNestedInput
     inventoryLevels?: InventoryLevelUpdateManyWithoutProductNestedInput
@@ -70436,7 +70542,7 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     productGroupId?: NullableIntFieldUpdateOperationsInput | number | null
     size?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -70473,7 +70579,7 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutUsersInput
+    organization: OrganizationCreateNestedOneWithoutUsersInput
     role?: RoleCreateNestedOneWithoutUsersInput
     homeSite?: SiteCreateNestedOneWithoutUsersInput
     cashRegister?: FinancialAccountCreateNestedOneWithoutAssignedUsersInput
@@ -70491,7 +70597,7 @@ export namespace Prisma {
     password: string
     name: string
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     roleId?: number | null
     homeSiteId?: number | null
     cashRegisterId?: number | null
@@ -70528,7 +70634,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutUsersNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutUsersNestedInput
     role?: RoleUpdateOneWithoutUsersNestedInput
     homeSite?: SiteUpdateOneWithoutUsersNestedInput
     cashRegister?: FinancialAccountUpdateOneWithoutAssignedUsersNestedInput
@@ -70546,7 +70652,7 @@ export namespace Prisma {
     password?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     roleId?: NullableIntFieldUpdateOperationsInput | number | null
     homeSiteId?: NullableIntFieldUpdateOperationsInput | number | null
     cashRegisterId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -70579,7 +70685,7 @@ export namespace Prisma {
     isTaxIncluded?: boolean
     isExpiryTracked?: boolean
     minStockLevel?: number
-    organization?: OrganizationCreateNestedOneWithoutProductsInput
+    organization: OrganizationCreateNestedOneWithoutProductsInput
     productGroup?: ProductGroupCreateNestedOneWithoutProductsInput
     sizeUnit?: UnitCreateNestedOneWithoutProductsWithSizeInput
     inventoryLevels?: InventoryLevelCreateNestedManyWithoutProductInput
@@ -70601,7 +70707,7 @@ export namespace Prisma {
     barcode?: string | null
     name: string
     description?: string | null
-    organizationId?: string | null
+    organizationId: string
     productGroupId?: number | null
     size?: Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: number | null
@@ -70666,7 +70772,7 @@ export namespace Prisma {
     isTaxIncluded?: BoolFieldUpdateOperationsInput | boolean
     isExpiryTracked?: BoolFieldUpdateOperationsInput | boolean
     minStockLevel?: IntFieldUpdateOperationsInput | number
-    organization?: OrganizationUpdateOneWithoutProductsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutProductsNestedInput
     productGroup?: ProductGroupUpdateOneWithoutProductsNestedInput
     sizeUnit?: UnitUpdateOneWithoutProductsWithSizeNestedInput
     inventoryLevels?: InventoryLevelUpdateManyWithoutProductNestedInput
@@ -70688,7 +70794,7 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     productGroupId?: NullableIntFieldUpdateOperationsInput | number | null
     size?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -70822,6 +70928,7 @@ export namespace Prisma {
 
   export type FiscalPeriodCreateManyFiscalYearInputEnvelope = {
     data: FiscalPeriodCreateManyFiscalYearInput | FiscalPeriodCreateManyFiscalYearInput[]
+    skipDuplicates?: boolean
   }
 
   export type JournalEntryCreateWithoutFiscalYearInput = {
@@ -70872,6 +70979,7 @@ export namespace Prisma {
 
   export type JournalEntryCreateManyFiscalYearInputEnvelope = {
     data: JournalEntryCreateManyFiscalYearInput | JournalEntryCreateManyFiscalYearInput[]
+    skipDuplicates?: boolean
   }
 
   export type FiscalPeriodUpsertWithWhereUniqueWithoutFiscalYearInput = {
@@ -70996,6 +71104,7 @@ export namespace Prisma {
 
   export type JournalEntryCreateManyFiscalPeriodInputEnvelope = {
     data: JournalEntryCreateManyFiscalPeriodInput | JournalEntryCreateManyFiscalPeriodInput[]
+    skipDuplicates?: boolean
   }
 
   export type FiscalYearUpsertWithoutPeriodsInput = {
@@ -71099,7 +71208,7 @@ export namespace Prisma {
     requiresZeroBalance?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutLedgerInput
+    organization: OrganizationCreateNestedOneWithoutLedgerInput
     parent?: ChartOfAccountCreateNestedOneWithoutChildrenInput
     journalLines?: JournalEntryLineCreateNestedManyWithoutAccountInput
     linkedContact?: ContactCreateNestedOneWithoutLinkedAccountInput
@@ -71116,7 +71225,7 @@ export namespace Prisma {
     type: string
     subType?: string | null
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     balance?: Decimal | DecimalJsLike | number | string
     balanceOfficial?: Decimal | DecimalJsLike | number | string
     syscohadaCode?: string | null
@@ -71155,7 +71264,7 @@ export namespace Prisma {
     requiresZeroBalance?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutLedgerInput
+    organization: OrganizationCreateNestedOneWithoutLedgerInput
     children?: ChartOfAccountCreateNestedManyWithoutParentInput
     journalLines?: JournalEntryLineCreateNestedManyWithoutAccountInput
     linkedContact?: ContactCreateNestedOneWithoutLinkedAccountInput
@@ -71172,7 +71281,7 @@ export namespace Prisma {
     type: string
     subType?: string | null
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     balance?: Decimal | DecimalJsLike | number | string
     balanceOfficial?: Decimal | DecimalJsLike | number | string
     syscohadaCode?: string | null
@@ -71197,6 +71306,7 @@ export namespace Prisma {
 
   export type ChartOfAccountCreateManyParentInputEnvelope = {
     data: ChartOfAccountCreateManyParentInput | ChartOfAccountCreateManyParentInput[]
+    skipDuplicates?: boolean
   }
 
   export type JournalEntryLineCreateWithoutAccountInput = {
@@ -71225,6 +71335,7 @@ export namespace Prisma {
 
   export type JournalEntryLineCreateManyAccountInputEnvelope = {
     data: JournalEntryLineCreateManyAccountInput | JournalEntryLineCreateManyAccountInput[]
+    skipDuplicates?: boolean
   }
 
   export type ContactCreateWithoutLinkedAccountInput = {
@@ -71239,7 +71350,7 @@ export namespace Prisma {
     loyaltyPoints?: number
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutContactsInput
+    organization: OrganizationCreateNestedOneWithoutContactsInput
     homeSite?: SiteCreateNestedOneWithoutContactsInput
     orders?: OrderCreateNestedManyWithoutContactInput
     transactions?: JournalEntryLineCreateNestedManyWithoutContactInput
@@ -71256,7 +71367,7 @@ export namespace Prisma {
     phone?: string | null
     address?: string | null
     vatId?: string | null
-    organizationId?: string | null
+    organizationId: string
     homeSiteId?: number | null
     balance?: Decimal | DecimalJsLike | number | string
     creditLimit?: Decimal | DecimalJsLike | number | string
@@ -71282,7 +71393,7 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutUsersInput
+    organization: OrganizationCreateNestedOneWithoutUsersInput
     role?: RoleCreateNestedOneWithoutUsersInput
     homeSite?: SiteCreateNestedOneWithoutUsersInput
     cashRegister?: FinancialAccountCreateNestedOneWithoutAssignedUsersInput
@@ -71300,7 +71411,7 @@ export namespace Prisma {
     password: string
     name: string
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     roleId?: number | null
     homeSiteId?: number | null
     cashRegisterId?: number | null
@@ -71457,7 +71568,7 @@ export namespace Prisma {
     requiresZeroBalance?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutLedgerNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutLedgerNestedInput
     parent?: ChartOfAccountUpdateOneWithoutChildrenNestedInput
     journalLines?: JournalEntryLineUpdateManyWithoutAccountNestedInput
     linkedContact?: ContactUpdateOneWithoutLinkedAccountNestedInput
@@ -71474,7 +71585,7 @@ export namespace Prisma {
     type?: StringFieldUpdateOperationsInput | string
     subType?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     balance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     balanceOfficial?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     syscohadaCode?: NullableStringFieldUpdateOperationsInput | string | null
@@ -71547,7 +71658,7 @@ export namespace Prisma {
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutContactsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutContactsNestedInput
     homeSite?: SiteUpdateOneWithoutContactsNestedInput
     orders?: OrderUpdateManyWithoutContactNestedInput
     transactions?: JournalEntryLineUpdateManyWithoutContactNestedInput
@@ -71564,7 +71675,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     address?: NullableStringFieldUpdateOperationsInput | string | null
     vatId?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     homeSiteId?: NullableIntFieldUpdateOperationsInput | number | null
     balance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     creditLimit?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -71596,7 +71707,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutUsersNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutUsersNestedInput
     role?: RoleUpdateOneWithoutUsersNestedInput
     homeSite?: SiteUpdateOneWithoutUsersNestedInput
     cashRegister?: FinancialAccountUpdateOneWithoutAssignedUsersNestedInput
@@ -71614,7 +71725,7 @@ export namespace Prisma {
     password?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     roleId?: NullableIntFieldUpdateOperationsInput | number | null
     homeSiteId?: NullableIntFieldUpdateOperationsInput | number | null
     cashRegisterId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -71774,7 +71885,7 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutSitesInput
+    organization: OrganizationCreateNestedOneWithoutSitesInput
     warehouses?: WarehouseCreateNestedManyWithoutSiteInput
     users?: UserCreateNestedManyWithoutHomeSiteInput
     contacts?: ContactCreateNestedManyWithoutHomeSiteInput
@@ -71794,7 +71905,7 @@ export namespace Prisma {
     phone?: string | null
     vatNumber?: string | null
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     createdAt?: Date | string
     updatedAt?: Date | string
     warehouses?: WarehouseUncheckedCreateNestedManyWithoutSiteInput
@@ -71819,7 +71930,7 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutUsersInput
+    organization: OrganizationCreateNestedOneWithoutUsersInput
     role?: RoleCreateNestedOneWithoutUsersInput
     homeSite?: SiteCreateNestedOneWithoutUsersInput
     cashRegister?: FinancialAccountCreateNestedOneWithoutAssignedUsersInput
@@ -71837,7 +71948,7 @@ export namespace Prisma {
     password: string
     name: string
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     roleId?: number | null
     homeSiteId?: number | null
     cashRegisterId?: number | null
@@ -71882,6 +71993,7 @@ export namespace Prisma {
 
   export type JournalEntryLineCreateManyJournalEntryInputEnvelope = {
     data: JournalEntryLineCreateManyJournalEntryInput | JournalEntryLineCreateManyJournalEntryInput[]
+    skipDuplicates?: boolean
   }
 
   export type JournalEntryCreateWithoutReversedByInput = {
@@ -72099,7 +72211,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutSitesNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutSitesNestedInput
     warehouses?: WarehouseUpdateManyWithoutSiteNestedInput
     users?: UserUpdateManyWithoutHomeSiteNestedInput
     contacts?: ContactUpdateManyWithoutHomeSiteNestedInput
@@ -72119,7 +72231,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     vatNumber?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     warehouses?: WarehouseUncheckedUpdateManyWithoutSiteNestedInput
@@ -72150,7 +72262,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutUsersNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutUsersNestedInput
     role?: RoleUpdateOneWithoutUsersNestedInput
     homeSite?: SiteUpdateOneWithoutUsersNestedInput
     cashRegister?: FinancialAccountUpdateOneWithoutAssignedUsersNestedInput
@@ -72168,7 +72280,7 @@ export namespace Prisma {
     password?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     roleId?: NullableIntFieldUpdateOperationsInput | number | null
     homeSiteId?: NullableIntFieldUpdateOperationsInput | number | null
     cashRegisterId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -72406,7 +72518,7 @@ export namespace Prisma {
     requiresZeroBalance?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutLedgerInput
+    organization: OrganizationCreateNestedOneWithoutLedgerInput
     parent?: ChartOfAccountCreateNestedOneWithoutChildrenInput
     children?: ChartOfAccountCreateNestedManyWithoutParentInput
     linkedContact?: ContactCreateNestedOneWithoutLinkedAccountInput
@@ -72423,7 +72535,7 @@ export namespace Prisma {
     type: string
     subType?: string | null
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     balance?: Decimal | DecimalJsLike | number | string
     balanceOfficial?: Decimal | DecimalJsLike | number | string
     syscohadaCode?: string | null
@@ -72458,7 +72570,7 @@ export namespace Prisma {
     loyaltyPoints?: number
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutContactsInput
+    organization: OrganizationCreateNestedOneWithoutContactsInput
     homeSite?: SiteCreateNestedOneWithoutContactsInput
     linkedAccount?: ChartOfAccountCreateNestedOneWithoutLinkedContactInput
     orders?: OrderCreateNestedManyWithoutContactInput
@@ -72475,7 +72587,7 @@ export namespace Prisma {
     phone?: string | null
     address?: string | null
     vatId?: string | null
-    organizationId?: string | null
+    organizationId: string
     homeSiteId?: number | null
     balance?: Decimal | DecimalJsLike | number | string
     creditLimit?: Decimal | DecimalJsLike | number | string
@@ -72617,7 +72729,7 @@ export namespace Prisma {
     requiresZeroBalance?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutLedgerNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutLedgerNestedInput
     parent?: ChartOfAccountUpdateOneWithoutChildrenNestedInput
     children?: ChartOfAccountUpdateManyWithoutParentNestedInput
     linkedContact?: ContactUpdateOneWithoutLinkedAccountNestedInput
@@ -72634,7 +72746,7 @@ export namespace Prisma {
     type?: StringFieldUpdateOperationsInput | string
     subType?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     balance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     balanceOfficial?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     syscohadaCode?: NullableStringFieldUpdateOperationsInput | string | null
@@ -72675,7 +72787,7 @@ export namespace Prisma {
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutContactsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutContactsNestedInput
     homeSite?: SiteUpdateOneWithoutContactsNestedInput
     linkedAccount?: ChartOfAccountUpdateOneWithoutLinkedContactNestedInput
     orders?: OrderUpdateManyWithoutContactNestedInput
@@ -72692,7 +72804,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     address?: NullableStringFieldUpdateOperationsInput | string | null
     vatId?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     homeSiteId?: NullableIntFieldUpdateOperationsInput | number | null
     balance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     creditLimit?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -72784,6 +72896,7 @@ export namespace Prisma {
 
   export type PricingRuleCreateManyPriceListInputEnvelope = {
     data: PricingRuleCreateManyPriceListInput | PricingRuleCreateManyPriceListInput[]
+    skipDuplicates?: boolean
   }
 
   export type PricingRuleUpsertWithWhereUniqueWithoutPriceListInput = {
@@ -72843,7 +72956,7 @@ export namespace Prisma {
     isTaxIncluded?: boolean
     isExpiryTracked?: boolean
     minStockLevel?: number
-    organization?: OrganizationCreateNestedOneWithoutProductsInput
+    organization: OrganizationCreateNestedOneWithoutProductsInput
     productGroup?: ProductGroupCreateNestedOneWithoutProductsInput
     sizeUnit?: UnitCreateNestedOneWithoutProductsWithSizeInput
     inventoryLevels?: InventoryLevelCreateNestedManyWithoutProductInput
@@ -72865,7 +72978,7 @@ export namespace Prisma {
     barcode?: string | null
     name: string
     description?: string | null
-    organizationId?: string | null
+    organizationId: string
     productGroupId?: number | null
     size?: Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: number | null
@@ -73018,7 +73131,7 @@ export namespace Prisma {
     isTaxIncluded?: BoolFieldUpdateOperationsInput | boolean
     isExpiryTracked?: BoolFieldUpdateOperationsInput | boolean
     minStockLevel?: IntFieldUpdateOperationsInput | number
-    organization?: OrganizationUpdateOneWithoutProductsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutProductsNestedInput
     productGroup?: ProductGroupUpdateOneWithoutProductsNestedInput
     sizeUnit?: UnitUpdateOneWithoutProductsWithSizeNestedInput
     inventoryLevels?: InventoryLevelUpdateManyWithoutProductNestedInput
@@ -73040,7 +73153,7 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     productGroupId?: NullableIntFieldUpdateOperationsInput | number | null
     size?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -73207,6 +73320,7 @@ export namespace Prisma {
 
   export type WarehouseCreateManySiteInputEnvelope = {
     data: WarehouseCreateManySiteInput | WarehouseCreateManySiteInput[]
+    skipDuplicates?: boolean
   }
 
   export type UserCreateWithoutHomeSiteInput = {
@@ -73216,7 +73330,7 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutUsersInput
+    organization: OrganizationCreateNestedOneWithoutUsersInput
     role?: RoleCreateNestedOneWithoutUsersInput
     cashRegister?: FinancialAccountCreateNestedOneWithoutAssignedUsersInput
     employee?: EmployeeCreateNestedOneWithoutUserInput
@@ -73234,7 +73348,7 @@ export namespace Prisma {
     password: string
     name: string
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     roleId?: number | null
     cashRegisterId?: number | null
     employeeId?: number | null
@@ -73255,6 +73369,7 @@ export namespace Prisma {
 
   export type UserCreateManyHomeSiteInputEnvelope = {
     data: UserCreateManyHomeSiteInput | UserCreateManyHomeSiteInput[]
+    skipDuplicates?: boolean
   }
 
   export type ContactCreateWithoutHomeSiteInput = {
@@ -73269,7 +73384,7 @@ export namespace Prisma {
     loyaltyPoints?: number
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutContactsInput
+    organization: OrganizationCreateNestedOneWithoutContactsInput
     linkedAccount?: ChartOfAccountCreateNestedOneWithoutLinkedContactInput
     orders?: OrderCreateNestedManyWithoutContactInput
     transactions?: JournalEntryLineCreateNestedManyWithoutContactInput
@@ -73286,7 +73401,7 @@ export namespace Prisma {
     phone?: string | null
     address?: string | null
     vatId?: string | null
-    organizationId?: string | null
+    organizationId: string
     balance?: Decimal | DecimalJsLike | number | string
     creditLimit?: Decimal | DecimalJsLike | number | string
     loyaltyPoints?: number
@@ -73307,6 +73422,7 @@ export namespace Prisma {
 
   export type ContactCreateManyHomeSiteInputEnvelope = {
     data: ContactCreateManyHomeSiteInput | ContactCreateManyHomeSiteInput[]
+    skipDuplicates?: boolean
   }
 
   export type EmployeeCreateWithoutHomeSiteInput = {
@@ -73355,6 +73471,7 @@ export namespace Prisma {
 
   export type EmployeeCreateManyHomeSiteInputEnvelope = {
     data: EmployeeCreateManyHomeSiteInput | EmployeeCreateManyHomeSiteInput[]
+    skipDuplicates?: boolean
   }
 
   export type OrderCreateWithoutSiteInput = {
@@ -73409,6 +73526,7 @@ export namespace Prisma {
 
   export type OrderCreateManySiteInputEnvelope = {
     data: OrderCreateManySiteInput | OrderCreateManySiteInput[]
+    skipDuplicates?: boolean
   }
 
   export type TransactionCreateWithoutSiteInput = {
@@ -73441,6 +73559,7 @@ export namespace Prisma {
 
   export type TransactionCreateManySiteInputEnvelope = {
     data: TransactionCreateManySiteInput | TransactionCreateManySiteInput[]
+    skipDuplicates?: boolean
   }
 
   export type JournalEntryCreateWithoutSiteInput = {
@@ -73491,6 +73610,7 @@ export namespace Prisma {
 
   export type JournalEntryCreateManySiteInputEnvelope = {
     data: JournalEntryCreateManySiteInput | JournalEntryCreateManySiteInput[]
+    skipDuplicates?: boolean
   }
 
   export type FinancialAccountCreateWithoutSiteInput = {
@@ -73521,6 +73641,7 @@ export namespace Prisma {
 
   export type FinancialAccountCreateManySiteInputEnvelope = {
     data: FinancialAccountCreateManySiteInput | FinancialAccountCreateManySiteInput[]
+    skipDuplicates?: boolean
   }
 
   export type InventoryLevelCreateWithoutSiteInput = {
@@ -73543,6 +73664,7 @@ export namespace Prisma {
 
   export type InventoryLevelCreateManySiteInputEnvelope = {
     data: InventoryLevelCreateManySiteInput | InventoryLevelCreateManySiteInput[]
+    skipDuplicates?: boolean
   }
 
   export type OrganizationUpsertWithoutSitesInput = {
@@ -73790,7 +73912,7 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutSitesInput
+    organization: OrganizationCreateNestedOneWithoutSitesInput
     warehouses?: WarehouseCreateNestedManyWithoutSiteInput
     users?: UserCreateNestedManyWithoutHomeSiteInput
     contacts?: ContactCreateNestedManyWithoutHomeSiteInput
@@ -73810,7 +73932,7 @@ export namespace Prisma {
     phone?: string | null
     vatNumber?: string | null
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     createdAt?: Date | string
     updatedAt?: Date | string
     warehouses?: WarehouseUncheckedCreateNestedManyWithoutSiteInput
@@ -73847,7 +73969,7 @@ export namespace Prisma {
     isTaxIncluded?: boolean
     isExpiryTracked?: boolean
     minStockLevel?: number
-    organization?: OrganizationCreateNestedOneWithoutProductsInput
+    organization: OrganizationCreateNestedOneWithoutProductsInput
     productGroup?: ProductGroupCreateNestedOneWithoutProductsInput
     sizeUnit?: UnitCreateNestedOneWithoutProductsWithSizeInput
     brand?: BrandCreateNestedOneWithoutProductsInput
@@ -73869,7 +73991,7 @@ export namespace Prisma {
     barcode?: string | null
     name: string
     description?: string | null
-    organizationId?: string | null
+    organizationId: string
     productGroupId?: number | null
     size?: Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: number | null
@@ -73925,7 +74047,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutSitesNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutSitesNestedInput
     warehouses?: WarehouseUpdateManyWithoutSiteNestedInput
     users?: UserUpdateManyWithoutHomeSiteNestedInput
     contacts?: ContactUpdateManyWithoutHomeSiteNestedInput
@@ -73945,7 +74067,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     vatNumber?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     warehouses?: WarehouseUncheckedUpdateManyWithoutSiteNestedInput
@@ -73988,7 +74110,7 @@ export namespace Prisma {
     isTaxIncluded?: BoolFieldUpdateOperationsInput | boolean
     isExpiryTracked?: BoolFieldUpdateOperationsInput | boolean
     minStockLevel?: IntFieldUpdateOperationsInput | number
-    organization?: OrganizationUpdateOneWithoutProductsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutProductsNestedInput
     productGroup?: ProductGroupUpdateOneWithoutProductsNestedInput
     sizeUnit?: UnitUpdateOneWithoutProductsWithSizeNestedInput
     brand?: BrandUpdateOneWithoutProductsNestedInput
@@ -74010,7 +74132,7 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     productGroupId?: NullableIntFieldUpdateOperationsInput | number | null
     size?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -74052,7 +74174,7 @@ export namespace Prisma {
     loyaltyPoints?: number
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutContactsInput
+    organization: OrganizationCreateNestedOneWithoutContactsInput
     homeSite?: SiteCreateNestedOneWithoutContactsInput
     linkedAccount?: ChartOfAccountCreateNestedOneWithoutLinkedContactInput
     orders?: OrderCreateNestedManyWithoutContactInput
@@ -74069,7 +74191,7 @@ export namespace Prisma {
     phone?: string | null
     address?: string | null
     vatId?: string | null
-    organizationId?: string | null
+    organizationId: string
     homeSiteId?: number | null
     balance?: Decimal | DecimalJsLike | number | string
     creditLimit?: Decimal | DecimalJsLike | number | string
@@ -74221,7 +74343,7 @@ export namespace Prisma {
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutContactsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutContactsNestedInput
     homeSite?: SiteUpdateOneWithoutContactsNestedInput
     linkedAccount?: ChartOfAccountUpdateOneWithoutLinkedContactNestedInput
     orders?: OrderUpdateManyWithoutContactNestedInput
@@ -74238,7 +74360,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     address?: NullableStringFieldUpdateOperationsInput | string | null
     vatId?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     homeSiteId?: NullableIntFieldUpdateOperationsInput | number | null
     balance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     creditLimit?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -74392,7 +74514,7 @@ export namespace Prisma {
     loyaltyPoints?: number
     createdAt?: Date | string
     updatedAt?: Date | string
-    organization?: OrganizationCreateNestedOneWithoutContactsInput
+    organization: OrganizationCreateNestedOneWithoutContactsInput
     homeSite?: SiteCreateNestedOneWithoutContactsInput
     linkedAccount?: ChartOfAccountCreateNestedOneWithoutLinkedContactInput
     orders?: OrderCreateNestedManyWithoutContactInput
@@ -74409,7 +74531,7 @@ export namespace Prisma {
     phone?: string | null
     address?: string | null
     vatId?: string | null
-    organizationId?: string | null
+    organizationId: string
     homeSiteId?: number | null
     balance?: Decimal | DecimalJsLike | number | string
     creditLimit?: Decimal | DecimalJsLike | number | string
@@ -74458,6 +74580,7 @@ export namespace Prisma {
 
   export type LoanInstallmentCreateManyLoanInputEnvelope = {
     data: LoanInstallmentCreateManyLoanInput | LoanInstallmentCreateManyLoanInput[]
+    skipDuplicates?: boolean
   }
 
   export type FinancialEventCreateWithoutLoanInput = {
@@ -74498,6 +74621,7 @@ export namespace Prisma {
 
   export type FinancialEventCreateManyLoanInputEnvelope = {
     data: FinancialEventCreateManyLoanInput | FinancialEventCreateManyLoanInput[]
+    skipDuplicates?: boolean
   }
 
   export type ContactUpsertWithoutLoansInput = {
@@ -74523,7 +74647,7 @@ export namespace Prisma {
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutContactsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutContactsNestedInput
     homeSite?: SiteUpdateOneWithoutContactsNestedInput
     linkedAccount?: ChartOfAccountUpdateOneWithoutLinkedContactNestedInput
     orders?: OrderUpdateManyWithoutContactNestedInput
@@ -74540,7 +74664,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     address?: NullableStringFieldUpdateOperationsInput | string | null
     vatId?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     homeSiteId?: NullableIntFieldUpdateOperationsInput | number | null
     balance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     creditLimit?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -75234,7 +75358,7 @@ export namespace Prisma {
     barcode?: string | null
     name: string
     description?: string | null
-    organizationId?: string | null
+    organizationId: string
     productGroupId?: number | null
     size?: Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: number | null
@@ -75303,7 +75427,7 @@ export namespace Prisma {
     isTaxIncluded?: BoolFieldUpdateOperationsInput | boolean
     isExpiryTracked?: BoolFieldUpdateOperationsInput | boolean
     minStockLevel?: IntFieldUpdateOperationsInput | number
-    organization?: OrganizationUpdateOneWithoutProductsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutProductsNestedInput
     productGroup?: ProductGroupUpdateOneWithoutProductsNestedInput
     sizeUnit?: UnitUpdateOneWithoutProductsWithSizeNestedInput
     inventoryLevels?: InventoryLevelUpdateManyWithoutProductNestedInput
@@ -75325,7 +75449,7 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     productGroupId?: NullableIntFieldUpdateOperationsInput | number | null
     size?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -75361,7 +75485,7 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     productGroupId?: NullableIntFieldUpdateOperationsInput | number | null
     size?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -75403,7 +75527,7 @@ export namespace Prisma {
     barcode?: string | null
     name: string
     description?: string | null
-    organizationId?: string | null
+    organizationId: string
     productGroupId?: number | null
     size?: Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: number | null
@@ -75433,7 +75557,7 @@ export namespace Prisma {
     barcode?: string | null
     name: string
     description?: string | null
-    organizationId?: string | null
+    organizationId: string
     productGroupId?: number | null
     size?: Decimal | DecimalJsLike | number | string | null
     costPrice?: Decimal | DecimalJsLike | number | string
@@ -75517,7 +75641,7 @@ export namespace Prisma {
     isTaxIncluded?: BoolFieldUpdateOperationsInput | boolean
     isExpiryTracked?: BoolFieldUpdateOperationsInput | boolean
     minStockLevel?: IntFieldUpdateOperationsInput | number
-    organization?: OrganizationUpdateOneWithoutProductsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutProductsNestedInput
     productGroup?: ProductGroupUpdateOneWithoutProductsNestedInput
     sizeUnit?: UnitUpdateOneWithoutProductsWithSizeNestedInput
     inventoryLevels?: InventoryLevelUpdateManyWithoutProductNestedInput
@@ -75539,7 +75663,7 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     productGroupId?: NullableIntFieldUpdateOperationsInput | number | null
     size?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -75575,7 +75699,7 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     productGroupId?: NullableIntFieldUpdateOperationsInput | number | null
     size?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -75618,7 +75742,7 @@ export namespace Prisma {
     isTaxIncluded?: BoolFieldUpdateOperationsInput | boolean
     isExpiryTracked?: BoolFieldUpdateOperationsInput | boolean
     minStockLevel?: IntFieldUpdateOperationsInput | number
-    organization?: OrganizationUpdateOneWithoutProductsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutProductsNestedInput
     productGroup?: ProductGroupUpdateOneWithoutProductsNestedInput
     inventoryLevels?: InventoryLevelUpdateManyWithoutProductNestedInput
     brand?: BrandUpdateOneWithoutProductsNestedInput
@@ -75640,7 +75764,7 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     productGroupId?: NullableIntFieldUpdateOperationsInput | number | null
     size?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     costPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -75676,7 +75800,7 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     productGroupId?: NullableIntFieldUpdateOperationsInput | number | null
     size?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     costPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -75717,7 +75841,7 @@ export namespace Prisma {
     password: string
     name: string
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     roleId?: number | null
     homeSiteId?: number | null
     employeeId?: number | null
@@ -75767,7 +75891,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutUsersNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutUsersNestedInput
     role?: RoleUpdateOneWithoutUsersNestedInput
     homeSite?: SiteUpdateOneWithoutUsersNestedInput
     employee?: EmployeeUpdateOneWithoutUserNestedInput
@@ -75785,7 +75909,7 @@ export namespace Prisma {
     password?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     roleId?: NullableIntFieldUpdateOperationsInput | number | null
     homeSiteId?: NullableIntFieldUpdateOperationsInput | number | null
     employeeId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -75805,7 +75929,7 @@ export namespace Prisma {
     password?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     roleId?: NullableIntFieldUpdateOperationsInput | number | null
     homeSiteId?: NullableIntFieldUpdateOperationsInput | number | null
     employeeId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -76166,7 +76290,7 @@ export namespace Prisma {
     password: string
     name: string
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     homeSiteId?: number | null
     cashRegisterId?: number | null
     employeeId?: number | null
@@ -76208,7 +76332,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutUsersNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutUsersNestedInput
     homeSite?: SiteUpdateOneWithoutUsersNestedInput
     cashRegister?: FinancialAccountUpdateOneWithoutAssignedUsersNestedInput
     employee?: EmployeeUpdateOneWithoutUserNestedInput
@@ -76226,7 +76350,7 @@ export namespace Prisma {
     password?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     homeSiteId?: NullableIntFieldUpdateOperationsInput | number | null
     cashRegisterId?: NullableIntFieldUpdateOperationsInput | number | null
     employeeId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -76246,7 +76370,7 @@ export namespace Prisma {
     password?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     homeSiteId?: NullableIntFieldUpdateOperationsInput | number | null
     cashRegisterId?: NullableIntFieldUpdateOperationsInput | number | null
     employeeId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -76318,7 +76442,7 @@ export namespace Prisma {
     barcode?: string | null
     name: string
     description?: string | null
-    organizationId?: string | null
+    organizationId: string
     productGroupId?: number | null
     size?: Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: number | null
@@ -76487,7 +76611,7 @@ export namespace Prisma {
     isTaxIncluded?: BoolFieldUpdateOperationsInput | boolean
     isExpiryTracked?: BoolFieldUpdateOperationsInput | boolean
     minStockLevel?: IntFieldUpdateOperationsInput | number
-    organization?: OrganizationUpdateOneWithoutProductsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutProductsNestedInput
     productGroup?: ProductGroupUpdateOneWithoutProductsNestedInput
     sizeUnit?: UnitUpdateOneWithoutProductsWithSizeNestedInput
     inventoryLevels?: InventoryLevelUpdateManyWithoutProductNestedInput
@@ -76509,7 +76633,7 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     productGroupId?: NullableIntFieldUpdateOperationsInput | number | null
     size?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -76545,7 +76669,7 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     productGroupId?: NullableIntFieldUpdateOperationsInput | number | null
     size?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -76925,7 +77049,7 @@ export namespace Prisma {
     barcode?: string | null
     name: string
     description?: string | null
-    organizationId?: string | null
+    organizationId: string
     size?: Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: number | null
     costPrice?: Decimal | DecimalJsLike | number | string
@@ -77000,7 +77124,7 @@ export namespace Prisma {
     isTaxIncluded?: BoolFieldUpdateOperationsInput | boolean
     isExpiryTracked?: BoolFieldUpdateOperationsInput | boolean
     minStockLevel?: IntFieldUpdateOperationsInput | number
-    organization?: OrganizationUpdateOneWithoutProductsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutProductsNestedInput
     sizeUnit?: UnitUpdateOneWithoutProductsWithSizeNestedInput
     inventoryLevels?: InventoryLevelUpdateManyWithoutProductNestedInput
     brand?: BrandUpdateOneWithoutProductsNestedInput
@@ -77022,7 +77146,7 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     size?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: NullableIntFieldUpdateOperationsInput | number | null
     costPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -77058,7 +77182,7 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     size?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: NullableIntFieldUpdateOperationsInput | number | null
     costPrice?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
@@ -77095,7 +77219,7 @@ export namespace Prisma {
     barcode?: string | null
     name: string
     description?: string | null
-    organizationId?: string | null
+    organizationId: string
     productGroupId?: number | null
     size?: Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: number | null
@@ -77218,7 +77342,7 @@ export namespace Prisma {
     isTaxIncluded?: BoolFieldUpdateOperationsInput | boolean
     isExpiryTracked?: BoolFieldUpdateOperationsInput | boolean
     minStockLevel?: IntFieldUpdateOperationsInput | number
-    organization?: OrganizationUpdateOneWithoutProductsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutProductsNestedInput
     productGroup?: ProductGroupUpdateOneWithoutProductsNestedInput
     sizeUnit?: UnitUpdateOneWithoutProductsWithSizeNestedInput
     inventoryLevels?: InventoryLevelUpdateManyWithoutProductNestedInput
@@ -77240,7 +77364,7 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     productGroupId?: NullableIntFieldUpdateOperationsInput | number | null
     size?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -77276,7 +77400,7 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     productGroupId?: NullableIntFieldUpdateOperationsInput | number | null
     size?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -77395,7 +77519,7 @@ export namespace Prisma {
     barcode?: string | null
     name: string
     description?: string | null
-    organizationId?: string | null
+    organizationId: string
     productGroupId?: number | null
     size?: Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: number | null
@@ -77501,7 +77625,7 @@ export namespace Prisma {
     isTaxIncluded?: BoolFieldUpdateOperationsInput | boolean
     isExpiryTracked?: BoolFieldUpdateOperationsInput | boolean
     minStockLevel?: IntFieldUpdateOperationsInput | number
-    organization?: OrganizationUpdateOneWithoutProductsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutProductsNestedInput
     productGroup?: ProductGroupUpdateOneWithoutProductsNestedInput
     sizeUnit?: UnitUpdateOneWithoutProductsWithSizeNestedInput
     inventoryLevels?: InventoryLevelUpdateManyWithoutProductNestedInput
@@ -77523,7 +77647,7 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     productGroupId?: NullableIntFieldUpdateOperationsInput | number | null
     size?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -77559,7 +77683,7 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     productGroupId?: NullableIntFieldUpdateOperationsInput | number | null
     size?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -77625,7 +77749,7 @@ export namespace Prisma {
     barcode?: string | null
     name: string
     description?: string | null
-    organizationId?: string | null
+    organizationId: string
     productGroupId?: number | null
     size?: Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: number | null
@@ -77712,7 +77836,7 @@ export namespace Prisma {
     isTaxIncluded?: BoolFieldUpdateOperationsInput | boolean
     isExpiryTracked?: BoolFieldUpdateOperationsInput | boolean
     minStockLevel?: IntFieldUpdateOperationsInput | number
-    organization?: OrganizationUpdateOneWithoutProductsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutProductsNestedInput
     productGroup?: ProductGroupUpdateOneWithoutProductsNestedInput
     sizeUnit?: UnitUpdateOneWithoutProductsWithSizeNestedInput
     inventoryLevels?: InventoryLevelUpdateManyWithoutProductNestedInput
@@ -77734,7 +77858,7 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     productGroupId?: NullableIntFieldUpdateOperationsInput | number | null
     size?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -77770,7 +77894,7 @@ export namespace Prisma {
     barcode?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     productGroupId?: NullableIntFieldUpdateOperationsInput | number | null
     size?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     sizeUnitId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -78142,7 +78266,7 @@ export namespace Prisma {
     type: string
     subType?: string | null
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     balance?: Decimal | DecimalJsLike | number | string
     balanceOfficial?: Decimal | DecimalJsLike | number | string
     syscohadaCode?: string | null
@@ -78180,7 +78304,7 @@ export namespace Prisma {
     requiresZeroBalance?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutLedgerNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutLedgerNestedInput
     children?: ChartOfAccountUpdateManyWithoutParentNestedInput
     journalLines?: JournalEntryLineUpdateManyWithoutAccountNestedInput
     linkedContact?: ContactUpdateOneWithoutLinkedAccountNestedInput
@@ -78197,7 +78321,7 @@ export namespace Prisma {
     type?: StringFieldUpdateOperationsInput | string
     subType?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     balance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     balanceOfficial?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     syscohadaCode?: NullableStringFieldUpdateOperationsInput | string | null
@@ -78223,7 +78347,7 @@ export namespace Prisma {
     type?: StringFieldUpdateOperationsInput | string
     subType?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     balance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     balanceOfficial?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     syscohadaCode?: NullableStringFieldUpdateOperationsInput | string | null
@@ -78363,7 +78487,7 @@ export namespace Prisma {
     password: string
     name: string
     isActive?: boolean
-    organizationId?: string | null
+    organizationId: string
     roleId?: number | null
     cashRegisterId?: number | null
     employeeId?: number | null
@@ -78380,7 +78504,7 @@ export namespace Prisma {
     phone?: string | null
     address?: string | null
     vatId?: string | null
-    organizationId?: string | null
+    organizationId: string
     balance?: Decimal | DecimalJsLike | number | string
     creditLimit?: Decimal | DecimalJsLike | number | string
     loyaltyPoints?: number
@@ -78515,7 +78639,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutUsersNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutUsersNestedInput
     role?: RoleUpdateOneWithoutUsersNestedInput
     cashRegister?: FinancialAccountUpdateOneWithoutAssignedUsersNestedInput
     employee?: EmployeeUpdateOneWithoutUserNestedInput
@@ -78533,7 +78657,7 @@ export namespace Prisma {
     password?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     roleId?: NullableIntFieldUpdateOperationsInput | number | null
     cashRegisterId?: NullableIntFieldUpdateOperationsInput | number | null
     employeeId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -78553,7 +78677,7 @@ export namespace Prisma {
     password?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     roleId?: NullableIntFieldUpdateOperationsInput | number | null
     cashRegisterId?: NullableIntFieldUpdateOperationsInput | number | null
     employeeId?: NullableIntFieldUpdateOperationsInput | number | null
@@ -78574,7 +78698,7 @@ export namespace Prisma {
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    organization?: OrganizationUpdateOneWithoutContactsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutContactsNestedInput
     linkedAccount?: ChartOfAccountUpdateOneWithoutLinkedContactNestedInput
     orders?: OrderUpdateManyWithoutContactNestedInput
     transactions?: JournalEntryLineUpdateManyWithoutContactNestedInput
@@ -78591,7 +78715,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     address?: NullableStringFieldUpdateOperationsInput | string | null
     vatId?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     balance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     creditLimit?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
@@ -78613,7 +78737,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     address?: NullableStringFieldUpdateOperationsInput | string | null
     vatId?: NullableStringFieldUpdateOperationsInput | string | null
-    organizationId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     balance?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     creditLimit?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     loyaltyPoints?: IntFieldUpdateOperationsInput | number
