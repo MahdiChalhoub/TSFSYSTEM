@@ -4,7 +4,7 @@ from .models import (
     FiscalPeriod, JournalEntry, JournalEntryLine, ChartOfAccount,
     Product, Warehouse, Inventory, InventoryMovement, Unit,
     Brand, Category, Parfum, ProductGroup, Country,
-    Contact, Employee, Role, TransactionSequence, BarcodeSettings, Loan, LoanInstallment, FinancialEvent, Transaction
+    Contact, Employee, Role, TransactionSequence, BarcodeSettings, Loan, LoanInstallment, FinancialEvent, Transaction, User
 )
 
 class OrganizationSerializer(serializers.ModelSerializer):
@@ -101,9 +101,18 @@ class SiteSerializer(serializers.ModelSerializer):
         model = Site
         fields = '__all__'
 
+class UserValueSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+    def get_name(self, obj):
+        return f"{obj.first_name} {obj.last_name}".strip() or obj.username
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'email', 'name')
+
 class FinancialAccountSerializer(serializers.ModelSerializer):
     site_name = serializers.ReadOnlyField(source='site.name')
     ledger_code = serializers.ReadOnlyField(source='ledger_account.code')
+    assignedUsers = UserValueSerializer(source='assigned_users', many=True, read_only=True)
 
     class Meta:
         model = FinancialAccount
