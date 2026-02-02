@@ -59,7 +59,10 @@ MIDDLEWARE = [
     'erp.middleware.TenantMiddleware',
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True # In production we will restrict this
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+]
 
 ROOT_URLCONF = 'core.urls'
 
