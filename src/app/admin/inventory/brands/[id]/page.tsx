@@ -1,42 +1,44 @@
-import { prisma } from "@/lib/db";
+import { erpFetch } from "@/lib/erp-api";
 import { notFound } from "next/navigation";
 import Link from 'next/link';
-import { ChevronLeft, Box, Globe, Layers, Edit2 } from "lucide-react";
+import { ChevronLeft, Globe, Layers, Edit2 } from "lucide-react";
 
 export const dynamic = 'force-dynamic';
 
+interface BrandDetail {
+    id: number;
+    name: string;
+    shortName?: string;
+    countries: Array<{ id: number; name: string; code: string }>;
+    productGroups: Array<{
+        id: number;
+        name: string;
+        products: Product[];
+    }>;
+    products: Product[]; // Standalone
+}
+
+interface Product {
+    id: number;
+    name: string;
+    sku: string;
+    country?: { name: string; code: string };
+    unit?: { code: string; short_name?: string }; // backend uses snake_case usually, we handle both
+    inventory: Array<{ quantity: string }>;
+    size?: number; // legacy, might be missing
+}
+
+async function getBrandDetails(id: string): Promise<BrandDetail | null> {
+    try {
+        return await erpFetch(`brands/${id}/`);
+    } catch (e) {
+        return null;
+    }
+}
+
 export default async function BrandDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    const brandId = parseInt(id);
-
-    if (isNaN(brandId)) notFound();
-
-    const brand = await prisma.brand.findUnique({
-        where: { id: brandId },
-        include: {
-            countries: true, // Operating countries
-            productGroups: {
-                include: {
-                    products: {
-                        include: {
-                            country: true,
-                            inventory: true,
-                            unit: true
-                        }
-                    }
-                }
-            },
-            // Also fetch products that are NOT in a group (Standalone)
-            products: {
-                where: { productGroupId: null },
-                include: {
-                    country: true,
-                    inventory: true,
-                    unit: true
-                }
-            }
-        }
-    });
+    const brand = await getBrandDetails(id);
 
     if (!brand) notFound();
 
@@ -67,19 +69,17 @@ export default async function BrandDetailPage({ params }: { params: Promise<{ id
 
             {/* Content: Groups */}
             <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2 mb-4">
-
                 <Layers className="text-emerald-600" /> Parfums / Families
             </h2>
 
             <div className="grid gap-6">
-                {brand.productGroups.length === 0 && brand.products.length === 0 && (
+                {(brand.productGroups?.length || 0) === 0 && (brand.products?.length || 0) === 0 && (
                     <div className="p-8 text-center text-gray-400 bg-gray-50 rounded-xl">No products found for this brand.</div>
                 )}
 
                 {/* Groups */}
-                {/* Groups List */}
                 <div className="space-y-4">
-                    {brand.productGroups.map(group => {
+                    {brand.productGroups?.map(group => {
                         const totalGroupStock = group.products.reduce((acc, p) => acc + p.inventory.reduce((a, b) => a + Number(b.quantity), 0), 0);
 
                         return (
@@ -107,6 +107,9 @@ export default async function BrandDetailPage({ params }: { params: Promise<{ id
                                     ) : (
                                         group.products.map(variant => {
                                             const stock = variant.inventory.reduce((a, b) => a + Number(b.quantity), 0);
+                                            // Handling camelCase vs snake_case for unit properties if backend varies
+                                            const unitName = variant.unit?.short_name || variant.unit?.code || '';
+
                                             return (
                                                 <div key={variant.id} className="p-3 pl-12 flex justify-between items-center hover:bg-gray-50 transition-colors group">
                                                     <div className="flex items-center gap-3">
@@ -119,7 +122,7 @@ export default async function BrandDetailPage({ params }: { params: Promise<{ id
                                                             <span className="text-sm text-gray-900">{variant.name}</span>
                                                             <span className="text-[10px] text-gray-400 font-mono flex items-center gap-2">
                                                                 SKU: {variant.sku}
-                                                                <span className="bg-gray-100 px-1 rounded">{Number(variant.size)} {variant.unit?.shortName}</span>
+                                                                <span className="bg-gray-100 px-1 rounded">{unitName}</span>
                                                             </span>
                                                         </div>
                                                     </div>
@@ -140,7 +143,7 @@ export default async function BrandDetailPage({ params }: { params: Promise<{ id
                 </div>
 
                 {/* Standalone Products */}
-                {brand.products.length > 0 && (
+                {(brand.products?.length || 0) > 0 && (
                     <div className="card-premium p-6">
                         <h3 className="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Individual Items</h3>
                         <div className="overflow-x-auto">

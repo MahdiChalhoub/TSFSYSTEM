@@ -20,6 +20,39 @@ class TenantModel(models.Model):
     class Meta:
         abstract = True
 
+class Contact(TenantModel):
+    name = models.CharField(max_length=255)
+    type = models.CharField(max_length=50) # CUSTOMER, SUPPLIER
+    email = models.EmailField(null=True, blank=True)
+    phone = models.CharField(max_length=50, null=True, blank=True)
+    
+    home_site = models.ForeignKey('Site', on_delete=models.SET_NULL, null=True, blank=True, related_name='contacts')
+    linked_account = models.ForeignKey('FinancialAccount', on_delete=models.SET_NULL, null=True, blank=True)
+    
+    class Meta:
+        db_table = 'Contact'
+
+    def __str__(self):
+        return f"{self.name} ({self.type})"
+
+class Employee(TenantModel):
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    employee_id = models.CharField(max_length=50, null=True, blank=True)
+    email = models.EmailField(null=True, blank=True)
+    job_title = models.CharField(max_length=100, null=True, blank=True)
+    
+    home_site = models.ForeignKey('Site', on_delete=models.SET_NULL, null=True, blank=True, related_name='employees')
+    linked_account = models.ForeignKey('FinancialAccount', on_delete=models.SET_NULL, null=True, blank=True)
+    
+    user = models.OneToOneField('User', on_delete=models.SET_NULL, null=True, blank=True, related_name='employee_profile')
+
+    class Meta:
+        db_table = 'Employee'
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name}"
+
 class Unit(TenantModel):
     code = models.CharField(max_length=50) # PC, BOX
     name = models.CharField(max_length=255) # Piece, Box
@@ -192,7 +225,7 @@ class Product(TenantModel):
     
     # Matching Prisma Fields
     status = models.CharField(max_length=20, default='ACTIVE')
-    supplier = models.ForeignKey('Contact', on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
+    supplier = models.ForeignKey('erp.Contact', on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
 
     is_expiry_tracked = models.BooleanField(default=False)
     min_stock_level = models.IntegerField(default=10)
@@ -333,7 +366,7 @@ class Order(TenantModel):
     type = models.CharField(max_length=20, choices=TYPES)
     status = models.CharField(max_length=20, default='DRAFT') # 'DRAFT', 'COMPLETED', etc.
     
-    contact = models.ForeignKey(Contact, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
+    contact = models.ForeignKey('erp.Contact', on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
     user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='orders')
     site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
     
@@ -504,38 +537,4 @@ class User(AbstractUser):
     def __str__(self):
         return self.email if self.email else self.username
 
-class Contact(TenantModel):
-    name = models.CharField(max_length=255)
-    type = models.CharField(max_length=50) # CUSTOMER, SUPPLIER
-    email = models.EmailField(null=True, blank=True)
-    phone = models.CharField(max_length=50, null=True, blank=True)
-    
-    home_site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True, related_name='contacts')
-    linked_account = models.ForeignKey(FinancialAccount, on_delete=models.SET_NULL, null=True, blank=True)
-    
-    class Meta:
-        db_table = 'Contact'
 
-    def __str__(self):
-        return f"{self.name} ({self.type})"
-
-class Employee(TenantModel):
-    first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
-    employee_id = models.CharField(max_length=50, null=True, blank=True)
-    email = models.EmailField(null=True, blank=True)
-    job_title = models.CharField(max_length=100, null=True, blank=True)
-    
-    home_site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True, related_name='employees')
-    linked_account = models.ForeignKey(FinancialAccount, on_delete=models.SET_NULL, null=True, blank=True)
-    
-    # Using 'User' string reference or imported User model if available. 
-    # Since User is defined in this file (likely CustomUser), we can use string 'erp.User' or 'User' if defined above.
-    # The snippet showed 'class User(AbstractUser):' likely exists before line 506.
-    user = models.OneToOneField('User', on_delete=models.SET_NULL, null=True, blank=True, related_name='employee_profile')
-
-    class Meta:
-        db_table = 'Employee'
-
-    def __str__(self):
-        return f"{self.first_name} {self.last_name}"

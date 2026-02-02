@@ -3,7 +3,8 @@ from .models import (
     Organization, Site, FinancialAccount, FiscalYear, 
     FiscalPeriod, JournalEntry, JournalEntryLine, ChartOfAccount,
     Product, Warehouse, Inventory, InventoryMovement, Unit,
-    Brand, Category, Parfum, ProductGroup, Country
+    Brand, Category, Parfum, ProductGroup, Country,
+    Contact, Employee, Role
 )
 
 class OrganizationSerializer(serializers.ModelSerializer):
@@ -163,4 +164,50 @@ class ProductGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductGroup
         fields = '__all__'
+
+class ContactSerializer(serializers.ModelSerializer):
+    home_site = SiteSerializer(read_only=True)
+    linked_account = FinancialAccountSerializer(read_only=True)
+
+    class Meta:
+        model = Contact
+        fields = '__all__'
+
+class RoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Role
+        fields = '__all__'
+
+class EmployeeSerializer(serializers.ModelSerializer):
+    home_site = SiteSerializer(read_only=True)
+    linked_account = FinancialAccountSerializer(read_only=True)
+    # Basic user info
+    user_email = serializers.ReadOnlyField(source='user.email')
+    user_id = serializers.ReadOnlyField(source='user.id')
+
+    class Meta:
+        model = Employee
+        fields = '__all__'
+
+class BrandDetailSerializer(serializers.ModelSerializer):
+    countries = CountrySerializer(many=True, read_only=True)
+    productGroups = ProductGroupSerializer(source='product_set', many=True, read_only=True) # Wait, product_set? NO! productgroup_set!
+    # I need to be careful about related_name. If not set, it is modelname_set.
+    # ProductGroup -> productgroup_set.
+    # Brand -> products (Product) -> product_set.
+    # Brand -> productGroups (ProductGroup) -> productgroup_set.
+    # Frontend props: productGroups, products.
+    # Serializer fields: productGroups (mapped to productgroup_set), products (method field for filtered).
+    
+    productGroups = ProductGroupSerializer(source='productgroup_set', many=True, read_only=True)
+    products = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Brand
+        fields = '__all__'
+
+    def get_products(self, obj):
+        # Standalone products (no group)
+        standalone = obj.product_set.filter(product_group__isnull=True)
+        return ProductSerializer(standalone, many=True).data
 

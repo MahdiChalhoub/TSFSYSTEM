@@ -438,3 +438,21 @@
 2026-02-02 13:01:08.667 GMT [14652] ERROR:  column Order.totalAmount does not exist at character 40
 2026-02-02 13:01:08.667 GMT [14652] HINT:  Perhaps you meant to reference the column "Order.total_amount".
 2026-02-02 13:01:08.667 GMT [14652] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 13:02:13.535 GMT [14652] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 13:02:13.535 GMT [14652] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 13:02:13.535 GMT [14652] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 13:02:17.392 GMT [14652] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 13:02:17.392 GMT [14652] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 13:02:17.392 GMT [14652] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 13:03:52.408 GMT [14652] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 13:03:52.408 GMT [14652] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 13:03:52.408 GMT [14652] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 13:03:56.188 GMT [14652] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 13:03:56.188 GMT [14652] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 13:03:56.188 GMT [14652] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 13:05:03.994 GMT [14652] ERROR:  column Employee.employeeId does not exist at character 34
+2026-02-02 13:05:03.994 GMT [14652] HINT:  Perhaps you meant to reference the column "Employee.employee_id".
+2026-02-02 13:05:03.994 GMT [14652] STATEMENT:  SELECT "public"."Employee"."id", "public"."Employee"."employeeId", "public"."Employee"."firstName", "public"."Employee"."lastName", "public"."Employee"."idNumber", "public"."Employee"."phone", "public"."Employee"."email", "public"."Employee"."jobTitle", "public"."Employee"."department", "public"."Employee"."hireDate", "public"."Employee"."salary", "public"."Employee"."status", "public"."Employee"."homeSiteId", "public"."Employee"."linkedAccountId", "public"."Employee"."createdAt", "public"."Employee"."updatedAt" FROM "public"."Employee" WHERE 1=1 ORDER BY "public"."Employee"."lastName" ASC OFFSET $1
+2026-02-02 13:05:57.554 GMT [14232] ERROR:  column Employee.employeeId does not exist at character 34
+2026-02-02 13:05:57.554 GMT [14232] HINT:  Perhaps you meant to reference the column "Employee.employee_id".
+2026-02-02 13:05:57.554 GMT [14232] STATEMENT:  SELECT "public"."Employee"."id", "public"."Employee"."employeeId", "public"."Employee"."firstName", "public"."Employee"."lastName", "public"."Employee"."idNumber", "public"."Employee"."phone", "public"."Employee"."email", "public"."Employee"."jobTitle", "public"."Employee"."department", "public"."Employee"."hireDate", "public"."Employee"."salary", "public"."Employee"."status", "public"."Employee"."homeSiteId", "public"."Employee"."linkedAccountId", "public"."Employee"."createdAt", "public"."Employee"."updatedAt" FROM "public"."Employee" WHERE 1=1 ORDER BY "public"."Employee"."lastName" ASC OFFSET $1
