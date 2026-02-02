@@ -1,22 +1,27 @@
-import { prisma } from "@/lib/db";
+import { erpFetch } from "@/lib/erp-api";
 import { GroupedProductForm } from "@/components/admin/GroupedProductForm";
 
 export const dynamic = 'force-dynamic';
 
 async function getData() {
-    const [brands, categories, units, countries] = await Promise.all([
-        prisma.brand.findMany({ include: { countries: true }, orderBy: { name: 'asc' } }),
-        prisma.category.findMany({ orderBy: { name: 'asc' } }),
-        prisma.unit.findMany({ orderBy: { name: 'asc' } }),
-        prisma.country.findMany({ orderBy: { name: 'asc' } })
-    ]);
+    try {
+        const [brands, categories, units, countries] = await Promise.all([
+            erpFetch('brands/'),
+            erpFetch('categories/'),
+            erpFetch('units/'),
+            erpFetch('countries/')
+        ]);
 
-    return {
-        brands: JSON.parse(JSON.stringify(brands)),
-        categories: JSON.parse(JSON.stringify(categories)),
-        units: JSON.parse(JSON.stringify(units)),
-        countries: JSON.parse(JSON.stringify(countries))
-    };
+        return {
+            brands,
+            categories,
+            units,
+            countries
+        };
+    } catch (e) {
+        console.error("Failed to fetch product group metadata:", e);
+        return { brands: [], categories: [], units: [], countries: [] };
+    }
 }
 
 export default async function CreateGroupPage() {

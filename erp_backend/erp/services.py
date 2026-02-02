@@ -190,6 +190,24 @@ class ConfigurationService:
         SystemSettings.objects.update_or_create(organization=organization, key='global_financial_settings', defaults={'value': json.dumps(config)})
         return True
 
+    @staticmethod
+    def get_setting(organization, key, default=None):
+        from .models import SystemSettings
+        setting = SystemSettings.objects.filter(organization=organization, key=key).first()
+        if not setting: return default
+        try: return json.loads(setting.value)
+        except: return default
+
+    @staticmethod
+    def save_setting(organization, key, value):
+        from .models import SystemSettings
+        SystemSettings.objects.update_or_create(
+            organization=organization, 
+            key=key, 
+            defaults={'value': json.dumps(value)}
+        )
+        return True
+
 class InventoryService:
     @staticmethod
     def calculate_effective_cost(cost_price_ht, tva_rate, is_tax_recoverable):
@@ -285,6 +303,21 @@ class LedgerService:
             for l in lines: JournalEntryLine.objects.create(organization=organization, journal_entry=entry, account_id=l['account_id'], debit=Decimal(str(l['debit'])), credit=Decimal(str(l['credit'])), description=l.get('description', description))
             if status == 'POSTED': LedgerService.post_journal_entry(entry)
             return entry
+
+    @staticmethod
+    def create_linked_account(organization, name, type, sub_type, parent_id):
+        from .models import ChartOfAccount
+        parent = ChartOfAccount.objects.get(id=parent_id)
+        count = ChartOfAccount.objects.filter(parent=parent).count()
+        code = f"{parent.code}-{(count + 1):04d}"
+        return ChartOfAccount.objects.create(
+            organization=organization,
+            code=code,
+            name=name,
+            type=type,
+            sub_type=sub_type,
+            parent=parent
+        )
 
     @staticmethod
     def post_journal_entry(entry):
@@ -478,6 +511,153 @@ class PurchaseService:
             
             order.status = 'RECEIVED'
             order.save()
+            return order
+
+    @staticmethod
+    def quick_purchase(organization, supplier_id, warehouse_id, site_id, scope, invoice_price_type, vat_recoverable, lines, notes=None, ref_code=None, user=None):
+        from .models import Order, OrderLine, Product, Contact, ChartOfAccount, StockBatch, Inventory
+        from decimal import Decimal
+
+        with transaction.atomic():
+            settings = ConfigurationService.get_global_settings(organization)
+            pricing_cost_basis = settings.get('pricingCostBasis', 'AUTO')
+            
+            # 1. Create Order
+            order = Order.objects.create(
+                organization=organization,
+                type='PURCHASE',
+                status='COMPLETED',
+                scope=scope,
+                invoice_price_type=invoice_price_type,
+                vat_recoverable=vat_recoverable,
+                contact_id=supplier_id,
+                user=user,
+                site_id=site_id,
+                ref_code=ref_code,
+                notes=notes,
+                payment_method='CREDIT',
+                total_amount=Decimal('0'),
+                tax_amount=Decimal('0')
+            )
+
+            total_amount_ht = Decimal('0')
+            total_tax = Decimal('0')
+            
+            for line in lines:
+                product = Product.objects.get(id=line['productId'], organization=organization)
+                qty = Decimal(str(line['quantity']))
+                unit_cost_ht = Decimal(str(line['unitCostHT']))
+                unit_cost_ttc = Decimal(str(line['unitCostTTC']))
+                tax_rate = Decimal(str(line['taxRate']))
+                
+                # Default calcs if zero
+                if unit_cost_ht > 0 and unit_cost_ttc == 0:
+                    unit_cost_ttc = (unit_cost_ht * (Decimal('1') + tax_rate)).quantize(Decimal('0.01'))
+                elif unit_cost_ttc > 0 and unit_cost_ht == 0:
+                    unit_cost_ht = (unit_cost_ttc / (Decimal('1') + tax_rate)).quantize(Decimal('0.01'))
+
+                line_total_ht = qty * unit_cost_ht
+                line_tax = line_total_ht * tax_rate
+                line_total_ttc = line_total_ht + line_tax
+                
+                total_amount_ht += line_total_ht
+                total_tax += line_tax
+                
+                # Effective Cost Engine
+                if pricing_cost_basis == 'FORCE_HT':
+                    effective_cost = unit_cost_ht
+                elif pricing_cost_basis == 'FORCE_TTC':
+                    effective_cost = unit_cost_ttc
+                else: # AUTO
+                    effective_cost = unit_cost_ht if vat_recoverable else unit_cost_ttc
+                
+                # A. Order Line
+                OrderLine.objects.create(
+                    organization=organization,
+                    order=order,
+                    product=product,
+                    quantity=qty,
+                    unit_price=effective_cost,
+                    unit_cost_ht=unit_cost_ht,
+                    unit_cost_ttc=unit_cost_ttc,
+                    vat_amount=line_tax / qty if qty > 0 else 0,
+                    effective_cost=effective_cost,
+                    tax_rate=tax_rate,
+                    total=line_total_ttc
+                )
+                
+                # B. Stock Batch & Inventory
+                batch = StockBatch.objects.create(
+                    organization=organization,
+                    product=product,
+                    batch_code=f"PUR-{order.id}-{product.id}",
+                    cost_price=effective_cost,
+                    expiry_date=line.get('expiryDate')
+                )
+                
+                inv, _ = Inventory.objects.get_or_create(
+                    organization=organization,
+                    warehouse_id=warehouse_id,
+                    product=product,
+                    batch=batch,
+                    defaults={'quantity': Decimal('0')}
+                )
+                inv.quantity += qty
+                inv.save()
+                
+                # C. Update Product Master
+                product.cost_price = effective_cost # AMC update logic could be more complex, but we follow frontend for now
+                product.cost_price_ht = unit_cost_ht
+                product.cost_price_ttc = unit_cost_ttc
+                if line.get('sellingPriceHT'): product.selling_price_ht = Decimal(str(line['sellingPriceHT']))
+                if line.get('sellingPriceTTC'): product.selling_price_ttc = Decimal(str(line['sellingPriceTTC']))
+                product.save()
+
+            # Final Order Totals
+            order.total_amount = total_amount_ht + total_tax
+            order.tax_amount = total_tax
+            order.save()
+            
+            # 6. Financial Posting
+            supplier = Contact.objects.get(id=supplier_id, organization=organization)
+            rules = ConfigurationService.get_posting_rules(organization)
+            
+            ap_account_id = supplier.linked_account_id or rules['purchases']['payable']
+            stock_account_id = rules['purchases']['inventory']
+            tax_account_id = rules['purchases']['tax']
+            
+            if not ap_account_id or not stock_account_id:
+                raise ValidationError("Finance mapping missing: Accounts Payable or Inventory account not configured.")
+                
+            inventory_debit_amount = total_amount_ht if vat_recoverable else (total_amount_ht + total_tax)
+            
+            posting_lines = [
+                # Credit AP (Always TTC)
+                {"account_id": ap_account_id, "debit": Decimal('0'), "credit": total_amount_ht + total_tax, "description": f"Payable to {supplier.name}"},
+                # Debit Inventory
+                {"account_id": stock_account_id, "debit": inventory_debit_amount, "credit": Decimal('0'), "description": "Inventory Value (HT)" if vat_recoverable else "Inventory Value (TTC - Non-recoverable)"}
+            ]
+            
+            # Debit Tax (Only if recoverable)
+            if vat_recoverable and total_tax > 0:
+                posting_lines.append({
+                    "account_id": tax_account_id,
+                    "debit": total_tax,
+                    "credit": Decimal('0'),
+                    "description": "VAT Recoverable"
+                })
+                
+            LedgerService.create_journal_entry(
+                organization=organization,
+                transaction_date=timezone.now(),
+                description=f"Purchase: {supplier.name} | Basis: {pricing_cost_basis} | Recoverable: {vat_recoverable}",
+                reference=f"ORD-{order.id}",
+                status='POSTED',
+                scope=scope,
+                site_id=site_id,
+                lines=posting_lines
+            )
+            
             return order
 
     @staticmethod

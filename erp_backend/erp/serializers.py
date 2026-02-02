@@ -8,17 +8,41 @@ from .models import (
 )
 
 class OrganizationSerializer(serializers.ModelSerializer):
+    _count = serializers.SerializerMethodField()
+
+    def get__count(self, obj):
+        return {
+            "sites": obj.site_set.count() if hasattr(obj, 'site_set') else 0,
+            "users": obj.users.count() if hasattr(obj, 'users') else 0
+        }
+
     class Meta:
         model = Organization
         fields = '__all__'
 
 
 class BrandSerializer(serializers.ModelSerializer):
+    product_count = serializers.SerializerMethodField()
+    def get_product_count(self, obj):
+        return obj.product_set.count()
+
     class Meta:
         model = Brand
         fields = '__all__'
 
 class CategorySerializer(serializers.ModelSerializer):
+    product_count = serializers.SerializerMethodField()
+    children = serializers.SerializerMethodField()
+    
+    def get_product_count(self, obj):
+        return obj.products.count() if hasattr(obj, 'products') else obj.product_set.count()
+
+    def get_children(self, obj):
+        # Only return children if they exist to avoid recursion issues if not careful, 
+        # but DRF can handle nested if we use the same serializer.
+        children = Category.objects.filter(parent=obj)
+        return CategorySerializer(children, many=True).data
+
     class Meta:
         model = Category
         fields = '__all__'
@@ -78,8 +102,13 @@ class ProductCreateSerializer(serializers.Serializer):
     minStockLevel = serializers.IntegerField(default=10)
     isExpiryTracked = serializers.BooleanField(default=False)
 
+class SimpleSiteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Site
+        fields = ('id', 'name', 'code')
+
 class WarehouseSerializer(serializers.ModelSerializer):
-    site_name = serializers.ReadOnlyField(source='site.name')
+    site = SimpleSiteSerializer(read_only=True)
     inventory_count = serializers.SerializerMethodField()
 
     def get_inventory_count(self, obj):
@@ -100,11 +129,6 @@ class InventorySerializer(serializers.ModelSerializer):
 class InventoryMovementSerializer(serializers.ModelSerializer):
     class Meta:
         model = InventoryMovement
-        fields = '__all__'
-
-class WarehouseSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Warehouse
         fields = '__all__'
 
 class SiteSerializer(serializers.ModelSerializer):

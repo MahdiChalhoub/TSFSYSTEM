@@ -1,29 +1,28 @@
-import { prisma } from "@/lib/db";
+import { erpFetch } from "@/lib/erp-api";
 import StockAdjustmentManager from "./manager";
 import { Sliders } from "lucide-react";
 
 export const dynamic = 'force-dynamic';
 
 async function getWarehouses() {
-    return await prisma.warehouse.findMany({
-        where: { isActive: true },
-        include: {
-            site: {
-                select: { id: true, name: true }
-            }
-        },
-        orderBy: { name: 'asc' }
-    });
+    try {
+        const warehouses = await erpFetch('warehouses/');
+        // Filter active directly here since backend returns all
+        return warehouses.filter((w: any) => w.is_active);
+    } catch (e) {
+        console.error("Failed to fetch warehouses", e);
+        return [];
+    }
 }
 
 export default async function AdjustmentPage() {
     // Transform data to match the component's expected type if necessary
     const rawWarehouses = await getWarehouses();
-    const warehouses = rawWarehouses.map(w => ({
+    const warehouses = rawWarehouses.map((w: any) => ({
         id: w.id,
         name: w.name,
         type: w.type,
-        siteId: w.siteId, // Ensure siteId is passed
+        siteId: w.site?.id,
         site: w.site ? { name: w.site.name } : undefined
     }));
 

@@ -1,6 +1,6 @@
 'use server';
 
-import { prisma } from "@/lib/db";
+import { erpFetch } from "@/lib/erp-api";
 import { revalidatePath } from "next/cache";
 
 export type NamingRuleComponent = {
@@ -27,35 +27,29 @@ const DEFAULT_NAMING_RULE: ProductNamingRule = {
 };
 
 export async function getProductNamingRule(): Promise<ProductNamingRule> {
-    const setting = await prisma.systemSettings.findUnique({
-        where: { key: 'product_naming_rule' }
-    });
-
-    if (!setting) {
-        return DEFAULT_NAMING_RULE;
-    }
-
     try {
-        return JSON.parse(setting.value);
-    } catch {
+        const rule = await erpFetch('settings/item/product_naming_rule/');
+        return rule || DEFAULT_NAMING_RULE;
+    } catch (e) {
+        console.error("Failed to fetch naming rule:", e);
         return DEFAULT_NAMING_RULE;
     }
 }
 
 export async function saveProductNamingRule(rule: ProductNamingRule) {
-    await prisma.systemSettings.upsert({
-        where: { key: 'product_naming_rule' },
-        update: {
-            value: JSON.stringify(rule)
-        },
-        create: {
-            key: 'product_naming_rule',
-            value: JSON.stringify(rule)
-        }
-    });
+    try {
+        await erpFetch('settings/item/product_naming_rule/', {
+            method: 'POST',
+            body: JSON.stringify(rule),
+            headers: { 'Content-Type': 'application/json' }
+        });
 
-    revalidatePath('/admin/settings');
-    revalidatePath('/admin/products/new');
+        revalidatePath('/admin/settings');
+        revalidatePath('/admin/products/new');
 
-    return { success: true };
+        return { success: true };
+    } catch (e: any) {
+        console.error("Failed to save naming rule:", e);
+        return { success: false, message: e.message };
+    }
 }

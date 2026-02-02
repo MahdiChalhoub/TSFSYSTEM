@@ -1,3 +1,4 @@
+from django.db import transaction
 from rest_framework import viewsets, status, serializers
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, action
@@ -7,7 +8,8 @@ from .models import (
     FiscalYear, FiscalPeriod, JournalEntry, Product, 
     Warehouse, Inventory, InventoryMovement, Unit,
     Brand, Category, Parfum, ProductGroup, Country,
-    Contact, Employee, Role, TransactionSequence, BarcodeSettings, Loan, LoanInstallment, FinancialEvent, Transaction
+    Contact, Employee, Role, TransactionSequence, BarcodeSettings, Loan, LoanInstallment, FinancialEvent, Transaction, User,
+    OrderLine
 )
 from .serializers import (
     OrganizationSerializer, SiteSerializer, FinancialAccountSerializer,
@@ -89,6 +91,21 @@ class SettingsViewSet(viewsets.ViewSet):
         
         settings = ConfigurationService.get_global_settings(organization)
         return Response(settings)
+
+    @action(detail=False, methods=['get', 'post'], url_path='item/(?P<key>[^/.]+)')
+    def item(self, request, key=None):
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({"error": "No organization context"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        organization = Organization.objects.get(id=organization_id)
+        
+        if request.method == 'POST':
+            ConfigurationService.save_setting(organization, key, request.data)
+            return Response({"message": f"Setting '{key}' saved successfully"})
+        
+        value = ConfigurationService.get_setting(organization, key)
+        return Response(value)
 from .middleware import get_current_tenant_id
 
 @api_view(['GET'])
@@ -413,6 +430,41 @@ class UnitViewSet(viewsets.ModelViewSet):
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+
+    @action(detail=False, methods=['post'])
+    def bulk_move(self, request):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "No organization context"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+        
+        product_ids = request.data.get('productIds', [])
+        target_id = request.data.get('targetId')
+        move_type = request.data.get('type') # 'category', 'brand', 'unit', 'country', 'attribute'
+
+        if not product_ids or not target_id or not move_type:
+            return Response({"error": "Missing parameters"}, status=400)
+
+        with transaction.atomic():
+            products = Product.objects.filter(id__in=product_ids, organization=organization)
+            
+            updates = {}
+            if move_type == 'category':
+                updates['category_id'] = target_id
+                updates['product_group_id'] = None
+            elif move_type == 'brand':
+                updates['brand_id'] = target_id
+                updates['product_group_id'] = None
+            elif move_type == 'unit':
+                updates['unit_id'] = target_id
+            elif move_type == 'country':
+                updates['country_id'] = target_id
+            elif move_type == 'attribute':
+                updates['parfum_id'] = target_id
+            
+            if updates:
+                products.update(**updates)
+            
+            return Response({"success": True, "count": products.count()})
 
     @action(detail=False, methods=['post'])
     def create_complex(self, request):
@@ -806,6 +858,30 @@ class PurchaseViewSet(viewsets.ViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=False, methods=['post'])
+    def quick_purchase(self, request):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "No organization"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+        
+        try:
+            order = PurchaseService.quick_purchase(
+                organization=organization,
+                supplier_id=request.data.get('supplierId'),
+                warehouse_id=request.data.get('warehouseId'),
+                site_id=request.data.get('siteId'),
+                scope=request.data.get('scope'),
+                invoice_price_type=request.data.get('invoicePriceType'),
+                vat_recoverable=request.data.get('vatRecoverable'),
+                lines=request.data.get('lines', []),
+                notes=request.data.get('notes'),
+                ref_code=request.data.get('refCode'),
+                user=request.user if request.user.is_authenticated else None
+            )
+            return Response({"success": True, "orderId": order.id})
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
 class BrandViewSet(viewsets.ModelViewSet):
     queryset = Brand.objects.all()
     
@@ -912,6 +988,11 @@ class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
+    def get_queryset(self):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return self.queryset.none()
+        return self.queryset.filter(organization_id=organization_id)
+
     @action(detail=False, methods=['get'])
     def with_counts(self, request):
         organization_id = get_current_tenant_id()
@@ -947,6 +1028,11 @@ class ParfumViewSet(viewsets.ModelViewSet):
     queryset = Parfum.objects.all()
     serializer_class = ParfumSerializer
 
+    def get_queryset(self):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return self.queryset.none()
+        return self.queryset.filter(organization_id=organization_id)
+
     @action(detail=False, methods=['get'])
     def by_category(self, request):
         organization_id = get_current_tenant_id()
@@ -971,7 +1057,7 @@ class ParfumViewSet(viewsets.ModelViewSet):
                     Q(categories__in=category_ids) | Q(categories__isnull=True)
                 ).distinct()
             except Category.DoesNotExist:
-                return Response([]) # Category not found
+                pass 
         
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
@@ -1012,7 +1098,7 @@ class ParfumViewSet(viewsets.ModelViewSet):
             data.append({
                 "id": brand.id,
                 "name": brand.name,
-                "logo": "", # Add logo URL if available
+                "logo": "", 
                 "products": products_data,
                 "totalStock": brand_total_stock
             })
@@ -1023,18 +1109,323 @@ class ProductGroupViewSet(viewsets.ModelViewSet):
     queryset = ProductGroup.objects.all()
     serializer_class = ProductGroupSerializer
 
+    @action(detail=False, methods=['post'])
+    def create_with_variants(self, request):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "No organization context"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+        
+        data = request.data
+        name = data.get('name')
+        brand_id = data.get('brandId')
+        category_id = data.get('categoryId')
+        description = data.get('description')
+        base_unit_id = data.get('baseUnitId')
+        variants = data.get('variants', [])
+
+        if not name or not variants:
+            return Response({"error": "Name and variants required"}, status=400)
+
+        with transaction.atomic():
+            group = ProductGroup.objects.create(
+                organization=organization,
+                name=name,
+                brand_id=brand_id,
+                category_id=category_id,
+                description=description
+            )
+
+            for v in variants:
+                Product.objects.create(
+                    organization=organization,
+                    name=name,
+                    product_group=group,
+                    brand_id=brand_id,
+                    category_id=category_id,
+                    unit_id=base_unit_id,
+                    country_id=v.get('countryId'),
+                    sku=v.get('sku'),
+                    barcode=v.get('barcode'),
+                    # size=v.get('size'), # size field missing in recent models.py?
+                    cost_price=v.get('costPrice', 0),
+                    cost_price_ht=v.get('costPriceHT', 0),
+                    cost_price_ttc=v.get('costPriceTTC', 0),
+                    selling_price_ht=v.get('sellingPriceHT', 0),
+                    selling_price_ttc=v.get('sellingPriceTTC', 0),
+                    tva_rate=v.get('taxRate', 0),
+                    min_stock_level=v.get('minStockLevel', 0),
+                    status='ACTIVE'
+                )
+            
+            return Response(ProductGroupSerializer(group).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'])
+    def update_with_variants(self, request, pk=None):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "No organization context"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+        
+        group = self.get_object()
+        data = request.data
+        name = data.get('name')
+        brand_id = data.get('brandId')
+        category_id = data.get('categoryId')
+        description = data.get('description')
+        base_unit_id = data.get('baseUnitId')
+        variants = data.get('variants', [])
+
+        with transaction.atomic():
+            group.name = name
+            group.brand_id = brand_id
+            group.category_id = category_id
+            group.description = description
+            group.save()
+
+            for v in variants:
+                if v.get('id'):
+                    # Update existing
+                    Product.objects.filter(id=v.get('id'), organization=organization).update(
+                        name=name,
+                        brand_id=brand_id,
+                        category_id=category_id,
+                        unit_id=base_unit_id,
+                        country_id=v.get('countryId'),
+                        sku=v.get('sku'),
+                        barcode=v.get('barcode'),
+                        cost_price=v.get('costPrice'),
+                        cost_price_ht=v.get('costPriceHT'),
+                        cost_price_ttc=v.get('costPriceTTC'),
+                        selling_price_ht=v.get('sellingPriceHT'),
+                        selling_price_ttc=v.get('sellingPriceTTC'),
+                        tva_rate=v.get('taxRate')
+                    )
+                else:
+                    # Create new
+                    Product.objects.create(
+                        organization=organization,
+                        name=name,
+                        product_group=group,
+                        brand_id=brand_id,
+                        category_id=category_id,
+                        unit_id=base_unit_id,
+                        country_id=v.get('countryId'),
+                        sku=v.get('sku'),
+                        barcode=v.get('barcode'),
+                        cost_price=v.get('costPrice', 0),
+                        cost_price_ht=v.get('costPriceHT', 0),
+                        cost_price_ttc=v.get('costPriceTTC', 0),
+                        selling_price_ht=v.get('sellingPriceHT', 0),
+                        selling_price_ttc=v.get('sellingPriceTTC', 0),
+                        tva_rate=v.get('taxRate', 0),
+                        min_stock_level=v.get('minStockLevel', 0),
+                        status='ACTIVE'
+                    )
+            
+            return Response(ProductGroupSerializer(group).data)
+
+    @action(detail=True, methods=['post'])
+    def link_products(self, request, pk=None):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "No organization context"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+        
+        group = self.get_object()
+        product_ids = request.data.get('productIds', [])
+        
+        Product.objects.filter(
+            id__in=product_ids, 
+            organization=organization
+        ).update(
+            product_group=group,
+            brand=group.brand,
+            category=group.category
+        )
+        
+        return Response({"success": True})
+
+    @action(detail=False, methods=['post'])
+    def create_from_products(self, request):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "No organization context"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+        
+        product_ids = request.data.get('productIds', [])
+        name = request.data.get('name')
+        description = request.data.get('description')
+        
+        products = Product.objects.filter(id__in=product_ids, organization=organization)
+        if not products.exists():
+            return Response({"error": "No products found"}, status=400)
+            
+        template = products.first()
+        if not template.brand:
+            return Response({"error": "Reference product must have a brand"}, status=400)
+
+        with transaction.atomic():
+            group = ProductGroup.objects.create(
+                organization=organization,
+                name=name,
+                description=description,
+                brand=template.brand,
+                category=template.category
+            )
+            
+            products.update(
+                product_group=group,
+                brand=template.brand,
+                category=template.category
+            )
+            
+            return Response(ProductGroupSerializer(group).data, status=status.HTTP_201_CREATED)
+
 class CountryViewSet(viewsets.ModelViewSet):
     queryset = Country.objects.all()
     serializer_class = CountrySerializer
+
+    @action(detail=True, methods=['get'])
+    def hierarchy(self, request, pk=None):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "No organization context"}, status=400)
+        
+        # Get brands that have products from this country
+        brands = Brand.objects.filter(
+            products__country_id=pk,
+            organization_id=organization_id
+        ).distinct().prefetch_related(
+            'product_set', 'product_set__inventory', 'product_set__unit'
+        )
+
+        data = []
+        for brand in brands:
+            products_data = []
+            products = brand.product_set.filter(country_id=pk)
+            brand_total_stock = 0
+            for p in products:
+                stock = sum(i.quantity for i in p.inventory.all())
+                brand_total_stock += stock
+                products_data.append({
+                    "id": p.id,
+                    "name": p.name,
+                    "sku": p.sku,
+                    "size": float(p.size) if hasattr(p, 'size') and p.size else 0,
+                    "unitShortName": p.unit.short_name if p.unit else None,
+                    "categoryName": p.category.name if p.category else None,
+                    "stock": float(stock)
+                })
+            
+            data.append({
+                "id": brand.id,
+                "name": brand.name,
+                "logo": "",
+                "products": products_data,
+                "totalStock": brand_total_stock
+            })
+
+        return Response(data)
 
 class ContactViewSet(viewsets.ModelViewSet):
     queryset = Contact.objects.all()
     serializer_class = ContactSerializer
 
+    def create(self, request, *args, **kwargs):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "No organization context"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+        
+        data = request.data.copy()
+        data['organization'] = organization.id
+
+        with transaction.atomic():
+            # 1. Get Posting Rules to find root account
+            rules = ConfigurationService.get_posting_rules(organization)
+            # Match frontend logic
+            contact_type = data.get('type')
+            
+            # Map rule keys
+            # frontend: rules.automation.customerRoot
+            # backend config stores 'sales', 'purchases' etc.
+            # I'll check my ConfigurationService.apply_smart_posting_rules logic
+            
+            parent_account_id = None
+            if contact_type == 'CUSTOMER':
+                parent_account_id = rules.get('sales', {}).get('receivable')
+            else:
+                parent_account_id = rules.get('purchases', {}).get('payable')
+            
+            if not parent_account_id:
+                # Fallback to standard codes if rule is missing
+                fallback_code = '1110' if contact_type == 'CUSTOMER' else '2101'
+                parent = ChartOfAccount.objects.filter(organization=organization, code=fallback_code).first()
+                if parent: parent_account_id = parent.id
+            
+            if parent_account_id:
+                parent = ChartOfAccount.objects.get(id=parent_account_id)
+                linked_acc = LedgerService.create_linked_account(
+                    organization=organization,
+                    name=f"{data.get('name')} ({'AR' if contact_type == 'CUSTOMER' else 'AP'})",
+                    type=parent.type,
+                    sub_type='RECEIVABLE' if contact_type == 'CUSTOMER' else 'PAYABLE',
+                    parent_id=parent_account_id
+                )
+                data['linked_account'] = linked_acc.id
+
+            serializer = self.get_serializer(data=data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
 class EmployeeViewSet(viewsets.ModelViewSet):
     queryset = Employee.objects.all()
     serializer_class = EmployeeSerializer
 
+    def create(self, request, *args, **kwargs):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "No organization context"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+
+        data = request.data.copy()
+        data['organization'] = organization.id
+
+        with transaction.atomic():
+            rules = ConfigurationService.get_posting_rules(organization)
+            # For employees, we look for payroll root. 
+            # If not in rules, fallback to '2200'
+            parent_account_id = rules.get('payroll', {}).get('root') # Assuming we add this or use fallback
+            
+            if not parent_account_id:
+                parent = ChartOfAccount.objects.filter(organization=organization, code='2200').first()
+                if not parent:
+                    # Create root if missing
+                    parent = ChartOfAccount.objects.create(
+                        organization=organization,
+                        code='2200',
+                        name='Accrued Payroll & Salaries',
+                        type='LIABILITY',
+                        sub_type='PAYABLE'
+                    )
+                parent_account_id = parent.id
+
+            fullName = f"{data.get('first_name')} {data.get('last_name')}"
+            linked_acc = LedgerService.create_linked_account(
+                organization=organization,
+                name=f"Payable to {fullName}",
+                type='LIABILITY',
+                sub_type='PAYABLE',
+                parent_id=parent_account_id
+            )
+            data['linked_account'] = linked_acc.id
+
+            serializer = self.get_serializer(data=data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            
+            # TODO: Handle User creation if requested (similar to createLogin in TS)
+            
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+class RoleViewSet(viewsets.ModelViewSet):
+    queryset = Role.objects.all()
+    serializer_class = RoleSerializer
 
 class BarcodeSettingsViewSet(viewsets.ViewSet):
     def list(self, request):
@@ -1191,6 +1582,7 @@ class DashboardViewSet(viewsets.ViewSet):
         scope = request.query_params.get('scope', 'INTERNAL')
         
         from .services import LedgerService, InventoryService
+        from django.db.models import Sum, F
         
         # 1. Cash Position
         cash_accounts = FinancialAccount.objects.filter(organization=organization)
@@ -1236,12 +1628,32 @@ class DashboardViewSet(viewsets.ViewSet):
         # 3. Trends (Last 6 months Income/Expense)
         trends = []
         for i in range(5, -1, -1):
-            # Calculate logic for 6 months... excluding for brevity to keep specific scope
-            # Placeholder
+            month_start = (now.replace(day=1) - timezone.timedelta(days=30*i)).replace(day=1)
+            next_month_start = (month_start + timezone.timedelta(days=32)).replace(day=1)
+            
+            # Filter entries for this month
+            month_lines = JournalEntryLine.objects.filter(
+                journal_entry__organization=organization,
+                journal_entry__transaction_date__gte=month_start,
+                journal_entry__transaction_date__lt=next_month_start,
+                journal_entry__status='POSTED'
+            )
+            
+            if scope == 'OFFICIAL':
+                month_lines = month_lines.filter(journal_entry__scope='OFFICIAL')
+                
+            m_income = month_lines.filter(account__type='INCOME').aggregate(
+                val=Sum(F('credit') - F('debit'))
+            )['val'] or 0
+            
+            m_expense = month_lines.filter(account__type='EXPENSE').aggregate(
+                val=Sum(F('debit') - F('credit'))
+            )['val'] or 0
+            
             trends.append({
-                "month": (now.replace(day=1) - timezone.timedelta(days=30*i)).strftime("%b"),
-                "income": 0,
-                "expense": 0
+                "month": month_start.strftime("%b"),
+                "income": float(m_income),
+                "expense": float(m_expense)
             })
 
         # 4. Inventory Value
@@ -1259,7 +1671,66 @@ class DashboardViewSet(viewsets.ViewSet):
             "inventoryStatus": inv_status
         })
 
-class RoleViewSet(viewsets.ModelViewSet):
+    @action(detail=False, methods=['get'])
+    def search_enhanced(self, request):
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({"error": "No organization context"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        organization = Organization.objects.get(id=organization_id)
+        query = request.query_params.get('query', '')
+        site_id = request.query_params.get('site_id')
+        
+        from django.db.models import Q, Sum, F
+        from django.utils import timezone
+        from datetime import timedelta
+        
+        products_qs = Product.objects.filter(organization=organization, status='ACTIVE')
+        if query:
+            products_qs = products_qs.filter(
+                Q(name__icontains=query) | Q(sku__icontains=query) | Q(barcode__icontains=query)
+            )
+        
+        products_qs = products_qs[:10]
+        
+        data = []
+        thirty_days_ago = timezone.now() - timedelta(days=30)
+        
+        for p in products_qs:
+            # Aggregate Stock
+            stock_filter = {'organization': organization, 'product': p}
+            if site_id:
+                stock_filter['warehouse__site_id'] = site_id
+                
+            stock_level = Inventory.objects.filter(**stock_filter).aggregate(total=Sum('quantity'))['total'] or 0
+            
+            # Daily Sales (30 day avg)
+            # Using OrderLine
+            sales_qty = OrderLine.objects.filter(
+                order__organization=organization,
+                product=p,
+                order__created_at__gte=thirty_days_ago,
+                order__status='COMPLETED',
+                order__type='SALE'
+            ).aggregate(total=Sum('quantity'))['total'] or 0
+            
+            daily_sales = float(sales_qty) / 30.0
+            
+            data.append({
+                "id": p.id,
+                "name": p.name,
+                "sku": p.sku,
+                "barcode": p.barcode,
+                "costPrice": float(p.cost_price),
+                "costPriceHT": float(p.cost_price_ht),
+                "sellingPriceHT": float(p.selling_price_ht),
+                "sellingPriceTTC": float(p.selling_price_ttc),
+                "stockLevel": float(stock_level),
+                "dailySales": round(daily_sales, 2),
+                "proposedQty": max(0, int(daily_sales * 14 - stock_level))
+            })
+            
+        return Response(data)
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
 
