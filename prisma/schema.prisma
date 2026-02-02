@@ -1,5 +1,5 @@
-// This is the TSF Master Schema (v1.1 - SaaS Multi-Tenant)
-// Designed to support: ERP, Store, POS, HR, CRM, and Audit
+﻿// TSF Master Schema (v1.1 - SaaS Multi-Tenant)
+// Designed for: ERP, Store, POS, HR, CRM, Audit
 
 generator client {
   provider = "prisma-client-js"
@@ -22,34 +22,39 @@ model Organization {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  sites    Site[]
-  users    User[]
-  products Product[]
-  settings FinancialSettings[]
-  ledger   ChartOfAccount[]
-  contacts Contact[]
-  audits   AuditLog[]
-  unit        Unit[]
-  warehouse   Warehouse[]
-  order       Order[]
-  task        Task[]
-  pricingRule PricingRule[]
-  priceList   PriceList[]
-  brand       Brand[]
-  category    Category[]
-  parfum      Parfum[]
-  country     Country[]
-  fiscalYear  FiscalYear[]
-  fiscalPeriod FiscalPeriod[]
-  journalEntry JournalEntry[]
-  journalEntryLine JournalEntryLine[]
-  productImage ProductImage[]
+  sites               Site[]
+  users               User[]
+  products            Product[]
+  settings            FinancialSettings[]
+  ledger              ChartOfAccount[]
+  contacts            Contact[]
+  audits              AuditLog[]
+  unit                Unit[]
+  warehouse           Warehouse[]
+  order               Order[]
+  task                Task[]
+  pricingRule         PricingRule[]
+  priceList           PriceList[]
+  brand               Brand[]
+  category            Category[]
+  parfum              Parfum[]
+  country             Country[]
+  fiscalYear          FiscalYear[]
+  fiscalPeriod        FiscalPeriod[]
+  journalEntry        JournalEntry[]
+  journalEntryLine    JournalEntryLine[]
+  productImage        ProductImage[]
   transactionSequence TransactionSequence[]
-  barcodeSettings BarcodeSettings[]
-  systemSettings SystemSettings[]
-  inventory Inventory[]
-  stockBatch StockBatch[]
-  orderLine OrderLine[]
+  barcodeSettings     BarcodeSettings[]
+  systemSettings      SystemSettings[]
+  inventory           Inventory[]
+  stockBatch          StockBatch[]
+  orderLine           OrderLine[]
+  transactions        Transaction[]
+  financialAccount    FinancialAccount[]
+  financialEvent      FinancialEvent[]
+  loan                Loan[]
+  loanInstallment     LoanInstallment[]
 }
 
 model Country {
@@ -107,6 +112,10 @@ model FinancialAccount {
   ledgerAccount   ChartOfAccount? @relation("FinancialToLedger", fields: [ledgerAccountId], references: [id])
 
   transactions Transaction[]
+
+  // SaaS Context
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   // Assigned (Cashiers/Users) who use this account
   assignedUsers User[] @relation("UserCashRegister")
@@ -411,7 +420,7 @@ model Category {
   name      String
   code      String? // Internal Code
   shortName String? // Abbreviation
-  
+
   // SaaS Context
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id])
@@ -420,8 +429,8 @@ model Category {
   parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
   children Category[] @relation("CategoryHierarchy")
 
-  brands Brand[] // Many-to-Many
-  products Product[]
+  brands        Brand[] // Many-to-Many
+  products      Product[]
   productGroups ProductGroup[]
   parfums       Parfum[]
   PricingRule   PricingRule[]
@@ -431,7 +440,7 @@ model Category {
 
 model Brand {
   id        Int     @id @default(autoincrement())
-  name      String 
+  name      String
   shortName String? // Abbreviation
   logo      String? // URL to logo
 
@@ -450,14 +459,14 @@ model Brand {
 
 model Parfum {
   id        Int     @id @default(autoincrement())
-  name      String 
+  name      String
   shortName String?
 
   // SaaS Context
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id])
 
-  categories Category[] // Many-to-Many
+  categories    Category[] // Many-to-Many
   products      Product[]
   productGroups ProductGroup[]
 
@@ -482,7 +491,7 @@ model Warehouse {
   site   Site? @relation(fields: [siteId], references: [id])
 
   inventory Inventory[]
-  
+
   @@unique([code, organizationId])
 }
 
@@ -659,7 +668,7 @@ model BarcodeSettings {
   isEnabled Boolean @default(true)
 
   // SaaS Context
-  organizationId String @unique
+  organizationId String       @unique
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   updatedAt DateTime @updatedAt
@@ -667,7 +676,7 @@ model BarcodeSettings {
 
 model TransactionSequence {
   id         Int     @id @default(autoincrement())
-  type       String  // 'INVOICE', 'LOAN', 'JOURNAL', 'PAYMENT', 'CAPITAL', 'WITHDRAWAL'
+  type       String // 'INVOICE', 'LOAN', 'JOURNAL', 'PAYMENT', 'CAPITAL', 'WITHDRAWAL'
   prefix     String? // e.g., "INV-"
   suffix     String? // e.g., "/2024"
   nextNumber Int     @default(1)
@@ -892,7 +901,7 @@ model JournalEntryLine {
 
 model PriceList {
   id        Int     @id @default(autoincrement())
-  name      String  // "Retail Standard", "Wholesale A"
+  name      String // "Retail Standard", "Wholesale A"
   currency  String  @default("USD")
   isDefault Boolean @default(false)
 
@@ -933,7 +942,7 @@ model PricingRule {
 
   minQuantity Int @default(1) // For quantity breaks
 
-  priority       Int           @default(0) // Higher priority wins
+  priority Int @default(0) // Higher priority wins
 }
 
 // =========================================================
@@ -994,6 +1003,11 @@ model InventoryLevel {
 
 model FinancialEvent {
   id        Int    @id @default(autoincrement())
+  
+  // SaaS Context
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
   eventType String // 'PARTNER_CAPITAL_INJECTION', 'PARTNER_LOAN', 'PARTNER_WITHDRAWAL', 'REFUND_RECEIVED'
   status    String @default("DRAFT") // 'DRAFT', 'OPEN', 'SETTLED', 'CANCELLED'
 
@@ -1029,6 +1043,10 @@ model FinancialEvent {
 model Loan {
   id Int @id @default(autoincrement())
 
+  // SaaS Context
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
   contractNumber String? @unique // e.g., "LOAN-00001"
 
   // Borrower/Lender (Usually a Partner)
@@ -1057,6 +1075,10 @@ model Loan {
 model LoanInstallment {
   id Int @id @default(autoincrement())
 
+  // SaaS Context
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
   loanId Int
   loan   Loan @relation(fields: [loanId], references: [id], onDelete: Cascade)
 
@@ -1074,5 +1096,4 @@ model LoanInstallment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
-
 

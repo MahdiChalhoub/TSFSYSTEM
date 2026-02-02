@@ -1,10 +1,10 @@
 'use client'
 
 import { useEffect, useState } from "react"
-import { getOrganizations, toggleOrganizationStatus } from "./actions"
+import { getOrganizations, toggleOrganizationStatus, createOrganization } from "./actions"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Building, Plus, Globe, ShieldCheck, Activity, Trash2 } from "lucide-react"
+import { Building, Plus, Globe, ShieldCheck, Activity, Trash2, Zap } from "lucide-react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
@@ -23,7 +23,7 @@ export default function OrganizationsPage() {
         try {
             const data = await getOrganizations()
             setOrgs(data)
-        } catch (error) {
+        } catch {
             toast.error("Failed to load organizations")
         } finally {
             setLoading(false)
@@ -35,7 +35,7 @@ export default function OrganizationsPage() {
             await toggleOrganizationStatus(id, status)
             toast.success("Status updated")
             loadData()
-        } catch (error) {
+        } catch {
             toast.error("Failed to update status")
         }
     }
@@ -53,7 +53,7 @@ export default function OrganizationsPage() {
             setOpen(false)
             setNewOrg({ name: '', slug: '' })
             loadData()
-        } catch (error) {
+        } catch {
             toast.error("Provisioning failed")
         } finally {
             setIsCreating(false)
