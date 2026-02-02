@@ -35,6 +35,17 @@ export async function verifyTrialBalance() {
 import { erpFetch } from '@/lib/erp-api'
 
 export async function createJournalEntry(data: any) {
+    // Map camelCase lines to snake_case for Django if needed, 
+    // although ViewSet now handles some of it, let's be explicit.
+    if (data.lines) {
+        data.lines = data.lines.map((l: any) => ({
+            account_id: l.accountId || l.account_id,
+            debit: l.debit,
+            credit: l.credit,
+            description: l.description
+        }))
+    }
+
     try {
         const result = await erpFetch('journal/', {
             method: 'POST',
@@ -45,6 +56,30 @@ export async function createJournalEntry(data: any) {
         return result
     } catch (error: any) {
         console.error("Failed to create journal entry:", error)
+        throw error
+    }
+}
+
+export async function updateJournalEntry(id: number, data: any) {
+    if (data.lines) {
+        data.lines = data.lines.map((l: any) => ({
+            account_id: l.accountId || l.account_id,
+            debit: l.debit,
+            credit: l.credit,
+            description: l.description
+        }))
+    }
+
+    try {
+        const result = await erpFetch(`journal/${id}/`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        revalidatePath('/admin/finance/ledger')
+        return result
+    } catch (error: any) {
+        console.error("Failed to update journal entry:", error)
         throw error
     }
 }
