@@ -15,25 +15,23 @@ export const config = {
 
 export default async function middleware(req: NextRequest) {
     const url = req.nextUrl
-    const hostname = req.headers.get("host") || "localhost:3000"
+    // Extract subdomain
+    const hostname = req.headers.get("host")?.split(":")[0] || "localhost"
+    const hostnameParts = hostname.split('.')
 
-    // Extract subdomain (works for localhost and production domains)
-    // localhost:3000 -> ["localhost:3000"]
-    // saas.localhost:3000 -> ["saas", "localhost:3000"]
-    // demo.tsf-city.com -> ["demo", "tsf-city", "com"]
     const searchParams = url.searchParams.toString()
     const path = `${url.pathname}${searchParams.length > 0 ? `?${searchParams}` : ""}`
 
-    const hostnameParts = hostname.split('.')
-
-    // Logic for localhost development vs Production
     let subdomain = ""
-    if (hostnameParts.length > 1 && !hostname.includes("localhost")) {
-        // Production: xxx.domain.com
-        subdomain = hostnameParts[0]
-    } else if (hostnameParts.length > 2 && hostname.includes("localhost")) {
-        // Localhost: xxx.localhost:3000
-        subdomain = hostnameParts[0]
+    if (hostname.includes("localhost")) {
+        if (hostnameParts.length > 1) {
+            subdomain = hostnameParts[0]
+        }
+    } else {
+        // Production: expect xxx.domain.com (3 parts or more)
+        if (hostnameParts.length > 2) {
+            subdomain = hostnameParts[0]
+        }
     }
 
     // 1. MASTER PANEL: saas.localhost -> /admin/saas
