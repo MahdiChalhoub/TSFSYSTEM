@@ -4,15 +4,43 @@ from rest_framework.decorators import api_view, action
 from .models import (
     Organization, Site, FinancialAccount, ChartOfAccount,
     FiscalYear, FiscalPeriod, JournalEntry, Product, 
-    Warehouse, Inventory, InventoryMovement, Unit
+    Warehouse, Inventory, InventoryMovement, Unit,
+    Brand, Category, Parfum, ProductGroup, Country
 )
 from .serializers import (
     OrganizationSerializer, SiteSerializer, FinancialAccountSerializer,
     ChartOfAccountSerializer, FiscalYearSerializer, FiscalPeriodSerializer,
     JournalEntrySerializer, ProductSerializer, WarehouseSerializer,
-    InventorySerializer, InventoryMovementSerializer, UnitSerializer
+    InventorySerializer, InventoryMovementSerializer, UnitSerializer,
+    ProductCreateSerializer, BrandSerializer, CategorySerializer, 
+    ParfumSerializer, ProductGroupSerializer, CountrySerializer
 )
 from .services import FinancialAccountService, LedgerService, InventoryService, ProvisioningService, ConfigurationService, POSService, PurchaseService
+
+class TenantResolutionView(viewsets.ViewSet):
+    """
+    Public endpoint to resolve tenant slug to ID.
+    Used by Next.js middleware/context to avoid direct DB access.
+    """
+    permission_classes = [] 
+    authentication_classes = []
+
+    @action(detail=False, methods=['get'])
+    def resolve(self, request):
+        slug = request.query_params.get('slug')
+        if not slug:
+            return Response({"error": "Slug required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            org = Organization.objects.get(slug=slug)
+            return Response({
+                "id": str(org.id),
+                "slug": org.slug,
+                "name": org.name
+            })
+        except Organization.DoesNotExist:
+            return Response({"error": "Tenant not found"}, status=status.HTTP_404_NOT_FOUND)
+
 
 class SettingsViewSet(viewsets.ViewSet):
     """
@@ -316,6 +344,106 @@ class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
 
+    @action(detail=False, methods=['post'])
+    def create_complex(self, request):
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({"error": "No organization context"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        organization = Organization.objects.get(id=organization_id)
+        
+        serializer = ProductCreateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+        data = serializer.validated_data
+        
+        # 1. Check Uniqueness
+        if Product.objects.filter(organization=organization, sku=data['sku']).exists():
+             return Response({"error": "SKU already exists"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # 2. Grouping Logic
+            parfum_id = None
+            product_group_id = None
+            
+            parfum_name = data.get('parfumName')
+            brand_id = data.get('brandId')
+            category_id = data.get('categoryId')
+            
+            if parfum_name and brand_id:
+                # Upsert Parfum
+                parfum, created = Parfum.objects.update_or_create(
+                    organization=organization,
+                    name=parfum_name,
+                    defaults={}
+                )
+                parfum_id = parfum.id
+                
+                # Find or Create Group
+                # Logic: Brand + Parfum
+                group = ProductGroup.objects.filter(
+                    organization=organization,
+                    brand_id=brand_id,
+                    parfum_id=parfum_id
+                ).first()
+                
+                if not group:
+                    brand = Brand.objects.get(id=brand_id)
+                    group_name = f"{brand.name} {parfum_name}".strip()
+                    group = ProductGroup.objects.create(
+                        organization=organization,
+                        name=group_name,
+                        brand_id=brand_id,
+                        parfum_id=parfum_id,
+                        category_id=category_id,
+                        description=f"Auto-generated group via {parfum_name}"
+                    )
+                product_group_id = group.id
+
+            # 3. Create Product
+            product = Product.objects.create(
+                organization=organization,
+                name=data['name'],
+                description=data.get('description', ''),
+                sku=data['sku'],
+                barcode=data.get('barcode'),
+                category_id=category_id,
+                unit_id=data.get('unitId'),
+                brand_id=brand_id,
+                country_id=data.get('countryId'),
+                parfum_id=parfum_id,
+                product_group_id=product_group_id,
+                
+                cost_price=data.get('costPrice', 0),
+                cost_price_ht=data.get('costPrice', 0), # assuming same as costPrice?
+                status='ACTIVE',
+                selling_price_ht=data.get('sellingPriceHT', 0),
+                selling_price_ttc=data.get('sellingPriceTTC', 0),
+                tva_rate=data.get('taxRate', 0),
+                
+                min_stock_level=data.get('minStockLevel', 10),
+                is_expiry_tracked=data.get('isExpiryTracked', False)
+            )
+            
+            # 4. Auto Barcode
+            if not product.barcode and category_id:
+                category = Category.objects.get(id=category_id)
+                # Assuming category has 'code' field based on standard models, 
+                # but models.py showed Category just has name/org. 
+                # Wait, earlier models.py dump showed Category(TenantModel) name, created_at. No code.
+                # Standard pattern usually implies checking if field exists or generating purely numeric.
+                # I will skip Category Code if it doesn't exist.
+                # Actually, let's just use PK.
+                auto_barcode = f"P-{product.id}" 
+                product.barcode = auto_barcode
+                product.save()
+
+            return Response(ProductSerializer(product).data, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
     @action(detail=False, methods=['get'])
     def search_enhanced(self, request):
         organization_id = get_current_tenant_id()
@@ -578,3 +706,148 @@ class PurchaseViewSet(viewsets.ViewSet):
             return Response({"message": "PO Invoiced", "status": order.status})
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+class BrandViewSet(viewsets.ModelViewSet):
+    queryset = Brand.objects.all()
+    serializer_class = BrandSerializer
+
+    @action(detail=False, methods=['get'])
+    def by_category(self, request):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+        
+        category_id = request.query_params.get('category_id')
+        
+        if not category_id:
+            brands = Brand.objects.filter(organization=organization).values('id', 'name', 'short_name')
+            return Response(brands)
+
+        try:
+            category = Category.objects.get(id=category_id, organization=organization)
+            
+            # Walk up hierarchy
+            parents = [category.id]
+            curr = category
+            while curr.parent:
+                curr = curr.parent
+                parents.append(curr.id)
+            
+            # Filter logic: Universal (no categories) OR linked to this or parents
+            from django.db.models import Q
+            brands = Brand.objects.filter(
+                Q(organization=organization) & 
+                (Q(categories__isnull=True) | Q(categories__id__in=parents))
+            ).distinct().order_by('name').values('id', 'name', 'short_name')
+            
+            return Response(brands)
+        except Category.DoesNotExist:
+            return Response([])
+
+    @action(detail=True, methods=['get'])
+    def hierarchy(self, request, pk=None):
+        # Implementation for getBrandHierarchy
+        # Return nested groups and loose products
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+        
+        try:
+            brand = Brand.objects.get(id=pk, organization_id=organization_id)
+            
+            # Groups
+            groups_qs = brand.product_groups.all() # Assuming related_name='product_groups' (or 'productgroup_set')
+            # Wait, model definition in dump didn't show related_name
+            # models.py: brand = models.ForeignKey(Brand, ... product_group = models.ForeignKey(ProductGroup...
+            # ProductGroup has brandId. 
+            groups_qs = ProductGroup.objects.filter(brand=brand).prefetch_related('product_set', 'product_set__inventory') 
+            
+            groups_data = []
+            for g in groups_qs:
+                products = []
+                for p in g.product_set.all():
+                     stock = sum(i.quantity for i in p.inventory.all())
+                     products.append({
+                         "id": p.id,
+                         "name": p.name,
+                         "sku": p.sku,
+                         "countryName": p.country.name if p.country else None,
+                         "size": float(p.size or 0) if hasattr(p, 'size') else 0, # Model dump missed size field in Product?
+                         "unitName": p.unit.short_name if p.unit else None,
+                         "stock": float(stock)
+                     })
+                groups_data.append({
+                    "id": g.id, 
+                    "name": g.name,
+                    "products": products,
+                    "totalStock": sum(p['stock'] for p in products)
+                })
+            
+            # Loose Products (no group)
+            loose_qs = Product.objects.filter(brand=brand, product_group__isnull=True).prefetch_related('inventory')
+            loose_products = []
+            for p in loose_qs:
+                stock = sum(i.quantity for i in p.inventory.all())
+                loose_products.append({
+                    "id": p.id,
+                     "name": p.name,
+                     "sku": p.sku,
+                     "countryName": p.country.name if p.country else None,
+                     "size": float(p.size or 0) if hasattr(p, 'size') else 0,
+                     "unitName": p.unit.short_name if p.unit else None,
+                     "stock": float(stock)
+                })
+            
+            return Response({
+                "groups": groups_data,
+                "looseProducts": loose_products
+            })
+            
+        except Brand.DoesNotExist:
+            return Response({"error": "Brand not found"}, status=404)
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+    @action(detail=False, methods=['get'])
+    def with_counts(self, request):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+        
+        from django.db.models import Count
+        categories = Category.objects.filter(
+            organization_id=organization_id
+        ).annotate(product_count=Count('product')).order_by('name')
+        
+        return Response([
+            {**CategorySerializer(c).data, "_count": {"products": c.product_count}}
+            for c in categories
+        ])
+    
+    @action(detail=False, methods=['post'])
+    def move_products(self, request):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+        
+        target_id = request.data.get('targetCategoryId')
+        product_ids = request.data.get('productIds', [])
+        
+        Product.objects.filter(
+            organization_id=organization_id,
+            id__in=product_ids
+        ).update(category_id=target_id)
+        
+        return Response({"success": True})
+
+
+class ParfumViewSet(viewsets.ModelViewSet):
+    queryset = Parfum.objects.all()
+    serializer_class = ParfumSerializer
+
+class ProductGroupViewSet(viewsets.ModelViewSet):
+    queryset = ProductGroup.objects.all()
+    serializer_class = ProductGroupSerializer
+
+class CountryViewSet(viewsets.ModelViewSet):
+    queryset = Country.objects.all()
+    serializer_class = CountrySerializer

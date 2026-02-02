@@ -1,55 +1,56 @@
-import { prisma } from "@/lib/db";
+import { erpFetch } from "@/lib/erp-api";
 import { UnitTree } from "@/components/admin/UnitTree";
-import { Unit } from "@prisma/client";
 import { CreateUnitButton } from "@/components/admin/CreateUnitButton";
 import { UnitCalculator } from "@/components/admin/UnitCalculator";
-import { Link } from "lucide-react"; // Wait, Link is next/link. Lucide has Link icon too? No, use Ruler.
 import { Ruler } from 'lucide-react';
 import NextLink from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
 async function getUnitsData() {
-    const units = await prisma.unit.findMany({
-        include: {
-            _count: {
-                select: { products: true }
-            }
-        },
-        orderBy: { id: 'asc' }
-    });
+    try {
+        const units = await erpFetch('units/');
 
-    // Build Tree
-    const unitMap = new Map();
-    const roots: any[] = [];
+        // Map backend response if needed (UnitSerializer has product_count)
+        const mappedUnits = units.map((u: any) => ({
+            ...u,
+            _count: { products: u.product_count || 0 }
+        }));
 
-    // Initialize Map with empty children array
-    units.forEach((u: Unit) => {
-        unitMap.set(u.id, { ...u, children: [] });
-    });
+        // Build Tree
+        const unitMap = new Map();
+        const roots: any[] = [];
 
-    // Link Children to Parents
-    units.forEach((u: Unit) => {
-        const node = unitMap.get(u.id);
-        if (u.baseUnitId) {
-            const parent = unitMap.get(u.baseUnitId);
-            if (parent) {
-                parent.children.push(node);
+        // Initialize Map with empty children array
+        mappedUnits.forEach((u: any) => {
+            unitMap.set(u.id, { ...u, children: [] });
+        });
+
+        // Link Children to Parents
+        mappedUnits.forEach((u: any) => {
+            const node = unitMap.get(u.id);
+            if (u.baseUnitId) {
+                const parent = unitMap.get(u.baseUnitId);
+                if (parent) {
+                    parent.children.push(node);
+                } else {
+                    // If parent missing, treat as root (fallback)
+                    roots.push(node);
+                }
             } else {
-                // If parent missing, treat as root (fallback)
                 roots.push(node);
             }
-        } else {
-            roots.push(node);
-        }
-    });
+        });
 
-    // We also return the flat list for the generic "Create" dropdown
-    // Plain serialization to handle decimals
-    return {
-        hierarchicalUnits: JSON.parse(JSON.stringify(roots)),
-        flatUnits: JSON.parse(JSON.stringify(units))
-    };
+        // We also return the flat list for the generic "Create" dropdown
+        return {
+            hierarchicalUnits: JSON.parse(JSON.stringify(roots)),
+            flatUnits: JSON.parse(JSON.stringify(mappedUnits))
+        };
+    } catch (e) {
+        console.error("Failed to fetch units:", e);
+        return { hierarchicalUnits: [], flatUnits: [] };
+    }
 }
 
 export default async function UnitsPage() {

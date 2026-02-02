@@ -5,10 +5,14 @@ from .views import (
     ChartOfAccountViewSet, FiscalYearViewSet, FiscalPeriodViewSet,
     JournalEntryViewSet, ProductViewSet, WarehouseViewSet,
     InventoryViewSet, UnitViewSet, SettingsViewSet, health_check,
-    POSViewSet, PurchaseViewSet
+    InventoryViewSet, UnitViewSet, SettingsViewSet, health_check,
+    POSViewSet, PurchaseViewSet, TenantResolutionView,
+    BrandViewSet, CategoryViewSet, ParfumViewSet, ProductGroupViewSet,
+    CountryViewSet
 )
 
 router = DefaultRouter()
+router.register(r'tenant', TenantResolutionView, basename='tenant')
 router.register(r'organizations', OrganizationViewSet)
 router.register(r'sites', SiteViewSet)
 router.register(r'accounts', FinancialAccountViewSet)
@@ -23,6 +27,11 @@ router.register(r'inventory', InventoryViewSet)
 router.register(r'settings', SettingsViewSet, basename='settings')
 router.register(r'pos', POSViewSet, basename='pos')
 router.register(r'purchase', PurchaseViewSet, basename='purchase')
+router.register(r'brands', BrandViewSet)
+router.register(r'categories', CategoryViewSet)
+router.register(r'parfums', ParfumViewSet)
+router.register(r'product-groups', ProductGroupViewSet)
+router.register(r'countries', CountryViewSet)
 
 urlpatterns = [
     path('health/', health_check),

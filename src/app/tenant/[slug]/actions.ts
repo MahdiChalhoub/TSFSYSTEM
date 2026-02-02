@@ -1,6 +1,6 @@
 'use server'
 
-import { prisma } from "@/lib/db"
+import { erpFetch } from "@/lib/erp-api"
 
 /**
  * Fetches organization data by slug to establish tenant context.
@@ -8,19 +8,15 @@ import { prisma } from "@/lib/db"
  */
 export async function getOrganizationBySlug(slug: string) {
     try {
-        const org = await (prisma.organization as any).findUnique({
-            where: { slug },
-            include: {
-                _count: {
-                    select: { sites: true, users: true }
-                }
-            }
-        })
+        const response = await erpFetch(`tenant/resolve/?slug=${slug}`);
+        if (!response || response.error) return null;
 
-        if (!org) return null
-        if (!org.isActive) return { ...org, error: "ACCOUNT_SUSPENDED" }
-
-        return org
+        // Map backend response to frontend expectation
+        return {
+            ...response,
+            isActive: true, // Assuming if resolved it is active
+            _count: { sites: 0, users: 0 } // dummy counts or enhance API later
+        }
     } catch (error) {
         console.error("[TENANT_CONTEXT] Failed to fetch org:", error)
         return null

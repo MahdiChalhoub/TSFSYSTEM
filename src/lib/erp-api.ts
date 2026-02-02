@@ -1,5 +1,5 @@
 import { headers } from 'next/headers';
-import { prisma } from './db';
+// import { prisma } from './db'; // Prisma usage removed
 
 const DJANGO_URL = process.env.DJANGO_URL || 'http://localhost:8000';
 
@@ -23,12 +23,19 @@ export async function getTenantContext() {
         return null; // Master panel or landing page
     }
 
-    const org = await prisma.organization.findUnique({
-        where: { slug: subdomain },
-        select: { id: true, slug: true }
-    });
+    try {
+        // Resolve via Django API to avoid direct DB access
+        const res = await fetch(`${DJANGO_URL}/api/tenant/resolve/?slug=${subdomain}`, {
+            cache: 'force-cache',
+            next: { revalidate: 60 } // Cache resolution for 60s
+        });
 
-    return org;
+        if (!res.ok) return null;
+        return await res.json();
+    } catch (e) {
+        console.error("Failed to resolve tenant:", e);
+        return null;
+    }
 }
 
 export async function erpFetch(path: string, options: RequestInit = {}) {

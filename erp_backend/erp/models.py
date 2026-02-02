@@ -137,6 +137,9 @@ class Parfum(TenantModel):
 
 class Category(TenantModel):
     name = models.CharField(max_length=255)
+    short_name = models.CharField(max_length=100, null=True, blank=True)
+    code = models.CharField(max_length=50, null=True, blank=True)
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -145,6 +148,9 @@ class Category(TenantModel):
 
 class Brand(TenantModel):
     name = models.CharField(max_length=255)
+    short_name = models.CharField(max_length=100, null=True, blank=True)
+    categories = models.ManyToManyField(Category, related_name='brands', blank=True)
+    countries = models.ManyToManyField(Country, related_name='brands', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -497,3 +503,39 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.email if self.email else self.username
+
+class Contact(TenantModel):
+    name = models.CharField(max_length=255)
+    type = models.CharField(max_length=50) # CUSTOMER, SUPPLIER
+    email = models.EmailField(null=True, blank=True)
+    phone = models.CharField(max_length=50, null=True, blank=True)
+    
+    home_site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True, related_name='contacts')
+    linked_account = models.ForeignKey(FinancialAccount, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    class Meta:
+        db_table = 'Contact'
+
+    def __str__(self):
+        return f"{self.name} ({self.type})"
+
+class Employee(TenantModel):
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    employee_id = models.CharField(max_length=50, null=True, blank=True)
+    email = models.EmailField(null=True, blank=True)
+    job_title = models.CharField(max_length=100, null=True, blank=True)
+    
+    home_site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True, related_name='employees')
+    linked_account = models.ForeignKey(FinancialAccount, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    # Using 'User' string reference or imported User model if available. 
+    # Since User is defined in this file (likely CustomUser), we can use string 'erp.User' or 'User' if defined above.
+    # The snippet showed 'class User(AbstractUser):' likely exists before line 506.
+    user = models.OneToOneField('User', on_delete=models.SET_NULL, null=True, blank=True, related_name='employee_profile')
+
+    class Meta:
+        db_table = 'Employee'
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name}"

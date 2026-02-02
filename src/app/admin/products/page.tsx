@@ -1,61 +1,46 @@
 import Link from 'next/link';
-import { prisma } from "@/lib/db";
-import { Plus, Search, Filter, Package, Tag, Barcode, Layers, Globe, ChevronLeft, ChevronRight, Edit2, Copy } from 'lucide-react';
+import { erpFetch } from "@/lib/erp-api";
+import { Plus, Search, Layers, Globe, ChevronLeft, ChevronRight, Edit2, Copy, Barcode } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
 const PAGE_SIZE = 50;
 
 async function getProducts(page: number) {
-    const [products, total] = await prisma.$transaction([
-        prisma.product.findMany({
-            skip: (page - 1) * PAGE_SIZE,
-            take: PAGE_SIZE,
-            include: {
-                category: true,
-                brand: true,
-                unit: true,
-                country: true,
-                inventory: true
-            },
-            orderBy: { id: 'desc' }
-        }),
-        prisma.product.count()
-    ]);
+    try {
+        // Backend pagination expected: ?page=X (DRF default)
+        // We assume backend page_size is consistent or we pass it if supported.
+        // Standard DRF PageNumberPagination returns { count, next, previous, results }
+        const data = await erpFetch(`products/?page=${page}&page_size=${PAGE_SIZE}`);
+        const results = data.results || [];
+        const total = data.count || 0;
 
-    return {
-        data: JSON.parse(JSON.stringify(products)),
-        total,
-        totalPages: Math.ceil(total / PAGE_SIZE)
-    };
+        return {
+            data: results,
+            total,
+            totalPages: Math.ceil(total / PAGE_SIZE)
+        };
+    } catch (e) {
+        console.error("Failed to fetch products:", e);
+        return { data: [], total: 0, totalPages: 0 };
+    }
 }
 
 async function getGroups(page: number) {
-    const [groups, total] = await prisma.$transaction([
-        prisma.productGroup.findMany({
-            skip: (page - 1) * PAGE_SIZE,
-            take: PAGE_SIZE,
-            include: {
-                brand: true,
-                category: true,
-                products: {
-                    include: {
-                        country: true,
-                        inventory: true,
-                        unit: true
-                    }
-                }
-            },
-            orderBy: { id: 'desc' }
-        }),
-        prisma.productGroup.count()
-    ]);
+    try {
+        const data = await erpFetch(`product-groups/?page=${page}&page_size=${PAGE_SIZE}`);
+        const results = data.results || [];
+        const total = data.count || 0;
 
-    return {
-        data: JSON.parse(JSON.stringify(groups)),
-        total,
-        totalPages: Math.ceil(total / PAGE_SIZE)
-    };
+        return {
+            data: results,
+            total,
+            totalPages: Math.ceil(total / PAGE_SIZE)
+        };
+    } catch (e) {
+        console.error("Failed to fetch product groups:", e);
+        return { data: [], total: 0, totalPages: 0 };
+    }
 }
 
 export default async function ProductsPage({ searchParams }: { searchParams: Promise<{ view?: string, page?: string }> }) {
@@ -234,14 +219,14 @@ function ProductRow({ product }: { product: any }) {
 
 function GroupRow({ group }: { group: any }) {
     // Aggregate Stock
-    const totalVarStock = group.products.reduce((acc: number, p: any) => {
+    const totalVarStock = group.products?.reduce((acc: number, p: any) => {
         const pStock = p.inventory?.reduce((invAcc: number, inv: any) => invAcc + Number(inv.quantity), 0) || 0;
         return acc + pStock;
-    }, 0);
+    }, 0) || 0;
 
-    const variantCount = group.products.length;
+    const variantCount = group.products?.length || 0;
     // Extract Unique Countries
-    const uniqueCountries = Array.from(new Set(group.products.map((p: any) => p.country?.code).filter(Boolean)));
+    const uniqueCountries = Array.from(new Set(group.products?.map((p: any) => p.country?.code).filter(Boolean)));
 
     return (
         <tr className="hover:bg-gray-50/60 transition-colors bg-gray-50/30">
@@ -283,4 +268,3 @@ function GroupRow({ group }: { group: any }) {
         </tr>
     );
 }
-

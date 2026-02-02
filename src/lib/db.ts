@@ -17,6 +17,7 @@ const getDatabaseUrl = () => {
 
 const finalUrl = getDatabaseUrl();
 console.log(`[Prisma] Initializing with DB URL: ${finalUrl}`);
+console.error(" [CRITICAL] PRISMA IS BEING INITIALIZED. THIS VIOLATES ENGINE RULES. USE erpFetch() INSTEAD.");
 
 export const prisma =
     globalForPrisma.prismaMain ||

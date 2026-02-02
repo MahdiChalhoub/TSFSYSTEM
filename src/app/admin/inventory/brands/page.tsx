@@ -1,34 +1,18 @@
-import { prisma } from "@/lib/db";
+import { erpFetch } from "@/lib/erp-api";
 import { BrandManager } from "@/components/admin/BrandManager";
 
 export const dynamic = 'force-dynamic';
 
 async function getBrands() {
-    const brands = await prisma.brand.findMany({
-        include: {
-            countries: true,
-            categories: true, // Include linked categories
-            _count: {
-                select: { products: true }
-            }
-        },
-        orderBy: { name: 'asc' }
-    });
-    return JSON.parse(JSON.stringify(brands));
+    return await erpFetch('brands/');
 }
 
 async function getCountries() {
-    const countries = await prisma.country.findMany({
-        orderBy: { name: 'asc' }
-    });
-    return JSON.parse(JSON.stringify(countries));
+    return await erpFetch('countries/');
 }
 
 async function getCategories() {
-    const categories = await prisma.category.findMany({
-        orderBy: { name: 'asc' }
-    });
-    return JSON.parse(JSON.stringify(categories));
+    return await erpFetch('categories/');
 }
 
 export default async function BrandsPage() {
