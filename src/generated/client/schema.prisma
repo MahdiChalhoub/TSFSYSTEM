@@ -1,0 +1,947 @@
+// This is the TSF Master Schema (v1.1 - SaaS Multi-Tenant)
+// Designed to support: ERP, Store, POS, HR, CRM, and Audit
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/client"
+}
+
+datasource db {
+  provider = "sqlite" // We switch this to "mysql" for Hostinger
+  url      = env("DATABASE_URL")
+}
+
+// =========================================================
+// SQLite Compatible (No Enums)
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique // URL prefix
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sites    Site[]
+  users    User[]
+  products Product[]
+  settings FinancialSettings[]
+  ledger   ChartOfAccount[]
+  contacts Contact[]
+  audits   AuditLog[]
+}
+
+model Country {
+  id   Int    @id @default(autoincrement())
+  code String @unique // LB, US, FR
+  name String
+
+  brands   Brand[]
+  products Product[] // Origin
+}
+
+model Unit {
+  id   Int    @id @default(autoincrement())
+  code String @unique // PC, BOX
+  name String // Piece, Box
+
+  // Attributes requested by User
+  shortName            String?
+  type                 String  @default("COUNT") // 'COUNT', 'WEIGHT', 'VOLUME'
+  allowFraction        Boolean @default(false)
+  needsBalance         Boolean @default(false)
+  balanceCodeStructure String? // e.g. "6,3,3" for [Barcode(6)][Weight(3)][Dec(3)]
+
+  // Hierarchy & Conversion
+  baseUnitId Int?
+  baseUnit   Unit?  @relation("UnitHierarchy", fields: [baseUnitId], references: [id])
+  children   Unit[] @relation("UnitHierarchy")
+
+  conversionFactor Decimal @default(1) // e.g. 12 if 1 Box = 12 Pieces (where base is Piece)
+
+  products         Product[]
+  productsWithSize Product[] @relation("SizeUnit")
+}
+
+model FinancialAccount {
+  id       Int     @id @default(autoincrement())
+  name     String // "Cash Drawer 1", "Bank Audi"
+  type     String // 'CASH', 'BANK', 'MOBILE'
+  currency String  @default("USD")
+  balance  Decimal @default(0.00)
+
+  siteId Int? // Nullable for Global accounts (e.g. Main Bank)
+  site   Site? @relation(fields: [siteId], references: [id])
+
+  // STRICT LEDGER LINK
+  ledgerAccountId Int?            @unique // Must be set to allow transactions
+  ledgerAccount   ChartOfAccount? @relation("FinancialToLedger", fields: [ledgerAccountId], references: [id])
+
+  transactions Transaction[]
+
+  // Assigned (Cashiers/Users) who use this account
+  assignedUsers User[] @relation("UserCashRegister")
+}
+
+model Transaction {
+  id        Int              @id @default(autoincrement())
+  accountId Int
+  account   FinancialAccount @relation(fields: [accountId], references: [id])
+
+  siteId Int? // Dimension for P&L tracking
+  site   Site? @relation(fields: [siteId], references: [id])
+
+  amount      Decimal
+  type        String // 'DEBIT', 'CREDIT'
+  description String?
+  referenceId String? // Link to Order ID or Expense ID
+  scope       String  @default("OFFICIAL") // 'OFFICIAL', 'INTERNAL', 'PENDING'
+
+  createdAt DateTime @default(now())
+
+  financialEvent FinancialEvent?
+}
+
+// PaymentMethod: CASH, CARD, MOBILE_MONEY, CREDIT
+// Role: OWNER, MANAGER, CASHIER, WAREHOUSE, SHELF
+// ProductStatus: ACTIVE, DISCONTINUED, LIQUIDATION, DRAFT
+// UnitType: PC, KG, BOX, PACK, LITER, METER
+
+model User {
+  id       Int     @id @default(autoincrement())
+  email    String  @unique
+  password String // Hashed
+  name     String
+  isActive Boolean @default(true)
+
+  // SaaS Context
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  // Advanced RBAC
+  roleId Int?
+  role   Role? @relation(fields: [roleId], references: [id])
+
+  // Multi-Site Context
+  homeSiteId Int?
+  homeSite   Site? @relation("HomeSite", fields: [homeSiteId], references: [id])
+
+  // Financial Assignment
+  cashRegisterId Int?
+  cashRegister   FinancialAccount? @relation("UserCashRegister", fields: [cashRegisterId], references: [id])
+
+  // HR Link
+  employeeId Int?      @unique
+  employee   Employee? @relation(fields: [employeeId], references: [id])
+
+  // Financial Link (Sub-ledger account for employee payroll/expenses)
+  linkedAccountId Int?            @unique
+  linkedAccount   ChartOfAccount? @relation("UserAccount", fields: [linkedAccountId], references: [id])
+
+  // Relations
+  tasks           Task[]
+  audits          AuditLog[]
+  orders          Order[]        @relation("StaffOrders")
+  verifiedOrders  Order[]        @relation("VerifiedOrders")
+  verifiedEntries JournalEntry[] @relation("VerifiedEntries")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Role {
+  id          Int     @id @default(autoincrement())
+  name        String  @unique // 'Admin', 'Manager', 'Cashier', 'Driver'
+  description String?
+
+  permissions Permission[]
+  users       User[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Permission {
+  id          Int     @id @default(autoincrement())
+  code        String  @unique // 'pos.sell', 'inventory.adjust', 'finance.post'
+  name        String
+  description String?
+
+  roles Role[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// "The Black Box" - Track everything
+model AuditLog {
+  id       BigInt  @id @default(autoincrement())
+  action   String // 'CREATE', 'UPDATE', 'DELETE'
+  entity   String // 'Product', 'Price', 'Order'
+  entityId String // ID of the changed item
+  field    String? // Which field changed
+  oldValue String?
+  newValue String?
+
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  timestamp DateTime @default(now())
+
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+}
+
+// =========================================================
+// MODULE B: CRM & HR (Contacts & Employees)
+// =========================================================
+
+model Contact {
+  id      Int     @id @default(autoincrement())
+  type    String // 'SUPPLIER', 'CUSTOMER', 'LEAD'
+  name    String
+  email   String?
+  phone   String?
+  address String?
+  vatId   String? // Tax ID for suppliers/companies
+
+  // SaaS Context
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  // Home Site (Master Data - Registration/Base)
+  homeSiteId Int?
+  homeSite   Site? @relation(fields: [homeSiteId], references: [id])
+
+  // Financials
+  balance       Decimal @default(0.00) // + We owe them, - They owe us
+  creditLimit   Decimal @default(0.00)
+  loyaltyPoints Int     @default(0)
+
+  // Automatic Ledger Account (Sub-ledger link)
+  linkedAccountId Int?            @unique
+  linkedAccount   ChartOfAccount? @relation("ContactAccount", fields: [linkedAccountId], references: [id])
+
+  orders       Order[]
+  transactions JournalEntryLine[]
+
+  // Products where this contact is the primary supplier
+  suppliedProducts Product[] @relation("ProductSupplier")
+
+  financialEvents FinancialEvent[]
+  loans           Loan[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Employee {
+  id         Int       @id @default(autoincrement())
+  employeeId String    @unique // Internal ID like EMP-001
+  firstName  String
+  lastName   String
+  idNumber   String?   @unique // National ID / Passport
+  phone      String?
+  email      String?
+  jobTitle   String?
+  department String?
+  hireDate   DateTime?
+  salary     Decimal?
+  status     String    @default("ACTIVE") // 'ACTIVE', 'ON_LEAVE', 'TERMINATED'
+
+  // Home Site (Master Data - Base Branch)
+  homeSiteId Int?
+  homeSite   Site? @relation(fields: [homeSiteId], references: [id])
+
+  user User? // Link to system login
+
+  // Payroll Account Link
+  linkedAccountId Int?            @unique
+  linkedAccount   ChartOfAccount? @relation("EmployeeAccount", fields: [linkedAccountId], references: [id])
+
+  transactions JournalEntryLine[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// =========================================================
+// MODULE C: INVENTORY & PRODUCTS
+// =========================================================
+
+// ...
+model Product {
+  id          Int     @id @default(autoincrement())
+  sku         String  @unique // Internal ID
+  barcode     String? @unique // Scan Code
+  name        String
+  description String?
+
+  // SaaS Context
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  // Grouping (New)
+  productGroupId Int?
+  productGroup   ProductGroup? @relation(fields: [productGroupId], references: [id])
+
+  // Dimensions / Size (New)
+  size       Decimal? // e.g., 300
+  sizeUnitId Int?
+  sizeUnit   Unit?    @relation("SizeUnit", fields: [sizeUnitId], references: [id])
+
+  // Pricing Strategy (Updated for Financial Module)
+  costPrice Decimal @default(0.00) // Moving Average Cost (Generic)
+
+  // Explicit Pricing Fields (Financial Module)
+  inventoryLevels InventoryLevel[]
+  costPriceHT     Decimal          @default(0.00)
+  costPriceTTC    Decimal          @default(0.00)
+  tvaRate         Decimal          @default(0.00)
+  sellingPriceHT  Decimal          @default(0.00)
+  sellingPriceTTC Decimal          @default(0.00)
+
+  basePrice Decimal @default(0.00) // Keep for backward compatibility/reference
+  minPrice  Decimal @default(0.00) // Lowest allowed price
+
+  // Advanced Classification
+  brand   Brand? @relation(fields: [brandId], references: [id])
+  brandId Int?
+
+  country   Country? @relation(fields: [countryId], references: [id])
+  countryId Int? // Origin Country
+
+  unit   Unit? @relation(fields: [unitId], references: [id])
+  unitId Int?
+
+  status String @default("ACTIVE")
+
+  supplier   Contact? @relation("ProductSupplier", fields: [supplierId], references: [id])
+  supplierId Int?
+
+  // Tax / TVA Configuration
+  taxRate       Decimal @default(0.00) // e.g., 0.11 for 11%
+  isTaxIncluded Boolean @default(true) // Does basePrice include the tax?
+
+  // Settings
+  isExpiryTracked Boolean @default(false)
+  minStockLevel   Int     @default(10) // Reorder point
+
+  // Relations
+  category   Category? @relation(fields: [categoryId], references: [id])
+  categoryId Int?
+
+  parfumId Int?
+  parfum   Parfum? @relation(fields: [parfumId], references: [id])
+
+  inventory  Inventory[]
+  batches    StockBatch[]
+  orderLines OrderLine[]
+
+  images      ProductImage[]
+  PricingRule PricingRule[]
+
+  // Performance Indexes for POS search
+  @@index([name]) // Fast search by name
+  @@index([categoryId]) // Fast filtering by category  
+  @@index([productGroupId])
+}
+
+model ProductGroup {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+  image       String?
+
+  // Classification
+  brandId Int?
+  brand   Brand? @relation(fields: [brandId], references: [id])
+
+  categoryId Int?
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  parfumId Int?
+  parfum   Parfum? @relation(fields: [parfumId], references: [id])
+
+  // Pricing Brain Link
+  priceListRules PricingRule[] // Rules applying to this entire group
+
+  products Product[] // Products in this group
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id        Int     @id @default(autoincrement())
+  name      String
+  code      String? @unique // Internal Code for barcode generation
+  shortName String? // Abbreviation for nomenclature
+
+  parentId Int? // For Sub-categories
+  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryHierarchy")
+
+  brands Brand[] // Many-to-Many: Brands available in this category
+
+  products Product[]
+
+  productGroups ProductGroup[]
+  parfums       Parfum[]
+  PricingRule   PricingRule[]
+}
+
+model Brand {
+  id        Int     @id @default(autoincrement())
+  name      String  @unique
+  shortName String? // Abbreviation
+  logo      String? // URL to logo
+
+  countries  Country[] // Many-to-Many: Brand operates in these countries
+  categories Category[] // Many-to-Many: Categories where this brand applies
+
+  products      Product[]
+  productGroups ProductGroup[]
+}
+
+model Parfum {
+  id        Int     @id @default(autoincrement())
+  name      String  @unique
+  shortName String?
+
+  categories Category[] // Many-to-Many: Parfums available in these categories
+
+  products      Product[]
+  productGroups ProductGroup[]
+}
+
+model Warehouse {
+  id       Int     @id @default(autoincrement())
+  name     String // "Main", "Store", "Damaged"
+  code     String? // e.g., WH01, ST01
+  type     String  @default("PHYSICAL") // 'PHYSICAL', 'VIRTUAL'
+  canSell  Boolean @default(false) // If true, it acts as a Store (Point of Sale)
+  address  String?
+  city     String?
+  isActive Boolean @default(true)
+
+  siteId Int?
+  site   Site? @relation(fields: [siteId], references: [id])
+
+  inventory Inventory[]
+}
+
+// Specific batch of items (e.g., Milk expiring 2026-10-10)
+model StockBatch {
+  id        Int     @id @default(autoincrement())
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+  batchCode String // Auto-generated or Supplier Batch
+
+  expiryDate DateTime?
+  costPrice  Decimal // Cost of this specific batch
+
+  inventory Inventory[]
+}
+
+// The breakdown of stock: Product X, Batch Y, at Warehouse Z
+model Inventory {
+  id          Int       @id @default(autoincrement())
+  warehouseId Int
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+
+  batchId Int?
+  batch   StockBatch? @relation(fields: [batchId], references: [id])
+
+  quantity Decimal @default(0)
+
+  @@unique([warehouseId, productId, batchId])
+}
+
+// =========================================================
+// MODULE D: COMMERCIAL (Orders & Transations)
+// =========================================================
+
+model Order {
+  id     Int    @id @default(autoincrement())
+  type   String // 'SALE', 'PURCHASE', 'TRANSFER', 'ADJUSTMENT'
+  status String // 'DRAFT', 'PENDING_APPROVAL', 'COMPLETED', 'CANCELLED'
+
+  // Participants
+  contactId Int? // Supplier or Customer
+  contact   Contact? @relation(fields: [contactId], references: [id])
+
+  userId Int // Staff who processed it
+  user   User @relation("StaffOrders", fields: [userId], references: [id])
+
+  isVerified   Boolean @default(false)
+  verifiedById Int?
+  verifiedBy   User?   @relation("VerifiedOrders", fields: [verifiedById], references: [id])
+  isLocked     Boolean @default(false)
+
+  // Data
+  totalAmount Decimal @default(0.00)
+  taxAmount   Decimal @default(0.00)
+  discount    Decimal @default(0.00)
+  notes       String?
+
+  lines OrderLine[]
+
+  // Scope (Financial Module)
+  scope String? // 'OFFICIAL', 'INTERNAL', 'PENDING' (Models Enum)
+
+  // Payment Info
+  paymentMethod String?
+  refCode       String?
+
+  siteId Int? // Where the sale/purchase happened
+  site   Site? @relation(fields: [siteId], references: [id])
+
+  // Effective Cost Engine Flags
+  invoicePriceType String  @default("HT") // 'HT', 'TTC'
+  vatRecoverable   Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrderLine {
+  id      Int   @id @default(autoincrement())
+  orderId Int
+  order   Order @relation(fields: [orderId], references: [id])
+
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+
+  quantity  Decimal
+  unitPrice Decimal // At moment of sale/purchase
+  taxRate   Decimal @default(0.00) // Snapshot of tax rate at time of sale
+  total     Decimal
+
+  // For fulfillment
+  batchId Int? // Which batch was picked?
+
+  // Effective Cost Engine Fields (Calculated and Persisted)
+  unitCostHT    Decimal @default(0.00)
+  unitCostTTC   Decimal @default(0.00)
+  vatAmount     Decimal @default(0.00)
+  effectiveCost Decimal @default(0.00)
+}
+
+// =========================================================
+// MODULE E & F: HR, TASKS & AUTOMATION
+// =========================================================
+
+model Task {
+  id          Int     @id @default(autoincrement())
+  title       String
+  description String?
+  type        String // 'GENERAL', 'COUNT', 'EXPIRY_CHECK', 'LABEL_PRINT'
+
+  status   String // 'TODO', 'IN_PROGRESS', 'REVIEW', 'DONE'
+  priority String // 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'
+
+  assignedToId Int?
+  assignedTo   User? @relation(fields: [assignedToId], references: [id])
+
+  dueDate     DateTime?
+  completedAt DateTime?
+}
+
+// =========================================================
+// MODULE G: SYSTEM SETTINGS
+// =========================================================
+
+// =========================================================
+// MODULE G: SYSTEM SETTINGS
+// =========================================================
+
+model SystemSettings {
+  id    Int    @id @default(autoincrement())
+  key   String @unique // e.g., "product_naming_rule"
+  value String // JSON stringified value
+
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
+
+model BarcodeSettings {
+  id Int @id @default(autoincrement())
+
+  prefix       String @default("200") // e.g., "200" for internal items
+  length       Int    @default(13) // EAN-13
+  nextSequence Int    @default(1000) // Counter for next item
+
+  isEnabled Boolean @default(true)
+
+  updatedAt DateTime @updatedAt
+}
+
+model TransactionSequence {
+  id         Int     @id @default(autoincrement())
+  type       String  @unique // 'INVOICE', 'LOAN', 'JOURNAL', 'PAYMENT', 'CAPITAL', 'WITHDRAWAL'
+  prefix     String? // e.g., "INV-"
+  suffix     String? // e.g., "/2024"
+  nextNumber Int     @default(1)
+  padding    Int     @default(5) // e.g., 5 -> 00001
+
+  updatedAt DateTime @updatedAt
+}
+
+model ProductImage {
+  id        Int     @id @default(autoincrement())
+  url       String
+  isPrimary Boolean @default(false)
+
+  productId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+// =========================================================
+// MODULE H: FINANCE - SETTINGS & FISCAL YEAR
+// =========================================================
+
+model FinancialSettings {
+  id          Int    @id @default(autoincrement())
+  companyType String @default(value: "REGULAR") // 'REGULAR', 'MICRO', 'REAL', 'MIXED'
+
+  // SaaS Context
+  organizationId String?       @unique
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  // For Micro Companies
+  salesTaxPercentage    Decimal @default(0.00)
+  purchaseTaxPercentage Decimal @default(0.00)
+
+  // Custom Rules
+  customTaxRules String? // JSON
+
+  defaultTaxRate Decimal @default(0.11)
+  currency       String  @default("USD")
+
+  updatedAt DateTime @updatedAt
+
+  // Custom Company Flags
+  worksInTTC         Boolean @default(true) // Cost Effective Basis
+  allowHTEntryForTTC Boolean @default(false) // Allow entering HT invoice in TTC company
+  declareTVA         Boolean @default(false)
+  dualView           Boolean @default(false) // Official vs Internal
+
+  // Cost Engine Global Policy
+  pricingCostBasis String @default("AUTO") // 'AUTO', 'FORCE_HT', 'FORCE_TTC'
+}
+
+model FiscalYear {
+  id        Int      @id @default(autoincrement())
+  name      String // "FY 2026"
+  startDate DateTime
+  endDate   DateTime
+  status    String   @default("OPEN") // 'OPEN', 'CLOSED', 'LOCKED'
+
+  isLocked      Boolean   @default(false)
+  isHardLocked  Boolean   @default(false) // Cannot be reopened easily
+  autoCloseDate DateTime?
+
+  periods        FiscalPeriod[]
+  journalEntries JournalEntry[]
+}
+
+model FiscalPeriod {
+  id           Int        @id @default(autoincrement())
+  fiscalYearId Int
+  fiscalYear   FiscalYear @relation(fields: [fiscalYearId], references: [id])
+
+  name      String // "January 2026"
+  number    Int // 1 to 12 usually
+  type      String   @default("STANDARD") // 'STANDARD' or 'ADJUSTMENT'
+  startDate DateTime
+  endDate   DateTime
+  status    String   @default("OPEN")
+
+  journalEntries JournalEntry[]
+}
+
+// =========================================================
+// MODULE I: ACCOUNTING BRAIN (General Ledger)
+// =========================================================
+
+model ChartOfAccount {
+  id          Int     @id @default(autoincrement())
+  code        String  @unique // "1000", "5100"
+  name        String
+  description String?
+  type        String // 'ASSET', 'LIABILITY', 'EQUITY', 'INCOME', 'EXPENSE'
+  subType     String? // 'CASH', 'BANK', 'RECEIVABLE', 'PAYABLE' for automation
+  isActive    Boolean @default(true)
+
+  // SaaS Context
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  balance         Decimal @default(0.00) // Consolidated (Real) balance
+  balanceOfficial Decimal @default(0.00) // Official (Declared) balance
+
+  // Regulatory Mapping (Reporting-only)
+  syscohadaCode  String? // e.g. "57" for Cash
+  syscohadaClass String? // e.g. "Class 5"
+
+  // System Enforcement Flags
+  isSystemOnly        Boolean @default(false) // If true, prevent manual journal entries
+  isHidden            Boolean @default(false) // If true, hide from standard selects/lists
+  requiresZeroBalance Boolean @default(false) // If true, block period closure if balance != 0
+
+  parentId Int?
+  parent   ChartOfAccount?  @relation("AccountHierarchy", fields: [parentId], references: [id])
+  children ChartOfAccount[] @relation("AccountHierarchy")
+
+  journalLines JournalEntryLine[]
+
+  // Reverse links to People/Entities
+  linkedContact  Contact?  @relation("ContactAccount")
+  linkedUser     User?     @relation("UserAccount")
+  linkedEmployee Employee? @relation("EmployeeAccount")
+
+  // Reverse Link for Strict Financial Accounts
+  financialAccount FinancialAccount? @relation("FinancialToLedger")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model JournalEntry {
+  id              Int      @id @default(autoincrement())
+  transactionDate DateTime
+
+  description String?
+  reference   String? // Invoice #, Payment Ref
+
+  fiscalYearId Int
+  fiscalYear   FiscalYear @relation(fields: [fiscalYearId], references: [id])
+
+  fiscalPeriodId Int?
+  fiscalPeriod   FiscalPeriod? @relation(fields: [fiscalPeriodId], references: [id])
+
+  status String @default("DRAFT") // 'DRAFT', 'POSTED', 'REVERSED'
+  scope  String @default("OFFICIAL") // 'OFFICIAL', 'INTERNAL', 'PENDING'
+
+  siteId Int? // Dimension for P&L per site
+  site   Site? @relation(fields: [siteId], references: [id])
+
+  isVerified   Boolean @default(false)
+  verifiedById Int?
+  verifiedBy   User?   @relation("VerifiedEntries", fields: [verifiedById], references: [id])
+  isLocked     Boolean @default(false)
+
+  lines JournalEntryLine[]
+
+  reversalOfId Int?          @unique
+  reversalOf   JournalEntry? @relation("Reversal", fields: [reversalOfId], references: [id])
+  reversedBy   JournalEntry? @relation("Reversal")
+
+  createdAt DateTime  @default(now())
+  postedAt  DateTime?
+  createdBy Int? // User ID
+
+  financialEvent FinancialEvent?
+}
+
+model JournalEntryLine {
+  id             Int          @id @default(autoincrement())
+  journalEntryId Int
+  journalEntry   JournalEntry @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+
+  accountId Int
+  account   ChartOfAccount @relation(fields: [accountId], references: [id])
+
+  // Auxiliary Dimensions (Direct tracking for People/Contacts)
+  contactId Int?
+  contact   Contact? @relation(fields: [contactId], references: [id])
+
+  employeeId Int?
+  employee   Employee? @relation(fields: [employeeId], references: [id])
+
+  debit  Decimal @default(0.00)
+  credit Decimal @default(0.00)
+
+  description String?
+}
+
+// =========================================================
+// MODULE J: PRICING BRAIN
+// =========================================================
+
+model PriceList {
+  id        Int     @id @default(autoincrement())
+  name      String // "Retail Standard", "Wholesale A"
+  currency  String  @default("USD")
+  isDefault Boolean @default(false)
+
+  rules PricingRule[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PricingRule {
+  id          Int       @id @default(autoincrement())
+  priceListId Int
+  priceList   PriceList @relation(fields: [priceListId], references: [id], onDelete: Cascade)
+
+  // Scope (Specific Product OR Category OR Brand)
+  productId Int?
+  product   Product? @relation(fields: [productId], references: [id])
+
+  categoryId Int?
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  // Rule
+  adjustmentType String // 'PERCENTAGE', 'FIXED_PRICE', 'FIXED_DISCOUNT'
+  value          Decimal
+
+  minQuantity Int @default(1) // For quantity breaks
+
+  priority       Int           @default(0) // Higher priority wins
+  ProductGroup   ProductGroup? @relation(fields: [productGroupId], references: [id])
+  productGroupId Int?
+}
+
+// =========================================================
+// MODULE K: MULTI-SITE LOGISTICS
+// =========================================================
+
+model Site {
+  id        Int     @id @default(autoincrement())
+  name      String
+  code      String? @unique
+  address   String?
+  city      String?
+  phone     String?
+  vatNumber String? // Tax ID per branch
+
+  isActive Boolean @default(true)
+
+  // SaaS Context
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  warehouses        Warehouse[]
+  users             User[]             @relation("HomeSite")
+  contacts          Contact[]
+  employees         Employee[]
+  orders            Order[]
+  transactions      Transaction[]
+  journalEntries    JournalEntry[]
+  financialAccounts FinancialAccount[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  inventoryLevels InventoryLevel[]
+}
+
+model InventoryLevel {
+  id Int @id @default(autoincrement())
+
+  siteId Int
+  site   Site @relation(fields: [siteId], references: [id])
+
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+
+  quantity Decimal @default(0)
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([siteId, productId])
+}
+
+// =========================================================
+// MODULE L: FINANCIAL EVENTS (Non-Commercial)
+// =========================================================
+
+model FinancialEvent {
+  id        Int    @id @default(autoincrement())
+  eventType String // 'PARTNER_CAPITAL_INJECTION', 'PARTNER_LOAN', 'PARTNER_WITHDRAWAL', 'REFUND_RECEIVED'
+  status    String @default("DRAFT") // 'DRAFT', 'OPEN', 'SETTLED', 'CANCELLED'
+
+  amount    Decimal
+  currency  String   @default("USD")
+  date      DateTime
+  reference String? // Bank slip, Check #
+  notes     String?
+
+  // Participants
+  contactId Int? // Partner or Supplier
+  contact   Contact? @relation(fields: [contactId], references: [id])
+
+  // Linked Accounting
+  transactionId Int?         @unique // The Money Movement (Voucher)
+  transaction   Transaction? @relation(fields: [transactionId], references: [id])
+
+  journalEntryId Int?          @unique // The Accounting Record (GL)
+  journalEntry   JournalEntry? @relation(fields: [journalEntryId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Link to Loan
+  loanId Int?
+  loan   Loan? @relation(fields: [loanId], references: [id])
+}
+
+// =========================================================
+// MODULE M: LOAN CONTRACTS
+// =========================================================
+
+model Loan {
+  id Int @id @default(autoincrement())
+
+  contractNumber String? @unique // e.g., "LOAN-00001"
+
+  // Borrower/Lender (Usually a Partner)
+  contactId Int
+  contact   Contact @relation(fields: [contactId], references: [id])
+
+  // Terms
+  principalAmount Decimal
+  interestRate    Decimal  @default(0) // Percentage (e.g., 5.0 for 5%)
+  interestType    String   @default("NONE") // 'NONE', 'SIMPLE', 'COMPOUND'
+  termMonths      Int? // e.g., 12 months
+  startDate       DateTime
+
+  // Repayment Configuration
+  paymentFrequency String @default("MONTHLY") // 'MONTHLY', 'QUARTERLY'
+
+  status String @default("ACTIVE") // 'DRAFT', 'ACTIVE', 'PAID', 'DEFAULTED'
+
+  installments    LoanInstallment[]
+  financialEvents FinancialEvent[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model LoanInstallment {
+  id Int @id @default(autoincrement())
+
+  loanId Int
+  loan   Loan @relation(fields: [loanId], references: [id], onDelete: Cascade)
+
+  dueDate DateTime
+
+  // Amounts
+  principalAmount Decimal
+  interestAmount  Decimal @default(0)
+  totalAmount     Decimal
+
+  // Status Tracking
+  paidAmount Decimal @default(0)
+  status     String  @default("PENDING") // 'PENDING', 'PAID', 'PARTIAL', 'OVERDUE', 'RESCHEDULED'
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

@@ -1,8 +1,9 @@
-// This is the TSF Master Schema (v1.0)
+// This is the TSF Master Schema (v1.1 - SaaS Multi-Tenant)
 // Designed to support: ERP, Store, POS, HR, CRM, and Audit
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../src/generated/client"
 }
 
 datasource db {
@@ -11,9 +12,24 @@ datasource db {
 }
 
 // =========================================================
-// MODULE A: PEOPLE & SECURITY
-// =========================================================
 // SQLite Compatible (No Enums)
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique // URL prefix
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sites     Site[]
+  users     User[]
+  products  Product[]
+  settings  FinancialSettings[]
+  ledger    ChartOfAccount[]
+  contacts  Contact[]
+  audits    AuditLog[]
+}
 
 model Country {
   id   Int    @id @default(autoincrement())
@@ -98,6 +114,10 @@ model User {
   name     String
   isActive Boolean @default(true)
 
+  // SaaS Context
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
   // Advanced RBAC
   roleId Int?
   role   Role? @relation(fields: [roleId], references: [id])
@@ -122,7 +142,9 @@ model User {
   // Relations
   tasks  Task[]
   audits AuditLog[]
-  orders Order[] // Orders processed by this user
+  orders Order[] @relation("StaffOrders")
+  verifiedOrders Order[] @relation("VerifiedOrders")
+  verifiedEntries JournalEntry[] @relation("VerifiedEntries")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -165,6 +187,9 @@ model AuditLog {
   userId    Int
   user      User     @relation(fields: [userId], references: [id])
   timestamp DateTime @default(now())
+
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
 }
 
 // =========================================================
@@ -179,6 +204,10 @@ model Contact {
   phone   String?
   address String?
   vatId   String? // Tax ID for suppliers/companies
+
+  // SaaS Context
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
 
   // Home Site (Master Data - Registration/Base)
   homeSiteId Int?
@@ -247,6 +276,10 @@ model Product {
   barcode     String? @unique // Scan Code
   name        String
   description String?
+
+  // SaaS Context
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
 
   // Grouping (New)
   productGroupId Int?
@@ -442,7 +475,12 @@ model Order {
   contact   Contact? @relation(fields: [contactId], references: [id])
 
   userId Int // Staff who processed it
-  user   User @relation(fields: [userId], references: [id])
+  user   User @relation("StaffOrders", fields: [userId], references: [id])
+
+  isVerified     Boolean @default(false)
+  verifiedById   Int?
+  verifiedBy     User? @relation("VerifiedOrders", fields: [verifiedById], references: [id])
+  isLocked       Boolean @default(false)
 
   // Data
   totalAmount Decimal @default(0.00)
@@ -570,7 +608,11 @@ model ProductImage {
 
 model FinancialSettings {
   id          Int    @id @default(autoincrement())
-  companyType String @default("REGULAR") // 'REGULAR', 'MICRO', 'REAL', 'MIXED'
+  companyType String @default(value: "REGULAR") // 'REGULAR', 'MICRO', 'REAL', 'MIXED'
+
+  // SaaS Context
+  organizationId String? @unique
+  organization   Organization? @relation(fields: [organizationId], references: [id])
 
   // For Micro Companies
   salesTaxPercentage    Decimal @default(0.00)
@@ -637,6 +679,10 @@ model ChartOfAccount {
   subType String? // 'CASH', 'BANK', 'RECEIVABLE', 'PAYABLE' for automation
   isActive Boolean @default(true)
 
+  // SaaS Context
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
   balance Decimal @default(0.00) // Consolidated (Real) balance
   balanceOfficial Decimal @default(0.00) // Official (Declared) balance
 
@@ -685,6 +731,11 @@ model JournalEntry {
 
   siteId Int? // Dimension for P&L per site
   site   Site? @relation(fields: [siteId], references: [id])
+
+  isVerified     Boolean @default(false)
+  verifiedById   Int?
+  verifiedBy     User? @relation("VerifiedEntries", fields: [verifiedById], references: [id])
+  isLocked       Boolean @default(false)
 
   lines JournalEntryLine[]
 
@@ -773,6 +824,10 @@ model Site {
   vatNumber String? // Tax ID per branch
 
   isActive Boolean @default(true)
+
+  // SaaS Context
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
 
   warehouses        Warehouse[]
   users             User[]             @relation("HomeSite")

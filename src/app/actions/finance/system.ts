@@ -65,34 +65,46 @@ export async function wipeAllOperationalData() {
 export async function seedTestData() {
     return await prisma.$transaction(async (tx) => {
         // 0. Core Dimensions for Linkage
-        const site = await tx.site.findFirst() || await tx.site.create({
-            data: { name: 'Main Branch', code: 'MAIN' }
+        const organization = await tx.organization.upsert({
+            where: { slug: 'tsf' },
+            update: {},
+            create: { name: 'TSF Global', slug: 'tsf' }
+        })
+
+        const site = await tx.site.findFirst({
+            where: { organizationId: organization.id }
+        }) || await tx.site.create({
+            data: { name: 'Main Branch', code: 'MAIN', organizationId: organization.id }
         })
 
         // Ensure Cash/Bank Roots exist in COA
-        const assetRoot = await tx.chartOfAccount.findFirst({ where: { code: '1000' } })
+        const assetRoot = await tx.chartOfAccount.findFirst({
+            where: { code: '1000', organizationId: organization.id }
+        })
 
         const cashAccount = await tx.chartOfAccount.upsert({
-            where: { code: '5701' },
+            where: { code: '5701', organizationId: organization.id },
             update: {},
             create: {
                 code: '5701',
                 name: 'Main Cash Drawer Ledger',
                 type: 'ASSET',
                 subType: 'CASH',
-                parentId: assetRoot?.id
+                parentId: assetRoot?.id,
+                organizationId: organization.id
             }
         })
 
         const bankAccount = await tx.chartOfAccount.upsert({
-            where: { code: '5121' },
+            where: { code: '5121', organizationId: organization.id },
             update: {},
             create: {
                 code: '5121',
                 name: 'Main Bank Ledger',
                 type: 'ASSET',
                 subType: 'BANK',
-                parentId: assetRoot?.id
+                parentId: assetRoot?.id,
+                organizationId: organization.id
             }
         })
 
