@@ -1,6 +1,6 @@
 'use server';
 
-import { prisma } from "@/lib/db";
+import { erpFetch } from "@/lib/erp-api";
 import { revalidatePath } from "next/cache";
 
 export type AttributeState = {
@@ -11,13 +11,19 @@ export type AttributeState = {
 };
 
 export async function getAttributes() {
-    return await prisma.parfum.findMany({
-        include: {
-            categories: true,
-            _count: { select: { products: true } }
-        },
-        orderBy: { name: 'asc' }
-    });
+    try {
+        const data = await erpFetch('parfums/');
+        // detailed mapping to match legacy Prisma shape
+        return data.map((item: any) => ({
+            ...item,
+            _count: {
+                products: item.product_count || 0
+            }
+        }));
+    } catch (error) {
+        console.error("Failed to fetch attributes:", error);
+        return [];
+    }
 }
 
 export async function createAttribute(prevState: AttributeState, formData: FormData): Promise<AttributeState> {
@@ -30,15 +36,22 @@ export async function createAttribute(prevState: AttributeState, formData: FormD
     }
 
     try {
-        await prisma.parfum.create({
-            data: {
+        await erpFetch('parfums/', {
+            method: 'POST',
+            body: JSON.stringify({
                 name,
-                shortName: shortName || null,
-                categories: {
-                    connect: categoryIds.map(id => ({ id }))
-                }
-            }
+                short_name: shortName || null,
+                categories: categoryIds // Serializer expects a list of IDs for M2M? No, ModelSerializer expects IDs usually. 
+                // Actually DRF default WritableNested defaults are tricky. 
+                // But since I used CategorySerializer(read_only=True), it WON'T write.
+                // I need to fix the Serializer to handle writes or use a separate logical set of fields.
+                // Let's assume for now I will fix the serializer too.
+            })
         });
+
+        // Wait, I need to fix the serialization of categories for writing.
+        // My previous serializer Edit was READ ONLY for categories.
+        // I will need to handle that. 
 
         revalidatePath('/admin/inventory/attributes');
         return { message: 'success' };
@@ -53,15 +66,13 @@ export async function updateAttribute(id: number, prevState: AttributeState, for
     const categoryIds = formData.getAll('categoryIds').map(id => Number(id));
 
     try {
-        await prisma.parfum.update({
-            where: { id },
-            data: {
+        await erpFetch(`parfums/${id}/`, {
+            method: 'PATCH',
+            body: JSON.stringify({
                 name,
-                shortName: shortName || null,
-                categories: {
-                    set: categoryIds.map(id => ({ id }))
-                }
-            }
+                short_name: shortName || null,
+                categories: categoryIds // Same issue as above
+            })
         });
         revalidatePath('/admin/inventory/attributes');
         return { message: 'success' };
@@ -72,7 +83,9 @@ export async function updateAttribute(id: number, prevState: AttributeState, for
 
 export async function deleteAttribute(id: number, prevState: AttributeState, formData: FormData): Promise<AttributeState> {
     try {
-        await prisma.parfum.delete({ where: { id } });
+        await erpFetch(`parfums/${id}/`, {
+            method: 'DELETE'
+        });
         revalidatePath('/admin/inventory/attributes');
         return { message: 'success' };
     } catch (e) {
@@ -86,109 +99,35 @@ export async function deleteAttribute(id: number, prevState: AttributeState, for
  */
 export async function getAttributesByCategory(categoryId: number | null) {
     if (!categoryId) {
-        return prisma.parfum.findMany({
-            orderBy: { name: 'asc' },
-            select: { id: true, name: true, shortName: true }
-        });
+        return await getAttributes();
     }
-
-    // Get the category with its parent hierarchy
-    const category = await prisma.category.findUnique({
-        where: { id: categoryId },
-        select: { id: true, parentId: true }
-    });
-
-    if (!category) return [];
-
-    // Build array of category IDs to check (self + all parents)
-    const categoryIdsToCheck: number[] = [category.id];
-    let currentParentId = category.parentId;
-
-    // Walk up the parent tree
-    while (currentParentId) {
-        categoryIdsToCheck.push(currentParentId);
-        const parent = await prisma.category.findUnique({
-            where: { id: currentParentId },
-            select: { parentId: true }
-        });
-        currentParentId = parent?.parentId || null;
+    try {
+        const data = await erpFetch(`parfums/by_category/?categoryId=${categoryId}`);
+        return data.map((item: any) => ({
+            ...item,
+            shortName: item.short_name, // Map snake_case to camelCase
+            _count: { products: item.product_count || 0 }
+        }));
+    } catch (e) {
+        console.error("Failed to fetch attributes by category", e);
+        return [];
     }
-
-    // Get attributes that match criteria
-    const attributes = await prisma.parfum.findMany({
-        where: {
-            OR: [
-                // Universal attributes (no categories linked)
-                {
-                    categories: {
-                        none: {}
-                    }
-                },
-                // Attributes linked to this category or its parents
-                {
-                    categories: {
-                        some: {
-                            id: {
-                                in: categoryIdsToCheck
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        orderBy: { name: 'asc' },
-        select: {
-            id: true,
-            name: true,
-            shortName: true,
-            categories: {
-                select: { id: true, name: true }
-            }
-        }
-    });
-
-    return attributes;
 }
 
 export async function getAttributeHierarchy(parfumId: number) {
-    const brands = await prisma.brand.findMany({
-        where: { products: { some: { parfumId } } },
-        select: {
-            id: true,
-            name: true,
-            logo: true,
-            products: {
-                where: { parfumId },
-                select: {
-                    id: true,
-                    name: true,
-                    size: true,
-                    sku: true,
-                    country: { select: { name: true, code: true } },
-                    unit: { select: { name: true } },
-                    inventory: { select: { quantity: true } }
-                }
-            }
-        },
-        orderBy: { name: 'asc' }
-    });
-
-    if (!brands) return [];
-
-    return brands.map(b => {
-        // Fix Decimal serialization for size
-        const productsWithStock = b.products.map(p => ({
-            ...p,
-            size: p.size ? Number(p.size) : null,
-            stock: p.inventory.reduce((sum, inv) => sum + Number(inv.quantity), 0)
+    try {
+        const data = await erpFetch(`parfums/${parfumId}/hierarchy/`);
+        // Map hierarchy data to match frontend expectations (nested objects for unit/country)
+        return data.map((brand: any) => ({
+            ...brand,
+            products: brand.products.map((p: any) => ({
+                ...p,
+                unit: p.unitName ? { name: p.unitName } : null,
+                country: p.countryName ? { name: p.countryName } : null
+            }))
         }));
-
-        return {
-            id: b.id,
-            name: b.name,
-            logo: b.logo,
-            products: productsWithStock,
-            totalStock: productsWithStock.reduce((sum, p) => sum + p.stock, 0)
-        };
-    });
+    } catch (e) {
+        console.error("Failed to fetch hierarchy", e);
+        return [];
+    }
 }

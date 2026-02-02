@@ -24,9 +24,22 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class ParfumSerializer(serializers.ModelSerializer):
+    product_count = serializers.SerializerMethodField()
+
+    def get_product_count(self, obj):
+        return obj.product_set.count()
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret['categories'] = CategorySerializer(instance.categories.all(), many=True).data
+        return ret
+
     class Meta:
         model = Parfum
         fields = '__all__'
+        extra_kwargs = {
+            'categories': {'required': False}
+        }
 
 
 class CountrySerializer(serializers.ModelSerializer):

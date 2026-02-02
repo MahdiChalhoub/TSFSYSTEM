@@ -169,6 +169,7 @@ class ProductGroup(TenantModel):
 class Parfum(TenantModel):
     name = models.CharField(max_length=255)
     short_name = models.CharField(max_length=100, null=True, blank=True)
+    categories = models.ManyToManyField('Category', related_name='parfums', blank=True)
 
     class Meta:
         db_table = 'Parfum'
