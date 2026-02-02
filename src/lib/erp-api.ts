@@ -6,9 +6,20 @@ const DJANGO_URL = process.env.DJANGO_URL || 'http://localhost:8000';
 export async function getTenantContext() {
     const headerList = await headers();
     const host = headerList.get('host') || 'localhost:3000';
-    const subdomain = host.split('.')[0];
 
-    if (!subdomain || subdomain === 'localhost' || subdomain === 'saas' || subdomain === 'www') {
+    // Precise Hostname extraction (removes port)
+    const hostname = host.split(':')[0].toLowerCase();
+    const parts = hostname.split('.');
+
+    let subdomain = "";
+    if (hostname.includes("localhost")) {
+        if (parts.length > 1) subdomain = parts[0];
+    } else {
+        // Production: expect xxx.domain.com (3 parts or more)
+        if (parts.length > 2) subdomain = parts[0];
+    }
+
+    if (!subdomain || subdomain === "localhost" || subdomain === "saas" || subdomain === "www") {
         return null; // Master panel or landing page
     }
 

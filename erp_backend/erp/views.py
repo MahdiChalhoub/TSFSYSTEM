@@ -128,7 +128,7 @@ class ChartOfAccountViewSet(viewsets.ModelViewSet):
         
         accounts = LedgerService.get_chart_of_accounts(organization, scope, include_inactive)
         
-        # Serialize with rollup balances
+        # Serialize with rollup balances and expected frontend fields
         data = []
         for acc in accounts:
             data.append({
@@ -136,9 +136,13 @@ class ChartOfAccountViewSet(viewsets.ModelViewSet):
                 "code": acc.code,
                 "name": acc.name,
                 "type": acc.type,
+                "subType": acc.sub_type,
+                "isActive": acc.is_active,
+                "parentId": acc.parent_id,
+                "syscohadaCode": acc.syscohada_code,
+                "syscohadaClass": acc.syscohada_class,
                 "temp_balance": float(acc.temp_balance),
-                "rollup_balance": float(acc.rollup_balance),
-                "parent_id": acc.parent_id
+                "rollup_balance": float(acc.rollup_balance)
             })
         return Response(data)
 

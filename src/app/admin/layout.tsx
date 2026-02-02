@@ -11,6 +11,8 @@ import { Outfit } from 'next/font/google';
 import { getSites } from '@/app/actions/sites';
 import { getOrganizations } from '@/app/admin/saas/organizations/actions';
 
+import { headers } from 'next/headers';
+
 const outfit = Outfit({ subsets: ['latin'] });
 
 export default async function AdminLayout({
@@ -18,6 +20,10 @@ export default async function AdminLayout({
 }: {
     children: React.ReactNode;
 }) {
+    const headerList = await headers();
+    const host = headerList.get('host') || '';
+    const currentSlug = host.split(':')[0].split('.')[0];
+
     const [sites, organizations] = await Promise.all([
         getSites(),
         getOrganizations()
@@ -33,7 +39,7 @@ export default async function AdminLayout({
                     {/* Right Panel: Content */}
                     <div className="flex-1 flex flex-col min-w-0">
                         {/* 1. Global Header (Search, Profile) */}
-                        <TopHeader sites={sites} organizations={organizations} />
+                        <TopHeader sites={sites} organizations={organizations} currentSlug={currentSlug} />
 
                         {/* 2. Tab Navigation Bar */}
                         <TabNavigator />

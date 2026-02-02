@@ -4,20 +4,12 @@ import { useState, useTransition } from 'react';
 import { Building, ChevronDown, Check, DoorOpen, ExternalLink } from 'lucide-react';
 import clsx from 'clsx';
 
-export function TenantSwitcher({ organizations }: { organizations: any[] }) {
+export function TenantSwitcher({ organizations, forcedSlug }: { organizations: any[], forcedSlug?: string }) {
     const [isOpen, setIsOpen] = useState(false);
     const [isPending, startTransition] = useTransition();
 
     // Helper to get current subdomain/slug
-    const getCurrentSlug = () => {
-        if (typeof window === 'undefined') return '';
-        const host = window.location.host;
-        const parts = host.split('.');
-        if (parts.length > 1 && parts[0] !== 'localhost') return parts[0];
-        return '';
-    };
-
-    const currentSlug = getCurrentSlug();
+    const currentSlug = forcedSlug || (typeof window !== 'undefined' ? window.location.hostname.split('.')[0] : '');
     const activeOrg = organizations.find(o => o.slug === currentSlug);
 
     const handleSwitch = (slug: string) => {
