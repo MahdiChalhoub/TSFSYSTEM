@@ -11,7 +11,7 @@ export interface AuditLogParams {
     field?: string;
     oldValue?: string;
     newValue?: string;
-    organizationId?: string;
+    organizationId: string;
 }
 
 /**
@@ -53,8 +53,8 @@ export async function logEntityUpdate(
     entityId: string,
     oldData: any,
     newData: any,
-    tx?: Prisma.TransactionClient,
-    organizationId?: string
+    organizationId: string,
+    tx?: Prisma.TransactionClient
 ) {
     const fields = Object.keys(newData);
 

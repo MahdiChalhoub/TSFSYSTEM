@@ -43,6 +43,7 @@ export async function createJournalEntry(data: {
     scope?: 'OFFICIAL' | 'INTERNAL'
     siteId?: number | null
     userId?: number
+    organizationId: string
 }, tx?: Prisma.TransactionClient) {
     const status = data.status || 'DRAFT'
     const scope = data.scope || 'OFFICIAL'
@@ -97,7 +98,7 @@ export async function createJournalEntry(data: {
                 status: status,
                 scope: scope,
                 siteId: data.siteId,
-                postedAt: status === 'POSTED' ? new Date() : null,
+                organizationId: data.organizationId,
                 lines: {
                     create: data.lines.map(l => ({
                         accountId: l.accountId,
@@ -105,7 +106,8 @@ export async function createJournalEntry(data: {
                         employeeId: l.employeeId,
                         debit: l.debit,
                         credit: l.credit,
-                        description: l.description || data.description
+                        description: l.description || data.description,
+                        organizationId: data.organizationId
                     }))
                 }
             },
@@ -138,7 +140,8 @@ export async function createJournalEntry(data: {
             action: 'CREATE',
             entity: 'JournalEntry',
             entityId: entry.id.toString(),
-            newValue: JSON.stringify({ reference, totalDebit, status })
+            newValue: JSON.stringify({ reference, totalDebit, status }),
+            organizationId: data.organizationId
         }, ctx)
 
         return entry
@@ -183,9 +186,24 @@ export async function getLedgerEntries(scope: 'OFFICIAL' | 'INTERNAL' = 'INTERNA
     })
 }
 
+export async function getOpeningEntries() {
+    return await prisma.journalEntry.findMany({
+        where: {
+            OR: [
+                { description: { contains: 'Opening' } },
+                { reference: { startsWith: 'OPEN' } }
+            ]
+        },
+        orderBy: { transactionDate: 'desc' },
+        include: {
+            lines: { include: { account: true } }
+        }
+    })
+}
+
 export const getJournalEntries = getLedgerEntries;
 
-export async function postJournalEntry(id: number) {
+export async function postJournalEntry(id: number, organizationId: string) {
     return await prisma.$transaction(async (tx) => {
         const entry = await tx.journalEntry.findUnique({
             where: { id },
@@ -225,7 +243,8 @@ export async function postJournalEntry(id: number) {
             action: 'POST',
             entity: 'JournalEntry',
             entityId: id.toString(),
-            newValue: 'POSTED'
+            newValue: 'POSTED',
+            organizationId
         }, tx)
 
         return { success: true }
@@ -235,9 +254,9 @@ export async function postJournalEntry(id: number) {
 /**
  * Verification Layer: Confirms the entry is correct before it can be posted or locked.
  */
-export async function verifyJournalEntry(id: number, userId: number) {
+export async function verifyJournalEntry(id: number, userId: number, organizationId: string) {
     return await prisma.$transaction(async (tx) => {
-        const entry = await tx.journalEntry.findUnique({ where: { id } })
+        const entry = await tx.journalEntry.findUnique({ where: { id, organizationId } })
         if (!entry) throw new Error("Entry not found")
         if (entry.status === 'POSTED') throw new Error("Cannot verify a posted entry")
 
@@ -251,7 +270,8 @@ export async function verifyJournalEntry(id: number, userId: number) {
             action: 'VERIFY',
             entity: 'JournalEntry',
             entityId: id.toString(),
-            newValue: 'VERIFIED'
+            newValue: 'VERIFIED',
+            organizationId
         }, tx)
 
         return { success: true }
@@ -261,10 +281,10 @@ export async function verifyJournalEntry(id: number, userId: number) {
 /**
  * Locking Layer: Final seal that prevents even reversal without administrative unlock.
  */
-export async function lockJournalEntry(id: number, userId: number) {
+export async function lockJournalEntry(id: number, userId: number, organizationId: string) {
     return await prisma.$transaction(async (tx) => {
         await tx.journalEntry.update({
-            where: { id },
+            where: { id, organizationId },
             data: { isLocked: true }
         })
 
@@ -274,7 +294,8 @@ export async function lockJournalEntry(id: number, userId: number) {
             entity: 'JournalEntry',
             entityId: id.toString(),
             field: 'isLocked',
-            newValue: 'true'
+            newValue: 'true',
+            organizationId
         }, tx)
 
         return { success: true }

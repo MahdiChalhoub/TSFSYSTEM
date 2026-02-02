@@ -706,8 +706,8 @@ model FinancialSettings {
   companyType String @default(value: "REGULAR") // 'REGULAR', 'MICRO', 'REAL', 'MIXED'
 
   // SaaS Context (1 set of settings per Org)
-  organizationId String??       @unique
-  organization   Organization?? @relation(fields: [organizationId], references: [id])
+  organizationId String?       @unique
+  organization   Organization? @relation(fields: [organizationId], references: [id])
 
   // For Micro Companies
   salesTaxPercentage    Decimal @default(0.00)
