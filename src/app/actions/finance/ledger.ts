@@ -118,54 +118,38 @@ export async function reverseJournalEntry(id: number) {
 export const voidJournalEntry = reverseJournalEntry;
 
 export async function recalculateAccountBalances() {
-    return await prisma.$transaction(async (tx) => {
-        // 1. Reset all balances to zero
-        await tx.chartOfAccount.updateMany({
-            data: { balance: 0, balanceOfficial: 0 }
+    try {
+        await erpFetch('journal/recalculate_balances/', {
+            method: 'POST'
         })
-
-        // 2. Fetch all POSTED journal entry lines
-        const lines = await tx.journalEntryLine.findMany({
-            where: {
-                journalEntry: { status: 'POSTED' }
-            },
-            include: { journalEntry: true }
-        })
-
-        // 3. Apply each line to the balance
-        for (const line of lines) {
-            const netChange = Number(line.debit) - Number(line.credit)
-
-            const updateData: any = {
-                balance: { increment: netChange }
-            }
-
-            if (line.journalEntry.scope === 'OFFICIAL') {
-                updateData.balanceOfficial = { increment: netChange }
-            }
-
-            await tx.chartOfAccount.update({
-                where: { id: line.accountId },
-                data: updateData
-            })
-        }
-
         revalidatePath('/admin/finance/chart-of-accounts')
-        return { success: true, count: lines.length }
-    }, { maxWait: 10000, timeout: 60000 })
+        return { success: true }
+    } catch (error) {
+        console.error("Failed to recalculate balances:", error)
+        return { success: false }
+    }
 }
 
 export async function clearAllJournalEntries() {
-    return await prisma.$transaction(async (tx) => {
-        await tx.journalEntryLine.deleteMany({})
-        await tx.journalEntry.deleteMany({})
-        await tx.transaction.deleteMany({})
-        await tx.chartOfAccount.updateMany({
-            data: { balance: 0, balanceOfficial: 0 }
+    try {
+        await erpFetch('journal/clear_all/', {
+            method: 'POST'
         })
-
         revalidatePath('/admin/finance/ledger')
         revalidatePath('/admin/finance/chart-of-accounts')
         return { success: true }
-    })
+    } catch (error) {
+        console.error("Failed to clear entries:", error)
+        return { success: false }
+    }
+}
+
+export async function getOpeningEntries() {
+    try {
+        const result = await erpFetch('journal/opening_entries/')
+        return result
+    } catch (error) {
+        console.error("Failed to fetch opening entries:", error)
+        return []
+    }
 }

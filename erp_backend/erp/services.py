@@ -74,6 +74,85 @@ class ConfigurationService:
         except:
             return default_config
 
+    @staticmethod
+    def save_posting_rules(organization, config):
+        from .models import SystemSettings
+        import json
+        SystemSettings.objects.update_or_create(
+            organization=organization,
+            key='finance_posting_rules',
+            defaults={'value': json.dumps(config)}
+        )
+        return True
+
+    @staticmethod
+    def apply_smart_posting_rules(organization):
+        from .models import ChartOfAccount
+        """
+        Auto-maps accounts based on standard codes.
+        """
+        accounts = ChartOfAccount.objects.filter(organization=organization, is_active=True)
+        config = ConfigurationService.get_posting_rules(organization)
+
+        def find(code):
+            acc = accounts.filter(code=code).first()
+            return acc.id if acc else None
+
+        # Sales
+        config['sales']['receivable'] = find('1110') or find('1300') or config['sales']['receivable']
+        config['sales']['revenue'] = find('4100') or find('701') or config['sales']['revenue']
+        config['sales']['cogs'] = find('5100') or find('601') or config['sales']['cogs']
+        config['sales']['inventory'] = find('1120') or find('31') or config['sales']['inventory']
+
+        # Purchases
+        config['purchases']['payable'] = find('2101') or find('401') or config['purchases']['payable']
+        config['purchases']['inventory'] = find('1120') or find('607') or config['purchases']['inventory']
+        config['purchases']['tax'] = find('2111') or find('4456') or config['purchases']['tax']
+
+        # Inventory
+        config['inventory']['adjustment'] = find('5104') or find('709') or config['inventory']['adjustment']
+        config['inventory']['transfer'] = find('1120') or config['inventory']['transfer']
+
+        # Suspense
+        config['suspense']['reception'] = find('2102') or find('9004') or config['suspense']['reception']
+
+        ConfigurationService.save_posting_rules(organization, config)
+        return config
+
+    @staticmethod
+    def get_global_settings(organization):
+        from .models import SystemSettings
+        import json
+        setting = SystemSettings.objects.filter(organization=organization, key='global_financial_settings').first()
+        if not setting:
+            return {
+                "companyType": "REGULAR",
+                "currency": "USD",
+                "defaultTaxRate": 0.11,
+                "salesTaxPercentage": 11.0,
+                "purchaseTaxPercentage": 11.0,
+                "worksInTTC": True,
+                "allowHTEntryForTTC": True,
+                "declareTVA": True,
+                "dualView": False,
+                "pricingCostBasis": "AMC"
+            }
+        try:
+            return json.loads(setting.value)
+        except:
+            return {}
+
+    @staticmethod
+    def save_global_settings(organization, config):
+        from .models import SystemSettings
+        import json
+        SystemSettings.objects.update_or_create(
+            organization=organization,
+            key='global_financial_settings',
+            defaults={'value': json.dumps(config)}
+        )
+        return True
+
 class InventoryService:
     @staticmethod
     def receive_stock(organization, product, warehouse, quantity, cost_price_ht, reference="RECEPTION"):
@@ -185,6 +264,58 @@ class InventoryService:
             )
             
             return inventory
+
+    @staticmethod
+    def get_inventory_valuation(organization):
+        from .models import Inventory
+        from django.db.models import Sum, F
+        """
+        Calculates total value of inventory based on AMC.
+        """
+        # Sum of (Inventory.quantity * Product.cost_price)
+        result = Inventory.objects.filter(organization=organization).aggregate(
+            total_value=Sum(F('quantity') * F('product__cost_price'))
+        )
+        total_value = result['total_value'] or Decimal('0')
+        item_count = Inventory.objects.filter(organization=organization).count()
+        
+        return {
+            "total_value": total_value,
+            "item_count": item_count,
+            "timestamp": timezone.now()
+        }
+
+    @staticmethod
+    def get_inventory_financial_status(organization):
+        from .models import ChartOfAccount
+        valuation = InventoryService.get_inventory_valuation(organization)
+        rules = ConfigurationService.get_posting_rules(organization)
+        
+        inv_acc_id = rules.get('sales', {}).get('inventory')
+        if not inv_acc_id:
+            return {
+                **valuation,
+                "ledger_balance": Decimal('0'),
+                "discrepancy": Decimal('0'),
+                "is_mapped": False
+            }
+            
+        try:
+            account = ChartOfAccount.objects.get(id=inv_acc_id)
+            ledger_balance = account.balance
+        except ChartOfAccount.DoesNotExist:
+            ledger_balance = Decimal('0')
+
+        discrepancy = valuation['total_value'] - ledger_balance
+        
+        return {
+            **valuation,
+            "ledger_balance": ledger_balance,
+            "discrepancy": discrepancy,
+            "is_mapped": True,
+            "account_name": account.name if 'account' in locals() else "N/A",
+            "account_code": account.code if 'account' in locals() else "N/A"
+        }
 
 class LedgerService:
     @staticmethod
@@ -352,6 +483,159 @@ class LedgerService:
                 LedgerService.post_journal_entry(entry)
 
             return entry
+
+    @staticmethod
+    def get_chart_of_accounts(organization, scope='INTERNAL', include_inactive=False):
+        from .models import ChartOfAccount
+        """
+        Returns flat list of accounts with rollup balances.
+        """
+        accounts_qs = ChartOfAccount.objects.filter(organization=organization)
+        if not include_inactive:
+            accounts_qs = accounts_qs.filter(is_active=True)
+        
+        accounts = list(accounts_qs.order_by('code'))
+        
+        balance_attr = 'balance_official' if scope == 'OFFICIAL' else 'balance'
+        
+        # Build Map
+        account_map = {acc.id: acc for acc in accounts}
+        for acc in accounts:
+            acc.temp_balance = getattr(acc, balance_attr)
+            acc.temp_children = []
+
+        roots = []
+        for acc in accounts:
+            if acc.parent_id and acc.parent_id in account_map:
+                account_map[acc.parent_id].temp_children.append(acc)
+            else:
+                roots.append(acc)
+
+        def rollup(node):
+            child_sum = sum(rollup(child) for child in node.temp_children)
+            node.rollup_balance = node.temp_balance + child_sum
+            return node.rollup_balance
+
+        for root in roots:
+            rollup(root)
+            
+        return accounts
+
+    @staticmethod
+    def get_account_statement(organization, account_id, start_date=None, end_date=None, scope='INTERNAL'):
+        from .models import ChartOfAccount, JournalEntryLine
+        from django.db.models import Sum
+        account = ChartOfAccount.objects.get(id=account_id, organization=organization)
+        
+        lines_qs = JournalEntryLine.objects.filter(
+            account=account,
+            journal_entry__status='POSTED'
+        )
+        if scope == 'OFFICIAL':
+            lines_qs = lines_qs.filter(journal_entry__scope='OFFICIAL')
+            
+        opening_balance = Decimal('0')
+        if start_date:
+            opening_agg = lines_qs.filter(journal_entry__transaction_date__lt=start_date).aggregate(
+                total_debit=Sum('debit'),
+                total_credit=Sum('credit')
+            )
+            opening_balance = (opening_agg['total_debit'] or Decimal('0')) - (opening_agg['total_credit'] or Decimal('0'))
+            lines_qs = lines_qs.filter(journal_entry__transaction_date__gte=start_date)
+            
+        if end_date:
+            lines_qs = lines_qs.filter(journal_entry__transaction_date__lte=end_date)
+            
+        return {
+            "account": account,
+            "opening_balance": opening_balance,
+            "lines": lines_qs.select_related('journal_entry').order_by('journal_entry__transaction_date')
+        }
+
+    @staticmethod
+    def get_trial_balance(organization, as_of_date=None, scope='INTERNAL'):
+        from .models import ChartOfAccount, JournalEntryLine
+        from django.db.models import Sum
+        accounts = ChartOfAccount.objects.filter(organization=organization, is_active=True).order_by('code')
+        
+        lines_qs = JournalEntryLine.objects.filter(organization=organization, journal_entry__status='POSTED')
+        if as_of_date:
+            lines_qs = lines_qs.filter(journal_entry__transaction_date__lte=as_of_date)
+        if scope == 'OFFICIAL':
+            lines_qs = lines_qs.filter(journal_entry__scope='OFFICIAL')
+            
+        balances = lines_qs.values('account_id').annotate(
+            net=Sum('debit') - Sum('credit')
+        )
+        balance_map = {b['account_id']: b['net'] for b in balances}
+        
+        # Rollup logic
+        account_map = {acc.id: acc for acc in accounts}
+        for acc in accounts:
+            acc.temp_balance = balance_map.get(acc.id, Decimal('0'))
+            acc.temp_children = []
+
+        roots = []
+        for acc in accounts:
+            if acc.parent_id and acc.parent_id in account_map:
+                account_map[acc.parent_id].temp_children.append(acc)
+            else:
+                roots.append(acc)
+
+        def rollup(node):
+            child_sum = sum(rollup(child) for child in node.temp_children)
+            node.rollup_balance = node.temp_balance + child_sum
+            return node.rollup_balance
+
+        for root in roots:
+            rollup(root)
+            
+        return accounts
+
+    @staticmethod
+    def recalculate_balances(organization):
+        from .models import ChartOfAccount, JournalEntryLine
+        """
+        Wipes COA balances and rebuilds them from POSTED lines.
+        """
+        with transaction.atomic():
+            # 1. Reset all balances
+            ChartOfAccount.objects.filter(organization=organization).update(
+                balance=Decimal('0'),
+                balance_official=Decimal('0')
+            )
+            
+            # 2. Get all POSTED lines
+            lines = JournalEntryLine.objects.filter(
+                organization=organization,
+                journal_entry__status='POSTED'
+            ).select_related('journal_entry', 'account')
+            
+            for line in lines:
+                net = line.debit - line.credit
+                acc = line.account
+                acc.balance += net
+                if line.journal_entry.scope == 'OFFICIAL':
+                    acc.balance_official += net
+                acc.save()
+        return True
+
+    @staticmethod
+    def clear_all_data(organization):
+        from .models import JournalEntry, InventoryMovement, Transaction, ChartOfAccount
+        """
+        DANGER: Wipes all transactional data for an organization.
+        """
+        with transaction.atomic():
+            JournalEntry.objects.filter(organization=organization).delete()
+            InventoryMovement.objects.filter(organization=organization).delete()
+            Transaction.objects.filter(organization=organization).delete()
+            # Reset balances
+            ChartOfAccount.objects.filter(organization=organization).update(
+                balance=Decimal('0'),
+                balance_official=Decimal('0')
+            )
+        return True
 
 class FinancialAccountService:
     @staticmethod

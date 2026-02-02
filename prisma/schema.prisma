@@ -15,9 +15,9 @@ model Organization {
   id        String   @id @default(uuid())
   name      String
   slug      String   @unique // URL prefix
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  isActive  Boolean @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   sites               Site[]
   users               User[]
@@ -62,7 +62,7 @@ model Country {
   name String
 
   // SaaS Context
-  organizationId String
+  organizationId String @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   brands   Brand[]
@@ -77,7 +77,7 @@ model Unit {
   name String // Piece, Box
 
   // SaaS Context
-  organizationId String
+  organizationId String @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
   
   // ... attributes
@@ -116,7 +116,7 @@ model FinancialAccount {
   transactions Transaction[]
 
   // SaaS Context
-  organizationId String
+  organizationId String @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   // Assigned (Cashiers/Users) who use this account
@@ -138,10 +138,10 @@ model Transaction {
   scope       String  @default("OFFICIAL") // 'OFFICIAL', 'INTERNAL', 'PENDING'
 
   // SaaS Context
-  organizationId String
+  organizationId String @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
 
-  createdAt DateTime @default(now())
+  createdAt DateTime @map("created_at") @default(now())
 
   financialEvent FinancialEvent?
 }
@@ -156,10 +156,10 @@ model User {
   email    String  @unique
   password String // Hashed
   name     String
-  isActive Boolean @default(true)
+  isActive Boolean @map("is_active") @default(true)
 
   // SaaS Context (Mandatory for SaaS)
-  organizationId String?
+  organizationId String? @map("organization_id")
   organization   Organization? @relation(fields: [organizationId], references: [id])
 
   // Advanced RBAC
@@ -189,8 +189,8 @@ model User {
   verifiedOrders  Order[]        @relation("VerifiedOrders")
   verifiedEntries JournalEntry[] @relation("VerifiedEntries")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @map("created_at") @default(now())
+  updatedAt DateTime @map("updated_at") @updatedAt
 }
 
 model Role {
@@ -199,14 +199,14 @@ model Role {
   description String?
 
   // SaaS Context
-  organizationId String
+  organizationId String @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   permissions Permission[]
   users       User[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @map("created_at") @default(now())
+  updatedAt DateTime @map("updated_at") @updatedAt
 
   @@unique([name, organizationId])
 }
@@ -218,13 +218,13 @@ model Permission {
   description String?
 
   // SaaS Context
-  organizationId String
+  organizationId String @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   roles Role[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @map("created_at") @default(now())
+  updatedAt DateTime @map("updated_at") @updatedAt
 
   @@unique([code, organizationId])
 }
@@ -243,7 +243,7 @@ model AuditLog {
   user      User     @relation(fields: [userId], references: [id])
   timestamp DateTime @default(now())
 
-  organizationId String
+  organizationId String @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
 }
 
@@ -261,7 +261,7 @@ model Contact {
   vatId   String? // Tax ID for suppliers/companies
 
   // SaaS Context
-  organizationId String?
+  organizationId String? @map("organization_id")
   organization   Organization? @relation(fields: [organizationId], references: [id])
 
   // Home Site (Master Data - Registration/Base)
@@ -286,8 +286,8 @@ model Contact {
   financialEvents FinancialEvent[]
   loans           Loan[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @map("created_at") @default(now())
+  updatedAt DateTime @map("updated_at") @updatedAt
 }
 
 model Employee {
@@ -316,8 +316,8 @@ model Employee {
 
   transactions JournalEntryLine[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @map("created_at") @default(now())
+  updatedAt DateTime @map("updated_at") @updatedAt
 }
 
 // =========================================================
@@ -333,7 +333,7 @@ model Product {
   description String?
 
   // SaaS Context
-  organizationId String?
+  organizationId String? @map("organization_id")
   organization   Organization? @relation(fields: [organizationId], references: [id])
 
   // Grouping (New)
@@ -425,8 +425,8 @@ model ProductGroup {
 
   products Product[] // Products in this group
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @map("created_at") @default(now())
+  updatedAt DateTime @map("updated_at") @updatedAt
 }
 
 model Category {
@@ -436,7 +436,7 @@ model Category {
   shortName String? // Abbreviation
 
   // SaaS Context
-  organizationId String
+  organizationId String @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   parentId Int? // For Sub-categories
@@ -459,7 +459,7 @@ model Brand {
   logo      String? // URL to logo
 
   // SaaS Context
-  organizationId String
+  organizationId String @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   countries  Country[] // Many-to-Many
@@ -477,7 +477,7 @@ model Parfum {
   shortName String?
 
   // SaaS Context
-  organizationId String
+  organizationId String @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   categories    Category[] // Many-to-Many
@@ -495,10 +495,10 @@ model Warehouse {
   canSell  Boolean @default(false) // If true, it acts as a Store (Point of Sale)
   address  String?
   city     String?
-  isActive Boolean @default(true)
+  isActive Boolean @map("is_active") @default(true)
 
   // SaaS Context
-  organizationId String
+  organizationId String @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   siteId Int?
@@ -517,7 +517,7 @@ model StockBatch {
   batchCode String // Auto-generated or Supplier Batch
 
   // SaaS Context
-  organizationId String
+  organizationId String @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   expiryDate DateTime?
@@ -541,7 +541,7 @@ model Inventory {
   quantity Decimal @default(0)
 
   // SaaS Context
-  organizationId String
+  organizationId String @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   @@unique([warehouseId, productId, batchId, organizationId])
@@ -557,7 +557,7 @@ model Order {
   status String // 'DRAFT', 'PENDING_APPROVAL', 'COMPLETED', 'CANCELLED'
 
   // SaaS Context
-  organizationId String
+  organizationId String @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   // Participants
@@ -594,8 +594,8 @@ model Order {
   invoicePriceType String  @default("HT") // 'HT', 'TTC'
   vatRecoverable   Boolean @default(true)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @map("created_at") @default(now())
+  updatedAt DateTime @map("updated_at") @updatedAt
 }
 
 model OrderLine {
@@ -612,7 +612,7 @@ model OrderLine {
   total     Decimal
 
   // SaaS Context
-  organizationId String
+  organizationId String @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   // For fulfillment
@@ -639,7 +639,7 @@ model Task {
   priority String // 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'
 
   // SaaS Context
-  organizationId String
+  organizationId String @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   assignedToId Int?
@@ -663,11 +663,11 @@ model SystemSettings {
   value String // JSON stringified value
 
   // SaaS Context
-  organizationId String
+  organizationId String @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
 
-  updatedAt DateTime @updatedAt
-  createdAt DateTime @default(now())
+  updatedAt DateTime @map("updated_at") @updatedAt
+  createdAt DateTime @map("created_at") @default(now())
 
   @@unique([key, organizationId])
 }
@@ -682,10 +682,10 @@ model BarcodeSettings {
   isEnabled Boolean @default(true)
 
   // SaaS Context
-  organizationId String       @unique
+  organizationId String @map("organization_id")       @unique
   organization   Organization @relation(fields: [organizationId], references: [id])
 
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @map("updated_at") @updatedAt
 }
 
 model TransactionSequence {
@@ -697,10 +697,10 @@ model TransactionSequence {
   padding    Int     @default(5) // e.g., 5 -> 00001
 
   // SaaS Context
-  organizationId String
+  organizationId String @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
 
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @map("updated_at") @updatedAt
 
   @@unique([type, organizationId])
 }
@@ -714,10 +714,10 @@ model ProductImage {
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   // SaaS Context
-  organizationId String
+  organizationId String @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
 
-  createdAt DateTime @default(now())
+  createdAt DateTime @map("created_at") @default(now())
 }
 
 // =========================================================
@@ -729,7 +729,7 @@ model FinancialSettings {
   companyType String @default(value: "REGULAR") // 'REGULAR', 'MICRO', 'REAL', 'MIXED'
 
   // SaaS Context (1 set of settings per Org)
-  organizationId String?       @unique
+  organizationId String? @map("organization_id")       @unique
   organization   Organization? @relation(fields: [organizationId], references: [id])
 
   // For Micro Companies
@@ -742,7 +742,7 @@ model FinancialSettings {
   defaultTaxRate Decimal @default(0.11)
   currency       String  @default("USD")
 
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @map("updated_at") @updatedAt
 
   // Custom Company Flags
   worksInTTC         Boolean @default(true) // Cost Effective Basis
@@ -762,7 +762,7 @@ model FiscalYear {
   status    String   @default("OPEN") // 'OPEN', 'CLOSED', 'LOCKED'
 
   // SaaS Context
-  organizationId String
+  organizationId String @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   isLocked      Boolean   @default(false)
@@ -788,7 +788,7 @@ model FiscalPeriod {
   status    String   @default("OPEN")
 
   // SaaS Context
-  organizationId String
+  organizationId String @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   journalEntries JournalEntry[]
@@ -805,10 +805,10 @@ model ChartOfAccount {
   description String?
   type        String // 'ASSET', 'LIABILITY', 'EQUITY', 'INCOME', 'EXPENSE'
   subType     String? // 'CASH', 'BANK', 'RECEIVABLE', 'PAYABLE' for automation
-  isActive    Boolean @default(true)
+  isActive    Boolean @map("is_active") @default(true)
 
   // SaaS Context
-  organizationId String?
+  organizationId String? @map("organization_id")
   organization   Organization? @relation(fields: [organizationId], references: [id])
 
   balance         Decimal @default(0.00) // Consolidated (Real) balance
@@ -837,8 +837,8 @@ model ChartOfAccount {
   // Reverse Link for Strict Financial Accounts
   financialAccount FinancialAccount? @relation("FinancialToLedger")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @map("created_at") @default(now())
+  updatedAt DateTime @map("updated_at") @updatedAt
 
   @@unique([code, organizationId])
 }
@@ -851,7 +851,7 @@ model JournalEntry {
   reference   String? // Invoice #, Payment Ref
 
   // SaaS Context
-  organizationId String
+  organizationId String @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   fiscalYearId Int
@@ -877,7 +877,7 @@ model JournalEntry {
   reversalOf   JournalEntry? @relation("Reversal", fields: [reversalOfId], references: [id])
   reversedBy   JournalEntry? @relation("Reversal")
 
-  createdAt DateTime  @default(now())
+  createdAt DateTime @map("created_at")  @default(now())
   postedAt  DateTime?
   createdBy Int? // User ID
 
@@ -905,7 +905,7 @@ model JournalEntryLine {
   description String?
 
   // SaaS Context
-  organizationId String
+  organizationId String @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
 }
 
@@ -920,13 +920,13 @@ model PriceList {
   isDefault Boolean @default(false)
 
   // SaaS Context
-  organizationId String
+  organizationId String @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   rules PricingRule[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @map("created_at") @default(now())
+  updatedAt DateTime @map("updated_at") @updatedAt
 
   @@unique([name, organizationId])
 }
@@ -947,7 +947,7 @@ model PricingRule {
   productGroup   ProductGroup? @relation(fields: [productGroupId], references: [id])
 
   // SaaS Context
-  organizationId String
+  organizationId String @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   // Rule
@@ -972,10 +972,10 @@ model Site {
   phone     String?
   vatNumber String? // Tax ID per branch
 
-  isActive Boolean @default(true)
+  isActive Boolean @map("is_active") @default(true)
 
   // SaaS Context
-  organizationId String?
+  organizationId String? @map("organization_id")
   organization   Organization? @relation(fields: [organizationId], references: [id])
 
   warehouses        Warehouse[]
@@ -987,8 +987,8 @@ model Site {
   journalEntries    JournalEntry[]
   financialAccounts FinancialAccount[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @map("created_at") @default(now())
+  updatedAt DateTime @map("updated_at") @updatedAt
 
   inventoryLevels InventoryLevel[]
 
@@ -1006,7 +1006,7 @@ model InventoryLevel {
 
   quantity Decimal @default(0)
 
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @map("updated_at") @updatedAt
 
   @@unique([siteId, productId])
 }
@@ -1019,7 +1019,7 @@ model FinancialEvent {
   id        Int    @id @default(autoincrement())
   
   // SaaS Context
-  organizationId String
+  organizationId String @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   eventType String // 'PARTNER_CAPITAL_INJECTION', 'PARTNER_LOAN', 'PARTNER_WITHDRAWAL', 'REFUND_RECEIVED'
@@ -1042,8 +1042,8 @@ model FinancialEvent {
   journalEntryId Int?          @unique // The Accounting Record (GL)
   journalEntry   JournalEntry? @relation(fields: [journalEntryId], references: [id])
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @map("created_at") @default(now())
+  updatedAt DateTime @map("updated_at") @updatedAt
 
   // Link to Loan
   loanId Int?
@@ -1058,7 +1058,7 @@ model Loan {
   id Int @id @default(autoincrement())
 
   // SaaS Context
-  organizationId String
+  organizationId String @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   contractNumber String? @unique // e.g., "LOAN-00001"
@@ -1082,15 +1082,15 @@ model Loan {
   installments    LoanInstallment[]
   financialEvents FinancialEvent[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @map("created_at") @default(now())
+  updatedAt DateTime @map("updated_at") @updatedAt
 }
 
 model LoanInstallment {
   id Int @id @default(autoincrement())
 
   // SaaS Context
-  organizationId String
+  organizationId String @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   loanId Int
@@ -1107,7 +1107,7 @@ model LoanInstallment {
   paidAmount Decimal @default(0)
   status     String  @default("PENDING") // 'PENDING', 'PAID', 'PARTIAL', 'OVERDUE', 'RESCHEDULED'
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @map("created_at") @default(now())
+  updatedAt DateTime @map("updated_at") @updatedAt
 }
 
