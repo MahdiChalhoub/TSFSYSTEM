@@ -6,6 +6,42 @@ from django.db.models import Sum
 import uuid
 import json
 
+class ProvisioningService:
+    @staticmethod
+    def provision_organization(name, slug):
+        from .models import Organization, Site, ChartOfAccount
+        """
+        Creates a new organization and default skeleton.
+        """
+        with transaction.atomic():
+            org = Organization.objects.create(name=name, slug=slug)
+            
+            # Default Site
+            Site.objects.create(
+                organization=org,
+                name="Main Branch",
+                code="MAIN"
+            )
+            
+            # Core Accounts
+            core_accounts = [
+                ('1000', 'ASSETS', 'ASSET'),
+                ('2000', 'LIABILITIES', 'LIABILITY'),
+                ('3000', 'EQUITY', 'EQUITY'),
+                ('4000', 'REVENUE', 'REVENUE'),
+                ('5000', 'EXPENSES', 'EXPENSE'),
+            ]
+            
+            for code, name, type in core_accounts:
+                ChartOfAccount.objects.create(
+                    organization=org,
+                    code=code,
+                    name=name,
+                    type=type
+                )
+            
+            return org
+
 class ConfigurationService:
     @staticmethod
     def get_posting_rules(organization):
@@ -265,7 +301,57 @@ class LedgerService:
             original.status = 'REVERSED'
             original.save()
             
-            return True
+    @staticmethod
+    def update_journal_entry(organization, entry_id, transaction_date=None, description=None, lines=None, status=None):
+        from .models import JournalEntry, JournalEntryLine
+        """
+        Updates an existing journal entry. If moving from DRAFT to POSTED, triggers balance update.
+        """
+        with transaction.atomic():
+            entry = JournalEntry.objects.get(id=entry_id, organization=organization)
+            
+            if entry.status == 'POSTED' and status != 'REVERSED':
+                # Generally, posted entries shouldn't be edited. Use reversals.
+                # But we might allow minor description updates if needed.
+                if lines or transaction_date:
+                    raise ValidationError("Cannot edit lines or date of a POSTED entry. Please reverse and recreate.")
+
+            if transaction_date:
+                entry.transaction_date = transaction_date
+            if description:
+                entry.description = description
+            
+            if status:
+                entry.status = status
+
+            entry.save()
+
+            if lines is not None:
+                # 1. Clear existing lines
+                entry.lines.all().delete()
+                
+                # 2. Add new lines
+                for line_data in lines:
+                    JournalEntryLine.objects.create(
+                        organization=organization,
+                        journal_entry=entry,
+                        account_id=line_data['account_id'],
+                        debit=line_data['debit'],
+                        credit=line_data['credit'],
+                        description=line_data.get('description', entry.description)
+                    )
+                
+                # 3. Validation
+                total_debit = sum(Decimal(str(l['debit'])) for l in lines)
+                total_credit = sum(Decimal(str(l['credit'])) for l in lines)
+                if abs(total_debit - total_credit) > Decimal('0.001'):
+                    raise ValidationError("Out of Balance")
+
+            # 4. If moving to POSTED, update balances
+            if status == 'POSTED' and not entry.posted_at:
+                LedgerService.post_journal_entry(entry)
+
+            return entry
 
 class FinancialAccountService:
     @staticmethod

@@ -12,7 +12,7 @@ from .serializers import (
     JournalEntrySerializer, ProductSerializer, WarehouseSerializer,
     InventorySerializer, InventoryMovementSerializer
 )
-from .services import FinancialAccountService, LedgerService, InventoryService
+from .services import FinancialAccountService, LedgerService, InventoryService, ProvisioningService
 from .middleware import get_current_tenant_id
 
 @api_view(['GET'])
@@ -25,9 +25,20 @@ def health_check(request):
         "organization_id": get_current_tenant_id()
     })
 
-class OrganizationViewSet(viewsets.ReadOnlyModelViewSet):
+class OrganizationViewSet(viewsets.ModelViewSet):
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
+
+    def create(self, request, *args, **kwargs):
+        try:
+            org = ProvisioningService.provision_organization(
+                name=request.data.get('name'),
+                slug=request.data.get('slug')
+            )
+            serializer = self.get_serializer(org)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class SiteViewSet(viewsets.ModelViewSet):
     queryset = Site.objects.all()
@@ -109,6 +120,37 @@ class JournalEntryViewSet(viewsets.ModelViewSet):
             return Response({"message": "Journal entry reversed successfully"})
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, *args, **kwargs):
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({"error": "No organization context found"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        organization = Organization.objects.get(id=organization_id)
+        
+        try:
+            # Map frontend line 'accountId' to backend 'account_id'
+            lines = request.data.get('lines')
+            if lines:
+                for line in lines:
+                    if 'accountId' in line:
+                        line['account_id'] = line.pop('accountId')
+
+            entry = LedgerService.update_journal_entry(
+                organization=organization,
+                entry_id=kwargs.get('pk'),
+                transaction_date=request.data.get('transactionDate') or request.data.get('transaction_date'),
+                description=request.data.get('description'),
+                status=request.data.get('status'),
+                lines=lines
+            )
+            serializer = self.get_serializer(entry)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def partial_update(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
