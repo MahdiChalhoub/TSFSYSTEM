@@ -65,10 +65,10 @@ export async function wipeAllOperationalData() {
 export async function seedTestData() {
     return await prisma.$transaction(async (tx) => {
         // 0. Core Dimensions for Linkage
-        const organization = await tx.organization.upsert({
+        const organization = await (prisma.organization as any).upsert({
             where: { slug: 'tsf' },
             update: {},
-            create: { name: 'TSF Global', slug: 'tsf' }
+            create: { name: 'TSF Global', slug: 'tsf', isActive: true }
         })
 
         const site = await tx.site.findFirst({

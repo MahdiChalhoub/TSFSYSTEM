@@ -116,7 +116,7 @@ model User {
 
   // SaaS Context (Mandatory for SaaS)
   organizationId String?
-  organization   Organization @relation(fields: [organizationId], references: [id])
+  organization   Organization? @relation(fields: [organizationId], references: [id])
 
   // Advanced RBAC
   roleId Int?
@@ -188,7 +188,7 @@ model AuditLog {
   timestamp DateTime @default(now())
 
   organizationId String??
-  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organization   Organization?? @relation(fields: [organizationId], references: [id])
 }
 
 // =========================================================
@@ -206,7 +206,7 @@ model Contact {
 
   // SaaS Context
   organizationId String?
-  organization   Organization @relation(fields: [organizationId], references: [id])
+  organization   Organization? @relation(fields: [organizationId], references: [id])
 
   // Home Site (Master Data - Registration/Base)
   homeSiteId Int?
@@ -278,7 +278,7 @@ model Product {
 
   // SaaS Context
   organizationId String?
-  organization   Organization @relation(fields: [organizationId], references: [id])
+  organization   Organization? @relation(fields: [organizationId], references: [id])
 
   // Grouping (New)
   productGroupId Int?
@@ -613,7 +613,7 @@ model FinancialSettings {
 
   // SaaS Context (1 set of settings per Org)
   organizationId String??       @unique
-  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organization   Organization?? @relation(fields: [organizationId], references: [id])
 
   // For Micro Companies
   salesTaxPercentage    Decimal @default(0.00)
@@ -682,7 +682,7 @@ model ChartOfAccount {
 
   // SaaS Context
   organizationId String?
-  organization   Organization @relation(fields: [organizationId], references: [id])
+  organization   Organization? @relation(fields: [organizationId], references: [id])
 
   balance         Decimal @default(0.00) // Consolidated (Real) balance
   balanceOfficial Decimal @default(0.00) // Official (Declared) balance
@@ -830,7 +830,7 @@ model Site {
 
   // SaaS Context
   organizationId String?
-  organization   Organization @relation(fields: [organizationId], references: [id])
+  organization   Organization? @relation(fields: [organizationId], references: [id])
 
   warehouses        Warehouse[]
   users             User[]             @relation("HomeSite")
@@ -951,4 +951,5 @@ model LoanInstallment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
 
