@@ -42,6 +42,12 @@ export default async function middleware(req: NextRequest) {
 
     // 2. TENANT INSTANCE: xxx.localhost -> /tenant/[slug]
     if (subdomain && subdomain !== "www") {
+        // Exempt /admin paths from being rewritten into /tenant/[slug]
+        // This allows them to use the global admin structure while keeping the subdomain context
+        if (url.pathname.startsWith("/admin") || url.pathname.startsWith("/api")) {
+            return NextResponse.next()
+        }
+
         if (url.pathname.startsWith(`/tenant/${subdomain}`)) return NextResponse.next()
         return NextResponse.rewrite(new URL(`/tenant/${subdomain}${path}`, req.url))
     }

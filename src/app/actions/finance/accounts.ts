@@ -12,7 +12,7 @@ export async function getChartOfAccounts(includeInactive: boolean = false, scope
             scope,
             include_inactive: includeInactive.toString()
         }).toString()
-        const result = await erpFetch(`accounts/reporting/coa/?${query}`)
+        const result = await erpFetch(`coa/coa/?${query}`)
         return serialize(result.map((acc: any) => ({
             ...acc,
             balance: Number(acc.rollup_balance),
@@ -75,7 +75,7 @@ export async function getAccountStatement(accountId: number, filter?: { startDat
             end_date: filter?.endDate?.toISOString() || ''
         }).toString()
 
-        const result = await erpFetch(`accounts/reporting/statement/${accountId}/?${query}`)
+        const result = await erpFetch(`coa/${accountId}/statement/?${query}`)
         return serialize({
             account: {
                 ...result.account,
@@ -101,7 +101,7 @@ export async function getTrialBalanceReport(asOfDate?: Date, legalReport: boolea
             as_of: asOfDate?.toISOString() || ''
         }).toString()
 
-        const result = await erpFetch(`accounts/reporting/trial_balance/?${query}`)
+        const result = await erpFetch(`coa/trial_balance/?${query}`)
         return serialize(result.map((acc: any) => ({
             ...acc,
             balance: Number(acc.rollup_balance),

@@ -1,6 +1,9 @@
+'use server'
+
 import { erpFetch } from "@/lib/erp-api"
 import { createJournalEntry } from "./ledger"
 import { revalidatePath } from "next/cache"
+import { getPostingRules } from "./posting-rules"
 
 export async function getInventoryValuation() {
     try {
@@ -32,14 +35,13 @@ export async function getInventoryFinancialStatus() {
     }
 }
 
+
+
 export async function syncInventoryValueToLedger() {
     const status = await getInventoryFinancialStatus()
     if (!status.isMapped) throw new Error("Inventory Asset account is not mapped in Posting Rules.")
     if (Math.abs(status.discrepancy) < 0.01) return { success: true, message: "Ledger is already in sync." }
 
-    // Use current posting rules (fetched via erpFetch in posting-rules.ts)
-    // Actually posting-rules.ts should be refactored too.
-    const { getPostingRules } = await import("./posting-rules")
     const rules = await getPostingRules()
 
     if (!rules.inventory?.adjustment) throw new Error("Inventory Adjustment account is not mapped in Posting Rules.")
