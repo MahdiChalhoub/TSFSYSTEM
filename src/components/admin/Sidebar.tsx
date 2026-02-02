@@ -105,6 +105,14 @@ const MENU_ITEMS = [
             { title: 'Transaction Numbering', path: '/admin/settings/sequences' },
         ]
     },
+    {
+        title: 'SaaS Panel',
+        icon: Briefcase,
+        children: [
+            { title: 'Organizations', path: '/admin/saas/organizations' },
+            { title: 'Platform Health', path: '/admin/saas/health' },
+        ]
+    },
 ];
 
 export function Sidebar() {
