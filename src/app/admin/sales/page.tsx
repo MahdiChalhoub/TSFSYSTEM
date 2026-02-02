@@ -4,12 +4,21 @@ import { useState, useEffect } from 'react';
 import { ProductGrid } from '@/components/pos/ProductGrid';
 import { TicketSidebar } from '@/components/pos/TicketSidebar';
 import { Search } from 'lucide-react';
+import { getCategories } from '@/app/admin/sales/actions';
+import clsx from 'clsx';
 
 import { CartItem } from '@/types/pos';
 
 export default function POSPage() {
     const [cart, setCart] = useState<CartItem[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
+    const [categories, setCategories] = useState<any[]>([]);
+    const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+
+    // Fetch Categories
+    useEffect(() => {
+        getCategories().then(setCategories).catch(console.error);
+    }, []);
 
     // Add Item to Cart Logic
     const addToCart = (product: any) => {
@@ -66,12 +75,29 @@ export default function POSPage() {
                     </div>
 
                     <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                        <button className="px-5 py-2 bg-emerald-600 text-white shadow-lg shadow-emerald-900/20 rounded-xl font-medium text-sm transition-transform active:scale-95">
+                        <button
+                            onClick={() => setSelectedCategoryId(null)}
+                            className={clsx(
+                                "px-5 py-2 rounded-xl font-medium text-sm transition-all active:scale-95 whitespace-nowrap",
+                                selectedCategoryId === null
+                                    ? "bg-emerald-600 text-white shadow-lg shadow-emerald-900/20"
+                                    : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300"
+                            )}
+                        >
                             All Items
                         </button>
-                        {['Fresh Produce', 'Dairy & Eggs', 'Beverages', 'Bakery', 'Snacks'].map((cat) => (
-                            <button key={cat} className="px-5 py-2 bg-white border border-gray-200 text-gray-600 font-medium text-sm hover:bg-gray-50 hover:border-gray-300 rounded-xl transition-all whitespace-nowrap active:scale-95">
-                                {cat}
+                        {categories.map((cat) => (
+                            <button
+                                key={cat.id}
+                                onClick={() => setSelectedCategoryId(cat.id)}
+                                className={clsx(
+                                    "px-5 py-2 rounded-xl font-medium text-sm transition-all whitespace-nowrap active:scale-95",
+                                    selectedCategoryId === cat.id
+                                        ? "bg-emerald-600 text-white shadow-lg shadow-emerald-900/20"
+                                        : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300"
+                                )}
+                            >
+                                {cat.name}
                             </button>
                         ))}
                     </div>
@@ -79,7 +105,11 @@ export default function POSPage() {
 
                 {/* Grid */}
                 <div className="flex-1 overflow-y-auto p-5 custom-scrollbar">
-                    <ProductGrid searchQuery={searchQuery} onAddToCart={addToCart} />
+                    <ProductGrid
+                        searchQuery={searchQuery}
+                        categoryId={selectedCategoryId}
+                        onAddToCart={addToCart}
+                    />
                 </div>
             </div>
 

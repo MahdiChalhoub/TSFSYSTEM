@@ -2,13 +2,12 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { getPosProducts } from '@/app/admin/sales/actions';
-import clsx from 'clsx';
 import { AlertCircle, Loader2, PackageX } from 'lucide-react';
 
 const ITEMS_PER_LOAD = 50; // Load 50 products at a time
 const SEARCH_DEBOUNCE_MS = 300; // Wait 300ms after user stops typing
 
-export function ProductGrid({ searchQuery, onAddToCart }: { searchQuery: string, onAddToCart: (p: any) => void }) {
+export function ProductGrid({ searchQuery, categoryId, onAddToCart }: { searchQuery: string, categoryId?: number | null, onAddToCart: (p: any) => void }) {
     const [products, setProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -34,6 +33,7 @@ export function ProductGrid({ searchQuery, onAddToCart }: { searchQuery: string,
                 setError(null);
                 const data = await getPosProducts({
                     search: query,
+                    categoryId: categoryId || undefined,
                     limit: ITEMS_PER_LOAD,
                     offset: 0
                 });
@@ -46,36 +46,19 @@ export function ProductGrid({ searchQuery, onAddToCart }: { searchQuery: string,
                 setLoading(false);
             }
         }, SEARCH_DEBOUNCE_MS);
-    }, []);
+    }, [categoryId]);
 
-    // Initial load
-    useEffect(() => {
-        const loadInitial = async () => {
-            try {
-                setLoading(true);
-                setError(null);
-                const data = await getPosProducts({ limit: ITEMS_PER_LOAD });
-                setProducts(data);
-                setHasMore(data.length >= ITEMS_PER_LOAD);
-            } catch (err) {
-                console.error('Initial load error:', err);
-                setError('Failed to load products. Please refresh the page.');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        loadInitial();
-    }, []);
-
-    // Handle search changes
+    // Handle search or category changes
     useEffect(() => {
         if (searchQuery) {
             debouncedSearch(searchQuery);
         } else {
-            // Reset to initial load when search is cleared
+            // Reset to initial load when search is cleared or category changed
             setLoading(true);
-            getPosProducts({ limit: ITEMS_PER_LOAD })
+            getPosProducts({
+                categoryId: categoryId || undefined,
+                limit: ITEMS_PER_LOAD
+            })
                 .then(data => {
                     setProducts(data);
                     setHasMore(data.length >= ITEMS_PER_LOAD);
@@ -93,7 +76,7 @@ export function ProductGrid({ searchQuery, onAddToCart }: { searchQuery: string,
                 clearTimeout(searchTimeoutRef.current);
             }
         };
-    }, [searchQuery, debouncedSearch]);
+    }, [searchQuery, categoryId, debouncedSearch]);
 
     // Load more products
     const loadMore = useCallback(async () => {
@@ -103,6 +86,7 @@ export function ProductGrid({ searchQuery, onAddToCart }: { searchQuery: string,
             setLoadingMore(true);
             const data = await getPosProducts({
                 search: searchQuery,
+                categoryId: categoryId || undefined,
                 limit: ITEMS_PER_LOAD,
                 offset: products.length
             });
@@ -119,7 +103,7 @@ export function ProductGrid({ searchQuery, onAddToCart }: { searchQuery: string,
         } finally {
             setLoadingMore(false);
         }
-    }, [loadingMore, hasMore, searchQuery, products.length]);
+    }, [loadingMore, hasMore, searchQuery, products.length, categoryId]);
 
     // Infinite scroll observer
     useEffect(() => {
@@ -148,7 +132,7 @@ export function ProductGrid({ searchQuery, onAddToCart }: { searchQuery: string,
                 setProducts(data);
                 setHasMore(data.length >= ITEMS_PER_LOAD);
             })
-            .catch(err => {
+            .catch(() => {
                 setError('Failed to load products. Please check your connection.');
             })
             .finally(() => setLoading(false));
