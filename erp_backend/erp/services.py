@@ -300,11 +300,37 @@ class LedgerService:
 
     @staticmethod
     def get_chart_of_accounts(organization, scope='OFFICIAL', include_inactive=False):
-        from .models import ChartOfAccount
-        qs = ChartOfAccount.objects.filter(organization=organization)
+        from .models import ChartOfAccount, JournalEntryLine
+        qs = ChartOfAccount.objects.filter(organization=organization).order_by('code')
         if not include_inactive:
             qs = qs.filter(is_active=True)
-        return qs
+        
+        # Calculate Balances (similar to trial balance)
+        lines_qs = JournalEntryLine.objects.filter(organization=organization, journal_entry__status='POSTED')
+        if scope == 'OFFICIAL': lines_qs = lines_qs.filter(journal_entry__scope='OFFICIAL')
+        
+        balance_map = {b['account_id']: Decimal(str(b['net'] or '0')) for b in lines_qs.values('account_id').annotate(net=Sum('debit') - Sum('credit'))}
+        
+        accounts = list(qs)
+        account_map = {acc.id: acc for acc in accounts}
+        for acc in accounts: 
+            acc.temp_balance = balance_map.get(acc.id, Decimal('0'))
+            acc.temp_children = []
+            
+        roots = []
+        for acc in accounts:
+            if acc.parent_id and acc.parent_id in account_map: 
+                account_map[acc.parent_id].temp_children.append(acc)
+            else: 
+                roots.append(acc)
+                
+        def rollup(node):
+            node.rollup_balance = node.temp_balance + sum(rollup(child) for child in node.temp_children)
+            return node.rollup_balance
+            
+        for root in roots: rollup(root)
+        
+        return accounts
 
     @staticmethod
     def get_trial_balance(organization, as_of_date=None, scope='INTERNAL'):
