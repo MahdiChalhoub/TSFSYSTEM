@@ -115,7 +115,7 @@ model User {
   isActive Boolean @default(true)
 
   // SaaS Context (Mandatory for SaaS)
-  organizationId String
+  organizationId String?
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   // Advanced RBAC
@@ -187,7 +187,7 @@ model AuditLog {
   user      User     @relation(fields: [userId], references: [id])
   timestamp DateTime @default(now())
 
-  organizationId String?
+  organizationId String??
   organization   Organization? @relation(fields: [organizationId], references: [id])
 }
 
@@ -205,7 +205,7 @@ model Contact {
   vatId   String? // Tax ID for suppliers/companies
 
   // SaaS Context
-  organizationId String
+  organizationId String?
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   // Home Site (Master Data - Registration/Base)
@@ -277,7 +277,7 @@ model Product {
   description String?
 
   // SaaS Context
-  organizationId String
+  organizationId String?
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   // Grouping (New)
@@ -612,7 +612,7 @@ model FinancialSettings {
   companyType String @default(value: "REGULAR") // 'REGULAR', 'MICRO', 'REAL', 'MIXED'
 
   // SaaS Context (1 set of settings per Org)
-  organizationId String?       @unique
+  organizationId String??       @unique
   organization   Organization? @relation(fields: [organizationId], references: [id])
 
   // For Micro Companies
@@ -681,7 +681,7 @@ model ChartOfAccount {
   isActive    Boolean @default(true)
 
   // SaaS Context
-  organizationId String
+  organizationId String?
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   balance         Decimal @default(0.00) // Consolidated (Real) balance
@@ -829,7 +829,7 @@ model Site {
   isActive Boolean @default(true)
 
   // SaaS Context
-  organizationId String
+  organizationId String?
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   warehouses        Warehouse[]
@@ -951,3 +951,4 @@ model LoanInstallment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
