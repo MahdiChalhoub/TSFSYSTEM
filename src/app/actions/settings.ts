@@ -2,18 +2,23 @@
 
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
-export type NamingRuleComponent = {
-    id: string;
-    label: string;
-    enabled: boolean;
-    useShortName: boolean;
-};
+// Zod Schema Definition
+export const NamingRuleComponentSchema = z.object({
+    id: z.string(),
+    label: z.string(),
+    enabled: z.boolean(),
+    useShortName: z.boolean(),
+});
 
-export type ProductNamingRule = {
-    components: NamingRuleComponent[];
-    separator: string;
-};
+export const ProductNamingRuleSchema = z.object({
+    components: z.array(NamingRuleComponentSchema),
+    separator: z.string(),
+});
+
+export type NamingRuleComponent = z.infer<typeof NamingRuleComponentSchema>;
+export type ProductNamingRule = z.infer<typeof ProductNamingRuleSchema>;
 
 const DEFAULT_NAMING_RULE: ProductNamingRule = {
     components: [
@@ -26,9 +31,11 @@ const DEFAULT_NAMING_RULE: ProductNamingRule = {
     separator: ' '
 };
 
+export const SETTING_KEY = 'product_naming_rule';
+
 export async function getProductNamingRule(): Promise<ProductNamingRule> {
     const setting = await prisma.systemSettings.findUnique({
-        where: { key: 'product_naming_rule' }
+        where: { key: SETTING_KEY }
     });
 
     if (!setting) {
@@ -36,21 +43,37 @@ export async function getProductNamingRule(): Promise<ProductNamingRule> {
     }
 
     try {
-        return JSON.parse(setting.value);
-    } catch {
+        const parsed = JSON.parse(setting.value);
+        const result = ProductNamingRuleSchema.safeParse(parsed);
+
+        if (result.success) {
+            return result.data;
+        } else {
+            console.error('Invalid naming rule in DB:', result.error);
+            return DEFAULT_NAMING_RULE;
+        }
+    } catch (e) {
+        console.error('Failed to parse naming rule JSON:', e);
         return DEFAULT_NAMING_RULE;
     }
 }
 
 export async function saveProductNamingRule(rule: ProductNamingRule) {
+    // Validate input before saving
+    const validation = ProductNamingRuleSchema.safeParse(rule);
+
+    if (!validation.success) {
+        return { success: false, error: validation.error.format() };
+    }
+
     await prisma.systemSettings.upsert({
-        where: { key: 'product_naming_rule' },
+        where: { key: SETTING_KEY },
         update: {
-            value: JSON.stringify(rule)
+            value: JSON.stringify(validation.data)
         },
         create: {
-            key: 'product_naming_rule',
-            value: JSON.stringify(rule)
+            key: SETTING_KEY,
+            value: JSON.stringify(validation.data)
         }
     });
 
