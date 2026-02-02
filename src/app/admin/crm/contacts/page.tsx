@@ -1,24 +1,46 @@
 /** Master Data Center - Contacts Logic */
-import { prisma } from "@/lib/db";
+import { erpFetch } from "@/lib/erp-api";
 import ContactManager from "./manager";
 import { Users, ShieldCheck, CreditCard, Building2 } from "lucide-react";
-import { serializeDecimals } from "@/lib/utils/serialization";
 
 export const dynamic = 'force-dynamic';
 
-export default async function ContactsPage() {
-    const contacts = await prisma.contact.findMany({
-        include: {
-            homeSite: { select: { name: true, code: true } },
-            linkedAccount: { select: { code: true } }
-        },
-        orderBy: { name: 'asc' }
-    });
+async function getContacts() {
+    try {
+        const data = await erpFetch('contacts/');
+        // Map Django camelCase/snake_case if needed. 
+        // Django DRF default is snake_case unless configured otherwise.
+        // Assuming camelCase based on previous knowledge or needing mapping.
+        // Serializer uses snake_case keys (home_site).
+        // Frontend expects camelCase often (homeSite).
+        // I will map it MANUALLY here or update Serializer to use camelCase (using djangorestframework-camel-case or manual).
+        // Let's assume snake_case from backend and map to camelCase for frontend components if they expect it.
+        // The previous code used Prisma which returns camelCase.
+        // So I MUST mapping.
+        return data.map((c: any) => ({
+            ...c,
+            homeSite: c.home_site,
+            linkedAccount: c.linked_account
+        }));
+    } catch (e) {
+        console.error("Failed to fetch contacts", e);
+        return [];
+    }
+}
 
-    const sites = await prisma.site.findMany({
-        where: { isActive: true },
-        select: { id: true, name: true, code: true }
-    });
+async function getSites() {
+    try {
+        return await erpFetch('sites/');
+    } catch (e) {
+        return [];
+    }
+}
+
+export default async function ContactsPage() {
+    const [contacts, sites] = await Promise.all([
+        getContacts(),
+        getSites()
+    ]);
 
     return (
         <div className="min-h-screen bg-[#F8FAFC] p-8 lg:p-12">
@@ -43,11 +65,11 @@ export default async function ContactsPage() {
 
                     <div className="flex flex-col sm:flex-row gap-6 bg-white p-8 rounded-[40px] shadow-2xl shadow-indigo-900/5 border border-gray-50">
                         <div className="text-center px-6 border-r border-gray-100 last:border-0">
-                            <div className="text-4xl font-black text-gray-900 tracking-tighter mb-1">{contacts.filter(c => c.type === 'CUSTOMER').length}</div>
+                            <div className="text-4xl font-black text-gray-900 tracking-tighter mb-1">{contacts.filter((c: any) => c.type === 'CUSTOMER').length}</div>
                             <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Active Clients</div>
                         </div>
                         <div className="text-center px-6 border-r border-gray-100 last:border-0">
-                            <div className="text-4xl font-black text-gray-900 tracking-tighter mb-1">{contacts.filter(c => c.type === 'SUPPLIER').length}</div>
+                            <div className="text-4xl font-black text-gray-900 tracking-tighter mb-1">{contacts.filter((c: any) => c.type === 'SUPPLIER').length}</div>
                             <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Suppliers</div>
                         </div>
                     </div>
@@ -89,8 +111,8 @@ export default async function ContactsPage() {
                 </div>
 
                 <ContactManager
-                    contacts={serializeDecimals(contacts)}
-                    sites={serializeDecimals(sites)}
+                    contacts={contacts}
+                    sites={sites}
                 />
             </div>
         </div>

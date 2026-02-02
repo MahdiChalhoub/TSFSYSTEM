@@ -4,7 +4,7 @@ from .models import (
     FiscalPeriod, JournalEntry, JournalEntryLine, ChartOfAccount,
     Product, Warehouse, Inventory, InventoryMovement, Unit,
     Brand, Category, Parfum, ProductGroup, Country,
-    Contact, Employee, Role
+    Contact, Employee, Role, TransactionSequence, BarcodeSettings, Loan, LoanInstallment, FinancialEvent
 )
 
 class OrganizationSerializer(serializers.ModelSerializer):
@@ -206,8 +206,41 @@ class BrandDetailSerializer(serializers.ModelSerializer):
         model = Brand
         fields = '__all__'
 
+
     def get_products(self, obj):
         # Standalone products (no group)
         standalone = obj.product_set.filter(product_group__isnull=True)
         return ProductSerializer(standalone, many=True).data
+
+class TransactionSequenceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TransactionSequence
+        fields = '__all__'
+
+class BarcodeSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BarcodeSettings
+        fields = '__all__'
+
+class LoanInstallmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LoanInstallment
+        fields = '__all__'
+
+class LoanSerializer(serializers.ModelSerializer):
+    installments = LoanInstallmentSerializer(many=True, read_only=True)
+    contact_name = serializers.ReadOnlyField(source='contact.name')
+
+    class Meta:
+        model = Loan
+        fields = '__all__'
+
+class FinancialEventSerializer(serializers.ModelSerializer):
+    contact_name = serializers.ReadOnlyField(source='contact.name')
+    transaction_ref = serializers.ReadOnlyField(source='transaction.reference_id')
+    journal_ref = serializers.ReadOnlyField(source='journal_entry.reference')
+
+    class Meta:
+        model = FinancialEvent
+        fields = '__all__'
 

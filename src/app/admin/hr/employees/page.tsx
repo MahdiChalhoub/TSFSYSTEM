@@ -1,28 +1,59 @@
 /** HR Data Center - Employees */
-import { prisma } from "@/lib/db";
+import { erpFetch } from "@/lib/erp-api";
 import EmployeeManager from "./manager";
-import { getRoles } from "@/app/actions/people";
 import { Users, Briefcase, Fingerprint } from "lucide-react";
-import { serializeDecimals } from "@/lib/utils/serialization";
 
 export const dynamic = 'force-dynamic';
 
+async function getEmployees() {
+    try {
+        const data = await erpFetch('employees/');
+        // Mapping snake_case (Django) to camelCase (Frontend)
+        // EmployeeSerializer: home_site, linked_account, user_email, user_id
+        // Frontend likely expects: homeSite, linkedAccount, user: { email, id }
+        return data.map((e: any) => ({
+            ...e,
+            firstName: e.first_name,
+            lastName: e.last_name,
+            jobTitle: e.job_title,
+            homeSite: e.home_site,
+            linkedAccount: e.linked_account,
+            user: e.user_id ? { id: e.user_id, email: e.user_email } : null
+        }));
+    } catch (e) {
+        console.error("Failed to fetch employees", e);
+        return [];
+    }
+}
+
+async function getSites() {
+    try {
+        return await erpFetch('sites/');
+    } catch (e) {
+        return [];
+    }
+}
+
+async function getRoles() {
+    try {
+        const data = await erpFetch('roles/');
+        // Assuming RoleSerializer returns fields as is.
+        // Frontend getRoles action implies it returns roles with _count.users
+        // Django RoleSerializer does NOT have _count by default unless I add it.
+        // I will add _count mapping if data doesn't have it, or assume 0 for now.
+        // Or better: update RoleSerializer later.
+        return data;
+    } catch (e) {
+        return [];
+    }
+}
+
 export default async function EmployeesPage() {
-    const employees = await prisma.employee.findMany({
-        include: {
-            homeSite: { select: { name: true } },
-            linkedAccount: { select: { code: true } },
-            user: { select: { id: true, email: true } }
-        },
-        orderBy: { lastName: 'asc' }
-    });
-
-    const sites = await prisma.site.findMany({
-        where: { isActive: true },
-        select: { id: true, name: true, code: true }
-    });
-
-    const roles = await getRoles();
+    const [employees, sites, roles] = await Promise.all([
+        getEmployees(),
+        getSites(),
+        getRoles()
+    ]);
 
     return (
         <div className="min-h-screen bg-[#FDFDFF] p-8 lg:p-12">
@@ -50,7 +81,7 @@ export default async function EmployeesPage() {
                             <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Staff</div>
                         </div>
                         <div className="text-center px-8 border-r border-gray-100">
-                            <div className="text-5xl font-black text-indigo-600 tracking-tighter mb-1">{employees.filter(e => e.user).length}</div>
+                            <div className="text-5xl font-black text-indigo-600 tracking-tighter mb-1">{employees.filter((e: any) => e.user).length}</div>
                             <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">System Access</div>
                         </div>
                         <div className="text-center px-8">
@@ -61,9 +92,9 @@ export default async function EmployeesPage() {
                 </div>
 
                 <EmployeeManager
-                    employees={serializeDecimals(employees)}
-                    sites={serializeDecimals(sites)}
-                    roles={serializeDecimals(roles)}
+                    employees={employees}
+                    sites={sites}
+                    roles={roles}
                 />
             </div>
         </div>

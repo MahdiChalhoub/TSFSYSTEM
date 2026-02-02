@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+import { erpFetch } from "@/lib/erp-api";
 import Link from "next/link";
 import { ShoppingCart, Plus, Calendar, User, Tag, Clock, Database } from "lucide-react";
 import { serializeDecimals } from "@/lib/utils/serialization";
@@ -8,26 +8,19 @@ export const dynamic = 'force-dynamic';
 import { cookies } from "next/headers";
 
 async function getPurchases(scope: string = 'INTERNAL') {
-    const where: any = { type: 'PURCHASE' };
-    if (scope === 'OFFICIAL') {
-        where.scope = 'OFFICIAL';
+    try {
+        // Backend now supports GET /purchases/ with scope param
+        return await erpFetch(`purchases/?scope=${scope}`);
+    } catch (e) {
+        console.error("Failed to fetch purchases:", e);
+        return [];
     }
-
-    return await prisma.order.findMany({
-        where,
-        include: {
-            contact: true,
-            user: true,
-        },
-        orderBy: { createdAt: 'desc' }
-    });
 }
 
 export default async function PurchaseRegistryPage() {
     const cookieStore = await cookies();
     const scope = (cookieStore.get('tsf_view_scope')?.value as string) || 'INTERNAL'
-    const rawPurchases = await getPurchases(scope);
-    const purchases = serializeDecimals(rawPurchases);
+    const purchases = await getPurchases(scope);
 
     return (
         <div className="min-h-screen bg-[#F8FAFC] p-8 lg:p-12">

@@ -1,6 +1,5 @@
 'use server'
 
-import { prisma } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 
 export type FinancialAccountInput = {
@@ -40,32 +39,43 @@ export async function createFinancialAccount(data: FinancialAccountInput) {
 }
 
 export async function assignUserToAccount(userId: number, accountId: number) {
-    await prisma.user.update({
-        where: { id: userId },
-        data: { cashRegisterId: accountId }
-    })
-
-    revalidatePath('/admin/finance/accounts')
-    return { success: true }
+    try {
+        await erpFetch(`accounts/${accountId}/assign_user/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: userId })
+        })
+        revalidatePath('/admin/finance/accounts')
+        return { success: true }
+    } catch (e: any) {
+        console.error("Failed to assign user:", e);
+        throw e;
+    }
 }
 
-export async function unassignUser(userId: number) {
-    await prisma.user.update({
-        where: { id: userId },
-        data: { cashRegisterId: null }
-    })
-
-    revalidatePath('/admin/finance/accounts')
-    return { success: true }
+export async function unassignUser(userId: number, accountId: number) {
+    try {
+        await erpFetch(`accounts/${accountId}/remove_user/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: userId })
+        })
+        revalidatePath('/admin/finance/accounts')
+        return { success: true }
+    } catch (e: any) {
+        console.error("Failed to unassign user:", e);
+        throw e;
+    }
 }
 
 export async function deleteFinancialAccount(id: number) {
-    const txCount = await prisma.transaction.count({
-        where: { accountId: id }
-    })
-    if (txCount > 0) throw new Error("Cannot delete account with existing transactions.")
-
-    await prisma.financialAccount.delete({ where: { id } })
-    revalidatePath('/admin/finance/accounts')
-    return { success: true }
+    try {
+        await erpFetch(`accounts/${id}/`, { method: 'DELETE' })
+        revalidatePath('/admin/finance/accounts')
+        return { success: true }
+    } catch (e: any) {
+        // Backend should handle "cannot delete if transactions exist" logic and return 400
+        console.error("Failed to delete account:", e);
+        throw new Error(e.message || "Failed to delete account");
+    }
 }

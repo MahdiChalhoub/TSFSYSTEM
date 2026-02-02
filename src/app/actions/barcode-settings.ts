@@ -1,22 +1,11 @@
 'use server';
 
-import { prisma } from '@/lib/db';
-import { generateBarcode } from '@/lib/barcode';
+import { erpFetch } from "@/lib/erp-api";
 import { revalidatePath } from 'next/cache';
 
 export async function getBarcodeSettings() {
     try {
-        let settings = await prisma.barcodeSettings.findFirst();
-        if (!settings) {
-            settings = await prisma.barcodeSettings.create({
-                data: {
-                    prefix: "200",
-                    length: 13,
-                    nextSequence: 1000,
-                    isEnabled: true
-                }
-            });
-        }
+        const settings = await erpFetch('settings/barcode/');
         return { success: true, data: settings };
     } catch (error) {
         console.error("Failed to fetch barcode settings:", error);
@@ -30,16 +19,13 @@ export async function updateBarcodeSettings(data: {
     isEnabled: boolean;
 }) {
     try {
-        const first = await prisma.barcodeSettings.findFirst();
-        if (!first) throw new Error("Settings not found");
-
-        await prisma.barcodeSettings.update({
-            where: { id: first.id },
-            data: {
+        await erpFetch('settings/barcode/', {
+            method: 'POST',
+            body: JSON.stringify({
                 prefix: data.prefix,
-                nextSequence: Number(data.nextSequence),
-                isEnabled: data.isEnabled
-            }
+                next_sequence: data.nextSequence,
+                is_enabled: data.isEnabled
+            })
         });
 
         revalidatePath('/admin/settings/barcode');
@@ -52,8 +38,8 @@ export async function updateBarcodeSettings(data: {
 
 export async function generateNewBarcodeAction() {
     try {
-        const code = await generateBarcode();
-        return { success: true, code };
+        const res = await erpFetch('settings/barcode/generate/', { method: 'POST' });
+        return { success: true, code: res.barcode };
     } catch (error: any) {
         console.error("Generate failed:", error);
         return { success: false, error: error.message };
