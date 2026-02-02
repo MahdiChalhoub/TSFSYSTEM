@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
+  output   = "../src/generated/client"
 }
 
 datasource db {
@@ -559,77 +559,58 @@ model Inventory {
 // =========================================================
 
 model Order {
-  id     Int    @id @default(autoincrement())
-  type   String // 'SALE', 'PURCHASE', 'TRANSFER', 'ADJUSTMENT'
-  status String // 'DRAFT', 'PENDING_APPROVAL', 'COMPLETED', 'CANCELLED'
+  id             BigInt       @id @default(autoincrement())
+  type           String       @db.VarChar(20)
+  status         String       @db.VarChar(20)
+  totalAmount    Decimal      @map("total_amount") @db.Decimal(15, 2)
+  taxAmount      Decimal      @map("tax_amount") @db.Decimal(15, 2)
+  discount       Decimal      @db.Decimal(15, 2)
+  isVerified     Boolean      @map("is_verified")
+  isLocked       Boolean      @map("is_locked")
+  notes          String?
+  createdAt      DateTime     @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  contactId      BigInt?      @map("contact_id")
+  organizationId String       @map("organization_id") @db.Uuid
+  siteId         BigInt?      @map("site_id")
+  userId         BigInt       @map("user_id")
 
-  // SaaS Context
-  organizationId String @map("organization_id")
-  organization   Organization @relation(fields: [organizationId], references: [id])
+  // Added/Preserved fields not in Django yet but used in logic
+  scope String? @db.VarChar(20)
 
-  // Participants
-  contactId Int? @map("contact_id") // Supplier or Customer
-  contact   Contact? @relation(fields: [contactId], references: [id])
+  contact      Contact?     @relation(fields: [contactId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  site         Site?        @relation(fields: [siteId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user         User         @relation("StaffOrders", fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  lines        OrderLine[]
 
-  userId Int @map("user_id") // Staff who processed it
-  user   User @relation("StaffOrders", fields: [userId], references: [id])
-
-  isVerified   Boolean @map("is_verified") @default(false)
-  verifiedById Int? @map("verified_by_id")
-  verifiedBy   User?   @relation("VerifiedOrders", fields: [verifiedById], references: [id])
-  isLocked     Boolean @map("is_locked") @default(false)
-
-  // Data
-  totalAmount Decimal @map("total_amount") @default(0.00)
-  taxAmount   Decimal @map("tax_amount") @default(0.00)
-  discount    Decimal @default(0.00)
-  notes       String?
-
-  lines OrderLine[]
-
-  // Scope (Financial Module)
-  scope String? // 'OFFICIAL', 'INTERNAL', 'PENDING' (Models Enum)
-
-  // Payment Info
-  paymentMethod String? @map("payment_method")
-  refCode       String? @map("ref_code")
-
-  siteId Int? @map("site_id") // Where the sale/purchase happened
-  site   Site? @relation(fields: [siteId], references: [id])
-
-  // Effective Cost Engine Flags
-  invoicePriceType String  @map("invoice_price_type") @default("HT") // 'HT', 'TTC'
-  vatRecoverable   Boolean @map("vat_recoverable") @default(true)
-
-  createdAt DateTime @map("created_at") @default(now())
-  updatedAt DateTime @map("updated_at") @updatedAt
+  @@index([contactId])
+  @@index([organizationId])
+  @@index([siteId])
+  @@index([userId])
 }
 
 model OrderLine {
-  id      Int   @id @default(autoincrement())
-  orderId Int @map("order_id")
-  order   Order @relation(fields: [orderId], references: [id])
+  id             BigInt       @id @default(autoincrement())
+  quantity       Decimal      @db.Decimal(15, 2)
+  unitPrice      Decimal      @map("unit_price") @db.Decimal(15, 2)
+  taxRate        Decimal      @map("tax_rate") @db.Decimal(15, 2)
+  total          Decimal      @db.Decimal(15, 2)
+  unitCostHT     Decimal      @map("unit_cost_ht") @db.Decimal(15, 2)
+  effectiveCost  Decimal      @map("effective_cost") @db.Decimal(15, 2)
+  orderId        BigInt       @map("order_id")
+  organizationId String       @map("organization_id") @db.Uuid
+  productId      BigInt       @map("product_id")
+  batchId        BigInt?      @map("batch_id")
+  order          Order        @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  product        Product      @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  batch          StockBatch?  @relation(fields: [batchId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  productId Int @map("product_id")
-  product   Product @relation(fields: [productId], references: [id])
-
-  quantity  Decimal
-  unitPrice Decimal @map("unit_price") // At moment of sale/purchase
-  taxRate   Decimal @map("tax_rate") @default(0.00) // Snapshot of tax rate at time of sale
-  total     Decimal
-
-  // SaaS Context
-  organizationId String @map("organization_id")
-  organization   Organization @relation(fields: [organizationId], references: [id])
-
-  // For fulfillment
-  batchId Int? @map("batch_id") // Which batch was picked?
-
-  // Effective Cost Engine Fields (Calculated and Persisted)
-  unitCostHT    Decimal @map("unit_cost_ht") @default(0.00)
-  unitCostTTC   Decimal @map("unit_cost_ttc") @default(0.00)
-  vatAmount     Decimal @map("vat_amount") @default(0.00)
-  effectiveCost Decimal @map("effective_cost") @default(0.00)
+  @@index([batchId])
+  @@index([orderId])
+  @@index([organizationId])
+  @@index([productId])
 }
 
 // =========================================================

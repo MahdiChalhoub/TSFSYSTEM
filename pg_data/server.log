@@ -259,3 +259,48 @@
 2026-02-02 11:46:09.371 GMT [10416] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
 2026-02-02 11:46:13.361 GMT [36168] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
 	
+2026-02-02 11:46:58.231 GMT [10416] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 11:46:58.231 GMT [10416] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 11:46:58.231 GMT [10416] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:47:00.520 GMT [10416] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 11:47:00.520 GMT [10416] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 11:47:00.520 GMT [10416] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:47:29.300 GMT [10416] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 11:47:29.300 GMT [10416] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 11:47:29.300 GMT [10416] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:48:51.446 GMT [16036] LOG:  checkpoint starting: time
+2026-02-02 11:49:02.506 GMT [16036] LOG:  checkpoint complete: wrote 100 buffers (0.6%), wrote 2 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=10.954 s, sync=0.095 s, total=11.060 s; sync files=74, longest=0.005 s, average=0.002 s; distance=88 kB, estimate=2160 kB; lsn=0/20A0290, redo lsn=0/209F7A0
+2026-02-02 11:49:15.726 GMT [10416] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 11:49:15.726 GMT [10416] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 11:49:15.726 GMT [10416] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:49:51.561 GMT [10416] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 11:49:51.561 GMT [10416] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 11:49:51.561 GMT [10416] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:50:29.199 GMT [21752] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 11:50:29.199 GMT [21752] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 11:50:29.199 GMT [21752] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:51:19.668 GMT [25716] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 11:51:19.668 GMT [25716] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 11:51:19.668 GMT [25716] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:51:47.881 GMT [25716] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 11:51:47.881 GMT [25716] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 11:51:47.881 GMT [25716] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:51:56.032 GMT [25716] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 11:51:56.032 GMT [25716] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 11:51:56.032 GMT [25716] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:52:05.878 GMT [25716] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 11:52:05.878 GMT [25716] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 11:52:05.878 GMT [25716] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:53:51.521 GMT [16036] LOG:  checkpoint starting: time
+2026-02-02 11:54:00.837 GMT [16036] LOG:  checkpoint complete: wrote 85 buffers (0.5%), wrote 2 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=9.209 s, sync=0.097 s, total=9.316 s; sync files=77, longest=0.011 s, average=0.002 s; distance=234 kB, estimate=1967 kB; lsn=0/20DA2F8, redo lsn=0/20DA268
+2026-02-02 11:54:13.762 GMT [25716] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 11:54:13.762 GMT [25716] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 11:54:13.762 GMT [25716] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:56:52.101 GMT [22240] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 11:56:52.101 GMT [22240] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 11:56:52.101 GMT [22240] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:58:08.720 GMT [3916] ERROR:  duplicate key value violates unique constraint "JournalEntry_reference_key"
+2026-02-02 11:58:08.720 GMT [3916] DETAIL:  Key (reference)=(RECEPTION) already exists.
+2026-02-02 11:58:08.720 GMT [3916] STATEMENT:  INSERT INTO "JournalEntry" ("organization_id", "transaction_date", "description", "reference", "fiscal_year_id", "fiscal_period_id", "status", "scope", "site_id", "is_verified", "is_locked", "posted_at", "created_at", "updated_at") VALUES ('d05ca0a0-badc-4c87-b76f-c127a5d5a2f9'::uuid, '2026-02-02T11:58:08.714410+00:00'::timestamptz, 'Stock Reception: Test Inventory Item (10 @ 110.00)', 'RECEPTION', 13, 146, 'POSTED', 'OFFICIAL', 14, false, false, NULL, '2026-02-02T11:58:08.717113+00:00'::timestamptz, '2026-02-02T11:58:08.717125+00:00'::timestamptz) RETURNING "JournalEntry"."id"
+2026-02-02 11:58:51.848 GMT [16036] LOG:  checkpoint starting: time
+2026-02-02 11:59:05.170 GMT [16036] LOG:  checkpoint complete: wrote 122 buffers (0.7%), wrote 2 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=13.202 s, sync=0.101 s, total=13.322 s; sync files=93, longest=0.003 s, average=0.002 s; distance=250 kB, estimate=1795 kB; lsn=0/2118C78, redo lsn=0/2118C20

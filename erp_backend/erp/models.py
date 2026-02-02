@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 import uuid
+from decimal import Decimal
 from .middleware import get_current_tenant_id
 
 class TenantManager(models.Manager):
@@ -173,15 +174,15 @@ class Product(TenantModel):
     country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True, blank=True)
 
     # AMC (Average Moving Cost) - This is the "Logical" cost for accounting
-    cost_price = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+    cost_price = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     
     # Pricing Breakdown (HT / TTC)
-    cost_price_ht = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
-    cost_price_ttc = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
-    tva_rate = models.DecimalField(max_digits=15, decimal_places=2, default=0.0) # e.g. 0.11
+    cost_price_ht = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    cost_price_ttc = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    tva_rate = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00')) # e.g. 0.11
     
-    selling_price_ht = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
-    selling_price_ttc = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+    selling_price_ht = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    selling_price_ttc = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     
     # Matching Prisma Fields
     status = models.CharField(max_length=20, default='ACTIVE')
@@ -218,8 +219,8 @@ class ChartOfAccount(TenantModel):
     is_hidden = models.BooleanField(default=False)
     requires_zero_balance = models.BooleanField(default=False)
     
-    balance = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
-    balance_official = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+    balance = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    balance_official = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
 
     # Regulatory Mapping
     syscohada_code = models.CharField(max_length=50, null=True, blank=True)
@@ -330,9 +331,9 @@ class Order(TenantModel):
     user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='orders')
     site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
     
-    total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
-    tax_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
-    discount = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+    total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    tax_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    discount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     
     is_verified = models.BooleanField(default=False)
     is_locked = models.BooleanField(default=False)
@@ -351,12 +352,12 @@ class OrderLine(TenantModel):
     
     quantity = models.DecimalField(max_digits=15, decimal_places=2)
     unit_price = models.DecimalField(max_digits=15, decimal_places=2)
-    tax_rate = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
-    total = models.DecimalField(max_digits=15, decimal_places=2)
+    tax_rate = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    total = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     
     # Cost capture
-    unit_cost_ht = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
-    effective_cost = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+    unit_cost_ht = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    effective_cost = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
 
     class Meta:
         db_table = 'OrderLine'
@@ -456,8 +457,8 @@ class JournalEntryLine(TenantModel):
     journal_entry = models.ForeignKey(JournalEntry, on_delete=models.CASCADE, related_name='lines')
     account = models.ForeignKey(ChartOfAccount, on_delete=models.PROTECT, related_name='journal_lines')
     
-    debit = models.DecimalField(max_digits=15, decimal_places=2, default=0)
-    credit = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    debit = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    credit = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     
     description = models.TextField(null=True, blank=True)
     
