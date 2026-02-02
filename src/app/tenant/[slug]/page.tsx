@@ -35,9 +35,17 @@ export default function TenantWelcomePage({ params }: { params: { slug: string }
                     </div>
                 </div>
 
-                <p className="text-xs text-slate-600">
-                    Protected by TSF CITY Shield Multi-Tenant Isolation
-                </p>
+                <div className="pt-8 border-t border-slate-800/50 flex flex-col gap-4">
+                    <p className="text-xs text-slate-600">
+                        Protected by TSF CITY Shield Multi-Tenant Isolation
+                    </p>
+                    <a
+                        href="http://saas.localhost:3000"
+                        className="text-[10px] text-emerald-500 hover:text-emerald-400 font-bold uppercase tracking-widest transition-colors"
+                    >
+                        &larr; Return to Master Panel
+                    </a>
+                </div>
             </div>
         </div>
     )
