@@ -9,38 +9,126 @@ import json
 class ProvisioningService:
     @staticmethod
     def provision_organization(name, slug):
-        from .models import Organization, Site, ChartOfAccount
+        from .models import Organization, Site, ChartOfAccount, FiscalYear, FiscalPeriod, Warehouse
         """
-        Creates a new organization and default skeleton.
+        Creates a new organization and a FULL operational skeleton.
         """
         with transaction.atomic():
+            # 1. Organization
             org = Organization.objects.create(name=name, slug=slug)
             
-            # Default Site
-            Site.objects.create(
+            # 2. Main Site
+            site = Site.objects.create(
                 organization=org,
                 name="Main Branch",
                 code="MAIN"
             )
+
+            # 3. Main Warehouse
+            Warehouse.objects.create(
+                organization=org,
+                site=site,
+                name="Main Warehouse",
+                code="WH01",
+                can_sell=True
+            )
             
-            # Core Accounts
-            core_accounts = [
-                ('1000', 'ASSETS', 'ASSET'),
-                ('2000', 'LIABILITIES', 'LIABILITY'),
-                ('3000', 'EQUITY', 'EQUITY'),
-                ('4000', 'REVENUE', 'REVENUE'),
-                ('5000', 'EXPENSES', 'EXPENSE'),
-            ]
-            
-            for code, name, type in core_accounts:
-                ChartOfAccount.objects.create(
+            # 4. Fiscal Infrastructure (Current Year)
+            now = timezone.now()
+            fiscal_year = FiscalYear.objects.create(
+                organization=org,
+                name=f"FY-{now.year}",
+                start_date=f"{now.year}-01-01",
+                end_date=f"{now.year}-12-31"
+            )
+
+            # Create Monthly Periods
+            for month in range(1, 13):
+                import calendar
+                last_day = calendar.monthrange(now.year, month)[1]
+                FiscalPeriod.objects.create(
                     organization=org,
-                    code=code,
-                    name=name,
-                    type=type
+                    fiscal_year=fiscal_year,
+                    name=f"P{str(month).zfill(2)}-{now.year}",
+                    start_date=f"{now.year}-{str(month).zfill(2)}-01",
+                    end_date=f"{now.year}-{str(month).zfill(2)}-{last_day}"
                 )
             
+            # 5. Full Standardized Chart of Accounts
+            # Format: (Code, Name, Type, SubType, ParentCode)
+            coa_template = [
+                # Assets
+                ('1000', 'ASSETS', 'ASSET', None, None),
+                ('1110', 'Accounts Receivable', 'ASSET', 'RECEIVABLE', '1000'),
+                ('1120', 'Inventory', 'ASSET', 'INVENTORY', '1000'),
+                ('1300', 'Cash & Equivalents', 'ASSET', 'CASH', '1000'),
+                ('1310', 'Petty Cash', 'ASSET', 'CASH', '1300'),
+                ('1320', 'Main Bank Account', 'ASSET', 'BANK', '1300'),
+
+                # Liabilities
+                ('2000', 'LIABILITIES', 'LIABILITY', None, None),
+                ('2101', 'Accounts Payable', 'LIABILITY', 'PAYABLE', '2000'),
+                ('2102', 'Accrued Reception', 'LIABILITY', 'SUSPENSE', '2000'),
+                ('2111', 'VAT Payable', 'LIABILITY', 'TAX', '2000'),
+
+                # Equity
+                ('3000', 'EQUITY', 'EQUITY', None, None),
+
+                # Revenue
+                ('4000', 'REVENUE', 'INCOME', None, None),
+                ('4100', 'Sales Revenue', 'INCOME', 'REVENUE', '4000'),
+
+                # Expenses
+                ('5000', 'EXPENSES', 'EXPENSE', None, None),
+                ('5100', 'Cost of Goods Sold (COGS)', 'EXPENSE', 'COGS', '5000'),
+                ('5104', 'Inventory Adjustments', 'EXPENSE', 'ADJUSTMENT', '5000'),
+                ('5200', 'Operating Expenses', 'EXPENSE', None, '5000'),
+            ]
+            
+            account_map = {} # Code -> Object
+            for code, acc_name, acc_type, sub_type, parent_code in coa_template:
+                parent = account_map.get(parent_code)
+                acc = ChartOfAccount.objects.create(
+                    organization=org,
+                    code=code,
+                    name=acc_name,
+                    type=acc_type,
+                    sub_type=sub_type,
+                    parent=parent,
+                    is_active=True
+                )
+                account_map[code] = acc
+
+            # 6. Default Financial Accounts
+            from .services import FinancialAccountService
+            FinancialAccountService.create_account(
+                organization=org,
+                name="Cash Drawer",
+                type="CASH",
+                currency="USD",
+                site_id=site.id
+            )
+            
+            # 7. Auto-map Posting Rules
+            from .services import ConfigurationService
+            ConfigurationService.apply_smart_posting_rules(org)
+            
+            # 8. Global settings
+            ConfigurationService.save_global_settings(org, {
+                "companyType": "REGULAR",
+                "currency": "USD",
+                "defaultTaxRate": 0.11,
+                "salesTaxPercentage": 11.0,
+                "purchaseTaxPercentage": 11.0,
+                "worksInTTC": True,
+                "allowHTEntryForTTC": True,
+                "declareTVA": True,
+                "dualView": True,
+                "pricingCostBasis": "AMC"
+            })
+
             return org
+
 
 class ConfigurationService:
     @staticmethod
