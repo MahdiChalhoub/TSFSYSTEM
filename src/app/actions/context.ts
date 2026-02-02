@@ -5,12 +5,17 @@ import { revalidatePath } from 'next/cache';
 
 export async function setCurrentSite(siteId: number) {
     const cookieStore = await cookies();
-    cookieStore.set('tsf_current_site_id', siteId.toString(), {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 7 // 1 week
-    });
+
+    if (siteId === -1) {
+        cookieStore.delete('tsf_current_site_id');
+    } else {
+        cookieStore.set('tsf_current_site_id', siteId.toString(), {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 60 * 60 * 24 * 7 // 1 week
+        });
+    }
 
     revalidatePath('/', 'layout');
     return { success: true };

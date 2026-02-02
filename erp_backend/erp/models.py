@@ -4,6 +4,28 @@ import uuid
 from decimal import Decimal
 from .middleware import get_current_tenant_id
 
+class BusinessType(models.Model):
+    name = models.CharField(max_length=255)
+    slug = models.SlugField(unique=True)
+    description = models.TextField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'BusinessType'
+    
+    def __str__(self):
+        return self.name
+
+class GlobalCurrency(models.Model):
+    name = models.CharField(max_length=100)
+    code = models.CharField(max_length=10, unique=True) # USD, EUR
+    symbol = models.CharField(max_length=10) # $, €
+    
+    class Meta:
+        db_table = 'GlobalCurrency'
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
 class TenantManager(models.Manager):
     def get_queryset(self):
         tenant_id = get_current_tenant_id()
@@ -46,6 +68,22 @@ class Organization(models.Model):
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    # Onboarding Fields
+    logo = models.ImageField(upload_to='logos/', null=True, blank=True)
+    business_email = models.EmailField(null=True, blank=True)
+    phone = models.CharField(max_length=50, null=True, blank=True)
+    website = models.URLField(null=True, blank=True)
+    
+    address = models.TextField(null=True, blank=True)
+    city = models.CharField(max_length=100, null=True, blank=True)
+    state = models.CharField(max_length=100, null=True, blank=True)
+    zip_code = models.CharField(max_length=20, null=True, blank=True)
+    country = models.CharField(max_length=100, null=True, blank=True)
+    timezone = models.CharField(max_length=50, default='UTC')
+    
+    business_type = models.ForeignKey(BusinessType, on_delete=models.SET_NULL, null=True, blank=True)
+    base_currency = models.ForeignKey(GlobalCurrency, on_delete=models.SET_NULL, null=True, blank=True)
 
     class Meta:
         db_table = 'Organization'
@@ -98,6 +136,7 @@ class Permission(models.Model):
 class Role(TenantModel):
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
+    is_public_requestable = models.BooleanField(default=False)
     permissions = models.ManyToManyField(Permission, related_name='roles')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -261,6 +300,12 @@ class Employee(TenantModel):
     last_name = models.CharField(max_length=100)
     phone = models.CharField(max_length=50, null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
+    
+    # Employee Personal Details
+    nationality = models.CharField(max_length=100, null=True, blank=True)
+    address_line = models.TextField(null=True, blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
+    
     job_title = models.CharField(max_length=100, null=True, blank=True)
     salary = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
     
@@ -492,6 +537,16 @@ class User(AbstractUser):
     role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True, related_name='users')
     home_site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True, related_name='home_users')
     is_active_account = models.BooleanField(default=True)
+    
+    # Registration Status
+    REGISTRATION_STATUS = (
+        ('PENDING', 'Pending Approval'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+        ('NEEDS_CORRECTION', 'Needs Correction'),
+    )
+    registration_status = models.CharField(max_length=50, choices=REGISTRATION_STATUS, default='APPROVED')
+    correction_notes = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return self.email if self.email else self.username

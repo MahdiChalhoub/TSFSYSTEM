@@ -1,12 +1,13 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, action
+from .middleware import get_current_tenant_id
 from .models import (
     Organization, Site, FinancialAccount, ChartOfAccount,
     FiscalYear, FiscalPeriod, JournalEntry, Product, 
     Warehouse, Inventory, InventoryMovement, Unit,
     Brand, Category, Parfum, ProductGroup, Country,
-    Contact, Employee, Role, TransactionSequence, BarcodeSettings, Loan, LoanInstallment, FinancialEvent
+    Contact, Employee, Role, TransactionSequence, BarcodeSettings, Loan, LoanInstallment, FinancialEvent, Transaction
 )
 from .serializers import (
     OrganizationSerializer, SiteSerializer, FinancialAccountSerializer,
@@ -1050,3 +1051,43 @@ class FinancialEventViewSet(viewsets.ModelViewSet):
             traceback.print_exc()
             return Response({"error": str(e)}, status=400)
 
+
+class DashboardViewSet(viewsets.ViewSet):
+    """
+    Dashboard Aggregation ViewSet
+    """
+    
+    @action(detail=False, methods=['get'])
+    def admin_stats(self, request):
+        organization_id = get_current_tenant_id()
+        org = Organization.objects.get(id=organization_id)
+        
+        # 1. Total Sales (Revenue Accounts Credit Sum for now, or Mock for transition)
+        # Using Transaction sum for simpler mock or Product count
+        total_products = Product.objects.filter(is_active=True).count()
+        total_customers = Contact.objects.filter(type='CUSTOMER').count()
+        
+        # Latest Transactions (Simulating Sales)
+        latest_sales = Transaction.objects.filter(
+            type__in=['IN', 'SALE']
+        ).order_by('-created_at')[:5]
+        
+        # Serialize Transactions
+        from .serializers import TransactionSerializer
+        latest_sales_data = TransactionSerializer(latest_sales, many=True).data
+
+        return Response({
+            "totalSales": 0, # Placeholder until Order logic is fully ported
+            "activeOrders": 0,
+            "totalProducts": total_products,
+            "totalCustomers": total_customers,
+            "latestSales": latest_sales_data
+        })
+
+class RoleViewSet(viewsets.ModelViewSet):
+    queryset = Role.objects.all()
+    serializer_class = RoleSerializer
+
+class TransactionSequenceViewSet(viewsets.ModelViewSet):
+    queryset = TransactionSequence.objects.all()
+    serializer_class = TransactionSequenceSerializer

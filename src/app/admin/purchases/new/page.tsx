@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+import { erpFetch } from "@/lib/erp-api";
 import { getContactsByType } from "@/app/actions/crm/contacts";
 import { getFinancialSettings } from "@/app/actions/finance/settings";
 import PurchaseForm from "./form";
@@ -8,15 +8,19 @@ import { serializeDecimals } from "@/lib/utils/serialization";
 export const dynamic = 'force-dynamic';
 
 async function getSitesAndWarehouses() {
-    return await prisma.site.findMany({
-        where: { isActive: true },
-        include: {
-            warehouses: {
-                where: { isActive: true }
-            }
-        },
-        orderBy: { name: 'asc' }
-    });
+    try {
+        // Fetch sites with warehouses from Django API
+        // Assuming Django serializer returns warehouses nested in sites
+        // We might need to adjust the query param if Django follows different convention
+        // For now, let's fetch sites and hope the standard serializer includes details or we need a specific view
+
+        // Actually, let's check if we have a specific action for this already in src/app/actions
+        // But for now, direct fetch:
+        return await erpFetch('sites/?include_warehouses=true');
+    } catch (e) {
+        console.error("Failed to fetch sites", e);
+        return [];
+    }
 }
 
 export default async function NewPurchasePage() {

@@ -4,7 +4,7 @@ from .models import (
     FiscalPeriod, JournalEntry, JournalEntryLine, ChartOfAccount,
     Product, Warehouse, Inventory, InventoryMovement, Unit,
     Brand, Category, Parfum, ProductGroup, Country,
-    Contact, Employee, Role, TransactionSequence, BarcodeSettings, Loan, LoanInstallment, FinancialEvent
+    Contact, Employee, Role, TransactionSequence, BarcodeSettings, Loan, LoanInstallment, FinancialEvent, Transaction
 )
 
 class OrganizationSerializer(serializers.ModelSerializer):
@@ -89,7 +89,14 @@ class InventoryMovementSerializer(serializers.ModelSerializer):
         model = InventoryMovement
         fields = '__all__'
 
+class WarehouseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Warehouse
+        fields = '__all__'
+
 class SiteSerializer(serializers.ModelSerializer):
+    warehouses = WarehouseSerializer(many=True, read_only=True)
+
     class Meta:
         model = Site
         fields = '__all__'
@@ -103,14 +110,16 @@ class FinancialAccountSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ('ledger_account',)
 
-class FiscalYearSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = FiscalYear
-        fields = '__all__'
-
 class FiscalPeriodSerializer(serializers.ModelSerializer):
     class Meta:
         model = FiscalPeriod
+        fields = '__all__'
+
+class FiscalYearSerializer(serializers.ModelSerializer):
+    periods = FiscalPeriodSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = FiscalYear
         fields = '__all__'
 
 class ChartOfAccountSerializer(serializers.ModelSerializer):
@@ -191,14 +200,6 @@ class EmployeeSerializer(serializers.ModelSerializer):
 
 class BrandDetailSerializer(serializers.ModelSerializer):
     countries = CountrySerializer(many=True, read_only=True)
-    productGroups = ProductGroupSerializer(source='product_set', many=True, read_only=True) # Wait, product_set? NO! productgroup_set!
-    # I need to be careful about related_name. If not set, it is modelname_set.
-    # ProductGroup -> productgroup_set.
-    # Brand -> products (Product) -> product_set.
-    # Brand -> productGroups (ProductGroup) -> productgroup_set.
-    # Frontend props: productGroups, products.
-    # Serializer fields: productGroups (mapped to productgroup_set), products (method field for filtered).
-    
     productGroups = ProductGroupSerializer(source='productgroup_set', many=True, read_only=True)
     products = serializers.SerializerMethodField()
 
@@ -244,3 +245,8 @@ class FinancialEventSerializer(serializers.ModelSerializer):
         model = FinancialEvent
         fields = '__all__'
 
+
+class TransactionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transaction
+        fields = '__all__'

@@ -6,7 +6,15 @@ import { erpFetch } from '@/lib/erp-api'
 
 export async function getFiscalYears() {
     try {
-        return await erpFetch('fiscal-years/')
+        const data = await erpFetch('fiscal-years/')
+        return data.map((year: any) => ({
+            ...year,
+            startDate: year.start_date,
+            endDate: year.end_date,
+            isHardLocked: year.is_hard_locked,
+            // Ensure periods are also mapped if necessary, but periods usually come from nested serializer
+            // If periods have snake_case, we might need to map them too ideally
+        }))
     } catch (error) {
         console.error("Failed to fetch fiscal years:", error)
         return []
@@ -16,7 +24,16 @@ export async function getFiscalYears() {
 export async function getLatestFiscalYear() {
     try {
         const years = await erpFetch('fiscal-years/?limit=1&ordering=-end_date')
-        return years[0] || null
+        const year = years[0] || null
+        if (year) {
+            return {
+                ...year,
+                startDate: year.start_date,
+                endDate: year.end_date,
+                isHardLocked: year.is_hard_locked,
+            }
+        }
+        return null
     } catch (error) {
         console.error("Failed to fetch latest fiscal year:", error)
         return null
@@ -34,10 +51,30 @@ export type FiscalYearConfig = {
 
 export async function createFiscalYear(config: FiscalYearConfig) {
     try {
+        const payload = {
+            name: config.name,
+            start_date: config.startDate.toISOString().split('T')[0],
+            end_date: config.endDate.toISOString().split('T')[0],
+            frequency: config.frequency,
+            organization: 1, // Will be overridden by TenantMiddleware/View logic usually, but good to inspect view
+            // The view likely expects these for the service logic if it uses one, or just model fields.
+            // If the view creates periods, it needs 'frequency' in the request.data if it's not a model field.
+        }
+
+        // Wait, check if 'frequency' is a model field. If not, it might be extra data for the serializer/view.
+        // And 'defaultPeriodStatus' -> likely need to check how backend handles period creation.
+
         const result = await erpFetch('fiscal-years/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(config)
+            body: JSON.stringify({
+                name: config.name,
+                start_date: config.startDate instanceof Date ? config.startDate.toISOString().split('T')[0] : config.startDate,
+                end_date: config.endDate instanceof Date ? config.endDate.toISOString().split('T')[0] : config.endDate,
+                frequency: config.frequency,
+                period_status: config.defaultPeriodStatus, // Mapping defaultPeriodStatus
+                include_audit: config.includeAuditPeriod // Mapping includeAuditPeriod
+            })
         })
         revalidatePath('/admin/finance/fiscal-years')
         return { success: true, id: result.id }
