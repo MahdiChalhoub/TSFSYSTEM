@@ -1,6 +1,11 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import OrganizationViewSet, health_check
+from .views import (
+    OrganizationViewSet, SiteViewSet, FinancialAccountViewSet,
+    ChartOfAccountViewSet, FiscalYearViewSet, FiscalPeriodViewSet,
+    JournalEntryViewSet, ProductViewSet, WarehouseViewSet,
+    InventoryViewSet, health_check
+)
 
 router = DefaultRouter()
 router.register(r'organizations', OrganizationViewSet)
