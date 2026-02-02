@@ -3,8 +3,9 @@
 import { useAdmin } from '@/context/AdminContext';
 import { Bell, Search, User, Menu } from 'lucide-react';
 import { SiteSwitcher } from './SiteSwitcher';
+import { TenantSwitcher } from './TenantSwitcher';
 
-export function TopHeader({ sites }: { sites: any[] }) {
+export function TopHeader({ sites, organizations = [] }: { sites: any[], organizations?: any[] }) {
     const { toggleSidebar } = useAdmin();
 
     return (
@@ -13,6 +14,8 @@ export function TopHeader({ sites }: { sites: any[] }) {
                 <button onClick={toggleSidebar} className="p-2.5 hover:bg-gray-100/50 hover:scale-105 active:scale-95 rounded-xl text-gray-600 transition-all duration-200">
                     <Menu size={22} className="text-gray-700" />
                 </button>
+                <TenantSwitcher organizations={organizations} />
+                <div className="h-8 w-px bg-gray-200/60 hidden lg:block mx-1"></div>
                 <SiteSwitcher sites={sites} />
             </div>
 
