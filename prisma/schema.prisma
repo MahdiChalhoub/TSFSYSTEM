@@ -1,4 +1,4 @@
-﻿// TSF Master Schema (v1.1 - SaaS Multi-Tenant)
+// TSF Master Schema (v1.1 - SaaS Multi-Tenant)
 // Designed for: ERP, Store, POS, HR, CRM, Audit
 
 generator client {
@@ -55,6 +55,8 @@ model Organization {
   financialEvent      FinancialEvent[]
   loan                Loan[]
   loanInstallment     LoanInstallment[]
+  roles               Role[]
+  permissions         Permission[]
 }
 
 model Country {
@@ -193,21 +195,31 @@ model User {
 
 model Role {
   id          Int     @id @default(autoincrement())
-  name        String  @unique // 'Admin', 'Manager', 'Cashier', 'Driver'
+  name        String // 'Admin', 'Manager', 'Cashier', 'Driver'
   description String?
+
+  // SaaS Context
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   permissions Permission[]
   users       User[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([name, organizationId])
 }
 
 model Permission {
   id          Int     @id @default(autoincrement())
-  code        String  @unique // 'pos.sell', 'inventory.adjust', 'finance.post'
+  code        String // 'pos.sell', 'inventory.adjust', 'finance.post'
   name        String
   description String?
+
+  // SaaS Context
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   roles Role[]
 

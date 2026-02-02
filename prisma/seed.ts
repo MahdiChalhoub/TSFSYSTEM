@@ -4,7 +4,21 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 async function main() {
-    console.log('🌱 Starting seed...')
+    console.log('🌱 Starting seed (SaaS Mode)...')
+
+    // 0. Seed Default Organization
+    const organization = await (prisma as any).organization.upsert({
+        where: { slug: 'tsf-global' },
+        update: {},
+        create: {
+            name: 'TSF Global',
+            slug: 'tsf-global',
+            isActive: true
+        }
+    })
+    console.log(`🏢 Seeded Organization: ${organization.name}`)
+
+    const orgId = organization.id
 
     // 1. Seed Roles
     const roles = [
@@ -14,10 +28,10 @@ async function main() {
     ]
     for (const r of roles) {
         // @ts-ignore
-        await prisma.role.upsert({
+        await (prisma as any).role.upsert({
             where: { name: r.name },
             update: { description: r.description },
-            create: r
+            create: { ...r, organizationId: orgId }
         })
     }
     // @ts-ignore
@@ -25,15 +39,16 @@ async function main() {
 
     // 2. Seed Sites (The Enterprise Roots)
     // @ts-ignore
-    const hqSite = await prisma.site.upsert({
-        where: { code: 'HQ-BEIRUT' },
+    const hqSite = await (prisma as any).site.upsert({
+        where: { code: 'HQ-BEIRUT', organizationId: orgId },
         update: {},
         create: {
             name: 'HQ - Beirut Central',
             code: 'HQ-BEIRUT',
             address: 'Downtown, Beirut',
             phone: '+961 1 000 000',
-            isActive: true
+            isActive: true,
+            organizationId: orgId
         }
     })
     console.log(`📍 Seeded Primary Site: ${hqSite.name}`)
@@ -41,11 +56,12 @@ async function main() {
     // 2. Create Default Admin User
     const adminEmail = 'admin@tsfci.com'
     // @ts-ignore
-    await prisma.user.upsert({
+    await (prisma as any).user.upsert({
         where: { email: adminEmail },
         update: {
             role: adminRole ? { connect: { id: adminRole.id } } : undefined,
-            homeSite: hqSite ? { connect: { id: hqSite.id } } : undefined
+            homeSite: hqSite ? { connect: { id: hqSite.id } } : undefined,
+            organizationId: orgId
         },
         create: {
             email: adminEmail,
@@ -54,6 +70,7 @@ async function main() {
             role: adminRole ? { connect: { id: adminRole.id } } : undefined,
             homeSite: hqSite ? { connect: { id: hqSite.id } } : undefined,
             isActive: true,
+            organizationId: orgId
         },
     })
     console.log(`👤 Admin user: ${adminEmail}`)
@@ -68,10 +85,10 @@ async function main() {
     ]
 
     for (const c of countries) {
-        await prisma.country.upsert({
-            where: { code: c.code },
+        await (prisma as any).country.upsert({
+            where: { code: c.code, organizationId: orgId },
             update: {},
-            create: c,
+            create: { ...c, organizationId: orgId },
         })
     }
     console.log(`🌍 Seeded ${countries.length} countries`)
@@ -79,17 +96,17 @@ async function main() {
     // 3. Seed Units
     // 3. Seed Units (Hierarchical)
     // First, ensure Base Unit exists
-    const piece = await prisma.unit.upsert({
-        where: { code: 'PC' },
+    const piece = await (prisma as any).unit.upsert({
+        where: { code: 'PC', organizationId: orgId },
         update: {},
-        create: { code: 'PC', name: 'Piece', conversionFactor: 1 },
+        create: { code: 'PC', name: 'Piece', conversionFactor: 1, organizationId: orgId },
     })
 
     // Level 1: Weight based
-    await prisma.unit.upsert({
-        where: { code: 'KG' },
+    await (prisma as any).unit.upsert({
+        where: { code: 'KG', organizationId: orgId },
         update: {},
-        create: { code: 'KG', name: 'Kilogram', conversionFactor: 1 },
+        create: { code: 'KG', name: 'Kilogram', conversionFactor: 1, organizationId: orgId },
     })
 
     // Level 2: Derived Units (Pack = 6 Pieces)
@@ -107,10 +124,10 @@ async function main() {
     })
 
     // Liquid
-    await prisma.unit.upsert({
-        where: { code: 'LITER' },
+    await (prisma as any).unit.upsert({
+        where: { code: 'LITER', organizationId: orgId },
         update: {},
-        create: { code: 'LITER', name: 'Liter', conversionFactor: 1 },
+        create: { code: 'LITER', name: 'Liter', conversionFactor: 1, organizationId: orgId },
     })
 
     console.log(`📏 Seeded units with hierarchy`)
@@ -128,8 +145,8 @@ async function main() {
     if (warehouseCount === 0) {
         for (const w of warehouses) {
             // @ts-ignore
-            await prisma.warehouse.create({
-                data: { ...w, site: { connect: { id: hqSite.id } } }
+            await (prisma as any).warehouse.create({
+                data: { ...w, site: { connect: { id: hqSite.id } }, organizationId: orgId }
             })
         }
         console.log(`🏭 Seeded ${warehouses.length} warehouses for site ${hqSite.name}`)
@@ -146,8 +163,8 @@ async function main() {
     if (accountCount === 0) {
         for (const account of accounts) {
             // @ts-ignore
-            await prisma.financialAccount.create({
-                data: { ...account, site: { connect: { id: hqSite.id } } }
+            await (prisma as any).financialAccount.create({
+                data: { ...account, site: { connect: { id: hqSite.id } }, organizationId: orgId }
             })
         }
         console.log(`💰 Seeded ${accounts.length} financial accounts for site ${hqSite.name}`)
@@ -159,14 +176,15 @@ async function main() {
     // 6. Seed Financial Settings (Default)
     const settings = await prisma.financialSettings.findFirst()
     if (!settings) {
-        await prisma.financialSettings.create({
+        await (prisma as any).financialSettings.create({
             data: {
                 companyType: 'MIXED',
                 currency: 'USD',
                 defaultTaxRate: 0.11,
                 worksInTTC: true,
                 allowHTEntryForTTC: false,
-                dualView: true
+                dualView: true,
+                organizationId: orgId
             }
         })
         console.log('⚙️ Default Financial Settings Created')
@@ -181,7 +199,8 @@ async function main() {
             name: 'FY 2026',
             startDate: new Date('2026-01-01'),
             endDate: new Date('2026-12-31'),
-            status: 'OPEN'
+            status: 'OPEN',
+            organizationId: orgId
         }
     })
     console.log('📅 Fiscal Year FY 2026 Created')
@@ -194,7 +213,7 @@ async function main() {
         const acc = await prisma.chartOfAccount.upsert({
             where: { code },
             update: { subType },
-            create: { code, name, type, parentId, subType }
+            create: { code, name, type, parentId, subType, organizationId: orgId }
         })
         return acc
     }
@@ -253,10 +272,10 @@ async function main() {
         }
     }
 
-    await prisma.systemSettings.upsert({
-        where: { key: 'finance_posting_rules' },
+    await (prisma as any).systemSettings.upsert({
+        where: { key: 'finance_posting_rules', organizationId: orgId },
         update: { value: JSON.stringify(postingRules) },
-        create: { key: 'finance_posting_rules', value: JSON.stringify(postingRules) }
+        create: { key: 'finance_posting_rules', value: JSON.stringify(postingRules), organizationId: orgId }
     })
     console.log('⚙️ Posting Rules (Auto-Mapping) Initialized')
 
@@ -273,7 +292,8 @@ async function main() {
             basePrice: 50,
             taxRate: 0.11,
             isTaxIncluded: true,
-            status: 'ACTIVE'
+            status: 'ACTIVE',
+            organizationId: orgId
         }
     });
     console.log('✅ Sample Product Seeded');

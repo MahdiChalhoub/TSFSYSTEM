@@ -131,13 +131,15 @@ exports.Prisma.OrganizationScalarFieldEnum = {
 exports.Prisma.CountryScalarFieldEnum = {
   id: 'id',
   code: 'code',
-  name: 'name'
+  name: 'name',
+  organizationId: 'organizationId'
 };
 
 exports.Prisma.UnitScalarFieldEnum = {
   id: 'id',
   code: 'code',
   name: 'name',
+  organizationId: 'organizationId',
   shortName: 'shortName',
   type: 'type',
   allowFraction: 'allowFraction',
@@ -154,7 +156,8 @@ exports.Prisma.FinancialAccountScalarFieldEnum = {
   currency: 'currency',
   balance: 'balance',
   siteId: 'siteId',
-  ledgerAccountId: 'ledgerAccountId'
+  ledgerAccountId: 'ledgerAccountId',
+  organizationId: 'organizationId'
 };
 
 exports.Prisma.TransactionScalarFieldEnum = {
@@ -166,6 +169,7 @@ exports.Prisma.TransactionScalarFieldEnum = {
   description: 'description',
   referenceId: 'referenceId',
   scope: 'scope',
+  organizationId: 'organizationId',
   createdAt: 'createdAt'
 };
 
@@ -189,6 +193,7 @@ exports.Prisma.RoleScalarFieldEnum = {
   id: 'id',
   name: 'name',
   description: 'description',
+  organizationId: 'organizationId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -198,6 +203,7 @@ exports.Prisma.PermissionScalarFieldEnum = {
   code: 'code',
   name: 'name',
   description: 'description',
+  organizationId: 'organizationId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -300,6 +306,7 @@ exports.Prisma.CategoryScalarFieldEnum = {
   name: 'name',
   code: 'code',
   shortName: 'shortName',
+  organizationId: 'organizationId',
   parentId: 'parentId'
 };
 
@@ -307,13 +314,15 @@ exports.Prisma.BrandScalarFieldEnum = {
   id: 'id',
   name: 'name',
   shortName: 'shortName',
-  logo: 'logo'
+  logo: 'logo',
+  organizationId: 'organizationId'
 };
 
 exports.Prisma.ParfumScalarFieldEnum = {
   id: 'id',
   name: 'name',
-  shortName: 'shortName'
+  shortName: 'shortName',
+  organizationId: 'organizationId'
 };
 
 exports.Prisma.WarehouseScalarFieldEnum = {
@@ -325,6 +334,7 @@ exports.Prisma.WarehouseScalarFieldEnum = {
   address: 'address',
   city: 'city',
   isActive: 'isActive',
+  organizationId: 'organizationId',
   siteId: 'siteId'
 };
 
@@ -332,6 +342,7 @@ exports.Prisma.StockBatchScalarFieldEnum = {
   id: 'id',
   productId: 'productId',
   batchCode: 'batchCode',
+  organizationId: 'organizationId',
   expiryDate: 'expiryDate',
   costPrice: 'costPrice'
 };
@@ -341,13 +352,15 @@ exports.Prisma.InventoryScalarFieldEnum = {
   warehouseId: 'warehouseId',
   productId: 'productId',
   batchId: 'batchId',
-  quantity: 'quantity'
+  quantity: 'quantity',
+  organizationId: 'organizationId'
 };
 
 exports.Prisma.OrderScalarFieldEnum = {
   id: 'id',
   type: 'type',
   status: 'status',
+  organizationId: 'organizationId',
   contactId: 'contactId',
   userId: 'userId',
   isVerified: 'isVerified',
@@ -375,6 +388,7 @@ exports.Prisma.OrderLineScalarFieldEnum = {
   unitPrice: 'unitPrice',
   taxRate: 'taxRate',
   total: 'total',
+  organizationId: 'organizationId',
   batchId: 'batchId',
   unitCostHT: 'unitCostHT',
   unitCostTTC: 'unitCostTTC',
@@ -389,6 +403,7 @@ exports.Prisma.TaskScalarFieldEnum = {
   type: 'type',
   status: 'status',
   priority: 'priority',
+  organizationId: 'organizationId',
   assignedToId: 'assignedToId',
   dueDate: 'dueDate',
   completedAt: 'completedAt'
@@ -398,6 +413,7 @@ exports.Prisma.SystemSettingsScalarFieldEnum = {
   id: 'id',
   key: 'key',
   value: 'value',
+  organizationId: 'organizationId',
   updatedAt: 'updatedAt',
   createdAt: 'createdAt'
 };
@@ -408,6 +424,7 @@ exports.Prisma.BarcodeSettingsScalarFieldEnum = {
   length: 'length',
   nextSequence: 'nextSequence',
   isEnabled: 'isEnabled',
+  organizationId: 'organizationId',
   updatedAt: 'updatedAt'
 };
 
@@ -418,6 +435,7 @@ exports.Prisma.TransactionSequenceScalarFieldEnum = {
   suffix: 'suffix',
   nextNumber: 'nextNumber',
   padding: 'padding',
+  organizationId: 'organizationId',
   updatedAt: 'updatedAt'
 };
 
@@ -426,6 +444,7 @@ exports.Prisma.ProductImageScalarFieldEnum = {
   url: 'url',
   isPrimary: 'isPrimary',
   productId: 'productId',
+  organizationId: 'organizationId',
   createdAt: 'createdAt'
 };
 
@@ -452,6 +471,7 @@ exports.Prisma.FiscalYearScalarFieldEnum = {
   startDate: 'startDate',
   endDate: 'endDate',
   status: 'status',
+  organizationId: 'organizationId',
   isLocked: 'isLocked',
   isHardLocked: 'isHardLocked',
   autoCloseDate: 'autoCloseDate'
@@ -465,7 +485,8 @@ exports.Prisma.FiscalPeriodScalarFieldEnum = {
   type: 'type',
   startDate: 'startDate',
   endDate: 'endDate',
-  status: 'status'
+  status: 'status',
+  organizationId: 'organizationId'
 };
 
 exports.Prisma.ChartOfAccountScalarFieldEnum = {
@@ -494,6 +515,7 @@ exports.Prisma.JournalEntryScalarFieldEnum = {
   transactionDate: 'transactionDate',
   description: 'description',
   reference: 'reference',
+  organizationId: 'organizationId',
   fiscalYearId: 'fiscalYearId',
   fiscalPeriodId: 'fiscalPeriodId',
   status: 'status',
@@ -516,7 +538,8 @@ exports.Prisma.JournalEntryLineScalarFieldEnum = {
   employeeId: 'employeeId',
   debit: 'debit',
   credit: 'credit',
-  description: 'description'
+  description: 'description',
+  organizationId: 'organizationId'
 };
 
 exports.Prisma.PriceListScalarFieldEnum = {
@@ -524,6 +547,7 @@ exports.Prisma.PriceListScalarFieldEnum = {
   name: 'name',
   currency: 'currency',
   isDefault: 'isDefault',
+  organizationId: 'organizationId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -533,11 +557,12 @@ exports.Prisma.PricingRuleScalarFieldEnum = {
   priceListId: 'priceListId',
   productId: 'productId',
   categoryId: 'categoryId',
+  productGroupId: 'productGroupId',
+  organizationId: 'organizationId',
   adjustmentType: 'adjustmentType',
   value: 'value',
   minQuantity: 'minQuantity',
-  priority: 'priority',
-  productGroupId: 'productGroupId'
+  priority: 'priority'
 };
 
 exports.Prisma.SiteScalarFieldEnum = {
@@ -564,6 +589,7 @@ exports.Prisma.InventoryLevelScalarFieldEnum = {
 
 exports.Prisma.FinancialEventScalarFieldEnum = {
   id: 'id',
+  organizationId: 'organizationId',
   eventType: 'eventType',
   status: 'status',
   amount: 'amount',
@@ -581,6 +607,7 @@ exports.Prisma.FinancialEventScalarFieldEnum = {
 
 exports.Prisma.LoanScalarFieldEnum = {
   id: 'id',
+  organizationId: 'organizationId',
   contractNumber: 'contractNumber',
   contactId: 'contactId',
   principalAmount: 'principalAmount',
@@ -596,6 +623,7 @@ exports.Prisma.LoanScalarFieldEnum = {
 
 exports.Prisma.LoanInstallmentScalarFieldEnum = {
   id: 'id',
+  organizationId: 'organizationId',
   loanId: 'loanId',
   dueDate: 'dueDate',
   principalAmount: 'principalAmount',
