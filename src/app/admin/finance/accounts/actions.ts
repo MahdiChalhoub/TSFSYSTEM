@@ -12,76 +12,31 @@ export type FinancialAccountInput = {
 
 import { serialize } from "@/lib/utils"
 
+import { erpFetch } from "@/lib/erp-api"
+
 export async function getFinancialAccounts() {
-    const accounts = await prisma.financialAccount.findMany({
-        include: {
-            site: true,
-            ledgerAccount: true,
-            assignedUsers: { select: { id: true, name: true } }
-        },
-        orderBy: { name: 'asc' }
-    })
-    return serialize(accounts)
+    try {
+        return await erpFetch('accounts/')
+    } catch (error) {
+        console.error("Failed to fetch financial accounts:", error)
+        return []
+    }
 }
 
 export async function createFinancialAccount(data: FinancialAccountInput) {
-    // 1. Find Parent COA dynamically by SubType (CASH, BANK, MOBILE)
-    const parent = await prisma.chartOfAccount.findFirst({
-        where: { subType: data.type }
-    });
+    try {
+        const result = await erpFetch('accounts/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
 
-    if (!parent) {
-        throw new Error(`Accounting System Error: No Chart of Account found with subType "${data.type}". Please ensure your COA has a root account marked with this subType.`);
+        revalidatePath('/admin/finance/accounts')
+        return { success: true, id: result.id, ledgerCode: result.ledger_code }
+    } catch (error: any) {
+        console.error("Failed to create financial account:", error)
+        throw error
     }
-
-    const parentCode = parent.code;
-
-    const result = await prisma.$transaction(async (tx) => {
-        // 2. Generate Next Code (e.g. 5700.001)
-        const children = await tx.chartOfAccount.findMany({
-            where: { code: { startsWith: `${parentCode}.` } },
-            orderBy: { code: 'desc' },
-            take: 1
-        });
-
-        let nextSuffix = 1;
-        if (children.length > 0) {
-            const lastCode = children[0].code;
-            const parts = lastCode.split('.');
-            const lastNum = parseInt(parts[parts.length - 1]);
-            nextSuffix = isNaN(lastNum) ? 1 : lastNum + 1;
-        }
-        const nextCode = `${parentCode}.${nextSuffix.toString().padStart(3, '0')}`;
-
-        // 3. Create Ledger Account Automatically
-        const ledgerAccount = await tx.chartOfAccount.create({
-            data: {
-                code: nextCode,
-                name: data.name,
-                type: 'ASSET',
-                parentId: parent.id,
-                isSystemOnly: true,
-                isActive: true,
-                balance: 0
-            }
-        });
-
-        // 4. Create Financial Account linked to it
-        const financialAccount = await tx.financialAccount.create({
-            data: {
-                name: data.name,
-                type: data.type,
-                currency: data.currency,
-                siteId: data.siteId,
-                ledgerAccountId: ledgerAccount.id
-            }
-        });
-
-        return { success: true, id: financialAccount.id, ledgerCode: nextCode };
-    });
-
-    revalidatePath('/admin/finance/accounts')
-    return result;
 }
 
 export async function assignUserToAccount(userId: number, accountId: number) {

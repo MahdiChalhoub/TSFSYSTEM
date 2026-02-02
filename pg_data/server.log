@@ -5,3 +5,5 @@
 2026-02-02 09:53:50.152 GMT [14548] LOG:  database system is ready to accept connections
 2026-02-02 09:58:50.142 GMT [16036] LOG:  checkpoint starting: time
 2026-02-02 10:00:39.946 GMT [16036] LOG:  checkpoint complete: wrote 1028 buffers (6.3%), wrote 3 SLRU buffers; 1 WAL file(s) added, 0 removed, 0 recycled; write=109.498 s, sync=0.254 s, total=109.805 s; sync files=312, longest=0.012 s, average=0.001 s; distance=4998 kB, estimate=4998 kB; lsn=0/1CD2DC0, redo lsn=0/1CD2D30
+2026-02-02 10:13:50.991 GMT [16036] LOG:  checkpoint starting: time
+2026-02-02 10:14:16.860 GMT [16036] LOG:  checkpoint complete: wrote 242 buffers (1.5%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=25.702 s, sync=0.140 s, total=25.870 s; sync files=248, longest=0.005 s, average=0.001 s; distance=1809 kB, estimate=4679 kB; lsn=0/1E974E0, redo lsn=0/1E97450
