@@ -4,7 +4,7 @@ from .views import (
     OrganizationViewSet, SiteViewSet, FinancialAccountViewSet,
     ChartOfAccountViewSet, FiscalYearViewSet, FiscalPeriodViewSet,
     JournalEntryViewSet, ProductViewSet, WarehouseViewSet,
-    InventoryViewSet, UnitViewSet, health_check
+    InventoryViewSet, UnitViewSet, SettingsViewSet, health_check
 )
 
 router = DefaultRouter()
@@ -19,6 +19,7 @@ router.register(r'products', ProductViewSet)
 router.register(r'units', UnitViewSet)
 router.register(r'warehouses', WarehouseViewSet)
 router.register(r'inventory', InventoryViewSet)
+router.register(r'settings', SettingsViewSet, basename='settings')
 
 urlpatterns = [
     path('health/', health_check),

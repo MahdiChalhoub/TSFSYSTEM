@@ -7,3 +7,36 @@
 2026-02-02 10:00:39.946 GMT [16036] LOG:  checkpoint complete: wrote 1028 buffers (6.3%), wrote 3 SLRU buffers; 1 WAL file(s) added, 0 removed, 0 recycled; write=109.498 s, sync=0.254 s, total=109.805 s; sync files=312, longest=0.012 s, average=0.001 s; distance=4998 kB, estimate=4998 kB; lsn=0/1CD2DC0, redo lsn=0/1CD2D30
 2026-02-02 10:13:50.991 GMT [16036] LOG:  checkpoint starting: time
 2026-02-02 10:14:16.860 GMT [16036] LOG:  checkpoint complete: wrote 242 buffers (1.5%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=25.702 s, sync=0.140 s, total=25.870 s; sync files=248, longest=0.005 s, average=0.001 s; distance=1809 kB, estimate=4679 kB; lsn=0/1E974E0, redo lsn=0/1E97450
+2026-02-02 10:39:29.689 GMT [35648] ERROR:  cannot drop index "Brand_name_organization_id_849709bc_uniq" because constraint Brand_name_organization_id_849709bc_uniq on table "Brand" requires it
+2026-02-02 10:39:29.689 GMT [35648] HINT:  You can drop constraint Brand_name_organization_id_849709bc_uniq on table "Brand" instead.
+2026-02-02 10:39:29.689 GMT [35648] STATEMENT:  DROP INDEX "Brand_name_organization_id_849709bc_uniq"
+2026-02-02 10:39:29.693 GMT [35648] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2026-02-02 10:40:18.746 GMT [9492] ERROR:  column Organization.isActive does not exist at character 102
+2026-02-02 10:40:18.746 GMT [9492] HINT:  Perhaps you meant to reference the column "Organization.is_active".
+2026-02-02 10:40:18.746 GMT [9492] STATEMENT:  SELECT "public"."Organization"."id", "public"."Organization"."name", "public"."Organization"."slug", "public"."Organization"."isActive", "public"."Organization"."createdAt", "public"."Organization"."updatedAt" FROM "public"."Organization" WHERE 1=1 OFFSET $1
+2026-02-02 10:40:18.776 GMT [9492] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2026-02-02 10:40:38.716 GMT [19988] ERROR:  relation "public.Order" does not exist at character 76
+2026-02-02 10:40:38.716 GMT [19988] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 10:40:49.734 GMT [19988] ERROR:  relation "public.Order" does not exist at character 636
+2026-02-02 10:40:49.734 GMT [19988] STATEMENT:  SELECT "public"."Order"."id", "public"."Order"."type", "public"."Order"."status", "public"."Order"."organizationId", "public"."Order"."contactId", "public"."Order"."userId", "public"."Order"."isVerified", "public"."Order"."verifiedById", "public"."Order"."isLocked", "public"."Order"."totalAmount", "public"."Order"."taxAmount", "public"."Order"."discount", "public"."Order"."notes", "public"."Order"."scope", "public"."Order"."paymentMethod", "public"."Order"."refCode", "public"."Order"."siteId", "public"."Order"."invoicePriceType", "public"."Order"."vatRecoverable", "public"."Order"."createdAt", "public"."Order"."updatedAt" FROM "public"."Order" WHERE "public"."Order"."type" = $1 ORDER BY "public"."Order"."createdAt" DESC OFFSET $2
+2026-02-02 10:40:49.948 GMT [19988] ERROR:  relation "public.Order" does not exist at character 636
+2026-02-02 10:40:49.948 GMT [19988] STATEMENT:  SELECT "public"."Order"."id", "public"."Order"."type", "public"."Order"."status", "public"."Order"."organizationId", "public"."Order"."contactId", "public"."Order"."userId", "public"."Order"."isVerified", "public"."Order"."verifiedById", "public"."Order"."isLocked", "public"."Order"."totalAmount", "public"."Order"."taxAmount", "public"."Order"."discount", "public"."Order"."notes", "public"."Order"."scope", "public"."Order"."paymentMethod", "public"."Order"."refCode", "public"."Order"."siteId", "public"."Order"."invoicePriceType", "public"."Order"."vatRecoverable", "public"."Order"."createdAt", "public"."Order"."updatedAt" FROM "public"."Order" WHERE "public"."Order"."type" = $1 ORDER BY "public"."Order"."createdAt" DESC OFFSET $2
+2026-02-02 10:40:50.167 GMT [19988] ERROR:  relation "public.Order" does not exist at character 636
+2026-02-02 10:40:50.167 GMT [19988] STATEMENT:  SELECT "public"."Order"."id", "public"."Order"."type", "public"."Order"."status", "public"."Order"."organizationId", "public"."Order"."contactId", "public"."Order"."userId", "public"."Order"."isVerified", "public"."Order"."verifiedById", "public"."Order"."isLocked", "public"."Order"."totalAmount", "public"."Order"."taxAmount", "public"."Order"."discount", "public"."Order"."notes", "public"."Order"."scope", "public"."Order"."paymentMethod", "public"."Order"."refCode", "public"."Order"."siteId", "public"."Order"."invoicePriceType", "public"."Order"."vatRecoverable", "public"."Order"."createdAt", "public"."Order"."updatedAt" FROM "public"."Order" WHERE "public"."Order"."type" = $1 ORDER BY "public"."Order"."createdAt" DESC OFFSET $2
+2026-02-02 10:40:59.505 GMT [19988] ERROR:  relation "public.Order" does not exist at character 76
+2026-02-02 10:40:59.505 GMT [19988] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 10:41:36.595 GMT [34136] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2026-02-02 10:41:36.869 GMT [19784] ERROR:  cannot drop index "Category_name_organization_id_2bc313a0_uniq" because constraint Category_name_organization_id_2bc313a0_uniq on table "Category" requires it
+2026-02-02 10:41:36.869 GMT [19784] HINT:  You can drop constraint Category_name_organization_id_2bc313a0_uniq on table "Category" instead.
+2026-02-02 10:41:36.869 GMT [19784] STATEMENT:  DROP INDEX "Category_name_organization_id_2bc313a0_uniq"
+2026-02-02 10:41:36.874 GMT [19784] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2026-02-02 10:41:44.761 GMT [19988] ERROR:  relation "public.Order" does not exist at character 76
+2026-02-02 10:41:44.761 GMT [19988] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 10:42:04.265 GMT [19988] ERROR:  relation "public.Order" does not exist at character 76
+2026-02-02 10:42:04.265 GMT [19988] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 10:42:12.283 GMT [19988] ERROR:  relation "public.Order" does not exist at character 76
+2026-02-02 10:42:12.283 GMT [19988] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
