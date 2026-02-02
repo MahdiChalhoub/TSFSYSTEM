@@ -19,6 +19,25 @@ class TenantModel(models.Model):
     class Meta:
         abstract = True
 
+class Unit(TenantModel):
+    code = models.CharField(max_length=50) # PC, BOX
+    name = models.CharField(max_length=255) # Piece, Box
+    short_name = models.CharField(max_length=50, null=True, blank=True)
+    type = models.CharField(max_length=50, default='COUNT')
+    allow_fraction = models.BooleanField(default=False)
+    needs_balance = models.BooleanField(default=False)
+    balance_code_structure = models.CharField(max_length=100, null=True, blank=True)
+    
+    base_unit = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='children')
+    conversion_factor = models.DecimalField(max_digits=15, decimal_places=6, default=1.0)
+
+    class Meta:
+        db_table = 'Unit'
+        unique_together = ('code', 'organization')
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
 class Organization(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)

@@ -4,13 +4,13 @@ from rest_framework.decorators import api_view, action
 from .models import (
     Organization, Site, FinancialAccount, ChartOfAccount,
     FiscalYear, FiscalPeriod, JournalEntry, Product, 
-    Warehouse, Inventory, InventoryMovement
+    Warehouse, Inventory, InventoryMovement, Unit
 )
 from .serializers import (
     OrganizationSerializer, SiteSerializer, FinancialAccountSerializer,
     ChartOfAccountSerializer, FiscalYearSerializer, FiscalPeriodSerializer,
     JournalEntrySerializer, ProductSerializer, WarehouseSerializer,
-    InventorySerializer, InventoryMovementSerializer
+    InventorySerializer, InventoryMovementSerializer, UnitSerializer
 )
 from .services import FinancialAccountService, LedgerService, InventoryService, ProvisioningService
 from .middleware import get_current_tenant_id
@@ -151,6 +151,10 @@ class JournalEntryViewSet(viewsets.ModelViewSet):
 
     def partial_update(self, request, *args, **kwargs):
         return self.update(request, *args, **kwargs)
+
+class UnitViewSet(viewsets.ModelViewSet):
+    queryset = Unit.objects.all()
+    serializer_class = UnitSerializer
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()

@@ -4,7 +4,7 @@ from .views import (
     OrganizationViewSet, SiteViewSet, FinancialAccountViewSet,
     ChartOfAccountViewSet, FiscalYearViewSet, FiscalPeriodViewSet,
     JournalEntryViewSet, ProductViewSet, WarehouseViewSet,
-    InventoryViewSet, health_check
+    InventoryViewSet, UnitViewSet, health_check
 )
 
 router = DefaultRouter()
@@ -16,6 +16,7 @@ router.register(r'fiscal-years', FiscalYearViewSet)
 router.register(r'fiscal-periods', FiscalPeriodViewSet)
 router.register(r'journal', JournalEntryViewSet)
 router.register(r'products', ProductViewSet)
+router.register(r'units', UnitViewSet)
 router.register(r'warehouses', WarehouseViewSet)
 router.register(r'inventory', InventoryViewSet)
 
