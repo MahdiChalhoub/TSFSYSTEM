@@ -78,6 +78,32 @@ class Role(TenantModel):
     def __str__(self):
         return f"{self.name} ({self.organization.name})"
 
+class Country(models.Model):
+    code = models.CharField(max_length=5, unique=True) # 'LB', 'US'
+    name = models.CharField(max_length=100)
+
+    class Meta:
+        db_table = 'Country'
+
+    def __str__(self):
+        return self.name
+
+class ProductGroup(TenantModel):
+    name = models.CharField(max_length=255)
+    description = models.TextField(null=True, blank=True)
+    image = models.CharField(max_length=255, null=True, blank=True)
+
+    class Meta:
+        db_table = 'ProductGroup'
+
+class Parfum(TenantModel):
+    name = models.CharField(max_length=255)
+    short_name = models.CharField(max_length=100, null=True, blank=True)
+
+    class Meta:
+        db_table = 'Parfum'
+        unique_together = ('name', 'organization')
+
 class Category(TenantModel):
     name = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -108,12 +134,27 @@ class Product(TenantModel):
     barcode = models.CharField(max_length=100, null=True, blank=True)
     name = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
+    
+    product_group = models.ForeignKey(ProductGroup, on_delete=models.SET_NULL, null=True, blank=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
     brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True, blank=True)
     unit = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True, blank=True)
-    
+    parfum = models.ForeignKey(Parfum, on_delete=models.SET_NULL, null=True, blank=True)
+    country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True, blank=True)
+
+    # AMC (Average Moving Cost) - This is the "Logical" cost for accounting
     cost_price = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
-    selling_price = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+    
+    # Pricing Breakdown (HT / TTC)
+    cost_price_ht = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+    cost_price_ttc = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+    tva_rate = models.DecimalField(max_digits=15, decimal_places=2, default=0.0) # e.g. 0.11
+    
+    selling_price_ht = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+    selling_price_ttc = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+    
+    is_expiry_tracked = models.BooleanField(default=False)
+    min_stock_level = models.IntegerField(default=10)
     
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -124,11 +165,23 @@ class Product(TenantModel):
         unique_together = (('sku', 'organization'), ('barcode', 'organization'))
 
 class ChartOfAccount(TenantModel):
+    ACCOUNT_TYPES = (
+        ('ASSET', 'Asset'),
+        ('LIABILITY', 'Liability'),
+        ('EQUITY', 'Equity'),
+        ('REVENUE', 'Revenue'),
+        ('EXPENSE', 'Expense'),
+    )
     code = models.CharField(max_length=50)
     name = models.CharField(max_length=255)
     type = models.CharField(max_length=20, choices=ACCOUNT_TYPES)
+    sub_type = models.CharField(max_length=50, null=True, blank=True) # e.g. 'CASH', 'BANK'
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
     
+    is_system_only = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    balance = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -136,10 +189,58 @@ class ChartOfAccount(TenantModel):
         db_table = 'ChartOfAccount'
         unique_together = ('code', 'organization')
 
+class Warehouse(TenantModel):
+    site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name='warehouses')
+    name = models.CharField(max_length=255) # "Main", "Damaged"
+    code = models.CharField(max_length=50, null=True, blank=True)
+    type = models.CharField(max_length=50, default='PHYSICAL')
+    can_sell = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'Warehouse'
+        unique_together = ('name', 'site')
+
+class Inventory(TenantModel):
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE, related_name='inventory')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='inventory')
+    quantity = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+    
+    # We will add StockBatch tracking later if needed
+    
+    class Meta:
+        db_table = 'Inventory'
+        unique_together = ('warehouse', 'product')
+
+class InventoryMovement(TenantModel):
+    MOVEMENT_TYPES = (
+        ('IN', 'Inbound'),
+        ('OUT', 'Outbound'),
+        ('TRANSFER', 'Transfer'),
+        ('ADJUST', 'Adjustment'),
+    )
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE)
+    type = models.CharField(max_length=20, choices=MOVEMENT_TYPES)
+    quantity = models.DecimalField(max_digits=15, decimal_places=2)
+    cost_price = models.DecimalField(max_digits=15, decimal_places=2) # Cost at time of movement
+    reference = models.CharField(max_length=100, null=True, blank=True)
+    reason = models.TextField(null=True, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'InventoryMovement'
+
 class FinancialAccount(TenantModel):
+    FINANCIAL_TYPES = (
+        ('CASH', 'Cash'),
+        ('BANK', 'Bank'),
+        ('MOBILE', 'Mobile'),
+    )
     site = models.ForeignKey(Site, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=255)
-    type = models.CharField(max_length=20, choices=ACCOUNT_TYPES)
+    type = models.CharField(max_length=20, choices=FINANCIAL_TYPES)
     currency = models.CharField(max_length=10, default='USD')
     balance = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
     ledger_account = models.OneToOneField(ChartOfAccount, on_delete=models.PROTECT, null=True, blank=True)
@@ -147,6 +248,76 @@ class FinancialAccount(TenantModel):
     class Meta:
         db_table = 'FinancialAccount'
         unique_together = ('name', 'organization', 'site')
+
+class FiscalYear(TenantModel):
+    name = models.CharField(max_length=100)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    is_closed = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'FiscalYear'
+        unique_together = ('name', 'organization')
+
+class FiscalPeriod(TenantModel):
+    fiscal_year = models.ForeignKey(FiscalYear, on_delete=models.CASCADE, related_name='periods')
+    name = models.CharField(max_length=100)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    is_closed = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'FiscalPeriod'
+        unique_together = ('name', 'fiscal_year')
+
+class JournalEntry(TenantModel):
+    STATUS_CHOICES = (
+        ('DRAFT', 'Draft'),
+        ('POSTED', 'Posted'),
+        ('REVERSED', 'Reversed'),
+        ('VOID', 'Void'),
+    )
+    SCOPE_CHOICES = (
+        ('OFFICIAL', 'Official'),
+        ('INTERNAL', 'Internal'),
+    )
+    transaction_date = models.DateTimeField()
+    description = models.TextField()
+    reference = models.CharField(max_length=100, unique=True)
+    
+    fiscal_year = models.ForeignKey(FiscalYear, on_delete=models.PROTECT)
+    fiscal_period = models.ForeignKey(FiscalPeriod, on_delete=models.PROTECT)
+    
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
+    scope = models.CharField(max_length=20, choices=SCOPE_CHOICES, default='OFFICIAL')
+    
+    site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    is_verified = models.BooleanField(default=False)
+    is_locked = models.BooleanField(default=False)
+    
+    posted_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'JournalEntry'
+
+class JournalEntryLine(TenantModel):
+    journal_entry = models.ForeignKey(JournalEntry, on_delete=models.CASCADE, related_name='lines')
+    account = models.ForeignKey(ChartOfAccount, on_delete=models.PROTECT, related_name='journal_lines')
+    
+    debit = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    credit = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    
+    description = models.TextField(null=True, blank=True)
+    
+    # Optional links to other domains
+    contact_id = models.IntegerField(null=True, blank=True) # Will link to Contact later
+    employee_id = models.IntegerField(null=True, blank=True) # Will link to Employee later
+
+    class Meta:
+        db_table = 'JournalEntryLine'
 
 class Transaction(TenantModel):
     account = models.ForeignKey(FinancialAccount, on_delete=models.CASCADE, related_name='transactions')
