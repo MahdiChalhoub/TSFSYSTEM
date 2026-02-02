@@ -517,6 +517,11 @@ class POSService:
 
             if not all([rev_acc, inv_acc, cogs_acc]):
                 raise ValidationError("Missing sales posting rules mapping.")
+            
+            # Resolve Payment Ledger ID
+            from .models import FinancialAccount
+            fin_acc = FinancialAccount.objects.filter(id=payment_account_id, organization=organization).first()
+            actual_payment_acc_id = fin_acc.ledger_account_id if fin_acc else payment_account_id
 
             LedgerService.create_journal_entry(
                 organization=organization,
@@ -528,7 +533,7 @@ class POSService:
                                    # For now, let's keep consistency.
                 site_id=warehouse.site_id,
                 lines=[
-                    {"account_id": payment_account_id, "debit": total_amount, "credit": Decimal('0')}, # Dr Cash
+                    {"account_id": actual_payment_acc_id, "debit": total_amount, "credit": Decimal('0')}, # Dr Cash
                     {"account_id": rev_acc, "debit": Decimal('0'), "credit": (total_amount - total_tax)}, # Cr Revenue
                     {"account_id": tax_acc or rev_acc, "debit": Decimal('0'), "credit": total_tax}, # Cr VAT
                     {"account_id": cogs_acc, "debit": total_cogs, "credit": Decimal('0')}, # Dr COGS

@@ -34,6 +34,8 @@ model Organization {
   financialAccounts   FinancialAccount[]
   transactions        Transaction[]
   journalEntries      JournalEntry[]
+  journalEntryLines   JournalEntryLine[]
+  units               Unit[]
 
   @@index([slug], map: "Organization_slug_06169c56_like")
 }
@@ -99,23 +101,26 @@ model Transaction {
 }
 
 model User {
-  id                BigInt    @id @default(autoincrement())
-  password          String    @db.VarChar(128)
-  last_login        DateTime? @db.Timestamptz(6)
-  is_superuser      Boolean
-  username          String    @unique @db.VarChar(150)
-  first_name        String    @db.VarChar(150)
-  last_name         String    @db.VarChar(150)
-  email             String    @db.VarChar(254)
-  is_staff          Boolean
-  isActive          Boolean   @map("is_active")
-  date_joined       DateTime  @db.Timestamptz(6)
-  is_active_account Boolean
-  organizationId    String?   @map("organization_id") @db.Uuid
-  roleId            BigInt?   @map("role_id")
-  homeSiteId        BigInt?   @map("home_site_id")
-  Employee          Employee?
-  orders            Order[]   @relation("StaffOrders")
+  id              BigInt    @id @default(autoincrement())
+  password        String    @db.VarChar(128)
+  lastLogin       DateTime? @map("last_login") @db.Timestamptz(6)
+  isSuperuser     Boolean   @map("is_superuser")
+  username        String    @unique @db.VarChar(150)
+  firstName       String    @map("first_name") @db.VarChar(150)
+  lastName        String    @map("last_name") @db.VarChar(150)
+  email           String    @db.VarChar(254)
+  isStaff         Boolean   @map("is_staff")
+  isActive        Boolean   @map("is_active")
+  dateJoined      DateTime  @map("date_joined") @db.Timestamptz(6)
+  isActiveAccount Boolean   @map("is_active_account")
+  organizationId  String?   @map("organization_id") @db.Uuid
+  organization    Organization? @relation(fields: [organizationId], references: [id])
+  roleId          BigInt?   @map("role_id")
+  role            Role?     @relation(fields: [roleId], references: [id])
+  homeSiteId      BigInt?   @map("home_site_id")
+  homeSite        Site?     @relation(fields: [homeSiteId], references: [id])
+  employee        Employee?
+  orders          Order[]   @relation("StaffOrders")
 
   @@index([homeSiteId], map: "User_home_site_id_a6640f94")
   @@index([organizationId], map: "User_organization_id_b8824f58")
@@ -183,14 +188,14 @@ model Employee {
   createdAt       DateTime        @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
   linkedAccountId BigInt?         @unique @map("linked_account_id")
-  organization_id String          @db.Uuid
-  user_id         BigInt?         @unique
+  organizationId  String          @map("organization_id") @db.Uuid
+  userId          BigInt?         @unique @map("user_id")
   linkedAccount   ChartOfAccount? @relation("EmployeeAccount", fields: [linkedAccountId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Employee_linked_account_id_6138d796_fk_ChartOfAccount_id")
-  Organization    Organization    @relation(fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Employee_organization_id_7ab29110_fk_Organization_id")
-  User            User?           @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Employee_user_id_1c533b7d_fk_User_id")
+  organization    Organization    @relation("OrgEmployees", fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Employee_organization_id_7ab29110_fk_Organization_id")
+  user            User?           @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Employee_user_id_1c533b7d_fk_User_id")
 
   @@index([employeeId], map: "Employee_employee_id_fe00240c_like")
-  @@index([organization_id], map: "Employee_organization_id_7ab29110")
+  @@index([organizationId], map: "Employee_organization_id_7ab29110")
 }
 
 model Product {
@@ -207,22 +212,31 @@ model Product {
   sellingPriceTTC Decimal          @map("selling_price_ttc") @db.Decimal(15, 2)
   isExpiryTracked Boolean          @map("is_expiry_tracked")
   minStockLevel   Int              @map("min_stock_level")
-  is_active       Boolean
-  created_at      DateTime         @db.Timestamptz(6)
-  updated_at      DateTime         @db.Timestamptz(6)
+  isActive        Boolean          @map("is_active")
+  createdAt       DateTime         @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime         @map("updated_at") @db.Timestamptz(6)
   brandId         BigInt?          @map("brand_id")
+  brand           Brand?           @relation(fields: [brandId], references: [id])
   categoryId      BigInt?          @map("category_id")
+  category        Category?        @relation(fields: [categoryId], references: [id])
   countryId       BigInt?          @map("country_id")
+  country         Country?         @relation(fields: [countryId], references: [id])
   organizationId  String           @map("organization_id") @db.Uuid
+  organization    Organization     @relation(fields: [organizationId], references: [id])
   parfumId        BigInt?          @map("parfum_id")
+  parfum          Parfum?          @relation(fields: [parfumId], references: [id])
   productGroupId  BigInt?          @map("product_group_id")
+  productGroup    ProductGroup?    @relation(fields: [productGroupId], references: [id])
   unitId          BigInt?          @map("unit_id")
+  unit            Unit?            @relation(fields: [unitId], references: [id])
   status          String           @db.VarChar(20)
   supplierId      BigInt?          @map("supplier_id")
-  InventoryLevel  InventoryLevel[]
-  orderLines      OrderLine[]
   supplier        Contact?         @relation("ProductSupplier", fields: [supplierId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Product_supplier_id_993ea89f_fk_Contact_id")
-  StockBatch      StockBatch[]
+  inventoryLevels InventoryLevel[]
+  orderLines      OrderLine[]
+  stockBatches    StockBatch[]
+  inventory       Inventory[]
+  movements       InventoryMovement[]
 
   @@unique([barcode, organizationId], map: "Product_barcode_organization_id_ef60e086_uniq")
   @@unique([sku, organizationId], map: "Product_sku_organization_id_e7fc9452_uniq")
@@ -237,11 +251,13 @@ model Product {
 }
 
 model ProductGroup {
-  id             BigInt  @id @default(autoincrement())
-  name           String  @db.VarChar(255)
+  id             BigInt   @id @default(autoincrement())
+  name           String   @db.VarChar(255)
   description    String?
-  image          String? @db.VarChar(255)
-  organizationId String  @map("organization_id") @db.Uuid
+  image          String?  @db.VarChar(255)
+  organizationId String   @map("organization_id") @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  products       Product[]
 
   @@index([organizationId], map: "ProductGroup_organization_id_63ca6f47")
 }
@@ -249,8 +265,10 @@ model ProductGroup {
 model Category {
   id             BigInt   @id @default(autoincrement())
   name           String   @db.VarChar(255)
-  created_at     DateTime @db.Timestamptz(6)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   organizationId String   @map("organization_id") @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  products       Product[]
 
   @@unique([name, organizationId], map: "Category_name_organization_id_2bc313a0_uniq")
   @@index([organizationId], map: "Category_organization_id_0c63f8e5")
@@ -259,8 +277,10 @@ model Category {
 model Brand {
   id             BigInt   @id @default(autoincrement())
   name           String   @db.VarChar(255)
-  created_at     DateTime @db.Timestamptz(6)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   organizationId String   @map("organization_id") @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  products       Product[]
 
   @@unique([name, organizationId], map: "Brand_name_organization_id_849709bc_uniq")
 }
@@ -268,8 +288,10 @@ model Brand {
 model Parfum {
   id             BigInt  @id @default(autoincrement())
   name           String  @db.VarChar(255)
-  short_name     String? @db.VarChar(100)
+  shortName      String? @map("short_name") @db.VarChar(100)
   organizationId String  @map("organization_id") @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  products       Product[]
 
   @@unique([name, organizationId], map: "Parfum_name_organization_id_3f7c47f9_uniq")
   @@index([organizationId], map: "Parfum_organization_id_535e12a1")
@@ -280,47 +302,54 @@ model Warehouse {
   name           String  @db.VarChar(255)
   code           String? @db.VarChar(50)
   type           String  @db.VarChar(50)
-  can_sell       Boolean
+  canSell        Boolean @map("can_sell")
   isActive       Boolean @map("is_active")
   organizationId String  @map("organization_id") @db.Uuid
-  site_id        BigInt
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  siteId         BigInt  @map("site_id")
+  site           Site    @relation(fields: [siteId], references: [id])
+  inventory      Inventory[]
+  movements      InventoryMovement[]
 
-  @@unique([name, site_id], map: "Warehouse_name_site_id_3d549713_uniq")
+  @@unique([name, siteId], map: "Warehouse_name_site_id_3d549713_uniq")
   @@index([organizationId], map: "Warehouse_organization_id_c15c0734")
-  @@index([site_id], map: "Warehouse_site_id_18b45d8f")
+  @@index([siteId], map: "Warehouse_site_id_18b45d8f")
 }
 
 model StockBatch {
-  id             BigInt       @id @default(autoincrement())
-  batch_code     String       @db.VarChar(100)
-  expiry_date    DateTime?    @db.Timestamptz(6)
-  cost_price     Decimal      @db.Decimal(15, 2)
-  created_at     DateTime     @db.Timestamptz(6)
-  organizationId String       @map("organization_id") @db.Uuid
-  product_id     BigInt
-  Inventory      Inventory[]
-  OrderLine      OrderLine[]
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "StockBatch_organization_id_03ed910e_fk_Organization_id")
-  Product        Product      @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "StockBatch_product_id_a2407416_fk_Product_id")
+  id              BigInt       @id @default(autoincrement())
+  batchCode       String       @map("batch_code") @db.VarChar(100)
+  expiryDate      DateTime?    @map("expiry_date") @db.Timestamptz(6)
+  costPrice       Decimal      @map("cost_price") @db.Decimal(15, 2)
+  createdAt       DateTime     @map("created_at") @db.Timestamptz(6)
+  organizationId  String       @map("organization_id") @db.Uuid
+  productId       BigInt       @map("product_id")
+  inventory       Inventory[]
+  orderLines      OrderLine[]
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "StockBatch_organization_id_03ed910e_fk_Organization_id")
+  product         Product      @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "StockBatch_product_id_a2407416_fk_Product_id")
 
   @@index([organizationId], map: "StockBatch_organization_id_03ed910e")
-  @@index([product_id], map: "StockBatch_product_id_a2407416")
+  @@index([productId], map: "StockBatch_product_id_a2407416")
 }
 
 model Inventory {
   id             BigInt      @id @default(autoincrement())
   quantity       Decimal     @db.Decimal(15, 2)
   organizationId String      @map("organization_id") @db.Uuid
-  product_id     BigInt
-  warehouse_id   BigInt
-  batch_id       BigInt?
-  StockBatch     StockBatch? @relation(fields: [batch_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Inventory_batch_id_22dfd017_fk_StockBatch_id")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  productId      BigInt      @map("product_id")
+  product        Product     @relation(fields: [productId], references: [id])
+  warehouseId    BigInt      @map("warehouse_id")
+  warehouse      Warehouse   @relation(fields: [warehouseId], references: [id])
+  batchId        BigInt?     @map("batch_id")
+  batch          StockBatch? @relation(fields: [batchId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Inventory_batch_id_22dfd017_fk_StockBatch_id")
 
-  @@unique([warehouse_id, product_id, batch_id, organizationId], map: "Inventory_warehouse_id_product_id__570ed674_uniq")
-  @@index([batch_id], map: "Inventory_batch_id_22dfd017")
+  @@unique([warehouseId, productId, batchId, organizationId], map: "Inventory_warehouse_id_product_id__570ed674_uniq")
+  @@index([batchId], map: "Inventory_batch_id_22dfd017")
   @@index([organizationId], map: "Inventory_organization_id_59e27ef0")
-  @@index([product_id], map: "Inventory_product_id_8a67ec14")
-  @@index([warehouse_id], map: "Inventory_warehouse_id_befa68d4")
+  @@index([productId], map: "Inventory_product_id_8a67ec14")
+  @@index([warehouseId], map: "Inventory_warehouse_id_befa68d4")
 }
 
 model Order {
@@ -363,7 +392,7 @@ model OrderLine {
   organizationId String       @map("organization_id") @db.Uuid
   productId      BigInt       @map("product_id")
   batchId        BigInt?      @map("batch_id")
-  StockBatch     StockBatch?  @relation(fields: [batchId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "OrderLine_batch_id_3b521aeb_fk_StockBatch_id")
+  stockBatch     StockBatch?  @relation(fields: [batchId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "OrderLine_batch_id_3b521aeb_fk_StockBatch_id")
   order          Order        @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "OrderLine_order_id_7a514c82_fk_Order_id")
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "OrderLine_organization_id_978ae015_fk_Organization_id")
   product        Product      @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "OrderLine_product_id_77048367_fk_Product_id")
@@ -502,7 +531,11 @@ model Site {
   organizationId String           @map("organization_id") @db.Uuid
   contacts       Contact[]
   InventoryLevel InventoryLevel[]
-  orders         Order[]
+  orders            Order[]
+  financialAccounts FinancialAccount[]
+  transactions      Transaction[]
+  journalEntries    JournalEntry[]
+  warehouses        Warehouse[]
 
   @@unique([code, organizationId], map: "Site_code_organization_id_1dbc360c_uniq")
   @@index([organizationId], map: "Site_organization_id_addcb3d6")
@@ -511,34 +544,37 @@ model Site {
 model InventoryLevel {
   id              BigInt       @id @default(autoincrement())
   quantity        Decimal      @db.Decimal(15, 2)
-  organization_id String       @db.Uuid
-  product_id      BigInt
-  site_id         BigInt
-  Organization    Organization @relation(fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "InventoryLevel_organization_id_26e5d99a_fk_Organization_id")
-  Product         Product      @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "InventoryLevel_product_id_06c9f82d_fk_Product_id")
-  Site            Site         @relation(fields: [site_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "InventoryLevel_site_id_354f746f_fk_Site_id")
+  organizationId  String       @map("organization_id") @db.Uuid
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "InventoryLevel_organization_id_26e5d99a_fk_Organization_id")
+  productId       BigInt       @map("product_id")
+  product         Product      @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "InventoryLevel_product_id_06c9f82d_fk_Product_id")
+  siteId          BigInt       @map("site_id")
+  site            Site         @relation(fields: [siteId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "InventoryLevel_site_id_354f746f_fk_Site_id")
 
-  @@unique([site_id, product_id, organization_id], map: "InventoryLevel_site_id_product_id_organization_id_c3854548_uniq")
-  @@index([organization_id], map: "InventoryLevel_organization_id_26e5d99a")
-  @@index([product_id], map: "InventoryLevel_product_id_06c9f82d")
-  @@index([site_id], map: "InventoryLevel_site_id_354f746f")
+  @@unique([siteId, productId, organizationId], map: "InventoryLevel_site_id_product_id_organization_id_c3854548_uniq")
+  @@index([organizationId], map: "InventoryLevel_organization_id_26e5d99a")
+  @@index([productId], map: "InventoryLevel_product_id_06c9f82d")
+  @@index([siteId], map: "InventoryLevel_site_id_354f746f")
 }
 
 model InventoryMovement {
-  id              BigInt   @id @default(autoincrement())
-  type            String   @db.VarChar(20)
-  quantity        Decimal  @db.Decimal(15, 2)
-  cost_price      Decimal  @db.Decimal(15, 2)
-  reference       String?  @db.VarChar(100)
-  reason          String?
-  created_at      DateTime @db.Timestamptz(6)
-  organization_id String   @db.Uuid
-  product_id      BigInt
-  warehouse_id    BigInt
+  id             BigInt   @id @default(autoincrement())
+  type           String   @db.VarChar(20)
+  quantity       Decimal  @db.Decimal(15, 2)
+  costPrice      Decimal  @map("cost_price") @db.Decimal(15, 2)
+  reference      String?  @db.VarChar(100)
+  reason         String?
+  createdAt      DateTime @map("created_at") @db.Timestamptz(6)
+  organizationId String   @map("organization_id") @db.Uuid
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  productId      BigInt   @map("product_id")
+  product        Product  @relation(fields: [productId], references: [id])
+  warehouseId    BigInt   @map("warehouse_id")
+  warehouse      Warehouse @relation(fields: [warehouseId], references: [id])
 
-  @@index([organization_id], map: "InventoryMovement_organization_id_89f7a0f0")
-  @@index([product_id], map: "InventoryMovement_product_id_d80d62ec")
-  @@index([warehouse_id], map: "InventoryMovement_warehouse_id_646337ea")
+  @@index([organizationId], map: "InventoryMovement_organization_id_89f7a0f0")
+  @@index([productId], map: "InventoryMovement_product_id_d80d62ec")
+  @@index([warehouseId], map: "InventoryMovement_warehouse_id_646337ea")
 }
 
 model Role_permissions {
