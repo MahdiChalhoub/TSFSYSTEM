@@ -1,19 +1,21 @@
 'use server'
 
-import { prisma } from "@/lib/db"
+import { erpFetch } from "@/lib/erp-api"
 
 export async function getChartOfAccountsList() {
-    return await prisma.chartOfAccount.findMany({
-        where: { isActive: true }, // Add checking for 'isLeaf' if schema has it? Or assume all can be posted to?
-        orderBy: { code: 'asc' },
-        select: { id: true, code: true, name: true, type: true }
-    })
+    try {
+        return await erpFetch('coa/?is_active=true');
+    } catch (e) {
+        console.error("Failed to fetch COA list:", e);
+        return [];
+    }
 }
 
 export async function getUsersList() {
-    return await prisma.user.findMany({
-        where: { isActive: true },
-        orderBy: { name: 'asc' },
-        select: { id: true, name: true, email: true }
-    })
+    try {
+        return await erpFetch('users/?is_active=true');
+    } catch (e) {
+        console.error("Failed to fetch users list:", e);
+        return [];
+    }
 }

@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+import { erpFetch } from "@/lib/erp-api";
 import { getMaintenanceEntities } from "@/app/actions/maintenance";
 import { MaintenanceSidebar } from "@/components/admin/maintenance/MaintenanceSidebar";
 import { UnifiedReassignmentTable } from "@/components/admin/maintenance/UnifiedReassignmentTable";
@@ -22,7 +22,6 @@ export default async function MaintenancePage(props: {
     }
 
     // 1. Fetch Entities (Sidebar Data)
-    // Note: getMaintenanceEntities returns generic structure { id, name, count, children? }
     const entities = await getMaintenanceEntities(tab as any);
 
     // 2. Fetch Products (if active)
@@ -30,28 +29,18 @@ export default async function MaintenancePage(props: {
     let currentEntityName = `Select ${tab.charAt(0).toUpperCase() + tab.slice(1)}`;
 
     if (activeId) {
-        const whereClause: any = {};
-        if (tab === 'category') whereClause.categoryId = activeId;
-        if (tab === 'brand') whereClause.brandId = activeId;
-        if (tab === 'unit') whereClause.unitId = activeId;
-        if (tab === 'country') whereClause.countryId = activeId;
-        if (tab === 'attribute') whereClause.parfumId = activeId;
+        let filterKey = '';
+        if (tab === 'category') filterKey = 'category';
+        if (tab === 'brand') filterKey = 'brand';
+        if (tab === 'unit') filterKey = 'unit';
+        if (tab === 'country') filterKey = 'country';
+        if (tab === 'attribute') filterKey = 'parfum';
 
-        products = await prisma.product.findMany({
-            where: whereClause,
-            select: {
-                id: true,
-                name: true,
-                sku: true,
-                // Add relevant relations simply for display/validation if needed
-                brand: { select: { name: true } },
-                category: { select: { name: true } },
-                unit: { select: { name: true } },
-                country: { select: { name: true } },
-                productGroup: { select: { name: true } }
-            },
-            orderBy: { name: 'asc' }
-        });
+        try {
+            products = await erpFetch(`products/?${filterKey}=${activeId}`);
+        } catch (e) {
+            console.error("Failed to fetch products for maintenance:", e);
+        }
 
         const activeEntity = findEntityRecursive(entities, activeId);
         if (activeEntity) currentEntityName = activeEntity.name;

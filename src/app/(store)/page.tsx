@@ -1,15 +1,16 @@
 import Image from "next/image";
-import { prisma } from "@/lib/db";
+import { erpFetch } from "@/lib/erp-api";
 
 export const dynamic = 'force-dynamic';
 
 async function getFeaturedProducts() {
-  // Fetch products from DB
-  const products = await prisma.product.findMany({
-    take: 8,
-    orderBy: { id: 'desc' }
-  });
-  return products;
+  try {
+    const products = await erpFetch('products/');
+    return products.slice(0, 8);
+  } catch (e) {
+    console.error("Storefront fetch failed:", e);
+    return [];
+  }
 }
 
 export default async function Home() {
@@ -107,7 +108,7 @@ export default async function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {products.length === 0 && <p>No products found in the database. Run seed!</p>}
 
-            {products.map((product) => (
+            {products.map((product: any) => (
               <div key={product.id} className="card" style={{ padding: '0', overflow: 'hidden', border: 'none' }}>
                 <div style={{ height: '220px', background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '6rem', position: 'relative' }}>
                   <span style={{ filter: 'drop-shadow(0 10px 10px rgba(0,0,0,0.1))', transition: 'transform 0.3s' }} className="product-emoji">
@@ -128,10 +129,10 @@ export default async function Home() {
                 <div style={{ padding: '1.5rem' }}>
                   <div className="flex justify-between items-start" style={{ marginBottom: '0.5rem' }}>
                     <span className="badge" style={{ background: 'var(--background)', fontSize: '0.75rem' }}>
-                      {product.isTaxIncluded ? 'Tax Inc' : '+Tax'}
+                      Tax Inc
                     </span>
                     <span style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '1.1rem' }}>
-                      ${Number(product.basePrice).toFixed(2)}
+                      ${Number(product.selling_price_ttc).toFixed(2)}
                     </span>
                   </div>
                   <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>{product.name}</h3>

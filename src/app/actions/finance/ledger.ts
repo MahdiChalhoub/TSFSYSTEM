@@ -1,10 +1,7 @@
 'use server'
 
-import { prisma } from '@/lib/db'
+import { erpFetch } from '@/lib/erp-api'
 import { revalidatePath } from 'next/cache'
-import { Prisma } from '@/generated/client'
-import { generateTransactionNumber } from '@/lib/sequences'
-import { logAuditAction } from '@/lib/audit'
 
 export type JournalLineInput = {
     accountId: number
@@ -20,19 +17,20 @@ export type JournalLineInput = {
  * This checks the "Trial Balance" integrity.
  */
 export async function verifyTrialBalance() {
-    const aggregate = await prisma.chartOfAccount.aggregate({
-        _sum: { balance: true }
-    })
-    const total = Number(aggregate._sum.balance || 0)
+    try {
+        const accounts = await erpFetch('chart-of-accounts/trial_balance/')
+        const total = accounts.reduce((acc: number, cur: any) => acc + (cur.temp_balance || 0), 0)
 
-    if (Math.abs(total) > 0.01) {
-        console.error(`CRITICAL: System Out of Balance! Trial Balance Total: ${total}`)
-        return { isBalanced: false, difference: total }
+        if (Math.abs(total) > 0.01) {
+            console.error(`CRITICAL: System Out of Balance! Trial Balance Total: ${total}`)
+            return { isBalanced: false, difference: total }
+        }
+        return { isBalanced: true, difference: total }
+    } catch (e) {
+        console.error("Trial balance check failed:", e)
+        return { isBalanced: false, difference: 0 }
     }
-    return { isBalanced: true, difference: total }
 }
-
-import { erpFetch } from '@/lib/erp-api'
 
 export async function createJournalEntry(data: any) {
     // Map camelCase lines to snake_case for Django if needed, 

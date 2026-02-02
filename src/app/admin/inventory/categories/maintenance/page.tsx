@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+import { erpFetch } from "@/lib/erp-api";
 import { getCategoryWithCounts } from "@/app/actions/categories";
 import { CategoryMaintenanceSidebar } from "@/components/admin/CategoryMaintenanceSidebar";
 import { ProductReassignmentTable } from "@/components/admin/ProductReassignmentTable";
@@ -18,19 +18,13 @@ export default async function CategoryMaintenancePage(props: {
     let currentCategoryName = "Select a Category";
 
     if (activeCategoryId) {
-        products = await prisma.product.findMany({
-            where: { categoryId: activeCategoryId },
-            select: {
-                id: true,
-                name: true,
-                productGroup: { select: { image: true } },
-                brand: { select: { name: true } },
-                unit: { select: { name: true } }
-            },
-            orderBy: { name: 'asc' }
-        });
+        try {
+            products = await erpFetch(`products/?category=${activeCategoryId}`);
+        } catch (e) {
+            console.error("Failed to fetch products for category maintenance:", e);
+        }
 
-        const activeCat = categories.find(c => c.id === activeCategoryId);
+        const activeCat = categories.find((c: any) => c.id === activeCategoryId);
         if (activeCat) currentCategoryName = activeCat.name;
     }
 

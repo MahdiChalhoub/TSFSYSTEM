@@ -1,33 +1,32 @@
-
-import { prisma } from "@/lib/db";
+import { erpFetch } from "@/lib/erp-api";
 import { GroupedProductForm } from "@/components/admin/GroupedProductForm";
 import { notFound } from "next/navigation";
 
 export const dynamic = 'force-dynamic';
 
 async function getData(groupId: number) {
-    const [group, brands, categories, units, countries] = await Promise.all([
-        prisma.productGroup.findUnique({
-            where: { id: groupId },
-            include: {
-                products: true
-            }
-        }),
-        prisma.brand.findMany({ include: { countries: true }, orderBy: { name: 'asc' } }),
-        prisma.category.findMany({ orderBy: { name: 'asc' } }),
-        prisma.unit.findMany({ orderBy: { name: 'asc' } }),
-        prisma.country.findMany({ orderBy: { name: 'asc' } })
-    ]);
+    try {
+        const [group, brands, categories, units, countries] = await Promise.all([
+            erpFetch(`product-groups/${groupId}/`),
+            erpFetch('brands/'),
+            erpFetch('categories/'),
+            erpFetch('units/'),
+            erpFetch('countries/')
+        ]);
 
-    if (!group) return null;
+        if (!group) return null;
 
-    return {
-        initialGroup: JSON.parse(JSON.stringify(group)),
-        brands: JSON.parse(JSON.stringify(brands)),
-        categories: JSON.parse(JSON.stringify(categories)),
-        units: JSON.parse(JSON.stringify(units)),
-        countries: JSON.parse(JSON.stringify(countries))
-    };
+        return {
+            initialGroup: group,
+            brands,
+            categories,
+            units,
+            countries
+        };
+    } catch (e) {
+        console.error("Failed to fetch product group edit data:", e);
+        return null;
+    }
 }
 
 export default async function EditGroupPage({ params }: { params: Promise<{ id: string }> }) {

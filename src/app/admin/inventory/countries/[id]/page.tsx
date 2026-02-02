@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+import { erpFetch } from "@/lib/erp-api";
 import { notFound } from "next/navigation";
 import Link from 'next/link';
 import { ChevronLeft, Package, Factory, Globe } from "lucide-react";
@@ -7,29 +7,17 @@ export const dynamic = 'force-dynamic';
 
 export default async function CountryDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    const countryId = parseInt(id);
 
-    if (isNaN(countryId)) notFound();
+    let country: any;
+    let brands: any[] = [];
 
-    const country = await prisma.country.findUnique({
-        where: { id: countryId },
-        include: {
-            brands: {
-                orderBy: { name: 'asc' },
-                include: {
-                    products: {
-                        where: { countryId: countryId },
-                        orderBy: { name: 'asc' },
-                        include: {
-                            inventory: true,
-                            unit: true,
-                            category: true
-                        }
-                    }
-                }
-            }
-        }
-    });
+    try {
+        country = await erpFetch(`countries/${id}/`);
+        brands = await erpFetch(`countries/${id}/hierarchy/`);
+    } catch (e) {
+        console.error(e);
+        notFound();
+    }
 
     if (!country) notFound();
 
@@ -51,17 +39,16 @@ export default async function CountryDetailPage({ params }: { params: Promise<{ 
 
             {/* Brands List */}
             <div className="space-y-6">
-                {country.brands.length === 0 ? (
+                {brands.length === 0 ? (
                     <div className="p-12 text-center text-gray-400 bg-white rounded-xl border border-dashed border-gray-200">
                         <Globe size={48} className="mx-auto mb-4 opacity-20" />
                         <p>No brands associated with this country.</p>
                     </div>
                 ) : (
-                    country.brands.map(brand => {
+                    brands.map((brand: any) => {
                         const products = brand.products;
                         const hasProducts = products.length > 0;
-                        // Calculate total stock for this brand in this country
-                        const totalStock = products.reduce((acc, p) => acc + p.inventory.reduce((sum, inv) => sum + Number(inv.quantity), 0), 0);
+                        const totalStock = brand.totalStock;
 
                         if (!hasProducts) return null;
 
@@ -88,9 +75,9 @@ export default async function CountryDetailPage({ params }: { params: Promise<{ 
 
                                 {/* Products List */}
                                 <div className="bg-white">
-                                    {products.map((p, idx) => {
+                                    {products.map((p: any, idx: number) => {
                                         const isLast = idx === products.length - 1;
-                                        const stock = p.inventory.reduce((a, b) => a + Number(b.quantity), 0);
+                                        const stock = p.stock;
 
                                         return (
                                             <div key={p.id} className="relative pl-6 hover:bg-slate-50 transition-colors group/item">
@@ -105,11 +92,11 @@ export default async function CountryDetailPage({ params }: { params: Promise<{ 
                                                         <div className="flex flex-col">
                                                             <div className="flex items-center gap-2">
                                                                 <span className="text-sm font-semibold text-gray-900">{p.name}</span>
-                                                                <span className="text-sm text-gray-500">{Number(p.size)} {p.unit?.shortName}</span>
+                                                                <span className="text-sm text-gray-500">{Number(p.size)} {p.unitShortName}</span>
                                                             </div>
                                                             <div className="flex items-center gap-2 text-[10px] text-gray-400 font-mono">
                                                                 {p.sku && <span>SKU: {p.sku}</span>}
-                                                                {p.category && <span>• {p.category.name}</span>}
+                                                                {p.categoryName && <span>• {p.categoryName}</span>}
                                                             </div>
                                                         </div>
                                                     </div>
