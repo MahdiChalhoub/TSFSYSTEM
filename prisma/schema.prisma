@@ -7,7 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -175,7 +175,7 @@ model Permission {
 
 // "The Black Box" - Track everything
 model AuditLog {
-  id       BigInt  @id @default(autoincrement())
+  id       Int     @id @default(autoincrement())
   action   String // 'CREATE', 'UPDATE', 'DELETE'
   entity   String // 'Product', 'Price', 'Order'
   entityId String // ID of the changed item
@@ -612,8 +612,8 @@ model FinancialSettings {
   companyType String @default(value: "REGULAR") // 'REGULAR', 'MICRO', 'REAL', 'MIXED'
 
   // SaaS Context (1 set of settings per Org)
-  organizationId String       @unique
-  organization   Organization @relation(fields: [organizationId], references: [id])
+  organizationId String?       @unique
+  organization   Organization? @relation(fields: [organizationId], references: [id])
 
   // For Micro Companies
   salesTaxPercentage    Decimal @default(0.00)

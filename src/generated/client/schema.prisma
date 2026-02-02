@@ -7,7 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -175,7 +175,7 @@ model Permission {
 
 // "The Black Box" - Track everything
 model AuditLog {
-  id       BigInt  @id @default(autoincrement())
+  id       Int     @id @default(autoincrement())
   action   String // 'CREATE', 'UPDATE', 'DELETE'
   entity   String // 'Product', 'Price', 'Order'
   entityId String // ID of the changed item
