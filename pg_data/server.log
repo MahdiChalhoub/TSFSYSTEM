@@ -248,3 +248,14 @@
 2026-02-02 11:40:38.928 GMT [20188] ERROR:  column Order.totalAmount does not exist at character 40
 2026-02-02 11:40:38.928 GMT [20188] HINT:  Perhaps you meant to reference the column "Order.total_amount".
 2026-02-02 11:40:38.928 GMT [20188] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:44:07.712 GMT [20188] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 11:44:07.712 GMT [20188] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 11:44:07.712 GMT [20188] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:45:23.836 GMT [36500] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 11:45:23.836 GMT [36500] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 11:45:23.836 GMT [36500] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:46:09.371 GMT [10416] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 11:46:09.371 GMT [10416] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 11:46:09.371 GMT [10416] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:46:13.361 GMT [36168] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
