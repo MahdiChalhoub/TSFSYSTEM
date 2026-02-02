@@ -164,6 +164,9 @@ class Transaction(models.Model):
     description = models.TextField(null=True, blank=True)
     reference_id = models.CharField(max_length=100, null=True, blank=True)
     scope = models.CharField(max_length=20, default='OFFICIAL')
+
+    class Meta:
+        db_table = 'Transaction'
     
     created_at = models.DateTimeField(auto_now_add=True)
 
