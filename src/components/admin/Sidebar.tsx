@@ -109,6 +109,7 @@ const MENU_ITEMS = [
         title: 'SaaS Panel',
         icon: Briefcase,
         children: [
+            { title: 'Master Dashboard', path: '/admin/saas/dashboard' },
             { title: 'Organizations', path: '/admin/saas/organizations' },
             { title: 'Platform Health', path: '/admin/saas/health' },
         ]
