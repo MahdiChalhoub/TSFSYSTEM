@@ -199,18 +199,27 @@ class ChartOfAccount(TenantModel):
         ('ASSET', 'Asset'),
         ('LIABILITY', 'Liability'),
         ('EQUITY', 'Equity'),
-        ('REVENUE', 'Revenue'),
+        ('INCOME', 'Income'),
         ('EXPENSE', 'Expense'),
     )
     code = models.CharField(max_length=50)
     name = models.CharField(max_length=255)
+    description = models.TextField(null=True, blank=True)
     type = models.CharField(max_length=20, choices=ACCOUNT_TYPES)
     sub_type = models.CharField(max_length=50, null=True, blank=True) # e.g. 'CASH', 'BANK'
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
     
     is_system_only = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    is_hidden = models.BooleanField(default=False)
+    requires_zero_balance = models.BooleanField(default=False)
+    
     balance = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+    balance_official = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+
+    # Regulatory Mapping
+    syscohada_code = models.CharField(max_length=50, null=True, blank=True)
+    syscohada_class = models.CharField(max_length=100, null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

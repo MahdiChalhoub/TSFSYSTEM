@@ -110,3 +110,7 @@
 2026-02-02 11:03:31.597 GMT [32608] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
 2026-02-02 11:03:33.019 GMT [32608] ERROR:  relation "public.Order" does not exist at character 76
 2026-02-02 11:03:33.019 GMT [32608] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 11:03:51.330 GMT [16036] LOG:  checkpoint starting: time
+2026-02-02 11:03:51.459 GMT [16036] LOG:  checkpoint complete: wrote 1 buffers (0.0%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=0.105 s, sync=0.005 s, total=0.129 s; sync files=2, longest=0.004 s, average=0.003 s; distance=1 kB, estimate=3122 kB; lsn=0/1F47DF8, redo lsn=0/1F47DA0
+2026-02-02 11:08:51.473 GMT [16036] LOG:  checkpoint starting: time
+2026-02-02 11:08:55.327 GMT [16036] LOG:  checkpoint complete: wrote 35 buffers (0.2%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=3.781 s, sync=0.061 s, total=3.855 s; sync files=29, longest=0.012 s, average=0.003 s; distance=159 kB, estimate=2825 kB; lsn=0/1F6FDF0, redo lsn=0/1F6FD60
