@@ -315,6 +315,7 @@ class LedgerService:
         account_map = {acc.id: acc for acc in accounts}
         for acc in accounts: 
             acc.temp_balance = balance_map.get(acc.id, Decimal('0'))
+            acc.rollup_balance = acc.temp_balance # Initialize to prevent AttributeError if skipped
             acc.temp_children = []
             
         roots = []
