@@ -36,17 +36,19 @@ export default async function middleware(req: NextRequest) {
 
     // 1. MASTER PANEL: saas.localhost -> /admin/saas
     if (subdomain === "saas") {
+        if (url.pathname.startsWith("/admin/saas")) return NextResponse.next()
         return NextResponse.rewrite(new URL(`/admin/saas${path}`, req.url))
     }
 
     // 2. TENANT INSTANCE: xxx.localhost -> /tenant/[slug]
     if (subdomain && subdomain !== "www") {
+        if (url.pathname.startsWith(`/tenant/${subdomain}`)) return NextResponse.next()
         return NextResponse.rewrite(new URL(`/tenant/${subdomain}${path}`, req.url))
     }
 
     // 3. LANDING PAGE: root localhost -> /landing (internal rewrite)
-    // We rewrite so the URL remains clean as "/"
     if (!subdomain || subdomain === "www") {
+        if (url.pathname.startsWith("/landing")) return NextResponse.next()
         return NextResponse.rewrite(new URL(`/landing${path}`, req.url))
     }
 
