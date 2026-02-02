@@ -50612,16 +50612,17 @@ export namespace Prisma {
 
   export type CountryWhereUniqueInput = Prisma.AtLeast<{
     id?: number
-    code?: string
+    code_organizationId?: CountryCodeOrganizationIdCompoundUniqueInput
     AND?: CountryWhereInput | CountryWhereInput[]
     OR?: CountryWhereInput[]
     NOT?: CountryWhereInput | CountryWhereInput[]
+    code?: StringFilter<"Country"> | string
     name?: StringFilter<"Country"> | string
     organizationId?: StringFilter<"Country"> | string
     organization?: XOR<OrganizationRelationFilter, OrganizationWhereInput>
     brands?: BrandListRelationFilter
     products?: ProductListRelationFilter
-  }, "id" | "code">
+  }, "id" | "code_organizationId">
 
   export type CountryOrderByWithAggregationInput = {
     id?: SortOrder
@@ -50688,10 +50689,11 @@ export namespace Prisma {
 
   export type UnitWhereUniqueInput = Prisma.AtLeast<{
     id?: number
-    code?: string
+    code_organizationId?: UnitCodeOrganizationIdCompoundUniqueInput
     AND?: UnitWhereInput | UnitWhereInput[]
     OR?: UnitWhereInput[]
     NOT?: UnitWhereInput | UnitWhereInput[]
+    code?: StringFilter<"Unit"> | string
     name?: StringFilter<"Unit"> | string
     organizationId?: StringFilter<"Unit"> | string
     shortName?: StringNullableFilter<"Unit"> | string | null
@@ -50706,7 +50708,7 @@ export namespace Prisma {
     children?: UnitListRelationFilter
     products?: ProductListRelationFilter
     productsWithSize?: ProductListRelationFilter
-  }, "id" | "code">
+  }, "id" | "code_organizationId">
 
   export type UnitOrderByWithAggregationInput = {
     id?: SortOrder
@@ -51144,6 +51146,7 @@ export namespace Prisma {
 
   export type PermissionWhereUniqueInput = Prisma.AtLeast<{
     id?: number
+    code_organizationId?: PermissionCodeOrganizationIdCompoundUniqueInput
     AND?: PermissionWhereInput | PermissionWhereInput[]
     OR?: PermissionWhereInput[]
     NOT?: PermissionWhereInput | PermissionWhereInput[]
@@ -51155,7 +51158,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Permission"> | Date | string
     organization?: XOR<OrganizationRelationFilter, OrganizationWhereInput>
     roles?: RoleListRelationFilter
-  }, "id">
+  }, "id" | "code_organizationId">
 
   export type PermissionOrderByWithAggregationInput = {
     id?: SortOrder
@@ -58462,6 +58465,11 @@ export namespace Prisma {
     isNot?: OrganizationWhereInput
   }
 
+  export type CountryCodeOrganizationIdCompoundUniqueInput = {
+    code: string
+    organizationId: string
+  }
+
   export type CountryCountOrderByAggregateInput = {
     id?: SortOrder
     code?: SortOrder
@@ -58551,6 +58559,11 @@ export namespace Prisma {
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
+  }
+
+  export type UnitCodeOrganizationIdCompoundUniqueInput = {
+    code: string
+    organizationId: string
   }
 
   export type UnitCountOrderByAggregateInput = {
@@ -58900,6 +58913,11 @@ export namespace Prisma {
 
   export type RoleSumOrderByAggregateInput = {
     id?: SortOrder
+  }
+
+  export type PermissionCodeOrganizationIdCompoundUniqueInput = {
+    code: string
+    organizationId: string
   }
 
   export type PermissionCountOrderByAggregateInput = {

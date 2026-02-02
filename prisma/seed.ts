@@ -1,5 +1,5 @@
 
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '../src/generated/client'
 
 const prisma = new PrismaClient()
 
@@ -29,18 +29,20 @@ async function main() {
     for (const r of roles) {
         // @ts-ignore
         await (prisma as any).role.upsert({
-            where: { name: r.name },
+            where: { name_organizationId: { name: r.name, organizationId: orgId } },
             update: { description: r.description },
             create: { ...r, organizationId: orgId }
         })
     }
     // @ts-ignore
-    const adminRole = await prisma.role.findUnique({ where: { name: 'ADMIN' } })
+    const adminRole = await (prisma as any).role.findUnique({
+        where: { name_organizationId: { name: 'ADMIN', organizationId: orgId } }
+    })
 
     // 2. Seed Sites (The Enterprise Roots)
     // @ts-ignore
     const hqSite = await (prisma as any).site.upsert({
-        where: { code: 'HQ-BEIRUT', organizationId: orgId },
+        where: { code_organizationId: { code: 'HQ-BEIRUT', organizationId: orgId } },
         update: {},
         create: {
             name: 'HQ - Beirut Central',
@@ -86,7 +88,7 @@ async function main() {
 
     for (const c of countries) {
         await (prisma as any).country.upsert({
-            where: { code: c.code, organizationId: orgId },
+            where: { code_organizationId: { code: c.code, organizationId: orgId } },
             update: {},
             create: { ...c, organizationId: orgId },
         })
@@ -97,35 +99,35 @@ async function main() {
     // 3. Seed Units (Hierarchical)
     // First, ensure Base Unit exists
     const piece = await (prisma as any).unit.upsert({
-        where: { code: 'PC', organizationId: orgId },
+        where: { code_organizationId: { code: 'PC', organizationId: orgId } },
         update: {},
         create: { code: 'PC', name: 'Piece', conversionFactor: 1, organizationId: orgId },
     })
 
     // Level 1: Weight based
     await (prisma as any).unit.upsert({
-        where: { code: 'KG', organizationId: orgId },
+        where: { code_organizationId: { code: 'KG', organizationId: orgId } },
         update: {},
         create: { code: 'KG', name: 'Kilogram', conversionFactor: 1, organizationId: orgId },
     })
 
     // Level 2: Derived Units (Pack = 6 Pieces)
-    await prisma.unit.upsert({
-        where: { code: 'PACK' },
+    await (prisma as any).unit.upsert({
+        where: { code_organizationId: { code: 'PACK', organizationId: orgId } },
         update: { baseUnitId: piece.id, conversionFactor: 6 },
-        create: { code: 'PACK', name: 'Pack', baseUnitId: piece.id, conversionFactor: 6 },
+        create: { code: 'PACK', name: 'Pack', baseUnitId: piece.id, conversionFactor: 6, organizationId: orgId },
     })
 
     // Level 2: Derived Units (Box = 12 Pieces)
-    await prisma.unit.upsert({
-        where: { code: 'BOX' },
+    await (prisma as any).unit.upsert({
+        where: { code_organizationId: { code: 'BOX', organizationId: orgId } },
         update: { baseUnitId: piece.id, conversionFactor: 12 },
-        create: { code: 'BOX', name: 'Box', baseUnitId: piece.id, conversionFactor: 12 },
+        create: { code: 'BOX', name: 'Box', baseUnitId: piece.id, conversionFactor: 12, organizationId: orgId },
     })
 
     // Liquid
     await (prisma as any).unit.upsert({
-        where: { code: 'LITER', organizationId: orgId },
+        where: { code_organizationId: { code: 'LITER', organizationId: orgId } },
         update: {},
         create: { code: 'LITER', name: 'Liter', conversionFactor: 1, organizationId: orgId },
     })
@@ -190,9 +192,8 @@ async function main() {
         console.log('⚙️ Default Financial Settings Created')
     }
 
-    // 7. Seed Fiscal Year 2026
-    const fy2026 = await prisma.fiscalYear.upsert({
-        where: { id: 1 }, // Using ID 1 for simplicity in test
+    const fy2026 = await (prisma as any).fiscalYear.upsert({
+        where: { id: 1 }, // ID is still globally unique in SQLite autoincrement
         update: {},
         create: {
             id: 1,
@@ -210,8 +211,8 @@ async function main() {
 
     // Helper to create account if missing
     const upsertAccount = async (code: string, name: string, type: string, parentId?: number, subType?: string) => {
-        const acc = await prisma.chartOfAccount.upsert({
-            where: { code },
+        const acc = await (prisma as any).chartOfAccount.upsert({
+            where: { code_organizationId: { code, organizationId: orgId } },
             update: { subType },
             create: { code, name, type, parentId, subType, organizationId: orgId }
         })
@@ -273,16 +274,18 @@ async function main() {
     }
 
     await (prisma as any).systemSettings.upsert({
-        where: { key: 'finance_posting_rules', organizationId: orgId },
+        where: { key_organizationId: { key: 'finance_posting_rules', organizationId: orgId } },
         update: { value: JSON.stringify(postingRules) },
         create: { key: 'finance_posting_rules', value: JSON.stringify(postingRules), organizationId: orgId }
     })
     console.log('⚙️ Posting Rules (Auto-Mapping) Initialized')
 
     // 9. Seed Sample Product for Valuation Tests
-    const testPiece = await prisma.unit.findUnique({ where: { code: 'PC' } })
-    await prisma.product.upsert({
-        where: { sku: 'TEST-PROD-01' },
+    const testPiece = await (prisma as any).unit.findUnique({
+        where: { code_organizationId: { code: 'PC', organizationId: orgId } }
+    })
+    await (prisma as any).product.upsert({
+        where: { sku_organizationId: { sku: 'TEST-PROD-01', organizationId: orgId } },
         update: { unitId: testPiece?.id },
         create: {
             sku: 'TEST-PROD-01',

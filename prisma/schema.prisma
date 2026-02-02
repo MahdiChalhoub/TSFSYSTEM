@@ -61,7 +61,7 @@ model Organization {
 
 model Country {
   id   Int    @id @default(autoincrement())
-  code String @unique // LB, US, FR
+  code String // LB, US, FR
   name String
 
   // SaaS Context
@@ -70,33 +70,36 @@ model Country {
 
   brands   Brand[]
   products Product[] // Origin
+
+  @@unique([code, organizationId])
 }
 
 model Unit {
   id   Int    @id @default(autoincrement())
-  code String @unique // PC, BOX
+  code String // PC, BOX
   name String // Piece, Box
 
   // SaaS Context
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id])
-
-  // Attributes requested by User
+  
+  // ... attributes
   shortName            String?
-  type                 String  @default("COUNT") // 'COUNT', 'WEIGHT', 'VOLUME'
+  type                 String  @default("COUNT")
   allowFraction        Boolean @default(false)
   needsBalance         Boolean @default(false)
-  balanceCodeStructure String? // e.g. "6,3,3" for [Barcode(6)][Weight(3)][Dec(3)]
+  balanceCodeStructure String?
 
-  // Hierarchy & Conversion
   baseUnitId Int?
   baseUnit   Unit?  @relation("UnitHierarchy", fields: [baseUnitId], references: [id])
   children   Unit[] @relation("UnitHierarchy")
 
-  conversionFactor Decimal @default(1) // e.g. 12 if 1 Box = 12 Pieces (where base is Piece)
+  conversionFactor Decimal @default(1)
 
   products         Product[]
   productsWithSize Product[] @relation("SizeUnit")
+
+  @@unique([code, organizationId])
 }
 
 model FinancialAccount {
@@ -225,6 +228,8 @@ model Permission {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([code, organizationId])
 }
 
 // "The Black Box" - Track everything
