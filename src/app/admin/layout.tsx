@@ -9,6 +9,7 @@ import DebugOverlay from '@/components/dev/DebugOverlay';
 
 import { Outfit } from 'next/font/google';
 import { getSites } from '@/app/actions/sites';
+import { getOrganizations } from '@/app/admin/saas/organizations/actions';
 
 const outfit = Outfit({ subsets: ['latin'] });
 
@@ -17,7 +18,10 @@ export default async function AdminLayout({
 }: {
     children: React.ReactNode;
 }) {
-    const sites = await getSites();
+    const [sites, organizations] = await Promise.all([
+        getSites(),
+        getOrganizations()
+    ]);
 
     return (
         <AdminProvider>
@@ -29,7 +33,7 @@ export default async function AdminLayout({
                     {/* Right Panel: Content */}
                     <div className="flex-1 flex flex-col min-w-0">
                         {/* 1. Global Header (Search, Profile) */}
-                        <TopHeader sites={sites} />
+                        <TopHeader sites={sites} organizations={organizations} />
 
                         {/* 2. Tab Navigation Bar */}
                         <TabNavigator />
