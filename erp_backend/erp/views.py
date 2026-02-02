@@ -218,6 +218,25 @@ class ChartOfAccountViewSet(viewsets.ModelViewSet):
             })
         return Response(data)
 
+    @action(detail=False, methods=['post'])
+    def apply_template(self, request):
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({"error": "No organization context found"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        organization = Organization.objects.get(id=organization_id)
+        template_key = request.data.get('template_key')
+        reset = request.data.get('reset', False)
+        
+        if not template_key:
+            return Response({"error": "template_key is required"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            LedgerService.apply_coa_template(organization, template_key, reset)
+            return Response({"message": "Template applied successfully"})
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
     @action(detail=True, methods=['get'])
     def statement(self, request, pk=None):
         organization_id = get_current_tenant_id()

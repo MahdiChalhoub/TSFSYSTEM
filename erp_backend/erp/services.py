@@ -299,6 +299,53 @@ class LedgerService:
             entry.status = 'POSTED'; entry.posted_at = timezone.now(); entry.save()
 
     @staticmethod
+    def apply_coa_template(organization, template_key, reset=False):
+        from .models import ChartOfAccount, JournalEntry
+        from .coa_templates import TEMPLATES
+        from .services import ConfigurationService
+
+        template = TEMPLATES.get(template_key)
+        if not template:
+            raise ValidationError(f"Template {template_key} not found")
+
+        with transaction.atomic():
+            if reset:
+                if JournalEntry.objects.filter(organization=organization).exists():
+                    raise ValidationError("Cannot reset Chart of Accounts: Transactions already exist.")
+                ChartOfAccount.objects.filter(organization=organization).delete()
+            
+            def create_recursive(items, parent=None):
+                for item in items:
+                    # Try finding existing by code
+                    defaults = {
+                        "name": item['name'],
+                        "type": item['type'],
+                        "sub_type": item.get('subType'),
+                        "syscohada_code": item.get('syscohadaCode'),
+                        "syscohada_class": item.get('syscohadaClass'),
+                        "is_active": True,
+                        "parent": parent,
+                        "is_system_only": item.get('isSystemOnly', False),
+                        "is_hidden": item.get('isHidden', False),
+                        "requires_zero_balance": item.get('requiresZeroBalance', False)
+                    }
+                    
+                    acc, created = ChartOfAccount.objects.update_or_create(
+                        organization=organization,
+                        code=item['code'],
+                        defaults=defaults
+                    )
+                    
+                    if 'children' in item and item['children']:
+                        create_recursive(item['children'], acc)
+
+            create_recursive(template)
+            
+            # Auto-wire posting rules
+            ConfigurationService.apply_smart_posting_rules(organization)
+            return True
+
+    @staticmethod
     def get_chart_of_accounts(organization, scope='OFFICIAL', include_inactive=False):
         from .models import ChartOfAccount, JournalEntryLine
         qs = ChartOfAccount.objects.filter(organization=organization).order_by('code')

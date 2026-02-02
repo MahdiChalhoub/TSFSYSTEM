@@ -288,92 +288,16 @@ const TEMPLATES = {
 
 export async function importChartOfAccountsTemplate(templateKey: keyof typeof TEMPLATES, options?: { reset?: boolean }) {
     console.log(`[COA_TEMPLATE] Starting import for ${templateKey}, reset=${options?.reset}`)
-    const tenant = await getTenantContext()
-    if (!tenant) {
-        console.error(`[COA_TEMPLATE] No tenant context found!`)
-        throw new Error("No organization context found")
-    }
-    console.log(`[COA_TEMPLATE] Tenant found: ${tenant.slug} (${tenant.id})`)
-
-    const template = TEMPLATES[templateKey]
-    if (!template) {
-        console.error(`[COA_TEMPLATE] Template ${templateKey} not found!`)
-        throw new Error("Template not found")
-    }
 
     try {
-        await prisma.$transaction(async (tx) => {
-            if (options?.reset) {
-                // Check for transactions first!
-                const entryCount = await tx.journalEntry.count({
-                    where: { organizationId: tenant.id }
-                })
-                if (entryCount > 0) {
-                    throw new Error("Cannot reset Chart of Accounts: Transactions already exist in the system. Please delete all transactions first or import manually.")
-                }
-                // Delete all existing accounts
-                await tx.chartOfAccount.deleteMany({
-                    where: { organizationId: tenant.id }
-                })
-            }
-
-            async function createRecursive(items: TemplateAccount[], parentId?: number) {
-                if (!tenant) return; // Should not happen due to top-level check
-                for (const item of items) {
-                    // Check if account already exists by code and organization to prevent unique constraint error
-                    let existing = await tx.chartOfAccount.findFirst({
-                        where: { code: item.code, organizationId: tenant.id }
-                    })
-
-                    let created
-                    if (existing) {
-                        // Update existing account to ensure it's active and has correct metadata
-                        created = await tx.chartOfAccount.update({
-                            where: { id: existing.id },
-                            data: {
-                                name: item.name,
-                                type: item.type,
-                                subType: item.subType || null,
-                                isActive: true,
-                                syscohadaCode: item.syscohadaCode || null,
-                                syscohadaClass: item.syscohadaClass || null,
-                                // Only update parent if it doesn't have one to preserve custom structures
-                                parentId: existing.parentId || parentId || null,
-                                isSystemOnly: item.isSystemOnly || false,
-                                isHidden: item.isHidden || false,
-                                requiresZeroBalance: item.requiresZeroBalance || false
-                            }
-                        })
-                    } else {
-                        created = await tx.chartOfAccount.create({
-                            data: {
-                                code: item.code,
-                                name: item.name,
-                                type: item.type,
-                                subType: item.subType || null,
-                                isActive: true,
-                                organizationId: tenant.id,
-                                parentId: parentId || null,
-                                syscohadaCode: item.syscohadaCode || null,
-                                syscohadaClass: item.syscohadaClass || null,
-                                isSystemOnly: item.isSystemOnly || false,
-                                isHidden: item.isHidden || false,
-                                requiresZeroBalance: item.requiresZeroBalance || false
-                            }
-                        })
-                    }
-
-                    if (item.children && item.children.length > 0) {
-                        await createRecursive(item.children, created.id)
-                    }
-                }
-            }
-
-            await createRecursive(template)
-        }, { maxWait: 15000, timeout: 60000 })
-
-        // Auto-wire the posting rules based on the new accounts (AFTER commit)
-        await applySmartPostingRules()
+        const { erpFetch } = await import('@/lib/erp-api')
+        await erpFetch('/api/coa/apply_template/', {
+            method: 'POST',
+            body: JSON.stringify({
+                template_key: templateKey,
+                reset: options?.reset || false
+            })
+        })
 
         try {
             revalidatePath('/admin/finance/chart-of-accounts')
