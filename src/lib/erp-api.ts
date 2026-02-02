@@ -41,6 +41,7 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
     }
 
     const url = `${DJANGO_URL}/api/${path.startsWith('/') ? path.slice(1) : path}`;
+    console.log(`[ERP_API] Requesting: ${options.method || 'GET'} ${url}`)
 
     try {
         const response = await fetch(url, {
@@ -49,8 +50,13 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
             cache: 'no-store'
         });
 
+        console.log(`[ERP_API] Response: ${response.status} from ${path}`)
+
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
+            const errorText = await response.text().catch(() => "Unknown Error")
+            console.error(`[ERP_API] Error response from ${path}:`, errorText)
+            let errorData: any = {}
+            try { errorData = JSON.parse(errorText) } catch (e) { }
             throw new Error(errorData.error || `ERP Backend error: ${response.statusText}`);
         }
 
