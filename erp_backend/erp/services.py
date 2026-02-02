@@ -5,6 +5,7 @@ from decimal import Decimal
 from django.db.models import Sum, F
 import uuid
 import json
+import math
 
 class ProvisioningService:
     @staticmethod
@@ -542,3 +543,329 @@ class POSService:
             )
             
             return order
+
+class SequenceService:
+    @staticmethod
+    def get_next_number(organization, type):
+        from .models import TransactionSequence
+        from django.db.models import F
+        with transaction.atomic():
+            seq, created = TransactionSequence.objects.get_or_create(
+                organization=organization, 
+                type=type,
+                defaults={'prefix': type[:3].upper() + '-', 'padding': 5}
+            )
+            # Use lock to prevent race conditions
+            seq = TransactionSequence.objects.select_for_update().get(id=seq.id)
+            
+            number_string = str(seq.next_number).zfill(seq.padding)
+            formatted = f"{seq.prefix or ''}{number_string}{seq.suffix or ''}"
+            
+            seq.next_number += 1
+            seq.save()
+            
+            return formatted
+
+class BarcodeService:
+    @staticmethod
+    def calculate_ean13_check_digit(digits):
+        # Validation: digits should be string of 12 numbers
+        sum_odd = 0
+        sum_even = 0
+        for i, char in enumerate(digits):
+            num = int(char)
+            # Even index i (0, 2...) is ODD position (1st, 3rd...) -> weight 1
+            # Odd index i (1, 3...) is EVEN position (2nd, 4th...) -> weight 3
+            if i % 2 == 0:
+                sum_odd += num * 1
+            else:
+                sum_even += num * 3
+        
+        total = sum_odd + sum_even
+        remainder = total % 10
+        return (10 - remainder) % 10
+
+    @staticmethod
+    def generate_barcode(organization):
+        from .models import BarcodeSettings, Product
+        with transaction.atomic():
+            settings, created = BarcodeSettings.objects.get_or_create(
+                organization=organization,
+                defaults={'prefix': '200', 'next_sequence': 1000}
+            )
+            if not settings.is_enabled:
+                raise ValidationError("Barcode generation is disabled")
+            
+            current_seq = settings.next_sequence
+            prefix = settings.prefix
+            # Padding: Total length 13. Check digit 1. Payload 12. 
+            # Seq length = 12 - len(prefix).
+            seq_str = str(current_seq).zfill(12 - len(prefix))
+            raw_code = f"{prefix}{seq_str}"
+            
+            check_digit = BarcodeService.calculate_ean13_check_digit(raw_code)
+            final_barcode = f"{raw_code}{check_digit}"
+            
+            settings.next_sequence += 1
+            settings.save()
+            
+            # Recursion check (unlikely with atomic seq, but safe)
+            if Product.objects.filter(organization=organization, barcode=final_barcode).exists():
+                return BarcodeService.generate_barcode(organization)
+                
+            return final_barcode
+
+class LoanService:
+    @staticmethod
+    def calculate_schedule(principal, interest_rate, interest_type, term_months, start_date, frequency):
+        """
+        Pure logic calculation, returns list of dicts.
+        interest_rate is Annual %.
+        """
+        import datetime
+        from dateutil.relativedelta import relativedelta
+        
+        principal = Decimal(str(principal))
+        rate = Decimal(str(interest_rate))
+        
+        # 1. Determine num installments
+        if frequency == 'MONTHLY': num_installments = term_months
+        elif frequency == 'QUARTERLY': num_installments = math.ceil(term_months / 3)
+        elif frequency == 'YEARLY': num_installments = math.ceil(term_months / 12)
+        else: num_installments = term_months # Default
+        
+        if num_installments <= 0: return []
+        
+        # 2. Calculate Base Amounts
+        total_interest = Decimal('0')
+        if interest_type == 'SIMPLE':
+            # Simple Interest: Principal * (Rate/100) * (Years)
+            years = Decimal(term_months) / Decimal('12')
+            total_interest = principal * (rate / Decimal('100')) * years
+        
+        base_principal = principal / Decimal(num_installments)
+        base_interest = total_interest / Decimal(num_installments)
+        
+        installments = []
+        remaining_principal = principal
+        remaining_interest = total_interest
+        
+        current_date_obj = start_date if isinstance(start_date, datetime.date) else datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
+        
+        for i in range(1, num_installments + 1):
+            # Calculate next date
+            if frequency == 'MONTHLY':
+                next_date = current_date_obj + relativedelta(months=i)
+            elif frequency == 'QUARTERLY':
+                next_date = current_date_obj + relativedelta(months=i*3)
+            elif frequency == 'YEARLY':
+                next_date = current_date_obj + relativedelta(years=i)
+            else:
+                next_date = current_date_obj + relativedelta(months=i)
+
+            is_last = (i == num_installments)
+            
+            line_principal = remaining_principal if is_last else base_principal.quantize(Decimal('0.01'))
+            line_interest = remaining_interest if is_last else base_interest.quantize(Decimal('0.01'))
+            line_total = line_principal + line_interest
+            
+            installments.append({
+                "due_date": next_date,
+                "principal": line_principal,
+                "interest": line_interest,
+                "total": line_total
+            })
+            
+            if not is_last:
+                remaining_principal -= line_principal
+                remaining_interest -= line_interest
+                
+        return installments
+
+    @staticmethod
+    def create_contract(organization, data):
+        from .models import Loan, LoanInstallment, Contact
+        """
+        Creates a Loan and its Installments in DRAFT status.
+        Uses SequenceService for contract number.
+        """
+        with transaction.atomic():
+            contract_number = SequenceService.get_next_number(organization, 'LOAN')
+            
+            contact = Contact.objects.get(id=data['contact_id'], organization=organization)
+            
+            loan = Loan.objects.create(
+                organization=organization,
+                contract_number=contract_number,
+                contact=contact,
+                principal_amount=data['principal_amount'],
+                interest_rate=data['interest_rate'],
+                interest_type=data.get('interest_type', 'SIMPLE'),
+                term_months=data['term_months'],
+                start_date=data['start_date'],
+                payment_frequency=data.get('payment_frequency', 'MONTHLY'),
+                status='DRAFT'
+            )
+            
+            # Generate Installments
+            schedule = LoanService.calculate_schedule(
+                loan.principal_amount,
+                loan.interest_rate,
+                loan.interest_type,
+                loan.term_months,
+                loan.start_date,
+                loan.payment_frequency
+            )
+            
+            for item in schedule:
+                LoanInstallment.objects.create(
+                    organization=organization,
+                    loan=loan,
+                    due_date=item['due_date'],
+                    principal_amount=item['principal'],
+                    interest_amount=item['interest'],
+                    total_amount=item['total'],
+                    status='PENDING'
+                )
+            
+            return loan
+
+    @staticmethod
+    def disburse_loan(organization, loan_id, transaction_ref=None, account_id=None):
+        from .models import Loan, FinancialEvent, FinancialAccount
+        with transaction.atomic():
+            loan = Loan.objects.get(id=loan_id, organization=organization)
+            if loan.status != 'DRAFT':
+                raise ValidationError("Loan is not in DRAFT status")
+            
+            # 1. Create Financial Event (Partner Loan if strictly internal, but this looks like lending TO someone)
+            # Actually, if we are LENDING, it's an Asset.
+            # If we are BORROWING, it's a Liability.
+            # The Loan model seems to be "Lending to Contact" (Receiver).
+            # Because we have `principal` and `contact`.
+            
+            # Let's assume Lending for now (common in this ERP context for "Microfinance").
+            
+            # Create Disbursement Event
+            FinancialEventService.create_event(
+                organization=organization,
+                event_type='LOAN_DISBURSEMENT', # Need to add this to choices or map to generic
+                amount=loan.principal_amount,
+                date=timezone.now(),
+                contact_id=loan.contact.id,
+                reference=transaction_ref or f"DISB-{loan.contract_number}",
+                loan_id=loan.id,
+                account_id=account_id # Paying FROM this account
+            )
+            
+            loan.status = 'ACTIVE'
+            loan.save()
+            return loan
+
+class FinancialEventService:
+    @staticmethod
+    def create_event(organization, event_type, amount, date, contact_id, reference=None, notes=None, loan_id=None, account_id=None):
+        from .models import FinancialEvent, Contact
+        with transaction.atomic():
+            contact = Contact.objects.get(id=contact_id, organization=organization)
+            
+            event = FinancialEvent.objects.create(
+                organization=organization,
+                event_type=event_type,
+                amount=amount,
+                date=date,
+                contact=contact,
+                reference=reference,
+                notes=notes,
+                loan_id=loan_id,
+                status='DRAFT' # Created as draft, need to POST to settle
+            )
+            
+            if account_id:
+                # Immediate posting if account provided
+                FinancialEventService.post_event(organization, event.id, account_id)
+                event.refresh_from_db()
+                
+            return event
+
+    @staticmethod
+    def post_event(organization, event_id, account_id):
+        from .models import FinancialEvent, FinancialAccount
+        with transaction.atomic():
+            event = FinancialEvent.objects.get(id=event_id, organization=organization)
+            if event.status == 'SETTLED': return event
+            
+            fin_acc = FinancialAccount.objects.get(id=account_id, organization=organization)
+            actual_payment_acc_id = fin_acc.ledger_account_id
+            
+            # Determine Accounting Rules based on Event Type
+            # This requires dynamic mapping.
+            # For now hardcoding based on expected types.
+            
+            rules = ConfigurationService.get_posting_rules(organization)
+            
+            debit_acc = None
+            credit_acc = None
+            
+            # Logic:
+            # PARTNER_CAPITAL_INJECTION: Dr Cash, Cr Equity
+            # PARTNER_LOAN (Borrowing): Dr Cash, Cr Liability
+            # LOAN_DISBURSEMENT (Lending): Dr Asset (Loan Receivable), Cr Cash
+            
+            description = ""
+            
+            if event.event_type == 'PARTNER_CAPITAL_INJECTION':
+                debit_acc = actual_payment_acc_id
+                credit_acc = rules.get('equity', {}).get('capital') # Need to add this rule
+                description = f"Capital Injection from {event.contact.name}"
+                
+            elif event.event_type == 'PARTNER_LOAN': # We borrow
+                debit_acc = actual_payment_acc_id
+                credit_acc = event.contact.linked_account_id # Use contact's linked payable account?
+                if not credit_acc: raise ValidationError("Partner has no linked account")
+                description = f"Loan from Partner {event.contact.name}"
+
+            elif event.event_type == 'LOAN_DISBURSEMENT': # We lend
+                # We need a 'Loan Receivable' account. 
+                # Ideally, the Loan model should link to a specific sub-account.
+                # For now using a generic 'Loans Receivable' or Contact's account.
+                debit_acc = event.contact.linked_account_id
+                credit_acc = actual_payment_acc_id
+                description = f"Loan Disbursement to {event.contact.name}"
+                
+            if not debit_acc or not credit_acc:
+                raise ValidationError(f"Accounting mapping failed for {event.event_type}")
+
+            # 1. Create Transaction (Cash Move)
+            from .models import Transaction
+            trx_type = 'IN' if debit_acc == actual_payment_acc_id else 'OUT'
+            
+            trx = Transaction.objects.create(
+                organization=organization,
+                account=fin_acc,
+                amount=event.amount,
+                type=trx_type,
+                description=description,
+                reference_id=event.reference
+            )
+            
+            # 2. Create Journal Entry
+            entry = LedgerService.create_journal_entry(
+                organization=organization,
+                transaction_date=event.date,
+                description=description,
+                reference=event.reference,
+                status='POSTED',
+                site_id=fin_acc.site_id,
+                lines=[
+                    {"account_id": debit_acc, "debit": event.amount, "credit": Decimal('0')},
+                    {"account_id": credit_acc, "debit": Decimal('0'), "credit": event.amount}
+                ]
+            )
+            
+            event.transaction = trx
+            event.journal_entry = entry
+            event.status = 'SETTLED'
+            event.save()
+            
+            return event

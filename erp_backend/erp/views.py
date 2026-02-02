@@ -6,7 +6,7 @@ from .models import (
     FiscalYear, FiscalPeriod, JournalEntry, Product, 
     Warehouse, Inventory, InventoryMovement, Unit,
     Brand, Category, Parfum, ProductGroup, Country,
-    Contact, Employee, Role
+    Contact, Employee, Role, TransactionSequence, BarcodeSettings, Loan, LoanInstallment, FinancialEvent
 )
 from .serializers import (
     OrganizationSerializer, SiteSerializer, FinancialAccountSerializer,
@@ -15,9 +15,10 @@ from .serializers import (
     InventorySerializer, InventoryMovementSerializer, UnitSerializer,
     ProductCreateSerializer, BrandSerializer, BrandDetailSerializer, CategorySerializer, 
     ParfumSerializer, ProductGroupSerializer, CountrySerializer,
-    ContactSerializer, EmployeeSerializer, RoleSerializer
+    ContactSerializer, EmployeeSerializer, RoleSerializer,
+    TransactionSequenceSerializer, BarcodeSettingsSerializer, LoanSerializer, LoanInstallmentSerializer, FinancialEventSerializer
 )
-from .services import FinancialAccountService, LedgerService, InventoryService, ProvisioningService, ConfigurationService, POSService, PurchaseService
+from .services import FinancialAccountService, LedgerService, InventoryService, ProvisioningService, ConfigurationService, POSService, PurchaseService, SequenceService, BarcodeService, LoanService, FinancialEventService
 
 class TenantResolutionView(viewsets.ViewSet):
     """
@@ -139,6 +140,46 @@ class FinancialAccountViewSet(viewsets.ModelViewSet):
             )
             serializer = self.get_serializer(account)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def assign_user(self, request, pk=None):
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({"error": "No organization context"}, status=status.HTTP_400_BAD_REQUEST)
+        organization = Organization.objects.get(id=organization_id)
+        
+        try:
+            user_id = request.data.get('user_id')
+            from .models import User
+            user = User.objects.get(id=user_id, organization=organization)
+            account = FinancialAccount.objects.get(id=pk, organization=organization)
+            
+            user.cash_register = account
+            user.save()
+            
+            return Response({"message": "User assigned successfully"})
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def remove_user(self, request, pk=None):
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({"error": "No organization context"}, status=status.HTTP_400_BAD_REQUEST)
+        organization = Organization.objects.get(id=organization_id)
+        
+        try:
+            user_id = request.data.get('user_id')
+            from .models import User
+            user = User.objects.get(id=user_id, organization=organization)
+            
+            if user.cash_register_id == int(pk):
+                user.cash_register = None
+                user.save()
+            
+            return Response({"message": "User unassigned successfully"})
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -674,6 +715,35 @@ class PurchaseViewSet(viewsets.ViewSet):
     """
     Handles Purchase Order (PO) operations.
     """
+    def list(self, request):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "No organization context"}, status=status.HTTP_400_BAD_REQUEST)
+        organization = Organization.objects.get(id=organization_id)
+        
+        scope = request.query_params.get('scope', 'INTERNAL')
+        
+        from .models import Order
+        qs = Order.objects.filter(organization=organization, type='PURCHASE')
+        
+        # Assuming we might have scope field later, for now we filter by type
+        # if scope == 'OFFICIAL' and hasattr(Order, 'scope'): qs = qs.filter(scope='OFFICIAL')
+        
+        qs = qs.order_by('-created_at')
+        
+        data = []
+        for o in qs:
+            data.append({
+                "id": o.id,
+                "refCode": o.ref_code,
+                "createdAt": o.created_at,
+                "status": o.status,
+                "totalAmount": float(o.total_amount),
+                "contact": { "name": o.contact.name } if o.contact else None,
+                "user": { "name": f"{o.user.first_name} {o.user.last_name}".strip() or o.user.username } if o.user else None
+            })
+            
+        return Response(data)
+
     @action(detail=True, methods=['post'])
     def authorize(self, request, pk=None):
         organization_id = get_current_tenant_id()
@@ -866,7 +936,117 @@ class EmployeeViewSet(viewsets.ModelViewSet):
     queryset = Employee.objects.all()
     serializer_class = EmployeeSerializer
 
-class RoleViewSet(viewsets.ModelViewSet):
-    queryset = Role.objects.all()
-    serializer_class = RoleSerializer
+
+class BarcodeSettingsViewSet(viewsets.ViewSet):
+    def list(self, request):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+        
+        settings, _ = BarcodeSettings.objects.get_or_create(organization=organization)
+        return Response(BarcodeSettingsSerializer(settings).data)
+
+    def create(self, request): # Used for update basically
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+        
+        settings, _ = BarcodeSettings.objects.get_or_create(organization=organization)
+        serializer = BarcodeSettingsSerializer(settings, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
+
+    @action(detail=False, methods=['post'])
+    def generate(self, request):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+        
+        try:
+            code = BarcodeService.generate_barcode(organization)
+            return Response({"barcode": code})
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
+class LoanViewSet(viewsets.ModelViewSet):
+    queryset = Loan.objects.all()
+    serializer_class = LoanSerializer
+
+    def get_queryset(self):
+        return super().get_queryset().order_by('-created_at')
+
+    @action(detail=False, methods=['post'])
+    def contract(self, request):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+        
+        try:
+            loan = LoanService.create_contract(organization, request.data)
+            return Response(LoanSerializer(loan).data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
+    @action(detail=True, methods=['post'])
+    def disburse(self, request, pk=None):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+        
+        try:
+            transaction_ref = request.data.get('transaction_ref')
+            account_id = request.data.get('account_id')
+            loan = LoanService.disburse_loan(organization, pk, transaction_ref, account_id)
+            return Response(LoanSerializer(loan).data)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
+class FinancialEventViewSet(viewsets.ModelViewSet):
+    queryset = FinancialEvent.objects.all()
+    serializer_class = FinancialEventSerializer
+
+    def get_queryset(self):
+        return super().get_queryset().order_by('-date')
+
+    @action(detail=False, methods=['post'])
+    def create_event(self, request):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+        
+        try:
+            # Manually map fields to service
+            event = FinancialEventService.create_event(
+                organization=organization,
+                event_type=request.data.get('event_type'),
+                amount=request.data.get('amount'),
+                date=request.data.get('date'),
+                contact_id=request.data.get('contact_id'),
+                reference=request.data.get('reference'),
+                notes=request.data.get('notes'),
+                loan_id=request.data.get('loan_id'),
+                account_id=request.data.get('account_id') # If provided, posts immediately
+            )
+            return Response(FinancialEventSerializer(event).data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
+    @action(detail=True, methods=['post'])
+    def post_event(self, request, pk=None):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+        
+        try:
+            account_id = request.data.get('account_id')
+            if not account_id: return Response({"error": "Account ID required"}, status=400)
+            
+            event = FinancialEventService.post_event(organization, pk, account_id)
+            return Response(FinancialEventSerializer(event).data)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return Response({"error": str(e)}, status=400)
 

@@ -80,11 +80,11 @@ export default function FinancialAccountsPage() {
 }
 
 function AccountCard({ account, onDelete, onRefresh }: { account: any, onDelete: () => void, onRefresh: () => void }) {
-    const icon = {
+    const icon: Record<string, any> = {
         'CASH': Wallet,
         'BANK': Building,
         'MOBILE': Smartphone
-    }[account.type] || Wallet
+    }
 
     // Check Config Health
     const isConfigured = !!account.ledgerAccount
@@ -147,7 +147,7 @@ function AccountCard({ account, onDelete, onRefresh }: { account: any, onDelete:
                                         className="ml-1 hover:bg-slate-200 rounded-full p-0.5"
                                         onClick={async () => {
                                             if (confirm(`Unassign ${u.name}?`)) {
-                                                await unassignUser(u.id)
+                                                await unassignUser(u.id, account.id)
                                                 onRefresh()
                                             }
                                         }}

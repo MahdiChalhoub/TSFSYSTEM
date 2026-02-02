@@ -456,3 +456,22 @@
 2026-02-02 13:05:57.554 GMT [14232] ERROR:  column Employee.employeeId does not exist at character 34
 2026-02-02 13:05:57.554 GMT [14232] HINT:  Perhaps you meant to reference the column "Employee.employee_id".
 2026-02-02 13:05:57.554 GMT [14232] STATEMENT:  SELECT "public"."Employee"."id", "public"."Employee"."employeeId", "public"."Employee"."firstName", "public"."Employee"."lastName", "public"."Employee"."idNumber", "public"."Employee"."phone", "public"."Employee"."email", "public"."Employee"."jobTitle", "public"."Employee"."department", "public"."Employee"."hireDate", "public"."Employee"."salary", "public"."Employee"."status", "public"."Employee"."homeSiteId", "public"."Employee"."linkedAccountId", "public"."Employee"."createdAt", "public"."Employee"."updatedAt" FROM "public"."Employee" WHERE 1=1 ORDER BY "public"."Employee"."lastName" ASC OFFSET $1
+2026-02-02 13:08:16.812 GMT [14232] ERROR:  column Employee.employeeId does not exist at character 34
+2026-02-02 13:08:16.812 GMT [14232] HINT:  Perhaps you meant to reference the column "Employee.employee_id".
+2026-02-02 13:08:16.812 GMT [14232] STATEMENT:  SELECT "public"."Employee"."id", "public"."Employee"."employeeId", "public"."Employee"."firstName", "public"."Employee"."lastName", "public"."Employee"."idNumber", "public"."Employee"."phone", "public"."Employee"."email", "public"."Employee"."jobTitle", "public"."Employee"."department", "public"."Employee"."hireDate", "public"."Employee"."salary", "public"."Employee"."status", "public"."Employee"."homeSiteId", "public"."Employee"."linkedAccountId", "public"."Employee"."createdAt", "public"."Employee"."updatedAt" FROM "public"."Employee" WHERE 1=1 ORDER BY "public"."Employee"."lastName" ASC OFFSET $1
+2026-02-02 13:08:37.455 GMT [14232] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 13:08:37.455 GMT [14232] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 13:08:37.455 GMT [14232] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 13:08:51.994 GMT [16036] LOG:  checkpoint starting: time
+2026-02-02 13:08:54.607 GMT [16036] LOG:  checkpoint complete: wrote 24 buffers (0.1%), wrote 1 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=2.574 s, sync=0.025 s, total=2.613 s; sync files=16, longest=0.006 s, average=0.002 s; distance=141 kB, estimate=895 kB; lsn=0/22D10A8, redo lsn=0/22D1050
+2026-02-02 13:10:03.742 GMT [14232] ERROR:  column Order.totalAmount does not exist at character 40
+2026-02-02 13:10:03.742 GMT [14232] HINT:  Perhaps you meant to reference the column "Order.total_amount".
+2026-02-02 13:10:03.742 GMT [14232] STATEMENT:  SELECT SUM("totalAmount") FROM (SELECT "public"."Order"."totalAmount" FROM "public"."Order" WHERE ("public"."Order"."type" = $1 AND "public"."Order"."status" = $2) OFFSET $3) AS "sub"
+2026-02-02 13:10:37.045 GMT [36232] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2026-02-02 13:10:37.350 GMT [14232] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2026-02-02 13:10:38.242 GMT [37580] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	
+2026-02-02 13:10:38.518 GMT [27920] LOG:  could not receive data from client: An existing connection was forcibly closed by the remote host.
+	

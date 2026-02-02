@@ -20,39 +20,6 @@ class TenantModel(models.Model):
     class Meta:
         abstract = True
 
-class Contact(TenantModel):
-    name = models.CharField(max_length=255)
-    type = models.CharField(max_length=50) # CUSTOMER, SUPPLIER
-    email = models.EmailField(null=True, blank=True)
-    phone = models.CharField(max_length=50, null=True, blank=True)
-    
-    home_site = models.ForeignKey('Site', on_delete=models.SET_NULL, null=True, blank=True, related_name='contacts')
-    linked_account = models.ForeignKey('FinancialAccount', on_delete=models.SET_NULL, null=True, blank=True)
-    
-    class Meta:
-        db_table = 'Contact'
-
-    def __str__(self):
-        return f"{self.name} ({self.type})"
-
-class Employee(TenantModel):
-    first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
-    employee_id = models.CharField(max_length=50, null=True, blank=True)
-    email = models.EmailField(null=True, blank=True)
-    job_title = models.CharField(max_length=100, null=True, blank=True)
-    
-    home_site = models.ForeignKey('Site', on_delete=models.SET_NULL, null=True, blank=True, related_name='employees')
-    linked_account = models.ForeignKey('FinancialAccount', on_delete=models.SET_NULL, null=True, blank=True)
-    
-    user = models.OneToOneField('User', on_delete=models.SET_NULL, null=True, blank=True, related_name='employee_profile')
-
-    class Meta:
-        db_table = 'Employee'
-
-    def __str__(self):
-        return f"{self.first_name} {self.last_name}"
-
 class Unit(TenantModel):
     code = models.CharField(max_length=50) # PC, BOX
     name = models.CharField(max_length=255) # Piece, Box
@@ -190,15 +157,6 @@ class Brand(TenantModel):
         db_table = 'Brand'
         unique_together = ('name', 'organization')
 
-class Unit(TenantModel):
-    code = models.CharField(max_length=50) # 'KG', 'PC'
-    name = models.CharField(max_length=100)
-    conversion_factor = models.DecimalField(max_digits=15, decimal_places=5, default=1.0)
-    
-    class Meta:
-        db_table = 'Unit'
-        unique_together = ('code', 'organization')
-
 class Product(TenantModel):
     sku = models.CharField(max_length=100)
     barcode = models.CharField(max_length=100, null=True, blank=True)
@@ -225,7 +183,7 @@ class Product(TenantModel):
     
     # Matching Prisma Fields
     status = models.CharField(max_length=20, default='ACTIVE')
-    supplier = models.ForeignKey('erp.Contact', on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
+    # supplier = models.ForeignKey('erp.Contact', on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
 
     is_expiry_tracked = models.BooleanField(default=False)
     min_stock_level = models.IntegerField(default=10)
@@ -306,6 +264,7 @@ class Employee(TenantModel):
     job_title = models.CharField(max_length=100, null=True, blank=True)
     salary = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
     
+    home_site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True, related_name='employees')
     linked_account = models.OneToOneField(ChartOfAccount, on_delete=models.SET_NULL, null=True, blank=True, related_name='employee')
     user = models.OneToOneField('User', on_delete=models.SET_NULL, null=True, blank=True, related_name='employee')
     
@@ -366,7 +325,7 @@ class Order(TenantModel):
     type = models.CharField(max_length=20, choices=TYPES)
     status = models.CharField(max_length=20, default='DRAFT') # 'DRAFT', 'COMPLETED', etc.
     
-    contact = models.ForeignKey('erp.Contact', on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
+    # contact = models.ForeignKey('erp.Contact', on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
     user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='orders')
     site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
     
@@ -537,4 +496,120 @@ class User(AbstractUser):
     def __str__(self):
         return self.email if self.email else self.username
 
+class TransactionSequence(TenantModel):
+    type = models.CharField(max_length=50) # 'INVOICE', 'LOAN', etc.
+    prefix = models.CharField(max_length=20, null=True, blank=True)
+    suffix = models.CharField(max_length=20, null=True, blank=True)
+    next_number = models.IntegerField(default=1)
+    padding = models.IntegerField(default=5)
+    
+    class Meta:
+        db_table = 'TransactionSequence'
+        unique_together = ('type', 'organization')
 
+class BarcodeSettings(TenantModel):
+    prefix = models.CharField(max_length=10, default="200")
+    next_sequence = models.IntegerField(default=1000)
+    length = models.IntegerField(default=13)
+    is_enabled = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'BarcodeSettings'
+
+class Loan(TenantModel):
+    INTEREST_TYPES = (
+        ('NONE', 'None'),
+        ('SIMPLE', 'Simple'),
+        ('COMPOUND', 'Compound')
+    )
+    FREQUENCIES = (
+        ('MONTHLY', 'Monthly'),
+        ('QUARTERLY', 'Quarterly'),
+        ('YEARLY', 'Yearly')
+    )
+    STATUS_CHOICES = (
+        ('DRAFT', 'Draft'),
+        ('ACTIVE', 'Active'),
+        ('COMPLETED', 'Completed'),
+        ('DEFAULTED', 'Defaulted')
+    )
+
+    contract_number = models.CharField(max_length=50)
+    contact = models.ForeignKey(Contact, on_delete=models.PROTECT, related_name='loans')
+    
+    principal_amount = models.DecimalField(max_digits=15, decimal_places=2)
+    interest_rate = models.DecimalField(max_digits=5, decimal_places=2) # Annual %
+    interest_type = models.CharField(max_length=20, choices=INTEREST_TYPES, default='SIMPLE')
+    
+    term_months = models.IntegerField()
+    start_date = models.DateField()
+    payment_frequency = models.CharField(max_length=20, choices=FREQUENCIES, default='MONTHLY')
+    
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'Loan'
+        unique_together = ('contract_number', 'organization')
+
+class LoanInstallment(TenantModel):
+    STATUS_CHOICES = (
+        ('PENDING', 'Pending'),
+        ('PAID', 'Paid'),
+        ('PARTIAL', 'Partial'),
+        ('OVERDUE', 'Overdue')
+    )
+    
+    loan = models.ForeignKey(Loan, on_delete=models.CASCADE, related_name='installments')
+    due_date = models.DateField()
+    
+    principal_amount = models.DecimalField(max_digits=15, decimal_places=2)
+    interest_amount = models.DecimalField(max_digits=15, decimal_places=2)
+    total_amount = models.DecimalField(max_digits=15, decimal_places=2)
+    
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    
+    paid_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    paid_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'LoanInstallment'
+
+class FinancialEvent(TenantModel):
+    EVENT_TYPES = (
+        ('PARTNER_CAPITAL_INJECTION', 'Capital Injection'),
+        ('PARTNER_LOAN', 'Partner Loan'),
+        ('PARTNER_WITHDRAWAL', 'Partner Withdrawal'),
+        ('REFUND_RECEIVED', 'Refund Received'),
+    )
+    STATUS_CHOICES = (
+        ('DRAFT', 'Draft'),
+        ('SETTLED', 'Settled'),
+        ('CANCELLED', 'Cancelled')
+    )
+
+    event_type = models.CharField(max_length=50, choices=EVENT_TYPES)
+    amount = models.DecimalField(max_digits=15, decimal_places=2)
+    currency = models.CharField(max_length=10, default='USD')
+    date = models.DateTimeField()
+    
+    reference = models.CharField(max_length=100, null=True, blank=True)
+    notes = models.TextField(null=True, blank=True)
+    
+    contact = models.ForeignKey(Contact, on_delete=models.PROTECT, related_name='financial_events')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
+    
+    # Links to accounting
+    transaction = models.ForeignKey(Transaction, on_delete=models.SET_NULL, null=True, blank=True, related_name='financial_events')
+    journal_entry = models.ForeignKey(JournalEntry, on_delete=models.SET_NULL, null=True, blank=True, related_name='financial_events')
+    
+    # Optional link to Loan if this event IS a loan disbursement
+    loan = models.ForeignKey(Loan, on_delete=models.SET_NULL, null=True, blank=True, related_name='financial_events')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'FinancialEvent'
