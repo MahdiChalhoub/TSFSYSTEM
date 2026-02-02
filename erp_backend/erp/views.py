@@ -12,7 +12,7 @@ from .serializers import (
     JournalEntrySerializer, ProductSerializer, WarehouseSerializer,
     InventorySerializer, InventoryMovementSerializer, UnitSerializer
 )
-from .services import FinancialAccountService, LedgerService, InventoryService, ProvisioningService, ConfigurationService
+from .services import FinancialAccountService, LedgerService, InventoryService, ProvisioningService, ConfigurationService, POSService, PurchaseService
 
 class SettingsViewSet(viewsets.ViewSet):
     """
@@ -496,3 +496,85 @@ class InventoryViewSet(viewsets.ReadOnlyModelViewSet):
             "sites": SiteSerializer(sites, many=True).data,
             "totalCount": len(data)
         })
+
+class POSViewSet(viewsets.ViewSet):
+    """
+    Handles Point of Sale transactions.
+    """
+    @action(detail=False, methods=['post'])
+    def checkout(self, request):
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({"error": "No organization context found"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        organization = Organization.objects.get(id=organization_id)
+        
+        try:
+            warehouse_id = request.data.get('warehouse_id')
+            payment_account_id = request.data.get('payment_account_id')
+            items = request.data.get('items') # Should be list of {product_id, quantity, unit_price}
+            
+            # Use current authenticated user if possible, or fallback for system/POS user
+            user = request.user
+            if user.is_anonymous:
+                from .models import User
+                user = User.objects.filter(organization=organization, is_staff=True).first()
+            
+            warehouse = Warehouse.objects.get(id=warehouse_id, organization=organization)
+            
+            order = POSService.checkout(
+                organization=organization,
+                user=user,
+                warehouse=warehouse,
+                payment_account_id=payment_account_id,
+                items=items
+            )
+            
+            return Response({
+                "message": "Checkout successful",
+                "order_id": order.id,
+                "total_amount": float(order.total_amount)
+            }, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+class PurchaseViewSet(viewsets.ViewSet):
+    """
+    Handles Purchase Order (PO) operations.
+    """
+    @action(detail=True, methods=['post'])
+    def authorize(self, request, pk=None):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "No organization context"}, status=status.HTTP_400_BAD_REQUEST)
+        organization = Organization.objects.get(id=organization_id)
+        try:
+            order = PurchaseService.authorize_po(organization, pk)
+            return Response({"message": "PO Authorized", "status": order.status})
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def receive(self, request, pk=None):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "No organization context"}, status=status.HTTP_400_BAD_REQUEST)
+        organization = Organization.objects.get(id=organization_id)
+        try:
+            warehouse_id = request.data.get('warehouse_id')
+            order = PurchaseService.receive_po(organization, pk, warehouse_id)
+            return Response({"message": "Goods Received", "status": order.status})
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def invoice(self, request, pk=None):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "No organization context"}, status=status.HTTP_400_BAD_REQUEST)
+        organization = Organization.objects.get(id=organization_id)
+        try:
+            invoice_num = request.data.get('invoice_number')
+            order = PurchaseService.invoice_po(organization, pk, invoice_num)
+            return Response({"message": "PO Invoiced", "status": order.status})
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
