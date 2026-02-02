@@ -15,6 +15,9 @@ const getDatabaseUrl = () => {
     return process.env.DATABASE_URL;
 };
 
+const finalUrl = getDatabaseUrl();
+console.log(`[Prisma] Initializing with DB URL: ${finalUrl}`);
+
 export const prisma =
     globalForPrisma.prismaMain ||
     new PrismaClient({
@@ -22,7 +25,7 @@ export const prisma =
         // Query timeout configuration for Hostinger shared hosting
         datasources: {
             db: {
-                url: getDatabaseUrl(),
+                url: finalUrl,
             },
         },
     })

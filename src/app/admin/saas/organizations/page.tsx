@@ -22,7 +22,13 @@ export default function OrganizationsPage() {
     async function loadData() {
         try {
             const data = await getOrganizations()
-            setOrgs(data)
+            console.log("Fetched orgs:", data)
+            if (Array.isArray(data)) {
+                setOrgs(data)
+            } else {
+                setOrgs([])
+                toast.error("Invalid data format received")
+            }
         } catch {
             toast.error("Failed to load organizations")
         } finally {
@@ -66,6 +72,9 @@ export default function OrganizationsPage() {
                 <div>
                     <h2 className="text-4xl font-black text-white tracking-tight">Organizations</h2>
                     <p className="text-gray-400 mt-2 font-medium">Manage multi-tenant company instances</p>
+                    <div className="mt-2 text-[8px] text-gray-700 font-mono">
+                        DB: {process.env.DATABASE_URL || 'FALLBACK'}
+                    </div>
                 </div>
                 <Dialog open={open} onOpenChange={setOpen}>
                     <DialogTrigger asChild>

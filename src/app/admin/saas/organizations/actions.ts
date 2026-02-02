@@ -4,14 +4,21 @@ import { prisma } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 
 export async function getOrganizations() {
-    return await (prisma.organization as any).findMany({
-        include: {
-            _count: {
-                select: { sites: true, users: true }
-            }
-        },
-        orderBy: { name: 'asc' }
-    })
+    try {
+        const data = await (prisma.organization as any).findMany({
+            include: {
+                _count: {
+                    select: { sites: true, users: true }
+                }
+            },
+            orderBy: { name: 'asc' }
+        })
+        console.log(`[SaaS] Fetched ${data.length} organizations`);
+        return data
+    } catch (error) {
+        console.error("[SaaS] Error fetching organizations:", error);
+        return []
+    }
 }
 
 export async function createOrganization(data: { name: string, slug: string }) {
