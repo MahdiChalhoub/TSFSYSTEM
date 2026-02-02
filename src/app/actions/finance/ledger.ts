@@ -32,313 +32,52 @@ export async function verifyTrialBalance() {
     return { isBalanced: true, difference: total }
 }
 
-export async function createJournalEntry(data: {
-    transactionDate: Date
-    description: string
-    reference?: string
-    fiscalYearId?: number
-    fiscalPeriodId?: number
-    lines: JournalLineInput[]
-    status?: 'DRAFT' | 'POSTED'
-    scope?: 'OFFICIAL' | 'INTERNAL'
-    siteId?: number | null
-    userId?: number
-    organizationId: string
-}, tx?: Prisma.TransactionClient) {
-    const status = data.status || 'DRAFT'
-    const scope = data.scope || 'OFFICIAL'
+import { erpFetch } from '@/lib/erp-api'
 
-    // Auto-generate reference if missing
-    let reference = data.reference
-    if (!reference) {
-        try {
-            reference = await generateTransactionNumber('JOURNAL')
-        } catch (e) {
-            console.error("Failed to generate journal sequence", e)
-        }
-    }
-
-    const execute = async (ctx: Prisma.TransactionClient) => {
-        // 0. Resolve Fiscal Year if not provided
-        let fyId = data.fiscalYearId
-        if (!fyId) {
-            const fy = await ctx.fiscalYear.findFirst({
-                where: { startDate: { lte: data.transactionDate }, endDate: { gte: data.transactionDate } }
-            })
-            fyId = fy?.id
-        }
-
-        if (!fyId) throw new Error("No active Fiscal Year found for date: " + data.transactionDate)
-
-        // Resolve Period
-        let periodId = data.fiscalPeriodId
-        if (!periodId) {
-            const period = await ctx.fiscalPeriod.findFirst({
-                where: { fiscalYearId: fyId, startDate: { lte: data.transactionDate }, endDate: { gte: data.transactionDate } }
-            })
-            periodId = period?.id
-        }
-
-        // 1. Double-Entry Validation (The Absolute Law)
-        const totalDebit = data.lines.reduce((sum, l) => sum + Number(l.debit), 0)
-        const totalCredit = data.lines.reduce((sum, l) => sum + Number(l.credit), 0)
-
-        if (Math.abs(totalDebit - totalCredit) > 0.001) {
-            throw new Error(`Out of Balance: Total Debit (${totalDebit}) must equal Total Credit (${totalCredit})`)
-        }
-
-        // 2. Create the Entry
-        const entry = await ctx.journalEntry.create({
-            data: {
-                transactionDate: data.transactionDate,
-                description: data.description,
-                reference: reference,
-                fiscalYearId: fyId,
-                fiscalPeriodId: periodId,
-                status: status,
-                scope: scope,
-                siteId: data.siteId,
-                organizationId: data.organizationId,
-                lines: {
-                    create: data.lines.map(l => ({
-                        accountId: l.accountId,
-                        contactId: l.contactId,
-                        employeeId: l.employeeId,
-                        debit: l.debit,
-                        credit: l.credit,
-                        description: l.description || data.description,
-                        organizationId: data.organizationId
-                    }))
-                }
-            },
-            include: { lines: true }
-        }) as any
-
-        // 3. If POSTED, Update Account Balances
-        if (status === 'POSTED') {
-            for (const line of entry.lines) {
-                const netChange = Number(line.debit) - Number(line.credit)
-
-                const updateData: any = {
-                    balance: { increment: netChange } // Real balance always updated
-                }
-
-                if (scope === 'OFFICIAL') {
-                    updateData.balanceOfficial = { increment: netChange }
-                }
-
-                await ctx.chartOfAccount.update({
-                    where: { id: line.accountId },
-                    data: updateData
-                })
-            }
-        }
-
-        // 4. Audit Trail
-        await logAuditAction({
-            userId: data.userId || 1, // TODO: Auth
-            action: 'CREATE',
-            entity: 'JournalEntry',
-            entityId: entry.id.toString(),
-            newValue: JSON.stringify({ reference, totalDebit, status }),
-            organizationId: data.organizationId
-        }, ctx)
-
-        return entry
-    }
-
-    // Wrap in transaction if not already provided
-    if (tx) {
-        return await execute(tx)
-    } else {
-        const result = await prisma.$transaction(async (newTx) => {
-            return await execute(newTx)
+export async function createJournalEntry(data: any) {
+    try {
+        const result = await erpFetch('journal/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
         })
-
         revalidatePath('/admin/finance/ledger')
-        revalidatePath('/admin/finance/chart-of-accounts')
         return result
+    } catch (error: any) {
+        console.error("Failed to create journal entry:", error)
+        throw error
     }
 }
 
 export async function getLedgerEntries(scope: 'OFFICIAL' | 'INTERNAL' = 'INTERNAL', filters?: { status?: string, q?: string }) {
-    const where: any = {}
-    if (scope === 'OFFICIAL') where.scope = 'OFFICIAL'
+    try {
+        let path = 'journal/'
+        const params = new URLSearchParams()
+        if (scope === 'OFFICIAL') params.append('scope', 'OFFICIAL')
+        if (filters?.status) params.append('status', filters.status)
+        if (filters?.q) params.append('search', filters.q)
 
-    if (filters?.status) where.status = filters.status
-    if (filters?.q) {
-        where.OR = [
-            { reference: { contains: filters.q } },
-            { description: { contains: filters.q } },
-        ]
+        const queryString = params.toString()
+        if (queryString) path += `?${queryString}`
+
+        return await erpFetch(path)
+    } catch (error) {
+        console.error("Failed to fetch ledger entries:", error)
+        return []
     }
-
-    return await prisma.journalEntry.findMany({
-        where,
-        orderBy: { transactionDate: 'desc' },
-        include: {
-            lines: { include: { account: true } },
-            site: true,
-            fiscalYear: true,
-            reversalOf: true,
-            reversedBy: true
-        }
-    })
-}
-
-export async function getOpeningEntries() {
-    return await prisma.journalEntry.findMany({
-        where: {
-            OR: [
-                { description: { contains: 'Opening' } },
-                { reference: { startsWith: 'OPEN' } }
-            ]
-        },
-        orderBy: { transactionDate: 'desc' },
-        include: {
-            lines: { include: { account: true } }
-        }
-    })
-}
-
-export const getJournalEntries = getLedgerEntries;
-
-export async function postJournalEntry(id: number, organizationId: string) {
-    return await prisma.$transaction(async (tx) => {
-        const entry = await tx.journalEntry.findUnique({
-            where: { id },
-            include: { lines: true }
-        }) as any
-
-        if (!entry) throw new Error("Entry not found")
-        if (entry.status === 'POSTED') throw new Error("Entry already posted")
-
-        // 1. Update status
-        await tx.journalEntry.update({
-            where: { id },
-            data: { status: 'POSTED', postedAt: new Date() }
-        })
-
-        // 2. Update balances
-        for (const line of entry.lines) {
-            const netChange = Number(line.debit) - Number(line.credit)
-
-            const updateData: any = {
-                balance: { increment: netChange }
-            }
-
-            if (entry.scope === 'OFFICIAL') {
-                updateData.balanceOfficial = { increment: netChange }
-            }
-
-            await tx.chartOfAccount.update({
-                where: { id: line.accountId },
-                data: updateData
-            })
-        }
-
-        // 3. Audit Trail
-        await logAuditAction({
-            userId: 1, // TODO: Auth
-            action: 'POST',
-            entity: 'JournalEntry',
-            entityId: id.toString(),
-            newValue: 'POSTED',
-            organizationId
-        }, tx)
-
-        return { success: true }
-    })
-}
-
-/**
- * Verification Layer: Confirms the entry is correct before it can be posted or locked.
- */
-export async function verifyJournalEntry(id: number, userId: number, organizationId: string) {
-    return await prisma.$transaction(async (tx) => {
-        const entry = await tx.journalEntry.findUnique({ where: { id, organizationId } })
-        if (!entry) throw new Error("Entry not found")
-        if (entry.status === 'POSTED') throw new Error("Cannot verify a posted entry")
-
-        await tx.journalEntry.update({
-            where: { id },
-            data: { isVerified: true, verifiedById: userId }
-        })
-
-        await logAuditAction({
-            userId,
-            action: 'VERIFY',
-            entity: 'JournalEntry',
-            entityId: id.toString(),
-            newValue: 'VERIFIED',
-            organizationId
-        }, tx)
-
-        return { success: true }
-    })
-}
-
-/**
- * Locking Layer: Final seal that prevents even reversal without administrative unlock.
- */
-export async function lockJournalEntry(id: number, userId: number, organizationId: string) {
-    return await prisma.$transaction(async (tx) => {
-        await tx.journalEntry.update({
-            where: { id, organizationId },
-            data: { isLocked: true }
-        })
-
-        await logAuditAction({
-            userId,
-            action: 'UPDATE',
-            entity: 'JournalEntry',
-            entityId: id.toString(),
-            field: 'isLocked',
-            newValue: 'true',
-            organizationId
-        }, tx)
-
-        return { success: true }
-    })
 }
 
 export async function reverseJournalEntry(id: number) {
-    return await prisma.$transaction(async (tx) => {
-        const entry = await tx.journalEntry.findUnique({
-            where: { id },
-            include: { lines: true }
-        }) as any
-
-        if (!entry) throw new Error("Entry not found")
-        if (entry.status !== 'POSTED') throw new Error("Only posted entries can be reversed")
-
-        // 1. Reversal Entry (Standard Accounting Practice)
-        const reversalLines: JournalLineInput[] = entry.lines.map((l: any) => ({
-            accountId: l.accountId,
-            debit: Number(l.credit),
-            credit: Number(l.debit),
-            description: `Reversal of Entry #${entry.id}`
-        }))
-
-        await createJournalEntry({
-            transactionDate: new Date(),
-            description: `Reversal of Entry #${entry.id} (${entry.reference})`,
-            reference: `REV-${entry.id}`,
-            status: 'POSTED',
-            scope: entry.scope, // Keep same scope
-            lines: reversalLines
-        }, tx)
-
-        // 2. Mark original as voided
-        await tx.journalEntry.update({
-            where: { id },
-            data: {
-                status: 'REVERSED'
-            }
+    try {
+        const result = await erpFetch(`journal/${id}/reverse/`, {
+            method: 'POST'
         })
-
-        return { success: true }
-    })
+        revalidatePath('/admin/finance/ledger')
+        return result
+    } catch (error: any) {
+        console.error("Failed to reverse journal entry:", error)
+        throw error
+    }
 }
 
 export const voidJournalEntry = reverseJournalEntry;

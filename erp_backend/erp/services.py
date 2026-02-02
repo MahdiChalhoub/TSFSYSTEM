@@ -227,7 +227,45 @@ class LedgerService:
             entry.posted_at = timezone.now()
             entry.save()
             
-        return True
+    @staticmethod
+    def reverse_journal_entry(organization, entry_id):
+        from .models import JournalEntry
+        """
+        Creates a mirrored entry to cancel out the original and marks it as REVERSED.
+        """
+        with transaction.atomic():
+            original = JournalEntry.objects.get(id=entry_id, organization=organization)
+            
+            if original.status != 'POSTED':
+                raise ValidationError("Only posted entries can be reversed")
+
+            # 1. Prepare reversal lines (swap debit/credit)
+            reversal_lines = []
+            for line in original.lines.all():
+                reversal_lines.append({
+                    "account_id": line.account_id,
+                    "debit": line.credit,
+                    "credit": line.debit,
+                    "description": f"Reversal of Entry #{original.id}"
+                })
+
+            # 2. Create the Reversal Entry
+            LedgerService.create_journal_entry(
+                organization=organization,
+                transaction_date=timezone.now(),
+                description=f"Reversal of Entry #{original.id} ({original.reference})",
+                reference=f"REV-{original.id}",
+                lines=reversal_lines,
+                status='POSTED',
+                scope=original.scope,
+                site_id=original.site_id
+            )
+
+            # 3. Mark original as REVERSED
+            original.status = 'REVERSED'
+            original.save()
+            
+            return True
 
 class FinancialAccountService:
     @staticmethod
