@@ -14,7 +14,7 @@ export async function getOrganizations() {
     })
 }
 
-export async function createOrganization(data: { name: string, slug: string }) {
+try {
     return await prisma.$transaction(async (tx) => {
         // 1. Root Organization
         const org = await (tx.organization as any).create({
@@ -36,7 +36,6 @@ export async function createOrganization(data: { name: string, slug: string }) {
         })
 
         // 3. Initial Chart of Accounts Skeleton
-        // Just the core parents to enable immediate financial activity
         const coreAccounts = [
             { code: '1000', name: 'ASSETS', type: 'ASSET' },
             { code: '2000', name: 'LIABILITIES', type: 'LIABILITY' },
@@ -60,6 +59,9 @@ export async function createOrganization(data: { name: string, slug: string }) {
         revalidatePath('/admin/saas/dashboard')
         return org
     })
+} catch (error: any) {
+    console.error("CRITICAL: Organization Provisioning Failed", error);
+    throw error;
 }
 
 export async function toggleOrganizationStatus(id: string, currentStatus: boolean) {

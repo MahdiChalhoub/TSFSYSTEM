@@ -20,34 +20,30 @@ export default async function AdminLayout({
     const sites = await getSites();
 
     return (
-        <html lang="en" suppressHydrationWarning>
-            <body className={outfit.className}>
-                <AdminProvider>
-                    <DevProvider>
-                        <div className="flex h-screen bg-gray-50 overflow-hidden font-sans text-gray-900">
-                            {/* Left Panel: Sidebar Tree */}
-                            <Sidebar />
+        <AdminProvider>
+            <DevProvider>
+                <div className="flex h-screen bg-gray-50 overflow-hidden font-sans text-gray-900">
+                    {/* Left Panel: Sidebar Tree */}
+                    <Sidebar />
 
-                            {/* Right Panel: Content */}
-                            <div className="flex-1 flex flex-col min-w-0">
-                                {/* 1. Global Header (Search, Profile) */}
-                                <TopHeader sites={sites} />
+                    {/* Right Panel: Content */}
+                    <div className="flex-1 flex flex-col min-w-0">
+                        {/* 1. Global Header (Search, Profile) */}
+                        <TopHeader sites={sites} />
 
-                                {/* 2. Tab Navigation Bar */}
-                                <TabNavigator />
+                        {/* 2. Tab Navigation Bar */}
+                        <TabNavigator />
 
-                                {/* 3. The Page Content */}
-                                <main className="flex-1 overflow-auto p-8 relative">
-                                    <div className="max-w-[1600px] mx-auto">
-                                        {children}
-                                    </div>
-                                </main>
+                        {/* 3. The Page Content */}
+                        <main className="flex-1 overflow-auto p-8 relative">
+                            <div className="max-w-[1600px] mx-auto">
+                                {children}
                             </div>
-                            <DebugOverlay />
-                        </div>
-                    </DevProvider>
-                </AdminProvider>
-            </body>
-        </html>
+                        </main>
+                    </div>
+                    <DebugOverlay />
+                </div>
+            </DevProvider>
+        </AdminProvider>
     );
 }

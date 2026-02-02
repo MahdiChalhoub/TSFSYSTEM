@@ -1,6 +1,3 @@
-// TSF Master Schema (v1.1 - SaaS Multi-Tenant)
-// Designed for: ERP, Store, POS, HR, CRM, Audit
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/client"
