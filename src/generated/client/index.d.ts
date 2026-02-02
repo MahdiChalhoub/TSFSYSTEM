@@ -4146,6 +4146,7 @@ export namespace Prisma {
     loanInstallment: number
     roles: number
     permissions: number
+    productGroups: number
   }
 
   export type OrganizationCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -4184,6 +4185,7 @@ export namespace Prisma {
     loanInstallment?: boolean | OrganizationCountOutputTypeCountLoanInstallmentArgs
     roles?: boolean | OrganizationCountOutputTypeCountRolesArgs
     permissions?: boolean | OrganizationCountOutputTypeCountPermissionsArgs
+    productGroups?: boolean | OrganizationCountOutputTypeCountProductGroupsArgs
   }
 
   // Custom InputTypes
@@ -4440,6 +4442,13 @@ export namespace Prisma {
    */
   export type OrganizationCountOutputTypeCountPermissionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: PermissionWhereInput
+  }
+
+  /**
+   * OrganizationCountOutputType without action
+   */
+  export type OrganizationCountOutputTypeCountProductGroupsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ProductGroupWhereInput
   }
 
 
@@ -5727,6 +5736,7 @@ export namespace Prisma {
     loanInstallment?: boolean | Organization$loanInstallmentArgs<ExtArgs>
     roles?: boolean | Organization$rolesArgs<ExtArgs>
     permissions?: boolean | Organization$permissionsArgs<ExtArgs>
+    productGroups?: boolean | Organization$productGroupsArgs<ExtArgs>
     _count?: boolean | OrganizationCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["organization"]>
 
@@ -5784,6 +5794,7 @@ export namespace Prisma {
     loanInstallment?: boolean | Organization$loanInstallmentArgs<ExtArgs>
     roles?: boolean | Organization$rolesArgs<ExtArgs>
     permissions?: boolean | Organization$permissionsArgs<ExtArgs>
+    productGroups?: boolean | Organization$productGroupsArgs<ExtArgs>
     _count?: boolean | OrganizationCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type OrganizationIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -5826,6 +5837,7 @@ export namespace Prisma {
       loanInstallment: Prisma.$LoanInstallmentPayload<ExtArgs>[]
       roles: Prisma.$RolePayload<ExtArgs>[]
       permissions: Prisma.$PermissionPayload<ExtArgs>[]
+      productGroups: Prisma.$ProductGroupPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -6233,6 +6245,7 @@ export namespace Prisma {
     loanInstallment<T extends Organization$loanInstallmentArgs<ExtArgs> = {}>(args?: Subset<T, Organization$loanInstallmentArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LoanInstallmentPayload<ExtArgs>, T, "findMany"> | Null>
     roles<T extends Organization$rolesArgs<ExtArgs> = {}>(args?: Subset<T, Organization$rolesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RolePayload<ExtArgs>, T, "findMany"> | Null>
     permissions<T extends Organization$permissionsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$permissionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PermissionPayload<ExtArgs>, T, "findMany"> | Null>
+    productGroups<T extends Organization$productGroupsArgs<ExtArgs> = {}>(args?: Subset<T, Organization$productGroupsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProductGroupPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -7279,6 +7292,26 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: PermissionScalarFieldEnum | PermissionScalarFieldEnum[]
+  }
+
+  /**
+   * Organization.productGroups
+   */
+  export type Organization$productGroupsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProductGroup
+     */
+    select?: ProductGroupSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProductGroupInclude<ExtArgs> | null
+    where?: ProductGroupWhereInput
+    orderBy?: ProductGroupOrderByWithRelationInput | ProductGroupOrderByWithRelationInput[]
+    cursor?: ProductGroupWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ProductGroupScalarFieldEnum | ProductGroupScalarFieldEnum[]
   }
 
   /**
@@ -20203,6 +20236,7 @@ export namespace Prisma {
     brandId: number | null
     categoryId: number | null
     parfumId: number | null
+    organizationId: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -20215,6 +20249,7 @@ export namespace Prisma {
     brandId: number | null
     categoryId: number | null
     parfumId: number | null
+    organizationId: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -20227,6 +20262,7 @@ export namespace Prisma {
     brandId: number
     categoryId: number
     parfumId: number
+    organizationId: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -20255,6 +20291,7 @@ export namespace Prisma {
     brandId?: true
     categoryId?: true
     parfumId?: true
+    organizationId?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -20267,6 +20304,7 @@ export namespace Prisma {
     brandId?: true
     categoryId?: true
     parfumId?: true
+    organizationId?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -20279,6 +20317,7 @@ export namespace Prisma {
     brandId?: true
     categoryId?: true
     parfumId?: true
+    organizationId?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -20378,6 +20417,7 @@ export namespace Prisma {
     brandId: number | null
     categoryId: number | null
     parfumId: number | null
+    organizationId: string
     createdAt: Date
     updatedAt: Date
     _count: ProductGroupCountAggregateOutputType | null
@@ -20409,11 +20449,13 @@ export namespace Prisma {
     brandId?: boolean
     categoryId?: boolean
     parfumId?: boolean
+    organizationId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     brand?: boolean | ProductGroup$brandArgs<ExtArgs>
     category?: boolean | ProductGroup$categoryArgs<ExtArgs>
     parfum?: boolean | ProductGroup$parfumArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     priceListRules?: boolean | ProductGroup$priceListRulesArgs<ExtArgs>
     products?: boolean | ProductGroup$productsArgs<ExtArgs>
     _count?: boolean | ProductGroupCountOutputTypeDefaultArgs<ExtArgs>
@@ -20427,11 +20469,13 @@ export namespace Prisma {
     brandId?: boolean
     categoryId?: boolean
     parfumId?: boolean
+    organizationId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     brand?: boolean | ProductGroup$brandArgs<ExtArgs>
     category?: boolean | ProductGroup$categoryArgs<ExtArgs>
     parfum?: boolean | ProductGroup$parfumArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["productGroup"]>
 
   export type ProductGroupSelectScalar = {
@@ -20442,6 +20486,7 @@ export namespace Prisma {
     brandId?: boolean
     categoryId?: boolean
     parfumId?: boolean
+    organizationId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
@@ -20450,6 +20495,7 @@ export namespace Prisma {
     brand?: boolean | ProductGroup$brandArgs<ExtArgs>
     category?: boolean | ProductGroup$categoryArgs<ExtArgs>
     parfum?: boolean | ProductGroup$parfumArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
     priceListRules?: boolean | ProductGroup$priceListRulesArgs<ExtArgs>
     products?: boolean | ProductGroup$productsArgs<ExtArgs>
     _count?: boolean | ProductGroupCountOutputTypeDefaultArgs<ExtArgs>
@@ -20458,6 +20504,7 @@ export namespace Prisma {
     brand?: boolean | ProductGroup$brandArgs<ExtArgs>
     category?: boolean | ProductGroup$categoryArgs<ExtArgs>
     parfum?: boolean | ProductGroup$parfumArgs<ExtArgs>
+    organization?: boolean | OrganizationDefaultArgs<ExtArgs>
   }
 
   export type $ProductGroupPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -20466,6 +20513,7 @@ export namespace Prisma {
       brand: Prisma.$BrandPayload<ExtArgs> | null
       category: Prisma.$CategoryPayload<ExtArgs> | null
       parfum: Prisma.$ParfumPayload<ExtArgs> | null
+      organization: Prisma.$OrganizationPayload<ExtArgs>
       priceListRules: Prisma.$PricingRulePayload<ExtArgs>[]
       products: Prisma.$ProductPayload<ExtArgs>[]
     }
@@ -20477,6 +20525,7 @@ export namespace Prisma {
       brandId: number | null
       categoryId: number | null
       parfumId: number | null
+      organizationId: string
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["productGroup"]>
@@ -20846,6 +20895,7 @@ export namespace Prisma {
     brand<T extends ProductGroup$brandArgs<ExtArgs> = {}>(args?: Subset<T, ProductGroup$brandArgs<ExtArgs>>): Prisma__BrandClient<$Result.GetResult<Prisma.$BrandPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
     category<T extends ProductGroup$categoryArgs<ExtArgs> = {}>(args?: Subset<T, ProductGroup$categoryArgs<ExtArgs>>): Prisma__CategoryClient<$Result.GetResult<Prisma.$CategoryPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
     parfum<T extends ProductGroup$parfumArgs<ExtArgs> = {}>(args?: Subset<T, ProductGroup$parfumArgs<ExtArgs>>): Prisma__ParfumClient<$Result.GetResult<Prisma.$ParfumPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
+    organization<T extends OrganizationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, OrganizationDefaultArgs<ExtArgs>>): Prisma__OrganizationClient<$Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
     priceListRules<T extends ProductGroup$priceListRulesArgs<ExtArgs> = {}>(args?: Subset<T, ProductGroup$priceListRulesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PricingRulePayload<ExtArgs>, T, "findMany"> | Null>
     products<T extends ProductGroup$productsArgs<ExtArgs> = {}>(args?: Subset<T, ProductGroup$productsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProductPayload<ExtArgs>, T, "findMany"> | Null>
     /**
@@ -20884,6 +20934,7 @@ export namespace Prisma {
     readonly brandId: FieldRef<"ProductGroup", 'Int'>
     readonly categoryId: FieldRef<"ProductGroup", 'Int'>
     readonly parfumId: FieldRef<"ProductGroup", 'Int'>
+    readonly organizationId: FieldRef<"ProductGroup", 'String'>
     readonly createdAt: FieldRef<"ProductGroup", 'DateTime'>
     readonly updatedAt: FieldRef<"ProductGroup", 'DateTime'>
   }
@@ -50021,6 +50072,7 @@ export namespace Prisma {
     brandId: 'brandId',
     categoryId: 'categoryId',
     parfumId: 'parfumId',
+    organizationId: 'organizationId',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -50594,6 +50646,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentListRelationFilter
     roles?: RoleListRelationFilter
     permissions?: PermissionListRelationFilter
+    productGroups?: ProductGroupListRelationFilter
   }
 
   export type OrganizationOrderByWithRelationInput = {
@@ -50638,6 +50691,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentOrderByRelationAggregateInput
     roles?: RoleOrderByRelationAggregateInput
     permissions?: PermissionOrderByRelationAggregateInput
+    productGroups?: ProductGroupOrderByRelationAggregateInput
   }
 
   export type OrganizationWhereUniqueInput = Prisma.AtLeast<{
@@ -50685,6 +50739,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentListRelationFilter
     roles?: RoleListRelationFilter
     permissions?: PermissionListRelationFilter
+    productGroups?: ProductGroupListRelationFilter
   }, "id" | "slug">
 
   export type OrganizationOrderByWithAggregationInput = {
@@ -51873,11 +51928,13 @@ export namespace Prisma {
     brandId?: IntNullableFilter<"ProductGroup"> | number | null
     categoryId?: IntNullableFilter<"ProductGroup"> | number | null
     parfumId?: IntNullableFilter<"ProductGroup"> | number | null
+    organizationId?: StringFilter<"ProductGroup"> | string
     createdAt?: DateTimeFilter<"ProductGroup"> | Date | string
     updatedAt?: DateTimeFilter<"ProductGroup"> | Date | string
     brand?: XOR<BrandNullableRelationFilter, BrandWhereInput> | null
     category?: XOR<CategoryNullableRelationFilter, CategoryWhereInput> | null
     parfum?: XOR<ParfumNullableRelationFilter, ParfumWhereInput> | null
+    organization?: XOR<OrganizationRelationFilter, OrganizationWhereInput>
     priceListRules?: PricingRuleListRelationFilter
     products?: ProductListRelationFilter
   }
@@ -51890,17 +51947,20 @@ export namespace Prisma {
     brandId?: SortOrderInput | SortOrder
     categoryId?: SortOrderInput | SortOrder
     parfumId?: SortOrderInput | SortOrder
+    organizationId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     brand?: BrandOrderByWithRelationInput
     category?: CategoryOrderByWithRelationInput
     parfum?: ParfumOrderByWithRelationInput
+    organization?: OrganizationOrderByWithRelationInput
     priceListRules?: PricingRuleOrderByRelationAggregateInput
     products?: ProductOrderByRelationAggregateInput
   }
 
   export type ProductGroupWhereUniqueInput = Prisma.AtLeast<{
     id?: number
+    name_organizationId?: ProductGroupNameOrganizationIdCompoundUniqueInput
     AND?: ProductGroupWhereInput | ProductGroupWhereInput[]
     OR?: ProductGroupWhereInput[]
     NOT?: ProductGroupWhereInput | ProductGroupWhereInput[]
@@ -51910,14 +51970,16 @@ export namespace Prisma {
     brandId?: IntNullableFilter<"ProductGroup"> | number | null
     categoryId?: IntNullableFilter<"ProductGroup"> | number | null
     parfumId?: IntNullableFilter<"ProductGroup"> | number | null
+    organizationId?: StringFilter<"ProductGroup"> | string
     createdAt?: DateTimeFilter<"ProductGroup"> | Date | string
     updatedAt?: DateTimeFilter<"ProductGroup"> | Date | string
     brand?: XOR<BrandNullableRelationFilter, BrandWhereInput> | null
     category?: XOR<CategoryNullableRelationFilter, CategoryWhereInput> | null
     parfum?: XOR<ParfumNullableRelationFilter, ParfumWhereInput> | null
+    organization?: XOR<OrganizationRelationFilter, OrganizationWhereInput>
     priceListRules?: PricingRuleListRelationFilter
     products?: ProductListRelationFilter
-  }, "id">
+  }, "id" | "name_organizationId">
 
   export type ProductGroupOrderByWithAggregationInput = {
     id?: SortOrder
@@ -51927,6 +51989,7 @@ export namespace Prisma {
     brandId?: SortOrderInput | SortOrder
     categoryId?: SortOrderInput | SortOrder
     parfumId?: SortOrderInput | SortOrder
+    organizationId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: ProductGroupCountOrderByAggregateInput
@@ -51947,6 +52010,7 @@ export namespace Prisma {
     brandId?: IntNullableWithAggregatesFilter<"ProductGroup"> | number | null
     categoryId?: IntNullableWithAggregatesFilter<"ProductGroup"> | number | null
     parfumId?: IntNullableWithAggregatesFilter<"ProductGroup"> | number | null
+    organizationId?: StringWithAggregatesFilter<"ProductGroup"> | string
     createdAt?: DateTimeWithAggregatesFilter<"ProductGroup"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"ProductGroup"> | Date | string
   }
@@ -54345,6 +54409,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateInput = {
@@ -54389,6 +54454,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUpdateInput = {
@@ -54433,6 +54499,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateInput = {
@@ -54477,6 +54544,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateManyInput = {
@@ -55692,6 +55760,7 @@ export namespace Prisma {
     brand?: BrandCreateNestedOneWithoutProductGroupsInput
     category?: CategoryCreateNestedOneWithoutProductGroupsInput
     parfum?: ParfumCreateNestedOneWithoutProductGroupsInput
+    organization: OrganizationCreateNestedOneWithoutProductGroupsInput
     priceListRules?: PricingRuleCreateNestedManyWithoutProductGroupInput
     products?: ProductCreateNestedManyWithoutProductGroupInput
   }
@@ -55704,6 +55773,7 @@ export namespace Prisma {
     brandId?: number | null
     categoryId?: number | null
     parfumId?: number | null
+    organizationId: string
     createdAt?: Date | string
     updatedAt?: Date | string
     priceListRules?: PricingRuleUncheckedCreateNestedManyWithoutProductGroupInput
@@ -55719,6 +55789,7 @@ export namespace Prisma {
     brand?: BrandUpdateOneWithoutProductGroupsNestedInput
     category?: CategoryUpdateOneWithoutProductGroupsNestedInput
     parfum?: ParfumUpdateOneWithoutProductGroupsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutProductGroupsNestedInput
     priceListRules?: PricingRuleUpdateManyWithoutProductGroupNestedInput
     products?: ProductUpdateManyWithoutProductGroupNestedInput
   }
@@ -55731,6 +55802,7 @@ export namespace Prisma {
     brandId?: NullableIntFieldUpdateOperationsInput | number | null
     categoryId?: NullableIntFieldUpdateOperationsInput | number | null
     parfumId?: NullableIntFieldUpdateOperationsInput | number | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     priceListRules?: PricingRuleUncheckedUpdateManyWithoutProductGroupNestedInput
@@ -55745,6 +55817,7 @@ export namespace Prisma {
     brandId?: number | null
     categoryId?: number | null
     parfumId?: number | null
+    organizationId: string
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -55765,6 +55838,7 @@ export namespace Prisma {
     brandId?: NullableIntFieldUpdateOperationsInput | number | null
     categoryId?: NullableIntFieldUpdateOperationsInput | number | null
     parfumId?: NullableIntFieldUpdateOperationsInput | number | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -58368,6 +58442,12 @@ export namespace Prisma {
     none?: PermissionWhereInput
   }
 
+  export type ProductGroupListRelationFilter = {
+    every?: ProductGroupWhereInput
+    some?: ProductGroupWhereInput
+    none?: ProductGroupWhereInput
+  }
+
   export type SiteOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -58505,6 +58585,10 @@ export namespace Prisma {
   }
 
   export type PermissionOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type ProductGroupOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -59529,6 +59613,11 @@ export namespace Prisma {
     parfumId?: SortOrder
   }
 
+  export type ProductGroupNameOrganizationIdCompoundUniqueInput = {
+    name: string
+    organizationId: string
+  }
+
   export type ProductGroupCountOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
@@ -59537,6 +59626,7 @@ export namespace Prisma {
     brandId?: SortOrder
     categoryId?: SortOrder
     parfumId?: SortOrder
+    organizationId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -59556,6 +59646,7 @@ export namespace Prisma {
     brandId?: SortOrder
     categoryId?: SortOrder
     parfumId?: SortOrder
+    organizationId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -59568,6 +59659,7 @@ export namespace Prisma {
     brandId?: SortOrder
     categoryId?: SortOrder
     parfumId?: SortOrder
+    organizationId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -59577,16 +59669,6 @@ export namespace Prisma {
     brandId?: SortOrder
     categoryId?: SortOrder
     parfumId?: SortOrder
-  }
-
-  export type ProductGroupListRelationFilter = {
-    every?: ProductGroupWhereInput
-    some?: ProductGroupWhereInput
-    none?: ProductGroupWhereInput
-  }
-
-  export type ProductGroupOrderByRelationAggregateInput = {
-    _count?: SortOrder
   }
 
   export type CategoryCodeOrganizationIdCompoundUniqueInput = {
@@ -61348,6 +61430,13 @@ export namespace Prisma {
     connect?: PermissionWhereUniqueInput | PermissionWhereUniqueInput[]
   }
 
+  export type ProductGroupCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<ProductGroupCreateWithoutOrganizationInput, ProductGroupUncheckedCreateWithoutOrganizationInput> | ProductGroupCreateWithoutOrganizationInput[] | ProductGroupUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: ProductGroupCreateOrConnectWithoutOrganizationInput | ProductGroupCreateOrConnectWithoutOrganizationInput[]
+    createMany?: ProductGroupCreateManyOrganizationInputEnvelope
+    connect?: ProductGroupWhereUniqueInput | ProductGroupWhereUniqueInput[]
+  }
+
   export type SiteUncheckedCreateNestedManyWithoutOrganizationInput = {
     create?: XOR<SiteCreateWithoutOrganizationInput, SiteUncheckedCreateWithoutOrganizationInput> | SiteCreateWithoutOrganizationInput[] | SiteUncheckedCreateWithoutOrganizationInput[]
     connectOrCreate?: SiteCreateOrConnectWithoutOrganizationInput | SiteCreateOrConnectWithoutOrganizationInput[]
@@ -61591,6 +61680,13 @@ export namespace Prisma {
     connectOrCreate?: PermissionCreateOrConnectWithoutOrganizationInput | PermissionCreateOrConnectWithoutOrganizationInput[]
     createMany?: PermissionCreateManyOrganizationInputEnvelope
     connect?: PermissionWhereUniqueInput | PermissionWhereUniqueInput[]
+  }
+
+  export type ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput = {
+    create?: XOR<ProductGroupCreateWithoutOrganizationInput, ProductGroupUncheckedCreateWithoutOrganizationInput> | ProductGroupCreateWithoutOrganizationInput[] | ProductGroupUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: ProductGroupCreateOrConnectWithoutOrganizationInput | ProductGroupCreateOrConnectWithoutOrganizationInput[]
+    createMany?: ProductGroupCreateManyOrganizationInputEnvelope
+    connect?: ProductGroupWhereUniqueInput | ProductGroupWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -62095,6 +62191,20 @@ export namespace Prisma {
     deleteMany?: PermissionScalarWhereInput | PermissionScalarWhereInput[]
   }
 
+  export type ProductGroupUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<ProductGroupCreateWithoutOrganizationInput, ProductGroupUncheckedCreateWithoutOrganizationInput> | ProductGroupCreateWithoutOrganizationInput[] | ProductGroupUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: ProductGroupCreateOrConnectWithoutOrganizationInput | ProductGroupCreateOrConnectWithoutOrganizationInput[]
+    upsert?: ProductGroupUpsertWithWhereUniqueWithoutOrganizationInput | ProductGroupUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: ProductGroupCreateManyOrganizationInputEnvelope
+    set?: ProductGroupWhereUniqueInput | ProductGroupWhereUniqueInput[]
+    disconnect?: ProductGroupWhereUniqueInput | ProductGroupWhereUniqueInput[]
+    delete?: ProductGroupWhereUniqueInput | ProductGroupWhereUniqueInput[]
+    connect?: ProductGroupWhereUniqueInput | ProductGroupWhereUniqueInput[]
+    update?: ProductGroupUpdateWithWhereUniqueWithoutOrganizationInput | ProductGroupUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: ProductGroupUpdateManyWithWhereWithoutOrganizationInput | ProductGroupUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: ProductGroupScalarWhereInput | ProductGroupScalarWhereInput[]
+  }
+
   export type SiteUncheckedUpdateManyWithoutOrganizationNestedInput = {
     create?: XOR<SiteCreateWithoutOrganizationInput, SiteUncheckedCreateWithoutOrganizationInput> | SiteCreateWithoutOrganizationInput[] | SiteUncheckedCreateWithoutOrganizationInput[]
     connectOrCreate?: SiteCreateOrConnectWithoutOrganizationInput | SiteCreateOrConnectWithoutOrganizationInput[]
@@ -62583,6 +62693,20 @@ export namespace Prisma {
     update?: PermissionUpdateWithWhereUniqueWithoutOrganizationInput | PermissionUpdateWithWhereUniqueWithoutOrganizationInput[]
     updateMany?: PermissionUpdateManyWithWhereWithoutOrganizationInput | PermissionUpdateManyWithWhereWithoutOrganizationInput[]
     deleteMany?: PermissionScalarWhereInput | PermissionScalarWhereInput[]
+  }
+
+  export type ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput = {
+    create?: XOR<ProductGroupCreateWithoutOrganizationInput, ProductGroupUncheckedCreateWithoutOrganizationInput> | ProductGroupCreateWithoutOrganizationInput[] | ProductGroupUncheckedCreateWithoutOrganizationInput[]
+    connectOrCreate?: ProductGroupCreateOrConnectWithoutOrganizationInput | ProductGroupCreateOrConnectWithoutOrganizationInput[]
+    upsert?: ProductGroupUpsertWithWhereUniqueWithoutOrganizationInput | ProductGroupUpsertWithWhereUniqueWithoutOrganizationInput[]
+    createMany?: ProductGroupCreateManyOrganizationInputEnvelope
+    set?: ProductGroupWhereUniqueInput | ProductGroupWhereUniqueInput[]
+    disconnect?: ProductGroupWhereUniqueInput | ProductGroupWhereUniqueInput[]
+    delete?: ProductGroupWhereUniqueInput | ProductGroupWhereUniqueInput[]
+    connect?: ProductGroupWhereUniqueInput | ProductGroupWhereUniqueInput[]
+    update?: ProductGroupUpdateWithWhereUniqueWithoutOrganizationInput | ProductGroupUpdateWithWhereUniqueWithoutOrganizationInput[]
+    updateMany?: ProductGroupUpdateManyWithWhereWithoutOrganizationInput | ProductGroupUpdateManyWithWhereWithoutOrganizationInput[]
+    deleteMany?: ProductGroupScalarWhereInput | ProductGroupScalarWhereInput[]
   }
 
   export type OrganizationCreateNestedOneWithoutCountryInput = {
@@ -64339,6 +64463,12 @@ export namespace Prisma {
     connect?: ParfumWhereUniqueInput
   }
 
+  export type OrganizationCreateNestedOneWithoutProductGroupsInput = {
+    create?: XOR<OrganizationCreateWithoutProductGroupsInput, OrganizationUncheckedCreateWithoutProductGroupsInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutProductGroupsInput
+    connect?: OrganizationWhereUniqueInput
+  }
+
   export type PricingRuleCreateNestedManyWithoutProductGroupInput = {
     create?: XOR<PricingRuleCreateWithoutProductGroupInput, PricingRuleUncheckedCreateWithoutProductGroupInput> | PricingRuleCreateWithoutProductGroupInput[] | PricingRuleUncheckedCreateWithoutProductGroupInput[]
     connectOrCreate?: PricingRuleCreateOrConnectWithoutProductGroupInput | PricingRuleCreateOrConnectWithoutProductGroupInput[]
@@ -64395,6 +64525,14 @@ export namespace Prisma {
     delete?: ParfumWhereInput | boolean
     connect?: ParfumWhereUniqueInput
     update?: XOR<XOR<ParfumUpdateToOneWithWhereWithoutProductGroupsInput, ParfumUpdateWithoutProductGroupsInput>, ParfumUncheckedUpdateWithoutProductGroupsInput>
+  }
+
+  export type OrganizationUpdateOneRequiredWithoutProductGroupsNestedInput = {
+    create?: XOR<OrganizationCreateWithoutProductGroupsInput, OrganizationUncheckedCreateWithoutProductGroupsInput>
+    connectOrCreate?: OrganizationCreateOrConnectWithoutProductGroupsInput
+    upsert?: OrganizationUpsertWithoutProductGroupsInput
+    connect?: OrganizationWhereUniqueInput
+    update?: XOR<XOR<OrganizationUpdateToOneWithWhereWithoutProductGroupsInput, OrganizationUpdateWithoutProductGroupsInput>, OrganizationUncheckedUpdateWithoutProductGroupsInput>
   }
 
   export type PricingRuleUpdateManyWithoutProductGroupNestedInput = {
@@ -68539,6 +68677,43 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type ProductGroupCreateWithoutOrganizationInput = {
+    name: string
+    description?: string | null
+    image?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    brand?: BrandCreateNestedOneWithoutProductGroupsInput
+    category?: CategoryCreateNestedOneWithoutProductGroupsInput
+    parfum?: ParfumCreateNestedOneWithoutProductGroupsInput
+    priceListRules?: PricingRuleCreateNestedManyWithoutProductGroupInput
+    products?: ProductCreateNestedManyWithoutProductGroupInput
+  }
+
+  export type ProductGroupUncheckedCreateWithoutOrganizationInput = {
+    id?: number
+    name: string
+    description?: string | null
+    image?: string | null
+    brandId?: number | null
+    categoryId?: number | null
+    parfumId?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    priceListRules?: PricingRuleUncheckedCreateNestedManyWithoutProductGroupInput
+    products?: ProductUncheckedCreateNestedManyWithoutProductGroupInput
+  }
+
+  export type ProductGroupCreateOrConnectWithoutOrganizationInput = {
+    where: ProductGroupWhereUniqueInput
+    create: XOR<ProductGroupCreateWithoutOrganizationInput, ProductGroupUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type ProductGroupCreateManyOrganizationInputEnvelope = {
+    data: ProductGroupCreateManyOrganizationInput | ProductGroupCreateManyOrganizationInput[]
+    skipDuplicates?: boolean
+  }
+
   export type SiteUpsertWithWhereUniqueWithoutOrganizationInput = {
     where: SiteWhereUniqueInput
     update: XOR<SiteUpdateWithoutOrganizationInput, SiteUncheckedUpdateWithoutOrganizationInput>
@@ -69672,6 +69847,38 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Permission"> | Date | string
   }
 
+  export type ProductGroupUpsertWithWhereUniqueWithoutOrganizationInput = {
+    where: ProductGroupWhereUniqueInput
+    update: XOR<ProductGroupUpdateWithoutOrganizationInput, ProductGroupUncheckedUpdateWithoutOrganizationInput>
+    create: XOR<ProductGroupCreateWithoutOrganizationInput, ProductGroupUncheckedCreateWithoutOrganizationInput>
+  }
+
+  export type ProductGroupUpdateWithWhereUniqueWithoutOrganizationInput = {
+    where: ProductGroupWhereUniqueInput
+    data: XOR<ProductGroupUpdateWithoutOrganizationInput, ProductGroupUncheckedUpdateWithoutOrganizationInput>
+  }
+
+  export type ProductGroupUpdateManyWithWhereWithoutOrganizationInput = {
+    where: ProductGroupScalarWhereInput
+    data: XOR<ProductGroupUpdateManyMutationInput, ProductGroupUncheckedUpdateManyWithoutOrganizationInput>
+  }
+
+  export type ProductGroupScalarWhereInput = {
+    AND?: ProductGroupScalarWhereInput | ProductGroupScalarWhereInput[]
+    OR?: ProductGroupScalarWhereInput[]
+    NOT?: ProductGroupScalarWhereInput | ProductGroupScalarWhereInput[]
+    id?: IntFilter<"ProductGroup"> | number
+    name?: StringFilter<"ProductGroup"> | string
+    description?: StringNullableFilter<"ProductGroup"> | string | null
+    image?: StringNullableFilter<"ProductGroup"> | string | null
+    brandId?: IntNullableFilter<"ProductGroup"> | number | null
+    categoryId?: IntNullableFilter<"ProductGroup"> | number | null
+    parfumId?: IntNullableFilter<"ProductGroup"> | number | null
+    organizationId?: StringFilter<"ProductGroup"> | string
+    createdAt?: DateTimeFilter<"ProductGroup"> | Date | string
+    updatedAt?: DateTimeFilter<"ProductGroup"> | Date | string
+  }
+
   export type OrganizationCreateWithoutCountryInput = {
     id?: string
     name: string
@@ -69713,6 +69920,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutCountryInput = {
@@ -69756,6 +69964,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutCountryInput = {
@@ -69922,6 +70131,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutCountryInput = {
@@ -69965,6 +70175,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type BrandUpsertWithWhereUniqueWithoutCountriesInput = {
@@ -70040,6 +70251,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutUnitInput = {
@@ -70083,6 +70295,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutUnitInput = {
@@ -70381,6 +70594,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutUnitInput = {
@@ -70424,6 +70638,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type UnitUpsertWithoutChildrenInput = {
@@ -70696,6 +70911,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutFinancialAccountInput = {
@@ -70739,6 +70955,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutFinancialAccountInput = {
@@ -70979,6 +71196,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutFinancialAccountInput = {
@@ -71022,6 +71240,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type UserUpsertWithWhereUniqueWithoutCashRegisterInput = {
@@ -71157,6 +71376,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutTransactionsInput = {
@@ -71200,6 +71420,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutTransactionsInput = {
@@ -71385,6 +71606,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutTransactionsInput = {
@@ -71428,6 +71650,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type FinancialEventUpsertWithoutTransactionInput = {
@@ -71515,6 +71738,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutUsersInput = {
@@ -71558,6 +71782,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutUsersInput = {
@@ -72050,6 +72275,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutUsersInput = {
@@ -72093,6 +72319,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type RoleUpsertWithoutUsersInput = {
@@ -72446,6 +72673,7 @@ export namespace Prisma {
     loan?: LoanCreateNestedManyWithoutOrganizationInput
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutRolesInput = {
@@ -72489,6 +72717,7 @@ export namespace Prisma {
     loan?: LoanUncheckedCreateNestedManyWithoutOrganizationInput
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutRolesInput = {
@@ -72621,6 +72850,7 @@ export namespace Prisma {
     loan?: LoanUpdateManyWithoutOrganizationNestedInput
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutRolesInput = {
@@ -72664,6 +72894,7 @@ export namespace Prisma {
     loan?: LoanUncheckedUpdateManyWithoutOrganizationNestedInput
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type PermissionUpsertWithWhereUniqueWithoutRolesInput = {
@@ -72739,6 +72970,7 @@ export namespace Prisma {
     loan?: LoanCreateNestedManyWithoutOrganizationInput
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutPermissionsInput = {
@@ -72782,6 +73014,7 @@ export namespace Prisma {
     loan?: LoanUncheckedCreateNestedManyWithoutOrganizationInput
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutPermissionsInput = {
@@ -72865,6 +73098,7 @@ export namespace Prisma {
     loan?: LoanUpdateManyWithoutOrganizationNestedInput
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutPermissionsInput = {
@@ -72908,6 +73142,7 @@ export namespace Prisma {
     loan?: LoanUncheckedUpdateManyWithoutOrganizationNestedInput
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type RoleUpsertWithWhereUniqueWithoutPermissionsInput = {
@@ -73011,6 +73246,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutAuditsInput = {
@@ -73054,6 +73290,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutAuditsInput = {
@@ -73163,6 +73400,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutAuditsInput = {
@@ -73206,6 +73444,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateWithoutContactsInput = {
@@ -73249,6 +73488,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutContactsInput = {
@@ -73292,6 +73532,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutContactsInput = {
@@ -73710,6 +73951,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutContactsInput = {
@@ -73753,6 +73995,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type SiteUpsertWithoutContactsInput = {
@@ -74353,6 +74596,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutProductsInput = {
@@ -74396,6 +74640,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutProductsInput = {
@@ -74412,6 +74657,7 @@ export namespace Prisma {
     brand?: BrandCreateNestedOneWithoutProductGroupsInput
     category?: CategoryCreateNestedOneWithoutProductGroupsInput
     parfum?: ParfumCreateNestedOneWithoutProductGroupsInput
+    organization: OrganizationCreateNestedOneWithoutProductGroupsInput
     priceListRules?: PricingRuleCreateNestedManyWithoutProductGroupInput
   }
 
@@ -74423,6 +74669,7 @@ export namespace Prisma {
     brandId?: number | null
     categoryId?: number | null
     parfumId?: number | null
+    organizationId: string
     createdAt?: Date | string
     updatedAt?: Date | string
     priceListRules?: PricingRuleUncheckedCreateNestedManyWithoutProductGroupInput
@@ -74877,6 +75124,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutProductsInput = {
@@ -74920,6 +75168,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type ProductGroupUpsertWithoutProductsInput = {
@@ -74942,6 +75191,7 @@ export namespace Prisma {
     brand?: BrandUpdateOneWithoutProductGroupsNestedInput
     category?: CategoryUpdateOneWithoutProductGroupsNestedInput
     parfum?: ParfumUpdateOneWithoutProductGroupsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutProductGroupsNestedInput
     priceListRules?: PricingRuleUpdateManyWithoutProductGroupNestedInput
   }
 
@@ -74953,6 +75203,7 @@ export namespace Prisma {
     brandId?: NullableIntFieldUpdateOperationsInput | number | null
     categoryId?: NullableIntFieldUpdateOperationsInput | number | null
     parfumId?: NullableIntFieldUpdateOperationsInput | number | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     priceListRules?: PricingRuleUncheckedUpdateManyWithoutProductGroupNestedInput
@@ -75407,6 +75658,99 @@ export namespace Prisma {
     create: XOR<ParfumCreateWithoutProductGroupsInput, ParfumUncheckedCreateWithoutProductGroupsInput>
   }
 
+  export type OrganizationCreateWithoutProductGroupsInput = {
+    id?: string
+    name: string
+    slug: string
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    sites?: SiteCreateNestedManyWithoutOrganizationInput
+    users?: UserCreateNestedManyWithoutOrganizationInput
+    products?: ProductCreateNestedManyWithoutOrganizationInput
+    settings?: FinancialSettingsCreateNestedManyWithoutOrganizationInput
+    ledger?: ChartOfAccountCreateNestedManyWithoutOrganizationInput
+    contacts?: ContactCreateNestedManyWithoutOrganizationInput
+    audits?: AuditLogCreateNestedManyWithoutOrganizationInput
+    unit?: UnitCreateNestedManyWithoutOrganizationInput
+    warehouse?: WarehouseCreateNestedManyWithoutOrganizationInput
+    order?: OrderCreateNestedManyWithoutOrganizationInput
+    task?: TaskCreateNestedManyWithoutOrganizationInput
+    pricingRule?: PricingRuleCreateNestedManyWithoutOrganizationInput
+    priceList?: PriceListCreateNestedManyWithoutOrganizationInput
+    brand?: BrandCreateNestedManyWithoutOrganizationInput
+    category?: CategoryCreateNestedManyWithoutOrganizationInput
+    parfum?: ParfumCreateNestedManyWithoutOrganizationInput
+    country?: CountryCreateNestedManyWithoutOrganizationInput
+    fiscalYear?: FiscalYearCreateNestedManyWithoutOrganizationInput
+    fiscalPeriod?: FiscalPeriodCreateNestedManyWithoutOrganizationInput
+    journalEntry?: JournalEntryCreateNestedManyWithoutOrganizationInput
+    journalEntryLine?: JournalEntryLineCreateNestedManyWithoutOrganizationInput
+    productImage?: ProductImageCreateNestedManyWithoutOrganizationInput
+    transactionSequence?: TransactionSequenceCreateNestedManyWithoutOrganizationInput
+    barcodeSettings?: BarcodeSettingsCreateNestedManyWithoutOrganizationInput
+    systemSettings?: SystemSettingsCreateNestedManyWithoutOrganizationInput
+    inventory?: InventoryCreateNestedManyWithoutOrganizationInput
+    stockBatch?: StockBatchCreateNestedManyWithoutOrganizationInput
+    orderLine?: OrderLineCreateNestedManyWithoutOrganizationInput
+    transactions?: TransactionCreateNestedManyWithoutOrganizationInput
+    financialAccount?: FinancialAccountCreateNestedManyWithoutOrganizationInput
+    financialEvent?: FinancialEventCreateNestedManyWithoutOrganizationInput
+    loan?: LoanCreateNestedManyWithoutOrganizationInput
+    loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
+    roles?: RoleCreateNestedManyWithoutOrganizationInput
+    permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationUncheckedCreateWithoutProductGroupsInput = {
+    id?: string
+    name: string
+    slug: string
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    sites?: SiteUncheckedCreateNestedManyWithoutOrganizationInput
+    users?: UserUncheckedCreateNestedManyWithoutOrganizationInput
+    products?: ProductUncheckedCreateNestedManyWithoutOrganizationInput
+    settings?: FinancialSettingsUncheckedCreateNestedManyWithoutOrganizationInput
+    ledger?: ChartOfAccountUncheckedCreateNestedManyWithoutOrganizationInput
+    contacts?: ContactUncheckedCreateNestedManyWithoutOrganizationInput
+    audits?: AuditLogUncheckedCreateNestedManyWithoutOrganizationInput
+    unit?: UnitUncheckedCreateNestedManyWithoutOrganizationInput
+    warehouse?: WarehouseUncheckedCreateNestedManyWithoutOrganizationInput
+    order?: OrderUncheckedCreateNestedManyWithoutOrganizationInput
+    task?: TaskUncheckedCreateNestedManyWithoutOrganizationInput
+    pricingRule?: PricingRuleUncheckedCreateNestedManyWithoutOrganizationInput
+    priceList?: PriceListUncheckedCreateNestedManyWithoutOrganizationInput
+    brand?: BrandUncheckedCreateNestedManyWithoutOrganizationInput
+    category?: CategoryUncheckedCreateNestedManyWithoutOrganizationInput
+    parfum?: ParfumUncheckedCreateNestedManyWithoutOrganizationInput
+    country?: CountryUncheckedCreateNestedManyWithoutOrganizationInput
+    fiscalYear?: FiscalYearUncheckedCreateNestedManyWithoutOrganizationInput
+    fiscalPeriod?: FiscalPeriodUncheckedCreateNestedManyWithoutOrganizationInput
+    journalEntry?: JournalEntryUncheckedCreateNestedManyWithoutOrganizationInput
+    journalEntryLine?: JournalEntryLineUncheckedCreateNestedManyWithoutOrganizationInput
+    productImage?: ProductImageUncheckedCreateNestedManyWithoutOrganizationInput
+    transactionSequence?: TransactionSequenceUncheckedCreateNestedManyWithoutOrganizationInput
+    barcodeSettings?: BarcodeSettingsUncheckedCreateNestedManyWithoutOrganizationInput
+    systemSettings?: SystemSettingsUncheckedCreateNestedManyWithoutOrganizationInput
+    inventory?: InventoryUncheckedCreateNestedManyWithoutOrganizationInput
+    stockBatch?: StockBatchUncheckedCreateNestedManyWithoutOrganizationInput
+    orderLine?: OrderLineUncheckedCreateNestedManyWithoutOrganizationInput
+    transactions?: TransactionUncheckedCreateNestedManyWithoutOrganizationInput
+    financialAccount?: FinancialAccountUncheckedCreateNestedManyWithoutOrganizationInput
+    financialEvent?: FinancialEventUncheckedCreateNestedManyWithoutOrganizationInput
+    loan?: LoanUncheckedCreateNestedManyWithoutOrganizationInput
+    loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
+    roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
+    permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+  }
+
+  export type OrganizationCreateOrConnectWithoutProductGroupsInput = {
+    where: OrganizationWhereUniqueInput
+    create: XOR<OrganizationCreateWithoutProductGroupsInput, OrganizationUncheckedCreateWithoutProductGroupsInput>
+  }
+
   export type PricingRuleCreateWithoutProductGroupInput = {
     adjustmentType: string
     value: Decimal | DecimalJsLike | number | string
@@ -75619,6 +75963,105 @@ export namespace Prisma {
     products?: ProductUncheckedUpdateManyWithoutParfumNestedInput
   }
 
+  export type OrganizationUpsertWithoutProductGroupsInput = {
+    update: XOR<OrganizationUpdateWithoutProductGroupsInput, OrganizationUncheckedUpdateWithoutProductGroupsInput>
+    create: XOR<OrganizationCreateWithoutProductGroupsInput, OrganizationUncheckedCreateWithoutProductGroupsInput>
+    where?: OrganizationWhereInput
+  }
+
+  export type OrganizationUpdateToOneWithWhereWithoutProductGroupsInput = {
+    where?: OrganizationWhereInput
+    data: XOR<OrganizationUpdateWithoutProductGroupsInput, OrganizationUncheckedUpdateWithoutProductGroupsInput>
+  }
+
+  export type OrganizationUpdateWithoutProductGroupsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    sites?: SiteUpdateManyWithoutOrganizationNestedInput
+    users?: UserUpdateManyWithoutOrganizationNestedInput
+    products?: ProductUpdateManyWithoutOrganizationNestedInput
+    settings?: FinancialSettingsUpdateManyWithoutOrganizationNestedInput
+    ledger?: ChartOfAccountUpdateManyWithoutOrganizationNestedInput
+    contacts?: ContactUpdateManyWithoutOrganizationNestedInput
+    audits?: AuditLogUpdateManyWithoutOrganizationNestedInput
+    unit?: UnitUpdateManyWithoutOrganizationNestedInput
+    warehouse?: WarehouseUpdateManyWithoutOrganizationNestedInput
+    order?: OrderUpdateManyWithoutOrganizationNestedInput
+    task?: TaskUpdateManyWithoutOrganizationNestedInput
+    pricingRule?: PricingRuleUpdateManyWithoutOrganizationNestedInput
+    priceList?: PriceListUpdateManyWithoutOrganizationNestedInput
+    brand?: BrandUpdateManyWithoutOrganizationNestedInput
+    category?: CategoryUpdateManyWithoutOrganizationNestedInput
+    parfum?: ParfumUpdateManyWithoutOrganizationNestedInput
+    country?: CountryUpdateManyWithoutOrganizationNestedInput
+    fiscalYear?: FiscalYearUpdateManyWithoutOrganizationNestedInput
+    fiscalPeriod?: FiscalPeriodUpdateManyWithoutOrganizationNestedInput
+    journalEntry?: JournalEntryUpdateManyWithoutOrganizationNestedInput
+    journalEntryLine?: JournalEntryLineUpdateManyWithoutOrganizationNestedInput
+    productImage?: ProductImageUpdateManyWithoutOrganizationNestedInput
+    transactionSequence?: TransactionSequenceUpdateManyWithoutOrganizationNestedInput
+    barcodeSettings?: BarcodeSettingsUpdateManyWithoutOrganizationNestedInput
+    systemSettings?: SystemSettingsUpdateManyWithoutOrganizationNestedInput
+    inventory?: InventoryUpdateManyWithoutOrganizationNestedInput
+    stockBatch?: StockBatchUpdateManyWithoutOrganizationNestedInput
+    orderLine?: OrderLineUpdateManyWithoutOrganizationNestedInput
+    transactions?: TransactionUpdateManyWithoutOrganizationNestedInput
+    financialAccount?: FinancialAccountUpdateManyWithoutOrganizationNestedInput
+    financialEvent?: FinancialEventUpdateManyWithoutOrganizationNestedInput
+    loan?: LoanUpdateManyWithoutOrganizationNestedInput
+    loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
+    roles?: RoleUpdateManyWithoutOrganizationNestedInput
+    permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+  }
+
+  export type OrganizationUncheckedUpdateWithoutProductGroupsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    sites?: SiteUncheckedUpdateManyWithoutOrganizationNestedInput
+    users?: UserUncheckedUpdateManyWithoutOrganizationNestedInput
+    products?: ProductUncheckedUpdateManyWithoutOrganizationNestedInput
+    settings?: FinancialSettingsUncheckedUpdateManyWithoutOrganizationNestedInput
+    ledger?: ChartOfAccountUncheckedUpdateManyWithoutOrganizationNestedInput
+    contacts?: ContactUncheckedUpdateManyWithoutOrganizationNestedInput
+    audits?: AuditLogUncheckedUpdateManyWithoutOrganizationNestedInput
+    unit?: UnitUncheckedUpdateManyWithoutOrganizationNestedInput
+    warehouse?: WarehouseUncheckedUpdateManyWithoutOrganizationNestedInput
+    order?: OrderUncheckedUpdateManyWithoutOrganizationNestedInput
+    task?: TaskUncheckedUpdateManyWithoutOrganizationNestedInput
+    pricingRule?: PricingRuleUncheckedUpdateManyWithoutOrganizationNestedInput
+    priceList?: PriceListUncheckedUpdateManyWithoutOrganizationNestedInput
+    brand?: BrandUncheckedUpdateManyWithoutOrganizationNestedInput
+    category?: CategoryUncheckedUpdateManyWithoutOrganizationNestedInput
+    parfum?: ParfumUncheckedUpdateManyWithoutOrganizationNestedInput
+    country?: CountryUncheckedUpdateManyWithoutOrganizationNestedInput
+    fiscalYear?: FiscalYearUncheckedUpdateManyWithoutOrganizationNestedInput
+    fiscalPeriod?: FiscalPeriodUncheckedUpdateManyWithoutOrganizationNestedInput
+    journalEntry?: JournalEntryUncheckedUpdateManyWithoutOrganizationNestedInput
+    journalEntryLine?: JournalEntryLineUncheckedUpdateManyWithoutOrganizationNestedInput
+    productImage?: ProductImageUncheckedUpdateManyWithoutOrganizationNestedInput
+    transactionSequence?: TransactionSequenceUncheckedUpdateManyWithoutOrganizationNestedInput
+    barcodeSettings?: BarcodeSettingsUncheckedUpdateManyWithoutOrganizationNestedInput
+    systemSettings?: SystemSettingsUncheckedUpdateManyWithoutOrganizationNestedInput
+    inventory?: InventoryUncheckedUpdateManyWithoutOrganizationNestedInput
+    stockBatch?: StockBatchUncheckedUpdateManyWithoutOrganizationNestedInput
+    orderLine?: OrderLineUncheckedUpdateManyWithoutOrganizationNestedInput
+    transactions?: TransactionUncheckedUpdateManyWithoutOrganizationNestedInput
+    financialAccount?: FinancialAccountUncheckedUpdateManyWithoutOrganizationNestedInput
+    financialEvent?: FinancialEventUncheckedUpdateManyWithoutOrganizationNestedInput
+    loan?: LoanUncheckedUpdateManyWithoutOrganizationNestedInput
+    loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
+    roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
+    permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+  }
+
   export type PricingRuleUpsertWithWhereUniqueWithoutProductGroupInput = {
     where: PricingRuleWhereUniqueInput
     update: XOR<PricingRuleUpdateWithoutProductGroupInput, PricingRuleUncheckedUpdateWithoutProductGroupInput>
@@ -75692,6 +76135,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutCategoryInput = {
@@ -75735,6 +76179,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutCategoryInput = {
@@ -75926,6 +76371,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     brand?: BrandCreateNestedOneWithoutProductGroupsInput
     parfum?: ParfumCreateNestedOneWithoutProductGroupsInput
+    organization: OrganizationCreateNestedOneWithoutProductGroupsInput
     priceListRules?: PricingRuleCreateNestedManyWithoutProductGroupInput
     products?: ProductCreateNestedManyWithoutProductGroupInput
   }
@@ -75937,6 +76383,7 @@ export namespace Prisma {
     image?: string | null
     brandId?: number | null
     parfumId?: number | null
+    organizationId: string
     createdAt?: Date | string
     updatedAt?: Date | string
     priceListRules?: PricingRuleUncheckedCreateNestedManyWithoutProductGroupInput
@@ -76060,6 +76507,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutCategoryInput = {
@@ -76103,6 +76551,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type CategoryUpsertWithoutChildrenInput = {
@@ -76207,21 +76656,6 @@ export namespace Prisma {
     data: XOR<ProductGroupUpdateManyMutationInput, ProductGroupUncheckedUpdateManyWithoutCategoryInput>
   }
 
-  export type ProductGroupScalarWhereInput = {
-    AND?: ProductGroupScalarWhereInput | ProductGroupScalarWhereInput[]
-    OR?: ProductGroupScalarWhereInput[]
-    NOT?: ProductGroupScalarWhereInput | ProductGroupScalarWhereInput[]
-    id?: IntFilter<"ProductGroup"> | number
-    name?: StringFilter<"ProductGroup"> | string
-    description?: StringNullableFilter<"ProductGroup"> | string | null
-    image?: StringNullableFilter<"ProductGroup"> | string | null
-    brandId?: IntNullableFilter<"ProductGroup"> | number | null
-    categoryId?: IntNullableFilter<"ProductGroup"> | number | null
-    parfumId?: IntNullableFilter<"ProductGroup"> | number | null
-    createdAt?: DateTimeFilter<"ProductGroup"> | Date | string
-    updatedAt?: DateTimeFilter<"ProductGroup"> | Date | string
-  }
-
   export type ParfumUpsertWithWhereUniqueWithoutCategoriesInput = {
     where: ParfumWhereUniqueInput
     update: XOR<ParfumUpdateWithoutCategoriesInput, ParfumUncheckedUpdateWithoutCategoriesInput>
@@ -76295,6 +76729,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutBrandInput = {
@@ -76338,6 +76773,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutBrandInput = {
@@ -76486,6 +76922,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     category?: CategoryCreateNestedOneWithoutProductGroupsInput
     parfum?: ParfumCreateNestedOneWithoutProductGroupsInput
+    organization: OrganizationCreateNestedOneWithoutProductGroupsInput
     priceListRules?: PricingRuleCreateNestedManyWithoutProductGroupInput
     products?: ProductCreateNestedManyWithoutProductGroupInput
   }
@@ -76497,6 +76934,7 @@ export namespace Prisma {
     image?: string | null
     categoryId?: number | null
     parfumId?: number | null
+    organizationId: string
     createdAt?: Date | string
     updatedAt?: Date | string
     priceListRules?: PricingRuleUncheckedCreateNestedManyWithoutProductGroupInput
@@ -76565,6 +77003,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutBrandInput = {
@@ -76608,6 +77047,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type CountryUpsertWithWhereUniqueWithoutBrandsInput = {
@@ -76715,6 +77155,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutParfumInput = {
@@ -76758,6 +77199,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutParfumInput = {
@@ -76886,6 +77328,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     brand?: BrandCreateNestedOneWithoutProductGroupsInput
     category?: CategoryCreateNestedOneWithoutProductGroupsInput
+    organization: OrganizationCreateNestedOneWithoutProductGroupsInput
     priceListRules?: PricingRuleCreateNestedManyWithoutProductGroupInput
     products?: ProductCreateNestedManyWithoutProductGroupInput
   }
@@ -76897,6 +77340,7 @@ export namespace Prisma {
     image?: string | null
     brandId?: number | null
     categoryId?: number | null
+    organizationId: string
     createdAt?: Date | string
     updatedAt?: Date | string
     priceListRules?: PricingRuleUncheckedCreateNestedManyWithoutProductGroupInput
@@ -76965,6 +77409,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutParfumInput = {
@@ -77008,6 +77453,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type CategoryUpsertWithWhereUniqueWithoutParfumsInput = {
@@ -77099,6 +77545,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutWarehouseInput = {
@@ -77142,6 +77589,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutWarehouseInput = {
@@ -77274,6 +77722,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutWarehouseInput = {
@@ -77317,6 +77766,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type SiteUpsertWithoutWarehousesInput = {
@@ -77506,6 +77956,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutStockBatchInput = {
@@ -77549,6 +78000,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutStockBatchInput = {
@@ -77715,6 +78167,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutStockBatchInput = {
@@ -77758,6 +78211,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type InventoryUpsertWithWhereUniqueWithoutBatchInput = {
@@ -77945,6 +78399,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutInventoryInput = {
@@ -77988,6 +78443,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutInventoryInput = {
@@ -78193,6 +78649,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutInventoryInput = {
@@ -78236,6 +78693,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateWithoutOrderInput = {
@@ -78279,6 +78737,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutOrderInput = {
@@ -78322,6 +78781,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutOrderInput = {
@@ -78604,6 +79064,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutOrderInput = {
@@ -78647,6 +79108,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type ContactUpsertWithoutOrdersInput = {
@@ -79042,6 +79504,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutOrderLineInput = {
@@ -79085,6 +79548,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutOrderLineInput = {
@@ -79284,6 +79748,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutOrderLineInput = {
@@ -79327,6 +79792,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateWithoutTaskInput = {
@@ -79370,6 +79836,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutTaskInput = {
@@ -79413,6 +79880,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutTaskInput = {
@@ -79516,6 +79984,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutTaskInput = {
@@ -79559,6 +80028,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type UserUpsertWithoutTasksInput = {
@@ -79652,6 +80122,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutSystemSettingsInput = {
@@ -79695,6 +80166,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutSystemSettingsInput = {
@@ -79754,6 +80226,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutSystemSettingsInput = {
@@ -79797,6 +80270,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateWithoutBarcodeSettingsInput = {
@@ -79840,6 +80314,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutBarcodeSettingsInput = {
@@ -79883,6 +80358,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutBarcodeSettingsInput = {
@@ -79942,6 +80418,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutBarcodeSettingsInput = {
@@ -79985,6 +80462,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateWithoutTransactionSequenceInput = {
@@ -80028,6 +80506,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutTransactionSequenceInput = {
@@ -80071,6 +80550,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutTransactionSequenceInput = {
@@ -80130,6 +80610,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutTransactionSequenceInput = {
@@ -80173,6 +80654,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type ProductCreateWithoutImagesInput = {
@@ -80292,6 +80774,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutProductImageInput = {
@@ -80335,6 +80818,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutProductImageInput = {
@@ -80476,6 +80960,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutProductImageInput = {
@@ -80519,6 +81004,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateWithoutSettingsInput = {
@@ -80562,6 +81048,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutSettingsInput = {
@@ -80605,6 +81092,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutSettingsInput = {
@@ -80664,6 +81152,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutSettingsInput = {
@@ -80707,6 +81196,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateWithoutFiscalYearInput = {
@@ -80750,6 +81240,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutFiscalYearInput = {
@@ -80793,6 +81284,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutFiscalYearInput = {
@@ -80938,6 +81430,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutFiscalYearInput = {
@@ -80981,6 +81474,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type FiscalPeriodUpsertWithWhereUniqueWithoutFiscalYearInput = {
@@ -81086,6 +81580,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutFiscalPeriodInput = {
@@ -81129,6 +81624,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutFiscalPeriodInput = {
@@ -81277,6 +81773,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutFiscalPeriodInput = {
@@ -81320,6 +81817,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type JournalEntryUpsertWithWhereUniqueWithoutFiscalPeriodInput = {
@@ -81379,6 +81877,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutLedgerInput = {
@@ -81422,6 +81921,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutLedgerInput = {
@@ -81793,6 +82293,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutLedgerInput = {
@@ -81836,6 +82337,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type ChartOfAccountUpsertWithoutChildrenInput = {
@@ -82161,6 +82663,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutJournalEntryInput = {
@@ -82204,6 +82707,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutJournalEntryInput = {
@@ -82578,6 +83082,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutJournalEntryInput = {
@@ -82621,6 +83126,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type FiscalYearUpsertWithoutJournalEntriesInput = {
@@ -83202,6 +83708,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutJournalEntryLineInput = {
@@ -83245,6 +83752,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutJournalEntryLineInput = {
@@ -83524,6 +84032,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutJournalEntryLineInput = {
@@ -83567,6 +84076,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateWithoutPriceListInput = {
@@ -83610,6 +84120,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutPriceListInput = {
@@ -83653,6 +84164,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutPriceListInput = {
@@ -83745,6 +84257,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutPriceListInput = {
@@ -83788,6 +84301,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type PricingRuleUpsertWithWhereUniqueWithoutPriceListInput = {
@@ -83947,6 +84461,7 @@ export namespace Prisma {
     brand?: BrandCreateNestedOneWithoutProductGroupsInput
     category?: CategoryCreateNestedOneWithoutProductGroupsInput
     parfum?: ParfumCreateNestedOneWithoutProductGroupsInput
+    organization: OrganizationCreateNestedOneWithoutProductGroupsInput
     products?: ProductCreateNestedManyWithoutProductGroupInput
   }
 
@@ -83958,6 +84473,7 @@ export namespace Prisma {
     brandId?: number | null
     categoryId?: number | null
     parfumId?: number | null
+    organizationId: string
     createdAt?: Date | string
     updatedAt?: Date | string
     products?: ProductUncheckedCreateNestedManyWithoutProductGroupInput
@@ -84009,6 +84525,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutPricingRuleInput = {
@@ -84052,6 +84569,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutPricingRuleInput = {
@@ -84229,6 +84747,7 @@ export namespace Prisma {
     brand?: BrandUpdateOneWithoutProductGroupsNestedInput
     category?: CategoryUpdateOneWithoutProductGroupsNestedInput
     parfum?: ParfumUpdateOneWithoutProductGroupsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutProductGroupsNestedInput
     products?: ProductUpdateManyWithoutProductGroupNestedInput
   }
 
@@ -84240,6 +84759,7 @@ export namespace Prisma {
     brandId?: NullableIntFieldUpdateOperationsInput | number | null
     categoryId?: NullableIntFieldUpdateOperationsInput | number | null
     parfumId?: NullableIntFieldUpdateOperationsInput | number | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     products?: ProductUncheckedUpdateManyWithoutProductGroupNestedInput
@@ -84297,6 +84817,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutPricingRuleInput = {
@@ -84340,6 +84861,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationCreateWithoutSitesInput = {
@@ -84383,6 +84905,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutSitesInput = {
@@ -84426,6 +84949,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutSitesInput = {
@@ -84872,6 +85396,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutSitesInput = {
@@ -84915,6 +85440,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type WarehouseUpsertWithWhereUniqueWithoutSiteInput = {
@@ -85384,6 +85910,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutFinancialEventInput = {
@@ -85427,6 +85954,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutFinancialEventInput = {
@@ -85650,6 +86178,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutFinancialEventInput = {
@@ -85693,6 +86222,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type ContactUpsertWithoutFinancialEventsInput = {
@@ -85924,6 +86454,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutLoanInput = {
@@ -85967,6 +86498,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutLoanInput = {
@@ -86152,6 +86684,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutLoanInput = {
@@ -86195,6 +86728,7 @@ export namespace Prisma {
     loanInstallment?: LoanInstallmentUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type ContactUpsertWithoutLoansInput = {
@@ -86324,6 +86858,7 @@ export namespace Prisma {
     loan?: LoanCreateNestedManyWithoutOrganizationInput
     roles?: RoleCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationUncheckedCreateWithoutLoanInstallmentInput = {
@@ -86367,6 +86902,7 @@ export namespace Prisma {
     loan?: LoanUncheckedCreateNestedManyWithoutOrganizationInput
     roles?: RoleUncheckedCreateNestedManyWithoutOrganizationInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutOrganizationInput
+    productGroups?: ProductGroupUncheckedCreateNestedManyWithoutOrganizationInput
   }
 
   export type OrganizationCreateOrConnectWithoutLoanInstallmentInput = {
@@ -86464,6 +87000,7 @@ export namespace Prisma {
     loan?: LoanUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUpdateManyWithoutOrganizationNestedInput
   }
 
   export type OrganizationUncheckedUpdateWithoutLoanInstallmentInput = {
@@ -86507,6 +87044,7 @@ export namespace Prisma {
     loan?: LoanUncheckedUpdateManyWithoutOrganizationNestedInput
     roles?: RoleUncheckedUpdateManyWithoutOrganizationNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutOrganizationNestedInput
+    productGroups?: ProductGroupUncheckedUpdateManyWithoutOrganizationNestedInput
   }
 
   export type LoanUpsertWithoutInstallmentsInput = {
@@ -86982,6 +87520,18 @@ export namespace Prisma {
     code: string
     name: string
     description?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ProductGroupCreateManyOrganizationInput = {
+    id?: number
+    name: string
+    description?: string | null
+    image?: string | null
+    brandId?: number | null
+    categoryId?: number | null
+    parfumId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -88380,6 +88930,45 @@ export namespace Prisma {
     code?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProductGroupUpdateWithoutOrganizationInput = {
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    brand?: BrandUpdateOneWithoutProductGroupsNestedInput
+    category?: CategoryUpdateOneWithoutProductGroupsNestedInput
+    parfum?: ParfumUpdateOneWithoutProductGroupsNestedInput
+    priceListRules?: PricingRuleUpdateManyWithoutProductGroupNestedInput
+    products?: ProductUpdateManyWithoutProductGroupNestedInput
+  }
+
+  export type ProductGroupUncheckedUpdateWithoutOrganizationInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableIntFieldUpdateOperationsInput | number | null
+    categoryId?: NullableIntFieldUpdateOperationsInput | number | null
+    parfumId?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    priceListRules?: PricingRuleUncheckedUpdateManyWithoutProductGroupNestedInput
+    products?: ProductUncheckedUpdateManyWithoutProductGroupNestedInput
+  }
+
+  export type ProductGroupUncheckedUpdateManyWithoutOrganizationInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    brandId?: NullableIntFieldUpdateOperationsInput | number | null
+    categoryId?: NullableIntFieldUpdateOperationsInput | number | null
+    parfumId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -90359,6 +90948,7 @@ export namespace Prisma {
     image?: string | null
     brandId?: number | null
     parfumId?: number | null
+    organizationId: string
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -90548,6 +91138,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     brand?: BrandUpdateOneWithoutProductGroupsNestedInput
     parfum?: ParfumUpdateOneWithoutProductGroupsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutProductGroupsNestedInput
     priceListRules?: PricingRuleUpdateManyWithoutProductGroupNestedInput
     products?: ProductUpdateManyWithoutProductGroupNestedInput
   }
@@ -90559,6 +91150,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     brandId?: NullableIntFieldUpdateOperationsInput | number | null
     parfumId?: NullableIntFieldUpdateOperationsInput | number | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     priceListRules?: PricingRuleUncheckedUpdateManyWithoutProductGroupNestedInput
@@ -90572,6 +91164,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     brandId?: NullableIntFieldUpdateOperationsInput | number | null
     parfumId?: NullableIntFieldUpdateOperationsInput | number | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -90672,6 +91265,7 @@ export namespace Prisma {
     image?: string | null
     categoryId?: number | null
     parfumId?: number | null
+    organizationId: string
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -90843,6 +91437,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     category?: CategoryUpdateOneWithoutProductGroupsNestedInput
     parfum?: ParfumUpdateOneWithoutProductGroupsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutProductGroupsNestedInput
     priceListRules?: PricingRuleUpdateManyWithoutProductGroupNestedInput
     products?: ProductUpdateManyWithoutProductGroupNestedInput
   }
@@ -90854,6 +91449,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     categoryId?: NullableIntFieldUpdateOperationsInput | number | null
     parfumId?: NullableIntFieldUpdateOperationsInput | number | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     priceListRules?: PricingRuleUncheckedUpdateManyWithoutProductGroupNestedInput
@@ -90867,6 +91463,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     categoryId?: NullableIntFieldUpdateOperationsInput | number | null
     parfumId?: NullableIntFieldUpdateOperationsInput | number | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -90908,6 +91505,7 @@ export namespace Prisma {
     image?: string | null
     brandId?: number | null
     categoryId?: number | null
+    organizationId: string
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -91057,6 +91655,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     brand?: BrandUpdateOneWithoutProductGroupsNestedInput
     category?: CategoryUpdateOneWithoutProductGroupsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutProductGroupsNestedInput
     priceListRules?: PricingRuleUpdateManyWithoutProductGroupNestedInput
     products?: ProductUpdateManyWithoutProductGroupNestedInput
   }
@@ -91068,6 +91667,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     brandId?: NullableIntFieldUpdateOperationsInput | number | null
     categoryId?: NullableIntFieldUpdateOperationsInput | number | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     priceListRules?: PricingRuleUncheckedUpdateManyWithoutProductGroupNestedInput
@@ -91081,6 +91681,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     brandId?: NullableIntFieldUpdateOperationsInput | number | null
     categoryId?: NullableIntFieldUpdateOperationsInput | number | null
+    organizationId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

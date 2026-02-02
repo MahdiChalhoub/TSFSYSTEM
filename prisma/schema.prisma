@@ -54,6 +54,7 @@ model Organization {
   loanInstallment     LoanInstallment[]
   roles               Role[]
   permissions         Permission[]
+  productGroups       ProductGroup[]
 }
 
 model Country {
@@ -163,23 +164,23 @@ model User {
   organization   Organization? @relation(fields: [organizationId], references: [id])
 
   // Advanced RBAC
-  roleId Int?
+  roleId Int? @map("role_id")
   role   Role? @relation(fields: [roleId], references: [id])
 
   // Multi-Site Context
-  homeSiteId Int?
+  homeSiteId Int? @map("home_site_id")
   homeSite   Site? @relation("HomeSite", fields: [homeSiteId], references: [id])
 
   // Financial Assignment
-  cashRegisterId Int?
+  cashRegisterId Int? @map("cash_register_id")
   cashRegister   FinancialAccount? @relation("UserCashRegister", fields: [cashRegisterId], references: [id])
 
   // HR Link
-  employeeId Int?      @unique
+  employeeId Int?      @unique @map("employee_id")
   employee   Employee? @relation(fields: [employeeId], references: [id])
 
   // Financial Link (Sub-ledger account for employee payroll/expenses)
-  linkedAccountId Int?            @unique
+  linkedAccountId Int?            @unique @map("linked_account_id")
   linkedAccount   ChartOfAccount? @relation("UserAccount", fields: [linkedAccountId], references: [id])
 
   // Relations
@@ -258,23 +259,23 @@ model Contact {
   email   String?
   phone   String?
   address String?
-  vatId   String? // Tax ID for suppliers/companies
+  vatId   String? @map("vat_id") // Tax ID for suppliers/companies
 
   // SaaS Context
   organizationId String? @map("organization_id")
   organization   Organization? @relation(fields: [organizationId], references: [id])
 
   // Home Site (Master Data - Registration/Base)
-  homeSiteId Int?
+  homeSiteId Int? @map("home_site_id")
   homeSite   Site? @relation(fields: [homeSiteId], references: [id])
 
   // Financials
   balance       Decimal @default(0.00) // + We owe them, - They owe us
-  creditLimit   Decimal @default(0.00)
-  loyaltyPoints Int     @default(0)
+  creditLimit   Decimal @map("credit_limit") @default(0.00)
+  loyaltyPoints Int     @map("loyalty_points") @default(0)
 
   // Automatic Ledger Account (Sub-ledger link)
-  linkedAccountId Int?            @unique
+  linkedAccountId Int?            @unique @map("linked_account_id")
   linkedAccount   ChartOfAccount? @relation("ContactAccount", fields: [linkedAccountId], references: [id])
 
   orders       Order[]
@@ -292,26 +293,26 @@ model Contact {
 
 model Employee {
   id         Int       @id @default(autoincrement())
-  employeeId String    @unique // Internal ID like EMP-001
-  firstName  String
-  lastName   String
-  idNumber   String?   @unique // National ID / Passport
+  employeeId String    @unique @map("employee_id") // Internal ID like EMP-001
+  firstName  String    @map("first_name")
+  lastName   String    @map("last_name")
+  idNumber   String?   @unique @map("id_number") // National ID / Passport
   phone      String?
   email      String?
-  jobTitle   String?
+  jobTitle   String?   @map("job_title")
   department String?
-  hireDate   DateTime?
+  hireDate   DateTime? @map("hire_date")
   salary     Decimal?
   status     String    @default("ACTIVE") // 'ACTIVE', 'ON_LEAVE', 'TERMINATED'
 
   // Home Site (Master Data - Base Branch)
-  homeSiteId Int?
+  homeSiteId Int? @map("home_site_id")
   homeSite   Site? @relation(fields: [homeSiteId], references: [id])
 
   user User? // Link to system login
 
   // Payroll Account Link
-  linkedAccountId Int?            @unique
+  linkedAccountId Int?            @unique @map("linked_account_id")
   linkedAccount   ChartOfAccount? @relation("EmployeeAccount", fields: [linkedAccountId], references: [id])
 
   transactions JournalEntryLine[]
@@ -337,56 +338,56 @@ model Product {
   organization   Organization? @relation(fields: [organizationId], references: [id])
 
   // Grouping (New)
-  productGroupId Int?
+  productGroupId Int? @map("product_group_id")
   productGroup   ProductGroup? @relation(fields: [productGroupId], references: [id])
 
   // Dimensions / Size (New)
   size       Decimal? // e.g., 300
-  sizeUnitId Int?
+  sizeUnitId Int? @map("size_unit_id")
   sizeUnit   Unit?    @relation("SizeUnit", fields: [sizeUnitId], references: [id])
 
   // Pricing Strategy (Updated for Financial Module)
-  costPrice Decimal @default(0.00) // Moving Average Cost (Generic)
+  costPrice Decimal @map("cost_price") @default(0.00) // Moving Average Cost (Generic)
 
   // Explicit Pricing Fields (Financial Module)
   inventoryLevels InventoryLevel[]
-  costPriceHT     Decimal          @default(0.00)
-  costPriceTTC    Decimal          @default(0.00)
-  tvaRate         Decimal          @default(0.00)
-  sellingPriceHT  Decimal          @default(0.00)
-  sellingPriceTTC Decimal          @default(0.00)
+  costPriceHT     Decimal          @map("cost_price_ht") @default(0.00)
+  costPriceTTC    Decimal          @map("cost_price_ttc") @default(0.00)
+  tvaRate         Decimal          @map("tva_rate") @default(0.00)
+  sellingPriceHT  Decimal          @map("selling_price_ht") @default(0.00)
+  sellingPriceTTC Decimal          @map("selling_price_ttc") @default(0.00)
 
-  basePrice Decimal @default(0.00) // Keep for backward compatibility/reference
-  minPrice  Decimal @default(0.00) // Lowest allowed price
+  basePrice Decimal @map("base_price") @default(0.00) // Keep for backward compatibility/reference
+  minPrice  Decimal @map("min_price") @default(0.00) // Lowest allowed price
 
   // Advanced Classification
   brand   Brand? @relation(fields: [brandId], references: [id])
-  brandId Int?
+  brandId Int? @map("brand_id")
 
   country   Country? @relation(fields: [countryId], references: [id])
-  countryId Int? // Origin Country
+  countryId Int? @map("country_id") // Origin Country
 
   unit   Unit? @relation(fields: [unitId], references: [id])
-  unitId Int?
+  unitId Int? @map("unit_id")
 
   status String @default("ACTIVE")
 
   supplier   Contact? @relation("ProductSupplier", fields: [supplierId], references: [id])
-  supplierId Int?
+  supplierId Int? @map("supplier_id")
 
   // Tax / TVA Configuration
-  taxRate       Decimal @default(0.00) // e.g., 0.11 for 11%
-  isTaxIncluded Boolean @default(true) // Does basePrice include the tax?
+  taxRate       Decimal @map("tax_rate") @default(0.00) // e.g., 0.11 for 11%
+  isTaxIncluded Boolean @map("is_tax_included") @default(true) // Does basePrice include the tax?
 
   // Settings
-  isExpiryTracked Boolean @default(false)
-  minStockLevel   Int     @default(10) // Reorder point
+  isExpiryTracked Boolean @map("is_expiry_tracked") @default(false)
+  minStockLevel   Int     @map("min_stock_level") @default(10) // Reorder point
 
   // Relations
   category   Category? @relation(fields: [categoryId], references: [id])
-  categoryId Int?
+  categoryId Int? @map("category_id")
 
-  parfumId Int?
+  parfumId Int? @map("parfum_id")
   parfum   Parfum? @relation(fields: [parfumId], references: [id])
 
   inventory  Inventory[]
@@ -411,14 +412,18 @@ model ProductGroup {
   image       String?
 
   // Classification
-  brandId Int?
+  brandId Int? @map("brand_id")
   brand   Brand? @relation(fields: [brandId], references: [id])
 
-  categoryId Int?
+  categoryId Int? @map("category_id")
   category   Category? @relation(fields: [categoryId], references: [id])
 
-  parfumId Int?
+  parfumId Int? @map("parfum_id")
   parfum   Parfum? @relation(fields: [parfumId], references: [id])
+
+  // SaaS Context
+  organizationId String @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
   // Pricing Brain Link
   priceListRules PricingRule[] // Rules applying to this entire group
@@ -427,6 +432,8 @@ model ProductGroup {
 
   createdAt DateTime @map("created_at") @default(now())
   updatedAt DateTime @map("updated_at") @updatedAt
+
+  @@unique([name, organizationId])
 }
 
 model Category {
@@ -561,20 +568,20 @@ model Order {
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   // Participants
-  contactId Int? // Supplier or Customer
+  contactId Int? @map("contact_id") // Supplier or Customer
   contact   Contact? @relation(fields: [contactId], references: [id])
 
-  userId Int // Staff who processed it
+  userId Int @map("user_id") // Staff who processed it
   user   User @relation("StaffOrders", fields: [userId], references: [id])
 
-  isVerified   Boolean @default(false)
-  verifiedById Int?
+  isVerified   Boolean @map("is_verified") @default(false)
+  verifiedById Int? @map("verified_by_id")
   verifiedBy   User?   @relation("VerifiedOrders", fields: [verifiedById], references: [id])
-  isLocked     Boolean @default(false)
+  isLocked     Boolean @map("is_locked") @default(false)
 
   // Data
-  totalAmount Decimal @default(0.00)
-  taxAmount   Decimal @default(0.00)
+  totalAmount Decimal @map("total_amount") @default(0.00)
+  taxAmount   Decimal @map("tax_amount") @default(0.00)
   discount    Decimal @default(0.00)
   notes       String?
 
@@ -584,15 +591,15 @@ model Order {
   scope String? // 'OFFICIAL', 'INTERNAL', 'PENDING' (Models Enum)
 
   // Payment Info
-  paymentMethod String?
-  refCode       String?
+  paymentMethod String? @map("payment_method")
+  refCode       String? @map("ref_code")
 
-  siteId Int? // Where the sale/purchase happened
+  siteId Int? @map("site_id") // Where the sale/purchase happened
   site   Site? @relation(fields: [siteId], references: [id])
 
   // Effective Cost Engine Flags
-  invoicePriceType String  @default("HT") // 'HT', 'TTC'
-  vatRecoverable   Boolean @default(true)
+  invoicePriceType String  @map("invoice_price_type") @default("HT") // 'HT', 'TTC'
+  vatRecoverable   Boolean @map("vat_recoverable") @default(true)
 
   createdAt DateTime @map("created_at") @default(now())
   updatedAt DateTime @map("updated_at") @updatedAt
@@ -600,15 +607,15 @@ model Order {
 
 model OrderLine {
   id      Int   @id @default(autoincrement())
-  orderId Int
+  orderId Int @map("order_id")
   order   Order @relation(fields: [orderId], references: [id])
 
-  productId Int
+  productId Int @map("product_id")
   product   Product @relation(fields: [productId], references: [id])
 
   quantity  Decimal
-  unitPrice Decimal // At moment of sale/purchase
-  taxRate   Decimal @default(0.00) // Snapshot of tax rate at time of sale
+  unitPrice Decimal @map("unit_price") // At moment of sale/purchase
+  taxRate   Decimal @map("tax_rate") @default(0.00) // Snapshot of tax rate at time of sale
   total     Decimal
 
   // SaaS Context
@@ -616,13 +623,13 @@ model OrderLine {
   organization   Organization @relation(fields: [organizationId], references: [id])
 
   // For fulfillment
-  batchId Int? // Which batch was picked?
+  batchId Int? @map("batch_id") // Which batch was picked?
 
   // Effective Cost Engine Fields (Calculated and Persisted)
-  unitCostHT    Decimal @default(0.00)
-  unitCostTTC   Decimal @default(0.00)
-  vatAmount     Decimal @default(0.00)
-  effectiveCost Decimal @default(0.00)
+  unitCostHT    Decimal @map("unit_cost_ht") @default(0.00)
+  unitCostTTC   Decimal @map("unit_cost_ttc") @default(0.00)
+  vatAmount     Decimal @map("vat_amount") @default(0.00)
+  effectiveCost Decimal @map("effective_cost") @default(0.00)
 }
 
 // =========================================================
