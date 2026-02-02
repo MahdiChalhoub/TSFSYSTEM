@@ -47,7 +47,19 @@ export default async function middleware(req: NextRequest) {
     }
 
     // 3. LANDING PAGE: root localhost -> /landing (internal rewrite)
+    // ONLY rewrite if it's NOT an admin, api, or tenant path
     if (!subdomain || subdomain === "www") {
+        const isInternalPath =
+            url.pathname.startsWith("/admin") ||
+            url.pathname.startsWith("/api") ||
+            url.pathname.startsWith("/tenant") ||
+            url.pathname.startsWith("/login") ||
+            url.pathname.startsWith("/auth")
+
+        if (isInternalPath) {
+            return NextResponse.next()
+        }
+
         if (url.pathname.startsWith("/landing")) return NextResponse.next()
         return NextResponse.rewrite(new URL(`/landing${path}`, req.url))
     }

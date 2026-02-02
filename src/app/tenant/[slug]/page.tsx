@@ -1,11 +1,12 @@
 import { getOrganizationBySlug } from "./actions"
-import { notFound, redirect } from "next/navigation"
-import { Building, ShieldCheck, ArrowRight, Globe, Users, History } from "lucide-react"
+import { notFound } from "next/navigation"
+import { ShieldCheck, Activity, Zap, Globe, ArrowRight, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
-export default async function TenantBrandedPortal({ params }: { params: { slug: string } }) {
-    const org = await getOrganizationBySlug(params.slug)
+export default async function TenantWelcomePage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = await params
+    const org = await getOrganizationBySlug(slug)
 
     if (!org) {
         return notFound()
@@ -20,147 +21,113 @@ export default async function TenantBrandedPortal({ params }: { params: { slug: 
                     </div>
                     <h1 className="text-3xl font-black text-white">Instance Suspended</h1>
                     <p className="text-gray-400">The account for <span className="text-white font-bold">{org.name}</span> has been temporarily suspended. Please contact platform administration.</p>
-                    <Button variant="outline" className="border-gray-800 text-white rounded-xl" asChild>
-                        <Link href="/">Back to Home</Link>
-                    </Button>
+                    <Link href="/">
+                        <Button variant="outline" className="border-gray-800 text-white rounded-xl">
+                            Back to Home
+                        </Button>
+                    </Link>
                 </div>
             </div>
         )
     }
 
     return (
-        <div className="min-h-screen bg-[#020617] text-white selection:bg-emerald-500/30">
+        <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6 overflow-hidden relative">
             {/* Ambient Background */}
-            <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-500/10 blur-[120px] rounded-full" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full" />
-            </div>
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/5 blur-[120px] rounded-full pointer-events-none" />
 
-            <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 py-10">
-                {/* Header */}
-                <nav className="flex justify-between items-center mb-20 animate-in fade-in slide-in-from-top-4 duration-700">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center shadow-2xl">
-                            <span className="text-2xl font-black bg-gradient-to-br from-white to-gray-500 bg-clip-text text-transparent">
-                                {org.name[0]}
-                            </span>
+            <div className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-2 gap-16 items-center relative z-10">
+                <div className="space-y-10 animate-in fade-in slide-in-from-left-8 duration-1000">
+                    <div className="space-y-6">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-400 text-[10px] font-black uppercase tracking-widest">
+                            <Globe size={14} /> TSF City Edge Portal
                         </div>
-                        <div>
-                            <h2 className="font-black text-xl tracking-tight leading-none">{org.name}</h2>
-                            <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-[0.2em] mt-1">Verified Instance</p>
-                        </div>
+                        <h1 className="text-6xl lg:text-7xl font-black text-white tracking-tighter leading-none">
+                            {org.name} <span className="text-emerald-500">.</span>
+                        </h1>
+                        <p className="text-lg text-slate-400 font-medium max-w-md">
+                            Isolated Enterprise Instance Verified. Authenticate to access your dedicated business environment.
+                        </p>
                     </div>
-                    <div className="hidden md:flex items-center gap-8 text-sm font-bold text-gray-400 uppercase tracking-widest">
-                        <a href="#" className="hover:text-white transition-colors">Resources</a>
-                        <a href="#" className="hover:text-white transition-colors">Support</a>
-                        <div className="h-4 w-px bg-gray-800" />
-                        <span className="text-gray-600">ID: {org.id.split('-')[0]}</span>
-                    </div>
-                </nav>
 
-                {/* Hero Section */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-                    <div className="space-y-10 animate-in fade-in slide-in-from-left-8 duration-1000">
-                        <div className="space-y-4">
-                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-400 text-xs font-bold uppercase tracking-widest">
-                                <Globe size={14} /> Cloud Workspace Active
-                            </div>
-                            <h1 className="text-6xl lg:text-8xl font-black tracking-tighter leading-[0.9]">
-                                Enterprise <br />
-                                <span className="bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400 bg-clip-text text-transparent italic">Verified.</span>
-                            </h1>
-                            <p className="text-xl text-gray-400 max-w-lg leading-relaxed font-medium">
-                                Welcome back to the {org.name} management environment. Your data is isolated, secure, and ready for operations.
-                            </p>
+                    <div className="p-10 bg-slate-900/40 backdrop-blur-3xl border border-white/5 rounded-[3rem] space-y-8 shadow-2xl relative overflow-hidden group">
+                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="space-y-1 relative">
+                            <h2 className="text-xl font-bold text-white">Secure Gateway</h2>
+                            <p className="text-xs text-slate-500 font-medium tracking-wide uppercase">{slug}.tsf-city.com</p>
                         </div>
 
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <Button className="bg-white text-black hover:bg-gray-200 rounded-2xl px-10 py-8 font-black text-lg flex gap-3 shadow-2xl shadow-emerald-500/20 transition-all hover:scale-[1.03] active:scale-[0.98]">
-                                Secure Login <ArrowRight size={20} />
-                            </Button>
-                            <Button variant="outline" className="border-gray-800 bg-transparent hover:bg-white/5 text-white rounded-2xl px-10 py-8 font-black text-lg transition-all">
-                                Request Access
-                            </Button>
-                        </div>
-
-                        {/* Quick Stats */}
-                        <div className="grid grid-cols-3 gap-8 pt-10 border-t border-white/5">
-                            <div>
-                                <div className="text-3xl font-black text-white">{org._count.sites}</div>
-                                <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Operational Sites</div>
-                            </div>
-                            <div>
-                                <div className="text-3xl font-black text-white">{org._count.users}</div>
-                                <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Team Members</div>
-                            </div>
-                            <div>
-                                <div className="text-3xl font-black text-white">99.9%</div>
-                                <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Instance Uptime</div>
-                            </div>
+                        <div className="space-y-4 pt-2 relative">
+                            <input
+                                type="email"
+                                placeholder="Credentials"
+                                className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-emerald-500 transition-all focus:ring-4 focus:ring-emerald-500/5 placeholder:text-slate-700"
+                            />
+                            <input
+                                type="password"
+                                placeholder="Access Key"
+                                className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-emerald-500 transition-all focus:ring-4 focus:ring-emerald-500/5 placeholder:text-slate-700"
+                            />
+                            <button className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-5 rounded-2xl font-black transition-all shadow-xl shadow-emerald-900/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3">
+                                Initialize Session <ArrowRight size={20} />
+                            </button>
                         </div>
                     </div>
 
-                    <div className="relative animate-in fade-in slide-in-from-right-8 duration-1000 delay-300">
-                        {/* Mockup Card */}
-                        <div className="bg-[#0F172A] border border-white/10 rounded-[3rem] p-4 shadow-2xl relative overflow-hidden group">
-                            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-                            <div className="bg-[#020617] rounded-[2.5rem] p-10 space-y-8 relative">
-                                <div className="flex justify-between items-start">
-                                    <div className="space-y-1">
-                                        <div className="text-xs font-bold text-gray-600 uppercase tracking-widest leading-none">Access Gateway</div>
-                                        <div className="text-2xl font-black text-white">Identity Check</div>
-                                    </div>
-                                    <div className="p-3 bg-emerald-500/10 rounded-2xl text-emerald-400">
-                                        <ShieldCheck size={28} />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Identity Provider</label>
-                                        <div className="w-full bg-white/5 border border-white/10 p-5 rounded-2xl text-gray-400 text-sm font-medium flex justify-between items-center italic">
-                                            {params.slug}.tsf-city.com
-                                            <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Status</label>
-                                        <div className="px-4 py-3 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center gap-3">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                                            <span className="text-xs font-black text-emerald-300 uppercase tracking-tighter italic">Instance Reachable - Low Latency</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="pt-4 flex items-center justify-between">
-                                    <div className="flex -space-x-3">
-                                        {[1, 2, 3].map(i => (
-                                            <div key={i} className="w-10 h-10 rounded-full border-2 border-black bg-gray-800" />
-                                        ))}
-                                        <div className="w-10 h-10 rounded-full border-2 border-black bg-emerald-600 flex items-center justify-center text-[10px] font-black">+12</div>
-                                    </div>
-                                    <div className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">Active Sessions</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Floating elements */}
-                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/20 blur-3xl animate-pulse" />
-                        <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-emerald-500/20 blur-3xl animate-pulse" />
+                    <div className="flex items-center gap-6">
+                        <a
+                            href="http://saas.localhost:3000"
+                            className="inline-flex items-center gap-2 text-[10px] text-slate-600 hover:text-emerald-500 font-bold uppercase tracking-[0.2em] transition-colors"
+                        >
+                            <ShieldCheck size={14} /> Master Panel Gateway
+                        </a>
+                        <div className="h-px w-10 bg-white/5" />
+                        <span className="text-[10px] text-slate-700 font-bold uppercase tracking-widest">Node ID: {org.id.split('-')[0]}</span>
                     </div>
                 </div>
 
-                {/* Footer Section */}
-                <footer className="mt-32 pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 animate-in fade-in duration-1000">
-                    <p className="text-xs font-bold text-gray-600 uppercase tracking-[0.3em]">
-                        &copy; 2026 TSF CITY OS &bull; <span className="text-gray-400">All Systems Operational</span>
-                    </p>
-                    <div className="flex gap-10 text-[10px] font-black text-gray-500 uppercase tracking-widest">
-                        <a href="#" className="hover:text-white transition-all">Privacy Protocol</a>
-                        <a href="#" className="hover:text-white transition-all">Service Level Agreement</a>
-                        <a href="#" className="hover:text-white transition-all">Global Node Map</a>
+                <div className="hidden lg:block relative animate-in fade-in slide-in-from-right-8 duration-1000 delay-300">
+                    <div className="bg-slate-900/50 border border-white/5 rounded-[4rem] p-12 shadow-3xl backdrop-blur-md relative overflow-hidden group">
+                        <div className="flex justify-between items-center mb-12">
+                            <div className="space-y-1">
+                                <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Instance Telemetry</div>
+                                <div className="text-xs font-bold text-emerald-400 flex items-center gap-2">
+                                    <Activity size={14} className="animate-pulse" />
+                                    Global Latency: 12ms
+                                </div>
+                            </div>
+                            <div className="w-16 h-16 bg-white/5 rounded-[1.5rem] flex items-center justify-center text-white font-black text-2xl border border-white/10 group-hover:scale-110 transition-transform">
+                                {org.name[0]}
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-6">
+                            <div className="bg-white/5 rounded-3xl border border-white/5 p-6 space-y-3">
+                                <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400">
+                                    <Globe size={20} />
+                                </div>
+                                <div className="text-2xl font-black text-white">{org._count.sites}</div>
+                                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Active Sites</div>
+                            </div>
+                            <div className="bg-white/5 rounded-3xl border border-white/5 p-6 space-y-3">
+                                <div className="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center text-purple-400">
+                                    <Users size={20} />
+                                </div>
+                                <div className="text-2xl font-black text-white">{org._count.users}</div>
+                                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Users</div>
+                            </div>
+                        </div>
+
+                        <div className="mt-8 p-6 bg-emerald-500/5 border border-emerald-500/10 rounded-[2.5rem] flex justify-between items-center group-hover:bg-emerald-500/10 transition-colors">
+                            <div className="space-y-1">
+                                <div className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Status</div>
+                                <div className="text-sm font-black text-white tracking-tight">PROTECTED BY TSF SHIELD</div>
+                            </div>
+                            <Zap className="text-emerald-500" size={24} />
+                        </div>
                     </div>
-                </footer>
+                </div>
             </div>
         </div>
     )
