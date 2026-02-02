@@ -1,7 +1,8 @@
 import { headers } from 'next/headers';
 // import { prisma } from './db'; // Prisma usage removed
 
-const DJANGO_URL = process.env.DJANGO_URL || 'http://localhost:8000';
+// Use 127.0.0.1 to avoid IPv6 resolution issues with localhost on Windows/Node 18+
+const DJANGO_URL = process.env.DJANGO_URL || 'http://127.0.0.1:8000';
 
 export async function getTenantContext() {
     const headerList = await headers();
@@ -19,8 +20,13 @@ export async function getTenantContext() {
         if (parts.length > 2) subdomain = parts[0];
     }
 
-    if (!subdomain || subdomain === "localhost" || subdomain === "saas" || subdomain === "www") {
-        return null; // Master panel or landing page
+    if (!subdomain || subdomain === "localhost" || subdomain === "www") {
+        // DEVELOPMENT FALLBACK: Default to "tsf-global" if on localhost root
+        if (process.env.NODE_ENV !== 'production') {
+            subdomain = "tsf-global";
+        } else {
+            return null;
+        }
     }
 
     try {
@@ -41,6 +47,20 @@ export async function getTenantContext() {
 export async function erpFetch(path: string, options: RequestInit = {}) {
     const context = await getTenantContext();
     const headersRaw = new Headers(options.headers || {});
+
+    // [AUTH INTEGRATION]
+    // We import cookies dynamically to avoid "Dynamic server usage" errors in static generation if unnecessary
+    // However, erpFetch is mostly used in server components/actions where dynamic is fine.
+    try {
+        const { cookies } = await import('next/headers');
+        const cookieStore = await cookies();
+        const token = cookieStore.get('auth_token')?.value;
+        if (token) {
+            headersRaw.set('Authorization', `Token ${token}`);
+        }
+    } catch (e) {
+        // Fallback for environments where cookies are unavailable (e.g. static generation)
+    }
 
     if (context) {
         headersRaw.set('X-Tenant-Id', context.id);
@@ -67,9 +87,21 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
             throw new Error(errorData.error || `ERP Backend error: ${response.statusText}`);
         }
 
+        if (response.status === 204) {
+            return null;
+        }
+
         return await response.json();
     } catch (error) {
         console.error(`[ERP_API] Request to ${path} failed:`, error);
         throw error;
+    }
+}
+
+export async function getUser() {
+    try {
+        return await erpFetch('auth/me/');
+    } catch {
+        return null;
     }
 }

@@ -76,8 +76,11 @@ export function SiteSwitcher({ sites }: { sites: any[] }) {
                         </div>
                         <div className="p-3 bg-gray-900/50 border-t border-gray-700">
                             <button
-                                onClick={() => {/* Future: All sites view */ }}
-                                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-gray-700 text-gray-500 hover:text-indigo-400 hover:border-indigo-400 transition-all text-[10px] font-black uppercase tracking-widest"
+                                onClick={() => handleSwitch(-1)}
+                                className={clsx(
+                                    "w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-gray-700 text-gray-500 hover:text-indigo-400 hover:border-indigo-400 transition-all text-[10px] font-black uppercase tracking-widest",
+                                    currentId === null && "border-indigo-500 text-indigo-400 bg-indigo-500/10"
+                                )}
                             >
                                 <Globe size={14} /> Global Enterprise View
                             </button>

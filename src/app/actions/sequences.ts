@@ -1,6 +1,6 @@
 'use server'
 
-import { prisma } from "@/lib/db"
+import { erpFetch } from "@/lib/erp-api"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
@@ -8,30 +8,14 @@ const updateSchema = z.object({
     id: z.number(),
     prefix: z.string().optional(),
     suffix: z.string().optional(),
-    nextNumber: z.number().min(1),
+    next_number: z.number().min(1), // Snake case from Django
     padding: z.number().min(1).max(20)
 })
 
 export async function getTransactionSequences() {
-    // Ensure default types exist
-    const defaultTypes = ['INVOICE', 'BILL', 'LOAN', 'JOURNAL', 'PAYMENT', 'RECEIPT']
-
-    for (const type of defaultTypes) {
-        const exists = await (prisma as any).transactionSequence.findUnique({ where: { type } })
-        if (!exists) {
-            await (prisma as any).transactionSequence.create({
-                data: {
-                    type,
-                    prefix: type.substring(0, 3) + "-",
-                    nextNumber: 1
-                }
-            })
-        }
-    }
-
-    return await (prisma as any).transactionSequence.findMany({
-        orderBy: { type: 'asc' }
-    })
+    // Django backend should handle initialization in Service or View
+    const sequences = await erpFetch('/api/sequences/')
+    return sequences
 }
 
 export async function updateTransactionSequence(data: {
@@ -42,16 +26,17 @@ export async function updateTransactionSequence(data: {
     padding: number
 }) {
     try {
-        const validated = updateSchema.parse(data)
+        // Map camelCase to snake_case for Django
+        const payload = {
+            prefix: data.prefix,
+            suffix: data.suffix,
+            next_number: data.nextNumber,
+            padding: data.padding
+        }
 
-        await (prisma as any).transactionSequence.update({
-            where: { id: validated.id },
-            data: {
-                prefix: validated.prefix,
-                suffix: validated.suffix,
-                nextNumber: validated.nextNumber,
-                padding: validated.padding
-            }
+        await erpFetch(`/api/sequences/${data.id}/`, {
+            method: 'PATCH',
+            body: JSON.stringify(payload)
         })
 
         revalidatePath('/admin/settings/sequences')

@@ -1,8 +1,8 @@
-14548
-c:/tsfci/pg_data
-1770026030
+1
+/var/lib/postgresql/data
+1770040037
 5432
-
-localhost
-
+/var/run/postgresql
+*
+  1360752         5
 ready   

@@ -299,6 +299,14 @@ class LedgerService:
             entry.status = 'POSTED'; entry.posted_at = timezone.now(); entry.save()
 
     @staticmethod
+    def get_chart_of_accounts(organization, scope='OFFICIAL', include_inactive=False):
+        from .models import ChartOfAccount
+        qs = ChartOfAccount.objects.filter(organization=organization)
+        if not include_inactive:
+            qs = qs.filter(is_active=True)
+        return qs
+
+    @staticmethod
     def get_trial_balance(organization, as_of_date=None, scope='INTERNAL'):
         from .models import ChartOfAccount, JournalEntryLine
         accounts = ChartOfAccount.objects.filter(organization=organization, is_active=True).order_by('code')
