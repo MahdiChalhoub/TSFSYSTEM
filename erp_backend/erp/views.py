@@ -947,6 +947,78 @@ class ParfumViewSet(viewsets.ModelViewSet):
     queryset = Parfum.objects.all()
     serializer_class = ParfumSerializer
 
+    @action(detail=False, methods=['get'])
+    def by_category(self, request):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+        
+        category_id = request.query_params.get('categoryId')
+        queryset = self.get_queryset()
+
+        if category_id:
+            try:
+                # Walk up the category tree
+                category_ids = []
+                current = Category.objects.get(id=category_id, organization_id=organization_id)
+                category_ids.append(current.id)
+                while current.parent:
+                    current = current.parent
+                    category_ids.append(current.id)
+                
+                # Filter: Attributes linked to this category/parents OR universal (no categories)
+                from django.db.models import Q
+                queryset = queryset.filter(
+                    Q(categories__in=category_ids) | Q(categories__isnull=True)
+                ).distinct()
+            except Category.DoesNotExist:
+                return Response([]) # Category not found
+        
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def hierarchy(self, request, pk=None):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+
+        # Get brands that have products with this parfum
+        brands = Brand.objects.filter(
+            products__parfum_id=pk, 
+            organization_id=organization_id
+        ).distinct().prefetch_related(
+            'product_set', 'product_set__inventory', 'product_set__unit', 'product_set__country'
+        )
+
+        data = []
+        for brand in brands:
+            products_data = []
+            # Filter products for this specific parfum within the brand
+            products = brand.product_set.filter(parfum_id=pk)
+            
+            brand_total_stock = 0
+            for p in products:
+                stock = sum(i.quantity for i in p.inventory.all())
+                brand_total_stock += stock
+                products_data.append({
+                    "id": p.id,
+                    "name": p.name,
+                    "sku": p.sku,
+                    "size": float(p.size or 0) if hasattr(p, 'size') else 0,
+                    "unitName": p.unit.short_name if p.unit else None,
+                    "countryName": p.country.name if p.country else None,
+                    "stock": float(stock)
+                })
+
+            data.append({
+                "id": brand.id,
+                "name": brand.name,
+                "logo": "", # Add logo URL if available
+                "products": products_data,
+                "totalStock": brand_total_stock
+            })
+            
+        return Response(data)
+
 class ProductGroupViewSet(viewsets.ModelViewSet):
     queryset = ProductGroup.objects.all()
     serializer_class = ProductGroupSerializer

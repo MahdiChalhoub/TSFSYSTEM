@@ -1,13 +1,16 @@
-import { prisma } from "@/lib/db";
 import { AttributeManager } from "@/components/admin/AttributeManager";
 import { getAttributes } from "@/app/actions/attributes";
-
-export const dynamic = 'force-dynamic';
+import { erpFetch } from "@/lib/erp-api";
 
 async function getCategories() {
-    return await prisma.category.findMany({
-        orderBy: { name: 'asc' }
-    });
+    try {
+        const categories = await erpFetch('categories/');
+        // Sort explicitly if backend doesn't guarantee order
+        return categories.sort((a: any, b: any) => a.name.localeCompare(b.name));
+    } catch (e) {
+        console.error("Failed to fetch categories", e);
+        return [];
+    }
 }
 
 export default async function AttributesPage() {
