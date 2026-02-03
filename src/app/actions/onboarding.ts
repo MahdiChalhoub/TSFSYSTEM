@@ -30,7 +30,18 @@ export async function registerBusinessAction(prevState: any, formData: FormData)
     djangoPayload.append('state', rawData.state as string);
     djangoPayload.append('zip_code', rawData.zip_code as string);
     djangoPayload.append('country', rawData.country as string);
-    djangoPayload.append('website', rawData.website as string);
+
+    // Website Handling (Sanitization)
+    if (rawData.website) {
+        let url = (rawData.website as string).trim();
+        if (url) {
+            if (!/^https?:\/\//i.test(url)) {
+                url = 'https://' + url;
+            }
+            djangoPayload.append('website', url);
+        }
+    }
+
     djangoPayload.append('timezone', 'UTC');
 
     // Logo File
