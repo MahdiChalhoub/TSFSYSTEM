@@ -42,7 +42,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://backend:8000
+      - NEXT_PUBLIC_API_URL=http://91.99.186.183:8000
+      - DJANGO_URL=http://backend:8000
     depends_on:
       - backend
     networks:
