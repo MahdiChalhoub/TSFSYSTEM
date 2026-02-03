@@ -40,7 +40,7 @@ export default async function SitesPage() {
                         </div>
                         <div className="p-8 lg:p-10 bg-indigo-600 rounded-[48px] text-center shadow-2xl shadow-indigo-200 flex flex-col justify-center">
                             <div className="text-4xl lg:text-6xl font-black text-white mb-2">
-                                {sites.reduce((acc, s) => acc + (s._count?.warehouses || 0), 0)}
+                                {sites.reduce((acc: number, s: any) => acc + (s._count?.warehouses || 0), 0)}
                             </div>
                             <div className="text-[10px] font-black text-indigo-200 uppercase tracking-[0.3em]">Total Zones</div>
                         </div>

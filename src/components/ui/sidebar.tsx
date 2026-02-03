@@ -516,6 +516,8 @@ const SidebarMenuButton = React.forwardRef<
         asChild?: boolean
         isActive?: boolean
         tooltip?: string | React.ComponentProps<typeof TooltipContent>
+        variant?: "default" | "outline"
+        size?: "default" | "sm" | "lg"
     }
 >(
     (
