@@ -1,24 +1,19 @@
 import Image from "next/image";
-import { erpFetch } from "@/lib/erp-api";
+import { getActiveLandingComponents } from '@/lib/module-registry';
 
 export const dynamic = 'force-dynamic';
 
-async function getFeaturedProducts() {
-  try {
-    const products = await erpFetch('products/');
-    return products.slice(0, 8);
-  } catch (e) {
-    console.error("Storefront fetch failed:", e);
-    return [];
-  }
-}
-
 export default async function Home() {
-  const products = await getFeaturedProducts();
+  // [TEMPORARY] Simulate installed modules (Same as Dashboard)
+  // In a real multi-tenant storefront, we would read the host header to find the tenant,
+  // then look up their installed modules.
+  const installedModuleCodes = ['inventory', 'sales', 'finance', 'crm']; // TODO: Fetch from Host Context
+
+  const DynamicSections = getActiveLandingComponents(installedModuleCodes);
 
   return (
     <main>
-      {/* Hero Section */}
+      {/* Hero Section - Core Kernel */}
       <section style={{ position: 'relative', height: '85vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, zIndex: -1 }}>
           <Image
@@ -47,7 +42,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Benefits Strip */}
+      {/* Benefits Strip - Core Kernel */}
       <div style={{ background: 'var(--primary)', color: 'white', padding: '2rem 0' }}>
         <div className="container grid grid-cols-3 gap-4 text-center">
           <div className="flex items-center justify-center gap-2">
@@ -65,7 +60,7 @@ export default async function Home() {
         </div>
       </div>
 
-      {/* Categories */}
+      {/* Categories - Core Kernel (Could also be modularized later) */}
       <section className="container" style={{ padding: '6rem 20px' }}>
         <h2 className="text-center" style={{ marginBottom: '1rem' }}>Shop by Category</h2>
         <p className="text-center" style={{ marginBottom: '3rem', color: 'var(--text-muted)' }}>Find everything you need for your home</p>
@@ -94,59 +89,12 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Featured Products */}
-      <section id="featured" style={{ background: '#F8FAFC', padding: '6rem 0' }}>
-        <div className="container">
-          <div className="flex justify-between items-end" style={{ marginBottom: '3rem' }}>
-            <div>
-              <h2 style={{ marginBottom: '0.5rem' }}>Weekly Best Sellers</h2>
-              <p>Grab them while they last!</p>
-            </div>
-            <a href="#" className="btn-outline" style={{ padding: '8px 24px' }}>View All Products</a>
-          </div>
+      {/* Dynamic Module Sections (e.g., Featured Products from Inventory) */}
+      {DynamicSections.map((Section, i) => (
+        <Section key={i} />
+      ))}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {products.length === 0 && <p>No products found in the database. Run seed!</p>}
-
-            {products.map((product: any) => (
-              <div key={product.id} className="card" style={{ padding: '0', overflow: 'hidden', border: 'none' }}>
-                <div style={{ height: '220px', background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '6rem', position: 'relative' }}>
-                  <span style={{ filter: 'drop-shadow(0 10px 10px rgba(0,0,0,0.1))', transition: 'transform 0.3s' }} className="product-emoji">
-                    {/* Fallback emoji based on ID since we don't have images yet */}
-                    {product.name.includes('Apple') ? '🍎' : product.name.includes('Milk') ? '🥛' : '📦'}
-                  </span>
-                  <button style={{
-                    position: 'absolute', bottom: '1rem', right: '1rem',
-                    width: '40px', height: '40px', borderRadius: '50%',
-                    background: 'white', border: 'none',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: 'var(--primary)'
-                  }}>
-                    +
-                  </button>
-                </div>
-                <div style={{ padding: '1.5rem' }}>
-                  <div className="flex justify-between items-start" style={{ marginBottom: '0.5rem' }}>
-                    <span className="badge" style={{ background: 'var(--background)', fontSize: '0.75rem' }}>
-                      Tax Inc
-                    </span>
-                    <span style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '1.1rem' }}>
-                      ${Number(product.selling_price_ttc).toFixed(2)}
-                    </span>
-                  </div>
-                  <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>{product.name}</h3>
-                  <div className="flex gap-1">
-                    {'⭐'.repeat(5)} <span style={{ fontSize: '0.8rem', color: '#9CA3AF' }}>(New)</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
+      {/* CTA Section - Core Kernel */}
       <section className="container" style={{ padding: '6rem 20px' }}>
         <div style={{
           background: 'var(--secondary)',
