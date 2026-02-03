@@ -25,7 +25,21 @@ Customer type determines the **Pricing Mode**, while the Company Type determines
 > **Crucial Rule**: Even in **MIXED** mode, Sales are legally compliant. The "Mixed" aspect primarily affects the **Purchase/Cost** view (Internal TTC vs Declared HT). Sales are always declared fully for Real/Mixed companies.
 
 ## 3. AIRSI (Income Tax Withholding) Treatment
-AIRSI is an **Event-Based Tax**, separate from VAT.
+AIRSI is an **Event-Based Tax** that behaves hierarchically.
+
+### Logic Hierarchy
+The system determines if AIRSI applies by checking rules in this order:
+
+1.  **Company Level (Global Switch)**
+    *   If the Company Setting `airsi_tax_percentage` is **0%**, AIRSI is DISABLED globally for purchased/sales.
+    *   If enabled (e.g., 5%), the system *can* apply it, subject to level 2.
+
+2.  **Contact Level (Override)**
+    *   **Purchases (Suppliers)**: If `is_airsi_subject=True`, we withhold tax from them.
+    *   **Sales (Customers - B2B)**: If `is_airsi_subject=True`, we apply tax to their invoice.
+    *   *Default*: B2C customers are assumed `False`. B2B defaults to `True` if global is enabled, but can be disabled per client.
+
+### Accounting Modes
 
 | Mode | Accounting Entry | Best For |
 |------|------------------|----------|
@@ -33,7 +47,9 @@ AIRSI is an **Event-Based Tax**, separate from VAT.
 | **Capitalized** | `Dr Inventory (inc. AIRSI)`, `Cr Payable` | **REGULAR** (increases stock value). |
 | **Expensed** | `Dr Expense (AIRSI)`, `Cr Payable` | **MICRO** (simple reduction of profit). |
 
-**Configuration**: AIRSI can be enabled per **Supplier**, **Product**, or globally by **Company Type**.
+**Configuration**:
+*   Global: **Admin > Finance > Settings > Tax Rates**.
+*   Specific: **CRM > [Contact] > Financial Settings > Subject to AIRSI**.
 
 ## 4. Configuration Definitions
 
