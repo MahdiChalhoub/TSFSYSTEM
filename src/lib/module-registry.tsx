@@ -14,6 +14,7 @@ export type ModuleDefinition = {
 
 import { InventoryStatsWidget } from '@/components/modules/inventory/InventoryWidgets';
 import InventorySettingsPanel from '@/components/modules/inventory/InventorySettings';
+import StorefrontFeatured from '@/components/modules/inventory/StorefrontFeatured';
 import { SalesStatsWidget } from '@/components/modules/sales/SalesWidgets';
 
 // The Central Registry
@@ -24,7 +25,8 @@ export const MODULE_REGISTRY: Record<string, ModuleDefinition> = {
         code: 'inventory',
         name: 'Inventory Management',
         dashboardWidgets: [InventoryStatsWidget],
-        settingsPanel: InventorySettingsPanel
+        settingsPanel: InventorySettingsPanel,
+        landingComponents: [StorefrontFeatured]
     },
     'sales': { // or 'pos' depending on module code
         code: 'sales',
@@ -72,4 +74,18 @@ export function getActiveSettingsPanels(installedModuleCodes: string[]) {
     });
 
     return panels;
+}
+
+// Helper to get active landing page components
+export function getActiveLandingComponents(installedModuleCodes: string[]) {
+    const components: React.ComponentType[] = [];
+
+    installedModuleCodes.forEach(code => {
+        const mod = MODULE_REGISTRY[code];
+        if (mod && mod.landingComponents) {
+            components.push(...mod.landingComponents);
+        }
+    });
+
+    return components;
 }
