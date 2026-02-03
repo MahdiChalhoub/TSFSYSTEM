@@ -35,8 +35,7 @@ class Command(BaseCommand):
             slug='saas',
             defaults={
                 'name': 'SAAS',
-                'is_active': True,
-                'is_personal': False
+                'is_active': True
             }
         )
         self.stdout.write(f"🏢 SaaS Root Organization Created: {saas_org.name} (Slug: saas)")
