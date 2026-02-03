@@ -260,9 +260,71 @@ IFRS_COA = [
     }
 ]
 
+SYSCOHADA_REVISED = [
+    {
+        "code": "1", "name": "Comptes de capitaux", "type": "EQUITY", "children": [
+            { "code": "10", "name": "Capital", "type": "EQUITY" },
+            { "code": "11", "name": "Reserves", "type": "EQUITY" },
+            { "code": "12", "name": "Report à nouveau", "type": "EQUITY" },
+            { "code": "13", "name": "Resultat net de l'exercice", "type": "EQUITY" },
+            { "code": "16", "name": "Emprunts et dettes assimilées", "type": "LIABILITY" },
+        ]
+    },
+    {
+        "code": "2", "name": "Comptes d'immobilisations", "type": "ASSET", "children": [
+            { "code": "21", "name": "Immobilisations incorporelles", "type": "ASSET" },
+            { "code": "22", "name": "Terrains", "type": "ASSET" },
+            { "code": "23", "name": "Batiments, Installations techniques", "type": "ASSET" },
+            { "code": "24", "name": "Materiel", "type": "ASSET" },
+            { "code": "25", "name": "Materiel de transport", "type": "ASSET" },
+            { "code": "28", "name": "Amortissements", "type": "ASSET" },
+        ]
+    },
+    {
+        "code": "3", "name": "Comptes de stocks", "type": "ASSET", "children": [
+            { "code": "31", "name": "Marchandises", "type": "ASSET", "subType": "INVENTORY" },
+            { "code": "32", "name": "Matieres premieres", "type": "ASSET" },
+            { "code": "33", "name": "En-cours de production", "type": "ASSET" },
+        ]
+    },
+    {
+        "code": "4", "name": "Comptes de tiers", "type": "ASSET", "children": [
+            { "code": "40", "name": "Fournisseurs et comptes rattachés", "type": "LIABILITY", "subType": "PAYABLE" },
+            { "code": "41", "name": "Clients et comptes rattachés", "type": "ASSET", "subType": "RECEIVABLE" },
+            { "code": "42", "name": "Personnel", "type": "LIABILITY" },
+            { "code": "44", "name": "Etat et collectivités publiques", "type": "LIABILITY" },
+        ]
+    },
+    {
+        "code": "5", "name": "Comptes financiers", "type": "ASSET", "children": [
+            { "code": "52", "name": "Banques", "type": "ASSET", "subType": "BANK" },
+            { "code": "57", "name": "Caisse", "type": "ASSET", "subType": "CASH" },
+        ]
+    },
+    {
+        "code": "6", "name": "Comptes de charges", "type": "EXPENSE", "children": [
+            { "code": "60", "name": "Achats et variations de stocks", "type": "EXPENSE" },
+            { "code": "61", "name": "Transports", "type": "EXPENSE" },
+            { "code": "62", "name": "Services exterieurs A", "type": "EXPENSE" },
+            { "code": "63", "name": "Services exterieurs B", "type": "EXPENSE" },
+            { "code": "64", "name": "Impots et taxes", "type": "EXPENSE" },
+            { "code": "66", "name": "Charges de personnel", "type": "EXPENSE" },
+        ]
+    },
+    {
+        "code": "7", "name": "Comptes de produits", "type": "INCOME", "children": [
+            { "code": "70", "name": "Ventes", "type": "INCOME" },
+            { "code": "71", "name": "Subventions d'exploitation", "type": "INCOME" },
+            { "code": "75", "name": "Autres produits", "type": "INCOME" },
+            { "code": "77", "name": "Revenus financiers", "type": "INCOME" },
+        ]
+    }
+]
+
 TEMPLATES = {
     'IFRS_COA': IFRS_COA,
     'LEBANESE_PCN': LEBANESE_PCN,
     'FRENCH_PCG': FRENCH_PCG,
-    'USA_GAAP': USA_GAAP
+    'USA_GAAP': USA_GAAP,
+    'SYSCOHADA_REVISED': SYSCOHADA_REVISED
 }

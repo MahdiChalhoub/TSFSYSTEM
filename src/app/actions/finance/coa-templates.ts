@@ -138,7 +138,7 @@ const IFRS_COA: TemplateAccount[] = [
                     { code: '1110', name: 'Accounts Receivable', type: 'ASSET', subType: 'RECEIVABLE', syscohadaCode: '41', syscohadaClass: 'Class 4' },
                     { code: '1120', name: 'Inventory', type: 'ASSET', syscohadaCode: '31', syscohadaClass: 'Class 3' },
                     { code: '1130', name: 'Prepaid Expenses', type: 'ASSET', syscohadaCode: '47', syscohadaClass: 'Class 4' },
-                    { code: '1140', name: 'Employee Advances', type: 'ASSET', syscohadaCode: '42', syscohadaClass: 'Class 4' },
+                    { code: '1140', name: 'Employee Advances', type: 'ASSET', subType: 'RECEIVABLE', syscohadaCode: '42', syscohadaClass: 'Class 4' },
                     { code: '1150', name: 'Deposits & Guarantees', type: 'ASSET', syscohadaCode: '27', syscohadaClass: 'Class 2' },
                 ]
             },
@@ -279,11 +279,73 @@ const IFRS_COA: TemplateAccount[] = [
     }
 ]
 
+const SYSCOHADA_REVISED: TemplateAccount[] = [
+    {
+        code: "1", name: "Comptes de capitaux", type: "EQUITY", children: [
+            { code: "10", name: "Capital", type: "EQUITY" },
+            { code: "11", name: "Reserves", type: "EQUITY" },
+            { code: "12", name: "Report à nouveau", type: "EQUITY" },
+            { code: "13", name: "Resultat net de l'exercice", type: "EQUITY" },
+            { code: "16", name: "Emprunts et dettes assimilées", type: "LIABILITY" },
+        ]
+    },
+    {
+        code: "2", name: "Comptes d'immobilisations", type: "ASSET", children: [
+            { code: "21", name: "Immobilisations incorporelles", type: "ASSET" },
+            { code: "22", name: "Terrains", type: "ASSET" },
+            { code: "23", name: "Batiments, Installations techniques", type: "ASSET" },
+            { code: "24", name: "Materiel", type: "ASSET" },
+            { code: "25", name: "Materiel de transport", type: "ASSET" },
+            { code: "28", name: "Amortissements", type: "ASSET" },
+        ]
+    },
+    {
+        code: "3", name: "Comptes de stocks", type: "ASSET", children: [
+            { code: "31", name: "Marchandises", type: "ASSET", subType: "INVENTORY" },
+            { code: "32", name: "Matieres premieres", type: "ASSET" },
+            { code: "33", name: "En-cours de production", type: "ASSET" },
+        ]
+    },
+    {
+        code: "4", name: "Comptes de tiers", type: "ASSET", children: [
+            { code: "40", name: "Fournisseurs et comptes rattachés", type: "LIABILITY", subType: "PAYABLE" },
+            { code: "41", name: "Clients et comptes rattachés", type: "ASSET", subType: "RECEIVABLE" },
+            { code: "42", name: "Personnel", type: "LIABILITY" },
+            { code: "44", name: "Etat et collectivités publiques", type: "LIABILITY" },
+        ]
+    },
+    {
+        code: "5", name: "Comptes financiers", type: "ASSET", children: [
+            { code: "52", name: "Banques", type: "ASSET", subType: "BANK" },
+            { code: "57", name: "Caisse", type: "ASSET", subType: "CASH" },
+        ]
+    },
+    {
+        code: "6", name: "Comptes de charges", type: "EXPENSE", children: [
+            { code: "60", name: "Achats et variations de stocks", type: "EXPENSE" },
+            { code: "61", name: "Transports", type: "EXPENSE" },
+            { code: "62", name: "Services exterieurs A", type: "EXPENSE" },
+            { code: "63", name: "Services exterieurs B", type: "EXPENSE" },
+            { code: "64", name: "Impots et taxes", type: "EXPENSE" },
+            { code: "66", name: "Charges de personnel", type: "EXPENSE" },
+        ]
+    },
+    {
+        code: "7", name: "Comptes de produits", type: "INCOME", children: [
+            { code: "70", name: "Ventes", type: "INCOME" },
+            { code: "71", "name": "Subventions d'exploitation", type: "INCOME" },
+            { code: "75", "name": "Autres produits", type: "INCOME" },
+            { code: "77", "name": "Revenus financiers", type: "INCOME" },
+        ]
+    }
+]
+
 const TEMPLATES = {
     'IFRS_COA': IFRS_COA,
     'LEBANESE_PCN': LEBANESE_PCN,
     'FRENCH_PCG': FRENCH_PCG,
-    'USA_GAAP': USA_GAAP
+    'USA_GAAP': USA_GAAP,
+    'SYSCOHADA_REVISED': SYSCOHADA_REVISED
 }
 
 export async function importChartOfAccountsTemplate(templateKey: keyof typeof TEMPLATES, options?: { reset?: boolean }) {
@@ -323,8 +385,18 @@ export async function getTemplatePreview(templateKey: keyof typeof TEMPLATES) {
  * MAPPING TOOL (Advanced)
  * Moves all balances from old accounts to new ones and deactivates old ones.
  */
-export async function migrateBalances(data: any) {
-    throw new Error("Migration logic must be moved to Django Backend via erpFetch.")
+export async function migrateBalances(data: { mappings: any[], description: string }) {
+    console.log(`[COA_MIGRATE] Executing migration: ${data.description}`)
+    try {
+        const { erpFetch } = await import('@/lib/erp-api')
+        return await erpFetch('coa/migrate/', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        })
+    } catch (error) {
+        console.error(`[COA_MIGRATE] Migration failed:`, error)
+        throw error
+    }
 }
 
 export async function sweepInactiveBalances(mapping: any) {

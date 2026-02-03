@@ -28,41 +28,66 @@ export async function getInactiveAccounts() {
     return getChartOfAccounts(true)
 }
 
-export async function createAccount(data: any) {
+export async function createFinancialAccount(data: any) {
     try {
-        // Map camelCase to snake_case if necessary, 
-        // but FinancialAccountViewSet in Django handles FinancialAccount and COA
-        // Actually, looking at services.py, FinancialAccountService.create_account
-        // is called by FinancialAccountViewSet.
-
         const result = await erpFetch('accounts/', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 name: data.name,
                 type: data.type,
-                site_id: data.siteId
+                site_id: data.siteId,
+                currency: data.currency || 'USD'
             })
         })
         revalidatePath('/admin/finance/chart-of-accounts')
         return { success: true, result }
     } catch (error) {
-        console.error("Failed to create account:", error)
+        console.error("Failed to create financial account:", error)
         throw error
     }
 }
 
-export async function updateAccount(data: any) {
+export async function createAccount(data: any) {
     try {
-        const result = await erpFetch(`accounts/${data.id}/`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+        const result = await erpFetch('coa/', {
+            method: 'POST',
+            body: JSON.stringify({
+                code: data.code,
+                name: data.name,
+                type: data.type,
+                sub_type: data.subType,
+                parent: data.parentId,
+                syscohada_code: data.syscohadaCode,
+                syscohada_class: data.syscohadaClass
+            })
         })
         revalidatePath('/admin/finance/chart-of-accounts')
         return { success: true, result }
     } catch (error) {
-        console.error("Failed to update account:", error)
+        console.error("Failed to create COA account:", error)
+        throw error
+    }
+}
+
+export async function updateChartOfAccount(id: number, data: any) {
+    try {
+        const result = await erpFetch(`coa/${id}/`, {
+            method: 'PATCH',
+            body: JSON.stringify({
+                code: data.code,
+                name: data.name,
+                type: data.type,
+                sub_type: data.subType,
+                parent: data.parentId,
+                syscohada_code: data.syscohadaCode,
+                syscohada_class: data.syscohadaClass,
+                is_active: data.isActive
+            })
+        })
+        revalidatePath('/admin/finance/chart-of-accounts')
+        return { success: true, result }
+    } catch (error) {
+        console.error("Failed to update COA account:", error)
         throw error
     }
 }
@@ -127,5 +152,5 @@ export async function getBalanceSheetReport(asOfDate: Date, scope: 'OFFICIAL' | 
 }
 
 export async function reactivateChartOfAccount(id: number) {
-    return updateAccount({ id, isActive: true })
+    return updateChartOfAccount(id, { isActive: true })
 }

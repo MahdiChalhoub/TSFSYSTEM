@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useTransition } from 'react'
-import { ChevronRight, ChevronDown, Plus, Folder, FolderOpen, FileText, RefreshCcw, Library, Zap, Eye, EyeOff, Power } from 'lucide-react'
+import { ChevronRight, ChevronDown, Plus, Folder, FolderOpen, FileText, RefreshCcw, Library, Zap, Eye, EyeOff, Power, Pencil, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { recalculateAccountBalances } from '@/app/actions/finance/ledger'
 
@@ -91,6 +91,13 @@ const AccountNode = ({ node, level, accounts }: { node: any, level: number, acco
                 {/* Actions */}
                 <div className="w-16 flex items-center justify-end pr-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
+                        title="Edit / Revise Account"
+                        onClick={() => (window as any).openEditModal(node)}
+                        className="p-1.5 hover:bg-stone-200 rounded-md text-stone-500"
+                    >
+                        <Pencil size={12} />
+                    </button>
+                    <button
                         title="Add Sub-Account"
                         onClick={() => (window as any).openAddModal(node.id)}
                         className="p-1.5 hover:bg-stone-200 rounded-md text-stone-500"
@@ -125,6 +132,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: any[] }) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [isAdding, setIsAdding] = useState(false)
+    const [editingAccount, setEditingAccount] = useState<any | null>(null)
     const [preselectedParentId, setPreselectedParentId] = useState<number | undefined>(undefined)
     const [showInactive, setShowInactive] = useState(false)
 
@@ -189,10 +197,39 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: any[] }) {
         })
     }
 
+    const openEditModal = (account: any) => {
+        setEditingAccount(account)
+    }
+
     // Expose globally for children to use
     if (typeof window !== 'undefined') {
         (window as any).openAddModal = openAddModal;
+        (window as any).openEditModal = openEditModal;
         (window as any).reactivateAccount = reactivateAccount;
+    }
+
+    async function handleUpdate(formData: FormData) {
+        if (!editingAccount) return
+        const code = formData.get('code') as string
+        const name = formData.get('name') as string
+        const type = formData.get('type') as string
+        const subType = formData.get('subType') as string
+        const parentId = formData.get('parentId') ? parseInt(formData.get('parentId') as string) : null
+        const syscohadaCode = formData.get('syscohadaCode') as string
+        const syscohadaClass = formData.get('syscohadaClass') as string
+
+        startTransition(async () => {
+            const { updateChartOfAccount } = await import('@/app/actions/finance/accounts')
+            try {
+                await updateChartOfAccount(editingAccount.id, {
+                    code, name, type, subType, parentId, syscohadaCode, syscohadaClass, isActive: true
+                })
+                setEditingAccount(null)
+                router.refresh()
+            } catch (err: any) {
+                alert('Update Error: ' + err.message)
+            }
+        })
     }
 
     return (
@@ -340,6 +377,94 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: any[] }) {
                         No accounts defined yet. Start building your chart of accounts.
                     </div>
                 )}
+            </div>
+
+            {/* Edit / Revise Modal */}
+            {editingAccount && (
+                <EditModal
+                    account={editingAccount}
+                    accounts={accounts}
+                    onUpdate={handleUpdate}
+                    onClose={() => setEditingAccount(null)}
+                    isPending={isPending}
+                />
+            )}
+        </div>
+    )
+}
+
+const EditModal = ({ account, accounts, onUpdate, onClose, isPending }: any) => {
+    return (
+        <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+                <div className="p-6 border-b border-stone-100 flex justify-between items-center bg-stone-50">
+                    <div>
+                        <h3 className="text-xl font-bold text-stone-900">Revise Account Hierarchy</h3>
+                        <p className="text-xs text-stone-500 font-bold uppercase tracking-widest mt-1">Modifying: {account.name}</p>
+                    </div>
+                    <button onClick={onClose} className="p-2 hover:bg-stone-200 rounded-full transition-colors">
+                        <X size={20} className="text-stone-400" />
+                    </button>
+                </div>
+                <form action={onUpdate} className="p-8 space-y-6">
+                    <div className="grid grid-cols-2 gap-6">
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-black uppercase text-stone-400 tracking-widest">Account Code</label>
+                            <input name="code" defaultValue={account.code} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-4 focus:ring-black/5 outline-none transition-all font-mono font-bold" required />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-black uppercase text-stone-400 tracking-widest">Display Name</label>
+                            <input name="name" defaultValue={account.name} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-4 focus:ring-black/5 outline-none transition-all font-bold" required />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-black uppercase text-stone-400 tracking-widest">Financial Type</label>
+                            <select name="type" defaultValue={account.type} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-4 focus:ring-black/5 outline-none transition-all font-bold">
+                                <option value="ASSET">Asset</option>
+                                <option value="LIABILITY">Liability</option>
+                                <option value="EQUITY">Equity</option>
+                                <option value="INCOME">Income</option>
+                                <option value="EXPENSE">Expense</option>
+                            </select>
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-black uppercase text-stone-400 tracking-widest">Account Category (Sub-Type)</label>
+                            <select name="subType" defaultValue={account.subType || ''} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-4 focus:ring-black/5 outline-none transition-all font-bold">
+                                <option value="">Standard Ledger Account</option>
+                                <option value="CASH">Liquid Cash</option>
+                                <option value="BANK">Bank Holding</option>
+                                <option value="RECEIVABLE">Trade Receivable (Customers)</option>
+                                <option value="PAYABLE">Trade Payable (Suppliers)</option>
+                            </select>
+                        </div>
+                        <div className="col-span-2 space-y-1">
+                            <label className="text-[10px] font-black uppercase text-stone-400 tracking-widest">Parent Node (Hierarchy Position)</label>
+                            <select name="parentId" defaultValue={account.parentId || ''} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-4 focus:ring-black/5 outline-none transition-all font-mono text-sm">
+                                <option value="">[TOP LEVEL ROOT]</option>
+                                {accounts.filter((a: any) => a.id !== account.id).map((a: any) => (
+                                    <option key={a.id} value={a.id}>{a.code} - {a.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-black uppercase text-stone-400 tracking-widest">SYSCOHADA Code</label>
+                            <input name="syscohadaCode" defaultValue={account.syscohadaCode || ''} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-4 focus:ring-black/5 outline-none transition-all font-mono" />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-black uppercase text-stone-400 tracking-widest">SYSCOHADA Classification</label>
+                            <input name="syscohadaClass" defaultValue={account.syscohadaClass || ''} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-4 focus:ring-black/5 outline-none transition-all" />
+                        </div>
+                    </div>
+
+                    <div className="flex gap-4 pt-4">
+                        <button type="button" onClick={onClose} className="flex-1 p-4 rounded-2xl border border-stone-200 font-bold hover:bg-stone-50 transition-all">
+                            Discard Changes
+                        </button>
+                        <button type="submit" disabled={isPending} className="flex-2 bg-stone-900 text-white px-12 rounded-2xl font-bold hover:bg-black transition-all shadow-xl shadow-stone-900/20 flex items-center gap-2">
+                            {isPending ? 'Saving Revisions...' : 'Apply Hierarchy Changes'}
+                            <RefreshCcw size={18} className={isPending ? 'animate-spin text-amber-400' : 'text-emerald-400'} />
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     )
