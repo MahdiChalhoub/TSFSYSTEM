@@ -138,6 +138,7 @@ export function Sidebar() {
             <div className="mx-6 mt-6 p-1.5 bg-[#0B1120] rounded-2xl border border-gray-800 flex gap-1">
                 <button
                     onClick={() => setViewScope('OFFICIAL')}
+                    suppressHydrationWarning={true}
                     className={clsx(
                         "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
                         viewScope === 'OFFICIAL'
@@ -150,6 +151,7 @@ export function Sidebar() {
                 </button>
                 <button
                     onClick={() => setViewScope('INTERNAL')}
+                    suppressHydrationWarning={true}
                     className={clsx(
                         "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
                         viewScope === 'INTERNAL'
@@ -170,7 +172,10 @@ export function Sidebar() {
             </div>
 
             <div className="p-6 border-t border-gray-800/50 bg-[#0B1120]">
-                <button className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl hover:bg-gray-800/50 text-gray-400 hover:text-white transition-all group">
+                <button
+                    suppressHydrationWarning={true}
+                    className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl hover:bg-gray-800/50 text-gray-400 hover:text-white transition-all group"
+                >
                     <LogOut size={20} className="group-hover:text-red-400 transition-colors" />
                     <span className="text-sm font-medium">Sign Out</span>
                 </button>
