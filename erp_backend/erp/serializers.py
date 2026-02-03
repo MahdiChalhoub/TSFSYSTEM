@@ -112,7 +112,7 @@ class WarehouseSerializer(serializers.ModelSerializer):
     inventory_count = serializers.SerializerMethodField()
 
     def get_inventory_count(self, obj):
-        return obj.inventory_set.count()
+        return obj.inventories.count()
 
     class Meta:
         model = Warehouse
