@@ -47,18 +47,23 @@ export function TenantSwitcher({ organizations, forcedSlug, user }: { organizati
                 </div>
                 <div className="text-left hidden lg:block">
                     <div className="text-[10px] font-black text-emerald-500 uppercase tracking-widest leading-none mb-0.5">
-                        {showMasterPanel ? 'Control Plane' : 'Workspace'}
+                        {currentSlug === 'saas' ? 'Control Plane' : 'Workspace'}
                     </div>
                     <div className="text-sm font-bold text-gray-800 leading-none truncate max-w-[140px]">
-                        {activeOrg?.name || 'Platform Root'}
+                        {currentSlug === 'saas' ? 'SaaS Platform' : (activeOrg?.name || 'Platform Root')}
                     </div>
                 </div>
-                {!isLocked && (
+                {/* 
+                   HIDE DROPDOWN IN SAAS PANEL 
+                   User Requirement: "I should not see valid business in saas panel"
+                   The switcher is disabled when on the SaaS Control Plane to prevent 'spying'.
+                */}
+                {!isLocked && currentSlug !== 'saas' && (
                     <ChevronDown size={16} className={clsx("text-gray-400 transition-transform duration-300", isOpen && "rotate-180")} />
                 )}
             </button>
 
-            {isOpen && (
+            {isOpen && currentSlug !== 'saas' && (
                 <>
                     <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)}></div>
                     <div className="absolute top-full left-0 mt-3 w-80 bg-white border border-gray-200 rounded-3xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in duration-200">
@@ -69,10 +74,10 @@ export function TenantSwitcher({ organizations, forcedSlug, user }: { organizati
                             )}
                         </div>
                         <div className="p-2 max-h-80 overflow-y-auto">
-                            {organizations.length === 0 && (
+                            {organizations.filter(o => o.slug !== 'saas').length === 0 && (
                                 <div className="p-6 text-center text-gray-400 text-sm italic font-medium">No organizations found</div>
                             )}
-                            {organizations.map(org => (
+                            {organizations.filter(o => o.slug !== 'saas').map(org => (
                                 <button
                                     key={org.id}
                                     onClick={() => handleSwitch(org.slug)}

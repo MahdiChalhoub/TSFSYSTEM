@@ -32,12 +32,19 @@ export async function getFinancialSettings() {
             salesTaxPercentage: Number(result.salesTaxPercentage),
             purchaseTaxPercentage: Number(result.purchaseTaxPercentage),
         }
-    } catch (error) {
-        console.error("Failed to fetch settings:", error)
+    } catch (error: any) {
+        const isContextError = error.message && error.message.includes('No organization context');
+
+        if (!isContextError) {
+            console.error("Failed to fetch settings:", error)
+        }
+
         return {
             companyType: 'REGULAR',
             currency: 'USD',
-            defaultTaxRate: 0.11
+            defaultTaxRate: 0.11,
+            salesTaxPercentage: 0,
+            purchaseTaxPercentage: 0
         }
     }
 }

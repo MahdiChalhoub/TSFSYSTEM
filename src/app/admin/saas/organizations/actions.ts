@@ -8,8 +8,11 @@ export async function getOrganizations() {
     try {
         return await erpFetch('organizations/')
     } catch (error: any) {
-        // Suppress auth errors (expected for unauthenticated users accessing layout)
-        if (error.message && error.message.includes('Authentication credentials')) {
+        // Suppress auth or context errors (expected for unauthenticated users or during SaaS root layout load)
+        if (error.message && (
+            error.message.includes('Authentication credentials') ||
+            error.message.includes('No organization context')
+        )) {
             return []
         }
         console.error("[SaaS] Error fetching organizations:", error);
