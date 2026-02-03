@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useActionState, useEffect } from "react";
+import { useState, useActionState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { registerBusinessAction, getPublicConfig } from "@/app/actions/onboarding";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +20,8 @@ const slugify = (text: string) => {
         .replace(/\-\-+/g, '-');
 };
 
-export default function BusinessRegisterPage() {
+function BusinessRegisterContent() {
+    const searchParams = useSearchParams();
     const [state, action, isPending] = useActionState(registerBusinessAction, null);
     const [config, setConfig] = useState<any>({ business_types: [], currencies: [] });
     const [businessName, setBusinessName] = useState("");
@@ -28,7 +30,18 @@ export default function BusinessRegisterPage() {
 
     useEffect(() => {
         getPublicConfig().then(setConfig);
-    }, []);
+
+        const initialSlug = searchParams.get('slug');
+        const initialName = searchParams.get('name');
+
+        if (initialSlug) {
+            setSlug(initialSlug);
+            setSlugManuallyEdited(true);
+        }
+        if (initialName) {
+            setBusinessName(initialName);
+        }
+    }, [searchParams]);
 
     const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const name = e.target.value;
@@ -78,10 +91,10 @@ export default function BusinessRegisterPage() {
 
                 <CardContent className="p-10 md:p-16">
                     <form action={action} className="space-y-12">
-                        {(state?.error as any)?.root && (
+                        {(state as any)?.error?.root && (
                             <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3 text-red-400 text-xs font-bold animate-in zoom-in-95">
                                 <AlertCircle size={16} />
-                                {(state?.error as any).root}
+                                {(state as any).error.root}
                             </div>
                         )}
 
@@ -224,5 +237,17 @@ export default function BusinessRegisterPage() {
                 </CardFooter>
             </Card>
         </div>
+    );
+}
+
+export default function BusinessRegisterPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-[#020617] flex items-center justify-center">
+                <Loader2 className="animate-spin text-amber-500 h-12 w-12" />
+            </div>
+        }>
+            <BusinessRegisterContent />
+        </Suspense>
     );
 }

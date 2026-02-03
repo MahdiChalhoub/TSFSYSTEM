@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Building2, UserPlus, LogIn, ArrowRight, ShieldCheck, Zap, Globe, Sparkles, AlertCircle, CheckCircle2, RotateCcw } from "lucide-react"
 import { toast } from "sonner"
-import { registerBusiness } from "@/app/actions/saas/registration"
 import { checkWorkspace } from "@/app/actions/onboarding"
 
 type AuthMode = 'login' | 'signup' | 'register'
@@ -53,21 +52,21 @@ export default function LandingPage() {
                     throw new Error("Missing tactical coordinates (Name & Slug).")
                 }
 
-                try {
-                    const result = await registerBusiness({ name: formData.name, slug: formData.slug })
-                    toast.success("Infrastructure Provisioned. Redirecting...")
-                    setTimeout(() => {
-                        const host = window.location.host.includes('localhost') ? `http://${result.slug}.localhost:3000` : `https://${result.slug}.${window.location.host}`
-                        window.location.href = host
-                    }, 1500)
-                } catch (err: any) {
-                    if (err.message.includes("already registered") || err.message.includes("taken")) {
-                        setError("Business ID collision detected. This designation is already active.")
-                        setSuggestions(generateSuggestions(formData.slug))
-                    } else {
-                        throw err
-                    }
+                // First, check if the desired slug is taken
+                const check = await checkWorkspace(formData.slug)
+                if (check.exists) {
+                    setError("Business ID collision detected. This designation is already active.")
+                    setSuggestions(generateSuggestions(formData.slug))
+                    setLoading(false)
+                    return
                 }
+
+                // If available, redirect to full registration form with initial data
+                toast.success("Designation available. Initializing onboarding sequence...")
+                setTimeout(() => {
+                    window.location.href = `/register/business?slug=${formData.slug}&name=${encodeURIComponent(formData.name)}`
+                }, 1000)
+                return
             } else {
                 // Discovery for Login/Signup
                 if (!formData.workspace) throw new Error("Workspace ID required for uplink.")
@@ -169,8 +168,8 @@ export default function LandingPage() {
 
                 <Button
                     className={`w-full h-16 rounded-2xl text-lg font-black tracking-tight shadow-2xl transition-all active:scale-[0.98] ${isLogin ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/20' :
-                            isSignup ? 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-cyan-900/20' :
-                                'bg-amber-600 hover:bg-amber-500 text-white shadow-amber-900/20'
+                        isSignup ? 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-cyan-900/20' :
+                            'bg-amber-600 hover:bg-amber-500 text-white shadow-amber-900/20'
                         }`}
                     disabled={loading}
                 >
