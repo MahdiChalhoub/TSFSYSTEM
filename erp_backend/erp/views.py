@@ -1610,8 +1610,18 @@ from rest_framework import permissions
 class OrganizationViewSet(viewsets.ModelViewSet):
     # permission_classes = [permissions.AllowAny] - REVERTED for security
     permission_classes = [permissions.IsAuthenticated]
-    queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        # SaaS Admins sees all
+        if user.is_superuser or user.is_staff:
+            return Organization.objects.all()
+        # Tenant Users see ONLY their own organization
+        if user.organization_id:
+            return Organization.objects.filter(id=user.organization_id)
+        # Should not happen for valid active users, but return empty
+        return Organization.objects.none()
     
 class SiteViewSet(viewsets.ModelViewSet):
     # permission_classes = [permissions.AllowAny] - REVERTED for security
