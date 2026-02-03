@@ -33,7 +33,7 @@ export default async function middleware(req: NextRequest) {
     if (isLocalhost || isVercel || hostname === process.env.NEXT_PUBLIC_ROOT_DOMAIN) {
 
         // Special case: /saas is the Master Panel
-        if (url.pathname.startsWith('/saas')) {
+        if (url.pathname.startsWith('/saas') && !url.pathname.startsWith('/saas/login')) {
             return NextResponse.rewrite(new URL(`/admin${path}`, req.url));
         }
 
