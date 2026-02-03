@@ -1,5 +1,4 @@
 import React from 'react';
-import { ShoppingCart, Package, DollarSign, Users } from 'lucide-react';
 
 // Type definition for a Module's Frontend Presence
 export type ModuleDefinition = {
@@ -13,33 +12,18 @@ export type ModuleDefinition = {
     landingComponents?: React.ComponentType[];
 }
 
-import { InventoryStatsWidget } from '@/components/modules/inventory/InventoryWidgets';
-import InventorySettingsPanel from '@/components/modules/inventory/InventorySettings';
-import StorefrontFeatured from '@/components/modules/inventory/StorefrontFeatured';
-import { SalesStatsWidget, SalesRecentActivity } from '@/components/modules/sales/SalesWidgets';
 import BusinessSettings from '@/components/modules/core/BusinessSettings';
 
-// The Central Registry
-// In a real plugin system, this would be populated dynamically.
-// For now, we import all known modules and conditionally render them.
+/**
+ * THE CENTRAL REGISTRY (Kernel Shell)
+ * In the engine-stable branch, this registry is empty of business modules.
+ * Business modules are registered dynamically when their packages are installed.
+ */
 export const MODULE_REGISTRY: Record<string, ModuleDefinition> = {
     'core': {
         code: 'core',
         name: 'Platform Core',
         settingsPanel: BusinessSettings
-    },
-    'inventory': {
-        code: 'inventory',
-        name: 'Inventory Management',
-        dashboardWidgets: [InventoryStatsWidget],
-        settingsPanel: InventorySettingsPanel,
-        landingComponents: [StorefrontFeatured]
-    },
-    'sales': { // or 'pos' depending on module code
-        code: 'sales',
-        name: 'Sales & POS',
-        dashboardWidgets: [SalesStatsWidget],
-        recentActivity: SalesRecentActivity
     }
 };
 
@@ -57,11 +41,7 @@ export function getActiveWidgets(installedModuleCodes: string[]) {
     }
 
     installedModuleCodes.forEach(code => {
-        // Handle alias: 'pos' module might correspond to 'sales' widget set
-        let lookupCode = code;
-        if (code === 'pos') lookupCode = 'sales';
-
-        const mod = MODULE_REGISTRY[lookupCode];
+        const mod = MODULE_REGISTRY[code];
         if (mod && mod.dashboardWidgets) {
             widgets.push(...mod.dashboardWidgets);
         }
@@ -100,8 +80,6 @@ export function getActiveLandingComponents(installedModuleCodes: string[]) {
 
 // Helper to get active recent activity widgets
 export function getActiveRecentActivity(installedModuleCodes: string[]) {
-    // We only support one recent activity widget for now (Sales), but designed for list
-    // In future this could return a merged list or multiple components
     for (const code of installedModuleCodes) {
         const mod = MODULE_REGISTRY[code];
         if (mod && mod.recentActivity) {
