@@ -12,7 +12,7 @@ from .views import (
     BarcodeSettingsViewSet, LoanViewSet, FinancialEventViewSet, TransactionSequenceViewSet
 )
 from .views_auth import login_view, logout_view, me_view
-from .views_onboarding import PublicConfigView, BusinessRegistrationView, UserSignUpView
+from .views_modules import ModuleListView, ModuleEnableView, ModuleDisableView
 from .views_manager import PendingUsersView, ApproveUserView, RejectUserView, RequestCorrectionView
 
 router = DefaultRouter()
@@ -62,5 +62,10 @@ urlpatterns = [
     path('manager/approvals/<int:user_id>/reject/', RejectUserView.as_view(), name='manager_reject_user'),
     path('manager/approvals/<int:user_id>/correction/', RequestCorrectionView.as_view(), name='manager_correction_user'),
     
+    # Module Management
+    path('modules/', ModuleListView.as_view(), name='module_list'),
+    path('modules/<str:code>/enable/', ModuleEnableView.as_view(), name='module_enable'),
+    path('modules/<str:code>/disable/', ModuleDisableView.as_view(), name='module_disable'),
+
     path('', include(router.urls)),
 ]
