@@ -1,6 +1,6 @@
 import { getJournalEntry } from '@/app/actions/finance/ledger'
 import { getChartOfAccounts } from '@/app/actions/finance/accounts'
-import { prisma } from '@/lib/db'
+import { getFiscalYears } from '@/app/actions/finance/fiscal-year'
 import JournalEntryForm from '../../new/form'
 import { notFound } from 'next/navigation'
 
@@ -23,9 +23,7 @@ export default async function EditJournalEntryPage({ params }: { params: Promise
     }
 
     const accounts = await getChartOfAccounts()
-    const fiscalYears = await prisma.fiscalYear.findMany({
-        include: { periods: true }
-    })
+    const fiscalYears = await getFiscalYears()
 
     return (
         <div className="p-8 max-w-5xl mx-auto">

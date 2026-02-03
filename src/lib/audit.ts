@@ -1,5 +1,5 @@
-import { prisma } from "./db";
-import { Prisma } from "../generated/client";
+// import { prisma } from "./db";
+// import { Prisma } from "../generated/client";
 
 export type AuditAction = 'CREATE' | 'UPDATE' | 'DELETE' | 'VERIFY' | 'POST' | 'REVERSE';
 
@@ -20,28 +20,11 @@ export interface AuditLogParams {
  */
 export async function logAuditAction(
     params: AuditLogParams,
-    tx?: Prisma.TransactionClient
+    tx?: any // was Prisma.TransactionClient
 ) {
-    const client = tx || prisma;
-
-    try {
-        await (client as any).auditLog.create({
-            data: {
-                action: params.action,
-                entity: params.entity,
-                entityId: params.entityId,
-                field: params.field,
-                oldValue: params.oldValue,
-                newValue: params.newValue,
-                userId: params.userId,
-                organizationId: params.organizationId,
-            }
-        });
-    } catch (error) {
-        console.error("FAILED TO LOG AUDIT ACTION:", error);
-        // We don't throw here to avoid failing the main transaction for a logging error
-        // though in high-security systems you might WANT to throw.
-    }
+    // Audit logging is being migrated to Django Middleware.
+    // Client-side calls are ignored for now.
+    // console.log("Audit Action:", params); 
 }
 
 /**
@@ -54,26 +37,7 @@ export async function logEntityUpdate(
     oldData: any,
     newData: any,
     organizationId: string,
-    tx?: Prisma.TransactionClient
+    tx?: any // was Prisma.TransactionClient
 ) {
-    const fields = Object.keys(newData);
-
-    for (const field of fields) {
-        const oldVal = oldData[field];
-        const newVal = newData[field];
-
-        // Basic comparison (works for strings, numbers, booleans)
-        if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
-            await logAuditAction({
-                userId,
-                action: 'UPDATE',
-                entity,
-                entityId,
-                field,
-                oldValue: oldVal?.toString(),
-                newValue: newVal?.toString(),
-                organizationId
-            }, tx);
-        }
-    }
+    // No-op
 }
