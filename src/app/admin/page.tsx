@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Activity, ShoppingCart, Package, Plus, ChevronRight, Zap } from 'lucide-react';
-import { getAdminDashboardStats } from '@/app/actions/finance/dashboard';
+// import { getAdminDashboardStats } from '@/app/actions/finance/dashboard';
 import { getActiveWidgets, getActiveRecentActivity } from '@/lib/module-registry';
 // import { getOrgModules } from '@/app/actions/saas/modules';
 import { SafeModuleBoundary } from '@/components/SafeModuleBoundary';
@@ -8,7 +8,8 @@ import { DashboardHeader } from '@/components/admin/DashboardHeader';
 
 export default async function AdminDashboard() {
     // 1. Fetch Real Data
-    const statsData = await getAdminDashboardStats();
+    // const statsData = await getAdminDashboardStats();
+    const statsData = {}; // Blank state
 
     // 2. Determine Installed Modules (Dynamic)
     // [TEMPORARY] For this refactor, we simulate fetching installed modules
