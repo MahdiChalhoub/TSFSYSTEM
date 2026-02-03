@@ -26,23 +26,35 @@ export function TenantSwitcher({ organizations, forcedSlug, user }: { organizati
         });
     };
 
+    // Locked mode: Single Org and No Master Access
+    const isLocked = organizations.length <= 1 && !showMasterPanel;
+
     return (
         <div className="relative">
             <button
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={() => !isLocked && setIsOpen(!isOpen)}
                 suppressHydrationWarning={true}
-                className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all group"
+                className={clsx(
+                    "flex items-center gap-3 px-4 py-2 rounded-2xl border transition-all group",
+                    isLocked
+                        ? "bg-transparent border-transparent cursor-default"
+                        : "bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/20 cursor-pointer"
+                )}
             >
                 <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-900/20">
                     <Building size={16} />
                 </div>
                 <div className="text-left hidden lg:block">
-                    <div className="text-[10px] font-black text-emerald-500 uppercase tracking-widest leading-none mb-0.5">Control Plane</div>
+                    <div className="text-[10px] font-black text-emerald-500 uppercase tracking-widest leading-none mb-0.5">
+                        {showMasterPanel ? 'Control Plane' : 'Workspace'}
+                    </div>
                     <div className="text-sm font-bold text-gray-800 leading-none truncate max-w-[140px]">
                         {activeOrg?.name || 'Platform Root'}
                     </div>
                 </div>
-                <ChevronDown size={16} className={clsx("text-gray-400 transition-transform duration-300", isOpen && "rotate-180")} />
+                {!isLocked && (
+                    <ChevronDown size={16} className={clsx("text-gray-400 transition-transform duration-300", isOpen && "rotate-180")} />
+                )}
             </button>
 
             {isOpen && (
