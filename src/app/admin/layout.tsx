@@ -31,7 +31,7 @@ export default async function AdminLayout({
     const user = await getUser();
 
     if (!user) {
-        redirect('/login');
+        redirect('/login?error=session_expired');
     }
 
     // 2. Fetch data in parallel ONLY if authenticated

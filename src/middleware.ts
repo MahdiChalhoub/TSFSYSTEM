@@ -58,9 +58,14 @@ export default async function middleware(req: NextRequest) {
 
     // If logged in and at Login page, redirect to Dashboard (or tenant home)
     if (authToken && isLoginPage) {
-        // If subdomain is saas, go to admin. If tenant, go to tenant dashboard.
-        const dashboardUrl = new URL("/admin/dashboard", req.url);
-        return NextResponse.redirect(dashboardUrl);
+        // Prevent LOOP: If we just came from a failed auth check (e.g. ?error=...) or explicit logout, DO NOT redirect back to dashboard
+        if (url.searchParams.has('error') || url.searchParams.has('logout')) {
+            // Allow user to see login page to re-authenticate or see error
+        } else {
+            // If subdomain is saas, go to admin. If tenant, go to tenant dashboard.
+            const dashboardUrl = new URL("/admin/dashboard", req.url);
+            return NextResponse.redirect(dashboardUrl);
+        }
     }
 
     // SLIDING EXPIRATION: Refresh cookie if interacting with protected route
