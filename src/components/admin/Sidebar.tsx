@@ -113,7 +113,6 @@ const MENU_ITEMS = [
         module: 'core',
         children: [
             { title: 'Sites & Branches', path: '/admin/settings/sites' },
-            { title: 'Transaction Numbering', path: '/admin/core/sequences', module: 'core' },
         ]
     },
     {
