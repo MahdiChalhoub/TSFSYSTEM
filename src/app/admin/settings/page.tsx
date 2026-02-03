@@ -1,4 +1,5 @@
 import { getActiveSettingsPanels } from '@/lib/module-registry';
+import { SafeModuleBoundary } from '@/components/SafeModuleBoundary';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,7 +26,9 @@ export default async function SettingsPage() {
 
             {/* Dynamic Module Settings */}
             {SettingsPanels.map((Panel, i) => (
-                <Panel key={i} />
+                <SafeModuleBoundary key={i} moduleName="Settings Panel">
+                    <Panel />
+                </SafeModuleBoundary>
             ))}
         </div>
     );

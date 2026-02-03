@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { getActiveLandingComponents } from '@/lib/module-registry';
+import { SafeModuleBoundary } from '@/components/SafeModuleBoundary';
 
 export const dynamic = 'force-dynamic';
 
@@ -91,7 +92,9 @@ export default async function Home() {
 
       {/* Dynamic Module Sections (e.g., Featured Products from Inventory) */}
       {DynamicSections.map((Section, i) => (
-        <Section key={i} />
+        <SafeModuleBoundary key={i} moduleName="Storefront Section">
+          <Section />
+        </SafeModuleBoundary>
       ))}
 
       {/* CTA Section - Core Kernel */}
