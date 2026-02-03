@@ -279,10 +279,18 @@ class ModuleManager:
         if not SystemModule.objects.filter(name=module_name, status='INSTALLED').exists():
             raise ValidationError(f"Module {module_name} is not installed on this system.")
             
+        # [FEATURE FLAGS] Calc default entitlements
+        manifest = SystemModule.objects.get(name=module_name).manifest
+        features = manifest.get('features', [])
+        default_features = [f['code'] for f in features if f.get('default', False)]
+
         OrganizationModule.objects.update_or_create(
             organization_id=organization_id,
             module_name=module_name,
-            defaults={'is_enabled': True}
+            defaults={
+                'is_enabled': True,
+                'active_features': default_features
+            }
         )
         return True
 
@@ -296,11 +304,19 @@ class ModuleManager:
              
         orgs = Organization.objects.all()
         count = 0
+        # [FEATURE FLAGS] Calc default entitlements
+        manifest = SystemModule.objects.get(name=module_name, status='INSTALLED').manifest
+        features = manifest.get('features', [])
+        default_features = [f['code'] for f in features if f.get('default', False)]
+
         for org in orgs:
             OrganizationModule.objects.update_or_create(
                 organization=org,
                 module_name=module_name,
-                defaults={'is_enabled': True}
+                defaults={
+                    'is_enabled': True,
+                    'active_features': default_features
+                }
             )
             count += 1
         return count

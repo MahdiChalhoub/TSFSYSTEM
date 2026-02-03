@@ -132,16 +132,24 @@ class OrgModuleViewSet(viewsets.ViewSet):
         org = Organization.objects.get(id=pk)
         all_modules = SystemModule.objects.all()
         org_modules = OrganizationModule.objects.filter(organization=org)
-        enabled_modules = {om.module_name for om in org_modules if om.is_enabled}
+        # Helper lookup for enabled modules
+        enabled_map = {om.module_name: om for om in org_modules if om.is_enabled}
 
         data = []
         for m in all_modules:
             is_core = m.manifest.get('required', False)
+            om_record = enabled_map.get(m.name)
+            
+            # [FEATURE FLAGS] Extract features from manifest
+            available_features = m.manifest.get('features', [])
+            
             data.append({
                 'code': m.name,
                 'name': m.name,
-                'status': 'INSTALLED' if (is_core or m.name in enabled_modules) else 'UNINSTALLED',
-                'is_core': is_core
+                'status': 'INSTALLED' if (is_core or m.name in enabled_map) else 'UNINSTALLED',
+                'is_core': is_core,
+                'active_features': om_record.active_features if om_record else [],
+                'available_features': available_features
             })
         return Response(data)
 
@@ -160,5 +168,20 @@ class OrgModuleViewSet(viewsets.ViewSet):
                     module_name=module_code
                 ).update(is_enabled=False)
             return Response({'message': 'Success'})
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def update_features(self, request, pk=None):
+        org_id = pk
+        module_code = request.data.get('module_code')
+        features = request.data.get('features', []) # List of strings
+
+        try:
+            OrganizationModule.objects.filter(
+                organization_id=org_id,
+                module_name=module_code
+            ).update(active_features=features)
+            return Response({'message': 'Features updated successfully', 'features': features})
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

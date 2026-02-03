@@ -1,7 +1,12 @@
 # Module Management System
 
-## Goal
 The goal of the Module Management System is to provide a safe, versioned, and transactional way to extend the ERP system with new features (Modules). It ensures that all modifications adhere to the "System Philosophy" and that dependencies are strictly enforced.
+
+## Architectural Design: "Flat Registry"
+The system uses a **Flat Module Registry**.
+- **No Sub-Modules**: You cannot install `inventory.warehouses` separately. You install the entire `inventory` module.
+- **Monolithic Functionality**: Group related features into a single module (e.g., "Feature A", "Feature B" inside `apps/my_module/`).
+- **Feature Flags**: If you need granular control, use `is_enabled` checks within the module itself, but deployment is always atomic.
 
 ## Data Models
 

@@ -122,3 +122,16 @@ export async function toggleOrgModule(orgId: string, moduleCode: string, action:
         return { error: e.message }
     }
 }
+
+export async function updateOrgModuleFeatures(orgId: string, moduleCode: string, features: string[]) {
+    try {
+        const data = await erpFetch(`/api/saas/org-modules/${orgId}/update_features/`, {
+            method: 'POST',
+            body: JSON.stringify({ module_code: moduleCode, features: features })
+        })
+        revalidatePath('/admin/saas/organizations')
+        return data
+    } catch (e: any) {
+        return { error: e.message }
+    }
+}
