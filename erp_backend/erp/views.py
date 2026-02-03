@@ -9,7 +9,7 @@ from .models import (
     Warehouse, Inventory, InventoryMovement, Unit,
     Brand, Category, Parfum, ProductGroup, Country,
     Contact, Employee, Role, TransactionSequence, BarcodeSettings, Loan, LoanInstallment, FinancialEvent, Transaction, User,
-    OrderLine, JournalEntryLine, Module, OrganizationModule
+    OrderLine, JournalEntryLine, SystemModule, OrganizationModule
 )
 from .serializers import (
     OrganizationSerializer, SiteSerializer, FinancialAccountSerializer,
@@ -1794,8 +1794,8 @@ class DashboardViewSet(viewsets.ViewSet):
         active_tenants = Organization.objects.filter(is_active=True).count()
         
         # Modules
-        total_modules = Module.objects.count()
-        total_deployments = OrganizationModule.objects.filter(status='INSTALLED').count()
+        total_modules = SystemModule.objects.count()
+        total_deployments = OrganizationModule.objects.filter(is_enabled=True).count()
         
         # Latest provisioned tenants
         latest_tenants = Organization.objects.order_by('-created_at')[:5]

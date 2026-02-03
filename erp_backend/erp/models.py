@@ -15,46 +15,66 @@ class BusinessType(models.Model):
     def __str__(self):
         return self.name
 
-class Module(models.Model):
+class SystemModule(models.Model):
     """
-    Global registry of available modules in the system.
-    """
-    code = models.CharField(max_length=100, unique=True) # e.g., 'inventory', 'accounting'
-    name = models.CharField(max_length=255)
-    version = models.CharField(max_length=50)
-    description = models.TextField(null=True, blank=True)
-    dependencies = models.JSONField(default=list) # List of module codes
-    is_core = models.BooleanField(default=False) # Core modules cannot be disabled
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        db_table = 'Module'
-
-    def __str__(self):
-        return f"{self.name} ({self.version})"
-
-class OrganizationModule(models.Model):
-    """
-    Tracks which modules are enabled/installed for a specific organization.
+    Internal registry of installed modules.
     """
     STATUS_CHOICES = (
         ('INSTALLED', 'Installed'),
+        ('UPGRADING', 'Upgrading'),
+        ('FAILED', 'Failed'),
         ('DISABLED', 'Disabled'),
-        ('UNINSTALLED', 'Uninstalled'),
     )
-    organization = models.ForeignKey('Organization', on_delete=models.CASCADE, related_name='modules')
-    module = models.ForeignKey(Module, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100, unique=True) # e.g. 'inventory'
+    version = models.CharField(max_length=50)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='INSTALLED')
+    manifest = models.JSONField(default=dict)
+    checksum = models.CharField(max_length=64) # SHA-256 for integrity
+    
     installed_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'OrganizationModule'
-        unique_together = ('organization', 'module')
+        db_table = 'SystemModule'
 
     def __str__(self):
-        return f"{self.module.name} for {self.organization.name} ({self.status})"
+        return f"{self.name} ({self.version})"
+
+class SystemModuleLog(models.Model):
+    """
+    ERP-grade auditing for module operations.
+    """
+    module_name = models.CharField(max_length=100)
+    from_version = models.CharField(max_length=50)
+    to_version = models.CharField(max_length=50)
+    action = models.CharField(max_length=20) # INSTALL, UPGRADE, DISABLE
+    status = models.CharField(max_length=20) # SUCCESS, FAILURE
+    logs = models.TextField()
+    performed_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'SystemModuleLog'
+
+    def __str__(self):
+        return f"{self.module_name}: {self.action} {self.from_version} -> {self.to_version}"
+
+class OrganizationModule(models.Model):
+    """
+    Tracks which modules are enabled for a specific organization.
+    This is for feature entitlement within the SaaS environment.
+    """
+    organization = models.ForeignKey('Organization', on_delete=models.CASCADE, related_name='enabled_modules')
+    module_name = models.CharField(max_length=100, default='legacy')
+    is_enabled = models.BooleanField(default=True)
+    granted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'OrganizationModule'
+        unique_together = ('organization', 'module_name')
+
+    def __str__(self):
+        return f"{self.module_name} for {self.organization.slug}"
 
 class GlobalCurrency(models.Model):
     name = models.CharField(max_length=100)

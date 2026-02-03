@@ -1,0 +1,8 @@
+{
+    "code": "core",
+    "name": "Core Platform",
+    "version": "1.0.0",
+    "description": "Essential infrastructure, security, and tenant management for the TSFSYSTEM.",
+    "dependencies": [],
+    "required": true
+}

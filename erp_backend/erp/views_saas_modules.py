@@ -2,7 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import permissions
-from .models import Module, Organization, OrganizationModule
+from .models import SystemModule, Organization, OrganizationModule
 from .module_manager import ModuleManager
 
 class SaaSModuleViewSet(viewsets.ViewSet):
@@ -13,36 +13,38 @@ class SaaSModuleViewSet(viewsets.ViewSet):
     permission_classes = [permissions.IsAdminUser]
 
     def list(self, request):
-        print(f"DEBUG: SaaSModuleViewSet.list called by user: {request.user} (Is Staff: {request.user.is_staff})")
-        modules = Module.objects.all().order_by('name')
-        print(f"DEBUG: Found {modules.count()} modules in DB")
+        modules = SystemModule.objects.all().order_by('name')
         data = []
         for m in modules:
             # Count how many orgs have this installed
-            install_count = OrganizationModule.objects.filter(module=m, status='INSTALLED').count()
+            install_count = OrganizationModule.objects.filter(module_name=m.name, is_enabled=True).count()
             data.append({
-                'code': m.code,
+                'code': m.name,
                 'name': m.name,
                 'version': m.version,
-                'description': m.description,
-                'dependencies': m.dependencies,
-                'is_core': m.is_core,
+                'description': m.manifest.get('description', ''),
+                'dependencies': m.manifest.get('requires', {}),
+                'is_core': m.manifest.get('required', False),
                 'total_installs': install_count
             })
         return Response(data)
 
     @action(detail=False, methods=['post'])
     def sync_global(self, request):
-        """Re-scans filesystem and updates Module table"""
-        codes = ModuleManager.sync()
-        return Response({'message': f'Synced {len(codes)} modules from filesystem', 'codes': codes})
+        """Re-scans filesystem and updates SystemModule table"""
+        names = ModuleManager.sync()
+        return Response({'message': f'Synced {len(names)} modules from filesystem', 'codes': names})
 
     @action(detail=True, methods=['post'])
     def install_global(self, request, pk=None):
-        """Installs a specific module for ALL organizations"""
+        """Installs a specific module for ALL organizations (feature grant)"""
         try:
-            count = ModuleManager.install_for_all(pk)
-            return Response({'message': f'Installed module {pk} for {count} organizations'})
+            orgs = Organization.objects.all()
+            count = 0
+            for org in orgs:
+                if ModuleManager.grant_access(pk, org.id):
+                    count += 1
+            return Response({'message': f'Granted module {pk} for {count} organizations'})
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -53,17 +55,18 @@ class OrgModuleViewSet(viewsets.ViewSet):
     @action(detail=True, methods=['get'])
     def modules(self, request, pk=None):
         org = Organization.objects.get(id=pk)
-        all_modules = Module.objects.all()
+        all_modules = SystemModule.objects.all()
         org_modules = OrganizationModule.objects.filter(organization=org)
-        org_status_map = {om.module_id: om.status for om in org_modules}
+        enabled_modules = {om.module_name for om in org_modules if om.is_enabled}
 
         data = []
         for m in all_modules:
+            is_core = m.manifest.get('required', False)
             data.append({
-                'code': m.code,
+                'code': m.name,
                 'name': m.name,
-                'status': org_status_map.get(m.id, 'UNINSTALLED' if not m.is_core else 'INSTALLED'),
-                'is_core': m.is_core
+                'status': 'INSTALLED' if (is_core or m.name in enabled_modules) else 'UNINSTALLED',
+                'is_core': is_core
             })
         return Response(data)
 
@@ -75,9 +78,12 @@ class OrgModuleViewSet(viewsets.ViewSet):
 
         try:
             if action_type == 'enable':
-                ModuleManager.install(module_code, org_id)
+                ModuleManager.grant_access(module_code, org_id)
             else:
-                ModuleManager.disable(module_code, org_id)
+                OrganizationModule.objects.filter(
+                    organization_id=org_id,
+                    module_name=module_code
+                ).update(is_enabled=False)
             return Response({'message': 'Success'})
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
