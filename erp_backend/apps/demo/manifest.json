@@ -1,0 +1,8 @@
+{
+    "code": "demo",
+    "name": "Demo Module",
+    "version": "1.0.0",
+    "description": "A simple demo module to test installation.",
+    "dependencies": [],
+    "required": false
+}

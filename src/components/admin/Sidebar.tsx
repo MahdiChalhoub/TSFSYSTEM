@@ -117,6 +117,12 @@ const MENU_ITEMS = [
         ]
     },
     {
+        title: 'Demo Feature',
+        icon: Box,
+        module: 'demo',
+        path: '/admin/demo'
+    },
+    {
         title: 'SaaS Panel',
         icon: Briefcase,
         module: 'core',
