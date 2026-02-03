@@ -62,6 +62,28 @@ class SaaSModuleViewSet(viewsets.ViewSet):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=True, methods=['get'])
+    def backups(self, request, pk=None):
+        """Lists available backups for a module"""
+        try:
+            backups = ModuleManager.list_backups(pk)
+            return Response(backups)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def rollback_module(self, request, pk=None):
+        """Restores a previous version from backup"""
+        target_version = request.data.get('target_version')
+        if not target_version:
+            return Response({'error': 'target_version is required'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            ModuleManager.rollback(pk, target_version)
+            return Response({'message': f'Module {pk} rolled back to {target_version}'})
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
     @action(detail=False, methods=['post'])
     def upload_module(self, request):
         """Handles .modpkg.zip upload and installation"""

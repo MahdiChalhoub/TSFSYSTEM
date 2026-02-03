@@ -346,3 +346,75 @@ class ModuleManager:
             logs=f"Module {module_name} wiped from system."
         )
         return True
+    @staticmethod
+    def list_backups(module_name):
+        """
+        Lists available backups for a module.
+        """
+        backups_dir = os.path.join(settings.BASE_DIR, 'backups')
+        if not os.path.exists(backups_dir):
+            return []
+            
+        params = []
+        for d in os.listdir(backups_dir):
+            if d.startswith(f"{module_name}_"):
+                version = d.replace(f"{module_name}_", "")
+                timestamp = os.path.getmtime(os.path.join(backups_dir, d))
+                from datetime import datetime
+                params.append({
+                    'version': version,
+                    'date': datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+                })
+        # Sort by latest
+        return sorted(params, key=lambda x: x['date'], reverse=True)
+
+    @staticmethod
+    @transaction.atomic
+    def rollback(module_name, target_version):
+        """
+        Restores a specific backup version.
+        WARNING: This does NOT automatically unapply migrations (Django restriction).
+        """
+        ModuleManager.acquire_lock()
+        try:
+            backup_path = os.path.join(settings.BASE_DIR, 'backups', f"{module_name}_{target_version}")
+            if not os.path.exists(backup_path):
+                raise ValidationError(f"Backup for version {target_version} not found.")
+
+            target_path = os.path.join(ModuleManager.MODULES_DIR, module_name)
+            
+            # 1. Wipe current
+            if os.path.exists(target_path):
+                shutil.rmtree(target_path)
+            
+            # 2. Restore backup
+            shutil.copytree(backup_path, target_path, dirs_exist_ok=True)
+            
+            # 3. Read restored manifest
+            with open(os.path.join(target_path, 'manifest.json'), 'r') as f:
+                manifest = json.load(f)
+                
+            # 4. Update Registry
+            SystemModule.objects.update_or_create(
+                name=module_name,
+                defaults={
+                    'version': target_version,
+                    'status': 'INSTALLED',
+                    'manifest': manifest,
+                    'checksum': 'RESTORED_BACKUP'
+                }
+            )
+            
+            SystemModuleLog.objects.create(
+                module_name=module_name,
+                from_version='CURRENT',
+                to_version=target_version,
+                action='ROLLBACK',
+                status='SUCCESS',
+                logs=f"Rolled back to version {target_version}"
+            )
+            
+        except Exception as e:
+            raise e
+        finally:
+            ModuleManager.release_lock()
