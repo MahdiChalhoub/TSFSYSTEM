@@ -27,15 +27,20 @@ export default async function AdminLayout({
     const currentSlug = host.split(':')[0].split('.')[0];
 
     // Parallel data fetching
-    const [sites, organizations, user] = await Promise.all([
-        getSites(),
-        getOrganizations(),
-        getUser()
-    ]);
+    // 1. Authenticate FIRST (Sequential check to prevent 401 floods)
+    const user = await getUser();
 
     if (!user) {
         redirect('/login');
     }
+
+    // 2. Fetch data in parallel ONLY if authenticated
+    const [sites, organizations] = await Promise.all([
+        getSites(),
+        getOrganizations()
+    ]);
+
+
 
     return (
         <AdminProvider>
