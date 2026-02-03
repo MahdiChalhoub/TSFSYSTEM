@@ -276,7 +276,14 @@ class Contact(TenantModel):
         ('CUSTOMER', 'Customer'),
         ('LEAD', 'Lead')
     )
+    CUSTOMER_TYPES = (
+        ('B2B', 'Business to Business'),
+        ('B2C', 'Business to Consumer'),
+        ('B2F', 'Business to Foreign'),
+        ('B2G', 'Business to Government'),
+    )
     type = models.CharField(max_length=20, choices=TYPES)
+    customer_type = models.CharField(max_length=10, choices=CUSTOMER_TYPES, default='B2C') # Default to Consumer
     name = models.CharField(max_length=255)
     email = models.CharField(max_length=255, null=True, blank=True)
     phone = models.CharField(max_length=50, null=True, blank=True)
