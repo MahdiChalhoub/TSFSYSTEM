@@ -3,6 +3,7 @@ import { Activity, Clock, ShoppingCart, Package, Plus, ChevronRight } from 'luci
 import { getAdminDashboardStats } from '@/app/actions/finance/dashboard';
 import { getActiveWidgets } from '@/lib/module-registry';
 // import { getOrgModules } from '@/app/actions/saas/modules';
+import { SafeModuleBoundary } from '@/components/SafeModuleBoundary';
 
 export default async function AdminDashboard() {
     // 1. Fetch Real Data
@@ -38,7 +39,9 @@ export default async function AdminDashboard() {
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
                 {DynamicWidgets.length > 0 ? (
                     DynamicWidgets.map((Widget, i) => (
-                        <Widget key={i} data={statsData} />
+                        <SafeModuleBoundary key={i} moduleName="Metrics Widget">
+                            <Widget data={statsData} />
+                        </SafeModuleBoundary>
                     ))
                 ) : (
                     <div className="col-span-full p-6 text-center text-gray-400 italic">
