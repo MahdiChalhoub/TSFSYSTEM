@@ -39,74 +39,19 @@ function LoginContent() {
     }, []);
 
     const tenant = config.tenant;
-    // --- VIEW 1: ROOT DOMAIN -> FIND WORKSPACE (Redirector) ---
-    const isRoot = !tenant || !tenant.name;
-    const tenantName = tenant?.name || "TSF Cloud";
     const tenantLogo = tenant?.logo;
     const sites = tenant?.sites || [];
 
-    if (isRoot) {
-        return (
-            <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 relative overflow-hidden">
-                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/5 blur-[160px] rounded-full" />
+    // --- UNIFIED VIEW (SPLIT SCREEN) ---
+    // Calculate display values based on context
+    const isRoot = !tenant || !tenant.name;
+    const isSaaS = tenant?.slug === 'saas' || tenant?.name === 'SaaS Federation'; // Adjust logic if needed based on backend response for 'saas' tenant
 
-                <Card className="w-full max-w-md bg-[#0f172a]/80 border-white/5 backdrop-blur-[20px] rounded-[2rem] shadow-2xl relative z-10">
-                    <CardHeader className="text-center pt-10 pb-6">
-                        <div className="w-12 h-12 mx-auto rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white font-black text-xl shadow-lg mb-4">
-                            W
-                        </div>
-                        <CardTitle className="text-2xl font-black text-white tracking-tight">Enter Workspace</CardTitle>
-                        <CardDescription className="text-slate-500 font-medium">
-                            Connect to your organization's dedicated environment
-                        </CardDescription>
-                    </CardHeader>
+    const displayTitle = isRoot ? "TSF CLOUD" : (tenant?.name || "TSF Cloud").toUpperCase();
+    const displaySubtitle = isRoot
+        ? "Enterprise Resource Federation Platform"
+        : "Secure enterprise gateway. Authorized personnel only.";
 
-                    <CardContent className="px-8 pb-10">
-                        <form action={action} className="space-y-6">
-                            {(state?.error as any)?.root && (
-                                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded text-red-400 text-xs font-bold text-center">
-                                    {(state?.error as any).root[0]}
-                                </div>
-                            )}
-
-                            <div className="space-y-2">
-                                <Label htmlFor="slug" className="text-[10px] uppercase tracking-widest font-black text-slate-500">Workspace URL</Label>
-                                <div className="relative">
-                                    <Input
-                                        id="slug"
-                                        name="slug"
-                                        placeholder="acme"
-                                        required
-                                        suppressHydrationWarning
-                                        className="bg-slate-900/50 border-white/5 h-14 rounded-xl font-mono text-indigo-400 pl-4 pr-32 focus:ring-indigo-500/20"
-                                    />
-                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 text-xs font-mono select-none">
-                                        .tsfcloud.com
-                                    </div>
-                                </div>
-                                <p className="text-[10px] text-slate-600 pt-1">
-                                    Don't have a workspace? <a href="/register/business" className="text-indigo-400 hover:text-indigo-300 font-bold underline">Create one</a>
-                                </p>
-                            </div>
-
-                            <Button className="w-full h-14 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-xl shadow-lg shadow-indigo-900/20 transition-all active:scale-[0.98]" disabled={isPending}>
-                                {isPending ? <Loader2 className="animate-spin" /> : "Continue to Workspace"}
-                            </Button>
-                        </form>
-                    </CardContent>
-
-                    <CardFooter className="justify-center py-6 border-t border-white/5">
-                        <a href="/saas/login" className="text-[10px] text-slate-700 hover:text-cyan-600 font-mono uppercase tracking-widest transition-colors flex items-center gap-2">
-                            <SquareTerminal size={12} />
-                            Federation Admin Login
-                        </a>
-                    </CardFooter>
-                </Card>
-            </div>
-        );
-    }
-
-    // --- VIEW 2: TENANT ORGANIZATION (SPLIT SCREEN) ---
     return (
         <div className="min-h-screen w-full grid grid-cols-1 lg:grid-cols-2">
             {/* Left Column: Visual Branding */}
@@ -122,15 +67,15 @@ function LoginContent() {
 
                 <div className="relative z-10 space-y-6">
                     {tenantLogo ? (
-                        <img src={tenantLogo} className="w-24 h-24 object-contain rounded-xl bg-white p-2" alt={tenantName} />
+                        <img src={tenantLogo} className="w-24 h-24 object-contain rounded-xl bg-white p-2" alt={displayTitle} />
                     ) : (
                         <div className="w-20 h-20 bg-emerald-500 text-white flex items-center justify-center text-4xl font-bold rounded-2xl shadow-xl shadow-emerald-500/20">
-                            {tenantName.charAt(0)}
+                            {displayTitle.charAt(0)}
                         </div>
                     )}
                     <div className="space-y-2">
-                        <h1 className="text-4xl font-black text-white tracking-tight">{tenantName.toUpperCase()}</h1>
-                        <p className="text-slate-400 text-lg max-w-md">Secure enterprise gateway. Authorized personnel only.</p>
+                        <h1 className="text-4xl font-black text-white tracking-tight">{displayTitle}</h1>
+                        <p className="text-slate-400 text-lg max-w-md">{displaySubtitle}</p>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-slate-500 font-mono uppercase tracking-widest pt-8">
                         <Globe size={14} className="text-emerald-500" />
@@ -155,6 +100,29 @@ function LoginContent() {
                         )}
 
                         <div className="space-y-4">
+                            {/* If Root, show Workspace Slug Input */}
+                            {isRoot && (
+                                <div className="space-y-2">
+                                    <Label className="text-xs uppercase font-bold text-slate-500">Workspace</Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="slug"
+                                            name="slug"
+                                            placeholder="acme"
+                                            required
+                                            suppressHydrationWarning
+                                            className="bg-[#1e293b] border-slate-700 h-14 rounded-lg text-white font-mono pl-4 pr-32 focus:ring-emerald-500 focus:border-emerald-500"
+                                        />
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs font-mono select-none">
+                                            .tsfcloud
+                                        </div>
+                                    </div>
+                                    <p className="text-[10px] text-slate-600">
+                                        Don't have a workspace? <a href="/register/business" className="text-emerald-400 hover:text-emerald-300 font-bold underline">Create one</a>
+                                    </p>
+                                </div>
+                            )}
+
                             <div className="space-y-2">
                                 <Label className="text-xs uppercase font-bold text-slate-500">Username</Label>
                                 <Input
@@ -180,7 +148,7 @@ function LoginContent() {
                                 />
                             </div>
 
-                            {sites.length > 0 && (
+                            {!isRoot && sites.length > 0 && (
                                 <div className="space-y-2">
                                     <Label className="text-xs uppercase font-bold text-slate-500">Site Location</Label>
                                     <Select name="site_id" defaultValue={sites[0]?.id?.toString()}>
@@ -198,12 +166,23 @@ function LoginContent() {
                         </div>
 
                         <Button className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-lg rounded-lg shadow-lg shadow-emerald-900/20 transition-all" disabled={isPending}>
-                            {isPending ? <Loader2 className="animate-spin" /> : "Sign In"}
+                            {isPending ? <Loader2 className="animate-spin" /> : (isRoot ? "Continue" : "Sign In")}
                         </Button>
 
-                        <div className="text-center">
-                            <a href="/register/user" className="text-sm font-medium text-emerald-400 hover:underline">Request Access</a>
-                        </div>
+                        {!isRoot && (
+                            <div className="text-center">
+                                <a href="/register/user" className="text-sm font-medium text-emerald-400 hover:underline">Request Access</a>
+                            </div>
+                        )}
+
+                        {isRoot && (
+                            <div className="text-center pt-4">
+                                <a href="/saas/login" className="text-[10px] text-slate-600 hover:text-emerald-500 font-mono uppercase tracking-widest flex items-center justify-center gap-2">
+                                    <SquareTerminal size={12} />
+                                    Federation Admin Login
+                                </a>
+                            </div>
+                        )}
                     </form>
                 </div>
             </div>
