@@ -14,8 +14,8 @@ export default function PriceListManager({ priceLists }: { priceLists: any[] }) 
             <div className="bg-white p-4 rounded-lg shadow-sm border border-stone-200">
                 <h2 className="text-lg font-bold text-stone-900 mb-2">Create Price List</h2>
                 <form action={handleCreate} className="flex gap-2">
-                    <input name="name" placeholder="List Name (e.g. Wholesale 2026)" className="border p-2 rounded w-full" required />
-                    <button type="submit" className="bg-black text-white px-4 py-2 rounded shrink-0">Create</button>
+                    <input name="name" placeholder="List Name (e.g. Wholesale 2026)" className="border p-2 rounded w-full" required suppressHydrationWarning={true} />
+                    <button type="submit" className="bg-black text-white px-4 py-2 rounded shrink-0" suppressHydrationWarning={true}>Create</button>
                 </form>
             </div>
 
