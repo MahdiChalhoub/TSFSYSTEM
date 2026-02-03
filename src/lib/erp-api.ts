@@ -114,7 +114,11 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
         return await response.json();
     } catch (error: any) {
         // Suppress noisy logs for expected auth redirection flows
-        const isAuthError = error.message?.includes('Authentication credentials') || error.message?.includes('401') || error.message?.includes('403');
+        const isAuthError =
+            error.message?.includes('Authentication credentials') ||
+            error.message?.includes('Invalid token') ||
+            error.message?.includes('401') ||
+            error.message?.includes('403');
 
         if (!isAuthError) {
             console.error(`[ERP_API] Request to ${path} failed:`, error);
