@@ -15,6 +15,47 @@ class BusinessType(models.Model):
     def __str__(self):
         return self.name
 
+class Module(models.Model):
+    """
+    Global registry of available modules in the system.
+    """
+    code = models.CharField(max_length=100, unique=True) # e.g., 'inventory', 'accounting'
+    name = models.CharField(max_length=255)
+    version = models.CharField(max_length=50)
+    description = models.TextField(null=True, blank=True)
+    dependencies = models.JSONField(default=list) # List of module codes
+    is_core = models.BooleanField(default=False) # Core modules cannot be disabled
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'Module'
+
+    def __str__(self):
+        return f"{self.name} ({self.version})"
+
+class OrganizationModule(models.Model):
+    """
+    Tracks which modules are enabled/installed for a specific organization.
+    """
+    STATUS_CHOICES = (
+        ('INSTALLED', 'Installed'),
+        ('DISABLED', 'Disabled'),
+        ('UNINSTALLED', 'Uninstalled'),
+    )
+    organization = models.ForeignKey('Organization', on_delete=models.CASCADE, related_name='modules')
+    module = models.ForeignKey(Module, on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='INSTALLED')
+    installed_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'OrganizationModule'
+        unique_together = ('organization', 'module')
+
+    def __str__(self):
+        return f"{self.module.name} for {self.organization.name} ({self.status})"
+
 class GlobalCurrency(models.Model):
     name = models.CharField(max_length=100)
     code = models.CharField(max_length=10, unique=True) # USD, EUR

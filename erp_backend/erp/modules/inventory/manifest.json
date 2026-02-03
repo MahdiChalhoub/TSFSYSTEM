@@ -1,0 +1,8 @@
+{
+    "code": "inventory",
+    "name": "Inventory Management",
+    "version": "1.0.0",
+    "description": "Comprehensive inventory tracking, warehouse management, and stock operations.",
+    "dependencies": [],
+    "required": false
+}

@@ -24,6 +24,8 @@ To provide a standardized, hierarchical structure for all financial transactions
 3.  **Auto-Coding**: The system automatically generates the next sequential code under the specified parent.
 4.  **Posting**: Transactions generate `JournalEntryLine` records linked to these accounts.
 5.  **Rollup**: The `LedgerService` calculates aggregate balances by traversing the account hierarchy.
+6.  **Revision**: Users can edit existing accounts (Revision Modal) to change their parent, name, or regulatory mappings (SYSCOHADA).
+7.  **Migration**: Users can switch entire trees using the Migration Tool, which reclassifies balances and deactivates old nodes.
 
 ## How the page achieves its goal
 By enforcing a strict coding structure and functional sub-types, the COA allows the system to automate complex accounting tasks (like Cost of Goods Sold and Tax calculations) while keeping the ledger organized and scalable.
