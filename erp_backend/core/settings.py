@@ -47,6 +47,13 @@ INSTALLED_APPS = [
     'erp',
 ]
 
+# Auto-discover modules in 'apps' directory
+APPS_DIR = BASE_DIR / "apps"
+if APPS_DIR.exists():
+    for item in APPS_DIR.iterdir():
+        if item.is_dir() and (item / "apps.py").exists():
+            INSTALLED_APPS.append(f"apps.{item.name}")
+
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
