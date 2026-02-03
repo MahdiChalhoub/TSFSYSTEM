@@ -154,7 +154,7 @@ class FinancialAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = FinancialAccount
         fields = '__all__'
-        read_only_fields = ('ledger_account',)
+        read_only_fields = ('ledger_account', 'organization')
 
 class FiscalPeriodSerializer(serializers.ModelSerializer):
     class Meta:
@@ -212,6 +212,7 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = '__all__'
+        read_only_fields = ('organization',)
 
 class ProductGroupSerializer(serializers.ModelSerializer):
     brand = BrandSerializer(read_only=True)
@@ -229,6 +230,7 @@ class ContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contact
         fields = '__all__'
+        read_only_fields = ('organization',)
 
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:
@@ -245,6 +247,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employee
         fields = '__all__'
+        read_only_fields = ('organization',)
 
 class BrandDetailSerializer(serializers.ModelSerializer):
     countries = CountrySerializer(many=True, read_only=True)

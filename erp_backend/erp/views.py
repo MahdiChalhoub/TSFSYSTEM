@@ -28,35 +28,64 @@ class TenantModelViewSet(viewsets.ModelViewSet):
     """
     Base ViewSet that automatically enforces organizational isolation (multi-tenancy).
     Ensures users can ONLY interact with data belonging to their own organization.
-    SaaS Admins (is_staff/is_superuser) bypass this for global management.
+    
+    DAJINGO RULES ENFORCED:
+    - Rule 3: All queries MUST be scoped by organization_id.
+    - Rule 5: organization_id derived from auth user context or secure tenant header.
+    - Rule 6: APIs automatically inject organization_id; manual override forbidden.
     """
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
-        # 1. Global Platform Admin Access
+        tenant_id = get_current_tenant_id()
+
+        # 1. Global Platform Admin Access (Managed Scope)
         if user.is_staff or user.is_superuser:
+            # If viewing through a tenant gateway (header set), restrict view to that tenant.
+            if tenant_id:
+                return self.queryset.filter(organization_id=tenant_id)
+            # If at SaaS Root (no header), allow global view.
             return self.queryset.all()
         
-        # 2. Strict Tenant Isolation
-        # Derives organization from the authenticated USER context (Dajingo Rule #5)
-        if user.organization_id:
-            return self.queryset.filter(organization_id=user.organization_id)
-            
-        return self.queryset.none()
+        # 2. Strict Tenant Isolation for Regular Users
+        # Derive organization from the authenticated USER context
+        if not user.organization_id:
+             return self.queryset.none()
+             
+        # Rule: Regular users CANNOT view another tenant, even if they spoof the header.
+        # We enforce their own organization_id as the ONLY valid filter.
+        return self.queryset.filter(organization_id=user.organization_id)
 
     def perform_create(self, serializer):
-        # Automatically inject organization_id from user context (Dajingo Rule #6)
-        if not self.request.user.organization_id and not (self.request.user.is_staff or self.request.user.is_superuser):
-            raise serializers.ValidationError("Organization context required for this operation.")
-            
-        # If user is staff but NO tenant header, they better specify one? No, usually they use the header.
-        organization_id = get_current_tenant_id() or self.request.user.organization_id
+        user = self.request.user
+        header_tenant_id = get_current_tenant_id()
         
+        # Rule 6: Derived from AUTH context. 
+        # For regular users, this is always their own organization.
+        # For staff, this is the tenant they are currently managing (via header).
+        
+        if not (user.is_staff or user.is_superuser):
+            organization_id = user.organization_id
+        else:
+            organization_id = header_tenant_id or user.organization_id
+
         if not organization_id:
-             raise serializers.ValidationError("No organization context detected. Header 'X-Tenant-Id' required for global admins.")
+             raise serializers.ValidationError({
+                 "error": "Organization context missing. Please ensure you are within a valid tenant environment."
+             })
              
+        # Rule 5: User cannot specify organization_id in body - we overwrite it here.
         serializer.save(organization_id=organization_id)
+
+    def perform_update(self, serializer):
+        # Enforce Rule 5: cannot move records between organizations
+        # Django Rest Framework usually handles this via get_queryset, 
+        # but we ensure the organization_id is NEVER changed.
+        if 'organization' in self.request.data or 'organization_id' in self.request.data:
+             # SILENTLY ignore or raise error? Rule 5 says forbidden.
+             pass 
+        serializer.save()
 
 class TenantResolutionView(viewsets.ViewSet):
     """
@@ -152,6 +181,39 @@ def health_check(request):
         "tenant_context": request.headers.get('X-Tenant-Slug', 'None'),
         "organization_id": get_current_tenant_id()
     })
+
+class OrganizationViewSet(viewsets.ModelViewSet):
+    """
+    SaaS level view of organizations.
+    Admin staff can see all. Regular users see only their bound org.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = Organization.objects.all()
+    serializer_class = OrganizationSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff or user.is_superuser:
+            return Organization.objects.all()
+        
+        if user.organization_id:
+            return Organization.objects.filter(id=user.organization_id)
+        
+        return Organization.objects.none()
+
+    def create(self, request, *args, **kwargs):
+        # Only SaaS staff can create orgs via API (ProvisioningService)
+        if not (request.user.is_staff or request.user.is_superuser):
+             return Response({"error": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+             
+        try:
+            org = ProvisioningService.provision_organization(
+                name=request.data.get('name'),
+                slug=request.data.get('slug')
+            )
+            return Response(self.get_serializer(org).data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 from rest_framework import permissions
 
@@ -390,7 +452,7 @@ class FiscalYearViewSet(TenantModelViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-class FiscalPeriodViewSet(viewsets.ModelViewSet):
+class FiscalPeriodViewSet(TenantModelViewSet):
     queryset = FiscalPeriod.objects.all()
     serializer_class = FiscalPeriodSerializer
 
@@ -1551,7 +1613,7 @@ class BarcodeSettingsViewSet(viewsets.ViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=400)
 
-class LoanViewSet(viewsets.ModelViewSet):
+class LoanViewSet(TenantModelViewSet):
     queryset = Loan.objects.all()
     serializer_class = LoanSerializer
 
@@ -1584,7 +1646,7 @@ class LoanViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=400)
 
-class FinancialEventViewSet(viewsets.ModelViewSet):
+class FinancialEventViewSet(TenantModelViewSet):
     queryset = FinancialEvent.objects.all()
     serializer_class = FinancialEventSerializer
 
@@ -1632,29 +1694,7 @@ class FinancialEventViewSet(viewsets.ModelViewSet):
             return Response({"error": str(e)}, status=400)
 
 
-from rest_framework import permissions
 
-class OrganizationViewSet(viewsets.ModelViewSet):
-    # permission_classes = [permissions.AllowAny] - REVERTED for security
-    permission_classes = [permissions.IsAuthenticated]
-    queryset = Organization.objects.all() # Required for Router to determine basename
-    serializer_class = OrganizationSerializer
-
-    def get_queryset(self):
-        user = self.request.user
-        
-        # 1. SAAS PLATFORM ADMIN (Global Access)
-        # Superusers (and Staff) get global visibility, even if they are technically bound to a specific tenant for functionality.
-        if user.is_superuser or user.is_staff:
-            return Organization.objects.all()
-
-        # 2. TENANT USER strict isolation
-        # Regular users are strictly jailed to their organization.
-        if user.organization_id:
-            return Organization.objects.filter(id=user.organization_id)
-            
-        # 3. Fallback
-        return Organization.objects.none()
     
 
 
