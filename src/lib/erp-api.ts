@@ -83,8 +83,14 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
             const errorText = await response.text().catch(() => "Unknown Error")
             console.error(`[ERP_API] Error response from ${path}:`, errorText)
             let errorData: any = {}
-            try { errorData = JSON.parse(errorText) } catch (e) { }
-            throw new Error(errorData.error || `ERP Backend error: ${response.statusText}`);
+            try {
+                errorData = JSON.parse(errorText)
+                // Throw the whole data object so catch blocks can access field-specific errors
+                throw new Error(JSON.stringify(errorData));
+            } catch (e) {
+                if (e instanceof Error && e.message.startsWith('{')) throw e;
+                throw new Error(errorData.error || errorData.detail || `ERP Backend error: ${response.statusText}`);
+            }
         }
 
         if (response.status === 204) {

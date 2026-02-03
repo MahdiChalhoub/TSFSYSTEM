@@ -1,193 +1,278 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Building2, UserPlus, LogIn, ArrowRight, ShieldCheck, Zap, Globe, Sparkles } from "lucide-react"
+import { Building2, UserPlus, LogIn, ArrowRight, ShieldCheck, Zap, Globe, Sparkles, AlertCircle, CheckCircle2, RotateCcw } from "lucide-react"
 import { toast } from "sonner"
 import { registerBusiness } from "@/app/actions/saas/registration"
+import { checkWorkspace } from "@/app/actions/onboarding"
 
 type AuthMode = 'login' | 'signup' | 'register'
 
 export default function LandingPage() {
     const [mode, setMode] = useState<AuthMode>('login')
     const [loading, setLoading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+    const [suggestions, setSuggestions] = useState<string[]>([])
+
     const [formData, setFormData] = useState({
         name: '',
         slug: '',
         email: '',
-        workspace: '' // For login/signup discovery
+        workspace: ''
     })
+
+    // Reset states when mode changes
+    useEffect(() => {
+        setError(null)
+        setSuggestions([])
+    }, [mode])
+
+    const generateSuggestions = (base: string) => {
+        const clean = base.toLowerCase().replace(/[^a-z0-9]/g, '-')
+        return [
+            `${clean}-corp`,
+            `${clean}-hq`,
+            `${clean}-${Math.floor(Math.random() * 900) + 100}`,
+            `${clean}-global`
+        ]
+    }
 
     const handleAction = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
+        setError(null)
+        setSuggestions([])
 
         try {
             if (mode === 'register') {
-                if (!formData.name || !formData.slug) throw new Error("Please fill business details")
-                await registerBusiness({ name: formData.name, slug: formData.slug })
-                toast.success("Business Registered! provisioning your instance...")
-                setTimeout(() => {
-                    const host = window.location.host.includes('localhost') ? `http://${formData.slug}.localhost:3000` : `https://${formData.slug}.${window.location.host}`
+                if (!formData.name || !formData.slug) {
+                    throw new Error("Missing tactical coordinates (Name & Slug).")
+                }
+
+                try {
+                    const result = await registerBusiness({ name: formData.name, slug: formData.slug })
+                    toast.success("Infrastructure Provisioned. Redirecting...")
+                    setTimeout(() => {
+                        const host = window.location.host.includes('localhost') ? `http://${result.slug}.localhost:3000` : `https://${result.slug}.${window.location.host}`
+                        window.location.href = host
+                    }, 1500)
+                } catch (err: any) {
+                    if (err.message.includes("already registered") || err.message.includes("taken")) {
+                        setError("Business ID collision detected. This designation is already active.")
+                        setSuggestions(generateSuggestions(formData.slug))
+                    } else {
+                        throw err
+                    }
+                }
+            } else {
+                // Discovery for Login/Signup
+                if (!formData.workspace) throw new Error("Workspace ID required for uplink.")
+
+                const check = await checkWorkspace(formData.workspace)
+                if (check.exists) {
+                    const route = mode === 'login' ? '/login' : '/register/user'
+                    const host = window.location.host.includes('localhost') ? `http://${formData.workspace}.localhost:3000${route}` : `https://${formData.workspace}.${window.location.host}${route}`
                     window.location.href = host
-                }, 1500)
-            } else if (mode === 'login') {
-                if (!formData.workspace) throw new Error("Workspace ID required")
-                const host = window.location.host.includes('localhost') ? `http://${formData.workspace}.localhost:3000/login` : `https://${formData.workspace}.${window.location.host}/login`
-                window.location.href = host
-            } else if (mode === 'signup') {
-                if (!formData.workspace) throw new Error("Workspace ID required")
-                const host = window.location.host.includes('localhost') ? `http://${formData.workspace}.localhost:3000/register/user` : `https://${formData.workspace}.${window.location.host}/register/user`
-                window.location.href = host
+                } else {
+                    setError(`Workspace '${formData.workspace}' not found in the federation.`)
+                }
             }
-        } catch (error: any) {
-            toast.error(error.message || "Operation failed")
+        } catch (err: any) {
+            setError(err.message || "Uplink failure. Please check connection.")
         } finally {
             setLoading(false)
         }
     }
 
+    const applySuggestion = (s: string) => {
+        setFormData({ ...formData, slug: s })
+        setError(null)
+        setSuggestions([])
+    }
+
     const renderForm = () => {
-        switch (mode) {
-            case 'login':
-                return (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        <div className="space-y-2">
-                            <Label className="text-[10px] uppercase tracking-tighter font-bold text-slate-500">Workspace ID</Label>
-                            <Input
-                                placeholder="e.g. acme"
-                                className="bg-slate-900/50 border-slate-800 h-14 rounded-xl font-mono text-emerald-400 focus:ring-emerald-500/20"
-                                value={formData.workspace}
-                                onChange={e => setFormData({ ...formData, workspace: e.target.value.toLowerCase() })}
-                            />
-                            <p className="text-[10px] text-slate-500">Enter the unique identifier of your organization.</p>
-                        </div>
-                        <Button className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-900/20 group" disabled={loading}>
-                            Access Workspace <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                        </Button>
+        const isLogin = mode === 'login'
+        const isSignup = mode === 'signup'
+        const isRegister = mode === 'register'
+
+        return (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                {(isLogin || isSignup) && (
+                    <div className="space-y-3">
+                        <Label className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500 flex items-center gap-2">
+                            Target Workspace ID
+                        </Label>
+                        <Input
+                            placeholder="e.g. acme"
+                            className={`bg-slate-900/50 border-slate-800 h-16 rounded-2xl font-mono text-lg transition-all focus:ring-2 ${isLogin ? 'text-emerald-400 focus:ring-emerald-500/20' : 'text-cyan-400 focus:ring-cyan-500/20'}`}
+                            value={formData.workspace}
+                            onChange={e => setFormData({ ...formData, workspace: e.target.value.toLowerCase().trim() })}
+                        />
+                        <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Connect to your organization's secure instance.</p>
                     </div>
-                )
-            case 'signup':
-                return (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        <div className="space-y-2">
-                            <Label className="text-[10px] uppercase tracking-tighter font-bold text-slate-500">Target Workspace</Label>
-                            <Input
-                                placeholder="e.g. acme"
-                                className="bg-slate-900/50 border-slate-800 h-14 rounded-xl font-mono text-cyan-400 focus:ring-cyan-500/20"
-                                value={formData.workspace}
-                                onChange={e => setFormData({ ...formData, workspace: e.target.value.toLowerCase() })}
-                            />
-                            <p className="text-[10px] text-slate-500">Find the business you want to join.</p>
-                        </div>
-                        <Button className="w-full h-14 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl shadow-lg shadow-cyan-900/20 group" disabled={loading}>
-                            Join Organization <UserPlus className="ml-2 w-4 h-4 group-hover:scale-110 transition-transform" />
-                        </Button>
-                    </div>
-                )
-            case 'register':
-                return (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                )}
+
+                {isRegister && (
+                    <div className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label className="text-[10px] uppercase tracking-tighter font-bold text-slate-500">Business Name</Label>
+                                <Label className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500">Business Title</Label>
                                 <Input
                                     placeholder="Acme Industries"
-                                    className="bg-slate-900/50 border-slate-800 h-14 rounded-xl"
+                                    className="bg-slate-900/50 border-slate-800 h-16 rounded-2xl text-white font-bold"
                                     value={formData.name}
                                     onChange={e => setFormData({ ...formData, name: e.target.value })}
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-[10px] uppercase tracking-tighter font-bold text-slate-500">Instance Slug</Label>
+                                <Label className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500">Workspace Slug</Label>
                                 <Input
                                     placeholder="acme"
-                                    className="bg-slate-900/50 border-slate-800 h-14 rounded-xl font-mono text-amber-400"
+                                    className="bg-slate-900/50 border-slate-800 h-16 rounded-2xl font-mono text-amber-400 text-lg"
                                     value={formData.slug}
                                     onChange={e => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/ /g, '-') })}
                                 />
                             </div>
                         </div>
-                        <Button className="w-full h-14 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl shadow-lg shadow-amber-900/20 group" disabled={loading}>
-                            Provision Infrastructure <ShieldCheck className="ml-2 w-4 h-4 group-hover:animate-pulse" />
-                        </Button>
                     </div>
-                )
-        }
+                )}
+
+                {error && (
+                    <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex flex-col gap-3 animate-in zoom-in-95 duration-300">
+                        <div className="flex items-center gap-2 text-red-400 text-xs font-bold">
+                            <AlertCircle size={14} />
+                            {error}
+                        </div>
+                        {suggestions.length > 0 && (
+                            <div className="space-y-2">
+                                <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Suggested Available Designations:</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {suggestions.map(s => (
+                                        <button
+                                            key={s}
+                                            type="button"
+                                            onClick={() => applySuggestion(s)}
+                                            className="px-3 py-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-[10px] font-mono text-amber-400 transition-colors"
+                                        >
+                                            {s}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                <Button
+                    className={`w-full h-16 rounded-2xl text-lg font-black tracking-tight shadow-2xl transition-all active:scale-[0.98] ${isLogin ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/20' :
+                            isSignup ? 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-cyan-900/20' :
+                                'bg-amber-600 hover:bg-amber-500 text-white shadow-amber-900/20'
+                        }`}
+                    disabled={loading}
+                >
+                    {loading ? (
+                        <div className="flex items-center gap-2">
+                            <RotateCcw className="animate-spin" size={20} />
+                            Establishing Uplink...
+                        </div>
+                    ) : (
+                        <div className="flex items-center justify-center gap-2">
+                            {isLogin ? "Initialize Command" : isSignup ? "Request Recruitment" : "Found Federation"}
+                            <ArrowRight className="w-5 h-5" />
+                        </div>
+                    )}
+                </Button>
+            </div>
+        )
     }
 
     return (
-        <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 relative overflow-hidden">
+        <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center p-6 relative overflow-hidden">
             {/* Ambient Background Elements */}
-            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-500/10 blur-[120px] rounded-full" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-cyan-500/10 blur-[120px] rounded-full" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03] pointer-events-none" />
+            <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/5 blur-[160px] rounded-full" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-cyan-500/5 blur-[160px] rounded-full" />
+            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] pointer-events-none brightness-200" />
 
             {/* Header Content */}
-            <div className="text-center mb-12 space-y-4 relative z-10">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-black uppercase tracking-widest text-emerald-400 mb-4 backdrop-blur-md">
-                    <Sparkles size={12} className="animate-pulse" />
-                    Strategic Enterprise Operating System
+            <div className="text-center mb-16 space-y-4 relative z-10 transition-all duration-1000">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-emerald-500/5 border border-emerald-500/10 rounded-full text-[10px] font-black uppercase tracking-[0.3em] text-emerald-400 mb-6 backdrop-blur-xl">
+                    <Sparkles size={14} className="animate-pulse" />
+                    Strategic Tactical OS Backbone
                 </div>
-                <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter leading-none italic">
-                    VANTAGE <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 not-italic">OS</span>
+                <h1 className="text-6xl md:text-9xl font-black text-white tracking-tighter leading-none italic select-none">
+                    VANTAGE <span className="text-transparent bg-clip-text bg-gradient-to-br from-emerald-400 to-cyan-400 not-italic drop-shadow-2xl">OS</span>
                 </h1>
-                <p className="text-slate-400 max-w-lg mx-auto text-sm md:text-base font-medium">
-                    The hybrid backbone for modern commerce. Multi-tenant architecture designed for massive scale and tactical precision.
+                <p className="text-slate-500 max-w-lg mx-auto text-sm md:text-lg font-medium leading-relaxed">
+                    Unifying distributed business intelligence into a single, high-fidelity command interface.
                 </p>
             </div>
 
             {/* Main Unified Portal */}
-            <Card className="w-full max-w-2xl bg-white/[0.02] border-white/10 backdrop-blur-2xl rounded-[2rem] overflow-hidden shadow-2xl relative z-10 transition-all duration-500">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
+            <Card className="w-full max-w-2xl bg-[#0f172a]/40 border-white/5 backdrop-blur-[40px] rounded-[3rem] overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.5)] border-t border-t-white/10 relative z-10 transition-all duration-500">
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent" />
 
                 {/* Mode Switcher */}
-                <div className="grid grid-cols-3 border-b border-white/5 bg-white/[0.01]">
+                <div className="grid grid-cols-3 border-b border-white/5 bg-black/20">
                     <button
                         onClick={() => setMode('login')}
-                        className={`py-6 flex flex-col items-center gap-2 transition-all ${mode === 'login' ? 'bg-emerald-500/10 text-emerald-400' : 'text-slate-500 hover:text-slate-300'}`}
+                        className={`py-8 flex flex-col items-center gap-3 transition-all relative ${mode === 'login' ? 'text-emerald-400' : 'text-slate-500 hover:text-slate-300'}`}
                     >
-                        <LogIn size={20} className={mode === 'login' ? 'scale-110' : ''} />
-                        <span className="text-[10px] font-black uppercase tracking-widest">Entrance</span>
+                        <LogIn size={24} />
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Entrance</span>
+                        {mode === 'login' && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-emerald-500 rounded-t-full" />}
                     </button>
                     <button
                         onClick={() => setMode('signup')}
-                        className={`py-6 flex flex-col items-center gap-2 transition-all ${mode === 'signup' ? 'bg-cyan-500/10 text-cyan-400' : 'text-slate-500 hover:text-slate-300'}`}
+                        className={`py-8 flex flex-col items-center gap-3 transition-all relative ${mode === 'signup' ? 'text-cyan-400' : 'text-slate-500 hover:text-slate-300'}`}
                     >
-                        <UserPlus size={20} className={mode === 'signup' ? 'scale-110' : ''} />
-                        <span className="text-[10px] font-black uppercase tracking-widest">Recruitment</span>
+                        <UserPlus size={24} />
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Recruit</span>
+                        {mode === 'signup' && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-cyan-500 rounded-t-full" />}
                     </button>
                     <button
                         onClick={() => setMode('register')}
-                        className={`py-6 flex flex-col items-center gap-2 transition-all ${mode === 'register' ? 'bg-amber-500/10 text-amber-400' : 'text-slate-500 hover:text-slate-300'}`}
+                        className={`py-8 flex flex-col items-center gap-3 transition-all relative ${mode === 'register' ? 'text-amber-400' : 'text-slate-500 hover:text-slate-300'}`}
                     >
-                        <Building2 size={20} className={mode === 'register' ? 'scale-110' : ''} />
-                        <span className="text-[10px] font-black uppercase tracking-widest">Founding</span>
+                        <Building2 size={24} />
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Found</span>
+                        {mode === 'register' && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-amber-500 rounded-t-full" />}
                     </button>
                 </div>
 
-                <CardContent className="p-8 md:p-12">
+                <CardContent className="p-10 md:p-16">
                     <form onSubmit={handleAction}>
                         {renderForm()}
                     </form>
                 </CardContent>
 
-                {/* Footer Insight */}
-                <div className="p-8 border-t border-white/5 bg-black/20 text-center">
-                    <div className="flex flex-wrap justify-center gap-8 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                        <div className="flex items-center gap-2"><Zap size={14} className="text-emerald-500" /> Real-time Sync</div>
-                        <div className="flex items-center gap-2"><Globe size={14} className="text-cyan-500" /> Multi-Tenant</div>
-                        <div className="flex items-center gap-2"><ShieldCheck size={14} className="text-amber-500" /> Encrypted Core</div>
+                {/* Tactical Ledger Footer */}
+                <div className="p-10 border-t border-white/5 bg-black/40">
+                    <div className="grid grid-cols-3 gap-4 text-center">
+                        <div className="space-y-1">
+                            <div className="text-white font-black text-xl flex items-center justify-center gap-2"><Zap size={16} className="text-emerald-400" /> 2.4s</div>
+                            <div className="text-[9px] text-slate-500 uppercase tracking-widest font-bold">Latency Uplink</div>
+                        </div>
+                        <div className="space-y-1">
+                            <div className="text-white font-black text-xl flex items-center justify-center gap-2"><CheckCircle2 size={16} className="text-cyan-400" /> AES</div>
+                            <div className="text-[9px] text-slate-500 uppercase tracking-widest font-bold">Encryption</div>
+                        </div>
+                        <div className="space-y-1">
+                            <div className="text-white font-black text-xl flex items-center justify-center gap-2"><Globe size={16} className="text-amber-400" /> INF</div>
+                            <div className="text-[9px] text-slate-500 uppercase tracking-widest font-bold">Provisioning</div>
+                        </div>
                     </div>
                 </div>
             </Card>
 
             {/* Bottom Credits */}
-            <div className="mt-12 text-[10px] font-black text-slate-600 uppercase tracking-[0.5em] relative z-10">
-                Secured by TSF Federation Architecture
+            <div className="mt-16 text-[11px] font-black text-slate-700 uppercase tracking-[0.8em] relative z-10 flex items-center gap-4">
+                <div className="h-[1px] w-12 bg-slate-800" />
+                Secured by TSF Global Federation Core
+                <div className="h-[1px] w-12 bg-slate-800" />
             </div>
         </div>
     )
