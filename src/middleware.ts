@@ -63,16 +63,18 @@ export default async function middleware(req: NextRequest) {
         // return NextResponse.redirect(new URL("/dashboard", req.url))
     }
 
-    // 1. MASTER PANEL: saas.localhost -> /admin/saas
-    if (subdomain === "saas") {
-        if (url.pathname.startsWith("/admin/saas")) return NextResponse.next()
-        return NextResponse.rewrite(new URL(`/admin/saas${path}`, req.url))
-    }
+    // SLIDING EXPIRATION: Refresh cookie if interacting with protected route
+    // This ensures session stays alive as long as user is active
+    let response = NextResponse.next()
 
-    // 2. TENANT INSTANCE: xxx.localhost -> /tenant/[slug]
-    if (subdomain && subdomain !== "www") {
-        // Exempt /admin paths and Auth paths from being rewritten into /tenant/[slug]
-        // This allows them to use the global pages while keeping the subdomain context (Host header)
+    // 1. MASTER PANEL logic override
+    if (subdomain === "saas") {
+        if (!url.pathname.startsWith("/admin/saas")) {
+            response = NextResponse.rewrite(new URL(`/admin/saas${path}`, req.url))
+        }
+    }
+    // 2. TENANT INSTANCE logic override
+    else if (subdomain && subdomain !== "www") {
         if (
             url.pathname.startsWith("/admin") ||
             url.pathname.startsWith("/api") ||
@@ -82,16 +84,13 @@ export default async function middleware(req: NextRequest) {
             url.pathname.startsWith("/_next") ||
             url.pathname.startsWith("/static")
         ) {
-            return NextResponse.next()
+            // No rewrite needed
+        } else if (!url.pathname.startsWith(`/tenant/${subdomain}`)) {
+            response = NextResponse.rewrite(new URL(`/tenant/${subdomain}${path}`, req.url))
         }
-
-        if (url.pathname.startsWith(`/tenant/${subdomain}`)) return NextResponse.next()
-        return NextResponse.rewrite(new URL(`/tenant/${subdomain}${path}`, req.url))
     }
-
-    // 3. LANDING PAGE: root localhost -> /landing (internal rewrite)
-    // ONLY rewrite if it's NOT an admin, api, or tenant path
-    if (!subdomain || subdomain === "www") {
+    // 3. LANDING PAGE logic
+    else if (!subdomain || subdomain === "www") {
         const isInternalPath =
             url.pathname.startsWith("/admin") ||
             url.pathname.startsWith("/api") ||
@@ -103,13 +102,23 @@ export default async function middleware(req: NextRequest) {
             url.pathname.startsWith("/static") ||
             url.pathname.startsWith("/_next")
 
-        if (isInternalPath) {
-            return NextResponse.next()
+        if (!isInternalPath) {
+            if (!url.pathname.startsWith("/landing")) {
+                response = NextResponse.rewrite(new URL(`/landing${path}`, req.url))
+            }
         }
-
-        if (url.pathname.startsWith("/landing")) return NextResponse.next()
-        return NextResponse.rewrite(new URL(`/landing${path}`, req.url))
     }
 
-    return NextResponse.next()
+    // Set cookie if token exists (Sliding Window)
+    if (authToken && !path.startsWith('/_next') && !path.startsWith('/static')) {
+        response.cookies.set('auth_token', authToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 60 * 30, // Reset to 30 mins
+        })
+    }
+
+    return response
 }
