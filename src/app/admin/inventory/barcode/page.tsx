@@ -5,7 +5,16 @@ import { getBarcodeSettings, updateBarcodeSettings } from '@/app/actions/barcode
 import { Save, RefreshCw, Barcode } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 
+import { redirect } from 'next/navigation';
+
 export default function BarcodeSettingsPage() {
+    // [TEMPORARY] Simulate installed modules
+    const installedModuleCodes: string[] = []; // BLANC SYSTEM
+
+    if (!installedModuleCodes.includes('inventory')) {
+        redirect('/admin');
+    }
+
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
