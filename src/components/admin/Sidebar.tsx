@@ -49,6 +49,7 @@ const MENU_ITEMS = [
             { title: 'Product Master', path: '/admin/products' },
             { title: 'Product Groups', path: '/admin/products?view=grouped' },
             { title: 'New Product Group', path: '/admin/products/create-group' },
+            { title: 'Barcode Configuration', path: '/admin/inventory/barcode', module: 'inventory' },
             { title: 'Warehouses & Zones', path: '/admin/inventory/warehouses' },
             { title: 'Stock Adjustments', path: '/admin/inventory/adjustments' },
             { title: 'Global Inventory', path: '/admin/inventory/global' },
@@ -112,8 +113,7 @@ const MENU_ITEMS = [
         module: 'core',
         children: [
             { title: 'Sites & Branches', path: '/admin/settings/sites' },
-            { title: 'Barcode Configuration', path: '/admin/settings/barcode' },
-            { title: 'Transaction Numbering', path: '/admin/settings/sequences' },
+            { title: 'Transaction Numbering', path: '/admin/core/sequences', module: 'core' },
         ]
     },
     {
@@ -218,7 +218,7 @@ export function Sidebar({ isSaas = false }: { isSaas?: boolean }) {
             <div className="p-6 space-y-2 flex-1">
                 <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-6 px-3 mt-2">Main Menu</div>
                 {filteredItems.map((item, idx) => (
-                    <MenuItem key={idx} item={item} openTab={openTab} activeTab={activeTab} />
+                    <MenuItem key={idx} item={item} openTab={openTab} activeTab={activeTab} installedModules={installedModules} />
                 ))}
             </div>
 
@@ -236,7 +236,7 @@ export function Sidebar({ isSaas = false }: { isSaas?: boolean }) {
     );
 }
 
-function MenuItem({ item, openTab, activeTab }: { item: any, openTab: any, activeTab: string }) {
+function MenuItem({ item, openTab, activeTab, installedModules }: { item: any, openTab: any, activeTab: string, installedModules: Set<string> }) {
     const Icon = item.icon;
     const hasChildren = item.children && item.children.length > 0;
 
@@ -289,6 +289,11 @@ function MenuItem({ item, openTab, activeTab }: { item: any, openTab: any, activ
             {hasChildren && expanded && (
                 <div className="ml-6 pl-5 border-l border-gray-800 my-2 space-y-1.5">
                     {item.children.map((child: any, idx: number) => {
+                        // Skip if child is module-bound and module not installed
+                        if (child.module && child.module !== 'core' && !installedModules.has(child.module)) {
+                            return null;
+                        }
+
                         const isCurrentChild = activeTab === child.path;
                         return (
                             <div
