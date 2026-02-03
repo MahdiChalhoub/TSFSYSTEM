@@ -97,8 +97,16 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
         }
 
         return await response.json();
-    } catch (error) {
-        console.error(`[ERP_API] Request to ${path} failed:`, error);
+    } catch (error: any) {
+        // Suppress noisy logs for expected auth redirection flows
+        const isAuthError = error.message?.includes('Authentication credentials') || error.message?.includes('401') || error.message?.includes('403');
+
+        if (!isAuthError) {
+            console.error(`[ERP_API] Request to ${path} failed:`, error);
+        } else {
+            // Keep debug log for troubleshooting if needed, but clean up production/dev console
+            console.log(`[ERP_API] Auth check failed for ${path} (Handled)`);
+        }
         throw error;
     }
 }
