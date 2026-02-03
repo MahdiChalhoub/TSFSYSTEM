@@ -84,39 +84,20 @@ export async function loginAction(prevState: any, formData: FormData) {
     }
 
     const { username, password } = validated.data
-    const djangoUrl = process.env.DJANGO_URL || 'http://localhost:8000'
+    const { erpFetch } = await import("@/lib/erp-api")
 
     try {
-        const headerStore = await import('next/headers');
-        const headersList = await headerStore.headers();
-        const host = headersList.get('host');
-
-        const res = await fetch(`${djangoUrl}/api/auth/login/`, {
+        const responseData = await erpFetch('auth/login/', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Host': host || 'localhost:8000' // Forward host for backend tenant resolution
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 username,
                 password,
-                site_id: data.site_id // Pass site_id if it exists
+                site_id: data.site_id
             }),
-            cache: 'no-store',
         })
 
-        if (!res.ok) {
-            let errorMessage = 'Invalid credentials'
-            try {
-                const errorData = await res.json()
-                if (errorData.non_field_errors) {
-                    errorMessage = errorData.non_field_errors[0]
-                }
-            } catch (e) { }
-            return { error: { root: [errorMessage] } }
-        }
-
-        const { token } = await res.json()
+        const token = responseData.token
         const cookieStore = await cookies()
         cookieStore.set('auth_token', token, {
             httpOnly: true,
@@ -126,9 +107,18 @@ export async function loginAction(prevState: any, formData: FormData) {
             maxAge: 60 * 60 * 24 * 7,
         })
 
-    } catch (error) {
-        console.error('Login error:', error)
-        return { error: { root: ['Service unavailable.'] } }
+    } catch (error: any) {
+        console.error('Login Tactical Error:', error)
+        let message = 'Vantage Uplink Failure'
+        try {
+            const errData = JSON.parse(error.message)
+            if (errData.non_field_errors) message = errData.non_field_errors[0]
+            else if (errData.detail) message = errData.detail
+            else if (errData.error) message = errData.error
+        } catch (e) {
+            message = error.message || 'Service unavailable'
+        }
+        return { error: { root: [message] } }
     }
 
     redirect('/admin')
