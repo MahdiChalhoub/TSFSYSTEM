@@ -1595,54 +1595,57 @@ class DashboardViewSet(viewsets.ViewSet):
     @action(detail=False, methods=['get'])
     def financial_stats(self, request):
         organization_id = get_current_tenant_id()
-        if not organization_id: return Response({"error": "No tenant context"}, status=400)
-        
-        organization = Organization.objects.get(id=organization_id)
         scope = request.query_params.get('scope', 'INTERNAL')
         
         from .services import LedgerService, InventoryService
         from django.db.models import Sum, F
-        
-        # 1. Cash Position
-        cash_accounts = FinancialAccount.objects.filter(organization=organization)
-        total_cash = sum(acc.balance for acc in cash_accounts)
-        
-        # 2. P&L (Monthly) - Simplified Logic for now
-        # Ideally we fetch this from LedgerService.get_income_statement
-        # For dashboard, we might want current month's performance
-        
-        # Mocking or extracting simple aggregates from JournalEntries
-        # Income = Credit sum on INCOME accounts
-        # Expense = Debit sum on EXPENSE accounts
-        
-        # Let's use a simpler approach: Sum of JournalEntries in current month
         from django.utils import timezone
+        
+        # Determine Context: Tenant vs Global
+        if organization_id:
+            try:
+                organization = Organization.objects.get(id=organization_id)
+            except Organization.DoesNotExist:
+                return Response({"error": "Organization not found"}, status=404)
+        else:
+            # Global / SaaS View
+            if not (request.user.is_staff or request.user.is_superuser):
+                return Response({"error": "Access Denied. Tenant context required."}, status=403)
+            organization = None # Signal for global queries
+
+        # 1. Cash Position
+        if organization:
+            cash_accounts = FinancialAccount.objects.filter(organization=organization)
+            total_cash = sum(acc.balance for acc in cash_accounts)
+        else:
+            # Global Cash
+            total_cash = FinancialAccount.objects.aggregate(total=Sum('balance'))['total'] or 0
+
+        # 2. P&L (Monthly)
         now = timezone.now()
         start_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         
-        income = JournalEntryLine.objects.filter(
-            journal_entry__organization=organization,
+        # Base Query for Income/Expense Lines
+        lines_qs = JournalEntryLine.objects.filter(
             journal_entry__transaction_date__gte=start_month,
-            account__type='INCOME',
             journal_entry__status='POSTED'
-        ).distinct()
+        )
+        
+        if organization:
+            lines_qs = lines_qs.filter(journal_entry__organization=organization)
         
         if scope == 'OFFICIAL':
-             income = income.filter(journal_entry__scope='OFFICIAL')
-             
-        monthly_income = sum(line.credit - line.debit for line in income) # Income is Credit normal
+            lines_qs = lines_qs.filter(journal_entry__scope='OFFICIAL')
+
+        # Income = Credit - Debit (for INCOME accounts)
+        monthly_income = lines_qs.filter(account__type='INCOME').aggregate(
+            val=Sum(F('credit') - F('debit'))
+        )['val'] or 0
         
-        expense = JournalEntryLine.objects.filter(
-            journal_entry__organization=organization,
-            journal_entry__transaction_date__gte=start_month,
-            account__type='EXPENSE',
-            journal_entry__status='POSTED'
-        ).distinct()
-        
-        if scope == 'OFFICIAL':
-             expense = expense.filter(journal_entry__scope='OFFICIAL')
-             
-        monthly_expense = sum(line.debit - line.credit for line in expense) # Expense is Debit normal
+        # Expense = Debit - Credit (for EXPENSE accounts)
+        monthly_expense = lines_qs.filter(account__type='EXPENSE').aggregate(
+            val=Sum(F('debit') - F('credit'))
+        )['val'] or 0
 
         # 3. Trends (Last 6 months Income/Expense)
         trends = []
@@ -1652,11 +1655,13 @@ class DashboardViewSet(viewsets.ViewSet):
             
             # Filter entries for this month
             month_lines = JournalEntryLine.objects.filter(
-                journal_entry__organization=organization,
                 journal_entry__transaction_date__gte=month_start,
                 journal_entry__transaction_date__lt=next_month_start,
                 journal_entry__status='POSTED'
             )
+            
+            if organization:
+                month_lines = month_lines.filter(journal_entry__organization=organization)
             
             if scope == 'OFFICIAL':
                 month_lines = month_lines.filter(journal_entry__scope='OFFICIAL')
@@ -1676,7 +1681,17 @@ class DashboardViewSet(viewsets.ViewSet):
             })
 
         # 4. Inventory Value
-        inv_status = InventoryService.get_inventory_financial_status(organization)
+        if organization:
+            inv_status = InventoryService.get_inventory_valuation(organization)
+        else:
+            # Global Inventory Value
+            from .models import Inventory
+            result = Inventory.objects.aggregate(total_value=Sum(F('quantity') * F('product__cost_price')))
+            inv_status = {
+                "total_value": Decimal(str(result['total_value'] or '0')),
+                "item_count": Inventory.objects.count(),
+                "timestamp": timezone.now()
+            }
         
         return Response({
             "totalCash": float(total_cash),

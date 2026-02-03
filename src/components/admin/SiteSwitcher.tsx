@@ -30,6 +30,7 @@ export function SiteSwitcher({ sites }: { sites: any[] }) {
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-gray-800/40 border border-gray-700 hover:bg-gray-800 transition-all group"
+                suppressHydrationWarning
             >
                 <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-900/20">
                     <Building2 size={16} />
