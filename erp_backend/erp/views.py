@@ -118,7 +118,10 @@ def health_check(request):
         "organization_id": get_current_tenant_id()
     })
 
+from rest_framework import permissions
+
 class OrganizationViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.AllowAny]
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
 
@@ -134,6 +137,7 @@ class OrganizationViewSet(viewsets.ModelViewSet):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class SiteViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.AllowAny]
     queryset = Site.objects.all()
     serializer_class = SiteSerializer
 
@@ -1598,6 +1602,33 @@ class FinancialEventViewSet(viewsets.ModelViewSet):
             import traceback
             traceback.print_exc()
             return Response({"error": str(e)}, status=400)
+
+
+from rest_framework import permissions
+
+class OrganizationViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.AllowAny]
+    queryset = Organization.objects.all()
+    serializer_class = OrganizationSerializer
+    
+class SiteViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.AllowAny]
+    queryset = Site.objects.all()
+    serializer_class = SiteSerializer
+
+    def get_queryset(self):
+        organization_id = get_current_tenant_id()
+        if organization_id:
+            return Site.objects.filter(organization_id=organization_id)
+        return Site.objects.none()
+
+    def perform_create(self, serializer):
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            raise serializers.ValidationError("No active organization found in context")
+            
+        organization = Organization.objects.get(id=organization_id)
+        serializer.save(organization=organization)
 
 
 class DashboardViewSet(viewsets.ViewSet):
