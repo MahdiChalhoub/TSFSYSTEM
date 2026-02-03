@@ -47,7 +47,7 @@ export default async function AdminLayout({
             <DevProvider>
                 <div className="flex h-screen bg-gray-50 overflow-hidden font-sans text-gray-900">
                     {/* Left Panel: Sidebar Tree */}
-                    <Sidebar />
+                    <Sidebar isSaas={currentSlug === 'saas' || currentSlug === 'www' || !currentSlug} />
 
                     {/* Right Panel: Content */}
                     <div className="flex-1 flex flex-col min-w-0">

@@ -118,8 +118,12 @@ const MENU_ITEMS = [
     },
 ];
 
-export function Sidebar() {
+export function Sidebar({ isSaas = false }: { isSaas?: boolean }) {
     const { sidebarOpen, openTab, activeTab, viewScope, setViewScope } = useAdmin();
+
+    const filteredItems = isSaas
+        ? MENU_ITEMS
+        : MENU_ITEMS.filter(item => item.title !== 'SaaS Panel');
 
     if (!sidebarOpen) return null;
 
@@ -131,7 +135,7 @@ export function Sidebar() {
                 </div>
                 <div>
                     <h1 className="text-xl font-bold text-white tracking-tight leading-none">TSF City</h1>
-                    <p className="text-xs text-emerald-400 font-medium mt-1.5">Marcory Branch</p>
+                    <p className="text-xs text-emerald-400 font-medium mt-1.5">{isSaas ? 'Federation Admin' : 'Workspace Admin'}</p>
                 </div>
             </div>
 
@@ -167,7 +171,7 @@ export function Sidebar() {
 
             <div className="p-6 space-y-2 flex-1">
                 <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-6 px-3 mt-2">Main Menu</div>
-                {MENU_ITEMS.map((item, idx) => (
+                {filteredItems.map((item, idx) => (
                     <MenuItem key={idx} item={item} openTab={openTab} activeTab={activeTab} />
                 ))}
             </div>
