@@ -9,8 +9,8 @@ import { cookies } from "next/headers";
 
 async function getPurchases(scope: string = 'INTERNAL') {
     try {
-        // Backend now supports GET /purchases/ with scope param
-        return await erpFetch(`purchases/?scope=${scope}`);
+        // Backend now supports GET /purchase/ with scope param
+        return await erpFetch(`purchase/?scope=${scope}`);
     } catch (e) {
         console.error("Failed to fetch purchases:", e);
         return [];

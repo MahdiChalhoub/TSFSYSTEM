@@ -72,7 +72,7 @@ export async function createPurchaseInvoice(prevState: PurchaseFormState, formDa
     const { data } = validated;
 
     try {
-        await erpFetch('purchases/quick_purchase/', {
+        await erpFetch('purchase/quick_purchase/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
