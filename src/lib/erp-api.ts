@@ -7,6 +7,7 @@ const DJANGO_URL = process.env.DJANGO_URL || 'http://127.0.0.1:8000';
 export async function getTenantContext() {
     const headerList = await headers();
     const host = headerList.get('host') || 'localhost:3000';
+    console.log(`[DEBUG] getTenantContext Host: ${host}`);
 
     // Precise Hostname extraction (removes port)
     const hostname = host.split(':')[0].toLowerCase();
@@ -20,6 +21,8 @@ export async function getTenantContext() {
         if (parts.length > 2) subdomain = parts[0];
     }
 
+    console.log(`[DEBUG] Subdomain detected: ${subdomain}`);
+
     if (!subdomain || subdomain === "localhost" || subdomain === "www") {
         // Root Domain (SaaS Panel) - No Tenant Context
         return null;
@@ -32,7 +35,10 @@ export async function getTenantContext() {
             next: { revalidate: 60 } // Cache resolution for 60s
         });
 
-        if (!res.ok) return null;
+        if (!res.ok) {
+            console.error(`[DEBUG] Tenant Resolution Failed: ${res.status}`);
+            return null;
+        }
         return await res.json();
     } catch (e) {
         console.error("Failed to resolve tenant:", e);
@@ -44,23 +50,12 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
     const context = await getTenantContext();
     const headersRaw = new Headers(options.headers || {});
 
-    // [AUTH INTEGRATION]
-    // We import cookies dynamically to avoid "Dynamic server usage" errors in static generation if unnecessary
-    // However, erpFetch is mostly used in server components/actions where dynamic is fine.
-    try {
-        const { cookies } = await import('next/headers');
-        const cookieStore = await cookies();
-        const token = cookieStore.get('auth_token')?.value;
-        if (token) {
-            headersRaw.set('Authorization', `Token ${token}`);
-        }
-    } catch (e) {
-        // Fallback for environments where cookies are unavailable (e.g. static generation)
-    }
-
     if (context) {
         headersRaw.set('X-Tenant-Id', context.id);
         headersRaw.set('X-Tenant-Slug', context.slug);
+        console.log(`[DEBUG] erpFetch Context: ${context.slug}`);
+    } else {
+        console.log(`[DEBUG] erpFetch Context: NULL`);
     }
 
     const url = `${DJANGO_URL}/api/${path.startsWith('/') ? path.slice(1) : path}`;
