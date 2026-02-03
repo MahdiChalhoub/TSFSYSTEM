@@ -1768,7 +1768,8 @@ class DashboardViewSet(viewsets.ViewSet):
     def search_enhanced(self, request):
         organization_id = get_current_tenant_id()
         if not organization_id:
-            return Response({"error": "No organization context"}, status=status.HTTP_400_BAD_REQUEST)
+            # Prevent crash on Global Dashboard (Root)
+            return Response([], status=status.HTTP_200_OK)
         
         organization = Organization.objects.get(id=organization_id)
         query = request.query_params.get('query', '')
