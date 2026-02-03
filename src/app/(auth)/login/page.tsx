@@ -80,7 +80,7 @@ function LoginContent() {
                         {(state?.error as any)?.root && (
                             <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3 text-red-400 text-xs font-bold animate-in zoom-in-95">
                                 <AlertCircle size={16} />
-                                {(state.error as any).root[0]}
+                                {(state?.error as any).root[0]}
                             </div>
                         )}
 
@@ -108,7 +108,7 @@ function LoginContent() {
                                 className="bg-slate-900/50 border-white/5 h-14 rounded-xl text-white font-bold focus:ring-emerald-500/20"
                             />
                             {(state?.error as any)?.username && (
-                                <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest">{(state.error as any).username[0]}</p>
+                                <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest">{(state?.error as any).username[0]}</p>
                             )}
                         </div>
 
@@ -122,7 +122,7 @@ function LoginContent() {
                                 className="bg-slate-900/50 border-white/5 h-14 rounded-xl text-white focus:ring-emerald-500/20"
                             />
                             {(state?.error as any)?.password && (
-                                <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest">{(state.error as any).password[0]}</p>
+                                <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest">{(state?.error as any).password[0]}</p>
                             )}
                         </div>
 

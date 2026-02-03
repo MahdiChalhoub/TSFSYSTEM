@@ -72,6 +72,7 @@ class BusinessRegistrationView(APIView):
                     business_email=data['email'],
                     phone=data.get('phone'),
                     website=data.get('website'),
+                    logo=data.get('logo'),
                     address=data.get('address'),
                     city=data.get('city'),
                     state=data.get('state'),
@@ -131,7 +132,9 @@ class BusinessRegistrationView(APIView):
                 }, status=status.HTTP_201_CREATED)
                 
         except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            import traceback
+            traceback.print_exc()
+            return Response({'detail': f"System Error: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
 
 class UserSignUpView(APIView):
     permission_classes = [AllowAny]

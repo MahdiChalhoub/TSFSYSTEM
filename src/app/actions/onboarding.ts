@@ -17,48 +17,75 @@ export async function getPublicConfig() {
 export async function registerBusinessAction(prevState: any, formData: FormData) {
     const rawData = Object.fromEntries(formData.entries());
 
-    const payload = {
-        business_name: rawData.business_name,
-        slug: rawData.slug,
-        business_type_id: parseInt(rawData.business_type_id as string),
-        currency_id: parseInt(rawData.currency_id as string),
-        email: rawData.email,
-        phone: rawData.phone,
-        address: rawData.address,
-        city: rawData.city,
-        country: rawData.country,
-        // Super Admin
-        admin_first_name: rawData.admin_first_name,
-        admin_last_name: rawData.admin_last_name,
-        admin_username: rawData.admin_username,
-        admin_email: rawData.admin_email,
-        admin_password: rawData.admin_password
-    };
+    // Build payload for Django (as FormData to support Logo)
+    const djangoPayload = new FormData();
+    djangoPayload.append('business_name', rawData.business_name as string);
+    djangoPayload.append('slug', rawData.slug as string);
+    djangoPayload.append('business_type_id', rawData.business_type_id as string);
+    djangoPayload.append('currency_id', rawData.currency_id as string);
+    djangoPayload.append('email', rawData.email as string);
+    djangoPayload.append('phone', rawData.phone as string);
+    djangoPayload.append('address', rawData.address as string);
+    djangoPayload.append('city', rawData.city as string);
+    djangoPayload.append('state', rawData.state as string);
+    djangoPayload.append('zip_code', rawData.zip_code as string);
+    djangoPayload.append('country', rawData.country as string);
+    djangoPayload.append('website', rawData.website as string);
+    djangoPayload.append('timezone', 'UTC');
+
+    // Logo File
+    const logoFile = formData.get('logo');
+    if (logoFile instanceof File && logoFile.size > 0) {
+        djangoPayload.append('logo', logoFile);
+    }
+
+    // Super Admin
+    djangoPayload.append('admin_first_name', rawData.admin_first_name as string);
+    djangoPayload.append('admin_last_name', rawData.admin_last_name as string);
+    djangoPayload.append('admin_username', rawData.admin_username as string);
+    djangoPayload.append('admin_email', rawData.admin_email as string);
+    djangoPayload.append('admin_password', rawData.admin_password as string);
 
     try {
-        // erpFetch handles headers and base URL
-        // For registration, we likely don't need tenant context, or we are creating it.
-        // erpFetch tries to resolve tenant context from subdomain. Use it safe.
-
-        // NOTE: erpFetch expects 'api/' prefix is added by it if we pass 'auth/...'.
-        // erpFetch: `${DJANGO_URL}/api/${path...}`
-
         const data = await erpFetch('auth/register/business/', {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
+            // DO NOT set Content-Type header when sending FormData!
+            body: djangoPayload
         });
 
         if (data.error) {
-            return { error: data };
+            // Normalize error structure
+            if (typeof data.error === 'string') {
+                return { error: { root: [data.error] } };
+            }
+            // If data.error is an object (e.g. { error: "msg" } or { detail: "msg" })
+            if (typeof data.error === 'object') {
+                if (data.error.detail) {
+                    return { error: { root: [data.error.detail] } };
+                }
+                if (data.error.error) {
+                    return { error: { root: [data.error.error] } };
+                }
+                // Otherwise it might be valiation fields
+                return { error: data.error };
+            }
+            return { error: { root: ["Unknown registration error"] } };
         }
 
         return { success: true, login_url: data.login_url };
 
     } catch (error: any) {
-        // erpFetch throws on error
         try {
             const errData = JSON.parse(error.message);
+            // Check for generic DRF error structure
+            if (errData.detail) {
+                return { error: { root: [errData.detail] } };
+            }
+            if (errData.error) {
+                // Convert { error: "msg" } to { root: ["msg"] }
+                if (typeof errData.error === 'string') return { error: { root: [errData.error] } };
+                return { error: errData.error };
+            }
             return { error: errData };
         } catch (e) {
             return { error: { root: ["Connection failed or invalid response"] } };
