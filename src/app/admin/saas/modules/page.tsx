@@ -92,7 +92,7 @@ export default function SaaSModulesPage() {
     }
 
     async function handleDelete(code: string) {
-        if (!confirm(`CRITICAL: This will permanently delete ${code} source code and registry. Proceed?`)) return;
+        if (!confirm(`Warning: This is a DESTRUCTIVE action.\n\nIt will check for active data usage. If any tenant has used this module, deletion will be BLOCKED to prevent data loss.\n\nProceed with safety check?`)) return;
         setProcessing(code)
         try {
             const res = await deleteModule(code)
@@ -275,7 +275,7 @@ export default function SaaSModulesPage() {
                     <h4 className="text-xl font-black text-emerald-400 uppercase tracking-tight">Infrastructure Policy</h4>
                     <p className="text-sm text-emerald-300/60 font-medium leading-relaxed mt-1">
                         Deployment actions are non-reversible for data states and will trigger migrations on all linked organization databases.
-                        <strong> Push</strong> enables the module for all tenants. <strong> Revoke</strong> disables it globally. <strong> Delete</strong> wipes source code.
+                        <strong> Push</strong> enables the module for all tenants. <strong> Revoke</strong> disables it globally. <strong> Delete</strong> will fail if data usage is detected.
                     </p>
                 </div>
             </div>
