@@ -13,8 +13,10 @@
 - **Relationships**: Parent to `OrganizationModule`.
 - **Which pages read from it**:
     - `admin/settings/modules/page.tsx`
+    - `admin/saas/modules/page.tsx`
 - **Which pages write to it**:
-    - `sync_modules` management command (Backend discovery).
+    - `SaaSModuleViewSet.sync_global` (Fast scan).
+    - `sync_modules` management command (CLI background).
 
 ---
 
@@ -29,6 +31,9 @@
     - ForeignKey to `Module`.
 - **Which pages read from it**:
     - `admin/settings/modules/page.tsx`
-    - Any feature-aware API (middleware check).
+    - `admin/saas/modules/page.tsx`
+    - `admin/saas/organizations/page.tsx`
 - **Which pages write to it**:
-    - `admin/settings/modules/page.tsx` (via server actions).
+    - `admin/settings/modules/page.tsx` (Tenant self-service).
+    - `OrgModuleViewSet.toggle_module` (SaaS Admin override).
+    - `SaaSModuleViewSet.install_global` (Master push).

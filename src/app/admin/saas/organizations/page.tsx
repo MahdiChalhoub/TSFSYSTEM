@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react"
 import { getOrganizations, toggleOrganizationStatus, createOrganization } from "./actions"
+import { getOrgModules, toggleOrgModule } from "@/app/actions/saas/modules"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Building, Plus, Globe, ShieldCheck, Activity, Trash2, Zap } from "lucide-react"
+import { Building, Plus, Globe, ShieldCheck, Activity, Trash2, Zap, Settings2 } from "lucide-react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
@@ -63,6 +64,38 @@ export default function OrganizationsPage() {
             toast.error("Provisioning failed")
         } finally {
             setIsCreating(false)
+        }
+    }
+
+    const [selectedOrg, setSelectedOrg] = useState<any>(null)
+    const [orgModules, setOrgModules] = useState<any[]>([])
+    const [loadingModules, setLoadingModules] = useState(false)
+    const [modulesOpen, setModulesOpen] = useState(false)
+
+    async function handleOpenModules(org: any) {
+        setSelectedOrg(org)
+        setModulesOpen(true)
+        setLoadingModules(true)
+        try {
+            const data = await getOrgModules(org.id)
+            setOrgModules(data)
+        } catch {
+            toast.error("Failed to load organization modules")
+        } finally {
+            setLoadingModules(false)
+        }
+    }
+
+    async function handleModuleToggle(moduleCode: string, currentStatus: string) {
+        const action = currentStatus === 'INSTALLED' ? 'disable' : 'enable'
+        try {
+            await toggleOrgModule(selectedOrg.id, moduleCode, action)
+            toast.success(`Module ${action}d`)
+            // Refresh module list
+            const data = await getOrgModules(selectedOrg.id)
+            setOrgModules(data)
+        } catch (e: any) {
+            toast.error(e.message || "Failed to toggle module")
         }
     }
 
@@ -173,6 +206,13 @@ export default function OrganizationsPage() {
                                 >
                                     {org.isActive ? 'Suspend' : 'Activate'}
                                 </Button>
+                                <Button
+                                    variant="outline"
+                                    className="px-6 py-6 rounded-2xl border-emerald-500/20 bg-emerald-500/5 text-emerald-400 hover:bg-emerald-500/20 transition-all font-bold"
+                                    onClick={() => handleOpenModules(org)}
+                                >
+                                    <Settings2 size={20} />
+                                </Button>
                                 <Button variant="ghost" className="p-6 rounded-2xl text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-all">
                                     <Trash2 size={20} />
                                 </Button>
@@ -181,6 +221,56 @@ export default function OrganizationsPage() {
                     </Card>
                 ))}
             </div>
+
+            <Dialog open={modulesOpen} onOpenChange={setModulesOpen}>
+                <DialogContent className="bg-[#0F172A] border-gray-800 text-white rounded-[2rem] max-w-2xl overflow-hidden p-0">
+                    <div className="p-8 bg-emerald-500/5 border-b border-gray-800/50">
+                        <DialogTitle className="text-2xl font-black">Feature Activation</DialogTitle>
+                        <CardDescription className="text-gray-400 mt-1">
+                            Managing modules for <span className="text-emerald-400 font-bold">{selectedOrg?.name}</span>
+                        </CardDescription>
+                    </div>
+
+                    <div className="p-8 max-h-[60vh] overflow-y-auto space-y-4">
+                        {loadingModules ? (
+                            <div className="py-12 text-center text-gray-500 italic font-medium">Scanning organizational entitlements...</div>
+                        ) : orgModules.length === 0 ? (
+                            <div className="py-12 text-center text-gray-500">No available features found for this instance.</div>
+                        ) : orgModules.map((m) => (
+                            <div key={m.code} className="p-4 bg-gray-950/50 border border-gray-800 rounded-2xl flex items-center justify-between group hover:border-emerald-500/30 transition-all">
+                                <div>
+                                    <h4 className="font-bold text-white group-hover:text-emerald-400 transition-colors">{m.name}</h4>
+                                    <p className="text-[10px] text-gray-500 uppercase tracking-widest font-mono">{m.code}</p>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <Badge className={m.status === 'INSTALLED' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-gray-800 text-gray-500 border-transparent"}>
+                                        {m.status}
+                                    </Badge>
+                                    {!m.is_core ? (
+                                        <Button
+                                            size="sm"
+                                            className={m.status === 'INSTALLED' ? "bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-xl px-4" : "bg-emerald-600 text-white hover:bg-emerald-500 rounded-xl px-4"}
+                                            onClick={() => handleModuleToggle(m.code, m.status)}
+                                        >
+                                            {m.status === 'INSTALLED' ? 'Deactivate' : 'Activate'}
+                                        </Button>
+                                    ) : (
+                                        <div className="text-[10px] text-indigo-400 font-bold uppercase tracking-tighter bg-indigo-500/10 px-2 py-1 rounded-md">
+                                            Permanent
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="p-8 bg-gray-950 border-t border-gray-800/50 flex justify-end">
+                        <Button variant="ghost" className="text-gray-400 hover:text-white rounded-xl px-8" onClick={() => setModulesOpen(false)}>
+                            Close Manager
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

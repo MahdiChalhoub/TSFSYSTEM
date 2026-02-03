@@ -21,14 +21,26 @@ The modular architecture allows the TSF ERP system to expand its features (HRM, 
     - `module_id`: Reference to Module.
     - `status`: `INSTALLED`, `DISABLED`, or `UNINSTALLED`.
 
-## Workflow: Module Management
+## SaaS Master Panel Integration
 
-### 1. Module Discovery
-- **Action**: Running `python manage.py sync_modules`.
-- **Logic**: Scans `erp/modules/*/manifest.json`.
-- **Result**: Data is mirrored to the `Module` table in the database.
+The SaaS panel provides centralized authority over the entire module ecosystem. This allows platform administrators to maintain consistency and enforce subscription boundaries across all tenants.
 
-### 2. Module Activation (Per Org)
+### Global Module Registry (/admin/saas/modules)
+- **Global Sync**: Scans the physical code directory and updates the global `Module` table.
+- **Push to All**: A high-privilege action that installs/enables a specific module for EVERY organization in the system simultaneously.
+
+### Granular Tenant Control (/admin/saas/organizations)
+- SaaS admins can manage specific features for individual companies via the Organization Management modal. 
+- This bypasses tenant-level restrictions and allows for manual entitlement adjustments.
+
+## Workflow: Global Module Deployment
+1. **Develop**: Create module folder and manifest in `erp/modules`.
+2. **Sync**: Run "Sync Registry" in the SaaS Panel.
+3. **Deploy**: Click "Push to All" for mandatory features, or let tenants discover the new feature in their own Module Manager.
+
+---
+
+## Workflow: Module Management (Tenant Level)
 - **Action**: User clicks "Install" in Settings -> Module Manager.
 - **Logic**:
     1. Check if dependencies are met (in `OrganizationModule`).

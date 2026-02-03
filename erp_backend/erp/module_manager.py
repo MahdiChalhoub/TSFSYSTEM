@@ -128,3 +128,25 @@ class ModuleManager:
             module=module,
             status='INSTALLED'
         ).exists()
+
+    @staticmethod
+    def install_for_all(module_code):
+        """
+        Enables a module for all organizations in the system.
+        """
+        module = Module.objects.get(code=module_code)
+        orgs = Organization.objects.all()
+        
+        installed_count = 0
+        for org in orgs:
+            try:
+                OrganizationModule.objects.update_or_create(
+                    organization=org,
+                    module=module,
+                    defaults={'status': 'INSTALLED'}
+                )
+                installed_count += 1
+            except Exception as e:
+                print(f"Failed to install for org {org.slug}: {str(e)}")
+        
+        return installed_count
