@@ -7,7 +7,11 @@ import { erpFetch } from "@/lib/erp-api"
 export async function getOrganizations() {
     try {
         return await erpFetch('organizations/')
-    } catch (error) {
+    } catch (error: any) {
+        // Suppress auth errors (expected for unauthenticated users accessing layout)
+        if (error.message && error.message.includes('Authentication credentials')) {
+            return []
+        }
         console.error("[SaaS] Error fetching organizations:", error);
         return []
     }

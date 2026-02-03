@@ -21,7 +21,12 @@ export async function getSites() {
                 users: 0
             }
         }))
-    } catch (error) {
+    } catch (error: any) {
+        // Suppress auth errors or 404s (e.g. valid for root domain or logged out state)
+        // We just return empty list so the Layout doesn't crash
+        if (error.message && (error.message.includes('Authentication credentials') || error.message.includes('Not Found'))) {
+            return []
+        }
         console.error("Failed to fetch sites:", error)
         return []
     }

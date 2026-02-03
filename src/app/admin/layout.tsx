@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import '../globals.css';
 import { AdminProvider } from '@/context/AdminContext';
 import { Sidebar } from '@/components/admin/Sidebar';
@@ -31,6 +32,10 @@ export default async function AdminLayout({
         getOrganizations(),
         getUser()
     ]);
+
+    if (!user) {
+        redirect('/login');
+    }
 
     return (
         <AdminProvider>
