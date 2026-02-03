@@ -297,3 +297,52 @@ class ModuleManager:
             )
             count += 1
         return count
+
+    @staticmethod
+    def revoke_all(module_name):
+        """
+        Revokes access to a specific module from all organizations.
+        """
+        if module_name == 'core':
+            raise ValidationError("Cannot revoke access to Core module.")
+            
+        return OrganizationModule.objects.filter(module_name=module_name).update(is_enabled=False)
+
+    @staticmethod
+    @transaction.atomic
+    def delete(module_name):
+        """
+        Completely removes a module from the registry and filesystem.
+        """
+        if module_name == 'core':
+            raise ValidationError("Cannot delete the Core module.")
+
+        # 1. Check if other modules depend on this
+        dependents = []
+        all_mods = SystemModule.objects.exclude(name=module_name)
+        for mod in all_mods:
+            requires = mod.manifest.get('dependencies', [])
+            if module_name in requires:
+                dependents.append(mod.name)
+        
+        if dependents:
+            raise ValidationError(f"Cannot delete {module_name}. Other modules depend on it: {', '.join(dependents)}")
+
+        # 2. Registry Removal
+        SystemModule.objects.filter(name=module_name).delete()
+        OrganizationModule.objects.filter(module_name=module_name).delete()
+
+        # 3. File Removal
+        target_path = os.path.join(ModuleManager.MODULES_DIR, module_name)
+        if os.path.exists(target_path):
+            shutil.rmtree(target_path)
+            
+        SystemModuleLog.objects.create(
+            module_name=module_name,
+            from_version="N/A",
+            to_version="N/A",
+            action='DELETE',
+            status='SUCCESS',
+            logs=f"Module {module_name} wiped from system."
+        )
+        return True

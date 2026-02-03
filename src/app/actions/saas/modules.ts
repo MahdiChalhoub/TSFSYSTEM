@@ -36,6 +36,46 @@ export async function installModuleGlobal(code: string) {
     }
 }
 
+export async function uninstallModuleGlobal(code: string) {
+    try {
+        const data = await erpFetch(`saas/modules/${code}/uninstall_global/`, {
+            method: 'POST'
+        })
+        revalidatePath('/admin/saas/modules')
+        return data
+    } catch (e: any) {
+        return { error: e.message }
+    }
+}
+
+export async function deleteModule(code: string) {
+    try {
+        const data = await erpFetch(`saas/modules/${code}/delete_module/`, {
+            method: 'POST'
+        })
+        revalidatePath('/admin/saas/modules')
+        return data
+    } catch (e: any) {
+        return { error: e.message }
+    }
+}
+
+export async function uploadModule(formData: FormData) {
+    try {
+        // erpFetch needs to be careful with FormData (browser handles boundaries usually)
+        // For server actions, we need to pass it through.
+        const res = await erpFetch('saas/modules/upload_module/', {
+            method: 'POST',
+            body: formData,
+            // DO NOT set Content-Type header manually for FormData
+        })
+        revalidatePath('/admin/saas/modules')
+        return res
+    } catch (e: any) {
+        return { error: e.message }
+    }
+}
+
 export async function getOrgModules(orgId: string) {
     try {
         return await erpFetch(`/api/saas/org-modules/${orgId}/modules/`)
