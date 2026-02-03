@@ -167,11 +167,13 @@ class FiscalYearSerializer(serializers.ModelSerializer):
     class Meta:
         model = FiscalYear
         fields = '__all__'
+        read_only_fields = ('organization',)
 
 class ChartOfAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChartOfAccount
         fields = '__all__'
+        read_only_fields = ('organization',)
 
 class JournalEntryLineSerializer(serializers.ModelSerializer):
     account_name = serializers.ReadOnlyField(source='account.name')
