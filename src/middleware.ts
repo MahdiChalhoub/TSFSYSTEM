@@ -121,5 +121,13 @@ export default async function middleware(req: NextRequest) {
         })
     }
 
+    // DEVELOPMENT ONLY: Allow unsafe-eval for Turbopack/HMR to prevent browser blocking scripts
+    if (process.env.NODE_ENV !== 'production') {
+        response.headers.set(
+            'Content-Security-Policy',
+            "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;"
+        )
+    }
+
     return response
 }
