@@ -1,8 +1,0 @@
-{
-    "code": "finance",
-    "name": "Finance & Accounting",
-    "version": "1.0.0",
-    "description": "Double-entry bookkeeping, multi-tenant ledger (COA), and fiscal management.",
-    "dependencies": [],
-    "required": true
-}
