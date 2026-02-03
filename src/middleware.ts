@@ -41,7 +41,6 @@ export default async function middleware(req: NextRequest) {
     // If trying to access protected routes (admin, tenant dashboard) without token
     const isProtectedRoute =
         url.pathname.startsWith("/admin") ||
-        url.pathname.startsWith("/tenant") ||
         url.pathname === "/dashboard"
 
     if (isProtectedRoute && !authToken) {
