@@ -290,6 +290,10 @@ class Contact(TenantModel):
     address = models.TextField(null=True, blank=True)
     vat_id = models.CharField(max_length=100, null=True, blank=True)
     
+    # Financial Configuration
+    is_airsi_subject = models.BooleanField(default=False, help_text="If true, AIRSI tax logic applies to this contact.")
+    airsi_tax_rate = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="Override specific rate. If null, uses global.")
+    
     balance = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
     credit_limit = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
     
