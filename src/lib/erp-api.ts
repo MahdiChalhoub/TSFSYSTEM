@@ -59,10 +59,15 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
             const token = cookieStore.get('auth_token')?.value;
             if (token) {
                 headersRaw.set('Authorization', `Token ${token}`);
+                console.log(`[ERP_API] Token found in cookies for ${path}: ${token.substring(0, 5)}...`);
+            } else {
+                console.log(`[ERP_API] No auth_token cookie found for ${path}`);
             }
         } catch (e) {
-            // Ignore in contexts where cookies aren't available
+            console.log(`[ERP_API] Cookies not available in this context for ${path}`);
         }
+    } else {
+        console.log(`[ERP_API] Authorization header already present for ${path}`);
     }
 
     if (context) {
@@ -74,7 +79,11 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
     }
 
     const url = `${DJANGO_URL}/api/${path.startsWith('/') ? path.slice(1) : path}`;
-    console.log(`[ERP_API] Requesting: ${options.method || 'GET'} ${url}`)
+    const cleanHeaders: any = {};
+    headersRaw.forEach((v, k) => {
+        cleanHeaders[k] = k.toLowerCase() === 'authorization' ? 'Token [REDACTED]' : v;
+    });
+    console.log(`[ERP_API] Request: ${options.method || 'GET'} ${url} | Headers: ${JSON.stringify(cleanHeaders)}`)
 
     try {
         const response = await fetch(url, {
