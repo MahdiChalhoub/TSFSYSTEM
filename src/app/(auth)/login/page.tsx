@@ -92,6 +92,7 @@ function LoginContent() {
                                     name="slug"
                                     placeholder="acme"
                                     required
+                                    suppressHydrationWarning
                                     className="bg-slate-900/50 border-white/5 h-14 rounded-xl font-mono text-amber-400 focus:ring-amber-500/20"
                                 />
                             </div>
@@ -105,6 +106,7 @@ function LoginContent() {
                                 placeholder="e.g. j.smith"
                                 required
                                 defaultValue={prefilledUsername}
+                                suppressHydrationWarning
                                 className="bg-slate-900/50 border-white/5 h-14 rounded-xl text-white font-bold focus:ring-emerald-500/20"
                             />
                             {(state?.error as any)?.username && (
@@ -119,6 +121,7 @@ function LoginContent() {
                                 name="password"
                                 type="password"
                                 required
+                                suppressHydrationWarning
                                 className="bg-slate-900/50 border-white/5 h-14 rounded-xl text-white focus:ring-emerald-500/20"
                             />
                             {(state?.error as any)?.password && (
@@ -142,7 +145,7 @@ function LoginContent() {
                             </div>
                         )}
 
-                        <Button type="submit" className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl shadow-lg shadow-emerald-900/20 transition-all active:scale-[0.98]" disabled={isPending}>
+                        <Button type="submit" suppressHydrationWarning className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl shadow-lg shadow-emerald-900/20 transition-all active:scale-[0.98]" disabled={isPending}>
                             {isPending ? <Loader2 className="animate-spin" /> : (isRoot ? "Resolve Instance" : "Establish Link")}
                         </Button>
 
