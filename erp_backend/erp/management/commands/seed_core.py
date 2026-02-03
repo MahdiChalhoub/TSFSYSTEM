@@ -1,0 +1,226 @@
+from django.core.management.base import BaseCommand
+from django.contrib.auth import get_user_model
+from erp.models import (
+    Organization, Site, Role, Country, Unit, Warehouse,
+    FinancialAccount, ChartOfAccount, SystemSettings, Product, FiscalYear
+)
+import json
+from datetime import date
+from decimal import Decimal
+
+class Command(BaseCommand):
+    help = 'Seeds the core engine with default data'
+
+    def handle(self, *args, **options):
+        self.stdout.write("🌱 Starting Django Seed...")
+
+        # 1. Organization
+        org, created = Organization.objects.get_or_create(
+            slug='tsf-global',
+            defaults={'name': 'TSF Global', 'is_active': True}
+        )
+        self.stdout.write(f"🏢 Organization: {org.name}")
+
+        # 2. Roles
+        roles_data = [
+            {'name': 'ADMIN', 'description': 'Total System Control'},
+            {'name': 'MANAGER', 'description': 'Branch & Stock Management'},
+            {'name': 'CASHIER', 'description': 'POS & Basic Sales'},
+        ]
+        for r in roles_data:
+            Role.objects.get_or_create(
+                name=r['name'], organization=org,
+                defaults={'description': r['description']}
+            )
+
+        # 3. Site
+        site, created = Site.objects.get_or_create(
+            code='HQ-BEIRUT', organization=org,
+            defaults={
+                'name': 'HQ - Beirut Central',
+                'address': 'Downtown, Beirut',
+                'phone': '+961 1 000 000',
+                'is_active': True
+            }
+        )
+        self.stdout.write(f"📍 Site: {site.name}")
+
+        # 4. Users (Admin)
+        User = get_user_model()
+        admin_email = 'admin@tsfci.com'
+        if not User.objects.filter(email=admin_email).exists():
+            admin_role = Role.objects.get(name='ADMIN', organization=org)
+            user = User.objects.create_user(
+                username='admin_erp',
+                email=admin_email,
+                password='hashed_password_123'
+            )
+            user.name = 'Admin User'
+            user.role = admin_role
+            user.home_site = site
+            user.organization = org
+            user.is_active = True
+            user.is_staff = True
+            user.is_superuser = True
+            user.save()
+            self.stdout.write(f"👤 Admin User Created: {admin_email}")
+        else:
+            self.stdout.write("👤 Admin User already exists")
+
+        # 5. Countries
+        countries = [
+            {'code': 'LB', 'name': 'Lebanon'},
+            {'code': 'US', 'name': 'United States'},
+            {'code': 'FR', 'name': 'France'},
+            {'code': 'TR', 'name': 'Turkey'},
+            {'code': 'CN', 'name': 'China'},
+        ]
+        for c in countries:
+            Country.objects.get_or_create(
+                code=c['code'],
+                defaults={'name': c['name']}
+            )
+        self.stdout.write(f"🌍 Seeded {len(countries)} countries")
+
+        # 6. Units
+        pc, _ = Unit.objects.get_or_create(
+            code='PC', organization=org,
+            defaults={'name': 'Piece', 'conversion_factor': 1}
+        )
+        
+        kg, _ = Unit.objects.get_or_create(
+            code='KG', organization=org,
+            defaults={'name': 'Kilogram', 'conversion_factor': 1}
+        )
+
+        pack, _ = Unit.objects.get_or_create(
+            code='PACK', organization=org,
+            defaults={'name': 'Pack', 'base_unit': pc, 'conversion_factor': 6}
+        )
+
+        box, _ = Unit.objects.get_or_create(
+            code='BOX', organization=org,
+            defaults={'name': 'Box', 'base_unit': pc, 'conversion_factor': 12}
+        )
+        self.stdout.write("📏 Units Seeded")
+
+        # 7. Warehouses
+        warehouses = [
+            {'name': 'Main Store', 'type': 'STORE'},
+            {'name': 'Backroom', 'type': 'PHYSICAL'},
+            {'name': 'Damaged Goods', 'type': 'VIRTUAL'},
+        ]
+        for w in warehouses:
+            Warehouse.objects.get_or_create(
+                name=w['name'], organization=org,
+                defaults={'type': w['type'], 'site': site}
+            )
+        self.stdout.write("🏭 Warehouses Seeded")
+
+        # 8. Financial Settings (Stored in SystemSettings)
+        # Using correct decimal representation in json if needed, but simple float/int is fine for config json
+        financial_config = {
+            'company_type': 'MIXED',
+            'currency': 'USD',
+            'default_tax_rate': 0.11,
+            'works_in_ttc': True,
+            'allow_ht_entry_for_ttc': False,
+            'dual_view': True
+        }
+        SystemSettings.objects.get_or_create(
+            key='financial_settings', organization=org,
+            defaults={'value': json.dumps(financial_config)}
+        )
+
+        # 9. Fiscal Year
+        # Check current year to avoid stale data if running in future
+        current_year = date.today().year
+        fy_name = f'FY {current_year}'
+        fy, _ = FiscalYear.objects.get_or_create(
+            name=fy_name, organization=org,
+            defaults={
+                'start_date': date(current_year, 1, 1),
+                'end_date': date(current_year, 12, 31),
+                'is_closed': False
+            }
+        )
+        self.stdout.write(f"📅 Fiscal Year {current_year} Seeded")
+
+        # 10. Chart of Accounts
+        def upsert_account(code, name, type, parent=None, sub_type=None):
+            acc, _ = ChartOfAccount.objects.get_or_create(
+                code=code, organization=org,
+                defaults={
+                    'name': name, 'type': type, 
+                    'parent': parent, 'sub_type': sub_type
+                }
+            )
+            return acc
+
+        assets = upsert_account('1000', 'ASSETS', 'ASSET')
+        liabilities = upsert_account('2000', 'LIABILITIES', 'LIABILITY')
+        equity = upsert_account('3000', 'EQUITY', 'EQUITY')
+        revenue = upsert_account('4000', 'REVENUE', 'INCOME')
+        expenses = upsert_account('5000', 'COST OF GOODS SOLD (COGS)', 'EXPENSE')
+        opex = upsert_account('6000', 'OPERATING EXPENSES', 'EXPENSE')
+
+        # Detailed
+        # Assets
+        curr_assets = upsert_account('1100', 'Current Assets', 'ASSET', assets)
+        ar = upsert_account('1110', 'Accounts Receivable', 'ASSET', curr_assets)
+        inventory = upsert_account('1120', 'Inventory', 'ASSET', curr_assets)
+        
+        # Roots
+        cash_root = upsert_account('5700', 'Cash Accounts', 'ASSET', curr_assets, 'CASH')
+        bank_root = upsert_account('5120', 'Bank Accounts', 'ASSET', curr_assets, 'BANK')
+
+        # Liabilities
+        curr_liab = upsert_account('2100', 'Current Liabilities', 'LIABILITY', liabilities)
+        ap = upsert_account('2101', 'Accounts Payable', 'LIABILITY', curr_liab)
+        vat = upsert_account('2111', 'VAT Payable', 'LIABILITY', curr_liab)
+        payroll = upsert_account('2121', 'Salaries Payable', 'LIABILITY', curr_liab)
+
+        # Income/Expense
+        sales = upsert_account('4100', 'Sales Revenue', 'INCOME', revenue)
+        cogs = upsert_account('5100', 'Cost of Sales', 'EXPENSE', expenses)
+        inv_adj = upsert_account('5104', 'Inventory Adjustment', 'EXPENSE', expenses)
+
+        depr_exp = upsert_account('6303', 'Depreciation Expense', 'EXPENSE', opex)
+        accum_depr = upsert_account('1210', 'Accumulated Depreciation', 'ASSET', assets)
+
+        self.stdout.write("📊 Chart of Accounts Seeded")
+
+        # 11. Posting Rules
+        rules = {
+            'sales': {
+                'receivable': ar.id, 'revenue': sales.id, 'cogs': cogs.id, 'inventory': inventory.id
+            },
+            'purchases': {
+                'payable': ap.id, 'inventory': inventory.id, 'tax': vat.id
+            },
+            'inventory': {
+                'adjustment': inv_adj.id, 'transfer': inventory.id
+            },
+            'automation': {
+                'customerRoot': ar.id, 'supplierRoot': ap.id, 'payrollRoot': payroll.id
+            }
+        }
+        
+        SystemSettings.objects.get_or_create(
+            key='finance_posting_rules', organization=org,
+            defaults={'value': json.dumps(rules)}
+        )
+
+        # 12. Financial Accounts
+        accounts = [
+            {'name': 'Main Cash Drawer', 'type': 'CASH', 'currency': 'USD'},
+            {'name': 'Main Bank Account', 'type': 'BANK', 'currency': 'USD'},
+            {'name': 'Petty Cash', 'type': 'CASH', 'currency': 'LBP'},
+        ]
+        for acc in accounts:
+            FinancialAccount.objects.get_or_create(
+                name=acc['name'], organization=org,
+                defaults={'type': acc['type'], 'currency': acc['currency'], 'site': site}
+            )
+
+        self.stdout.write(self.style.SUCCESS("✅ Seed Complete!"))
