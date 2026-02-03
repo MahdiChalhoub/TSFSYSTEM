@@ -7,7 +7,25 @@ export async function getFinancialDashboardStats(scope: 'OFFICIAL' | 'INTERNAL' 
     try {
         const data = await erpFetch(`dashboard/financial_stats/?scope=${scope}`);
         return serializeDecimals(data);
-    } catch (e) {
+    } catch (e: any) {
+        if (e.message && e.message.includes('Authentication credentials')) {
+            return serializeDecimals({
+                totalCash: 0,
+                monthlyIncome: 0,
+                monthlyExpense: 0,
+                netProfit: 0,
+                totalAR: 0,
+                totalAP: 0,
+                trends: [],
+                recentEntries: [],
+                inventoryStatus: {
+                    totalValue: 0,
+                    ledgerBalance: 0,
+                    discrepancy: 0,
+                    isMapped: false
+                }
+            });
+        }
         console.error("Failed to fetch financial dashboard stats:", e);
         // Return empty structure to prevent UI crash
         return serializeDecimals({
@@ -33,7 +51,17 @@ export async function getAdminDashboardStats() {
     try {
         const data = await erpFetch('dashboard/admin_stats/');
         return serializeDecimals(data);
-    } catch (e) {
+    } catch (e: any) {
+        if (e.message && e.message.includes('Authentication credentials')) {
+            // Explicitly ignore auth errors as redirect happens elsewhere
+            return serializeDecimals({
+                totalSales: 0,
+                activeOrders: 0,
+                totalProducts: 0,
+                totalCustomers: 0,
+                latestSales: []
+            });
+        }
         console.warn("Failed to fetch dashboard stats from Django:", e);
         return serializeDecimals({
             totalSales: 0,
