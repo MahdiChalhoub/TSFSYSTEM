@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: tsf_db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-tsfdb}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - tsf_network
+
+  backend:
+    build:
+      context: ./erp_backend
+      dockerfile: Dockerfile.backend
+    container_name: tsf_backend
+    volumes:
+      - ./erp_backend:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-tsfdb}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DEBUG=1
+    depends_on:
+      - db
+    networks:
+      - tsf_network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: tsf_frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8000
+    depends_on:
+      - backend
+    networks:
+      - tsf_network
+
+networks:
+  tsf_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
