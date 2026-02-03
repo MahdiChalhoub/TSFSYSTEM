@@ -39,14 +39,64 @@ class SaaSModuleViewSet(viewsets.ViewSet):
     def install_global(self, request, pk=None):
         """Installs a specific module for ALL organizations (feature grant)"""
         try:
-            orgs = Organization.objects.all()
-            count = 0
-            for org in orgs:
-                if ModuleManager.grant_access(pk, org.id):
-                    count += 1
+            count = ModuleManager.install_for_all(pk)
             return Response({'message': f'Granted module {pk} for {count} organizations'})
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def uninstall_global(self, request, pk=None):
+        """Revokes a specific module for ALL organizations"""
+        try:
+            count = ModuleManager.revoke_all(pk)
+            return Response({'message': f'Revoked module {pk} from {count} organizations'})
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def delete_module(self, request, pk=None):
+        """Wipes a module from registry and filesystem"""
+        try:
+            ModuleManager.delete(pk)
+            return Response({'message': f'Module {pk} deleted successfully'})
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['post'])
+    def upload_module(self, request):
+        """Handles .modpkg.zip upload and installation"""
+        file_obj = request.FILES.get('file')
+        if not file_obj:
+            return Response({'error': 'No file uploaded'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not file_obj.name.endswith('.modpkg.zip'):
+            return Response({'error': 'Invalid file type. Must be .modpkg.zip'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Save temporarily
+        from django.core.files.storage import default_storage
+        from django.core.files.base import ContentFile
+        import os
+        from django.conf import settings
+
+        temp_path = os.path.join(settings.BASE_DIR, 'tmp', file_obj.name)
+        if not os.path.exists(os.path.dirname(temp_path)):
+            os.makedirs(os.path.dirname(temp_path))
+
+        path = default_storage.save(temp_path, ContentFile(file_obj.read()))
+        full_path = os.path.join(settings.BASE_DIR, path)
+
+        try:
+            # We need to extract the module name from the zip or have it as a parameter
+            # For simplicity, we'll try to get it from the filename (e.g., inventory_1.0.0.modpkg.zip)
+            module_code = file_obj.name.split('_')[0]
+            
+            ModuleManager.upgrade(module_code, full_path, user=request.user)
+            return Response({'message': f'Module {module_code} uploaded and installed successfully'})
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        finally:
+            if os.path.exists(full_path):
+                os.remove(full_path)
 
 class OrgModuleViewSet(viewsets.ViewSet):
     """Management of modules for a specific Organization (SaaS View)"""
