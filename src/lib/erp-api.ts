@@ -23,8 +23,8 @@ export async function getTenantContext() {
 
     console.log(`[DEBUG] Subdomain detected: ${subdomain}`);
 
-    if (!subdomain || subdomain === "localhost" || subdomain === "www") {
-        // Root Domain - No Tenant Context (Fallback)
+    if (!subdomain || subdomain === "www") {
+        // Root Domain only - No Tenant Context (Fallback)
         return null;
     }
 

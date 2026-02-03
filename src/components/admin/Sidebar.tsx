@@ -33,9 +33,9 @@ const MENU_ITEMS = [
         title: 'Commercial',
         icon: ShoppingBag,
         children: [
-            { title: 'POS System (Mobile)', path: '/admin/sales' },
+            { title: 'POS Terminal', path: '/admin/sales' },
             { title: 'Purchase Registry', path: '/admin/purchases' },
-            { title: 'New Purchase invoice', path: '/admin/purchases/new' },
+            { title: 'New PO Invoice', path: '/admin/purchases/new' },
         ]
     },
     {
@@ -49,6 +49,7 @@ const MENU_ITEMS = [
             { title: 'Stock Adjustments', path: '/admin/inventory/adjustments' },
             { title: 'Global Inventory', path: '/admin/inventory/global' },
             { title: 'Categories', path: '/admin/inventory/categories' },
+            { title: 'Categories Audit', path: '/admin/inventory/categories/maintenance' },
             { title: 'Units & Packaging', path: '/admin/inventory/units' },
             { title: 'Brands', path: '/admin/inventory/brands' },
             { title: 'Countries', path: '/admin/inventory/countries' },
@@ -63,7 +64,10 @@ const MENU_ITEMS = [
             { title: 'Performance Dashboard', path: '/admin/finance/dashboard' },
             { title: 'Accounts & Drawers', path: '/admin/finance/accounts' },
             { title: 'Chart of Accounts', path: '/admin/finance/chart-of-accounts' },
+            { title: 'COA Templates', path: '/admin/finance/chart-of-accounts/templates' },
+            { title: 'Migration Tool', path: '/admin/finance/chart-of-accounts/migrate' },
             { title: 'General Ledger', path: '/admin/finance/ledger' },
+            { title: 'Opening Balances', path: '/admin/finance/ledger/opening' },
             { title: 'Account Statement', path: '/admin/finance/reports/statement' },
             { title: 'Trial Balance', path: '/admin/finance/reports/trial-balance' },
             { title: 'Profit & Loss', path: '/admin/finance/reports/pnl' },
@@ -72,11 +76,8 @@ const MENU_ITEMS = [
             { title: 'Pricing Engine', path: '/admin/finance/pricing' },
             { title: 'Loan Contracts', path: '/admin/finance/loans' },
             { title: 'Financial Events', path: '/admin/finance/events' },
+            { title: 'Posting Rules', path: '/admin/finance/settings/posting-rules' },
             { title: 'Financial Settings', path: '/admin/finance/settings' },
-            { title: '— Capital Injections', path: '/admin/finance/events?type=PARTNER_CAPITAL_INJECTION' },
-            { title: '— Partner Loans', path: '/admin/finance/events?type=PARTNER_LOAN' },
-            { title: '— Partner Withdrawals', path: '/admin/finance/events?type=PARTNER_WITHDRAWAL' },
-            { title: '— Refunds Received', path: '/admin/finance/events?type=REFUND_RECEIVED' },
         ]
     },
     {
@@ -94,6 +95,7 @@ const MENU_ITEMS = [
         children: [
             { title: 'Employee Manager', path: '/admin/hr/employees' },
             { title: 'Payroll & Accruals', path: '/admin/hr/payroll' },
+            { title: 'Enlistment Approvals', path: '/admin/users/approvals' },
             { title: 'Access Control (Roles)', path: '/admin/hr/roles' },
         ]
     },
