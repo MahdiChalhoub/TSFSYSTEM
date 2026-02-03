@@ -314,12 +314,57 @@ class FiscalYearViewSet(viewsets.ModelViewSet):
     queryset = FiscalYear.objects.all()
     serializer_class = FiscalYearSerializer
 
-    def perform_create(self, serializer):
+    def create(self, request, *args, **kwargs):
         organization_id = get_current_tenant_id()
         if not organization_id:
-            raise serializers.ValidationError("No organization context")
+            return Response({"error": "No organization context"}, status=status.HTTP_400_BAD_REQUEST)
+        
         organization = Organization.objects.get(id=organization_id)
-        serializer.save(organization=organization)
+        
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        try:
+            with transaction.atomic():
+                fiscal_year = serializer.save(organization=organization)
+                
+                # Auto-generate Periods
+                start_date = fiscal_year.start_date
+                end_date = fiscal_year.end_date
+                frequency = request.data.get('frequency', 'MONTHLY')
+                
+                from datetime import timedelta, date
+                import calendar
+                
+                curr = start_date
+                period_count = 1
+                
+                while curr <= end_date:
+                    # Determine period end
+                    # Simple monthly logic: end of current month
+                    last_day_of_month = calendar.monthrange(curr.year, curr.month)[1]
+                    period_end = date(curr.year, curr.month, last_day_of_month)
+                    
+                    if period_end > end_date:
+                        period_end = end_date
+                    
+                    period_name = f"P{str(period_count).zfill(2)}-{curr.year}"
+                    
+                    FiscalPeriod.objects.create(
+                        organization=organization,
+                        fiscal_year=fiscal_year,
+                        name=period_name,
+                        start_date=curr,
+                        end_date=period_end
+                    )
+                    
+                    # Move to next month
+                    curr = period_end + timedelta(days=1)
+                    period_count += 1
+
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class FiscalPeriodViewSet(viewsets.ModelViewSet):
     queryset = FiscalPeriod.objects.all()
