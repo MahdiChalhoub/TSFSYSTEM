@@ -3,44 +3,53 @@
 ## Overview
 The VSF ERP Financial Module supports multiple operating modes to accommodate different regulatory requirements and business complexities. This configuration controls how the ledger behaves, how taxes are calculated, and how transactions are posted.
 
-## 1. Company Types
+## 1. Company Types (Tax & Costing Regimes)
 
-| Type | Description | Best For | Technical Implication |
-|------|-------------|----------|-----------------------|
-| **REGULAR** | TTC-based. VAT is **Non-recoverable**. | Retailers, Shops | • **Sales**: Always in TTC. VAT is NOT declared on sales.<br>• **Purchases**: Cost Basis is always **TTC**. If invoice is HT, system adds VAT to calculate Effective Cost.<br>• **Purchases Tax (e.g. AIRSI)**: Configurable tax (default 5%) on official purchases. User decides if it helps increase Stock Cost or is expensed. |
-| **MICRO** | Simplified Regime. Revenue Tax. | Small Businesses | • **Sales**: VAT is not declared. Pay fixed % of **Turnover** to gov.<br>• **Purchases**: VAT is **Non-recoverable**. Cost Basis is **TTC**.<br>• **Purchases Tax**: Same as Regular (AIRSI support). |
-| **REAL** | Professional Accounting. | Corporations | • **Basis**: Strict **HT** (Tax Excluded). VAT is collected/paid.<br>• **Effective Cost**: <br>   - If VAT Recoverable: Cost = HT.<br>   - If VAT Non-Recoverable: Cost = TTC (HT + VAT). |
-| **MIXED** | Hybrid System (Dual View). | Semi-Formal | • **Scope**: Splits transactions into 'OFFICIAL' and 'INTERNAL'.<br>• **Access**: Requires **Double Authentication** (see below).<br>• **Costing**: <br> - **Internal Reality**: Cost is TTC. VAT is an expense/cost.<br> - **Declared Report**: Cost is presented as HT + Recoverable VAT (Simulated Compliance). |
-| **CUSTOM** | Manual Configuration. | Any | Allows manual toggling of individual flags. |
+| Type | VAT Regime | Sales Logic | Purchase Cost Basis | AIRSI / Special Tax |
+|------|------------|-------------|---------------------|---------------------|
+| **REGULAR** | **Non-Recoverable** | **TTC Only**. VAT is NOT declared. | **Always TTC**. System adds VAT to HT invoices. | Capitalize to Stock OR Expense. |
+| **MICRO** | **Rev. Tax** | **No VAT**. Pay % of Turnover. | **Always TTC**. | Expense (usually). |
+| **REAL** | **Recoverable** | **Declared**. VAT Collected/Paid. | **HT** (if recoverable) OR **TTC** (if non-recoverable). | Recoverable Asset (typically). |
+| **MIXED** | **Hybrid** | **Declared**. VAT Collected/Paid. | **Internal**: TTC (Real Cash). <br> **Declared**: HT (Virtual Reclass). | **Internal**: Cost. <br> **Declared**: Recoverable. |
 
-## 2. Configuration Definitions
+## 2. Customer Types & Sales Logic
+Customer type determines the **Pricing Mode**, while the Company Type determines the **Declaration Mode**.
+
+| Customer Type | Target Audience | Pricing Mode | VAT Handling | Accounting Implication |
+|---------------|-----------------|--------------|--------------|------------------------|
+| **B2B** | Business | **HT Basis** | **Explicit**. Added on top of HT. | `Dr AR (TTC)`, `Cr Sales (HT)`, `Cr VAT (Liab)` |
+| **B2C** | Consumer | **TTC Basis** | **Included**. Extracted from TTC. | `Dr Cash (TTC)`, `Cr Sales (HT)`, `Cr VAT (Liab)` |
+| **B2F** | Foreign | **HT Basis** | **Zero Rated**. (Export). | No VAT Liability. |
+| **B2G** | Government | **HT Basis** | **Explicit**. (Withholding rules). | Special Settlement rules. |
+
+> **Crucial Rule**: Even in **MIXED** mode, Sales are legally compliant. The "Mixed" aspect primarily affects the **Purchase/Cost** view (Internal TTC vs Declared HT). Sales are always declared fully for Real/Mixed companies.
+
+## 3. AIRSI (Income Tax Withholding) Treatment
+AIRSI is an **Event-Based Tax**, separate from VAT.
+
+| Mode | Accounting Entry | Best For |
+|------|------------------|----------|
+| **Recoverable** | `Dr Asset (Recoverable)`, `Cr Payable` | **REAL** (standard). |
+| **Capitalized** | `Dr Inventory (inc. AIRSI)`, `Cr Payable` | **REGULAR** (increases stock value). |
+| **Expensed** | `Dr Expense (AIRSI)`, `Cr Payable` | **MICRO** (simple reduction of profit). |
+
+**Configuration**: AIRSI can be enabled per **Supplier**, **Product**, or globally by **Company Type**.
+
+## 4. Configuration Definitions
 
 ### Base Currency
-The main software currency (e.g.,CFA, EUR, USD, etc). The ledger is always balanced in this currency to ensure system consistency.
+The main software currency (e.g., CFA, EUR, USD). The ledger is always balanced in this currency.
 
 ### Works in TTC
-- **True**: Prices include Tax. Essential for REGULAR/MICRO where VAT is a cost, not a liability.
-- **False**: Prices exclude Tax. Standard for REAL companies.
+- **True**: Prices include Tax. Essential for REGULAR/MICRO.
+- **False**: Prices exclude Tax. Standard for REAL.
 
 ### Dual View (Restricted Access)
-- **Enabled**: Adds `scope` to ledger. Can be enabled anytime via SaaS Panel.
-- **Stealth Mode / Double Access**: 
-  - **User A (Official Access)**: Logs in with "Declared" password. Sees strictly "REAL" mode interface. No trace of "Dual View", no "Official/Internal" labels. Invoices are just "Invoices".
-  - **User B (Master Access)**: Logs in with "Master" password. Sees both views.
-- **Vat Tracing in Mixed Mode (Implementation)**:
-  - **Internal Ledger Posting (Real Reality)**:
-    - **Principle**: Management wants to see true cash cost.
-    - **Posting**: `Dr Expenses/Inventory (TTC Amount)`, `Cr Payable (TTC Amount)`.
-    - **Logic**: No VAT liability account is touched. VAT is treated as a direct cost to the business.
-  - **VAT Tax Metadata**:
-    - VAT details (Rate, Amount HT, Amount Tax) are stored on the **Invoice Line** purely as metadata, NOT as ledger entries.
-  - **Declared Reporting (Virtual Reclassification)**:
-    - **Principle**: Compliance with Government/SYSCOHADA requiring HT basis.
-    - **Mechanism**: When generating Tax Reports, the system **virtually reclassifies** the transaction on-the-fly:
-      - `Cost = Stored HT`
-      - `VAT Recoverable = Stored Tax Amount`
-    - **Presentation**: The report shows `Dr Cost (HT)`, `Dr VAT Recoverable`, `Cr Payable`, covering compliance without altering the internal cash-basis ledger.
-- **Switching**: Can be enabled **anytime** (even mid-year) via SaaS Panel authority. It does not alter historical Cost Data, only visibility layers.
+- **Enabled**: Adds `scope` to ledger.
+- **Legacy/Real View**: strict compliance.
+- **Mixed Mode Implementation**:
+  - **Internal Reality**: Purchases are costed TTC. VAT is treated as expense (cost).
+  - **Declared Reporting**: Virtual Reclassification (Cost=HT, VAT=Recoverable).
 
 ### Special Purchase Tax (e.g., AIRSI)
 Applies to **Official** purchases in REGULAR/MICRO modes.
@@ -50,13 +59,13 @@ Applies to **Official** purchases in REGULAR/MICRO modes.
   - **Yes**: Increases Inventory Value (AMC).
   - **No**: Booked immediately as an Expense.
 
-## 3. Effective Cost Logic
+## 5. Effective Cost Logic
 The system calculates the **Stock Valuation Price** automatically:
 - **Case A (VAT Recoverable)**: Cost = Invoice HT.
 - **Case B (VAT Non-Recoverable)**: Cost = Invoice TTC.
 - **Case C (Special Tax Included)**: Cost = Case A/B + Special Tax Amount.
 
-## 3. Smart Posting Rules (Auto-Mapping)
+## 6. Smart Posting Rules (Auto-Mapping)
 The system automatically routes financial events to specific ledger accounts.
 
 | Operation | Default Account | Customizable? |
@@ -68,7 +77,7 @@ The system automatically routes financial events to specific ledger accounts.
 | **Inventory** | 1120 - Inventory Asset | Yes |
 | **VAT** | 2111 - VAT Payable | Yes |
 
-## 4. Changing Settings
+## 7. Changing Settings
 1. Go to **Admin > Finance > Settings**.
 2. Select **Company Type**.
 3. Adjust Tax Rates.
