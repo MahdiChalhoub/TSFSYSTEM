@@ -144,3 +144,13 @@ export async function logoutAction() {
     cookieStore.delete('auth_token')
     redirect('/login')
 }
+
+export async function getUser() {
+    const { erpFetch } = await import("@/lib/erp-api")
+    try {
+        const user = await erpFetch('auth/me/')
+        return user
+    } catch (error) {
+        return null
+    }
+}

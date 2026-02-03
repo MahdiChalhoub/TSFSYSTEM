@@ -5,7 +5,7 @@ import { Bell, Search, User, Menu } from 'lucide-react';
 import { SiteSwitcher } from './SiteSwitcher';
 import { TenantSwitcher } from './TenantSwitcher';
 
-export function TopHeader({ sites, organizations = [], currentSlug }: { sites: any[], organizations?: any[], currentSlug?: string }) {
+export function TopHeader({ sites, organizations = [], currentSlug, user }: { sites: any[], organizations?: any[], currentSlug?: string, user?: any }) {
     const { toggleSidebar } = useAdmin();
 
     return (
@@ -18,7 +18,7 @@ export function TopHeader({ sites, organizations = [], currentSlug }: { sites: a
                 >
                     <Menu size={22} className="text-gray-700" />
                 </button>
-                <TenantSwitcher organizations={organizations} forcedSlug={currentSlug} />
+                <TenantSwitcher organizations={organizations} forcedSlug={currentSlug} user={user} />
                 <div className="h-8 w-px bg-gray-200/60 hidden lg:block mx-1"></div>
                 <SiteSwitcher sites={sites} />
             </div>

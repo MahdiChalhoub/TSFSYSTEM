@@ -10,6 +10,7 @@ import DebugOverlay from '@/components/dev/DebugOverlay';
 import { Outfit } from 'next/font/google';
 import { getSites } from '@/app/actions/sites';
 import { getOrganizations } from '@/app/admin/saas/organizations/actions';
+import { getUser } from '@/app/actions/auth';
 
 import { headers } from 'next/headers';
 
@@ -24,9 +25,11 @@ export default async function AdminLayout({
     const host = headerList.get('host') || '';
     const currentSlug = host.split(':')[0].split('.')[0];
 
-    const [sites, organizations] = await Promise.all([
+    // Parallel data fetching
+    const [sites, organizations, user] = await Promise.all([
         getSites(),
-        getOrganizations()
+        getOrganizations(),
+        getUser()
     ]);
 
     return (
@@ -39,7 +42,7 @@ export default async function AdminLayout({
                     {/* Right Panel: Content */}
                     <div className="flex-1 flex flex-col min-w-0">
                         {/* 1. Global Header (Search, Profile) */}
-                        <TopHeader sites={sites} organizations={organizations} currentSlug={currentSlug} />
+                        <TopHeader sites={sites} organizations={organizations} currentSlug={currentSlug} user={user} />
 
                         {/* 2. Tab Navigation Bar */}
                         <TabNavigator />
