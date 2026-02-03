@@ -7,13 +7,23 @@ import {
     installModuleGlobal,
     uninstallModuleGlobal,
     deleteModule,
-    uploadModule
+    uploadModule,
+    getModuleBackups,
+    rollbackModule
 } from "@/app/actions/saas/modules"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Box, RefreshCw, Zap, ShieldCheck, Info, Trash2, XCircle, UploadCloud } from "lucide-react"
+import { Box, RefreshCw, Zap, ShieldCheck, Info, Trash2, XCircle, UploadCloud, History as HistoryIcon, RotateCcw } from "lucide-react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
 
 export default function SaaSModulesPage() {
     const [modules, setModules] = useState<any[]>([])
