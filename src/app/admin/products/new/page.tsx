@@ -7,19 +7,39 @@ import { serializeDecimals } from '@/lib/utils/serialization';
 export const dynamic = 'force-dynamic';
 
 async function getCategories() {
-    return await erpFetch('/inventory/categories/');
+    try {
+        return await erpFetch('/inventory/categories/');
+    } catch (e) {
+        console.warn("Error fetching categories:", e);
+        return [];
+    }
 }
 
 async function getUnits() {
-    return await erpFetch('/inventory/units/');
+    try {
+        return await erpFetch('/inventory/units/');
+    } catch (e) {
+        console.warn("Error fetching units:", e);
+        return [];
+    }
 }
 
 async function getBrands() {
-    return await erpFetch('/inventory/brands/');
+    try {
+        return await erpFetch('/inventory/brands/');
+    } catch (e) {
+        console.warn("Error fetching brands:", e);
+        return [];
+    }
 }
 
 async function getCountries() {
-    return await erpFetch('/inventory/countries/');
+    try {
+        return await erpFetch('/inventory/countries/');
+    } catch (e) {
+        console.warn("Error fetching countries:", e);
+        return [];
+    }
 }
 
 export default async function NewProductPage(props: { searchParams: Promise<{ cloneId?: string }> }) {
