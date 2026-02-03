@@ -48,8 +48,12 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: { si
 
                 <div className="flex items-center gap-3 pl-1 cursor-pointer group p-1.5 hover:bg-white/50 rounded-2xl border border-transparent hover:border-gray-200/50 transition-all">
                     <div className="text-right hidden sm:block">
-                        <div className="text-sm font-bold text-gray-800 group-hover:text-emerald-800 transition-colors">John Doe</div>
-                        <div className="text-xs text-gray-400 font-medium">Store Manager</div>
+                        <div className="text-sm font-bold text-gray-800 group-hover:text-emerald-800 transition-colors">
+                            {user?.first_name ? `${user.first_name} ${user.last_name || ''}` : (user?.username || 'User')}
+                        </div>
+                        <div className="text-xs text-gray-400 font-medium">
+                            {user?.is_superuser ? 'SaaS Commander' : (user?.role?.name || 'Authorized Personnel')}
+                        </div>
                     </div>
                     <div className="w-10 h-10 bg-gradient-to-br from-emerald-100 to-teal-100 border border-emerald-200 text-emerald-700 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-all">
                         <User size={20} />

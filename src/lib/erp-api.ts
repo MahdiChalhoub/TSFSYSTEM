@@ -23,7 +23,7 @@ export async function getTenantContext() {
 
     console.log(`[DEBUG] Subdomain detected: ${subdomain}`);
 
-    if (!subdomain || subdomain === "localhost" || subdomain === "www") {
+    if (!subdomain || subdomain === "localhost" || subdomain === "www" || subdomain === "saas") {
         // Root Domain (SaaS Panel) - No Tenant Context
         return null;
     }
