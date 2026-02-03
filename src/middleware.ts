@@ -69,7 +69,8 @@ export default async function middleware(req: NextRequest) {
 
     // 1. MASTER PANEL logic override
     if (subdomain === "saas") {
-        if (!url.pathname.startsWith("/admin/saas")) {
+        const isAuth = url.pathname.startsWith("/login") || url.pathname.startsWith("/register") || url.pathname.startsWith("/auth");
+        if (!url.pathname.startsWith("/admin/saas") && !isAuth) {
             response = NextResponse.rewrite(new URL(`/admin/saas${path}`, req.url))
         }
     }
