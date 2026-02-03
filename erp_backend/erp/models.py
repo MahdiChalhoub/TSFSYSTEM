@@ -531,9 +531,27 @@ class Transaction(TenantModel):
     
     created_at = models.DateTimeField(auto_now_add=True)
 
+from django.contrib.auth.validators import UnicodeUsernameValidator
+from django.utils.translation import gettext_lazy as _
+
 class User(AbstractUser):
+    # Override username to allow duplicates across tenants
+    username_validator = UnicodeUsernameValidator()
+
+    username = models.CharField(
+        _('username'),
+        max_length=150,
+        unique=False, 
+        help_text=_('Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.'),
+        validators=[username_validator],
+    )
+
     class Meta:
         db_table = 'User'
+        constraints = [
+            models.UniqueConstraint(fields=['username', 'organization'], name='unique_username_per_org')
+        ]
+    
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='users', null=True, blank=True)
     role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True, related_name='users')
     home_site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True, related_name='home_users')

@@ -52,7 +52,7 @@ def test_onboarding_flow():
         # Admin
         "admin_first_name": "Test",
         "admin_last_name": "Admin",
-        "admin_username": f"admin_{unique_id}",
+        "admin_username": "shared_global_user", # Testing duplicate username support
         "admin_email": f"admin_{unique_id}@example.com",
         "admin_password": "Password123!"
     }
