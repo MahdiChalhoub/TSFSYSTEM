@@ -393,7 +393,8 @@ class Order(TenantModel):
     ref_code = models.CharField(max_length=100, null=True, blank=True)
 
     total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
-    tax_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    tax_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00')) # VAT
+    airsi_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00')) # Special Tax
     discount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     
     is_verified = models.BooleanField(default=False)
@@ -420,6 +421,7 @@ class OrderLine(TenantModel):
     unit_cost_ht = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     unit_cost_ttc = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     vat_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    airsi_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     effective_cost = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
 
     class Meta:
