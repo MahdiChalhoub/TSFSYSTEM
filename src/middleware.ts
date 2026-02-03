@@ -38,6 +38,11 @@ export default async function middleware(req: NextRequest) {
         }
 
         // Default to Landing Page
+        const isAuthRoute = url.pathname.startsWith('/login') || url.pathname.startsWith('/register');
+        if (isAuthRoute) {
+            return NextResponse.next();
+        }
+
         return NextResponse.rewrite(new URL(`/landing${path === "/" ? "" : path}`, req.url));
     }
 
