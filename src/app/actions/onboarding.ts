@@ -106,3 +106,15 @@ export async function registerUserAction(prevState: any, formData: FormData) {
         }
     }
 }
+
+export async function checkWorkspace(slug: string) {
+    try {
+        const data = await erpFetch(`tenant/resolve/?slug=${slug}`);
+        if (data && data.id) {
+            return { exists: true, data };
+        }
+        return { exists: false };
+    } catch (error) {
+        return { exists: false };
+    }
+}
