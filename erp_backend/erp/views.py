@@ -1608,12 +1608,14 @@ class FinancialEventViewSet(viewsets.ModelViewSet):
 from rest_framework import permissions
 
 class OrganizationViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.AllowAny]
+    # permission_classes = [permissions.AllowAny] - REVERTED for security
+    permission_classes = [permissions.IsAuthenticated]
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
     
 class SiteViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.AllowAny]
+    # permission_classes = [permissions.AllowAny] - REVERTED for security
+    permission_classes = [permissions.IsAuthenticated]
     queryset = Site.objects.all()
     serializer_class = SiteSerializer
 
