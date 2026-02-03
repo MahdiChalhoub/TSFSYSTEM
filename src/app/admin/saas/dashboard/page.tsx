@@ -1,22 +1,30 @@
-'use client'
-
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import {
-    LayoutDashboard,
-    Building,
-    Users,
     Activity,
     Plus,
     TrendingUp,
     Database,
     Globe,
     ShieldCheck,
-    Zap
+    Zap,
+    Building,
+    Clock,
+    LayoutDashboard
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { getSaasStats } from "./actions";
 
-export default function SaasMasterDashboard() {
+export default async function SaasMasterDashboard() {
+    const stats = await getSaasStats();
+
+    const quickStats = [
+        { label: "Provisioned Tenants", value: stats?.tenants || "0", icon: Building, color: "emerald", trend: "Stable" },
+        { label: "Active Subscriptions", value: stats?.activeTenants || "0", icon: ShieldCheck, color: "blue", trend: stats?.lastSync ? `Sync ${stats.lastSync}` : "Live" },
+        { label: "Module Registries", value: stats?.modules || "0", icon: Database, color: "purple", trend: "Global" },
+        { label: "Module Deployments", value: stats?.deployments || "0", icon: Zap, color: "orange", trend: "Active" },
+    ];
+
     return (
         <div className="p-10 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header Section */}
@@ -25,7 +33,9 @@ export default function SaasMasterDashboard() {
                     <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-[0.2em]">
                         <ShieldCheck size={14} /> Platform Control Center
                     </div>
-                    <h1 className="text-5xl font-black text-white tracking-tight">SaaS Dashboard</h1>
+                    <h1 className="text-5xl font-black text-white tracking-tight flex items-center gap-4">
+                        SaaS Dashboard
+                    </h1>
                     <p className="text-gray-400 font-medium text-lg">Infrastructure & Tenant Management Engine</p>
                 </div>
                 <div className="flex gap-4">
@@ -40,14 +50,9 @@ export default function SaasMasterDashboard() {
                 </div>
             </div>
 
-            {/* Quick Stats Grid - INFRASTRUCTURE ONLY */}
+            {/* Quick Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {[
-                    { label: "Provisioned Tenants", value: "24", icon: Building, color: "emerald", trend: "Stable" },
-                    { label: "Active Subscriptions", value: "18", icon: ShieldCheck, color: "blue", trend: "+2 this week" },
-                    { label: "System Load", value: "32%", icon: Database, color: "purple", trend: "Optimal" },
-                    { label: "Module Deployments", value: "156", icon: Zap, color: "orange", trend: "Up to date" },
-                ].map((stat, i) => (
+                {quickStats.map((stat, i) => (
                     <Card key={i} className="bg-[#0F172A] border-gray-800 rounded-[2rem] overflow-hidden group hover:border-emerald-500/30 transition-all shadow-2xl">
                         <CardContent className="p-8 space-y-4">
                             <div className={`p-4 bg-${stat.color}-500/10 rounded-2xl w-fit text-${stat.color}-400 group-hover:scale-110 transition-transform`}>
@@ -55,12 +60,10 @@ export default function SaasMasterDashboard() {
                             </div>
                             <div>
                                 <div className="text-sm font-bold text-gray-500 uppercase tracking-widest">{stat.label}</div>
-                                <div className="text-3xl font-black text-white mt-1">{stat.value}</div>
+                                <div className="text-4xl font-black text-white mt-1 font-mono tracking-tighter">{stat.value}</div>
                             </div>
-                            <div className="flex items-center gap-2 text-xs font-bold">
-                                <span className="text-emerald-400 flex items-center gap-1">
-                                    <TrendingUp size={12} /> {stat.trend}
-                                </span>
+                            <div className="flex items-center gap-2 text-xs font-bold text-gray-500">
+                                <Clock size={12} /> {stat.trend}
                             </div>
                         </CardContent>
                     </Card>
@@ -77,37 +80,31 @@ export default function SaasMasterDashboard() {
                                 <CardTitle className="text-2xl font-black text-white">Recent Deployments</CardTitle>
                                 <CardDescription className="text-gray-400 mt-1 font-medium italic">Latest business versions spun up</CardDescription>
                             </div>
-                            <Button variant="ghost" className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 font-bold rounded-xl text-sm">
-                                View Full Console
-                            </Button>
+                            <Link href="/admin/saas/organizations">
+                                <Button variant="ghost" className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 font-bold rounded-xl text-sm">
+                                    View Full Console
+                                </Button>
+                            </Link>
                         </div>
                     </CardHeader>
                     <CardContent className="px-4 pb-8">
                         <div className="space-y-2">
-                            {[
-                                { name: "Bakery Corp Côte d'Ivoire", slug: "bakery-ci", sites: 4, status: "Active", time: "2h ago" },
-                                { name: "Abidjan Tech Hub", slug: "abidjan-tech", sites: 1, status: "Provisioning", time: "5h ago" },
-                                { name: "Global Logistics Ltd", slug: "gl-logistics", sites: 12, status: "Suspended", time: "1d ago" },
-                            ].map((org, i) => (
-                                <div key={i} className="flex items-center justify-between p-6 rounded-3xl hover:bg-white/5 transition-all border border-transparent hover:border-gray-800">
+                            {stats?.latestTenants?.map((ten: any) => (
+                                <div key={ten.id} className="flex items-center justify-between p-6 rounded-3xl hover:bg-white/5 transition-all border border-transparent hover:border-gray-800">
                                     <div className="flex items-center gap-5">
                                         <div className="w-12 h-12 rounded-2xl bg-gray-800 flex items-center justify-center text-white font-bold border border-gray-700 shadow-inner">
-                                            {org.name[0]}
+                                            {ten.name[0]}
                                         </div>
                                         <div>
-                                            <div className="text-lg font-bold text-white">{org.name}</div>
-                                            <div className="text-xs font-mono text-gray-500 uppercase tracking-tighter">{org.slug}.tsf-city.com</div>
+                                            <div className="text-lg font-bold text-white">{ten.name}</div>
+                                            <div className="text-xs font-mono text-gray-500 uppercase tracking-tighter">{ten.slug}.localhost</div>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-8">
-                                        <div className="text-center">
-                                            <div className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">Sites</div>
-                                            <div className="text-sm font-black text-white">{org.sites}</div>
-                                        </div>
                                         <div className="w-24 px-3 py-1.5 rounded-full border border-gray-800 text-[10px] font-black uppercase text-center tracking-widest bg-gray-900/50 text-gray-400">
-                                            {org.status}
+                                            {ten.is_active ? 'Active' : 'Suspended'}
                                         </div>
-                                        <div className="text-xs text-gray-500 font-medium w-16 text-right">{org.time}</div>
+                                        <div className="text-xs text-gray-500 font-medium w-16 text-right">{ten.created_at}</div>
                                     </div>
                                 </div>
                             ))}
@@ -116,20 +113,23 @@ export default function SaasMasterDashboard() {
                 </Card>
 
                 {/* System Activity */}
-                <Card className="bg-[#0F172A] border-gray-800 rounded-[2.5rem] shadow-2xl">
-                    <CardHeader className="p-8">
+                <Card className="bg-[#0F172A] border-gray-800 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-8 opacity-10">
+                        <Globe size={160} />
+                    </div>
+                    <CardHeader className="p-8 relative z-10">
                         <CardTitle className="text-2xl font-black text-white flex items-center gap-3">
-                            <Zap className="text-yellow-400 fill-yellow-400" size={24} /> Feed
+                            <Zap className="text-yellow-400 fill-yellow-400" size={24} /> Platform Feed
                         </CardTitle>
-                        <CardDescription className="text-gray-400">Real-time platform events</CardDescription>
+                        <CardDescription className="text-gray-400">Real-time infrastructure pulse</CardDescription>
                     </CardHeader>
-                    <CardContent className="p-8 pt-2">
+                    <CardContent className="p-8 pt-2 relative z-10">
                         <div className="space-y-8 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-gradient-to-b before:from-emerald-500/50 before:via-gray-800 before:to-transparent">
                             {[
-                                { title: "API Bridge Stabilized", desc: "Next-to-Django gateway re-synchronized", time: "12m ago", icon: Activity, color: "emerald" },
-                                { title: "New Org Provisioned", desc: "Abidjan Tech Hub successfully onboarded", time: "5h ago", icon: Building, color: "blue" },
-                                { title: "Database Optimization", desc: "Automated Vacuum completed on dev.db", time: "14h ago", icon: Database, color: "purple" },
-                                { title: "Security Audit", desc: "Passed weekly infrastructure check", time: "22h ago", icon: ShieldCheck, color: "emerald" },
+                                { title: "Isolation Hardened", desc: "Cross-tenant data separation logic enforced", time: "Now", icon: ShieldCheck, color: "emerald" },
+                                { title: "Context Synced", desc: "SaaS Platform recognized as management org", time: "2m ago", icon: Globe, color: "blue" },
+                                { title: "Switcher Refined", desc: "Client switcher filtering complete", time: "15m ago", icon: LayoutDashboard, color: "purple" },
+                                { title: "API Gateway Resilient", desc: "Missing context errors suppressed for root", time: "1h ago", icon: Activity, color: "emerald" },
                             ].map((event, i) => (
                                 <div key={i} className="relative pl-10">
                                     <div className={`absolute left-0 top-1 w-6 h-6 rounded-full bg-[#0F172A] border-2 border-${event.color}-500 flex items-center justify-center z-10 shadow-[0_0_10px_rgba(0,0,0,0.5)]`}>
