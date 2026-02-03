@@ -52,22 +52,48 @@ export default async function SaasMasterDashboard() {
 
             {/* Quick Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {quickStats.map((stat, i) => (
-                    <Card key={i} className="bg-[#0F172A] border-gray-800 rounded-[2rem] overflow-hidden group hover:border-emerald-500/30 transition-all shadow-2xl">
-                        <CardContent className="p-8 space-y-4">
-                            <div className={`p-4 bg-${stat.color}-500/10 rounded-2xl w-fit text-${stat.color}-400 group-hover:scale-110 transition-transform`}>
-                                <stat.icon size={24} />
-                            </div>
-                            <div>
-                                <div className="text-sm font-bold text-gray-500 uppercase tracking-widest">{stat.label}</div>
-                                <div className="text-4xl font-black text-white mt-1 font-mono tracking-tighter">{stat.value}</div>
-                            </div>
-                            <div className="flex items-center gap-2 text-xs font-bold text-gray-500">
-                                <Clock size={12} /> {stat.trend}
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
+                {quickStats.map((stat, i) => {
+                    if (stat.label.includes("Module")) {
+                        return (
+                            <Link href="/admin/saas/modules" key={i} className="block group">
+                                <Card className="bg-[#0F172A] border-gray-800 rounded-[2rem] overflow-hidden group hover:border-emerald-500/30 transition-all shadow-2xl h-full cursor-pointer">
+                                    <CardContent className="p-8 space-y-4">
+                                        <div className={`p-4 bg-${stat.color}-500/10 rounded-2xl w-fit text-${stat.color}-400 group-hover:scale-110 transition-transform`}>
+                                            <stat.icon size={24} />
+                                        </div>
+                                        <div>
+                                            <div className="text-sm font-bold text-gray-500 uppercase tracking-widest flex justify-between items-center group-hover:text-emerald-400 transition-colors">
+                                                {stat.label}
+                                                <Zap size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                                            </div>
+                                            <div className="text-4xl font-black text-white mt-1 font-mono tracking-tighter">{stat.value}</div>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-xs font-bold text-gray-500">
+                                            <Clock size={12} /> {stat.trend}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </Link>
+                        );
+                    }
+
+                    return (
+                        <Card key={i} className="bg-[#0F172A] border-gray-800 rounded-[2rem] overflow-hidden group hover:border-emerald-500/30 transition-all shadow-2xl h-full">
+                            <CardContent className="p-8 space-y-4">
+                                <div className={`p-4 bg-${stat.color}-500/10 rounded-2xl w-fit text-${stat.color}-400 group-hover:scale-110 transition-transform`}>
+                                    <stat.icon size={24} />
+                                </div>
+                                <div>
+                                    <div className="text-sm font-bold text-gray-500 uppercase tracking-widest">{stat.label}</div>
+                                    <div className="text-4xl font-black text-white mt-1 font-mono tracking-tighter">{stat.value}</div>
+                                </div>
+                                <div className="flex items-center gap-2 text-xs font-bold text-gray-500">
+                                    <Clock size={12} /> {stat.trend}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    );
+                })}
             </div>
 
             {/* Main Content Area */}
