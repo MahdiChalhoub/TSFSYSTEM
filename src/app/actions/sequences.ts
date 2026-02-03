@@ -14,7 +14,7 @@ const updateSchema = z.object({
 
 export async function getTransactionSequences() {
     // Django backend should handle initialization in Service or View
-    const sequences = await erpFetch('/api/sequences/')
+    const sequences = await erpFetch('sequences/')
     return sequences
 }
 
