@@ -21,17 +21,20 @@ import { useState, useEffect } from 'react';
 import clsx from 'clsx';
 import { usePathname } from 'next/navigation';
 import { logoutAction } from "@/app/actions/auth";
+import { getSaaSModules } from "@/app/actions/saas/modules";
 
 // Data Structure for the Recursive Menu
 const MENU_ITEMS = [
     {
         title: 'Dashboard',
         icon: LayoutDashboard,
-        path: '/admin'
+        path: '/admin',
+        module: 'core'
     },
     {
         title: 'Commercial',
         icon: ShoppingBag,
+        module: 'pos',
         children: [
             { title: 'POS Terminal', path: '/admin/sales' },
             { title: 'Purchase Registry', path: '/admin/purchases' },
@@ -41,6 +44,7 @@ const MENU_ITEMS = [
     {
         title: 'Inventory',
         icon: Box,
+        module: 'inventory',
         children: [
             { title: 'Product Master', path: '/admin/products' },
             { title: 'Product Groups', path: '/admin/products?view=grouped' },
@@ -60,6 +64,7 @@ const MENU_ITEMS = [
     {
         title: 'Finance',
         icon: FileText,
+        module: 'finance',
         children: [
             { title: 'Performance Dashboard', path: '/admin/finance/dashboard' },
             { title: 'Accounts & Drawers', path: '/admin/finance/accounts' },
@@ -83,6 +88,7 @@ const MENU_ITEMS = [
     {
         title: 'CRM',
         icon: Users,
+        module: 'crm',
         children: [
             { title: 'Contact Center', path: '/admin/crm/contacts' },
             { title: 'Customer Loyalty', path: '/admin/crm/loyalty' },
@@ -92,6 +98,7 @@ const MENU_ITEMS = [
     {
         title: 'HR & Teams',
         icon: ShieldCheck,
+        module: 'hr',
         children: [
             { title: 'Employee Manager', path: '/admin/hr/employees' },
             { title: 'Payroll & Accruals', path: '/admin/hr/payroll' },
@@ -102,6 +109,7 @@ const MENU_ITEMS = [
     {
         title: 'System Settings',
         icon: Settings,
+        module: 'core',
         children: [
             { title: 'Sites & Branches', path: '/admin/settings/sites' },
             { title: 'Barcode Configuration', path: '/admin/settings/barcode' },
@@ -111,6 +119,7 @@ const MENU_ITEMS = [
     {
         title: 'SaaS Panel',
         icon: Briefcase,
+        module: 'core',
         children: [
             { title: 'Master Dashboard', path: '/admin/saas/dashboard' },
             { title: 'Organizations', path: '/admin/saas/organizations' },
@@ -123,10 +132,38 @@ const MENU_ITEMS = [
 
 export function Sidebar({ isSaas = false }: { isSaas?: boolean }) {
     const { sidebarOpen, openTab, activeTab, viewScope, setViewScope } = useAdmin();
+    const [installedModules, setInstalledModules] = useState<Set<string>>(new Set(['core'])); // Default core
 
-    const filteredItems = isSaas
-        ? MENU_ITEMS
-        : MENU_ITEMS.filter(item => item.title !== 'SaaS Panel');
+    useEffect(() => {
+        // Fetch active modules to filter sidebar
+        async function fetchModules() {
+            try {
+                // If we are in SaaS context, we might want to show EVERYTHING? 
+                // No, the user wants the sidebar to reflect the *installed* system modules.
+                // Even for SaaS Admin, if 'inventory' is deleted, it shouldn't be in the menu.
+                const modules = await getSaaSModules();
+                if (Array.isArray(modules)) {
+                    setInstalledModules(new Set(modules.map((m: any) => m.code)));
+                }
+            } catch (e) {
+                console.error("Failed to fetch sidebar modules", e);
+            }
+        }
+        fetchModules();
+    }, []);
+
+    const filteredItems = MENU_ITEMS.filter(item => {
+        // 1. Filter by SaaS Panel visibility logic
+        if (!isSaas && item.title === 'SaaS Panel') return false;
+
+        // 2. Filter by Installed Module
+        // If the item has a 'module' property, check if it's installed.
+        // We always allow 'core'
+        if (item.module && item.module !== 'core' && !installedModules.has(item.module)) {
+            return false;
+        }
+        return true;
+    });
 
     if (!sidebarOpen) return null;
 
