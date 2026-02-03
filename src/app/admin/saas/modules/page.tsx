@@ -1,8 +1,10 @@
 'use client'
 
 import { useEffect, useState, useRef } from "react"
+import { useRouter } from "next/navigation"
 import {
     getSaaSModules,
+    // ... imports
     syncModulesGlobal,
     installModuleGlobal,
     uninstallModuleGlobal,
@@ -26,10 +28,12 @@ import {
 } from "@/components/ui/dialog"
 
 export default function SaaSModulesPage() {
+    const router = useRouter()
     const [modules, setModules] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [syncing, setSyncing] = useState(false)
     const [processing, setProcessing] = useState<string | null>(null)
+    const [lastSynced, setLastSynced] = useState<string>("")
     const fileInputRef = useRef<HTMLInputElement>(null)
 
     useEffect(() => {
@@ -39,8 +43,11 @@ export default function SaaSModulesPage() {
     async function loadModules() {
         setLoading(true)
         try {
+            console.log("Fetching fresh module list...")
             const data = await getSaaSModules()
             setModules(data)
+            setLastSynced(new Date().toLocaleTimeString())
+            router.refresh() // Force Next.js router cache update
         } catch {
             toast.error("Failed to load modules")
         } finally {
@@ -54,7 +61,7 @@ export default function SaaSModulesPage() {
             const res = await syncModulesGlobal()
             if (res.error) throw new Error(res.error)
             toast.success(res.message)
-            loadModules()
+            await loadModules()
         } catch (e: any) {
             toast.error(e.message)
         } finally {
@@ -68,7 +75,7 @@ export default function SaaSModulesPage() {
             const res = await installModuleGlobal(code)
             if (res.error) throw new Error(res.error)
             toast.success(res.message)
-            loadModules()
+            await loadModules()
         } catch (e: any) {
             toast.error(e.message)
         } finally {
@@ -83,7 +90,7 @@ export default function SaaSModulesPage() {
             const res = await uninstallModuleGlobal(code)
             if (res.error) throw new Error(res.error)
             toast.success(res.message)
-            loadModules()
+            await loadModules()
         } catch (e: any) {
             toast.error(e.message)
         } finally {
@@ -98,7 +105,7 @@ export default function SaaSModulesPage() {
             const res = await deleteModule(code)
             if (res.error) throw new Error(res.error)
             toast.success(res.message)
-            loadModules()
+            await loadModules()
         } catch (e: any) {
             toast.error(e.message)
         } finally {
@@ -118,12 +125,27 @@ export default function SaaSModulesPage() {
             const res = await uploadModule(formData)
             if (res.error) throw new Error(res.error)
             toast.success(res.message)
-            loadModules()
+            await loadModules()
         } catch (e: any) {
             toast.error(e.message)
         } finally {
             setSyncing(false)
             if (fileInputRef.current) fileInputRef.current.value = ''
+        }
+    }
+
+    async function handleRollback(code: string, version: string) {
+        if (!confirm(`Confirm rollback of ${code} to version ${version}? This cannot be undone.`)) return;
+        setProcessing(code)
+        try {
+            const res = await rollbackModule(code, version)
+            if (res.error) throw new Error(res.error)
+            toast.success(res.message)
+            await loadModules()
+        } catch (e: any) {
+            toast.error(e.message)
+        } finally {
+            setProcessing(null)
         }
     }
 
@@ -141,6 +163,7 @@ export default function SaaSModulesPage() {
                 <div>
                     <h2 className="text-4xl font-black text-white tracking-tight">Global Module Registry</h2>
                     <p className="text-gray-400 mt-2 font-medium">Coordinate system features across all tenant distributions</p>
+                    {lastSynced && <p className="text-emerald-500/50 text-[10px] font-mono mt-2 uppercase tracking-widest">Last Synced: {lastSynced}</p>}
                 </div>
                 <div className="flex gap-4">
                     <Button
@@ -283,20 +306,7 @@ export default function SaaSModulesPage() {
         </div>
     )
 
-    async function handleRollback(code: string, version: string) {
-        if (!confirm(`Confirm rollback of ${code} to version ${version}? This cannot be undone.`)) return;
-        setProcessing(code)
-        try {
-            const res = await rollbackModule(code, version)
-            if (res.error) throw new Error(res.error)
-            toast.success(res.message)
-            loadModules()
-        } catch (e: any) {
-            toast.error(e.message)
-        } finally {
-            setProcessing(null)
-        }
-    }
+
 }
 
 function BackupList({ moduleCode, onRollback, currentVersion }: { moduleCode: string, onRollback: (v: string) => void, currentVersion: string }) {
