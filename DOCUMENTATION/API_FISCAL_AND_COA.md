@@ -17,7 +17,9 @@ Manage fiscal years (open/close periods) for the tenant.
 ### Workflows
 1. **Creation**:
    - `POST /api/accounting/fiscal_years/` with `{ "name": "FY-202X", "start_date": "...", "end_date": "..." }`.
-   - **Validation Fix**: `organization` is now read-only in the serializer. The backend automatically injects the current tenant ID via `perform_create`.
+   - **Validation Fix**: `organization` is now read-only in the serializer. The backend automatically injects the current tenant ID via `create`.
+   - **Auto-Generation**: Creating a Fiscal Year automatically generates 12 monthly `FiscalPeriods` (e.g., "P01-202X") based on the start/end dates.
+
    
 ## Endpoint: `/api/accounting/coa/`
 
