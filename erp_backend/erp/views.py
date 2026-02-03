@@ -9,7 +9,7 @@ from .models import (
     Warehouse, Inventory, InventoryMovement, Unit,
     Brand, Category, Parfum, ProductGroup, Country,
     Contact, Employee, Role, TransactionSequence, BarcodeSettings, Loan, LoanInstallment, FinancialEvent, Transaction, User,
-    OrderLine, JournalEntryLine
+    OrderLine, JournalEntryLine, Module, OrganizationModule
 )
 from .serializers import (
     OrganizationSerializer, SiteSerializer, FinancialAccountSerializer,
