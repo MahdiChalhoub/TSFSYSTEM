@@ -61,3 +61,37 @@ The goal of the Module Management System is to provide a safe, versioned, and tr
     3. ZIP created with all module files.
     4. SHA-256 checksum generated.
 - **Data Movement**: `apps/<name>` -> `exports/<name>_<version>.modpkg.zip`.
+
+### Module Lifecycle (SaaS Panel)
+The SaaS Panel (`/admin/saas/modules`) provides full control over the module lifecycle. These actions are strictly audited.
+
+#### 1. Module Upload (`.modpkg.zip`)
+- **Action**: Administrator uploads a signed zip package via the SaaS Panel.
+- **Process**:
+  1. File is temporarily saved.
+  2. `ModuleManager` extracts and validates the `manifest.json`.
+  3. Checks for version compatibility (Upgrade vs Downgrade).
+  4. Installs the module to `apps/` and updates the `SystemModule` registry.
+- **Outcome**: Module appears in the registry with status `INSTALLED`.
+
+#### 2. Global Push (Install for All)
+- **Action**: Administrator clicks "Push to All Tenants".
+- **Process**:
+  1. Iterates through **all** `Organization` records.
+  2. Creates or updates `OrganizationModule` with `is_enabled=True`.
+- **Use Case**: Mandatory security updates or core feature rollouts.
+
+#### 3. Global Revoke (Uninstall)
+- **Action**: Administrator clicks "Revoke".
+- **Process**:
+  1. Sets `is_enabled=False` for all `OrganizationModule` records linked to this module.
+  2. **Does not delete data**, but feature entitlement is removed immediately.
+- **Restriction**: Cannot revoke `core` module.
+
+#### 4. Delete from System
+- **Action**: Administrator clicks "Delete from System".
+- **Process**:
+  1. **Dependency Check**: Verifies no other installed modules depend on this one.
+  2. **Registry Wipe**: Removes `SystemModule` and all `OrganizationModule` entries.
+  3. **Filesystem Wipe**: Deletes the module directory from `apps/`.
+- **Outcome**: Module is completely removed. Re-installation requires a new upload.

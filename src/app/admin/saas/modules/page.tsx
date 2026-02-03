@@ -217,6 +217,30 @@ export default function SaaSModulesPage() {
                                         <XCircle size={16} />
                                         Revoke
                                     </Button>
+
+                                    {/* Rollback & History Dialog */}
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <Button
+                                                disabled={processing === m.code}
+                                                variant="outline"
+                                                className="col-span-2 border-gray-800 hover:bg-blue-500/10 hover:text-blue-400 hover:border-blue-500/50 text-gray-400 rounded-2xl py-4 font-bold transition-all flex gap-2"
+                                            >
+                                                <HistoryIcon size={16} />
+                                                History & Rollback
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="bg-[#0F172A] border-gray-800 text-white sm:max-w-md">
+                                            <DialogHeader>
+                                                <DialogTitle>Version History: {m.name}</DialogTitle>
+                                                <DialogDescription>
+                                                    Select a previous version to restore. This will replace the source code but <strong>will not revert database schemas</strong>.
+                                                </DialogDescription>
+                                            </DialogHeader>
+                                            <BackupList moduleCode={m.code} onRollback={(v) => handleRollback(m.code, v)} currentVersion={m.version} />
+                                        </DialogContent>
+                                    </Dialog>
+
                                     <Button
                                         onClick={() => handleDelete(m.code)}
                                         disabled={processing === m.code || m.is_core}
@@ -244,6 +268,66 @@ export default function SaaSModulesPage() {
                         <strong> Push</strong> enables the module for all tenants. <strong> Revoke</strong> disables it globally. <strong> Delete</strong> wipes source code.
                     </p>
                 </div>
+            </div>
+            {/* ... rest of existing code ... */}
+        </div>
+    )
+
+    async function handleRollback(code: string, version: string) {
+        if (!confirm(`Confirm rollback of ${code} to version ${version}? This cannot be undone.`)) return;
+        setProcessing(code)
+        try {
+            const res = await rollbackModule(code, version)
+            if (res.error) throw new Error(res.error)
+            toast.success(res.message)
+            loadModules()
+        } catch (e: any) {
+            toast.error(e.message)
+        } finally {
+            setProcessing(null)
+        }
+    }
+}
+
+function BackupList({ moduleCode, onRollback, currentVersion }: { moduleCode: string, onRollback: (v: string) => void, currentVersion: string }) {
+    const [backups, setBackups] = useState<any[]>([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        getModuleBackups(moduleCode).then(data => {
+            setBackups(data)
+            setLoading(false)
+        })
+    }, [moduleCode])
+
+    if (loading) return <div className="text-center py-8 text-gray-500 text-sm">Loading history...</div>
+    if (backups.length === 0) return <div className="text-center py-8 text-gray-500 text-sm">No backup checkpoints found.</div>
+
+    return (
+        <div className="max-h-[300px] mt-2 overflow-y-auto pr-2 custom-scrollbar">
+            <div className="space-y-2">
+                {backups.map((b, i) => (
+                    <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-gray-900 border border-gray-800">
+                        <div>
+                            <div className="font-bold text-white text-sm">v{b.version}</div>
+                            <div className="text-xs text-gray-500 mt-0.5">{b.date}</div>
+                        </div>
+                        {b.version !== currentVersion && (
+                            <Button
+                                size="sm"
+                                variant="secondary"
+                                onClick={() => onRollback(b.version)}
+                                className="h-8 text-xs font-bold"
+                            >
+                                <RotateCcw size={12} className="mr-2" />
+                                Restore
+                            </Button>
+                        )}
+                        {b.version === currentVersion && (
+                            <div className="text-xs font-bold text-emerald-500 uppercase tracking-wider px-3">Current</div>
+                        )}
+                    </div>
+                ))}
             </div>
         </div>
     )

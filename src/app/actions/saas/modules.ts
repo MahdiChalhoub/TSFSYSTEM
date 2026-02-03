@@ -60,6 +60,30 @@ export async function deleteModule(code: string) {
     }
 }
 
+// ... existing exports ...
+
+export async function getModuleBackups(code: string) {
+    try {
+        return await erpFetch(`saas/modules/${code}/backups/`)
+    } catch (e) {
+        console.error("Failed to fetch backups:", e)
+        return []
+    }
+}
+
+export async function rollbackModule(code: string, targetVersion: string) {
+    try {
+        const data = await erpFetch(`saas/modules/${code}/rollback_module/`, {
+            method: 'POST',
+            body: JSON.stringify({ target_version: targetVersion })
+        })
+        revalidatePath('/admin/saas/modules')
+        return data
+    } catch (e: any) {
+        return { error: e.message }
+    }
+}
+
 export async function uploadModule(formData: FormData) {
     try {
         // erpFetch needs to be careful with FormData (browser handles boundaries usually)
