@@ -6,24 +6,29 @@ const DJANGO_URL = process.env.DJANGO_URL || 'http://localhost:8000';
  * Next.js ERP Proxy
  * Forwards requests to the Django Backend and injects tenant context.
  */
-export async function GET(req: NextRequest, { params }: { params: { path: string[] } }) {
-    return proxyRequest(req, params.path);
+export async function GET(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
+    const { path } = await params;
+    return proxyRequest(req, path);
 }
 
-export async function POST(req: NextRequest, { params }: { params: { path: string[] } }) {
-    return proxyRequest(req, params.path);
+export async function POST(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
+    const { path } = await params;
+    return proxyRequest(req, path);
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { path: string[] } }) {
-    return proxyRequest(req, params.path);
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
+    const { path } = await params;
+    return proxyRequest(req, path);
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { path: string[] } }) {
-    return proxyRequest(req, params.path);
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
+    const { path } = await params;
+    return proxyRequest(req, path);
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { path: string[] } }) {
-    return proxyRequest(req, params.path);
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
+    const { path } = await params;
+    return proxyRequest(req, path);
 }
 
 async function proxyRequest(req: NextRequest, pathParts: string[]) {
