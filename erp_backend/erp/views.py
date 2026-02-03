@@ -1610,6 +1610,7 @@ from rest_framework import permissions
 class OrganizationViewSet(viewsets.ModelViewSet):
     # permission_classes = [permissions.AllowAny] - REVERTED for security
     permission_classes = [permissions.IsAuthenticated]
+    queryset = Organization.objects.all() # Required for Router to determine basename
     serializer_class = OrganizationSerializer
 
     def get_queryset(self):
