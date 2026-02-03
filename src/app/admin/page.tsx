@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Activity, Clock, ShoppingCart, Package, Plus, ChevronRight } from 'lucide-react';
 import { getAdminDashboardStats } from '@/app/actions/finance/dashboard';
-import { getActiveWidgets } from '@/lib/module-registry';
+import { getActiveWidgets, getActiveRecentActivity } from '@/lib/module-registry';
 // import { getOrgModules } from '@/app/actions/saas/modules';
 import { SafeModuleBoundary } from '@/components/SafeModuleBoundary';
 
@@ -21,6 +21,7 @@ export default async function AdminDashboard() {
 
     // 3. Resolve Widgets
     const DynamicWidgets = getActiveWidgets(installedModuleCodes);
+    const RecentActivityWidget = getActiveRecentActivity(installedModuleCodes);
 
     return (
         <div className="space-y-12 animate-in fade-in duration-500 pb-10 px-8">
@@ -48,6 +49,24 @@ export default async function AdminDashboard() {
                         No active widgets. Install modules to see insights here.
                     </div>
                 )}
+            </div>
+
+            {/* Charts & Activity Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Evolution Chart Placeholders */}
+
+                {/* Activity Feed (Now Modular) */}
+                <div className="lg:col-span-1 h-full min-h-[500px]">
+                    {RecentActivityWidget ? (
+                        <SafeModuleBoundary moduleName="Recent Activity">
+                            <RecentActivityWidget data={statsData} />
+                        </SafeModuleBoundary>
+                    ) : (
+                        <div className="h-full rounded-2xl border border-dashed border-gray-200 flex items-center justify-center text-gray-400 text-sm">
+                            Activity Feed requires 'Sales' module.
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Main Content Grid */}
@@ -113,48 +132,6 @@ export default async function AdminDashboard() {
                     </div>
                 </div>
 
-                {/* Right Column: Recent Activity (1/3 width) - Keep hardcoded for now or fetch dynamically */}
-                <div className="space-y-6">
-                    <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                        <Clock size={20} className="text-blue-500" />
-                        Recent Activity
-                    </h2>
-
-                    <div className="card-premium p-0 overflow-hidden h-full min-h-[400px] flex flex-col bg-white rounded-2xl border border-gray-100 shadow-sm">
-                        <div className="p-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                            <span className="font-bold text-gray-700 text-sm">Latest Sales</span>
-                        </div>
-
-                        <div className="overflow-y-auto p-2 space-y-1">
-                            {statsData.latestSales.map((sale: any, i: number) => (
-                                <div key={i} className="flex items-center justify-between p-3 hovering rounded-xl group cursor-pointer hover:bg-gray-50 transition-colors">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-xs group-hover:scale-110 transition-transform">
-                                            #{sale.id}
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-bold text-gray-900">{sale.contact?.name || 'Walk-in Customer'}</p>
-                                            <p className="text-xs text-gray-500">{new Date(sale.createdAt).toLocaleTimeString()}</p>
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-sm font-bold text-gray-900">${Number(sale.totalAmount).toFixed(2)}</p>
-                                        <div className="flex items-center gap-1 text-[10px] text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded ml-auto w-fit font-medium">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                                            {sale.status}
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-
-                            {statsData.latestSales.length === 0 && (
-                                <div className="text-center py-10 text-gray-400 text-sm">
-                                    No recent sales recorded.
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
             </div>
 
         </div>

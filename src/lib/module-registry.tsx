@@ -7,6 +7,7 @@ export type ModuleDefinition = {
     name: string;
     description?: string;
     dashboardWidgets?: React.ComponentType<{ data: any }>[];
+    recentActivity?: React.ComponentType<{ data: any }>;
     settingsPanel?: React.ComponentType;
     // [FUTURE] Support for modular landing page sections
     landingComponents?: React.ComponentType[];
@@ -15,12 +16,18 @@ export type ModuleDefinition = {
 import { InventoryStatsWidget } from '@/components/modules/inventory/InventoryWidgets';
 import InventorySettingsPanel from '@/components/modules/inventory/InventorySettings';
 import StorefrontFeatured from '@/components/modules/inventory/StorefrontFeatured';
-import { SalesStatsWidget } from '@/components/modules/sales/SalesWidgets';
+import { SalesStatsWidget, SalesRecentActivity } from '@/components/modules/sales/SalesWidgets';
+import BusinessSettings from '@/components/modules/core/BusinessSettings';
 
 // The Central Registry
 // In a real plugin system, this would be populated dynamically.
 // For now, we import all known modules and conditionally render them.
 export const MODULE_REGISTRY: Record<string, ModuleDefinition> = {
+    'core': {
+        code: 'core',
+        name: 'Platform Core',
+        settingsPanel: BusinessSettings
+    },
     'inventory': {
         code: 'inventory',
         name: 'Inventory Management',
@@ -31,7 +38,8 @@ export const MODULE_REGISTRY: Record<string, ModuleDefinition> = {
     'sales': { // or 'pos' depending on module code
         code: 'sales',
         name: 'Sales & POS',
-        dashboardWidgets: [SalesStatsWidget]
+        dashboardWidgets: [SalesStatsWidget],
+        recentActivity: SalesRecentActivity
     }
 };
 
@@ -88,4 +96,17 @@ export function getActiveLandingComponents(installedModuleCodes: string[]) {
     });
 
     return components;
+}
+
+// Helper to get active recent activity widgets
+export function getActiveRecentActivity(installedModuleCodes: string[]) {
+    // We only support one recent activity widget for now (Sales), but designed for list
+    // In future this could return a merged list or multiple components
+    for (const code of installedModuleCodes) {
+        const mod = MODULE_REGISTRY[code];
+        if (mod && mod.recentActivity) {
+            return mod.recentActivity;
+        }
+    }
+    return null;
 }

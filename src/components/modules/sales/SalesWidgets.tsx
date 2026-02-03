@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShoppingCart, TrendingUp, DollarSign } from 'lucide-react';
+import { ShoppingCart, TrendingUp, DollarSign, Clock } from 'lucide-react';
 import clsx from 'clsx';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
@@ -25,6 +25,73 @@ export const SalesStatsWidget = ({ data }: { data: any }) => {
         </div>
     );
 };
+
+export const SalesActiveOrdersWidget = ({ data }: { data: any }) => {
+    const value = data?.activeOrders || 0;
+    return (
+        <div className="card-premium p-6 flex flex-col justify-between group cursor-default min-h-[160px] relative overflow-hidden bg-white rounded-2xl border border-gray-100 shadow-sm">
+            <div className="flex justify-between items-start z-10">
+                <div>
+                    <p className="text-sm font-medium text-gray-500 mb-2">Active Orders</p>
+                    <h3 className="text-3xl font-bold text-gray-900 tracking-tight">{value.toLocaleString()}</h3>
+                </div>
+                <div className={clsx("p-3 rounded-2xl bg-gradient-to-br transition-transform group-hover:scale-110 duration-300", "text-blue-600", "from-blue-400/20 to-blue-600/20")}>
+                    <ShoppingCart size={24} />
+                </div>
+            </div>
+            <div className="mt-4 flex items-center text-sm text-blue-600 font-medium z-10">
+                <TrendingUp size={16} className="mr-1.5" />
+                <span>Processing now</span>
+            </div>
+            <div className={clsx("absolute -bottom-4 -right-4 w-24 h-24 rounded-full opacity-10 blur-2xl", "bg-blue-600")}></div>
+        </div>
+    );
+};
+
+export const SalesRecentActivity = ({ data }: { data: any }) => {
+    // Expects activeOrders or latestSales
+    const validSales = Array.isArray(data?.latestSales) ? data.latestSales : [];
+
+    return (
+        <div className="card-premium p-0 overflow-hidden h-full min-h-[400px] flex flex-col bg-white rounded-2xl border border-gray-100 shadow-sm">
+            <div className="p-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                    <Clock size={16} className="text-blue-500" />
+                    <span className="font-bold text-gray-700 text-sm">Recent Sales</span>
+                </div>
+            </div>
+
+            <div className="overflow-y-auto p-2 space-y-1">
+                {validSales.map((sale: any, i: number) => (
+                    <div key={i} className="flex items-center justify-between p-3 hovering rounded-xl group cursor-pointer hover:bg-gray-50 transition-colors">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-xs group-hover:scale-110 transition-transform">
+                                #{sale.id}
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-gray-900">{sale.contact?.name || 'Walk-in Customer'}</p>
+                                <p className="text-xs text-gray-500">{new Date(sale.createdAt).toLocaleTimeString()}</p>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-sm font-bold text-gray-900">${Number(sale.totalAmount).toFixed(2)}</p>
+                            <div className="flex items-center gap-1 text-[10px] text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded ml-auto w-fit font-medium">
+                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                                {sale.status}
+                            </div>
+                        </div>
+                    </div>
+                ))}
+
+                {validSales.length === 0 && (
+                    <div className="text-center py-10 text-gray-400 text-sm">
+                        No recent sales recorded.
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
 
 export const POSQuickAction = () => {
     return (
