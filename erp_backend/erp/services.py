@@ -139,14 +139,18 @@ class ConfigurationService:
             "sales": {"receivable": None, "revenue": None, "cogs": None, "inventory": None},
             "purchases": {"payable": None, "inventory": None, "tax": None},
             "inventory": {"adjustment": None, "transfer": None},
+            "automation": {"customerRoot": None, "supplierRoot": None, "payrollRoot": None},
+            "fixedAssets": {"depreciationExpense": None, "accumulatedDepreciation": None},
             "suspense": {"reception": None},
-            "equity": {"capital": None, "draws": None}
+            "partners": {"capital": None, "loan": None, "withdrawal": None}
         }
         if not setting: return default_config
         try:
             stored = json.loads(setting.value)
             for key in default_config:
-                if key in stored: default_config[key].update(stored[key])
+                if key in stored and isinstance(stored[key], dict):
+                    # Update but only for keys that exist in default_config to maintain schema
+                    default_config[key].update({k: v for k, v in stored[key].items() if k in default_config[key]})
             return default_config
         except: return default_config
 
@@ -174,6 +178,12 @@ class ConfigurationService:
         config['inventory']['adjustment'] = find('5104') or find('709') or config['inventory']['adjustment']
         config['inventory']['transfer'] = find('1120') or config['inventory']['transfer']
         config['suspense']['reception'] = find('2102') or find('9004') or config['suspense']['reception']
+        
+        # Automation Mappings
+        config['automation']['customerRoot'] = find('1111') or find('1110') or find('1200') or find('411') or config['automation']['customerRoot']
+        config['automation']['supplierRoot'] = find('2101') or find('2100.1') or find('2100') or find('401') or config['automation']['supplierRoot']
+        config['automation']['payrollRoot'] = find('2200') or find('421') or config['automation']['payrollRoot']
+        
         ConfigurationService.save_posting_rules(organization, config)
         return config
 
