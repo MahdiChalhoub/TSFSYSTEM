@@ -27,6 +27,7 @@ export function TenantSwitcher({ organizations, forcedSlug }: { organizations: a
         <div className="relative">
             <button
                 onClick={() => setIsOpen(!isOpen)}
+                suppressHydrationWarning={true}
                 className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all group"
             >
                 <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-900/20">
