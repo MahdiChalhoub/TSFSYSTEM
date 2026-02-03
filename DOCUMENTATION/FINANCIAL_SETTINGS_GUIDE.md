@@ -7,29 +7,38 @@ The VSF ERP Financial Module supports multiple operating modes to accommodate di
 
 | Type | Description | Best For | Technical Implication |
 |------|-------------|----------|-----------------------|
-| **REGULAR** | Standard TTC-based business. | Retailers, Shops | Costs and Prices handled in TTC (Tax Included). VAT is declared. |
-| **MICRO** | Simplified Tax Regime. | Small Businesses | VAT is not declared on each Invoice. Instead, a fixed % of Revenue/Expenses is paid. |
-| **REAL** | Professional Accounting. | Corporations | Strict HT (Tax Excluded) basis. VAT is explicitly collected and paid. |
-| **MIXED** | Hybrid System (Dual View). | Semi-Formal | Supports "Official" (Declared) and "Internal" (Undeclared) scopes simultaneously. |
-| **CUSTOM** | Manual Configuration. | Any | Allows manual toggling of individual flags (Dual View, TTC Mode, etc.). |
+| **REGULAR** | TTC-based. VAT is **Non-recoverable**. | Retailers, Shops | • **Sales**: Always in TTC. VAT is NOT declared on sales.<br>• **Purchases**: Cost Basis is always **TTC**. If invoice is HT, system adds VAT to calculate Effective Cost.<br>• **Purchases Tax (e.g. AIRSI)**: Configurable tax (default 5%) on official purchases. User decides if it helps increase Stock Cost or is expensed. |
+| **MICRO** | Simplified Regime. Revenue Tax. | Small Businesses | • **Sales**: VAT is not declared. Pay fixed % of **Turnover** to gov.<br>• **Purchases**: VAT is **Non-recoverable**. Cost Basis is **TTC**.<br>• **Purchases Tax**: Same as Regular (AIRSI support). |
+| **REAL** | Professional Accounting. | Corporations | • **Basis**: Strict **HT** (Tax Excluded). VAT is collected/paid.<br>• **Effective Cost**: <br>   - If VAT Recoverable: Cost = HT.<br>   - If VAT Non-Recoverable: Cost = TTC (HT + VAT). |
+| **MIXED** | Hybrid System (Dual View). | Semi-Formal | • **Scope**: Splits transactions into 'OFFICIAL' and 'INTERNAL'.<br>• **Costing**: Ask user preference. Typically matches "REAL" logic (HT base, but adapts if VAT is non-recoverable). |
+| **CUSTOM** | Manual Configuration. | Any | Allows manual toggling of individual flags. |
 
 ## 2. Configuration Definitions
 
 ### Base Currency
-The primary reporting currency (e.g., USD, EUR). The ledger is always balanced in this currency.
+The main software currency (e.g., LBP, USD). The ledger is always balanced in this currency to ensure system consistency.
 
 ### Works in TTC
-- **True**: Users enter prices including Tax. Cost of Goods Sold (COGS) is calculated on TTC basis (useful for non-recoverable VAT).
-- **False**: Users enter prices excluding Tax. COGS is HT.
+- **True**: Prices include Tax. Essential for REGULAR/MICRO where VAT is a cost, not a liability.
+- **False**: Prices exclude Tax. Standard for REAL companies.
 
 ### Dual View
-- **Enabled**: Every transaction has a `scope` ('OFFICIAL', 'INTERNAL'). Financial reports can be generated for either scope.
-- **Disabled**: All transactions are considered 'OFFICIAL'.
+- **Enabled**: Adds `scope` to ledger.
+- **Switching**: Can be enabled **anytime** (even mid-year) via SaaS Panel authority. It does not alter historical Cost Data, only visibility layers.
 
-### Tax Rates
-- **Sale Tax %**: Default VAT applied to sales.
-- **Purchase Tax %**: Default VAT recoverable on purchases.
-- **Micro Tax %**: Flat rate for Micro regime.
+### Special Purchase Tax (e.g., AIRSI)
+Applies to **Official** purchases in REGULAR/MICRO modes.
+- **Name**: Configurable (e.g., "AIRSI").
+- **Rate**: Configurable (e.g., 5%).
+- **Behavior**: User setting `Include Special Tax in Cost?`
+  - **Yes**: Increases Inventory Value (AMC).
+  - **No**: Booked immediately as an Expense.
+
+## 3. Effective Cost Logic
+The system calculates the **Stock Valuation Price** automatically:
+- **Case A (VAT Recoverable)**: Cost = Invoice HT.
+- **Case B (VAT Non-Recoverable)**: Cost = Invoice TTC.
+- **Case C (Special Tax Included)**: Cost = Case A/B + Special Tax Amount.
 
 ## 3. Smart Posting Rules (Auto-Mapping)
 The system automatically routes financial events to specific ledger accounts.
