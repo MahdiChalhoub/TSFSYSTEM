@@ -59,8 +59,8 @@ export default async function middleware(req: NextRequest) {
     // If logged in and at Login page, redirect to Dashboard (or tenant home)
     if (authToken && isLoginPage) {
         // If subdomain is saas, go to admin. If tenant, go to tenant dashboard.
-        // For now, just /dashboard
-        // return NextResponse.redirect(new URL("/dashboard", req.url))
+        const dashboardUrl = new URL("/admin/dashboard", req.url);
+        return NextResponse.redirect(dashboardUrl);
     }
 
     // SLIDING EXPIRATION: Refresh cookie if interacting with protected route
