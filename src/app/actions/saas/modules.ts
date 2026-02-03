@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache'
 
 export async function getSaaSModules() {
     try {
-        return await erpFetch('/api/saas/modules/')
+        return await erpFetch('saas/modules/')
     } catch (e) {
         console.error("Failed to fetch SaaS modules:", e)
         return []
@@ -14,7 +14,7 @@ export async function getSaaSModules() {
 
 export async function syncModulesGlobal() {
     try {
-        const data = await erpFetch('/api/saas/modules/sync_global/', {
+        const data = await erpFetch('saas/modules/sync_global/', {
             method: 'POST'
         })
         revalidatePath('/admin/saas/modules')
@@ -26,7 +26,7 @@ export async function syncModulesGlobal() {
 
 export async function installModuleGlobal(code: string) {
     try {
-        const data = await erpFetch(`/api/saas/modules/${code}/install_global/`, {
+        const data = await erpFetch(`saas/modules/${code}/install_global/`, {
             method: 'POST'
         })
         revalidatePath('/admin/saas/modules')

@@ -20,10 +20,10 @@ class SaaSModuleViewSet(viewsets.ViewSet):
             install_count = OrganizationModule.objects.filter(module_name=m.name, is_enabled=True).count()
             data.append({
                 'code': m.name,
-                'name': m.name,
+                'name': m.manifest.get('name', m.name),
                 'version': m.version,
                 'description': m.manifest.get('description', ''),
-                'dependencies': m.manifest.get('requires', {}),
+                'dependencies': m.manifest.get('dependencies', []),
                 'is_core': m.manifest.get('required', False),
                 'total_installs': install_count
             })
