@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAdminUser
+from rest_framework import permissions
 from .models import Module, Organization, OrganizationModule
 from .module_manager import ModuleManager
 
@@ -10,10 +10,12 @@ class SaaSModuleViewSet(viewsets.ViewSet):
     SaaS Manager viewpoint for Global Module Registry.
     Requires Staff/Superuser permissions and no organization context.
     """
-    permission_classes = [IsAdminUser]
+    permission_classes = [permissions.IsAdminUser]
 
     def list(self, request):
+        print(f"DEBUG: SaaSModuleViewSet.list called by user: {request.user} (Is Staff: {request.user.is_staff})")
         modules = Module.objects.all().order_by('name')
+        print(f"DEBUG: Found {modules.count()} modules in DB")
         data = []
         for m in modules:
             # Count how many orgs have this installed
@@ -46,7 +48,7 @@ class SaaSModuleViewSet(viewsets.ViewSet):
 
 class OrgModuleViewSet(viewsets.ViewSet):
     """Management of modules for a specific Organization (SaaS View)"""
-    permission_classes = [IsAdminUser]
+    permission_classes = [permissions.IsAdminUser]
 
     @action(detail=True, methods=['get'])
     def modules(self, request, pk=None):

@@ -1,7 +1,7 @@
 from django.db import transaction
 from rest_framework import viewsets, status, serializers
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, action
+from rest_framework.decorators import api_view, action, permission_classes
 from .middleware import get_current_tenant_id
 from .models import (
     Organization, Site, FinancialAccount, ChartOfAccount,
@@ -43,10 +43,15 @@ class TenantModelViewSet(viewsets.ModelViewSet):
         # 1. Global Platform Admin Access (Managed Scope)
         if user.is_staff or user.is_superuser:
             # If viewing through a tenant gateway (header set), restrict view to that tenant.
+            # If viewing through a tenant gateway (header set), restrict view to that tenant.
             if tenant_id:
                 return self.queryset.filter(organization_id=tenant_id)
-            # If at SaaS Root (no header), allow global view.
-            return self.queryset.all()
+            
+            # [SECURITY FIX]
+            # If at SaaS Root (no header), DO NOT return all data.
+            # SaaS Panel is for infra management only. Business data is strictly partitioned.
+            # Staff must 'Proxy' into a tenant to see data.
+            return self.queryset.none()
         
         # 2. Strict Tenant Isolation for Regular Users
         # Derive organization from the authenticated USER context
@@ -173,6 +178,7 @@ class SettingsViewSet(viewsets.ViewSet):
 from .middleware import get_current_tenant_id
 
 @api_view(['GET'])
+@permission_classes([permissions.AllowAny])
 def health_check(request):
     return Response({
         "status": "online",
@@ -1776,6 +1782,39 @@ class DashboardViewSet(viewsets.ViewSet):
             "totalProducts": total_products,
             "totalCustomers": total_customers,
             "latestSales": latest_sales_data
+        })
+
+    @action(detail=False, methods=['get'])
+    def saas_stats(self, request):
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({"error": "Staff access required"}, status=403)
+            
+        from django.utils import timezone
+        total_tenants = Organization.objects.count()
+        active_tenants = Organization.objects.filter(is_active=True).count()
+        
+        # Modules
+        total_modules = Module.objects.count()
+        total_deployments = OrganizationModule.objects.filter(status='INSTALLED').count()
+        
+        # Latest provisioned tenants
+        latest_tenants = Organization.objects.order_by('-created_at')[:5]
+        latest_tenants_data = [{
+            'id': str(o.id),
+            'name': o.name,
+            'slug': o.slug,
+            'created_at': o.created_at.strftime("%Y-%m-%d"),
+            'is_active': o.is_active
+        } for o in latest_tenants]
+        
+        return Response({
+            "tenants": total_tenants,
+            "activeTenants": active_tenants,
+            "modules": total_modules,
+            "deployments": total_deployments,
+            "systemLoad": "Optimal",
+            "lastSync": timezone.now().strftime("%H:%M"),
+            "latestTenants": latest_tenants_data
         })
 
     @action(detail=False, methods=['get'])

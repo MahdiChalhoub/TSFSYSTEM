@@ -23,8 +23,8 @@ export async function getTenantContext() {
 
     console.log(`[DEBUG] Subdomain detected: ${subdomain}`);
 
-    if (!subdomain || subdomain === "localhost" || subdomain === "www" || subdomain === "saas") {
-        // Root Domain (SaaS Panel) - No Tenant Context
+    if (!subdomain || subdomain === "localhost" || subdomain === "www") {
+        // Root Domain - No Tenant Context (Fallback)
         return null;
     }
 
@@ -75,7 +75,10 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
         headersRaw.set('X-Tenant-Slug', context.slug);
         console.log(`[DEBUG] erpFetch Context: ${context.slug}`);
     } else {
-        console.log(`[DEBUG] erpFetch Context: NULL`);
+        // [SAAS FIX]
+        // If no context (SaaS Panel), we DO NOT send X-Tenant-Id.
+        // This is valid for /api/saas/, /api/sites/, etc.
+        console.log(`[DEBUG] erpFetch Context: SaaS/Root (No Tenant ID sent)`);
     }
 
     const url = `${DJANGO_URL}/api/${path.startsWith('/') ? path.slice(1) : path}`;
@@ -98,8 +101,16 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
             const errorText = await response.text().catch(() => "Unknown Error")
 
             // Only log errors for non-auth issues to prevent noise during redirects
+            // [SAAS RESILIENCE] Suppress "No organization context" errors in the logs if we are at SaaS root
+            const isContextError = errorText.includes("No organization context");
+            const isSaaS = !context;
+
             if (response.status !== 401 && response.status !== 403) {
-                console.error(`[ERP_API] Error response from ${path}:`, errorText)
+                if (isContextError && isSaaS) {
+                    console.log(`[ERP_API] Root/SaaS context - Ignoring expected missing context for ${path}`);
+                } else {
+                    console.error(`[ERP_API] Error response from ${path}:`, errorText);
+                }
             } else {
                 // Debug log only for auth failures
                 console.log(`[ERP_API] Auth required for ${path}: ${response.status}`);

@@ -40,13 +40,13 @@ export default function SaasMasterDashboard() {
                 </div>
             </div>
 
-            {/* Quick Stats Grid */}
+            {/* Quick Stats Grid - INFRASTRUCTURE ONLY */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                    { label: "Active Tenants", value: "24", icon: Building, color: "emerald", trend: "+12%" },
-                    { label: "Total Platform Users", value: "1,248", icon: Users, color: "blue", trend: "+5.4%" },
-                    { label: "Database Load", value: "32%", icon: Database, color: "purple", trend: "Optimal" },
-                    { label: "Global Reach", value: "12 Countries", icon: Globe, color: "orange", trend: "Expanding" },
+                    { label: "Provisioned Tenants", value: "24", icon: Building, color: "emerald", trend: "Stable" },
+                    { label: "Active Subscriptions", value: "18", icon: ShieldCheck, color: "blue", trend: "+2 this week" },
+                    { label: "System Load", value: "32%", icon: Database, color: "purple", trend: "Optimal" },
+                    { label: "Module Deployments", value: "156", icon: Zap, color: "orange", trend: "Up to date" },
                 ].map((stat, i) => (
                     <Card key={i} className="bg-[#0F172A] border-gray-800 rounded-[2rem] overflow-hidden group hover:border-emerald-500/30 transition-all shadow-2xl">
                         <CardContent className="p-8 space-y-4">
@@ -61,7 +61,6 @@ export default function SaasMasterDashboard() {
                                 <span className="text-emerald-400 flex items-center gap-1">
                                     <TrendingUp size={12} /> {stat.trend}
                                 </span>
-                                <span className="text-gray-600">vs last month</span>
                             </div>
                         </CardContent>
                     </Card>
