@@ -18,16 +18,33 @@ class LoginSerializer(serializers.Serializer):
         if username and password:
             # Check if user exists first to provide better feedback
             try:
-                user_obj = User.objects.get(username=username)
+                from .middleware import get_current_tenant_id
+                tenant_id = get_current_tenant_id()
+                
+                # Filter by tenant if present, otherwise assume root/null org
+                if tenant_id:
+                    user_obj = User.objects.get(username=username, organization_id=tenant_id)
+                else:
+                    # ROOT LOGIN (SaaS Panel)
+                    user_obj = User.objects.get(username=username, organization__isnull=True)
+                    
+                    # STRICT ACCESS CONTROL: Only SaaS Staff can enter the Root Panel
+                    if not (user_obj.is_staff or user_obj.is_superuser):
+                         raise serializers.ValidationError(_("Access Restricted. Only SaaS Federation Staff authorized."), code='forbidden')
+
                 if user_obj.registration_status == 'PENDING':
                     raise serializers.ValidationError(_("Security Clearance Required. Your enlistment is still being processed."), code='pending')
                 if user_obj.registration_status == 'REJECTED':
                     raise serializers.ValidationError(_("Access Denied. Your registration was not approved by command."), code='rejected')
-            except User.DoesNotExist:
+            except (User.DoesNotExist, User.MultipleObjectsReturned):
+                # If we are at ROOT and user doesn't exist as NULL-org, 
+                # OR if we are in TENANT and user doesn't exist there,
+                # we pass to let verify_password fail generically to avoid enumeration,
+                # UNLESS we want to be specific.
                 pass
 
             user = authenticate(request=self.context.get('request'),
-                                username=username, password=password)
+                                username=username, password=password, organization_id=tenant_id)
 
             if not user:
                 msg = _('Unable to log in with provided credentials.')

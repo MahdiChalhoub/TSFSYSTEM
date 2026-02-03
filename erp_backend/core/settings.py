@@ -155,3 +155,8 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'erp.User'
+
+AUTHENTICATION_BACKENDS = [
+    'erp.backends.TenantAuthBackend',
+    'django.contrib.auth.backends.ModelBackend', # Keep default for admin panel / fallback
+]
