@@ -16,6 +16,16 @@ class LoginSerializer(serializers.Serializer):
         password = attrs.get('password')
 
         if username and password:
+            # Check if user exists first to provide better feedback
+            try:
+                user_obj = User.objects.get(username=username)
+                if user_obj.registration_status == 'PENDING':
+                    raise serializers.ValidationError(_("Security Clearance Required. Your enlistment is still being processed."), code='pending')
+                if user_obj.registration_status == 'REJECTED':
+                    raise serializers.ValidationError(_("Access Denied. Your registration was not approved by command."), code='rejected')
+            except User.DoesNotExist:
+                pass
+
             user = authenticate(request=self.context.get('request'),
                                 username=username, password=password)
 
