@@ -67,6 +67,7 @@ class OrganizationModule(models.Model):
     organization = models.ForeignKey('Organization', on_delete=models.CASCADE, related_name='enabled_modules')
     module_name = models.CharField(max_length=100, default='legacy')
     is_enabled = models.BooleanField(default=True)
+    active_features = models.JSONField(default=list, blank=True) # List of enabled feature codes
     granted_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

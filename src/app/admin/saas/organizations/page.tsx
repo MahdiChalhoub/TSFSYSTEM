@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { getOrganizations, toggleOrganizationStatus, createOrganization } from "./actions"
-import { getOrgModules, toggleOrgModule } from "@/app/actions/saas/modules"
+import { getOrgModules, toggleOrgModule, updateOrgModuleFeatures } from "@/app/actions/saas/modules"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Building, Plus, Globe, ShieldCheck, Activity, Trash2, Zap, Settings2 } from "lucide-react"
@@ -234,29 +234,67 @@ export default function OrganizationsPage() {
                         ) : orgModules.length === 0 ? (
                             <div className="py-12 text-center text-gray-500">No available features found for this instance.</div>
                         ) : orgModules.map((m) => (
-                            <div key={m.code} className="p-4 bg-gray-950/50 border border-gray-800 rounded-2xl flex items-center justify-between group hover:border-emerald-500/30 transition-all">
-                                <div>
-                                    <h4 className="font-bold text-white group-hover:text-emerald-400 transition-colors">{m.name}</h4>
-                                    <p className="text-[10px] text-gray-500 uppercase tracking-widest font-mono">{m.code}</p>
+                            <div key={m.code} className="p-4 bg-gray-950/50 border border-gray-800 rounded-2xl group hover:border-emerald-500/30 transition-all">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <h4 className="font-bold text-white group-hover:text-emerald-400 transition-colors">{m.name}</h4>
+                                        <p className="text-[10px] text-gray-500 uppercase tracking-widest font-mono">{m.code}</p>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <Badge className={m.status === 'INSTALLED' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-gray-800 text-gray-500 border-transparent"}>
+                                            {m.status}
+                                        </Badge>
+                                        {!m.is_core ? (
+                                            <Button
+                                                size="sm"
+                                                className={m.status === 'INSTALLED' ? "bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-xl px-4" : "bg-emerald-600 text-white hover:bg-emerald-500 rounded-xl px-4"}
+                                                onClick={() => handleModuleToggle(m.code, m.status)}
+                                            >
+                                                {m.status === 'INSTALLED' ? 'Deactivate' : 'Activate'}
+                                            </Button>
+                                        ) : (
+                                            <div className="text-[10px] text-indigo-400 font-bold uppercase tracking-tighter bg-indigo-500/10 px-2 py-1 rounded-md">
+                                                Permanent
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-4">
-                                    <Badge className={m.status === 'INSTALLED' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-gray-800 text-gray-500 border-transparent"}>
-                                        {m.status}
-                                    </Badge>
-                                    {!m.is_core ? (
-                                        <Button
-                                            size="sm"
-                                            className={m.status === 'INSTALLED' ? "bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-xl px-4" : "bg-emerald-600 text-white hover:bg-emerald-500 rounded-xl px-4"}
-                                            onClick={() => handleModuleToggle(m.code, m.status)}
-                                        >
-                                            {m.status === 'INSTALLED' ? 'Deactivate' : 'Activate'}
-                                        </Button>
-                                    ) : (
-                                        <div className="text-[10px] text-indigo-400 font-bold uppercase tracking-tighter bg-indigo-500/10 px-2 py-1 rounded-md">
-                                            Permanent
+
+                                {/* Feature Flags UI */}
+                                {m.status === 'INSTALLED' && m.available_features?.length > 0 && (
+                                    <div className="mt-4 pt-4 border-t border-gray-800/50 pl-2">
+                                        <p className="text-[10px] text-gray-500 font-bold uppercase mb-2">Extended Capabilities</p>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {m.available_features.map((f: any) => (
+                                                <label key={f.code} className="flex items-center gap-2 text-sm text-gray-300 hover:text-white cursor-pointer select-none">
+                                                    <input
+                                                        type="checkbox"
+                                                        className="rounded border-gray-700 bg-gray-900 text-emerald-500 focus:ring-emerald-500/20"
+                                                        checked={m.active_features?.includes(f.code) || false}
+                                                        onChange={async (e) => {
+                                                            const newFeatures = e.target.checked
+                                                                ? [...(m.active_features || []), f.code]
+                                                                : (m.active_features || []).filter((c: string) => c !== f.code)
+
+                                                            // Optimistic update logic would go here, but for safety we await
+                                                            try {
+                                                                await updateOrgModuleFeatures(selectedOrg.id, m.code, newFeatures)
+                                                                toast.success("Feature updated")
+                                                                const data = await getOrgModules(selectedOrg.id)
+                                                                setOrgModules(data)
+                                                            } catch {
+                                                                toast.error("Failed to update feature")
+                                                            }
+                                                        }}
+                                                    />
+                                                    <span className={m.active_features?.includes(f.code) ? "text-emerald-300 font-medium" : ""}>
+                                                        {f.name}
+                                                    </span>
+                                                </label>
+                                            ))}
                                         </div>
-                                    )}
-                                </div>
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -268,6 +306,6 @@ export default function OrganizationsPage() {
                     </div>
                 </DialogContent>
             </Dialog>
-        </div>
+        </div >
     )
 }
