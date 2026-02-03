@@ -100,6 +100,15 @@ export async function getLedgerEntries(scope: 'OFFICIAL' | 'INTERNAL' = 'INTERNA
     }
 }
 
+export async function getJournalEntry(id: number) {
+    try {
+        return await erpFetch(`journal/${id}/`)
+    } catch (error) {
+        console.error(`Failed to fetch journal entry ${id}:`, error)
+        throw error
+    }
+}
+
 export async function reverseJournalEntry(id: number) {
     try {
         const result = await erpFetch(`journal/${id}/reverse/`, {
