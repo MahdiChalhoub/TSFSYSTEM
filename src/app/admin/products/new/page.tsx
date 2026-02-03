@@ -1,5 +1,5 @@
 import AddProductForm from './form';
-import { prisma } from '@/lib/db';
+import { erpFetch } from '@/lib/erp-api';
 import { getProductNamingRule } from '@/app/actions/settings';
 import { getFinancialSettings } from '@/app/actions/finance/settings';
 import { serializeDecimals } from '@/lib/utils/serialization';
@@ -7,31 +7,19 @@ import { serializeDecimals } from '@/lib/utils/serialization';
 export const dynamic = 'force-dynamic';
 
 async function getCategories() {
-    return await prisma.category.findMany({
-        include: { parfums: true },
-        orderBy: { name: 'asc' }
-    });
+    return await erpFetch('/inventory/categories/');
 }
 
 async function getUnits() {
-    const units = await prisma.unit.findMany({
-        orderBy: { name: 'asc' }
-    });
-    return JSON.parse(JSON.stringify(units));
+    return await erpFetch('/inventory/units/');
 }
 
 async function getBrands() {
-    const brands = await prisma.brand.findMany({
-        include: { countries: true },
-        orderBy: { name: 'asc' }
-    });
-    return JSON.parse(JSON.stringify(brands));
+    return await erpFetch('/inventory/brands/');
 }
 
 async function getCountries() {
-    return await prisma.country.findMany({
-        orderBy: { name: 'asc' }
-    });
+    return await erpFetch('/inventory/countries/');
 }
 
 export default async function NewProductPage(props: { searchParams: Promise<{ cloneId?: string }> }) {
@@ -40,14 +28,16 @@ export default async function NewProductPage(props: { searchParams: Promise<{ cl
 
     let clonedProduct = null;
     if (cloneId) {
-        clonedProduct = await prisma.product.findUnique({
-            where: { id: parseInt(cloneId) },
-        });
-        if (clonedProduct) {
-            // Reset unique fields
-            (clonedProduct as any).sku = '';
-            (clonedProduct as any).barcode = '';
-            (clonedProduct as any).name = `${clonedProduct.name} (Copy)`;
+        try {
+            clonedProduct = await erpFetch(`/inventory/products/${cloneId}/`);
+            if (clonedProduct) {
+                // Reset unique fields
+                clonedProduct.sku = '';
+                clonedProduct.barcode = '';
+                clonedProduct.name = `${clonedProduct.name} (Copy)`;
+            }
+        } catch (error) {
+            console.error("Failed to fetch cloned product", error);
         }
     }
 
@@ -72,13 +62,13 @@ export default async function NewProductPage(props: { searchParams: Promise<{ cl
             </div>
 
             <AddProductForm
-                categories={serializeDecimals(categories)}
-                units={serializeDecimals(units)}
-                brands={serializeDecimals(brands)}
-                countries={serializeDecimals(countries)}
-                namingRule={serializeDecimals(namingRule)}
-                initialData={clonedProduct ? serializeDecimals(clonedProduct) : null}
-                worksInTTC={financialSettings.worksInTTC}
+                categories={categories}
+                units={units}
+                brands={brands}
+                countries={countries}
+                namingRule={namingRule}
+                initialData={clonedProduct}
+                worksInTTC={financialSettings?.worksInTTC ?? false}
             />
         </div>
     );
