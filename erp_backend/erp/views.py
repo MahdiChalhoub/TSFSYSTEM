@@ -1615,13 +1615,18 @@ class OrganizationViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        # SaaS Admins sees all
-        if user.is_superuser or user.is_staff:
-            return Organization.objects.all()
-        # Tenant Users see ONLY their own organization
+        
+        # 1. TENANT USER strict isolation (Even if Admin/Staff)
+        # If a user is bound to an organization, they can NEVER see outside it.
         if user.organization_id:
             return Organization.objects.filter(id=user.organization_id)
-        # Should not happen for valid active users, but return empty
+            
+        # 2. SAAS PLATFORM ADMIN (Unbound Superuser)
+        # Only users with NO organization (Root) and Admin status can see all.
+        if user.is_superuser or user.is_staff:
+            return Organization.objects.all()
+            
+        # 3. Fallback
         return Organization.objects.none()
     
 class SiteViewSet(viewsets.ModelViewSet):
