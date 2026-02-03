@@ -4,13 +4,16 @@ import { useState, useTransition } from 'react';
 import { Building, ChevronDown, Check, DoorOpen, ExternalLink } from 'lucide-react';
 import clsx from 'clsx';
 
-export function TenantSwitcher({ organizations, forcedSlug }: { organizations: any[], forcedSlug?: string }) {
+export function TenantSwitcher({ organizations, forcedSlug, user }: { organizations: any[], forcedSlug?: string, user?: any }) {
     const [isOpen, setIsOpen] = useState(false);
     const [isPending, startTransition] = useTransition();
 
     // Helper to get current subdomain/slug
     const currentSlug = forcedSlug || (typeof window !== 'undefined' ? window.location.hostname.split('.')[0] : '');
     const activeOrg = organizations.find(o => o.slug === currentSlug);
+
+    // Only show Master Panel to authorized staff
+    const showMasterPanel = user?.is_superuser || user?.is_staff;
 
     const handleSwitch = (slug: string) => {
         startTransition(() => {
@@ -48,7 +51,9 @@ export function TenantSwitcher({ organizations, forcedSlug }: { organizations: a
                     <div className="absolute top-full left-0 mt-3 w-80 bg-white border border-gray-200 rounded-3xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in duration-200">
                         <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
                             <h4 className="text-xs font-black text-gray-500 uppercase tracking-widest text-[10px]">Select Managed Version</h4>
-                            <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[8px] font-bold rounded-full uppercase tracking-tighter shadow-sm">Super Admin</span>
+                            {showMasterPanel && (
+                                <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[8px] font-bold rounded-full uppercase tracking-tighter shadow-sm">Super Admin</span>
+                            )}
                         </div>
                         <div className="p-2 max-h-80 overflow-y-auto">
                             {organizations.length === 0 && (
@@ -80,14 +85,16 @@ export function TenantSwitcher({ organizations, forcedSlug }: { organizations: a
                                 </button>
                             ))}
                         </div>
-                        <div className="p-3 bg-gray-50/80 border-t border-gray-100">
-                            <button
-                                onClick={() => window.location.href = 'http://saas.localhost:3000/admin/saas/dashboard'}
-                                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-gray-200 text-gray-500 hover:text-emerald-600 hover:border-emerald-200 hover:bg-white transition-all text-[10px] font-black uppercase tracking-widest shadow-sm"
-                            >
-                                <DoorOpen size={14} /> Master Panel
-                            </button>
-                        </div>
+                        {showMasterPanel && (
+                            <div className="p-3 bg-gray-50/80 border-t border-gray-100">
+                                <button
+                                    onClick={() => window.location.href = 'http://saas.localhost:3000/admin/saas/dashboard'}
+                                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-gray-200 text-gray-500 hover:text-emerald-600 hover:border-emerald-200 hover:bg-white transition-all text-[10px] font-black uppercase tracking-widest shadow-sm"
+                                >
+                                    <DoorOpen size={14} /> Master Panel
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </>
             )}
