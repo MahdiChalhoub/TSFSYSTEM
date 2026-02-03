@@ -27,9 +27,19 @@ The main software currency (e.g.,CFA, EUR, USD, etc). The ledger is always balan
 - **Stealth Mode / Double Access**: 
   - **User A (Official Access)**: Logs in with "Declared" password. Sees strictly "REAL" mode interface. No trace of "Dual View", no "Official/Internal" labels. Invoices are just "Invoices".
   - **User B (Master Access)**: Logs in with "Master" password. Sees both views.
-- **Vat Tracing in Mixed Mode**:
-  - **Internal Reality**: Purchases are costed TTC. VAT is treated as expense (cost).
-  - **Declared Reporting**: The system retrospectively calculates what the report *should* look like for the government (Cost = HT, VAT = Recoverable Liability). This allows the business to run on actual costs internally while producing compliant tax reports.
+- **Vat Tracing in Mixed Mode (Implementation)**:
+  - **Internal Ledger Posting (Real Reality)**:
+    - **Principle**: Management wants to see true cash cost.
+    - **Posting**: `Dr Expenses/Inventory (TTC Amount)`, `Cr Payable (TTC Amount)`.
+    - **Logic**: No VAT liability account is touched. VAT is treated as a direct cost to the business.
+  - **VAT Tax Metadata**:
+    - VAT details (Rate, Amount HT, Amount Tax) are stored on the **Invoice Line** purely as metadata, NOT as ledger entries.
+  - **Declared Reporting (Virtual Reclassification)**:
+    - **Principle**: Compliance with Government/SYSCOHADA requiring HT basis.
+    - **Mechanism**: When generating Tax Reports, the system **virtually reclassifies** the transaction on-the-fly:
+      - `Cost = Stored HT`
+      - `VAT Recoverable = Stored Tax Amount`
+    - **Presentation**: The report shows `Dr Cost (HT)`, `Dr VAT Recoverable`, `Cr Payable`, covering compliance without altering the internal cash-basis ledger.
 - **Switching**: Can be enabled **anytime** (even mid-year) via SaaS Panel authority. It does not alter historical Cost Data, only visibility layers.
 
 ### Special Purchase Tax (e.g., AIRSI)
