@@ -50,6 +50,21 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
     const context = await getTenantContext();
     const headersRaw = new Headers(options.headers || {});
 
+    // [AUTH RESTORATION]
+    // Crucial: Inject auth token from cookies if not already present
+    if (!headersRaw.has('Authorization')) {
+        try {
+            const { cookies } = await import('next/headers');
+            const cookieStore = await cookies();
+            const token = cookieStore.get('auth_token')?.value;
+            if (token) {
+                headersRaw.set('Authorization', `Token ${token}`);
+            }
+        } catch (e) {
+            // Ignore in contexts where cookies aren't available
+        }
+    }
+
     if (context) {
         headersRaw.set('X-Tenant-Id', context.id);
         headersRaw.set('X-Tenant-Slug', context.slug);
