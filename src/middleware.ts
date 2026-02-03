@@ -99,6 +99,7 @@ export default async function middleware(req: NextRequest) {
             url.pathname.startsWith("/login") ||
             url.pathname.startsWith("/auth") ||
             url.pathname.startsWith("/register") ||
+            url.pathname.startsWith("/saas") ||
             url.pathname.startsWith("/static") ||
             url.pathname.startsWith("/_next")
 
