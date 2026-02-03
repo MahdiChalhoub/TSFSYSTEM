@@ -351,17 +351,16 @@ class ModuleManager:
         if dependents:
             raise ValidationError(f"Cannot delete {module_name}. Other modules depend on it: {', '.join(dependents)}")
 
-        # 2. Data Safety Check (NEW)
-        # If this module has EVER been provisioned to an org, we block deletion to prevent orphan data tables.
-        linked_orgs = OrganizationModule.objects.filter(module_name=module_name).count()
-        if linked_orgs > 0:
+        # 2. Data Safety Check
+        # Check for ACTIVE installations only
+        active_installs = OrganizationModule.objects.filter(module_name=module_name, is_enabled=True).count()
+        if active_installs > 0:
             raise ValidationError(
-                f"SAFETY BLOCK: Module {module_name} is linked to {linked_orgs} organizations. "
-                "Deleting it would leave orphaned data tables. "
-                "Please 'Revoke' access instead to disable it safely."
+                f"SAFETY BLOCK: Module {module_name} is ACTIVELY enabled for {active_installs} organizations. "
+                "Please 'Revoke' access for all organizations before deleting from system."
             )
 
-        # 3. Registry Removal
+        # 3. Registry and Inactive Link Removal
         SystemModule.objects.filter(name=module_name).delete()
         OrganizationModule.objects.filter(module_name=module_name).delete()
 

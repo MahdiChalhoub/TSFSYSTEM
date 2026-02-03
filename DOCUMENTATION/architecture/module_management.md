@@ -1,3 +1,13 @@
+## Engine Safety Philosophy
+The TSFSYSTEM engine uses a **"Slot & Guard"** architecture to ensure 100% uptime:
+
+1.  **Slots**: Areas like the Dashboard Grid or Settings List are "slots" that only fill when a module is present in the `installedModuleCodes` registry.
+2.  **Guards**: Deep routes (e.g., `/admin/inventory/barcode`) are protected by a `redirect` guard. If the module isn't active, the engine ejects the user back to the safe dashboard.
+3.  **Containment**: All modular code is wrapped in a `SafeModuleBoundary`. A bug in one module cannot spread to the core kernel.
+
+## Installation Flow
+To "install" a module in this blank state, the code simply needs to add the ID (e.g., `inventory`) to the active registry. The UI will instantly "awaken" with the new features.
+
 # Module Management System
 
 The goal of the Module Management System is to provide a safe, versioned, and transactional way to extend the ERP system with new features (Modules). It ensures that all modifications adhere to the "System Philosophy" and that dependencies are strictly enforced.
