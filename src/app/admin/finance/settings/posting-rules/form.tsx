@@ -12,7 +12,30 @@ export default function PostingRulesForm({
     initialConfig: PostingRulesConfig,
     accounts: any[]
 }) {
-    const [config, setConfig] = useState<PostingRulesConfig>(initialConfig)
+    const [config, setConfig] = useState<PostingRulesConfig>(() => {
+        // Ensure all sections exist to prevent "Cannot read properties of undefined"
+        const defaults: PostingRulesConfig = {
+            sales: { receivable: null, revenue: null, cogs: null, inventory: null },
+            purchases: { payable: null, inventory: null, tax: null },
+            inventory: { adjustment: null, transfer: null },
+            automation: { customerRoot: null, supplierRoot: null, payrollRoot: null },
+            fixedAssets: { depreciationExpense: null, accumulatedDepreciation: null },
+            suspense: { reception: null },
+            partners: { capital: null, loan: null, withdrawal: null }
+        }
+
+        return {
+            ...defaults,
+            ...initialConfig,
+            sales: { ...defaults.sales, ...(initialConfig?.sales || {}) },
+            purchases: { ...defaults.purchases, ...(initialConfig?.purchases || {}) },
+            inventory: { ...defaults.inventory, ...(initialConfig?.inventory || {}) },
+            automation: { ...defaults.automation, ...(initialConfig?.automation || {}) },
+            fixedAssets: { ...defaults.fixedAssets, ...(initialConfig?.fixedAssets || {}) },
+            suspense: { ...defaults.suspense, ...(initialConfig?.suspense || {}) },
+            partners: { ...defaults.partners, ...(initialConfig?.partners || {}) },
+        }
+    })
     const [isPending, startTransition] = useTransition()
     const router = useRouter()
 
@@ -31,7 +54,9 @@ export default function PostingRulesForm({
             purchases: { ...config.purchases },
             inventory: { ...config.inventory },
             automation: { ...config.automation },
-            fixedAssets: { ...config.fixedAssets }
+            fixedAssets: { ...config.fixedAssets },
+            suspense: { ...config.suspense },
+            partners: { ...config.partners }
         }
 
         // Helper to find account by code
