@@ -41,4 +41,19 @@ class Command(BaseCommand):
         )
         self.stdout.write(f"🏢 SaaS Root Organization Created: {saas_org.name} (Slug: saas)")
 
+        # 3. Auto-Link Existing Superusers (The Fix)
+        # If the user created a superuser manually, we find them and bind them to SaaS
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        superusers = User.objects.filter(is_superuser=True, organization__isnull=True)
+        
+        count = 0
+        for su in superusers:
+            su.organization = saas_org
+            su.save()
+            count += 1
+            
+        if count > 0:
+            self.stdout.write(f"🔗 Auto-Linked {count} Superuser(s) to SaaS Organization")
+
         self.stdout.write(self.style.SUCCESS("✅ Seed Complete! Engine is Blank (with SaaS Root)."))
