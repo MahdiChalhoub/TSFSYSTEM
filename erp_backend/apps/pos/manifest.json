@@ -1,0 +1,11 @@
+{
+    "code": "pos",
+    "name": "Point of Sale",
+    "version": "1.0.0",
+    "description": "Retail checkout, sales management, and cashier control.",
+    "dependencies": [
+        "inventory",
+        "finance"
+    ],
+    "required": false
+}

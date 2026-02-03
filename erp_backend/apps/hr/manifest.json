@@ -1,0 +1,10 @@
+{
+    "code": "hr",
+    "name": "Human Resources",
+    "version": "1.0.0",
+    "description": "Employee management, shifts, and payroll integration.",
+    "dependencies": [
+        "finance"
+    ],
+    "required": false
+}
