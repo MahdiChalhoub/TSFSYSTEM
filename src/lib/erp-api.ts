@@ -86,6 +86,15 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
     headersRaw.forEach((v, k) => {
         cleanHeaders[k] = k.toLowerCase() === 'authorization' ? 'Token [REDACTED]' : v;
     });
+
+    // [UPLOAD FIX]
+    // If body is FormData, we must NOT send Content-Type header.
+    // Fetch will automatically set it with the correct boundary.
+    if (options.body instanceof FormData) {
+        headersRaw.delete('Content-Type');
+        console.log(`[ERP_API] Removed Content-Type header for FormData upload`);
+    }
+
     console.log(`[ERP_API] Request: ${options.method || 'GET'} ${url} | Headers: ${JSON.stringify(cleanHeaders)}`)
 
     try {
