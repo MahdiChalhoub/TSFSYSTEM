@@ -6,7 +6,8 @@ export const dynamic = 'force-dynamic';
 export default async function SettingsPage() {
     // [TEMPORARY] Simulate installed modules (Same as Dashboard)
     // We add 'core' explicitly here because it's always installed
-    const installedModuleCodes = ['core', 'inventory', 'sales', 'finance', 'crm'];
+    // 'sales' removed to demonstrate modularity
+    const installedModuleCodes = ['core', 'inventory', 'finance', 'crm'];
 
     const SettingsPanels = getActiveSettingsPanels(installedModuleCodes);
 
