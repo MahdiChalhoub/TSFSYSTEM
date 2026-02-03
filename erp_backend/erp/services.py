@@ -524,12 +524,26 @@ class PurchaseService:
             pricing_cost_basis = settings.get('pricingCostBasis', 'AUTO')
             company_type = settings.get('companyType', 'REGULAR')
             
-            # Mixed/Regular/Micro Logic: 
+            # --- Mixed/Regular/Micro VAT Logic ---
             # Internal Ledger is strictly TTC (Cash Basis). 
             # VAT Recoverability is virtualized in reports, not posted to Ledger.
             if company_type in ['MIXED', 'REGULAR', 'MICRO']:
                 vat_recoverable = False
             
+            # --- AIRSI Logic ---
+            supplier = Contact.objects.get(id=supplier_id, organization=organization)
+            global_airsi_rate = Decimal(str(settings.get('airsi_tax_percentage', 0))) / 100
+            
+            apply_airsi = False
+            airsi_rate = Decimal('0')
+            
+            if global_airsi_rate > 0:
+                # Hierarchy: Contact Override -> Global Enabled -> B2B Default?
+                # User Guide says: "If enabled, system *can* apply it... Purchases (Suppliers): If is_airsi_subject=True"
+                if supplier.is_airsi_subject:
+                    apply_airsi = True
+                    airsi_rate = supplier.airsi_tax_rate if supplier.airsi_tax_rate is not None else global_airsi_rate
+
             # 1. Create Order
             order = Order.objects.create(
                 organization=organization,
@@ -545,11 +559,13 @@ class PurchaseService:
                 notes=notes,
                 payment_method='CREDIT',
                 total_amount=Decimal('0'),
-                tax_amount=Decimal('0')
+                tax_amount=Decimal('0'),
+                airsi_amount=Decimal('0')
             )
 
             total_amount_ht = Decimal('0')
             total_tax = Decimal('0')
+            total_airsi = Decimal('0')
             
             for line in lines:
                 product = Product.objects.get(id=line['productId'], organization=organization)
@@ -568,30 +584,54 @@ class PurchaseService:
                 line_tax = line_total_ht * tax_rate
                 line_total_ttc = line_total_ht + line_tax
                 
+                # Calculate AIRSI for line
+                line_airsi = Decimal('0')
+                if apply_airsi:
+                    # Usually applies to HT base (Service/Goods)
+                    line_airsi = (line_total_ht * airsi_rate).quantize(Decimal('0.01'))
+                
                 total_amount_ht += line_total_ht
                 total_tax += line_tax
+                total_airsi += line_airsi
                 
                 # Effective Cost Engine
+                base_effective_cost = Decimal('0')
                 if pricing_cost_basis == 'FORCE_HT':
-                    effective_cost = unit_cost_ht
+                    base_effective_cost = unit_cost_ht
                 elif pricing_cost_basis == 'FORCE_TTC':
-                    effective_cost = unit_cost_ttc
+                    base_effective_cost = unit_cost_ttc
                 else: # AUTO
-                    effective_cost = unit_cost_ht if vat_recoverable else unit_cost_ttc
+                    base_effective_cost = unit_cost_ht if vat_recoverable else unit_cost_ttc
                 
+                # Handling AIRSI in Cost
+                # Rules:
+                # REGULAR -> Capitalize (Typically)
+                # MICRO -> Expense
+                # REAL -> Recoverable
+                # MIXED -> Internal=Capitalize, Declared=Recoverable
+                
+                airsi_capitalized = True # Default for Mixed/Regular/Micro Internal View
+                if company_type == 'REAL': airsi_capitalized = False
+                
+                final_effective_cost = base_effective_cost
+                if apply_airsi and airsi_capitalized and qty > 0:
+                    final_effective_cost += (line_airsi / qty).quantize(Decimal('0.01'))
+
                 # A. Order Line
                 OrderLine.objects.create(
                     organization=organization,
                     order=order,
                     product=product,
                     quantity=qty,
-                    unit_price=effective_cost,
+                    unit_price=final_effective_cost,
                     unit_cost_ht=unit_cost_ht,
                     unit_cost_ttc=unit_cost_ttc,
                     vat_amount=line_tax / qty if qty > 0 else 0,
-                    effective_cost=effective_cost,
+                    airsi_amount=line_airsi / qty if qty > 0 else 0,
+                    effective_cost=final_effective_cost,
                     tax_rate=tax_rate,
-                    total=line_total_ttc
+                    total=line_total_ttc # Note: Total usually doesn't include AIRSI if it's external, but if Supplier Adds it, it does? 
+                                         # Let's assume Order Total = Payable to Supplier. If Supplier charged AIRSI, then yes.
                 )
                 
                 # B. Stock Batch & Inventory
@@ -599,7 +639,7 @@ class PurchaseService:
                     organization=organization,
                     product=product,
                     batch_code=f"PUR-{order.id}-{product.id}",
-                    cost_price=effective_cost,
+                    cost_price=final_effective_cost,
                     expiry_date=line.get('expiryDate')
                 )
                 
@@ -614,7 +654,7 @@ class PurchaseService:
                 inv.save()
                 
                 # C. Update Product Master
-                product.cost_price = effective_cost # AMC update logic could be more complex, but we follow frontend for now
+                product.cost_price = final_effective_cost # AMC update logic could be more complex, but we follow frontend for now
                 product.cost_price_ht = unit_cost_ht
                 product.cost_price_ttc = unit_cost_ttc
                 if line.get('sellingPriceHT'): product.selling_price_ht = Decimal(str(line['sellingPriceHT']))
@@ -622,37 +662,65 @@ class PurchaseService:
                 product.save()
 
             # Final Order Totals
-            order.total_amount = total_amount_ht + total_tax
+            # If AIRSI is charged by supplier (Additive), it increases Payable.
+            # If it's Withholding, it doesn't change Total Amount (Invoice Amount), but splits payment.
+            # Assumption: Supplier CHARGES valid tax.
+            order.total_amount = total_amount_ht + total_tax + total_airsi
             order.tax_amount = total_tax
+            order.airsi_amount = total_airsi
             order.save()
             
             # 6. Financial Posting
-            supplier = Contact.objects.get(id=supplier_id, organization=organization)
             rules = ConfigurationService.get_posting_rules(organization)
             
             ap_account_id = supplier.linked_account_id or rules['purchases']['payable']
             stock_account_id = rules['purchases']['inventory']
             tax_account_id = rules['purchases']['tax']
+            airsi_account_id = rules['purchases'].get('airsi') # Need to ensure this rule exists or fallback
             
             if not ap_account_id or not stock_account_id:
                 raise ValidationError("Finance mapping missing: Accounts Payable or Inventory account not configured.")
                 
-            inventory_debit_amount = total_amount_ht if vat_recoverable else (total_amount_ht + total_tax)
+            # Debit Inventory = Sum of Lines Effective Costs * Qty
+            # But simpler calculation:
+            inventory_debit_amount = total_amount_ht
+            if not vat_recoverable: inventory_debit_amount += total_tax
+            
+            # AIRSI Logic for Ledger
+            airsi_ledger_treatment = 'CAPITALIZE' # Default
+            if company_type == 'REAL': airsi_ledger_treatment = 'RECOVER'
+            elif company_type == 'MICRO': airsi_ledger_treatment = 'EXPENSE'
+            
+            if apply_airsi:
+                if airsi_ledger_treatment == 'CAPITALIZE':
+                    inventory_debit_amount += total_airsi
+                # Else: handled separately
             
             posting_lines = [
-                # Credit AP (Always TTC)
-                {"account_id": ap_account_id, "debit": Decimal('0'), "credit": total_amount_ht + total_tax, "description": f"Payable to {supplier.name}"},
+                # Credit AP (Gross Amount including everything charged)
+                {"account_id": ap_account_id, "debit": Decimal('0'), "credit": order.total_amount, "description": f"Payable to {supplier.name}"},
                 # Debit Inventory
-                {"account_id": stock_account_id, "debit": inventory_debit_amount, "credit": Decimal('0'), "description": "Inventory Value (HT)" if vat_recoverable else "Inventory Value (TTC - Non-recoverable)"}
+                {"account_id": stock_account_id, "debit": inventory_debit_amount, "credit": Decimal('0'), "description": "Inventory Value"}
             ]
             
-            # Debit Tax (Only if recoverable)
+            # Debit VAT (Only if recoverable)
             if vat_recoverable and total_tax > 0:
                 posting_lines.append({
                     "account_id": tax_account_id,
                     "debit": total_tax,
                     "credit": Decimal('0'),
                     "description": "VAT Recoverable"
+                })
+                
+            # Debit AIRSI (If not capitalized)
+            if apply_airsi and airsi_ledger_treatment != 'CAPITALIZE':
+                 # If Recoverable -> Asset. If Expense -> Expense.
+                 target_acc = airsi_account_id or tax_account_id # Fallback
+                 posting_lines.append({
+                    "account_id": target_acc,
+                    "debit": total_airsi,
+                    "credit": Decimal('0'),
+                    "description": f"AIRSI ({airsi_ledger_treatment})"
                 })
                 
             LedgerService.create_journal_entry(

@@ -41,9 +41,21 @@ class MixedTaxEngineTests(APITestCase):
             type="SUPPLIER"
         )
         
-        from erp.models import Warehouse, Site
+        from erp.models import Warehouse, Site, User
         self.site = Site.objects.get(organization=self.org, code="MAIN")
         self.warehouse = Warehouse.objects.get(organization=self.org, code="WH01")
+        
+        from erp.models import Warehouse, Site, User, Role
+        self.site = Site.objects.get(organization=self.org, code="MAIN")
+        self.warehouse = Warehouse.objects.get(organization=self.org, code="WH01")
+        
+        role = Role.objects.create(organization=self.org, name="ADMIN")
+        self.user = User.objects.create(
+            username="testuser",
+            email="test@example.com",
+            role=role,
+            organization=self.org
+        )
 
     def test_mixed_mode_purchase_posting(self):
         print("\n>>> Testing Mixed Mode Purchase Posting...")
@@ -67,7 +79,7 @@ class MixedTaxEngineTests(APITestCase):
             invoice_price_type='HT_BASED',
             vat_recoverable=True, # Instruction: Frontend asks for recoverable, but Backend logic should override
             lines=lines,
-            user=None
+            user=self.user
         )
         
         # 2. Verify Ledger (Internal Reality)
@@ -112,3 +124,61 @@ class MixedTaxEngineTests(APITestCase):
         self.assertEqual(report['purchases_ttc_internal'], Decimal('1180.00'))
         
         print("[OK] Virtual Tax Report Reclassified successfully.")
+    def test_mixed_mode_with_airsi(self):
+        print("\n>>> Testing Mixed Mode with AIRSI Capitalization...")
+        
+        # 1. Setup AIRSI
+        ConfigurationService.save_global_settings(self.org, {
+            "companyType": "MIXED",
+            "worksInTTC": True,
+            "dualView": True,
+            "airsi_tax_percentage": 5 # 5% Global Rate
+        })
+        
+        # Enable AIRSI for Supplier
+        self.supplier.is_airsi_subject = True
+        self.supplier.save()
+        
+        # 2. Execute Purchase
+        # HT = 1000. VAT = 180. AIRSI (5% of 1000) = 50.
+        # Total Payable = 1230.
+        # Cost (Mixed Mode = TTC + AIRSI) = 1000 + 180 + 50 = 1230.
+        
+        lines = [{
+            "productId": self.product.id,
+            "quantity": 10,
+            "unitCostHT": 100,
+            "unitCostTTC": 118,
+            "taxRate": 0.18,
+            "expiryDate": None
+        }]
+        
+        order = PurchaseService.quick_purchase(
+            organization=self.org,
+            supplier_id=self.supplier.id,
+            warehouse_id=self.warehouse.id,
+            site_id=self.site.id,
+            scope='OFFICIAL',
+            invoice_price_type='HT_BASED',
+            vat_recoverable=True, # Will be ignored by Mixed Mode logic
+            lines=lines,
+            user=self.user
+        )
+        
+        # 3. Verify Order Totals
+        self.assertEqual(order.total_amount, Decimal('1230.00'))
+        self.assertEqual(order.tax_amount, Decimal('180.00')) # VAT
+        self.assertEqual(order.airsi_amount, Decimal('50.00')) # AIRSI
+        
+        # 4. Verify Ledger (Internal Reality)
+        je = JournalEntry.objects.get(reference=f"ORD-{order.id}")
+        lines = je.lines.all()
+        
+        inventory_line = lines.filter(account__code='1120').first() # Stock
+        payable_line = lines.filter(account__code='2101').first() # AP
+        
+        # Assert Inventory Debit includes VAT + AIRSI (1230)
+        self.assertEqual(inventory_line.debit, Decimal('1230.00'))
+        self.assertEqual(payable_line.credit, Decimal('1230.00'))
+        
+        print("[OK] AIRSI Capitalized correctly in Mixed Mode.")
