@@ -44,6 +44,24 @@ The system is divided into three isolated containers:
     - **Frontend**: http://your-server-ip:3000
     - **Backend API**: http://your-server-ip:8000
 
+## Network & Access
+
+### 1. Direct Access (IP + Port)
+By default, the containers are exposed on your server's public IP:
+- **ERP UI**: `http://<YOUR_SERVER_IP>:3000`
+- **API Engine**: `http://<YOUR_SERVER_IP>:8000`
+
+### 2. Firewall Configuration (Linux UFW)
+If you cannot access the site, you must open the ports on your Linux firewall:
+```bash
+sudo ufw allow 3000/tcp
+sudo ufw allow 8000/tcp
+sudo ufw reload
+```
+
+### 3. Production Recommendation (Nginx)
+For a professional setup, you should use **Nginx** as a Reverse Proxy to map your domain (e.g., `erp.yourdomain.com`) to port 3000. This avoids typing `:3000` in the browser and allows for SSL (HTTPS).
+
 ## Managing Modules
 To install your exported modules on the server:
 1.  Upload your `.modpkg.zip` to the server (using SCP or the SaaS UI).
