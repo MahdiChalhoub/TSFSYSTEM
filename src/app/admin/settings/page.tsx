@@ -1,3 +1,4 @@
+
 import { getActiveSettingsPanels } from '@/lib/module-registry';
 import { SafeModuleBoundary } from '@/components/SafeModuleBoundary';
 
@@ -5,9 +6,8 @@ export const dynamic = 'force-dynamic';
 
 export default async function SettingsPage() {
     // [TEMPORARY] Simulate installed modules (Same as Dashboard)
-    // We add 'core' explicitly here because it's always installed
-    // 'sales' removed to demonstrate modularity
-    const installedModuleCodes = ['core', 'inventory', 'finance', 'crm'];
+    // BLANC SYSTEM: Only Core is active.
+    const installedModuleCodes = ['core'];
 
     const SettingsPanels = getActiveSettingsPanels(installedModuleCodes);
 
