@@ -1774,16 +1774,43 @@ class DashboardViewSet(viewsets.ViewSet):
             })
 
         # 4. Inventory Value
+        from decimal import Decimal
+        inv_status = {}
+        
         if organization:
-            inv_status = InventoryService.get_inventory_valuation(organization)
+            raw_status = InventoryService.get_inventory_valuation(organization)
+            stock_value = raw_status.get('total_value', Decimal('0'))
+            
+            # Get Ledger Balance
+            rules = ConfigurationService.get_posting_rules(organization)
+            # Try sales.inventory or purchases.inventory (usually same)
+            inv_acc_id = rules.get('sales', {}).get('inventory') or rules.get('purchases', {}).get('inventory')
+            ledger_balance = Decimal('0')
+            
+            if inv_acc_id:
+                from .models import ChartOfAccount
+                acc = ChartOfAccount.objects.filter(id=inv_acc_id).first()
+                if acc: ledger_balance = acc.balance
+            
+            inv_status = {
+                "totalValue": float(stock_value),
+                "ledgerBalance": float(ledger_balance),
+                "discrepancy": float(stock_value - ledger_balance),
+                "itemCount": raw_status.get('item_count', 0),
+                "isMapped": bool(inv_acc_id)
+            }
         else:
             # Global Inventory Value
             from .models import Inventory
             result = Inventory.objects.aggregate(total_value=Sum(F('quantity') * F('product__cost_price')))
+            stock_value = Decimal(str(result['total_value'] or '0'))
+            
             inv_status = {
-                "total_value": Decimal(str(result['total_value'] or '0')),
-                "item_count": Inventory.objects.count(),
-                "timestamp": timezone.now()
+                "totalValue": float(stock_value),
+                "ledgerBalance": 0, 
+                "discrepancy": 0,
+                "itemCount": Inventory.objects.count(),
+                "isMapped": False
             }
         
         return Response({
