@@ -121,9 +121,16 @@ class ModuleManager:
         Safely upgrades a module from a .modpkg.zip file.
         """
         ModuleManager.acquire_lock()
+        old_module = None  # [FIX] Prevent UnboundLocalError
         try:
             print(f"🚀 Starting upgrade for {module_name}...")
             
+            # Debug File Info
+            if os.path.exists(package_path):
+                print(f"📦 Package Size: {os.path.getsize(package_path)} bytes at {package_path}")
+            else:
+                print(f"❌ Package NOT FOUND at {package_path}")
+
             # 1. Validation
             if not zipfile.is_zipfile(package_path):
                 raise ValidationError("Invalid module package: Not a ZIP file.")

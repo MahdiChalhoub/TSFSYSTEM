@@ -2,6 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import permissions
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from .models import SystemModule, Organization, OrganizationModule
 from .module_manager import ModuleManager
 
@@ -11,6 +12,7 @@ class SaaSModuleViewSet(viewsets.ViewSet):
     Requires Staff/Superuser permissions and no organization context.
     """
     permission_classes = [permissions.IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def list(self, request):
         modules = SystemModule.objects.all().order_by('name')
@@ -94,22 +96,23 @@ class SaaSModuleViewSet(viewsets.ViewSet):
         if not file_obj.name.endswith('.modpkg.zip'):
             return Response({'error': 'Invalid file type. Must be .modpkg.zip'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Save temporarily
-        from django.core.files.storage import default_storage
-        from django.core.files.base import ContentFile
+        # Save temporarily using direct IO to avoid storage path mixups
         import os
         from django.conf import settings
 
-        temp_path = os.path.join(settings.BASE_DIR, 'tmp', file_obj.name)
-        if not os.path.exists(os.path.dirname(temp_path)):
-            os.makedirs(os.path.dirname(temp_path))
-
-        path = default_storage.save(temp_path, ContentFile(file_obj.read()))
-        full_path = os.path.join(settings.BASE_DIR, path)
+        temp_dir = os.path.join(settings.BASE_DIR, 'tmp')
+        if not os.path.exists(temp_dir):
+            os.makedirs(temp_dir)
+            
+        full_path = os.path.join(temp_dir, file_obj.name)
+        
+        # Write chunks to avoid memory issues
+        with open(full_path, 'wb+') as destination:
+            for chunk in file_obj.chunks():
+                destination.write(chunk)
 
         try:
-            # We need to extract the module name from the zip or have it as a parameter
-            # For simplicity, we'll try to get it from the filename (e.g., inventory_1.0.0.modpkg.zip)
+            # Re-read name handling
             module_code = file_obj.name.split('_')[0]
             
             ModuleManager.upgrade(module_code, full_path, user=request.user)
