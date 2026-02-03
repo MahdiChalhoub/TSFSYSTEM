@@ -193,12 +193,25 @@ class OrganizationViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_staff or user.is_superuser:
-            return Organization.objects.all()
         
+        # 1. ROOT PLATFORM ADMIN (Global SaaS View)
+        # Only users with is_staff/is_superuser AND NO bound organization can see everything.
+        if (user.is_superuser or user.is_staff) and not user.organization_id:
+            return Organization.objects.all()
+
+        # 2. CROSS-TENANT IDENTITY (Federated View)
+        # Rule: Users see all organizations where their email is registered as an account.
+        if user.email:
+            # We use the email to find all linked identities across organizations.
+            # This allows a single user identity to switch between their authorized businesses.
+            org_ids = User.objects.filter(email=user.email).values_list('organization_id', flat=True)
+            return Organization.objects.filter(id__in=org_ids)
+            
+        # 3. JAILED VIEW (Fallback)
+        # If no email is set, they only see the organization they are currently logged into.
         if user.organization_id:
             return Organization.objects.filter(id=user.organization_id)
-        
+            
         return Organization.objects.none()
 
     def create(self, request, *args, **kwargs):
@@ -780,17 +793,14 @@ class WarehouseViewSet(TenantModelViewSet):
     queryset = Warehouse.objects.all()
     serializer_class = WarehouseSerializer
 
-class InventoryViewSet(viewsets.ReadOnlyModelViewSet):
+class InventoryViewSet(TenantModelViewSet):
     queryset = Inventory.objects.all()
     serializer_class = InventorySerializer
 
     def get_queryset(self):
-        tenant_id = get_current_tenant_id()
-        if not tenant_id:
-            if self.request.user.is_staff or self.request.user.is_superuser:
-                return self.queryset.all()
-            return self.queryset.none()
-        return self.queryset.filter(organization_id=tenant_id)
+        # We still want Read-Only essentially for list, 
+        # but TenantModelViewSet handles the isolation.
+        return super().get_queryset()
 
     @action(detail=False, methods=['post'])
     def receive_stock(self, request):
@@ -1432,7 +1442,7 @@ class ProductGroupViewSet(TenantModelViewSet):
             
             return Response(ProductGroupSerializer(group).data, status=status.HTTP_201_CREATED)
 
-class CountryViewSet(viewsets.ModelViewSet):
+class CountryViewSet(TenantModelViewSet):
     queryset = Country.objects.all()
     serializer_class = CountrySerializer
 
