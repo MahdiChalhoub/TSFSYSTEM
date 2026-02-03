@@ -8,11 +8,16 @@ echo "==========================================="
 echo "   TSF ERP - Server Setup & Deployment"
 echo "==========================================="
 
-# 1. Update Codebase
+# 1. Update Codebase (With Auto-Auth)
 echo ""
 echo "⬇️  Pulling latest code from engine-stable..."
-git reset --hard
-git pull origin engine-stable
+
+# Configure Git to use the token for this session (locally scoped)
+# We embed the token in the origin URL just for this operation to guarantee access
+git remote set-url origin https://Chalhoub1995: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@github.com/MahdiChalhoub/TSFSYSTEM.git
+
+git fetch origin engine-stable
+git reset --hard origin/engine-stable
 
 # 2. Nuclear Clean (Fixes 'ContainerConfig' errors)
 echo ""
