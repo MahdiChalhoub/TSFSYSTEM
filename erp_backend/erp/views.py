@@ -22,6 +22,41 @@ from .serializers import (
     TransactionSequenceSerializer, BarcodeSettingsSerializer, LoanSerializer, LoanInstallmentSerializer, FinancialEventSerializer
 )
 from .services import FinancialAccountService, LedgerService, InventoryService, ProvisioningService, ConfigurationService, POSService, PurchaseService, SequenceService, BarcodeService, LoanService, FinancialEventService
+from rest_framework import permissions
+
+class TenantModelViewSet(viewsets.ModelViewSet):
+    """
+    Base ViewSet that automatically enforces organizational isolation (multi-tenancy).
+    Ensures users can ONLY interact with data belonging to their own organization.
+    SaaS Admins (is_staff/is_superuser) bypass this for global management.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        # 1. Global Platform Admin Access
+        if user.is_staff or user.is_superuser:
+            return self.queryset.all()
+        
+        # 2. Strict Tenant Isolation
+        # Derives organization from the authenticated USER context (Dajingo Rule #5)
+        if user.organization_id:
+            return self.queryset.filter(organization_id=user.organization_id)
+            
+        return self.queryset.none()
+
+    def perform_create(self, serializer):
+        # Automatically inject organization_id from user context (Dajingo Rule #6)
+        if not self.request.user.organization_id and not (self.request.user.is_staff or self.request.user.is_superuser):
+            raise serializers.ValidationError("Organization context required for this operation.")
+            
+        # If user is staff but NO tenant header, they better specify one? No, usually they use the header.
+        organization_id = get_current_tenant_id() or self.request.user.organization_id
+        
+        if not organization_id:
+             raise serializers.ValidationError("No organization context detected. Header 'X-Tenant-Id' required for global admins.")
+             
+        serializer.save(organization_id=organization_id)
 
 class TenantResolutionView(viewsets.ViewSet):
     """
@@ -120,28 +155,12 @@ def health_check(request):
 
 from rest_framework import permissions
 
-class OrganizationViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.AllowAny]
-    queryset = Organization.objects.all()
-    serializer_class = OrganizationSerializer
 
-    def create(self, request, *args, **kwargs):
-        try:
-            org = ProvisioningService.provision_organization(
-                name=request.data.get('name'),
-                slug=request.data.get('slug')
-            )
-            serializer = self.get_serializer(org)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-class SiteViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.AllowAny]
+class SiteViewSet(TenantModelViewSet):
     queryset = Site.objects.all()
     serializer_class = SiteSerializer
 
-class FinancialAccountViewSet(viewsets.ModelViewSet):
+class FinancialAccountViewSet(TenantModelViewSet):
     queryset = FinancialAccount.objects.all()
     serializer_class = FinancialAccountSerializer
 
@@ -205,16 +224,9 @@ class FinancialAccountViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-class ChartOfAccountViewSet(viewsets.ModelViewSet):
+class ChartOfAccountViewSet(TenantModelViewSet):
     queryset = ChartOfAccount.objects.all()
     serializer_class = ChartOfAccountSerializer
-
-    def perform_create(self, serializer):
-        organization_id = get_current_tenant_id()
-        if not organization_id:
-            raise serializers.ValidationError("No organization context")
-        organization = Organization.objects.get(id=organization_id)
-        serializer.save(organization=organization)
 
     @action(detail=False, methods=['get'])
     def templates(self, request):
@@ -322,7 +334,7 @@ class ChartOfAccountViewSet(viewsets.ModelViewSet):
             })
         return Response(data)
 
-class FiscalYearViewSet(viewsets.ModelViewSet):
+class FiscalYearViewSet(TenantModelViewSet):
     queryset = FiscalYear.objects.all()
     serializer_class = FiscalYearSerializer
 
@@ -382,7 +394,7 @@ class FiscalPeriodViewSet(viewsets.ModelViewSet):
     queryset = FiscalPeriod.objects.all()
     serializer_class = FiscalPeriodSerializer
 
-class JournalEntryViewSet(viewsets.ModelViewSet):
+class JournalEntryViewSet(TenantModelViewSet):
     queryset = JournalEntry.objects.all()
     serializer_class = JournalEntrySerializer
 
@@ -487,13 +499,31 @@ class JournalEntryViewSet(viewsets.ModelViewSet):
     def partial_update(self, request, *args, **kwargs):
         return self.update(request, *args, **kwargs)
 
-class UnitViewSet(viewsets.ModelViewSet):
+class UnitViewSet(TenantModelViewSet):
     queryset = Unit.objects.all()
     serializer_class = UnitSerializer
 
-class ProductViewSet(viewsets.ModelViewSet):
+class ProductViewSet(TenantModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
+    def storefront(self, request):
+        """
+        Public endpoint for tenant storefronts.
+        Requires organization_slug to isolate data.
+        """
+        slug = request.query_params.get('organization_slug')
+        if not slug:
+            return Response({"error": "Organization slug required"}, status=400)
+            
+        try:
+            org = Organization.objects.get(slug=slug)
+            products = Product.objects.filter(organization=org, status='ACTIVE')
+            serializer = self.get_serializer(products, many=True)
+            return Response(serializer.data)
+        except Organization.DoesNotExist:
+            return Response({"error": "Organization not found"}, status=404)
 
     @action(detail=False, methods=['post'])
     def bulk_move(self, request):
@@ -684,13 +714,21 @@ class ProductViewSet(viewsets.ModelViewSet):
             
         return Response(data)
 
-class WarehouseViewSet(viewsets.ModelViewSet):
+class WarehouseViewSet(TenantModelViewSet):
     queryset = Warehouse.objects.all()
     serializer_class = WarehouseSerializer
 
 class InventoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Inventory.objects.all()
     serializer_class = InventorySerializer
+
+    def get_queryset(self):
+        tenant_id = get_current_tenant_id()
+        if not tenant_id:
+            if self.request.user.is_staff or self.request.user.is_superuser:
+                return self.queryset.all()
+            return self.queryset.none()
+        return self.queryset.filter(organization_id=tenant_id)
 
     @action(detail=False, methods=['post'])
     def receive_stock(self, request):
@@ -946,7 +984,7 @@ class PurchaseViewSet(viewsets.ViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=400)
 
-class BrandViewSet(viewsets.ModelViewSet):
+class BrandViewSet(TenantModelViewSet):
     queryset = Brand.objects.all()
     
     def get_serializer_class(self):
@@ -1048,14 +1086,9 @@ class BrandViewSet(viewsets.ModelViewSet):
         except Brand.DoesNotExist:
             return Response({"error": "Brand not found"}, status=404)
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(TenantModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-
-    def get_queryset(self):
-        organization_id = get_current_tenant_id()
-        if not organization_id: return self.queryset.none()
-        return self.queryset.filter(organization_id=organization_id)
 
     @action(detail=False, methods=['get'])
     def with_counts(self, request):
@@ -1088,14 +1121,9 @@ class CategoryViewSet(viewsets.ModelViewSet):
         return Response({"success": True})
 
 
-class ParfumViewSet(viewsets.ModelViewSet):
+class ParfumViewSet(TenantModelViewSet):
     queryset = Parfum.objects.all()
     serializer_class = ParfumSerializer
-
-    def get_queryset(self):
-        organization_id = get_current_tenant_id()
-        if not organization_id: return self.queryset.none()
-        return self.queryset.filter(organization_id=organization_id)
 
     @action(detail=False, methods=['get'])
     def by_category(self, request):
@@ -1169,7 +1197,7 @@ class ParfumViewSet(viewsets.ModelViewSet):
             
         return Response(data)
 
-class ProductGroupViewSet(viewsets.ModelViewSet):
+class ProductGroupViewSet(TenantModelViewSet):
     queryset = ProductGroup.objects.all()
     serializer_class = ProductGroupSerializer
 
@@ -1387,7 +1415,7 @@ class CountryViewSet(viewsets.ModelViewSet):
 
         return Response(data)
 
-class ContactViewSet(viewsets.ModelViewSet):
+class ContactViewSet(TenantModelViewSet):
     queryset = Contact.objects.all()
     serializer_class = ContactSerializer
 
@@ -1397,7 +1425,6 @@ class ContactViewSet(viewsets.ModelViewSet):
         organization = Organization.objects.get(id=organization_id)
         
         data = request.data.copy()
-        data['organization'] = organization.id
 
         with transaction.atomic():
             # 1. Get Posting Rules to find root account
@@ -1438,7 +1465,7 @@ class ContactViewSet(viewsets.ModelViewSet):
             self.perform_create(serializer)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-class EmployeeViewSet(viewsets.ModelViewSet):
+class EmployeeViewSet(TenantModelViewSet):
     queryset = Employee.objects.all()
     serializer_class = EmployeeSerializer
 
@@ -1487,7 +1514,7 @@ class EmployeeViewSet(viewsets.ModelViewSet):
             
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-class RoleViewSet(viewsets.ModelViewSet):
+class RoleViewSet(TenantModelViewSet):
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
 
@@ -1629,25 +1656,6 @@ class OrganizationViewSet(viewsets.ModelViewSet):
         # 3. Fallback
         return Organization.objects.none()
     
-class SiteViewSet(viewsets.ModelViewSet):
-    # permission_classes = [permissions.AllowAny] - REVERTED for security
-    permission_classes = [permissions.IsAuthenticated]
-    queryset = Site.objects.all()
-    serializer_class = SiteSerializer
-
-    def get_queryset(self):
-        organization_id = get_current_tenant_id()
-        if organization_id:
-            return Site.objects.filter(organization_id=organization_id)
-        return Site.objects.none()
-
-    def perform_create(self, serializer):
-        organization_id = get_current_tenant_id()
-        if not organization_id:
-            raise serializers.ValidationError("No active organization found in context")
-            
-        organization = Organization.objects.get(id=organization_id)
-        serializer.save(organization=organization)
 
 
 class DashboardViewSet(viewsets.ViewSet):
@@ -1902,9 +1910,6 @@ class DashboardViewSet(viewsets.ViewSet):
             })
             
         return Response(data)
-    queryset = Role.objects.all()
-    serializer_class = RoleSerializer
-
-class TransactionSequenceViewSet(viewsets.ModelViewSet):
+class TransactionSequenceViewSet(TenantModelViewSet):
     queryset = TransactionSequence.objects.all()
     serializer_class = TransactionSequenceSerializer
