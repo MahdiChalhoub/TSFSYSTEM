@@ -1549,18 +1549,37 @@ class DashboardViewSet(viewsets.ViewSet):
     @action(detail=False, methods=['get'])
     def admin_stats(self, request):
         organization_id = get_current_tenant_id()
-        org = Organization.objects.get(id=organization_id)
         
-        # 1. Total Sales (Revenue Accounts Credit Sum for now, or Mock for transition)
-        # Using Transaction sum for simpler mock or Product count
-        total_products = Product.objects.filter(is_active=True).count()
-        total_customers = Contact.objects.filter(type='CUSTOMER').count()
-        
-        # Latest Transactions (Simulating Sales)
-        latest_sales = Transaction.objects.filter(
-            type__in=['IN', 'SALE']
-        ).order_by('-created_at')[:5]
-        
+        # Determine Scope: Tenant Specific or Global SaaS View
+        if organization_id:
+            try:
+                org = Organization.objects.get(id=organization_id)
+                # Tenant Stats
+                total_products = Product.objects.filter(organization=org, is_active=True).count()
+                total_customers = Contact.objects.filter(organization=org, type='CUSTOMER').count()
+                
+                # Latest Transactions
+                latest_sales = Transaction.objects.filter(
+                    organization=org,
+                    type__in=['IN', 'SALE']
+                ).order_by('-created_at')[:5]
+                
+            except Organization.DoesNotExist:
+                return Response({"error": "Organization not found"}, status=404)
+        else:
+            # Global/SaaS Stats (For Superusers/Staff)
+            if not (request.user.is_staff or request.user.is_superuser):
+                 return Response({"error": "Access Denied. Tenant context required."}, status=403)
+            
+            # Aggregate across ALL organizations
+            total_products = Product.objects.filter(is_active=True).count()
+            total_customers = Contact.objects.filter(type='CUSTOMER').count()
+            
+            # Latest Global Transactions (Top 5 system-wide)
+            latest_sales = Transaction.objects.filter(
+                type__in=['IN', 'SALE']
+            ).order_by('-created_at')[:5]
+
         # Serialize Transactions
         from .serializers import TransactionSerializer
         latest_sales_data = TransactionSerializer(latest_sales, many=True).data
