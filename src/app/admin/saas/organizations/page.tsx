@@ -157,11 +157,11 @@ export default function OrganizationsPage() {
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="p-4 bg-[#0B1120] rounded-2xl border border-gray-800/50">
                                     <div className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Sites</div>
-                                    <div className="text-xl font-bold text-white">{org._count.sites}</div>
+                                    <div className="text-xl font-bold text-white">{org._count?.sites || 0}</div>
                                 </div>
                                 <div className="p-4 bg-[#0B1120] rounded-2xl border border-gray-800/50">
                                     <div className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Users</div>
-                                    <div className="text-xl font-bold text-white">{org._count.users}</div>
+                                    <div className="text-xl font-bold text-white">{org._count?.users || 0}</div>
                                 </div>
                             </div>
 
