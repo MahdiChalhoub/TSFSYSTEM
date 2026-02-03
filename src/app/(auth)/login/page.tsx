@@ -40,6 +40,11 @@ function LoginContent() {
 
     const tenant = config.tenant;
     // --- VIEW 1: ROOT DOMAIN -> FIND WORKSPACE (Redirector) ---
+    const isRoot = !tenant || !tenant.name;
+    const tenantName = tenant?.name || "TSF Cloud";
+    const tenantLogo = tenant?.logo;
+    const sites = tenant?.sites || [];
+
     if (isRoot) {
         return (
             <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 relative overflow-hidden">
