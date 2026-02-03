@@ -29,24 +29,4 @@ class Command(BaseCommand):
             )
         self.stdout.write(f"🌍 Seeded {len(countries)} countries")
 
-        # 2. Superuser (No Organization - "Float Admin")
-        User = get_user_model()
-        admin_email = 'admin@tsfci.com'
-        if not User.objects.filter(email=admin_email).exists():
-            user = User.objects.create_user(
-                username='admin_erp',
-                email=admin_email,
-                password='admin' # default simple password for first login
-            )
-            user.first_name = 'Super'
-            user.last_name = 'Admin'
-            user.is_active = True
-            user.is_staff = True
-            user.is_superuser = True
-            # organization, role, and home_site are deliberately NULL
-            user.save()
-            self.stdout.write(f"👤 Super Admin Created: {admin_email} (Pass: admin)")
-        else:
-            self.stdout.write("👤 Super Admin already exists")
-
         self.stdout.write(self.style.SUCCESS("✅ Seed Complete! Engine is Blank."))
