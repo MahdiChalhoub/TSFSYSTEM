@@ -28,26 +28,30 @@ function BusinessRegisterContent() {
     const [slug, setSlug] = useState("");
     const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
 
+    // Multi-Step State
+    const [step, setStep] = useState(1);
+    const [logoPreview, setLogoPreview] = useState<string | null>(null);
+
     useEffect(() => {
         getPublicConfig().then(setConfig);
-
         const initialSlug = searchParams.get('slug');
         const initialName = searchParams.get('name');
-
-        if (initialSlug) {
-            setSlug(initialSlug);
-            setSlugManuallyEdited(true);
-        }
-        if (initialName) {
-            setBusinessName(initialName);
-        }
+        if (initialSlug) { setSlug(initialSlug); setSlugManuallyEdited(true); }
+        if (initialName) { setBusinessName(initialName); }
     }, [searchParams]);
 
     const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const name = e.target.value;
         setBusinessName(name);
-        if (!slugManuallyEdited) {
-            setSlug(slugify(name));
+        if (!slugManuallyEdited) setSlug(slugify(name));
+    };
+
+    const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => setLogoPreview(reader.result as string);
+            reader.readAsDataURL(file);
         }
     };
 
@@ -58,13 +62,20 @@ function BusinessRegisterContent() {
                 <div className="absolute inset-0 bg-emerald-500/5 blur-[160px] rounded-full" />
                 <Card className="w-full max-w-md bg-[#0f172a]/60 border-emerald-500/20 backdrop-blur-[40px] rounded-[2.5rem] text-center p-12 relative z-10 transition-all duration-1000">
                     <Rocket className="mx-auto text-emerald-400 mb-6 animate-bounce" size={48} />
-                    <h2 className="text-3xl font-black text-white tracking-tighter italic mb-4">FEDERATION ESTABLISHED</h2>
+                    <h2 className="text-3xl font-black text-white tracking-tighter italic mb-4 uppercase">Federation Established</h2>
                     <p className="text-slate-400 font-medium mb-8">Provisioning your strategic infrastructure. Stand by for redirection.</p>
                     <Loader2 className="mx-auto h-8 w-8 animate-spin text-emerald-500" />
                 </Card>
             </div>
         );
     }
+
+    const steps = [
+        { id: 1, name: "Admin Setup", icon: ShieldCheck },
+        { id: 2, name: "Business Identity", icon: Building2 },
+        { id: 3, name: "Location & Intel", icon: Globe },
+        { id: 4, name: "Status", icon: CheckCircle2 },
+    ];
 
     return (
         <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center p-6 py-20 relative overflow-hidden">
@@ -73,166 +84,268 @@ function BusinessRegisterContent() {
             <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-500/5 blur-[160px] rounded-full" />
             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] pointer-events-none" />
 
-            <div className="text-center mb-16 space-y-4 relative z-10">
+            <div className="text-center mb-12 space-y-4 relative z-10 w-full max-w-lg">
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-amber-500/5 border border-amber-500/10 rounded-full text-[10px] font-black uppercase tracking-[0.3em] text-amber-400 mb-4 backdrop-blur-xl">
                     <Sparkles size={14} className="animate-pulse" />
-                    New Federation Provisioning
+                    Strategic Infrastructure Genesis
                 </div>
-                <h1 className="text-5xl md:text-8xl font-black text-white tracking-tighter italic">
-                    FOUND A <span className="text-transparent bg-clip-text bg-gradient-to-br from-amber-400 to-emerald-400 not-italic">BUSINESS</span>
+                <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter italic uppercase">
+                    Initialize <span className="text-transparent bg-clip-text bg-gradient-to-br from-amber-400 to-emerald-400 not-italic">Enterprise</span>
                 </h1>
-                <p className="text-slate-500 max-w-lg mx-auto text-sm md:text-lg font-medium">
-                    Initialize your autonomous enterprise ecosystem with built-in multi-tenant isolation.
-                </p>
             </div>
 
-            <Card className="w-full max-w-4xl bg-[#0f172a]/60 border-white/5 backdrop-blur-[40px] rounded-[3rem] overflow-hidden shadow-2xl relative z-10">
-                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
+            {/* Tactical Stepper Ribbon */}
+            <div className="w-full max-w-4xl px-12 mb-12 relative z-10">
+                <div className="flex items-center justify-between relative">
+                    <div className="absolute top-1/2 left-0 w-full h-[2px] bg-slate-800 -translate-y-1/2 z-0" />
+                    <div
+                        className="absolute top-1/2 left-0 h-[2px] bg-cyan-500 -translate-y-1/2 z-0 transition-all duration-500"
+                        style={{ width: `${((step - 1) / (steps.length - 1)) * 100}%` }}
+                    />
+
+                    {steps.map((s) => (
+                        <div key={s.id} className="relative z-10 flex flex-col items-center gap-3">
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-500 ${step >= s.id ? 'bg-cyan-500 border-cyan-400 text-white shadow-[0_0_20px_rgba(6,182,212,0.4)]' : 'bg-slate-900 border-slate-700 text-slate-500'
+                                }`}>
+                                <span className="font-mono text-xs font-black">{s.id.toString().padStart(2, '0')}</span>
+                            </div>
+                            <span className={`text-[9px] font-black uppercase tracking-widest transition-colors duration-500 ${step >= s.id ? 'text-cyan-400' : 'text-slate-500'
+                                }`}>
+                                {s.name}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <Card className="w-full max-w-4xl bg-[#0f172a]/80 border-white/5 backdrop-blur-[40px] rounded-[3rem] overflow-hidden shadow-2xl relative z-10">
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
 
                 <CardContent className="p-10 md:p-16">
                     <form action={action} className="space-y-12">
-                        {(state as any)?.error?.root && (
+                        {/* Error Reporting */}
+                        {((state as any)?.error?.root || state?.error) && (
                             <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3 text-red-400 text-xs font-bold animate-in zoom-in-95">
                                 <AlertCircle size={16} />
-                                {(state as any).error.root}
+                                <div className="flex-1">
+                                    {(state as any).error.root ? (Array.isArray((state as any).error.root) ? (state as any).error.root[0] : (state as any).error.root) : "Registration sequence failed. Verify coordinates."}
+                                    {Object.keys((state as any).error || {}).map(k => k !== 'root' && (
+                                        <div key={k} className="mt-1 opacity-80 uppercase tracking-tighter">Field Error: {k}</div>
+                                    ))}
+                                </div>
                             </div>
                         )}
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                            {/* Business Infrastructure */}
-                            <div className="space-y-8">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
-                                        <Building2 size={20} />
-                                    </div>
-                                    <h3 className="text-lg font-black text-white italic tracking-tight uppercase">Infrastructure Details</h3>
+                        {/* STEP 01: Admin Authorization */}
+                        <div className={step === 1 ? "space-y-8 animate-in fade-in slide-in-from-right-4 duration-500" : "hidden"}>
+                            <div className="flex items-center gap-3 mb-8">
+                                <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 shadow-inner">
+                                    <ShieldCheck size={24} />
                                 </div>
+                                <h3 className="text-2xl font-black text-white italic tracking-tight uppercase">Master Authorization</h3>
+                            </div>
 
-                                <div className="space-y-6">
-                                    <div className="space-y-2">
-                                        <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500">Business Designation</Label>
-                                        <Input
-                                            name="business_name"
-                                            required
-                                            placeholder="e.g. Acme Corp"
-                                            value={businessName}
-                                            onChange={handleNameChange}
-                                            className="bg-slate-900/50 border-white/5 h-14 rounded-xl text-white font-bold"
-                                        />
-                                        {(state as any)?.error?.business_name && <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest">{(state as any).error.business_name}</p>}
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500">Workspace Slug (URL)</Label>
-                                        <div className="flex items-center gap-2 group">
-                                            <div className="bg-slate-900 border border-white/5 h-14 rounded-xl flex items-center px-4 font-mono text-[10px] text-slate-500">https://</div>
-                                            <Input
-                                                name="slug"
-                                                required
-                                                placeholder="acme-corp"
-                                                value={slug}
-                                                onChange={(e) => { setSlug(e.target.value); setSlugManuallyEdited(true); }}
-                                                className="bg-slate-900/50 border-white/5 h-14 rounded-xl font-mono text-amber-400 text-sm flex-1"
-                                            />
-                                            <div className="bg-slate-900 border border-white/5 h-14 rounded-xl flex items-center px-4 font-mono text-[10px] text-slate-500">.tsf.os</div>
-                                        </div>
-                                        {(state as any)?.error?.slug && <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest">{(state as any).error.slug}</p>}
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500">Industry Vector</Label>
-                                            <Select name="business_type_id" required>
-                                                <SelectTrigger className="bg-slate-900/50 border-white/5 h-14 rounded-xl text-white font-medium">
-                                                    <SelectValue placeholder="Select type" />
-                                                </SelectTrigger>
-                                                <SelectContent className="bg-slate-900 border-white/10 text-white">
-                                                    {config.business_types.map((t: any) => (
-                                                        <SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500">Base Currency</Label>
-                                            <Select name="currency_id" required defaultValue="1">
-                                                <SelectTrigger className="bg-slate-900/50 border-white/5 h-14 rounded-xl text-white font-medium">
-                                                    <SelectValue placeholder="Select currency" />
-                                                </SelectTrigger>
-                                                <SelectContent className="bg-slate-900 border-white/10 text-white">
-                                                    {config.currencies.map((c: any) => (
-                                                        <SelectItem key={c.id} value={c.id.toString()}>{c.code}</SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500">Contact Uplink (Email)</Label>
-                                        <Input name="email" type="email" required className="bg-slate-900/50 border-white/5 h-14 rounded-xl text-white font-medium" />
-                                    </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="space-y-2 text-left">
+                                    <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Admin First Name</Label>
+                                    <Input name="admin_first_name" required className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-bold focus:ring-2 focus:ring-cyan-500/20" />
+                                </div>
+                                <div className="space-y-2 text-left">
+                                    <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Admin Last Name</Label>
+                                    <Input name="admin_last_name" required className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-bold focus:ring-2 focus:ring-cyan-500/20" />
+                                </div>
+                                <div className="space-y-2 text-left">
+                                    <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Master Credentials (Username)</Label>
+                                    <Input name="admin_username" required className="bg-slate-900/50 border-white/10 h-14 rounded-xl font-mono text-cyan-400 focus:ring-2 focus:ring-cyan-500/20" />
+                                </div>
+                                <div className="space-y-2 text-left">
+                                    <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Official Uplink (Email)</Label>
+                                    <Input name="admin_email" type="email" required className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium focus:ring-2 focus:ring-cyan-500/20" />
+                                </div>
+                                <div className="space-y-2 text-left md:col-span-2">
+                                    <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Master Security Key (Password)</Label>
+                                    <Input name="admin_password" type="password" required className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white focus:ring-2 focus:ring-cyan-500/20" />
                                 </div>
                             </div>
 
-                            {/* Super Admin Configuration */}
-                            <div className="space-y-8">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
-                                        <ShieldCheck size={20} />
-                                    </div>
-                                    <h3 className="text-lg font-black text-white italic tracking-tight uppercase">Admin Authorization</h3>
-                                </div>
-
-                                <div className="space-y-6">
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500">Admin First Name</Label>
-                                            <Input name="admin_first_name" required className="bg-slate-900/50 border-white/5 h-14 rounded-xl text-white font-bold" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500">Admin Last Name</Label>
-                                            <Input name="admin_last_name" required className="bg-slate-900/50 border-white/5 h-14 rounded-xl text-white font-bold" />
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500">Admin Login ID</Label>
-                                        <Input name="admin_username" required className="bg-slate-900/50 border-white/5 h-14 rounded-xl font-mono text-cyan-400" />
-                                        {(state as any)?.error?.admin_username && <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest">{(state as any).error.admin_username}</p>}
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500">Master Security Key</Label>
-                                        <Input name="admin_password" type="password" required className="bg-slate-900/50 border-white/5 h-14 rounded-xl text-white" />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500">Master Admin Email</Label>
-                                        <Input name="admin_email" type="email" required className="bg-slate-900/50 border-white/5 h-14 rounded-xl text-white font-medium" />
-                                        {(state as any)?.error?.admin_email && <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest">{(state as any).error.admin_email}</p>}
-                                    </div>
-                                </div>
+                            <div className="pt-8">
+                                <Button type="button" onClick={() => setStep(2)} className="w-full h-16 bg-cyan-600 hover:bg-cyan-500 text-white font-black text-lg rounded-2xl shadow-xl transition-all">
+                                    Next: Identity Registration <ArrowRight className="ml-2" />
+                                </Button>
                             </div>
                         </div>
 
-                        <div className="pt-8">
-                            <Button type="submit" className="w-full h-20 bg-amber-600 hover:bg-amber-500 text-white font-black text-xl rounded-2xl shadow-2xl shadow-amber-900/40 transition-all active:scale-[0.98] group" disabled={isPending}>
-                                {isPending ? <Loader2 className="animate-spin" /> : (
-                                    <div className="flex items-center gap-3">
-                                        Initialize Enterprise Provisioning <ArrowRight className="group-hover:translate-x-2 transition-transform" />
+                        {/* STEP 02: Business Identity */}
+                        <div className={step === 2 ? "space-y-8 animate-in fade-in slide-in-from-right-4 duration-500" : "hidden"}>
+                            <div className="flex items-center gap-3 mb-8">
+                                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shadow-inner">
+                                    <Building2 size={24} />
+                                </div>
+                                <h3 className="text-2xl font-black text-white italic tracking-tight uppercase">Operational Identity</h3>
+                            </div>
+
+                            <div className="space-y-8">
+                                <div className="space-y-2 text-left">
+                                    <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Entity Designation (Business Name)</Label>
+                                    <Input
+                                        name="business_name"
+                                        required
+                                        placeholder="e.g. Acme Corp"
+                                        value={businessName}
+                                        onChange={handleNameChange}
+                                        className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-bold focus:ring-2 focus:ring-amber-500/20"
+                                    />
+                                </div>
+
+                                <div className="space-y-2 text-left">
+                                    <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Digital Coordinates (Workspace Slug)</Label>
+                                    <div className="flex items-center gap-2 group">
+                                        <div className="bg-slate-900 border border-white/10 h-14 rounded-xl flex items-center px-4 font-mono text-[10px] text-slate-500">https://</div>
+                                        <Input
+                                            name="slug"
+                                            required
+                                            placeholder="acme-corp"
+                                            value={slug}
+                                            onChange={(e) => { setSlug(e.target.value); setSlugManuallyEdited(true); }}
+                                            className="bg-slate-900/50 border-white/10 h-14 rounded-xl font-mono text-amber-400 text-sm flex-1"
+                                        />
+                                        <div className="bg-slate-900 border border-white/10 h-14 rounded-xl flex items-center px-4 font-mono text-[10px] text-slate-500">.vantage.os</div>
                                     </div>
-                                )}
-                            </Button>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-8">
+                                    <div className="space-y-2 text-left">
+                                        <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Industry Vector</Label>
+                                        <Select name="business_type_id" required>
+                                            <SelectTrigger className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium">
+                                                <SelectValue placeholder="Select Sector" />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-slate-900 border-white/10 text-white">
+                                                {config.business_types.map((t: any) => (
+                                                    <SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-2 text-left">
+                                        <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Monetary Standard (Currency)</Label>
+                                        <Select name="currency_id" required defaultValue="1">
+                                            <SelectTrigger className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium">
+                                                <SelectValue placeholder="Select Standard" />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-slate-900 border-white/10 text-white">
+                                                {config.currencies.map((c: any) => (
+                                                    <SelectItem key={c.id} value={c.id.toString()}>{c.code}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="pt-8 flex gap-4">
+                                <Button type="button" onClick={() => setStep(1)} variant="outline" className="h-16 flex-1 rounded-2xl border-white/10 text-slate-400 hover:bg-white/5">Back</Button>
+                                <Button type="button" onClick={() => setStep(3)} className="h-16 flex-[2] bg-amber-600 hover:bg-amber-500 text-white font-black text-lg rounded-2xl shadow-xl">
+                                    Next: Location Setup <ArrowRight className="ml-2" />
+                                </Button>
+                            </div>
+                        </div>
+
+                        {/* STEP 03: Location & Infrastructure */}
+                        <div className={step === 3 ? "space-y-8 animate-in fade-in slide-in-from-right-4 duration-500" : "hidden"}>
+                            <div className="flex items-center gap-3 mb-8">
+                                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shadow-inner">
+                                    <Globe size={24} />
+                                </div>
+                                <h3 className="text-2xl font-black text-white italic tracking-tight uppercase">Infrastructure & Intel</h3>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                                {/* Left Side: Media & Core Info */}
+                                <div className="space-y-8">
+                                    <div className="space-y-4">
+                                        <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Brand Insignia (Logo)</Label>
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-24 h-24 rounded-2xl bg-slate-900 border-2 border-dashed border-white/10 flex items-center justify-center overflow-hidden">
+                                                {logoPreview ? (
+                                                    <img src={logoPreview} alt="Logo Preview" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <Building2 className="text-slate-700" size={32} />
+                                                )}
+                                            </div>
+                                            <div className="flex-1">
+                                                <Input name="logo" type="file" accept="image/*" onChange={handleLogoChange} className="bg-slate-900/50 border-white/10 h-10 rounded-lg text-xs file:bg-transparent file:border-0 file:text-[10px] file:text-cyan-400 file:font-black text-slate-500" />
+                                                <p className="text-[8px] text-slate-500 mt-2 uppercase tracking-tight">SVG, PNG, or JPG. Max 5MB recommended.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2 text-left">
+                                        <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Official Website (Optional)</Label>
+                                        <Input name="website" placeholder="https://..." className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium focus:ring-2 focus:ring-emerald-500/20" />
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2 text-left">
+                                            <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Business Email</Label>
+                                            <Input name="email" type="email" required placeholder="contact@hq.com" className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium" />
+                                        </div>
+                                        <div className="space-y-2 text-left">
+                                            <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Comm-Link (Phone)</Label>
+                                            <Input name="phone" placeholder="+1..." className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Right Side: Location Info */}
+                                <div className="space-y-8">
+                                    <div className="space-y-2 text-left">
+                                        <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Physical Coordinates (Address)</Label>
+                                        <Input name="address" placeholder="HQ Physical Address" className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium" />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2 text-left">
+                                            <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">City</Label>
+                                            <Input name="city" className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium" />
+                                        </div>
+                                        <div className="space-y-2 text-left">
+                                            <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Zip Code</Label>
+                                            <Input name="zip_code" className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium font-mono" />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2 text-left">
+                                            <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Nation (Country)</Label>
+                                            <Input name="country" placeholder="e.g. United Kingdom" className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium" />
+                                        </div>
+                                        <div className="space-y-2 text-left">
+                                            <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Province (State)</Label>
+                                            <Input name="state" className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="pt-8 flex gap-4">
+                                <Button type="button" onClick={() => setStep(2)} variant="outline" className="h-16 flex-1 rounded-2xl border-white/10 text-slate-400 hover:bg-white/5">Back</Button>
+                                <Button type="submit" disabled={isPending} className="h-20 flex-[3] bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xl rounded-2xl shadow-emerald-500/20 shadow-2xl transition-all active:scale-[0.98] group">
+                                    {isPending ? <Loader2 className="animate-spin" /> : (
+                                        <div className="flex items-center gap-3">
+                                            Establish Global Federation <ArrowRight className="group-hover:translate-x-2 transition-transform" />
+                                        </div>
+                                    )}
+                                </Button>
+                            </div>
                         </div>
                     </form>
                 </CardContent>
 
-                <CardFooter className="bg-black/40 py-8 justify-center border-t border-white/5">
-                    <div className="grid grid-cols-3 gap-12 text-center text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">
-                        <div className="flex items-center gap-2"><Globe size={14} className="text-amber-500" /> Multi-Tenant</div>
-                        <div className="flex items-center gap-2"><ShieldCheck size={14} className="text-emerald-500" /> Isolated DB</div>
-                        <div className="flex items-center gap-2"><Sparkles size={14} className="text-cyan-500" /> Auto-Scaling</div>
+                <CardFooter className="bg-black/20 py-8 justify-center border-t border-white/5">
+                    <div className="grid grid-cols-4 gap-4 text-center text-[8px] font-black uppercase tracking-[0.4em] text-slate-500">
+                        <div className="flex items-center gap-1.5"><ShieldCheck size={12} className="text-cyan-500" /> Authorized access</div>
+                        <div className="flex items-center gap-1.5"><Building2 size={12} className="text-amber-500" /> multi-tenant</div>
+                        <div className="flex items-center gap-1.5"><Globe size={12} className="text-emerald-500" /> Isolated stack</div>
+                        <div className="flex items-center gap-1.5"><CheckCircle2 size={12} className="text-emerald-400" /> compliance a-1</div>
                     </div>
                 </CardFooter>
             </Card>
