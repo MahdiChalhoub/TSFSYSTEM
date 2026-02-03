@@ -205,6 +205,13 @@ class ChartOfAccountViewSet(viewsets.ModelViewSet):
     queryset = ChartOfAccount.objects.all()
     serializer_class = ChartOfAccountSerializer
 
+    def perform_create(self, serializer):
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            raise serializers.ValidationError("No organization context")
+        organization = Organization.objects.get(id=organization_id)
+        serializer.save(organization=organization)
+
     @action(detail=False, methods=['get'])
     def templates(self, request):
         from .coa_templates import TEMPLATES

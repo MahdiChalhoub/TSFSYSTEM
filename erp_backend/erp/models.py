@@ -448,6 +448,7 @@ class FiscalYear(TenantModel):
     start_date = models.DateField()
     end_date = models.DateField()
     is_closed = models.BooleanField(default=False)
+    is_hard_locked = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'FiscalYear'
