@@ -206,6 +206,13 @@ class ChartOfAccountViewSet(viewsets.ModelViewSet):
     serializer_class = ChartOfAccountSerializer
 
     @action(detail=False, methods=['get'])
+    def templates(self, request):
+        from .coa_templates import TEMPLATES
+        # Return list of {key, name} for frontend selection
+        data = [{"key": k, "name": k.replace('_', ' ')} for k in TEMPLATES.keys()]
+        return Response(data)
+
+    @action(detail=False, methods=['get'])
     def coa(self, request):
         organization_id = get_current_tenant_id()
         if not organization_id:
