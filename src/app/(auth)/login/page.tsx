@@ -39,77 +39,63 @@ function LoginContent() {
     }, []);
 
     const tenant = config.tenant;
-    const isRoot = !tenant || !tenant.name;
-    const tenantName = tenant?.name || "TSF Cloud";
-    const tenantLogo = tenant?.logo;
-    const sites = tenant?.sites || [];
-
-    // --- VIEW 1: SAAS COMMAND INTERFACE (ROOT) ---
+    // --- VIEW 1: ROOT DOMAIN -> FIND WORKSPACE (Redirector) ---
     if (isRoot) {
         return (
             <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 relative overflow-hidden">
-                {/* Tactical Grid Background */}
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
-                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-[#020617]/80 to-[#020617] pointer-events-none" />
+                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/5 blur-[160px] rounded-full" />
 
-                <Card className="w-full max-w-lg bg-[#0f172a] border-white/10 shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] relative z-10">
-                    <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50" />
-
-                    <CardHeader className="text-center pb-2 pt-8">
-                        <div className="w-16 h-16 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 mx-auto mb-4">
-                            <Command size={32} />
+                <Card className="w-full max-w-md bg-[#0f172a]/80 border-white/5 backdrop-blur-[20px] rounded-[2rem] shadow-2xl relative z-10">
+                    <CardHeader className="text-center pt-10 pb-6">
+                        <div className="w-12 h-12 mx-auto rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white font-black text-xl shadow-lg mb-4">
+                            W
                         </div>
-                        <CardTitle className="text-2xl font-black text-white uppercase tracking-widest">Federation Command</CardTitle>
-                        <CardDescription className="font-mono text-cyan-500/60 text-xs mt-2 uppercase tracking-widest">SECURE UPLINK ESTABLISHED</CardDescription>
+                        <CardTitle className="text-2xl font-black text-white tracking-tight">Enter Workspace</CardTitle>
+                        <CardDescription className="text-slate-500 font-medium">
+                            Connect to your organization's dedicated environment
+                        </CardDescription>
                     </CardHeader>
 
-                    <CardContent className="p-8 space-y-6">
+                    <CardContent className="px-8 pb-10">
                         <form action={action} className="space-y-6">
                             {(state?.error as any)?.root && (
-                                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded text-red-400 text-xs font-mono mb-4 text-center">
+                                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded text-red-400 text-xs font-bold text-center">
                                     {(state?.error as any).root[0]}
                                 </div>
                             )}
 
-                            <div className="space-y-4">
-                                <div className="space-y-1">
-                                    <Label className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Target Workspace</Label>
+                            <div className="space-y-2">
+                                <Label htmlFor="slug" className="text-[10px] uppercase tracking-widest font-black text-slate-500">Workspace URL</Label>
+                                <div className="relative">
                                     <Input
+                                        id="slug"
                                         name="slug"
-                                        placeholder="workspace-id"
-                                        className="bg-slate-900 border-white/5 h-12 font-mono text-cyan-400 placeholder:text-slate-700"
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <Label className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Admin Identifier</Label>
-                                    <Input
-                                        name="username"
+                                        placeholder="acme"
                                         required
-                                        className="bg-slate-900 border-white/5 h-12 text-white"
+                                        suppressHydrationWarning
+                                        className="bg-slate-900/50 border-white/5 h-14 rounded-xl font-mono text-indigo-400 pl-4 pr-32 focus:ring-indigo-500/20"
                                     />
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 text-xs font-mono select-none">
+                                        .tsfcloud.com
+                                    </div>
                                 </div>
-                                <div className="space-y-1">
-                                    <Label className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Access Key</Label>
-                                    <Input
-                                        name="password"
-                                        type="password"
-                                        required
-                                        className="bg-slate-900 border-white/5 h-12 text-white"
-                                    />
-                                </div>
+                                <p className="text-[10px] text-slate-600 pt-1">
+                                    Don't have a workspace? <a href="/register/business" className="text-indigo-400 hover:text-indigo-300 font-bold underline">Create one</a>
+                                </p>
                             </div>
 
-                            <Button className="w-full h-14 bg-cyan-600 hover:bg-cyan-500 text-white font-bold tracking-widest uppercase transition-all" disabled={isPending}>
-                                {isPending ? <Loader2 className="animate-spin" /> : "Initiate Sequence"}
+                            <Button className="w-full h-14 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-xl shadow-lg shadow-indigo-900/20 transition-all active:scale-[0.98]" disabled={isPending}>
+                                {isPending ? <Loader2 className="animate-spin" /> : "Continue to Workspace"}
                             </Button>
                         </form>
-
-                        <div className="text-center pt-4 border-t border-white/5">
-                            <a href="/register/business" className="text-xs text-slate-500 hover:text-cyan-400 transition-colors uppercase font-bold tracking-wider block mb-2">
-                                Provision New Federation Node
-                            </a>
-                        </div>
                     </CardContent>
+
+                    <CardFooter className="justify-center py-6 border-t border-white/5">
+                        <a href="/saas/login" className="text-[10px] text-slate-700 hover:text-cyan-600 font-mono uppercase tracking-widest transition-colors flex items-center gap-2">
+                            <SquareTerminal size={12} />
+                            Federation Admin Login
+                        </a>
+                    </CardFooter>
                 </Card>
             </div>
         );
