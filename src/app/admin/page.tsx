@@ -11,7 +11,10 @@ export default async function AdminDashboard() {
     const statsData = await getAdminDashboardStats();
 
     // 2. Determine Installed Modules (Dynamic)
-    const installedModuleCodes = ['inventory', 'sales', 'finance', 'crm']; // TODO: Fetch dynamically
+    // [TEMPORARY] For this refactor, we simulate fetching installed modules
+    // In production, this comes from the database via `OrganizationModule`
+    // 'sales' removed to demonstrate modularity as per user request
+    const installedModuleCodes = ['inventory', 'finance', 'crm']; // TODO: Fetch dynamically
 
     // 3. Resolve Widgets
     const DynamicWidgets = getActiveWidgets(installedModuleCodes);
