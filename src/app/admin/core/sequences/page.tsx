@@ -1,7 +1,16 @@
 import { getTransactionSequences } from "@/app/actions/sequences"
 import { SequencesList } from "./sequences-list"
 
+import { redirect } from 'next/navigation';
+
 export default async function SequencesPage() {
+    // [TEMPORARY] Simulate installed modules
+    const installedModuleCodes: string[] = []; // BLANC SYSTEM
+
+    if (!installedModuleCodes.includes('core')) {
+        redirect('/admin');
+    }
+
     const sequences = await getTransactionSequences()
 
     return (
