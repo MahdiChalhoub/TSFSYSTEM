@@ -12,6 +12,7 @@ from .views import (
     BarcodeSettingsViewSet, LoanViewSet, FinancialEventViewSet, TransactionSequenceViewSet
 )
 from .views_auth import login_view, logout_view, me_view
+from .views_saas_modules import SaaSModuleViewSet, OrgModuleViewSet
 from .views_modules import ModuleListView, ModuleEnableView, ModuleDisableView
 from .views_manager import PendingUsersView, ApproveUserView, RejectUserView, RequestCorrectionView
 
@@ -44,6 +45,10 @@ router.register(r'settings/barcode', BarcodeSettingsViewSet, basename='barcode-s
 router.register(r'loans', LoanViewSet)
 router.register(r'financial-events', FinancialEventViewSet)
 router.register(r'sequences', TransactionSequenceViewSet)
+
+# SaaS Management
+router.register(r'saas/modules', SaaSModuleViewSet, basename='saas-modules')
+router.register(r'saas/org-modules', OrgModuleViewSet, basename='saas-org-modules')
 
 urlpatterns = [
     path('health/', health_check),
