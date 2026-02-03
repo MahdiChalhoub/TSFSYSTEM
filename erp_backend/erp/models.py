@@ -371,10 +371,16 @@ class Order(TenantModel):
     type = models.CharField(max_length=20, choices=TYPES)
     status = models.CharField(max_length=20, default='DRAFT') # 'DRAFT', 'COMPLETED', etc.
     
-    # contact = models.ForeignKey('erp.Contact', on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
+    contact = models.ForeignKey('erp.Contact', on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
     user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='orders')
     site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
     
+    scope = models.CharField(max_length=20, default='OFFICIAL')
+    invoice_price_type = models.CharField(max_length=20, default='HT_BASED') # 'HT_BASED' or 'TTC_BASED'
+    vat_recoverable = models.BooleanField(default=True)
+    payment_method = models.CharField(max_length=20, default='CASH')
+    ref_code = models.CharField(max_length=100, null=True, blank=True)
+
     total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     tax_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     discount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
@@ -395,12 +401,14 @@ class OrderLine(TenantModel):
     batch = models.ForeignKey(StockBatch, on_delete=models.SET_NULL, null=True, blank=True)
     
     quantity = models.DecimalField(max_digits=15, decimal_places=2)
-    unit_price = models.DecimalField(max_digits=15, decimal_places=2)
+    unit_price = models.DecimalField(max_digits=15, decimal_places=2) # Selling Price or Effective Cost depending on context
     tax_rate = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     total = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     
     # Cost capture
     unit_cost_ht = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    unit_cost_ttc = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    vat_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     effective_cost = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
 
     class Meta:

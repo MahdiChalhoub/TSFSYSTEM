@@ -522,6 +522,13 @@ class PurchaseService:
         with transaction.atomic():
             settings = ConfigurationService.get_global_settings(organization)
             pricing_cost_basis = settings.get('pricingCostBasis', 'AUTO')
+            company_type = settings.get('companyType', 'REGULAR')
+            
+            # Mixed/Regular/Micro Logic: 
+            # Internal Ledger is strictly TTC (Cash Basis). 
+            # VAT Recoverability is virtualized in reports, not posted to Ledger.
+            if company_type in ['MIXED', 'REGULAR', 'MICRO']:
+                vat_recoverable = False
             
             # 1. Create Order
             order = Order.objects.create(
@@ -1179,3 +1186,76 @@ class FinancialEventService:
             event.save()
             
             return event
+            return event
+
+class TaxService:
+    @staticmethod
+    def get_declared_report(organization, start_date, end_date):
+        """
+        Generates the 'Virtual Reclassification' Report for Mixed/Regular modes.
+        Reconstructs the tax reality from Invoice Metadata.
+        """
+        from .models import OrderLine, Order
+        from django.db.models import Sum
+        
+        settings = ConfigurationService.get_global_settings(organization)
+        company_type = settings.get('companyType', 'REGULAR') # Default to REGULAR if unset
+        
+        # Date filtering
+        # Ideally should filter by fiscal period, but using raw dates for now
+        
+        if company_type == 'MICRO':
+            # Micro logic: Fixed % of Revenue
+            sales = Order.objects.filter(
+                organization=organization,
+                type='SALE',
+                scope='OFFICIAL',
+                created_at__range=[start_date, end_date]
+            ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
+            
+            micro_rate = Decimal(str(settings.get('microTaxPercentage', 0))) / 100
+            tax_due = sales * micro_rate
+            
+            return {
+                "type": "MICRO",
+                "period": f"{start_date} to {end_date}",
+                "sales_revenue": sales,
+                "tax_due": tax_due,
+                "note": f"Calculated at {micro_rate*100}% of Revenue"
+            }
+            
+        else:
+            # MIXED, REGULAR, REAL
+            # Virtual Reclassification of Purchases
+            purchase_lines = OrderLine.objects.filter(
+                organization=organization,
+                order__type='PURCHASE',
+                order__scope='OFFICIAL',
+                order__status__in=['COMPLETED', 'RECEIVED'],
+                order__created_at__range=[start_date, end_date]
+            )
+            
+            total_ht = Decimal('0')
+            total_vat_recoverable = Decimal('0')
+            total_ttc = Decimal('0')
+            
+            for line in purchase_lines:
+                # Metadata: unit_cost_ht, vat_amount (per unit)
+                qty = line.quantity
+                # Calculate line totals from scalar + qty to minimize rounding drift, or use line.total
+                ht = line.unit_cost_ht * qty
+                vat = line.vat_amount * qty
+                ttc = line.total
+                
+                total_ht += ht
+                total_vat_recoverable += vat
+                total_ttc += ttc
+                
+            return {
+                "type": "STANDARD_RECLASSIFIED",
+                "period": f"{start_date} to {end_date}",
+                "purchases_ht": total_ht,
+                "vat_recoverable": total_vat_recoverable,
+                "purchases_ttc_internal": total_ttc,
+                "note": "Virtual Reclassification: Ledger=TTC, Report=HT+VAT"
+            }
