@@ -21,12 +21,8 @@ export async function getTenantContext() {
     }
 
     if (!subdomain || subdomain === "localhost" || subdomain === "www") {
-        // DEVELOPMENT FALLBACK: Default to "tsf-global" if on localhost root
-        if (process.env.NODE_ENV !== 'production') {
-            subdomain = "tsf-global";
-        } else {
-            return null;
-        }
+        // Root Domain (SaaS Panel) - No Tenant Context
+        return null;
     }
 
     try {
