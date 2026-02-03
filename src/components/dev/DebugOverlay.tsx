@@ -20,16 +20,23 @@ export default function DebugOverlay() {
         setMounted(true);
         if (process.env.NODE_ENV !== 'production' && isOpen) {
             const fetchData = async () => {
-                const { getFinancialSettings } = await import('@/app/actions/finance/settings');
-                const { getLedgerEntries } = await import('@/app/actions/finance/ledger');
+                try {
+                    // BLANC ENGINE: Business modules might not be present
+                    /*
+                    const { getFinancialSettings } = await import('@/app/actions/finance/settings');
+                    const { getLedgerEntries } = await import('@/app/actions/finance/ledger');
 
-                const [s, l] = await Promise.all([
-                    getFinancialSettings(),
-                    getLedgerEntries(viewScope === 'OFFICIAL' ? 'OFFICIAL' : 'INTERNAL')
-                ]);
+                    const [s, l] = await Promise.all([
+                        getFinancialSettings(),
+                        getLedgerEntries(viewScope === 'OFFICIAL' ? 'OFFICIAL' : 'INTERNAL')
+                    ]);
 
-                setSettings(s);
-                setRecentLedger(l.slice(0, 5)); // Only last 5
+                    setSettings(s);
+                    setRecentLedger(l.slice(0, 5)); // Only last 5
+                    */
+                } catch (e) {
+                    console.log("Modular audit data unavailable");
+                }
             };
             fetchData();
         }
