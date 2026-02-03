@@ -60,6 +60,11 @@ export default async function middleware(req: NextRequest) {
         // Prevent LOOP: If we just came from a failed auth check (e.g. ?error=...) or explicit logout, DO NOT redirect back to dashboard
         if (url.searchParams.has('error') || url.searchParams.has('logout')) {
             // Allow user to see login page to re-authenticate or see error
+            // CRITICAL FIX: Clear the token cookie so the user starts with a clean slate
+            console.log(`[MIDDLEWARE] Clearing invalid/expired token from cookies...`);
+            const response = NextResponse.next();
+            response.cookies.delete('auth_token');
+            return response;
         } else {
             // If subdomain is saas, go to admin. If tenant, go to tenant dashboard.
             const dashboardUrl = new URL("/admin/dashboard", req.url);
@@ -116,12 +121,13 @@ export default async function middleware(req: NextRequest) {
 
     // Set cookie if token exists (Sliding Window)
     if (authToken && !path.startsWith('/_next') && !path.startsWith('/static')) {
+        console.log(`[MIDDLEWARE] Sliding window for token: ${authToken.substring(0, 5)}...`);
         response.cookies.set('auth_token', authToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
             path: '/',
-            maxAge: 60 * 30, // Reset to 30 mins
+            maxAge: 60 * 60 * 24 * 7, // 7 days (Matches auth action)
         })
     }
 
