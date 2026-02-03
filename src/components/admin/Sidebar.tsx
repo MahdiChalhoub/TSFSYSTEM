@@ -20,6 +20,7 @@ import {
 import { useState, useEffect } from 'react';
 import clsx from 'clsx';
 import { usePathname } from 'next/navigation';
+import { logoutAction } from "@/app/actions/auth";
 
 // Data Structure for the Recursive Menu
 const MENU_ITEMS = [
@@ -173,6 +174,7 @@ export function Sidebar() {
 
             <div className="p-6 border-t border-gray-800/50 bg-[#0B1120]">
                 <button
+                    onClick={() => logoutAction()}
                     suppressHydrationWarning={true}
                     className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl hover:bg-gray-800/50 text-gray-400 hover:text-white transition-all group"
                 >
