@@ -72,7 +72,15 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
 
         if (!response.ok) {
             const errorText = await response.text().catch(() => "Unknown Error")
-            console.error(`[ERP_API] Error response from ${path}:`, errorText)
+
+            // Only log errors for non-auth issues to prevent noise during redirects
+            if (response.status !== 401 && response.status !== 403) {
+                console.error(`[ERP_API] Error response from ${path}:`, errorText)
+            } else {
+                // Debug log only for auth failures
+                console.log(`[ERP_API] Auth required for ${path}: ${response.status}`);
+            }
+
             let errorData: any = {}
             try {
                 errorData = JSON.parse(errorText)
