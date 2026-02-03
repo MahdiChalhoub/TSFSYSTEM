@@ -29,4 +29,16 @@ class Command(BaseCommand):
             )
         self.stdout.write(f"🌍 Seeded {len(countries)} countries")
 
-        self.stdout.write(self.style.SUCCESS("✅ Seed Complete! Engine is Blank."))
+        # 2. SaaS Organization (The Root "0" Entity)
+        # We allow it to be created first so it likely gets ID 1 (Standard for Root)
+        saas_org, _ = Organization.objects.get_or_create(
+            slug='saas',
+            defaults={
+                'name': 'SAAS',
+                'is_active': True,
+                'is_personal': False
+            }
+        )
+        self.stdout.write(f"🏢 SaaS Root Organization Created: {saas_org.name} (Slug: saas)")
+
+        self.stdout.write(self.style.SUCCESS("✅ Seed Complete! Engine is Blank (with SaaS Root)."))
