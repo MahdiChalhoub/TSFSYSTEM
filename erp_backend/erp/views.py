@@ -360,6 +360,25 @@ class ChartOfAccountViewSet(TenantModelViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=False, methods=['post'])
+    def migrate(self, request):
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({"error": "No organization context found"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        organization = Organization.objects.get(id=organization_id)
+        mappings = request.data.get('mappings', [])
+        description = request.data.get('description', "COA Migration")
+        
+        if not mappings:
+            return Response({"error": "Mappings are required"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            LedgerService.migrate_coa(organization, mappings, description)
+            return Response({"message": "Migration completed successfully"})
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
     @action(detail=True, methods=['get'])
     def statement(self, request, pk=None):
         organization_id = get_current_tenant_id()

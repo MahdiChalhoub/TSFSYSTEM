@@ -354,8 +354,12 @@ class LedgerService:
 
         with transaction.atomic():
             if reset:
+                from .models import FinancialAccount
                 if JournalEntry.objects.filter(organization=organization).exists():
-                    raise ValidationError("Cannot reset Chart of Accounts: Transactions already exist.")
+                    raise ValidationError("Cannot reset Chart of Accounts: Transactions (Journal Entries) already exist. Use the Migration Tool instead.")
+                if FinancialAccount.objects.filter(organization=organization).exists():
+                    raise ValidationError("Cannot reset Chart of Accounts: Financial Accounts (Cash/Bank) are linked to existing accounts. Remove them or use the Migration Tool.")
+                
                 ChartOfAccount.objects.filter(organization=organization).delete()
             
             def create_recursive(items, parent=None):
@@ -387,6 +391,93 @@ class LedgerService:
             
             # Auto-wire posting rules
             ConfigurationService.apply_smart_posting_rules(organization)
+            return True
+
+    @staticmethod
+    def migrate_coa(organization, mappings, description):
+        from .models import ChartOfAccount, JournalEntry, JournalEntryLine, FiscalYear, FiscalPeriod
+        from decimal import Decimal
+        import uuid
+        from django.utils import timezone
+
+        with transaction.atomic():
+            source_ids = [m['sourceId'] for m in mappings]
+            target_ids = [m['targetId'] for m in mappings]
+            
+            source_accounts = ChartOfAccount.objects.filter(id__in=source_ids, organization=organization)
+            target_accounts = ChartOfAccount.objects.filter(id__in=target_ids, organization=organization)
+            
+            src_map = {acc.id: acc for acc in source_accounts}
+            tgt_map = {acc.id: acc for acc in target_accounts}
+            
+            # Prepare posting lines for official and internal reclassifications
+            official_lines = []
+            internal_only_lines = []
+            
+            for m in mappings:
+                src_acc = src_map.get(m['sourceId'])
+                tgt_acc = tgt_map.get(m['targetId'])
+                
+                if not src_acc or not tgt_acc: continue
+                
+                bal_official = src_acc.balance_official
+                bal_total = src_acc.balance
+                bal_internal_diff = bal_total - bal_official
+                
+                # A. Handle Official Balance (Moves both Total and Official)
+                if abs(bal_official) > Decimal('0.0001'):
+                    if bal_official > 0:
+                        official_lines.append({"account_id": src_acc.id, "debit": 0, "credit": bal_official, "description": f"Migration: {description} (Out)"})
+                        official_lines.append({"account_id": tgt_acc.id, "debit": bal_official, "credit": 0, "description": f"Migration: {description} (In)"})
+                    else:
+                        abs_val = abs(bal_official)
+                        official_lines.append({"account_id": src_acc.id, "debit": abs_val, "credit": 0, "description": f"Migration: {description} (Out)"})
+                        official_lines.append({"account_id": tgt_acc.id, "debit": 0, "credit": abs_val, "description": f"Migration: {description} (In)"})
+
+                # B. Handle Internal Difference (Moves only Total)
+                if abs(bal_internal_diff) > Decimal('0.0001'):
+                    if bal_internal_diff > 0:
+                        internal_only_lines.append({"account_id": src_acc.id, "debit": 0, "credit": bal_internal_diff, "description": f"Internal Migration (Out)"})
+                        internal_only_lines.append({"account_id": tgt_acc.id, "debit": bal_internal_diff, "credit": 0, "description": f"Internal Migration (In)"})
+                    else:
+                        abs_val = abs(bal_internal_diff)
+                        internal_only_lines.append({"account_id": src_acc.id, "debit": abs_val, "credit": 0, "description": f"Internal Migration (Out)"})
+                        internal_only_lines.append({"account_id": tgt_acc.id, "debit": 0, "credit": abs_val, "description": f"Internal Migration (In)"})
+                
+                # Deactivate source after mapping
+                src_acc.is_active = False
+                src_acc.save()
+
+            now = timezone.now()
+            
+            # Post Official Reclassification
+            if official_lines:
+                LedgerService.create_journal_entry(
+                    organization=organization,
+                    transaction_date=now,
+                    description=description,
+                    reference=f"MIG-OFF-{uuid.uuid4().hex[:6].upper()}",
+                    status='POSTED',
+                    scope='OFFICIAL',
+                    lines=official_lines
+                )
+
+            # Post Internal Reclassification
+            if internal_only_lines:
+                LedgerService.create_journal_entry(
+                    organization=organization,
+                    transaction_date=now,
+                    description=f"{description} (Internal Only Adjustment)",
+                    reference=f"MIG-INT-{uuid.uuid4().hex[:6].upper()}",
+                    status='POSTED',
+                    scope='INTERNAL',
+                    lines=internal_only_lines
+                )
+            
+            # Sync posting rules to new accounts
+            from .services import ConfigurationService
+            ConfigurationService.apply_smart_posting_rules(organization)
+            
             return True
 
     @staticmethod
