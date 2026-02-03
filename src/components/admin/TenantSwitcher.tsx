@@ -12,8 +12,12 @@ export function TenantSwitcher({ organizations, forcedSlug, user }: { organizati
     const currentSlug = forcedSlug || (typeof window !== 'undefined' ? window.location.hostname.split('.')[0] : '');
     const activeOrg = organizations.find(o => o.slug === currentSlug);
 
-    // Only show Master Panel to authorized staff
-    const showMasterPanel = user?.is_superuser || user?.is_staff;
+    // Only show Master Panel to authorized SaaS Staff (Unbound from specific tenant)
+    // We assume if organizations > 1 it's likely a SaaS view, or we check specifically 
+    // BUT since we fixed backend to only return 1 org for tenant admins, 
+    // we can use that signal OR checking user.organization if available.
+    // SAFE FIX: If user is bound to an org (inferred or explicit), they are NOT SaaS admin.
+    const showMasterPanel = (!user?.organization) && (user?.is_superuser || user?.is_staff);
 
     const handleSwitch = (slug: string) => {
         startTransition(() => {
