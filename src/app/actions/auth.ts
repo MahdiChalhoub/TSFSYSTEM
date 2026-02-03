@@ -72,7 +72,7 @@ export async function loginAction(prevState: any, formData: FormData) {
             newHost = `${slug}.${baseDomain}`;
         }
 
-        redirect(`${protocol}://${newHost}/login?username=${encodeURIComponent(data.username as string)}`);
+        redirect(`${protocol}://${newHost}/login?u=${btoa(data.username as string)}`);
         return; // Unreachable
     }
 
