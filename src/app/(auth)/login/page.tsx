@@ -34,8 +34,19 @@ function LoginContent() {
         prefilledUsername = userParam;
     }
 
+    const [subdomain, setSubdomain] = useState("");
+
     useEffect(() => {
         getPublicConfig().then(setConfig);
+        if (typeof window !== 'undefined') {
+            const host = window.location.hostname;
+            const parts = host.split('.');
+            if (host.includes("localhost")) {
+                if (parts.length > 1) setSubdomain(parts[0]);
+            } else {
+                if (parts.length > 2) setSubdomain(parts[0]);
+            }
+        }
     }, []);
 
     const tenant = config.tenant;
@@ -44,13 +55,15 @@ function LoginContent() {
 
     // --- UNIFIED VIEW (SPLIT SCREEN) ---
     // Calculate display values based on context
-    const isRoot = !tenant || !tenant.name;
-    const isSaaS = tenant?.slug === 'saas' || tenant?.name === 'SaaS Federation'; // Adjust logic if needed based on backend response for 'saas' tenant
+    const isSaaS = subdomain === 'saas' || tenant?.slug === 'saas' || tenant?.name === 'SaaS Federation';
+    const isRoot = (!tenant || !tenant.name) && !isSaaS;
 
-    const displayTitle = isRoot ? "TSF CLOUD" : (tenant?.name || "TSF Cloud").toUpperCase();
-    const displaySubtitle = isRoot
-        ? "Enterprise Resource Federation Platform"
-        : "Secure enterprise gateway. Authorized personnel only.";
+    const displayTitle = isSaaS ? "SaaS FEDERATION" : (isRoot ? "TSF CLOUD" : (tenant?.name || "TSF Cloud").toUpperCase());
+    const displaySubtitle = isSaaS
+        ? "Global infrastructure management & orchestration."
+        : (isRoot
+            ? "Enterprise Resource Federation Platform"
+            : "Secure enterprise gateway. Authorized personnel only.");
 
     return (
         <div className="min-h-screen w-full grid grid-cols-1 lg:grid-cols-2">

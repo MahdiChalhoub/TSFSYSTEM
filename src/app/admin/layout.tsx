@@ -24,7 +24,18 @@ export default async function AdminLayout({
 }) {
     const headerList = await headers();
     const host = headerList.get('host') || '';
-    const currentSlug = host.split(':')[0].split('.')[0];
+    const hostname = host.split(':')[0].toLowerCase();
+    const parts = hostname.split('.');
+
+    let subdomain = "";
+    if (hostname.includes("localhost")) {
+        if (parts.length > 1) subdomain = parts[0];
+    } else {
+        if (parts.length > 2) subdomain = parts[0];
+    }
+
+    const isSaas = !subdomain || subdomain === 'saas' || subdomain === 'www';
+    const currentSlug = subdomain || 'saas'; // Default to saas if at root
 
     // Parallel data fetching
     // 1. Authenticate FIRST (Sequential check to prevent 401 floods)
@@ -47,7 +58,7 @@ export default async function AdminLayout({
             <DevProvider>
                 <div className="flex h-screen bg-gray-50 overflow-hidden font-sans text-gray-900">
                     {/* Left Panel: Sidebar Tree */}
-                    <Sidebar isSaas={currentSlug === 'saas' || currentSlug === 'www' || !currentSlug} />
+                    <Sidebar isSaas={isSaas} />
 
                     {/* Right Panel: Content */}
                     <div className="flex-1 flex flex-col min-w-0">

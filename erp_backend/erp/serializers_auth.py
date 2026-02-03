@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django.utils.translation import gettext_lazy as _
-from erp.models import User
+from erp.models import User, Role
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField(label=_("Username"))
@@ -56,7 +56,13 @@ class LoginSerializer(serializers.Serializer):
         attrs['user'] = user
         return attrs
 
+class RoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Role
+        fields = ['id', 'name', 'description']
+
 class UserSerializer(serializers.ModelSerializer):
+    role = RoleSerializer(read_only=True)
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'is_active', 'is_staff', 'is_superuser', 'organization']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'is_active', 'is_staff', 'is_superuser', 'organization', 'role']

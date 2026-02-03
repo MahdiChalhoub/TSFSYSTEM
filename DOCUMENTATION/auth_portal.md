@@ -22,22 +22,26 @@ The Auth Portal provides a unified tactical interface for user authentication, e
 4. Handles duplicate slug suggestions using `generateSuggestions`.
 
 ### 2. Login Page (`/(auth)/login/page.tsx`)
-**Goal:** Authenticate personnel into their specific operational instance.
+**Goal:** Authenticate personnel into their specific operational instance or the SaaS Master Panel.
 **Read Data From:**
 - `getPublicConfig` (Server Action): Fetches tenant logo, name, and operational sites.
 - `loginAction` (Server Action): Authenticates credentials against Django.
 **Save Data To:**
 - `auth_token` cookie: Session management.
 **User Interactions:**
-- Personnel ID (Username) input.
-- Security Key (Password) input.
-- Operational Base (Site) selection.
+- **Workspace ID (Slug)**: Only shown when on the Root Domain (localhost, www).
+- **Personnel ID (Username)**: Required.
+- **Security Key (Password)**: Required.
+- **Operational Base (Site)**: Shown for tenants with multiple sites.
 **Workflow:**
-1. System resolves tenant from Host header.
-2. User enters credentials.
-3. `loginAction` validates with Django.
-4. If successful, sets `auth_token` and redirects to `/admin`.
-5. If failure (e.g., Pending Approval), displays specific tactical error messages.
+1. **Host Analysis**: System extracts subdomain from the Host header.
+2. **Tripartite mode selection**:
+   - **Root Domain**: Shows Workspace input. If filled, redirects to tenant domain.
+   - **SaaS Domain (`saas.`)**: Dedicated Federation Admin login (uses Root Backend Context).
+   - **Tenant Domain**: Direct login to the specific enterprise.
+3. **Redirection Logic**: `loginAction` detects if workspace slug is provided and redirects the user to the correct subdomain to ensure cross-domain cookie isolation.
+4. **Backend Validation**: `erpFetch` injects `X-Tenant-Id` for tenant domains, but remains NULL for `saas`/root access.
+5. **Success Handling**: Sets `auth_token` and redirects to `/admin`.
 
 ### 3. User Registration Page (`/(auth)/register/user/page.tsx`)
 **Goal:** Enable new personnel to request system access.
