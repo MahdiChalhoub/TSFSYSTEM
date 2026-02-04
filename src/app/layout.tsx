@@ -4,8 +4,10 @@ import "./globals.css";
 
 const outfit = Outfit({ subsets: ['latin'] });
 
+import { PLATFORM_CONFIG } from "@/lib/saas_config";
+
 export const metadata: Metadata = {
-    title: "TSF Global System",
+    title: `${PLATFORM_CONFIG.name} | Global System`,
     description: "Multi-Tenant Enterprise OS",
 };
 

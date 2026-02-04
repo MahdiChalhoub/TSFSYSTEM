@@ -4,9 +4,11 @@ import { Outfit } from 'next/font/google';
 
 const outfit = Outfit({ subsets: ['latin'] });
 
+import { PLATFORM_CONFIG } from "@/lib/saas_config";
+
 export const metadata: Metadata = {
-    title: "TSF SaaS | Future-Proof Your Business",
-    description: "Advanced Multi-Tenant ERP & Store Management Platform.",
+    title: `${PLATFORM_CONFIG.name} | Global System`,
+    description: "Multi-Tenant Enterprise OS",
 };
 
 export default function LandingLayout({
@@ -20,9 +22,12 @@ export default function LandingLayout({
                 <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
                     <div className="flex items-center gap-2">
                         <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                            <span className="text-white font-black text-xl">T</span>
+                            <span className="text-white font-black text-xl">{PLATFORM_CONFIG.name.charAt(0)}</span>
                         </div>
-                        <span className="text-2xl font-black tracking-tighter">TSF<span className="text-emerald-500">CITY</span></span>
+                        <span className="text-2xl font-black tracking-tighter">
+                            {PLATFORM_CONFIG.name.split(' ')[0]}
+                            <span className="text-emerald-500">{PLATFORM_CONFIG.name.split(' ').slice(1).join('')}</span>
+                        </span>
                     </div>
 
                     <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-400">
@@ -42,7 +47,10 @@ export default function LandingLayout({
             <footer className="bg-slate-950 border-t border-slate-900 py-20">
                 <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12 text-slate-400">
                     <div className="col-span-2">
-                        <span className="text-2xl font-black text-white tracking-tighter mb-4 block">TSF<span className="text-emerald-500">CITY</span></span>
+                        <span className="text-2xl font-black text-white tracking-tighter mb-4 block">
+                            {PLATFORM_CONFIG.name.split(' ')[0]}
+                            <span className="text-emerald-500">{PLATFORM_CONFIG.name.split(' ').slice(1).join('')}</span>
+                        </span>
                         <p className="max-w-xs leading-relaxed">
                             The ultimate SaaS platform for modern business management.
                             Unified ERP, POS, Finance and Inventory scaling with you.
@@ -66,7 +74,7 @@ export default function LandingLayout({
                     </div>
                 </div>
                 <div className="max-w-7xl mx-auto px-6 mt-20 pt-8 border-t border-slate-900 text-center text-xs text-slate-600">
-                    &copy; 2026 TSF Global. All rights reserved.
+                    &copy; {new Date().getFullYear()} {PLATFORM_CONFIG.federation_name}. All rights reserved.
                 </div>
             </footer>
         </div>

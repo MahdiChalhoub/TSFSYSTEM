@@ -63,7 +63,7 @@ export async function loginAction(prevState: any, formData: FormData) {
         }
         else {
             // Domain-based logic (localhost or production domain)
-            const baseDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "tsfcloud.com";
+            const baseDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || PLATFORM_CONFIG.domain;
             let protocol = "http";
 
             // Prefer HTTPS if header exists OR if we are on the production domain
@@ -75,7 +75,7 @@ export async function loginAction(prevState: any, formData: FormData) {
             if (host.includes('localhost')) {
                 newHost = `${slug}.localhost:3000`;
             } else {
-                const baseDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "tsfcloud.com";
+                const baseDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || PLATFORM_CONFIG.domain;
                 // Avoid double-slugging
                 if (host.includes(baseDomain) && !host.startsWith('www')) {
                     // Already on a subdomain? Replacing it is safer.

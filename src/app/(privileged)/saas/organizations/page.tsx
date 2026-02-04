@@ -138,7 +138,7 @@ export default function OrganizationsPage() {
                                         value={newOrg.slug}
                                         onChange={(e) => setNewOrg({ ...newOrg, slug: e.target.value.toLowerCase().replace(/ /g, '-') })}
                                     />
-                                    <span className="text-gray-600 font-mono text-xs">{PLATFORM_CONFIG.suffix}</span>
+                                    <span className="text-gray-600 font-mono text-xs">{typeof window !== 'undefined' ? (window.location.host.includes('localhost') ? '.localhost' : PLATFORM_CONFIG.suffix) : PLATFORM_CONFIG.suffix}</span>
                                 </div>
                             </div>
                             <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
@@ -181,7 +181,7 @@ export default function OrganizationsPage() {
                             </div>
                             <CardTitle className="text-2xl font-bold text-gray-900 mt-4">{org.name}</CardTitle>
                             <CardDescription className="text-emerald-600 font-mono text-[10px] tracking-widest uppercase mt-1">
-                                {org.slug}{PLATFORM_CONFIG.suffix}
+                                {org.slug}{typeof window !== 'undefined' ? (window.location.host.includes('localhost') ? '.localhost' : PLATFORM_CONFIG.suffix) : PLATFORM_CONFIG.suffix}
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
