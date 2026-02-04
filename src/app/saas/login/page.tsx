@@ -41,8 +41,8 @@ export default function SaaSLoginContent() {
                         )}
 
                         <div className="space-y-4">
-                            {/* Hidden slug field to ensure NO slug is sent, implying Root login */}
-                            <input type="hidden" name="slug" value="" />
+                            {/* Hidden slug field to ensure correct redirection after login */}
+                            <input type="hidden" name="slug" value="saas" />
 
                             <div className="space-y-1">
                                 <Label className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Commander ID</Label>

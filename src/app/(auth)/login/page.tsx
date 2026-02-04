@@ -118,11 +118,13 @@ function LoginContent() {
                                 <div className="space-y-2">
                                     <Label className="text-xs uppercase font-bold text-slate-500">Workspace</Label>
                                     <div className="relative">
+                                        <input type="hidden" name="slug" value={searchParams.get('slug') || ''} />
                                         <Input
                                             id="slug"
                                             name="slug"
                                             placeholder="acme"
                                             required
+                                            defaultValue={searchParams.get('slug') || ''}
                                             suppressHydrationWarning
                                             className="bg-[#1e293b] border-slate-700 h-14 rounded-lg text-white font-mono pl-4 pr-32 focus:ring-emerald-500 focus:border-emerald-500"
                                         />

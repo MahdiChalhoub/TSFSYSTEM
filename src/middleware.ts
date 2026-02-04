@@ -37,12 +37,13 @@ export default async function middleware(req: NextRequest) {
             return NextResponse.rewrite(new URL(`/admin${path}`, req.url));
         }
 
-        // Default to Landing Page
-        const isAuthRoute = url.pathname.startsWith('/login')
+        // Default to Application or Landing
+        const isAppRoute = url.pathname.startsWith('/login')
             || url.pathname.startsWith('/register')
-            || url.pathname === '/saas/login'; // EXPLICITLY ALLOW SAAS LOGIN
+            || url.pathname.startsWith('/admin')
+            || url.pathname === '/saas/login';
 
-        if (isAuthRoute) {
+        if (isAppRoute) {
             return NextResponse.next();
         }
 
