@@ -8,9 +8,9 @@ from .models import (
     Product, Warehouse, Inventory, InventoryMovement, Unit,
     Brand, Category, Parfum, ProductGroup, Country,
     Contact, Employee, Role, TransactionSequence, BarcodeSettings, User,
-    OrderLine, SystemModule, OrganizationModule
+    OrderLine, SystemModule, OrganizationModule,
+    JournalEntryLine
 )
-from apps.finance.models import JournalEntryLine
 from .serializers import (
     OrganizationSerializer, SiteSerializer, WarehouseSerializer, 
     InventorySerializer, CategorySerializer, ParfumSerializer, 
