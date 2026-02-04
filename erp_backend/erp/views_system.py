@@ -1,7 +1,7 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAdminUser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.utils import timezone
 from .models import SystemUpdate
 from .kernel_manager import KernelManager
@@ -12,6 +12,7 @@ class SystemUpdateViewSet(viewsets.ViewSet):
     Privileged API for System Updates (Kernel).
     """
     permission_classes = [IsOrgAdmin] # Platform Admins only
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     @action(detail=False, methods=['get'])
     def status(self, request):
