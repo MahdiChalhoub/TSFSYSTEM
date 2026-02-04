@@ -234,6 +234,64 @@ def get_tools() -> List[Tool]:
             description="Get information about the current organization.",
             inputSchema={"type": "object", "properties": {}}
         ),
+        
+        # === ANALYTICS ===
+        Tool(
+            name="get_sales_trend",
+            description="Get sales trend data for charting. Returns daily/weekly/monthly sales totals perfect for visualization.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "period": {"type": "string", "description": "Period: daily, weekly, monthly", "default": "monthly"},
+                    "months": {"type": "integer", "description": "Number of months to look back", "default": 6}
+                }
+            }
+        ),
+        Tool(
+            name="get_revenue_expenses",
+            description="Get revenue vs expenses comparison data for charting.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "period": {"type": "string", "description": "Period: daily, weekly, monthly", "default": "monthly"},
+                    "months": {"type": "integer", "description": "Number of months", "default": 6}
+                }
+            }
+        ),
+        Tool(
+            name="get_top_products",
+            description="Get top selling products with quantities. Perfect for pie/bar charts.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "limit": {"type": "integer", "description": "Number of products", "default": 10},
+                    "metric": {"type": "string", "description": "Sort by: revenue, quantity", "default": "revenue"}
+                }
+            }
+        ),
+        Tool(
+            name="get_inventory_status",
+            description="Get inventory status breakdown (in stock, low stock, out of stock) for pie charts.",
+            inputSchema={"type": "object", "properties": {}}
+        ),
+        Tool(
+            name="get_customer_segments",
+            description="Get customer segments by purchase value. Perfect for pie charts.",
+            inputSchema={"type": "object", "properties": {}}
+        ),
+        Tool(
+            name="save_report",
+            description="Save analysis or report for future reference.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string", "description": "Report title"},
+                    "content": {"type": "string", "description": "Report content/analysis"},
+                    "report_type": {"type": "string", "description": "Type: sales, inventory, financial, strategy"}
+                },
+                "required": ["title", "content"]
+            }
+        ),
     ]
 
 # =============================================================================
@@ -321,6 +379,41 @@ async def handle_tool_call(client: DajingoClient, name: str, arguments: dict) ->
                 result.update(details)
             except:
                 pass
+        
+        # === ANALYTICS ===
+        elif name == "get_sales_trend":
+            params = {
+                "period": arguments.get("period", "monthly"),
+                "months": arguments.get("months", 6)
+            }
+            result = await client.get("finance/analytics/sales-trend/", params)
+            
+        elif name == "get_revenue_expenses":
+            params = {
+                "period": arguments.get("period", "monthly"),
+                "months": arguments.get("months", 6)
+            }
+            result = await client.get("finance/analytics/revenue-expenses/", params)
+            
+        elif name == "get_top_products":
+            params = {
+                "limit": arguments.get("limit", 10),
+                "metric": arguments.get("metric", "revenue")
+            }
+            result = await client.get("products/analytics/top/", params)
+            
+        elif name == "get_inventory_status":
+            result = await client.get("inventory/analytics/status/")
+            
+        elif name == "get_customer_segments":
+            result = await client.get("contacts/analytics/segments/")
+            
+        elif name == "save_report":
+            result = await client.post("reports/", {
+                "title": arguments["title"],
+                "content": arguments["content"],
+                "report_type": arguments.get("report_type", "general")
+            })
             
         else:
             return f"Unknown tool: {name}"
