@@ -25,3 +25,15 @@ To promote SaaS management routes from a nested `/admin/saas` structure to a top
 
 ## How it Achieves the Goal
 By decoupling SaaS routes from the standard `/admin` prefix while sharing the same infrastructure (Sidebars, Headers) via Next.js Route Groups `(privileged)`, we achieve clean URLs without code duplication.
+
+## Conditional Visibility (Navigation)
+
+The "SaaS Control" section and administrative view switches follow specific visibility rules:
+
+| Element | Condition | Source |
+| :--- | :--- | :--- |
+| **SaaS Control Menu** | `isSaas` Context | Dynamic Manifest |
+| **Declared/Both Switcher** | `isSuperuser` AND `dualViewEnabled` | `global_financial_settings` |
+
+- **Dual View Control**: The visibility of "Declared" vs "Both" options in the sidebar is now strictly controlled by the `dualView` flag in the organization's global financial settings.
+- **Superuser Gate**: Even if `dualView` is enabled, the switcher is only presented to users with `is_superuser: true` to prevent confusing standard staff with complex accounting views.
