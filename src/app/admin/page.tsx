@@ -18,8 +18,8 @@ export default async function AdminDashboard() {
     const RecentActivityWidget = getActiveRecentActivity(installedModuleCodes);
 
     return (
-        <div className="min-h-screen bg-gray-50/50 pb-20">
-            <div className="max-w-[1600px] mx-auto px-6 py-8 animate-in fade-in duration-700">
+        <div className="animate-in fade-in duration-700">
+            <div className="max-w-[1800px] mx-auto p-4 md:p-8 space-y-12">
 
                 <DashboardHeader />
 

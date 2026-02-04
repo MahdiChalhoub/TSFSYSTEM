@@ -18,7 +18,7 @@ export default async function SaasLayout({
     }
 
     return (
-        <div className="bg-[#020617] min-h-full">
+        <div className="bg-gray-50/50 min-h-full">
             <div className="p-4 md:p-8 max-w-[1800px] mx-auto">
                 {children}
             </div>

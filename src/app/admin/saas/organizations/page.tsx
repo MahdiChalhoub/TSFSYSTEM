@@ -103,8 +103,8 @@ export default function OrganizationsPage() {
         <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 md:gap-4">
                 <div>
-                    <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight">Organizations</h2>
-                    <p className="text-gray-400 mt-1 md:mt-2 font-medium text-sm md:text-base">Manage multi-tenant company instances</p>
+                    <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">Organizations</h2>
+                    <p className="text-gray-500 mt-1 md:mt-2 font-medium text-sm md:text-base">Manage multi-tenant company instances</p>
                 </div>
                 <Dialog open={open} onOpenChange={setOpen}>
                     <DialogTrigger asChild>
@@ -113,17 +113,17 @@ export default function OrganizationsPage() {
                             Register Instance
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="bg-[#0F172A] border-gray-800 text-white rounded-[2rem] max-w-md">
+                    <DialogContent className="bg-white border-gray-100 text-gray-900 rounded-[2rem] max-w-md shadow-2xl">
                         <DialogHeader>
                             <DialogTitle className="text-2xl font-black">Provision Instance</DialogTitle>
-                            <CardDescription className="text-gray-400">Configure the new business version identity</CardDescription>
+                            <CardDescription className="text-gray-500">Configure the new business version identity</CardDescription>
                         </DialogHeader>
                         <div className="space-y-6 pt-6">
                             <div className="space-y-2">
                                 <Label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Business Legal Name</Label>
                                 <Input
                                     placeholder="e.g. TSF Global Côte d'Ivoire"
-                                    className="bg-gray-950 border-gray-800 rounded-xl py-6 focus:ring-emerald-500"
+                                    className="bg-gray-50 border-gray-100 rounded-xl py-6 focus:ring-emerald-500"
                                     value={newOrg.name}
                                     onChange={(e) => setNewOrg({ ...newOrg, name: e.target.value })}
                                 />
@@ -133,17 +133,17 @@ export default function OrganizationsPage() {
                                 <div className="flex items-center gap-2">
                                     <Input
                                         placeholder="tsf-global"
-                                        className="bg-gray-950 border-gray-800 rounded-xl py-6 focus:ring-emerald-500 font-mono text-emerald-400"
+                                        className="bg-gray-50 border-gray-100 rounded-xl py-6 focus:ring-emerald-500 font-mono text-emerald-600"
                                         value={newOrg.slug}
                                         onChange={(e) => setNewOrg({ ...newOrg, slug: e.target.value.toLowerCase().replace(/ /g, '-') })}
                                     />
                                     <span className="text-gray-600 font-mono text-xs">.tsf-city.com</span>
                                 </div>
                             </div>
-                            <div className="p-4 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
+                            <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
                                 <div className="flex gap-3">
-                                    <Zap className="text-emerald-400 shrink-0" size={18} />
-                                    <p className="text-[10px] leading-relaxed text-emerald-300 font-medium">
+                                    <Zap className="text-emerald-600 shrink-0" size={18} />
+                                    <p className="text-[10px] leading-relaxed text-emerald-800 font-medium">
                                         Submitting this will automatically provision a default branch, a super-admin user, and a full Chart of Accounts skeleton for this instance.
                                     </p>
                                 </div>
@@ -168,49 +168,49 @@ export default function OrganizationsPage() {
                 ) : orgs.length === 0 ? (
                     <div className="col-span-full py-20 text-center text-gray-500 font-medium">No organizations found.</div>
                 ) : orgs.map((org) => (
-                    <Card key={org.id} className="bg-[#0F172A] border-gray-800 hover:border-emerald-500/50 transition-all rounded-3xl overflow-hidden group shadow-xl">
+                    <Card key={org.id} className="bg-white border-gray-100 hover:border-emerald-500/30 transition-all rounded-3xl overflow-hidden group shadow-xl hover:shadow-2xl">
                         <CardHeader className="pb-4">
                             <div className="flex justify-between items-start">
-                                <div className="p-3 bg-emerald-500/10 rounded-2xl text-emerald-400">
+                                <div className="p-3 bg-emerald-50 rounded-2xl text-emerald-600 shadow-sm border border-emerald-100">
                                     <Building size={24} />
                                 </div>
-                                <Badge className={org.isActive ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-red-500/10 text-red-400 border-red-500/20"}>
+                                <Badge className={org.isActive ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-red-50 text-red-600 border-red-100"}>
                                     {org.isActive ? 'Active' : 'Suspended'}
                                 </Badge>
                             </div>
-                            <CardTitle className="text-2xl font-bold text-white mt-4">{org.name}</CardTitle>
-                            <CardDescription className="text-emerald-500/70 font-mono text-xs tracking-widest uppercase mt-1">
+                            <CardTitle className="text-2xl font-bold text-gray-900 mt-4">{org.name}</CardTitle>
+                            <CardDescription className="text-emerald-600 font-mono text-[10px] tracking-widest uppercase mt-1">
                                 {org.slug}.tsf-city.com
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
                             <div className="grid grid-cols-2 gap-3">
-                                <div className="p-4 bg-[#0B1120] rounded-2xl border border-gray-800/50">
+                                <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
                                     <div className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Sites</div>
-                                    <div className="text-xl font-bold text-white">{org._count?.sites || 0}</div>
+                                    <div className="text-xl font-bold text-gray-900">{org._count?.sites || 0}</div>
                                 </div>
-                                <div className="p-4 bg-[#0B1120] rounded-2xl border border-gray-800/50">
+                                <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
                                     <div className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Users</div>
-                                    <div className="text-xl font-bold text-white">{org._count?.users || 0}</div>
+                                    <div className="text-xl font-bold text-gray-900">{org._count?.users || 0}</div>
                                 </div>
                             </div>
 
                             <div className="flex gap-2">
                                 <Button
                                     variant="outline"
-                                    className="flex-1 py-6 rounded-2xl border-gray-800 hover:bg-gray-800 text-gray-400 hover:text-white transition-all font-bold"
+                                    className="flex-1 py-6 rounded-2xl border-gray-100 bg-gray-50 hover:bg-white text-gray-400 hover:text-gray-900 transition-all font-bold"
                                     onClick={() => handleToggle(org.id, org.isActive)}
                                 >
                                     {org.isActive ? 'Suspend' : 'Activate'}
                                 </Button>
                                 <Button
                                     variant="outline"
-                                    className="px-6 py-6 rounded-2xl border-emerald-500/20 bg-emerald-500/5 text-emerald-400 hover:bg-emerald-500/20 transition-all font-bold"
+                                    className="px-6 py-6 rounded-2xl border-emerald-100 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-all font-bold shadow-sm"
                                     onClick={() => handleOpenModules(org)}
                                 >
                                     <Settings2 size={20} />
                                 </Button>
-                                <Button variant="ghost" className="p-6 rounded-2xl text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-all">
+                                <Button variant="ghost" className="p-6 rounded-2xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all">
                                     <Trash2 size={20} />
                                 </Button>
                             </div>
@@ -220,11 +220,11 @@ export default function OrganizationsPage() {
             </div>
 
             <Dialog open={modulesOpen} onOpenChange={setModulesOpen}>
-                <DialogContent className="bg-[#0F172A] border-gray-800 text-white rounded-[2rem] max-w-2xl overflow-hidden p-0">
-                    <div className="p-8 bg-emerald-500/5 border-b border-gray-800/50">
+                <DialogContent className="bg-white border-gray-100 text-gray-900 rounded-[2rem] max-w-2xl overflow-hidden p-0 shadow-2xl">
+                    <div className="p-8 bg-emerald-50 border-b border-gray-100">
                         <DialogTitle className="text-2xl font-black">Feature Activation</DialogTitle>
-                        <CardDescription className="text-gray-400 mt-1">
-                            Managing modules for <span className="text-emerald-400 font-bold">{selectedOrg?.name}</span>
+                        <CardDescription className="text-gray-500 mt-1">
+                            Managing modules for <span className="text-emerald-600 font-bold">{selectedOrg?.name}</span>
                         </CardDescription>
                     </div>
 
@@ -234,11 +234,11 @@ export default function OrganizationsPage() {
                         ) : orgModules.length === 0 ? (
                             <div className="py-12 text-center text-gray-500">No available features found for this instance.</div>
                         ) : orgModules.map((m) => (
-                            <div key={m.code} className="p-4 bg-gray-950/50 border border-gray-800 rounded-2xl group hover:border-emerald-500/30 transition-all">
+                            <div key={m.code} className="p-4 bg-white border border-gray-100 rounded-2xl group hover:border-emerald-500/30 transition-all shadow-sm">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <h4 className="font-bold text-white group-hover:text-emerald-400 transition-colors">{m.name}</h4>
-                                        <p className="text-[10px] text-gray-500 uppercase tracking-widest font-mono">{m.code}</p>
+                                        <h4 className="font-bold text-gray-900 group-hover:text-emerald-700 transition-colors">{m.name}</h4>
+                                        <p className="text-[10px] text-gray-400 uppercase tracking-widest font-mono">{m.code}</p>
                                     </div>
                                     <div className="flex items-center gap-4">
                                         <Badge className={m.status === 'INSTALLED' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-gray-800 text-gray-500 border-transparent"}>

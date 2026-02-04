@@ -33,10 +33,10 @@ export default async function SaasMasterDashboard() {
                     <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-[0.2em]">
                         <ShieldCheck size={14} /> Platform Control Center
                     </div>
-                    <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight flex items-center gap-4">
+                    <h1 className="text-3xl md:text-5xl font-black text-gray-900 tracking-tight flex items-center gap-4">
                         SaaS Dashboard
                     </h1>
-                    <p className="text-gray-400 font-medium text-sm md:text-lg italic">Infrastructure & Tenant Management Engine</p>
+                    <p className="text-gray-500 font-medium text-sm md:text-lg italic">Infrastructure & Tenant Management Engine</p>
                 </div>
                 <div className="flex flex-wrap gap-2 md:gap-4">
                     <Link href="/admin/saas/updates">
@@ -44,7 +44,7 @@ export default async function SaasMasterDashboard() {
                             <Zap size={16} fill="currentColor" /> Updates
                         </Button>
                     </Link>
-                    <Button variant="outline" className="border-gray-800 bg-gray-900/50 hover:bg-gray-800 text-white rounded-2xl px-4 md:px-6 py-4 md:py-6 font-bold flex gap-2 text-xs md:text-sm">
+                    <Button variant="outline" className="border-gray-200 bg-white hover:bg-gray-50 text-gray-600 rounded-2xl px-4 md:px-6 py-4 md:py-6 font-bold flex gap-2 text-xs md:text-sm shadow-sm">
                         <Activity size={16} /> Health
                     </Button>
                     <Link href="/admin/saas/organizations">
@@ -61,7 +61,7 @@ export default async function SaasMasterDashboard() {
                     if (stat.label.includes("Module")) {
                         return (
                             <Link href="/admin/saas/modules" key={i} className="block group">
-                                <Card className="bg-[#0F172A] border-gray-800 rounded-[2rem] overflow-hidden group hover:border-emerald-500/30 transition-all shadow-2xl h-full cursor-pointer">
+                                <Card className="bg-white border-gray-100 rounded-[2rem] overflow-hidden group hover:border-emerald-500/30 transition-all shadow-xl h-full cursor-pointer">
                                     <CardContent className="p-8 space-y-4">
                                         <div className={`p-4 bg-${stat.color}-500/10 rounded-2xl w-fit text-${stat.color}-400 group-hover:scale-110 transition-transform`}>
                                             <stat.icon size={24} />
@@ -71,7 +71,7 @@ export default async function SaasMasterDashboard() {
                                                 {stat.label}
                                                 <Zap size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
                                             </div>
-                                            <div className="text-4xl font-black text-white mt-1 font-mono tracking-tighter">{stat.value}</div>
+                                            <div className="text-4xl font-black text-gray-900 mt-1 font-mono tracking-tighter">{stat.value}</div>
                                         </div>
                                         <div className="flex items-center gap-2 text-xs font-bold text-gray-500">
                                             <Clock size={12} /> {stat.trend}
@@ -83,14 +83,14 @@ export default async function SaasMasterDashboard() {
                     }
 
                     return (
-                        <Card key={i} className="bg-[#0F172A] border-gray-800 rounded-[2rem] overflow-hidden group hover:border-emerald-500/30 transition-all shadow-2xl h-full">
+                        <Card key={i} className="bg-white border-gray-100 rounded-[2rem] overflow-hidden group hover:border-emerald-500/30 transition-all shadow-xl h-full">
                             <CardContent className="p-8 space-y-4">
                                 <div className={`p-4 bg-${stat.color}-500/10 rounded-2xl w-fit text-${stat.color}-400 group-hover:scale-110 transition-transform`}>
                                     <stat.icon size={24} />
                                 </div>
                                 <div>
                                     <div className="text-sm font-bold text-gray-500 uppercase tracking-widest">{stat.label}</div>
-                                    <div className="text-4xl font-black text-white mt-1 font-mono tracking-tighter">{stat.value}</div>
+                                    <div className="text-4xl font-black text-gray-900 mt-1 font-mono tracking-tighter">{stat.value}</div>
                                 </div>
                                 <div className="flex items-center gap-2 text-xs font-bold text-gray-500">
                                     <Clock size={12} /> {stat.trend}
@@ -104,12 +104,12 @@ export default async function SaasMasterDashboard() {
             {/* Main Content Area */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Recent Provisioning */}
-                <Card className="lg:col-span-2 bg-[#0F172A]/50 backdrop-blur-xl border-gray-800 rounded-[2.5rem] shadow-2xl p-2">
+                <Card className="lg:col-span-2 bg-white border-gray-100 rounded-[2.5rem] shadow-xl p-2">
                     <CardHeader className="p-8">
                         <div className="flex justify-between items-center">
                             <div>
-                                <CardTitle className="text-2xl font-black text-white">Recent Deployments</CardTitle>
-                                <CardDescription className="text-gray-400 mt-1 font-medium italic">Latest business versions spun up</CardDescription>
+                                <CardTitle className="text-2xl font-black text-gray-900">Recent Deployments</CardTitle>
+                                <CardDescription className="text-gray-500 mt-1 font-medium italic">Latest business versions spun up</CardDescription>
                             </div>
                             <Link href="/admin/saas/organizations">
                                 <Button variant="ghost" className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 font-bold rounded-xl text-sm">
@@ -121,18 +121,18 @@ export default async function SaasMasterDashboard() {
                     <CardContent className="px-4 pb-8">
                         <div className="space-y-2">
                             {stats?.latestTenants?.map((ten: any) => (
-                                <div key={ten.id} className="flex items-center justify-between p-6 rounded-3xl hover:bg-white/5 transition-all border border-transparent hover:border-gray-800">
+                                <div key={ten.id} className="flex items-center justify-between p-6 rounded-3xl hover:bg-gray-50 transition-all border border-transparent hover:border-gray-100">
                                     <div className="flex items-center gap-5">
-                                        <div className="w-12 h-12 rounded-2xl bg-gray-800 flex items-center justify-center text-white font-bold border border-gray-700 shadow-inner">
+                                        <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center text-gray-700 font-bold border border-gray-200 shadow-inner">
                                             {ten.name[0]}
                                         </div>
                                         <div>
-                                            <div className="text-lg font-bold text-white">{ten.name}</div>
-                                            <div className="text-xs font-mono text-gray-500 uppercase tracking-tighter">{ten.slug}.localhost</div>
+                                            <div className="text-lg font-bold text-gray-900">{ten.name}</div>
+                                            <div className="text-xs font-mono text-gray-400 uppercase tracking-tighter">{ten.slug}.localhost</div>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-8">
-                                        <div className="w-24 px-3 py-1.5 rounded-full border border-gray-800 text-[10px] font-black uppercase text-center tracking-widest bg-gray-900/50 text-gray-400">
+                                        <div className="w-24 px-3 py-1.5 rounded-full border border-gray-100 text-[10px] font-black uppercase text-center tracking-widest bg-gray-50 text-gray-500">
                                             {ten.is_active ? 'Active' : 'Suspended'}
                                         </div>
                                         <div className="text-xs text-gray-500 font-medium w-16 text-right">{ten.created_at}</div>

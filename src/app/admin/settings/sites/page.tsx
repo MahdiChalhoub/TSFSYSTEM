@@ -6,7 +6,7 @@ export default async function SitesPage() {
     const sites = await getSites();
 
     return (
-        <div className="min-h-screen bg-[#FDFDFF] p-6 lg:p-12">
+        <div className="min-h-screen bg-[#FDFDFF] p-6 lg:p-12 animate-in fade-in duration-700">
             <div className="max-w-[1600px] mx-auto space-y-12">
                 {/* Enterprise Header */}
                 <div className="bg-white rounded-[60px] p-10 lg:p-16 relative overflow-hidden shadow-2xl shadow-indigo-900/5 flex flex-col lg:flex-row justify-between items-center gap-12 border border-gray-50">
