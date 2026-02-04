@@ -19,6 +19,10 @@ from .views_system import SystemUpdateViewSet
 from .views_modules import ModuleListView, ModuleEnableView, ModuleDisableView
 from .views_manager import PendingUsersView, ApproveUserView, RejectUserView, RequestCorrectionView
 from .views_onboarding import PublicConfigView, BusinessRegistrationView, UserSignUpView
+from .views_audit import (
+    AuditLogViewSet, WorkflowDefinitionViewSet, ApprovalRequestViewSet,
+    TaskTemplateViewSet, TaskQueueViewSet
+)
 
 router = DefaultRouter()
 router.register(r'tenant', TenantResolutionView, basename='tenant')
@@ -62,6 +66,13 @@ router.register(r'saas/org-modules', OrgModuleViewSet, basename='saas-org-module
 router.register(r'saas/plans/categories', PlanCategoryViewSet)
 router.register(r'saas/plans', SubscriptionPlanViewSet)
 router.register(r'saas/payments', SubscriptionPaymentViewSet, basename='subscription-payments')
+
+# Audit & Workflow Engine
+router.register(r'audit/logs', AuditLogViewSet, basename='audit-logs')
+router.register(r'audit/workflows', WorkflowDefinitionViewSet, basename='workflow-definitions')
+router.register(r'audit/approvals', ApprovalRequestViewSet, basename='approval-requests')
+router.register(r'audit/task-templates', TaskTemplateViewSet, basename='task-templates')
+router.register(r'audit/tasks', TaskQueueViewSet, basename='task-queue')
 
 urlpatterns = [
     path('health/', health_check),
