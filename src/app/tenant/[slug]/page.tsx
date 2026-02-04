@@ -4,6 +4,7 @@ import { ShieldCheck, Activity, Zap, Globe, ArrowRight, Users, Lock } from "luci
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { StorefrontCatalog } from "@/components/tenant/StorefrontCatalog"
+import { PLATFORM_CONFIG } from "@/lib/saas_config"
 
 export default async function TenantWelcomePage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params
@@ -45,7 +46,7 @@ export default async function TenantWelcomePage({ params }: { params: Promise<{ 
                     <div className="space-y-8 animate-in fade-in slide-in-from-left-8 duration-1000">
                         <div className="space-y-6">
                             <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-400 text-[10px] font-black uppercase tracking-widest">
-                                <Globe size={14} /> TSF City Edge Node
+                                <Globe size={14} /> {PLATFORM_CONFIG.federation_name} Edge Node
                             </div>
                             <h1 className="text-6xl lg:text-8xl font-black text-white tracking-tighter leading-none">
                                 {org.name} <span className="text-emerald-500">.</span>
@@ -78,7 +79,7 @@ export default async function TenantWelcomePage({ params }: { params: Promise<{ 
                             <div className="flex justify-between items-center relative">
                                 <div className="space-y-1">
                                     <h2 className="text-xl font-bold text-white">Secure Access</h2>
-                                    <p className="text-[10px] text-slate-500 font-medium tracking-wide uppercase">{slug}.tsf-city.com</p>
+                                    <p className="text-[10px] text-slate-500 font-medium tracking-wide uppercase">{slug}{PLATFORM_CONFIG.suffix}</p>
                                 </div>
                                 <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-white border border-white/10 group-hover:scale-110 transition-transform">
                                     <Lock size={20} />
@@ -109,7 +110,7 @@ export default async function TenantWelcomePage({ params }: { params: Promise<{ 
 
                         <div className="flex items-center gap-6 pt-4">
                             <a
-                                href="http://saas.localhost:3000"
+                                href={`http://saas.${PLATFORM_CONFIG.domain}`}
                                 className="inline-flex items-center gap-2 text-[10px] text-slate-600 hover:text-emerald-500 font-bold uppercase tracking-[0.2em] transition-colors"
                             >
                                 <ShieldCheck size={14} /> Master Panel
@@ -126,9 +127,9 @@ export default async function TenantWelcomePage({ params }: { params: Promise<{ 
 
                     {/* Footer Info */}
                     <div className="mt-20 pt-12 border-t border-white/5 space-y-4">
-                        <div className="text-[10px] font-black text-slate-700 uppercase tracking-[0.3em]">TSF Cloud Infrastructure • {org.name} Node</div>
+                        <div className="text-[10px] font-black text-slate-700 uppercase tracking-[0.3em]">{PLATFORM_CONFIG.name} Infrastructure • {org.name} Node</div>
                         <p className="text-[10px] text-slate-800 font-medium max-w-md leading-relaxed">
-                            Encrypted connection established. All transactions are logged and verified by the TSF City Federation Protocol.
+                            Encrypted connection established. All transactions are logged and verified by the {PLATFORM_CONFIG.federation_name} Protocol.
                         </p>
                     </div>
                 </div>

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Building2, UserPlus, LogIn, ArrowRight, ShieldCheck, Zap, Globe, Sparkles, AlertCircle, CheckCircle2, RotateCcw } from "lucide-react"
 import { toast } from "sonner"
+import { PLATFORM_CONFIG } from "@/lib/saas_config"
 import { checkWorkspace } from "@/app/actions/onboarding"
 
 type AuthMode = 'login' | 'signup' | 'register'
@@ -223,7 +224,7 @@ export default function LandingPage() {
                     Strategic Tactical OS Backbone
                 </div>
                 <h1 className="text-6xl md:text-9xl font-black text-white tracking-tighter leading-none italic select-none">
-                    VANTAGE <span className="text-transparent bg-clip-text bg-gradient-to-br from-emerald-400 to-cyan-400 not-italic drop-shadow-2xl">OS</span>
+                    {PLATFORM_CONFIG.name.split(' ')[0]} <span className="text-transparent bg-clip-text bg-gradient-to-br from-emerald-400 to-cyan-400 not-italic drop-shadow-2xl">{PLATFORM_CONFIG.name.split(' ').slice(1).join(' ')}</span>
                 </h1>
                 <p className="text-slate-500 max-w-lg mx-auto text-sm md:text-lg font-medium leading-relaxed">
                     Unifying distributed business intelligence into a single, high-fidelity command interface.
@@ -290,7 +291,7 @@ export default function LandingPage() {
             {/* Bottom Credits */}
             <div className="mt-16 text-[11px] font-black text-slate-700 uppercase tracking-[0.8em] relative z-10 flex items-center gap-4">
                 <div className="h-[1px] w-12 bg-slate-800" />
-                Secured by TSF Global Federation Core
+                Secured by {PLATFORM_CONFIG.federation_name} Core
                 <div className="h-[1px] w-12 bg-slate-800" />
             </div>
         </div>

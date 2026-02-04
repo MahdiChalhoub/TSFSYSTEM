@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { PLATFORM_CONFIG } from "@/lib/saas_config"
 
 export default function OrganizationsPage() {
     const [orgs, setOrgs] = useState<any[]>([])
@@ -122,7 +123,7 @@ export default function OrganizationsPage() {
                             <div className="space-y-2">
                                 <Label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Business Legal Name</Label>
                                 <Input
-                                    placeholder="e.g. TSF Global Côte d'Ivoire"
+                                    placeholder="e.g. Acme Global Industries"
                                     className="bg-gray-50 border-gray-100 rounded-xl py-6 focus:ring-emerald-500"
                                     value={newOrg.name}
                                     onChange={(e) => setNewOrg({ ...newOrg, name: e.target.value })}
@@ -132,12 +133,12 @@ export default function OrganizationsPage() {
                                 <Label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Unique URL Slug</Label>
                                 <div className="flex items-center gap-2">
                                     <Input
-                                        placeholder="tsf-global"
+                                        placeholder="acme-corp"
                                         className="bg-gray-50 border-gray-100 rounded-xl py-6 focus:ring-emerald-500 font-mono text-emerald-600"
                                         value={newOrg.slug}
                                         onChange={(e) => setNewOrg({ ...newOrg, slug: e.target.value.toLowerCase().replace(/ /g, '-') })}
                                     />
-                                    <span className="text-gray-600 font-mono text-xs">.tsf-city.com</span>
+                                    <span className="text-gray-600 font-mono text-xs">{PLATFORM_CONFIG.suffix}</span>
                                 </div>
                             </div>
                             <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
@@ -180,7 +181,7 @@ export default function OrganizationsPage() {
                             </div>
                             <CardTitle className="text-2xl font-bold text-gray-900 mt-4">{org.name}</CardTitle>
                             <CardDescription className="text-emerald-600 font-mono text-[10px] tracking-widest uppercase mt-1">
-                                {org.slug}.tsf-city.com
+                                {org.slug}{PLATFORM_CONFIG.suffix}
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
