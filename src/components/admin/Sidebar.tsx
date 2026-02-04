@@ -22,7 +22,27 @@ import { useState, useEffect } from 'react';
 import clsx from 'clsx';
 import { usePathname } from 'next/navigation';
 import { logoutAction } from "@/app/actions/auth";
-import { getSaaSModules } from "@/app/actions/saas/modules";
+import { getSaaSModules, getDynamicSidebar } from "@/app/actions/saas/modules";
+
+const ICON_MAP: Record<string, any> = {
+    LayoutDashboard,
+    ShoppingBag,
+    Box,
+    Users,
+    Briefcase,
+    FileText,
+    ShieldCheck,
+    Settings,
+    Zap,
+    Layers,
+    BarChart3,
+    ShoppingCart,
+    Package
+};
+
+function getIcon(name: string) {
+    return ICON_MAP[name] || Box;
+}
 
 // Data Structure for the Recursive Menu
 const MENU_ITEMS = [
@@ -117,18 +137,6 @@ const MENU_ITEMS = [
         ]
     },
     {
-        title: 'Demo Feature',
-        icon: Box,
-        module: 'demo',
-        path: '/admin/saas/demo'
-    },
-    {
-        title: 'Vantage Voyager',
-        icon: Zap,
-        module: 'test_vantage',
-        path: '/admin/saas/test_vantage'
-    },
-    {
         title: 'SaaS Panel',
         icon: Briefcase,
         module: 'core',
@@ -144,27 +152,44 @@ const MENU_ITEMS = [
 
 export function Sidebar({ isSaas = false }: { isSaas?: boolean }) {
     const { sidebarOpen, openTab, activeTab, viewScope, setViewScope } = useAdmin();
-    const [installedModules, setInstalledModules] = useState<Set<string>>(new Set(['core'])); // Default core
+    const [installedModules, setInstalledModules] = useState<Set<string>>(new Set(['core']));
+    const [dynamicItems, setDynamicItems] = useState<any[]>([]);
 
     useEffect(() => {
-        // Fetch active modules to filter sidebar
-        async function fetchModules() {
+        async function fetchData() {
             try {
-                // If we are in SaaS context, we might want to show EVERYTHING? 
-                // No, the user wants the sidebar to reflect the *installed* system modules.
-                // Even for SaaS Admin, if 'inventory' is deleted, it shouldn't be in the menu.
-                const modules = await getSaaSModules();
+                const [modules, sidebarData] = await Promise.all([
+                    getSaaSModules(),
+                    getDynamicSidebar()
+                ]);
+
                 if (Array.isArray(modules)) {
                     setInstalledModules(new Set(modules.map((m: any) => m.code)));
                 }
+
+                if (Array.isArray(sidebarData)) {
+                    // Convert icon strings to Components
+                    const parsed = sidebarData.map(item => ({
+                        ...item,
+                        icon: getIcon(item.icon),
+                        children: item.children?.map((c: any) => ({
+                            ...c,
+                            icon: c.icon ? getIcon(c.icon) : undefined
+                        }))
+                    }));
+                    setDynamicItems(parsed);
+                }
             } catch (e) {
-                console.error("Failed to fetch sidebar modules", e);
+                console.error("Failed to fetch sidebar data", e);
             }
         }
-        fetchModules();
+        fetchData();
     }, []);
 
-    const filteredItems = MENU_ITEMS.filter(item => {
+    // Merge hardcoded core with dynamic
+    const allItems = [...MENU_ITEMS, ...dynamicItems];
+
+    const filteredItems = allItems.filter(item => {
         // 1. Filter by SaaS Panel visibility logic
         if (!isSaas && item.title === 'SaaS Panel') return false;
 
