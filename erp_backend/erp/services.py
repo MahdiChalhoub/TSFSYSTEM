@@ -10,8 +10,7 @@ import math
 class ProvisioningService:
     @staticmethod
     def provision_organization(name, slug):
-        from .models import Organization, Site, Warehouse
-        from apps.finance.models import ChartOfAccount, FiscalYear, FiscalPeriod
+        from .models import Organization, Site, Warehouse, ChartOfAccount, FiscalYear, FiscalPeriod
         """
         Creates a new organization and a FULL operational skeleton.
         """
