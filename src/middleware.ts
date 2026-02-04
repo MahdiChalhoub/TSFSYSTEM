@@ -27,12 +27,26 @@ export default async function middleware(req: NextRequest) {
     // IP Address or Localhost handling for Root
     const isLocalhost = hostname.includes("localhost") || hostname.includes("127.0.0.1") || hostname.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/);
     const isVercel = hostname.includes("vercel.app"); // Fallback for previews
+    const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "";
+    const isRootDomain = hostname === rootDomain || hostname === `www.${rootDomain}`;
+    const isSaaSSubdomain = hostname === `saas.${rootDomain}`;
 
-    // ROOT DOMAIN (e.g. tsfcloud.com or just IP)
-    // If accessing via IP directly in production, treat as LANDING
-    if (isLocalhost || isVercel || hostname === process.env.NEXT_PUBLIC_ROOT_DOMAIN) {
+    // ROOT / SAAS PLATFORM LOGIC
+    if (isLocalhost || isVercel || isRootDomain || isSaaSSubdomain) {
 
-        // Special case: /saas is the Master Panel
+        // If on saas. domain, everything is an admin/saas route
+        if (isSaaSSubdomain) {
+            // Special handling for login
+            if (url.pathname === '/login' || url.pathname === '/') {
+                return NextResponse.rewrite(new URL(`/saas/login`, req.url));
+            }
+            // Standard paths go to /admin/saas/...
+            if (!url.pathname.startsWith('/admin') && !url.pathname.startsWith('/saas')) {
+                return NextResponse.rewrite(new URL(`/admin/saas${path}`, req.url));
+            }
+        }
+
+        // Special case: /saas is the Master Panel on root/IP
         if (url.pathname.startsWith('/saas') && !url.pathname.startsWith('/saas/login')) {
             return NextResponse.rewrite(new URL(`/admin${path}`, req.url));
         }
@@ -41,7 +55,7 @@ export default async function middleware(req: NextRequest) {
         const isAppRoute = url.pathname.startsWith('/login')
             || url.pathname.startsWith('/register')
             || url.pathname.startsWith('/admin')
-            || url.pathname === '/saas/login';
+            || url.pathname.startsWith('/saas');
 
         if (isAppRoute) {
             return NextResponse.next();
