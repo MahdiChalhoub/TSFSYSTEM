@@ -6,7 +6,7 @@ import clsx from 'clsx';
 import React, { useState, useEffect, useRef } from 'react';
 
 export function TabNavigator() {
-    const { openTabs, activeTab, closeTab, openTab } = useAdmin();
+    const { openTabs, activeTab, closeTab, openTab, clearTabs } = useAdmin();
     const containerRef = useRef<HTMLDivElement>(null);
     const [visibleCount, setVisibleCount] = useState(openTabs.length);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -76,8 +76,14 @@ export function TabNavigator() {
 
                     {isMenuOpen && (
                         <div className="absolute top-full right-0 mt-3 w-72 bg-white/98 backdrop-blur-xl border border-gray-200/60 rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] z-[100] py-2 animate-in fade-in zoom-in-95 duration-200 origin-top-right ring-1 ring-black/5">
-                            <div className="px-5 py-2.5 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 mb-1">
-                                Workspace Hub
+                            <div className="px-5 py-2.5 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 mb-1 flex justify-between items-center">
+                                <span>Workspace Hub</span>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); clearTabs(); setIsMenuOpen(false); }}
+                                    className="text-red-500 hover:text-red-700 hover:underline transition-colors lowercase font-bold"
+                                >
+                                    Clear All
+                                </button>
                             </div>
                             <div className="max-h-[340px] overflow-y-auto custom-scrollbar px-2">
                                 {hiddenTabs.map(tab => (
@@ -110,6 +116,16 @@ export function TabNavigator() {
                         </div>
                     )}
                 </div>
+            )}
+
+            {/* If no hidden tabs, show a simple clear button if there are multiple tabs */}
+            {hiddenTabs.length === 0 && openTabs.length > 1 && (
+                <button
+                    onClick={clearTabs}
+                    className="pb-3.5 ml-4 text-[10px] font-black text-gray-400 hover:text-red-500 uppercase tracking-widest transition-colors"
+                >
+                    Clear All
+                </button>
             )}
         </div>
     );
