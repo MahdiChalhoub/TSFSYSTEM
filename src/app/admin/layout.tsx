@@ -30,7 +30,11 @@ export default async function AdminLayout({
     const parts = hostname.split('.');
 
     let subdomain = "";
-    if (hostname.includes("localhost")) {
+    const isIp = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?::[0-9]+)?$/.test(hostname);
+
+    if (isIp) {
+        subdomain = ""; // IP is always root/saas context
+    } else if (hostname.includes("localhost")) {
         if (parts.length > 1) subdomain = parts[0];
     } else {
         if (parts.length > 2) subdomain = parts[0];

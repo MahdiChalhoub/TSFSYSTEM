@@ -14,7 +14,11 @@ export async function getTenantContext() {
     const parts = hostname.split('.');
 
     let subdomain = "";
-    if (hostname.includes("localhost")) {
+    const isIp = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?::[0-9]+)?$/.test(hostname);
+
+    if (isIp) {
+        subdomain = "";
+    } else if (hostname.includes("localhost")) {
         if (parts.length > 1) subdomain = parts[0];
     } else {
         // Production: expect xxx.domain.com (3 parts or more)
