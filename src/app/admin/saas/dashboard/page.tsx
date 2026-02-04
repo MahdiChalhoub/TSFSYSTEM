@@ -26,30 +26,30 @@ export default async function SaasMasterDashboard() {
     ];
 
     return (
-        <div className="p-10 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="space-y-6 md:space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Header Section */}
-            <div className="flex justify-between items-end">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 md:gap-4">
                 <div className="space-y-2">
                     <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-[0.2em]">
                         <ShieldCheck size={14} /> Platform Control Center
                     </div>
-                    <h1 className="text-5xl font-black text-white tracking-tight flex items-center gap-4">
+                    <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight flex items-center gap-4">
                         SaaS Dashboard
                     </h1>
-                    <p className="text-gray-400 font-medium text-lg">Infrastructure & Tenant Management Engine</p>
+                    <p className="text-gray-400 font-medium text-sm md:text-lg italic">Infrastructure & Tenant Management Engine</p>
                 </div>
-                <div className="flex gap-4">
+                <div className="flex flex-wrap gap-2 md:gap-4">
                     <Link href="/admin/saas/updates">
-                        <Button variant="outline" className="border-indigo-500/20 bg-indigo-500/5 hover:bg-indigo-500/10 text-indigo-400 rounded-2xl px-6 py-6 font-bold flex gap-2 transition-all">
-                            <Zap size={18} fill="currentColor" /> System Updates
+                        <Button variant="outline" className="border-indigo-500/20 bg-indigo-500/5 hover:bg-indigo-500/10 text-indigo-400 rounded-2xl px-4 md:px-6 py-4 md:py-6 font-bold flex gap-2 transition-all text-xs md:text-sm">
+                            <Zap size={16} fill="currentColor" /> Updates
                         </Button>
                     </Link>
-                    <Button variant="outline" className="border-gray-800 bg-gray-900/50 hover:bg-gray-800 text-white rounded-2xl px-6 py-6 font-bold flex gap-2">
-                        <Activity size={18} /> System Health
+                    <Button variant="outline" className="border-gray-800 bg-gray-900/50 hover:bg-gray-800 text-white rounded-2xl px-4 md:px-6 py-4 md:py-6 font-bold flex gap-2 text-xs md:text-sm">
+                        <Activity size={16} /> Health
                     </Button>
                     <Link href="/admin/saas/organizations">
-                        <Button className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl px-8 py-6 font-bold shadow-xl shadow-emerald-900/40 flex gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]">
-                            <Plus size={20} /> Provision New Instance
+                        <Button className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl px-6 md:px-8 py-4 md:py-6 font-bold shadow-xl shadow-emerald-900/40 flex gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] text-xs md:text-sm">
+                            <Plus size={18} /> Provision
                         </Button>
                     </Link>
                 </div>

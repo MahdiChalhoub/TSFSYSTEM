@@ -12,14 +12,14 @@ export default function DynamicModulePage() {
     // For now, we show a professional fallback that works for ALL modules instantly.
 
     return (
-        <div className="p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-[2rem] bg-gradient-to-br from-indigo-500 to-purple-700 flex items-center justify-center shadow-xl text-white">
-                    <Box size={32} />
+        <div className="space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div className="w-12 h-12 md:w-16 md:h-16 rounded-[1.5rem] md:rounded-[2rem] bg-gradient-to-br from-indigo-500 to-purple-700 flex items-center justify-center shadow-xl text-white shrink-0">
+                    <Box size={24} className="md:w-8 md:h-8" />
                 </div>
                 <div>
-                    <h2 className="text-4xl font-black text-white tracking-tight capitalize">{code.replace(/_/g, ' ')} Dashboard</h2>
-                    <p className="text-gray-400 mt-2 font-medium">Platform verified module: <code className="text-emerald-400">{code}</code></p>
+                    <h2 className="text-2xl md:text-4xl font-black text-white tracking-tight capitalize">{code.replace(/_/g, ' ')} Dashboard</h2>
+                    <p className="text-xs md:text-sm text-gray-400 mt-1 md:mt-2 font-medium">Platform verified module: <code className="text-emerald-400">{code}</code></p>
                 </div>
             </div>
 

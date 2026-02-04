@@ -100,17 +100,17 @@ export default function OrganizationsPage() {
     }
 
     return (
-        <div className="p-8 space-y-8 animate-in fade-in duration-500">
-            <div className="flex justify-between items-end">
+        <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 md:gap-4">
                 <div>
-                    <h2 className="text-4xl font-black text-white tracking-tight">Organizations</h2>
-                    <p className="text-gray-400 mt-2 font-medium">Manage multi-tenant company instances</p>
+                    <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight">Organizations</h2>
+                    <p className="text-gray-400 mt-1 md:mt-2 font-medium text-sm md:text-base">Manage multi-tenant company instances</p>
                 </div>
                 <Dialog open={open} onOpenChange={setOpen}>
                     <DialogTrigger asChild>
-                        <Button className="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-6 rounded-2xl flex gap-2 font-bold shadow-lg shadow-emerald-900/20 transition-all hover:scale-[1.02]">
-                            <Plus size={20} />
-                            Register New Organization
+                        <Button className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white px-4 md:px-6 py-4 md:py-6 rounded-2xl flex gap-2 font-bold shadow-lg shadow-emerald-900/20 transition-all hover:scale-[1.02] text-xs md:text-sm">
+                            <Plus size={18} />
+                            Register Instance
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="bg-[#0F172A] border-gray-800 text-white rounded-[2rem] max-w-md">
