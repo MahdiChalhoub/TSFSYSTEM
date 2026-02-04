@@ -130,6 +130,17 @@ const MENU_ITEMS = [
         ]
     },
     {
+        title: 'SaaS Control',
+        icon: ShieldCheck,
+        visibility: 'saas',
+        children: [
+            { title: 'SaaS Dashboard', path: '/saas/dashboard' },
+            { title: 'Organizations', path: '/saas/organizations' },
+            { title: 'Global Registry', path: '/saas/modules' },
+            { title: 'Kernel Updates', path: '/saas/updates' },
+        ]
+    },
+    {
         title: 'System Settings',
         icon: Settings,
         module: 'core',
