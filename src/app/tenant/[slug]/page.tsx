@@ -1,5 +1,6 @@
 import { getOrganizationBySlug, getPublicProducts } from "./actions"
 import { notFound } from "next/navigation"
+import { headers } from "next/headers"
 import { ShieldCheck, Lock, ArrowRight, Building2, Globe, Command, Sparkles, Activity, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -8,7 +9,8 @@ import { PLATFORM_CONFIG, getDynamicBranding } from "@/lib/saas_config"
 
 export default async function TenantWelcomePage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params
-    const branding = getDynamicBranding();
+    const host = (await headers()).get('host') || undefined;
+    const branding = getDynamicBranding(host);
     const org = await getOrganizationBySlug(slug)
     const products = await getPublicProducts(slug)
 

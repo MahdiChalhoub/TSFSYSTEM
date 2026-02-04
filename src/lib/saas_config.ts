@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+
 export const PLATFORM_CONFIG = {
     name: "Enterprise ERP",
     tagline: "The Unified Business Orchestration Engine",
@@ -10,12 +12,17 @@ export const PLATFORM_CONFIG = {
 
 /**
  * Centrally manages dynamic suffix and domain detection for white-labeling.
+ * @param host Optional host override (primarily for server components)
  */
-export const getDynamicBranding = () => {
-    if (typeof window === 'undefined') return { suffix: PLATFORM_CONFIG.suffix, domain: PLATFORM_CONFIG.domain };
+export const getDynamicBranding = (host?: string) => {
+    // If no host provided and we are on the server, use default config
+    if (!host && typeof window === 'undefined') {
+        return { suffix: PLATFORM_CONFIG.suffix, domain: PLATFORM_CONFIG.domain, isLocal: false };
+    }
 
-    const host = window.location.host;
-    const isLocal = host.includes('localhost');
+    // Use window host if on client and no host provided
+    const currentHost = host || (typeof window !== 'undefined' ? window.location.host : PLATFORM_CONFIG.domain);
+    const isLocal = currentHost.includes('localhost');
 
     return {
         suffix: isLocal ? '.localhost' : PLATFORM_CONFIG.suffix,
@@ -23,3 +30,25 @@ export const getDynamicBranding = () => {
         isLocal
     };
 };
+
+/**
+ * Hydration-safe hook for client components.
+ * Prevents "text content didn't match" errors by waiting for mount.
+ */
+export function useDynamicBranding() {
+    const [branding, setBranding] = useState(() => getDynamicBranding()); // Initial sync call for server-passable defaults
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+        setBranding(getDynamicBranding());
+    }, []);
+
+    // During hydration (unmounted), we return the default config to match the server's initial render.
+    // After mounting, we return the actual detected environment branding.
+    if (!mounted) {
+        return { suffix: PLATFORM_CONFIG.suffix, domain: PLATFORM_CONFIG.domain, isLocal: false };
+    }
+
+    return branding;
+}

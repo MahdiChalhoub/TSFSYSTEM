@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { Building, ChevronDown, Check, DoorOpen, ExternalLink } from 'lucide-react';
 import clsx from 'clsx';
-import { PLATFORM_CONFIG, getDynamicBranding } from '@/lib/saas_config';
+import { PLATFORM_CONFIG, useDynamicBranding } from '@/lib/saas_config';
 
 export function TenantSwitcher({ organizations, forcedSlug, user }: { organizations: any[], forcedSlug?: string, user?: any }) {
     const [isOpen, setIsOpen] = useState(false);
@@ -12,7 +12,7 @@ export function TenantSwitcher({ organizations, forcedSlug, user }: { organizati
     // Helper to get current subdomain/slug
     const currentSlug = forcedSlug || (typeof window !== 'undefined' ? window.location.hostname.split('.')[0] : '');
     const activeOrg = organizations.find(o => o.slug === currentSlug);
-    const branding = getDynamicBranding();
+    const branding = useDynamicBranding();
 
     // Only show Master Panel to authorized SaaS Staff (Superusers)
     // We allow Superusers to access the Master Panel even if they are currently inside a specific tenant context.
