@@ -10,7 +10,8 @@ import math
 class ProvisioningService:
     @staticmethod
     def provision_organization(name, slug):
-        from .models import Organization, Site, ChartOfAccount, FiscalYear, FiscalPeriod, Warehouse
+        from .models import Organization, Site, Warehouse
+        from apps.finance.models import ChartOfAccount, FiscalYear, FiscalPeriod
         """
         Creates a new organization and a FULL operational skeleton.
         """
@@ -254,6 +255,7 @@ class InventoryService:
             inv_acc = rules.get('sales', {}).get('inventory')
             susp_acc = rules.get('suspense', {}).get('reception')
             if inv_acc and susp_acc:
+                from apps.finance.services import LedgerService
                 LedgerService.create_journal_entry(organization=organization, transaction_date=timezone.now(), description=f"Stock Reception: {product.name}", reference=reference, status='POSTED', site_id=warehouse.site_id, lines=[
                     {"account_id": inv_acc, "debit": inbound_value, "credit": Decimal('0')},
                     {"account_id": susp_acc, "debit": Decimal('0'), "credit": inbound_value}
@@ -303,7 +305,7 @@ class InventoryService:
 class LedgerService:
     @staticmethod
     def create_journal_entry(organization, transaction_date, description, lines, reference=None, status='DRAFT', scope='OFFICIAL', site_id=None):
-        from .models import FiscalPeriod, JournalEntry, JournalEntryLine
+        from apps.finance.models import FiscalPeriod, JournalEntry, JournalEntryLine
         total_debit = sum((Decimal(str(l['debit'])) for l in lines), Decimal('0'))
         total_credit = sum((Decimal(str(l['credit'])) for l in lines), Decimal('0'))
         if abs(total_debit - total_credit) > Decimal('0.001'): raise ValidationError("Out of Balance")
@@ -317,7 +319,7 @@ class LedgerService:
 
     @staticmethod
     def create_linked_account(organization, name, type, sub_type, parent_id):
-        from .models import ChartOfAccount
+        from apps.finance.models import ChartOfAccount
         parent = ChartOfAccount.objects.get(id=parent_id)
         count = ChartOfAccount.objects.filter(parent=parent).count()
         code = f"{parent.code}-{(count + 1):04d}"
@@ -344,7 +346,7 @@ class LedgerService:
 
     @staticmethod
     def apply_coa_template(organization, template_key, reset=False):
-        from .models import ChartOfAccount, JournalEntry
+        from apps.finance.models import ChartOfAccount, JournalEntry
         from .coa_templates import TEMPLATES
         from .services import ConfigurationService
 
@@ -354,7 +356,7 @@ class LedgerService:
 
         with transaction.atomic():
             if reset:
-                from .models import FinancialAccount
+                from apps.finance.models import FinancialAccount
                 if JournalEntry.objects.filter(organization=organization).exists():
                     raise ValidationError("Cannot reset Chart of Accounts: Transactions (Journal Entries) already exist. Use the Migration Tool instead.")
                 if FinancialAccount.objects.filter(organization=organization).exists():
@@ -395,7 +397,7 @@ class LedgerService:
 
     @staticmethod
     def migrate_coa(organization, mappings, description):
-        from .models import ChartOfAccount, JournalEntry, JournalEntryLine, FiscalYear, FiscalPeriod
+        from apps.finance.models import ChartOfAccount, JournalEntry, JournalEntryLine, FiscalYear, FiscalPeriod
         from decimal import Decimal
         import uuid
         from django.utils import timezone
@@ -482,7 +484,7 @@ class LedgerService:
 
     @staticmethod
     def get_chart_of_accounts(organization, scope='OFFICIAL', include_inactive=False):
-        from .models import ChartOfAccount, JournalEntryLine
+        from apps.finance.models import ChartOfAccount, JournalEntryLine
         qs = ChartOfAccount.objects.filter(organization=organization).order_by('code')
         if not include_inactive:
             qs = qs.filter(is_active=True)
@@ -517,7 +519,7 @@ class LedgerService:
 
     @staticmethod
     def get_trial_balance(organization, as_of_date=None, scope='INTERNAL'):
-        from .models import ChartOfAccount, JournalEntryLine
+        from apps.finance.models import ChartOfAccount, JournalEntryLine
         accounts = ChartOfAccount.objects.filter(organization=organization, is_active=True).order_by('code')
         lines_qs = JournalEntryLine.objects.filter(organization=organization, journal_entry__status='POSTED')
         if as_of_date: lines_qs = lines_qs.filter(journal_entry__transaction_date__lte=as_of_date)
@@ -561,7 +563,7 @@ class LedgerService:
 class FinancialAccountService:
     @staticmethod
     def create_account(organization, name, type, currency, site_id=None):
-        from .models import ChartOfAccount, FinancialAccount
+        from apps.finance.models import ChartOfAccount, FinancialAccount
         parent = ChartOfAccount.objects.filter(organization=organization, sub_type=type).first()
         if not parent: raise ValidationError(f"No parent for {type}")
         with transaction.atomic():
@@ -577,7 +579,7 @@ class FinancialAccountService:
 class PurchaseService:
     @staticmethod
     def authorize_po(organization, order_id):
-        from .models import Order
+        from erp.models import Order
         with transaction.atomic():
             order = Order.objects.get(id=order_id, organization=organization, type='PURCHASE')
             if order.status != 'DRAFT':
@@ -588,7 +590,7 @@ class PurchaseService:
 
     @staticmethod
     def receive_po(organization, order_id, warehouse_id, is_tax_recoverable=True):
-        from .models import Order, Warehouse
+        from erp.models import Order, Warehouse
         """
         Processes physical reception of all items in the PO.
         Updates stock and creates Accrued Reception ledger entries.
@@ -617,7 +619,8 @@ class PurchaseService:
 
     @staticmethod
     def quick_purchase(organization, supplier_id, warehouse_id, site_id, scope, invoice_price_type, vat_recoverable, lines, notes=None, ref_code=None, user=None):
-        from .models import Order, OrderLine, Product, Contact, ChartOfAccount, StockBatch, Inventory
+        from erp.models import Order, OrderLine, Product, Contact, StockBatch, Inventory
+        from apps.finance.models import ChartOfAccount
         from decimal import Decimal
 
         with transaction.atomic():
@@ -839,7 +842,7 @@ class PurchaseService:
 
     @staticmethod
     def invoice_po(organization, order_id, invoice_number, invoice_date=None):
-        from .models import Order
+        from erp.models import Order
         """
         Converts the 'Accrued Reception' liability into a formal 'Accounts Payable'.
         """
@@ -890,7 +893,7 @@ class PurchaseService:
 class POSService:
     @staticmethod
     def checkout(organization, user, warehouse, payment_account_id, items):
-        from .models import Order, OrderLine, Product
+        from erp.models import Order, OrderLine, Product
         """
         items: list of {'product_id': id, 'quantity': q, 'unit_price': p}
         """
@@ -959,7 +962,7 @@ class POSService:
                 raise ValidationError("Missing sales posting rules mapping.")
             
             # Resolve Payment Ledger ID
-            from .models import FinancialAccount
+            from apps.finance.models import FinancialAccount
             fin_acc = FinancialAccount.objects.filter(id=payment_account_id, organization=organization).first()
             actual_payment_acc_id = fin_acc.ledger_account_id if fin_acc else payment_account_id
 
@@ -986,7 +989,7 @@ class POSService:
 class SequenceService:
     @staticmethod
     def get_next_number(organization, type):
-        from .models import TransactionSequence
+        from erp.models import TransactionSequence
         from django.db.models import F
         with transaction.atomic():
             seq, created = TransactionSequence.objects.get_or_create(
@@ -1026,7 +1029,7 @@ class BarcodeService:
 
     @staticmethod
     def generate_barcode(organization):
-        from .models import BarcodeSettings, Product
+        from erp.models import BarcodeSettings, Product
         with transaction.atomic():
             settings, created = BarcodeSettings.objects.get_or_create(
                 organization=organization,
@@ -1123,7 +1126,8 @@ class LoanService:
 
     @staticmethod
     def create_contract(organization, data):
-        from .models import Loan, LoanInstallment, Contact
+        from apps.finance.models import Loan, LoanInstallment
+        from erp.models import Contact
         """
         Creates a Loan and its Installments in DRAFT status.
         Uses SequenceService for contract number.
@@ -1171,7 +1175,8 @@ class LoanService:
 
     @staticmethod
     def disburse_loan(organization, loan_id, transaction_ref=None, account_id=None):
-        from .models import Loan, FinancialEvent, FinancialAccount
+        from apps.finance.models import Loan, FinancialAccount
+        from erp.services import FinancialEventService # This might need careful import
         with transaction.atomic():
             loan = Loan.objects.get(id=loan_id, organization=organization)
             if loan.status != 'DRAFT':
@@ -1203,7 +1208,7 @@ class LoanService:
 
     @staticmethod
     def process_repayment(organization, loan_id, amount, account_id, reference=None):
-        from .models import Loan, LoanInstallment, FinancialEvent
+        from apps.finance.models import Loan, LoanInstallment, FinancialEvent
         with transaction.atomic():
             loan = Loan.objects.get(id=loan_id, organization=organization)
             if loan.status != 'ACTIVE':
@@ -1247,7 +1252,8 @@ class LoanService:
 class FinancialEventService:
     @staticmethod
     def create_event(organization, event_type, amount, date, contact_id, reference=None, notes=None, loan_id=None, account_id=None):
-        from .models import FinancialEvent, Contact
+        from apps.finance.models import FinancialEvent
+        from erp.models import Contact
         with transaction.atomic():
             contact = Contact.objects.get(id=contact_id, organization=organization)
             
@@ -1272,7 +1278,7 @@ class FinancialEventService:
 
     @staticmethod
     def post_event(organization, event_id, account_id):
-        from .models import FinancialEvent, FinancialAccount
+        from apps.finance.models import FinancialEvent, FinancialAccount
         with transaction.atomic():
             event = FinancialEvent.objects.get(id=event_id, organization=organization)
             if event.status == 'SETTLED': return event
@@ -1323,7 +1329,7 @@ class FinancialEventService:
                 raise ValidationError(f"Accounting mapping failed for {event.event_type} (Dr:{debit_acc}, Cr:{credit_acc})")
 
             # 1. Create Transaction (Cash Move)
-            from .models import Transaction
+            from apps.finance.models import Transaction
             trx_type = 'IN' if debit_acc == actual_payment_acc_id else 'OUT'
             
             trx = Transaction.objects.create(
@@ -1364,7 +1370,7 @@ class TaxService:
         Generates the 'Virtual Reclassification' Report for Mixed/Regular modes.
         Reconstructs the tax reality from Invoice Metadata.
         """
-        from .models import OrderLine, Order
+        from erp.models import OrderLine, Order
         from django.db.models import Sum
         
         settings = ConfigurationService.get_global_settings(organization)

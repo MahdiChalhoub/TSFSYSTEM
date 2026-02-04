@@ -1,10 +1,15 @@
 from rest_framework import serializers
 from .models import (
-    Organization, Site, FinancialAccount, FiscalYear, 
-    FiscalPeriod, JournalEntry, JournalEntryLine, ChartOfAccount,
+    Organization, Site, 
     Product, Warehouse, Inventory, InventoryMovement, Unit,
     Brand, Category, Parfum, ProductGroup, Country,
-    Contact, Employee, Role, TransactionSequence, BarcodeSettings, Loan, LoanInstallment, FinancialEvent, Transaction, User
+    Contact, Employee, Role, TransactionSequence, BarcodeSettings, User
+)
+from apps.finance.serializers import (
+    FinancialAccountSerializer, FiscalPeriodSerializer, FiscalYearSerializer,
+    ChartOfAccountSerializer, JournalEntryLineSerializer, JournalEntrySerializer,
+    LoanInstallmentSerializer, LoanSerializer, FinancialEventSerializer,
+    TransactionSerializer
 )
 
 class OrganizationSerializer(serializers.ModelSerializer):
@@ -38,8 +43,6 @@ class CategorySerializer(serializers.ModelSerializer):
         return obj.products.count() if hasattr(obj, 'products') else obj.product_set.count()
 
     def get_children(self, obj):
-        # Only return children if they exist to avoid recursion issues if not careful, 
-        # but DRF can handle nested if we use the same serializer.
         children = Category.objects.filter(parent=obj)
         return CategorySerializer(children, many=True).data
 
@@ -78,9 +81,6 @@ class CountrySerializer(serializers.ModelSerializer):
 
 
 class ProductCreateSerializer(serializers.Serializer):
-    """
-    Serializer to handle complex product creation with auto-grouping.
-    """
     name = serializers.CharField(max_length=255)
     description = serializers.CharField(required=False, allow_blank=True)
     sku = serializers.CharField(max_length=100)
@@ -146,56 +146,10 @@ class UserValueSerializer(serializers.ModelSerializer):
         model = User
         fields = ('id', 'username', 'email', 'name')
 
-class FinancialAccountSerializer(serializers.ModelSerializer):
-    site_name = serializers.ReadOnlyField(source='site.name')
-    ledger_code = serializers.ReadOnlyField(source='ledger_account.code')
-    assignedUsers = UserValueSerializer(source='assigned_users', many=True, read_only=True)
-
-    class Meta:
-        model = FinancialAccount
-        fields = '__all__'
-        read_only_fields = ('ledger_account', 'organization')
-
-class FiscalPeriodSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = FiscalPeriod
-        fields = '__all__'
-
-class FiscalYearSerializer(serializers.ModelSerializer):
-    periods = FiscalPeriodSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = FiscalYear
-        fields = '__all__'
-        read_only_fields = ('organization',)
-
-class ChartOfAccountSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ChartOfAccount
-        fields = '__all__'
-        read_only_fields = ('organization',)
-
-class JournalEntryLineSerializer(serializers.ModelSerializer):
-    account_name = serializers.ReadOnlyField(source='account.name')
-    account_code = serializers.ReadOnlyField(source='account.code')
-
-    class Meta:
-        model = JournalEntryLine
-        fields = '__all__'
-
-class JournalEntrySerializer(serializers.ModelSerializer):
-    lines = JournalEntryLineSerializer(many=True, read_only=True)
-    site_name = serializers.ReadOnlyField(source='site.name')
-
-    class Meta:
-        model = JournalEntry
-        fields = '__all__'
-
 class UnitSerializer(serializers.ModelSerializer):
     product_count = serializers.SerializerMethodField()
 
     def get_product_count(self, obj):
-        # Handle 'product_set' reverse relation
         return getattr(obj, 'product_set', []).count() if hasattr(obj, 'product_set') else 0
 
     class Meta:
@@ -240,7 +194,6 @@ class RoleSerializer(serializers.ModelSerializer):
 class EmployeeSerializer(serializers.ModelSerializer):
     home_site = SiteSerializer(read_only=True)
     linked_account = FinancialAccountSerializer(read_only=True)
-    # Basic user info
     user_email = serializers.ReadOnlyField(source='user.email')
     user_id = serializers.ReadOnlyField(source='user.id')
 
@@ -258,9 +211,7 @@ class BrandDetailSerializer(serializers.ModelSerializer):
         model = Brand
         fields = '__all__'
 
-
     def get_products(self, obj):
-        # Standalone products (no group)
         standalone = obj.product_set.filter(product_group__isnull=True)
         return ProductSerializer(standalone, many=True).data
 
@@ -272,32 +223,4 @@ class TransactionSequenceSerializer(serializers.ModelSerializer):
 class BarcodeSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = BarcodeSettings
-        fields = '__all__'
-
-class LoanInstallmentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = LoanInstallment
-        fields = '__all__'
-
-class LoanSerializer(serializers.ModelSerializer):
-    installments = LoanInstallmentSerializer(many=True, read_only=True)
-    contact_name = serializers.ReadOnlyField(source='contact.name')
-
-    class Meta:
-        model = Loan
-        fields = '__all__'
-
-class FinancialEventSerializer(serializers.ModelSerializer):
-    contact_name = serializers.ReadOnlyField(source='contact.name')
-    transaction_ref = serializers.ReadOnlyField(source='transaction.reference_id')
-    journal_ref = serializers.ReadOnlyField(source='journal_entry.reference')
-
-    class Meta:
-        model = FinancialEvent
-        fields = '__all__'
-
-
-class TransactionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Transaction
         fields = '__all__'
