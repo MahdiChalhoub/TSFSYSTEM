@@ -341,8 +341,8 @@ class ModuleManager:
         """
         Revokes access to a specific module from all organizations.
         """
-        if module_name == 'core':
-            raise ValidationError("Cannot revoke access to Core module.")
+        if module_name in ['core', 'coreplatform']:
+            raise ValidationError(f"Cannot revoke access to system-critical module: {module_name}")
             
         return OrganizationModule.objects.filter(module_name=module_name).update(is_enabled=False)
 
@@ -352,8 +352,8 @@ class ModuleManager:
         """
         Completely removes a module from the registry and filesystem.
         """
-        if module_name == 'core':
-            raise ValidationError("Cannot delete the Core module.")
+        if module_name in ['core', 'coreplatform']:
+            raise ValidationError(f"Cannot delete system-critical module: {module_name}")
 
         # 1. Check if other modules depend on this
         dependents = []
