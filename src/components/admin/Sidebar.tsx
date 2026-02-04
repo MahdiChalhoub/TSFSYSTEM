@@ -17,7 +17,8 @@ import {
     Layers,
     BarChart3,
     Zap,
-    Package
+    Package,
+    CreditCard
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
@@ -40,7 +41,8 @@ const ICON_MAP: Record<string, any> = {
     Layers,
     BarChart3,
     ShoppingCart,
-    Package
+    Package,
+    CreditCard
 };
 
 function getIcon(name: string) {
@@ -52,7 +54,7 @@ const MENU_ITEMS = [
     {
         title: 'Dashboard',
         icon: LayoutDashboard,
-        path: '/admin',
+        path: '/saas/dashboard',
         module: 'core'
     },
     {
@@ -60,15 +62,15 @@ const MENU_ITEMS = [
         icon: ShoppingBag,
         module: 'pos',
         children: [
-            { title: 'POS Terminal', path: '/admin/sales' },
+            { title: 'POS Terminal', path: '/saas/sales' },
             {
                 title: 'Purchase Registry',
                 children: [
-                    { title: 'Active Invoices', path: '/admin/purchases' },
-                    { title: 'Archived POs', path: '/admin/purchases/archived' },
+                    { title: 'Active Invoices', path: '/saas/purchases' },
+                    { title: 'Archived POs', path: '/saas/purchases/archived' },
                 ]
             },
-            { title: 'New PO Invoice', path: '/admin/purchases/new' },
+            { title: 'New PO Invoice', path: '/saas/purchases/new' },
         ]
     },
     {
@@ -76,20 +78,20 @@ const MENU_ITEMS = [
         icon: Box,
         module: 'inventory',
         children: [
-            { title: 'Product Master', path: '/admin/products' },
-            { title: 'Product Groups', path: '/admin/products?view=grouped' },
-            { title: 'New Product Group', path: '/admin/products/create-group' },
-            { title: 'Barcode Configuration', path: '/admin/inventory/barcode', module: 'inventory' },
-            { title: 'Warehouses & Zones', path: '/admin/inventory/warehouses' },
-            { title: 'Stock Adjustments', path: '/admin/inventory/adjustments' },
-            { title: 'Global Inventory', path: '/admin/inventory/global' },
-            { title: 'Categories', path: '/admin/inventory/categories' },
-            { title: 'Categories Audit', path: '/admin/inventory/categories/maintenance' },
-            { title: 'Units & Packaging', path: '/admin/inventory/units' },
-            { title: 'Brands', path: '/admin/inventory/brands' },
-            { title: 'Countries', path: '/admin/inventory/countries' },
-            { title: 'Attributes', path: '/admin/inventory/attributes' },
-            { title: 'System Maintenance', path: '/admin/inventory/maintenance' },
+            { title: 'Product Master', path: '/saas/products' },
+            { title: 'Product Groups', path: '/saas/products?view=grouped' },
+            { title: 'New Product Group', path: '/saas/products/create-group' },
+            { title: 'Barcode Configuration', path: '/saas/inventory/barcode', module: 'inventory' },
+            { title: 'Warehouses & Zones', path: '/saas/inventory/warehouses' },
+            { title: 'Stock Adjustments', path: '/saas/inventory/adjustments' },
+            { title: 'Global Inventory', path: '/saas/inventory/global' },
+            { title: 'Categories', path: '/saas/inventory/categories' },
+            { title: 'Categories Audit', path: '/saas/inventory/categories/maintenance' },
+            { title: 'Units & Packaging', path: '/saas/inventory/units' },
+            { title: 'Brands', path: '/saas/inventory/brands' },
+            { title: 'Countries', path: '/saas/inventory/countries' },
+            { title: 'Attributes', path: '/saas/inventory/attributes' },
+            { title: 'System Maintenance', path: '/saas/inventory/maintenance' },
         ]
     },
     {
@@ -121,9 +123,9 @@ const MENU_ITEMS = [
         icon: Users,
         module: 'crm',
         children: [
-            { title: 'Contact Center', path: '/admin/crm/contacts' },
-            { title: 'Customer Loyalty', path: '/admin/crm/loyalty' },
-            { title: 'Supplier Portals', path: '/admin/crm/suppliers' },
+            { title: 'Contact Center', path: '/saas/crm/contacts' },
+            { title: 'Customer Loyalty', path: '/saas/crm/loyalty' },
+            { title: 'Supplier Portals', path: '/saas/crm/suppliers' },
         ]
     },
     {
@@ -131,10 +133,10 @@ const MENU_ITEMS = [
         icon: ShieldCheck,
         module: 'hr',
         children: [
-            { title: 'Employee Manager', path: '/admin/hr/employees' },
-            { title: 'Payroll & Accruals', path: '/admin/hr/payroll' },
-            { title: 'Enlistment Approvals', path: '/admin/users/approvals' },
-            { title: 'Access Control (Roles)', path: '/admin/hr/roles' },
+            { title: 'Employee Manager', path: '/saas/hr/employees' },
+            { title: 'Payroll & Accruals', path: '/saas/hr/payroll' },
+            { title: 'Enlistment Approvals', path: '/saas/users/approvals' },
+            { title: 'Access Control (Roles)', path: '/saas/hr/roles' },
         ]
     },
     {
@@ -148,6 +150,7 @@ const MENU_ITEMS = [
             { title: 'Instance Switcher', path: '/saas/switcher' },
             { title: 'Platform Health', path: '/saas/health' },
             { title: 'Kernel Updates', path: '/saas/updates' },
+            { title: 'Subscription Plans', path: '/saas/subscription-plans' },
         ]
     },
     {
@@ -155,7 +158,8 @@ const MENU_ITEMS = [
         icon: Settings,
         module: 'core',
         children: [
-            { title: 'Sites & Branches', path: '/admin/settings/sites' },
+            { title: 'Sites & Branches', path: '/saas/settings/sites' },
+            { title: 'Billing & Subscription', path: '/saas/subscription', icon: CreditCard },
         ]
     },
 ];
