@@ -53,7 +53,7 @@ export default async function AdminDashboard() {
                                             This is a blank slate. Head over to the Module Marketplace to install the capabilities you need.
                                         </p>
                                     </div>
-                                    <Link href="/admin/saas/modules" className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-black text-white rounded-xl font-medium transition-colors shadow-lg shadow-slate-900/10">
+                                    <Link href="/saas/modules" className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-black text-white rounded-xl font-medium transition-colors shadow-lg shadow-slate-900/10">
                                         <Plus size={18} />
                                         Install First Module
                                     </Link>

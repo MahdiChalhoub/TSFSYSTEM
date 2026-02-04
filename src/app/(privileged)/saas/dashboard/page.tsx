@@ -39,7 +39,7 @@ export default async function SaasMasterDashboard() {
                     <p className="text-gray-500 font-medium text-sm md:text-lg italic">Infrastructure & Tenant Management Engine</p>
                 </div>
                 <div className="flex flex-wrap gap-2 md:gap-4">
-                    <Link href="/admin/saas/updates">
+                    <Link href="/saas/updates">
                         <Button variant="outline" className="border-indigo-500/20 bg-indigo-500/5 hover:bg-indigo-500/10 text-indigo-400 rounded-2xl px-4 md:px-6 py-4 md:py-6 font-bold flex gap-2 transition-all text-xs md:text-sm">
                             <Zap size={16} fill="currentColor" /> Updates
                         </Button>
@@ -47,7 +47,7 @@ export default async function SaasMasterDashboard() {
                     <Button variant="outline" className="border-gray-200 bg-white hover:bg-gray-50 text-gray-600 rounded-2xl px-4 md:px-6 py-4 md:py-6 font-bold flex gap-2 text-xs md:text-sm shadow-sm">
                         <Activity size={16} /> Health
                     </Button>
-                    <Link href="/admin/saas/organizations">
+                    <Link href="/saas/organizations">
                         <Button className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl px-6 md:px-8 py-4 md:py-6 font-bold shadow-xl shadow-emerald-900/40 flex gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] text-xs md:text-sm">
                             <Plus size={18} /> Provision
                         </Button>
@@ -60,7 +60,7 @@ export default async function SaasMasterDashboard() {
                 {quickStats.map((stat, i) => {
                     if (stat.label.includes("Module")) {
                         return (
-                            <Link href="/admin/saas/modules" key={i} className="block group">
+                            <Link href="/saas/modules" key={i} className="block group">
                                 <Card className="bg-white border-gray-100 rounded-[2rem] overflow-hidden group hover:border-emerald-500/30 transition-all shadow-xl h-full cursor-pointer">
                                     <CardContent className="p-8 space-y-4">
                                         <div className={`p-4 bg-${stat.color}-500/10 rounded-2xl w-fit text-${stat.color}-400 group-hover:scale-110 transition-transform`}>
@@ -111,7 +111,7 @@ export default async function SaasMasterDashboard() {
                                 <CardTitle className="text-2xl font-black text-gray-900">Recent Deployments</CardTitle>
                                 <CardDescription className="text-gray-500 mt-1 font-medium italic">Latest business versions spun up</CardDescription>
                             </div>
-                            <Link href="/admin/saas/organizations">
+                            <Link href="/saas/organizations">
                                 <Button variant="ghost" className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 font-bold rounded-xl text-sm">
                                     View Full Console
                                 </Button>

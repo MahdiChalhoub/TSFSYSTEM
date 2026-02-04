@@ -35,20 +35,22 @@ export default async function middleware(req: NextRequest) {
     if (isLocalhost || isVercel || isRootDomain || isSaaSSubdomain) {
 
         // If on saas. domain, everything is an admin/saas route
+        // If on saas. domain, everything is an admin/saas route
         if (isSaaSSubdomain) {
             // Special handling for login
             if (url.pathname === '/login' || url.pathname === '/') {
                 return NextResponse.rewrite(new URL(`/saas/login`, req.url));
             }
-            // Standard paths go to /admin/saas/...
+            // Standard paths go to /saas/...
             if (!url.pathname.startsWith('/admin') && !url.pathname.startsWith('/saas')) {
-                return NextResponse.rewrite(new URL(`/admin/saas${path}`, req.url));
+                return NextResponse.rewrite(new URL(`/saas${path}`, req.url));
             }
         }
 
         // Special case: /saas is the Master Panel on root/IP
+        // No longer needs rewrite to /admin since /saas is top-level
         if (url.pathname.startsWith('/saas') && !url.pathname.startsWith('/saas/login')) {
-            return NextResponse.rewrite(new URL(`/admin${path}`, req.url));
+            return NextResponse.next();
         }
 
         // Default to Application or Landing

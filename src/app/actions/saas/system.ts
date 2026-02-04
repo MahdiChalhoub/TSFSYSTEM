@@ -16,7 +16,7 @@ export async function uploadKernelUpdate(formData: FormData) {
         method: 'POST',
         body: formData
     })
-    revalidatePath('/admin/saas/updates')
+    revalidatePath('/saas/updates')
     return res
 }
 

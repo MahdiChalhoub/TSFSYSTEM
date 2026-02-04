@@ -40,7 +40,7 @@ export async function syncModulesGlobal() {
         const data = await erpFetch('saas/modules/sync_global/', {
             method: 'POST'
         })
-        revalidatePath('/admin/saas/modules')
+        revalidatePath('/saas/modules')
         return data
     } catch (e: any) {
         return { error: e.message }
@@ -52,7 +52,7 @@ export async function installModuleGlobal(code: string) {
         const data = await erpFetch(`saas/modules/${code}/install_global/`, {
             method: 'POST'
         })
-        revalidatePath('/admin/saas/modules')
+        revalidatePath('/saas/modules')
         return data
     } catch (e: any) {
         return { error: e.message }
@@ -64,7 +64,7 @@ export async function uninstallModuleGlobal(code: string) {
         const data = await erpFetch(`saas/modules/${code}/uninstall_global/`, {
             method: 'POST'
         })
-        revalidatePath('/admin/saas/modules')
+        revalidatePath('/saas/modules')
         return data
     } catch (e: any) {
         return { error: e.message }
@@ -76,7 +76,7 @@ export async function deleteModule(code: string) {
         const data = await erpFetch(`saas/modules/${code}/delete_module/`, {
             method: 'POST'
         })
-        revalidatePath('/admin/saas/modules')
+        revalidatePath('/saas/modules')
         return data
     } catch (e: any) {
         return { error: e.message }
@@ -100,7 +100,7 @@ export async function rollbackModule(code: string, targetVersion: string) {
             method: 'POST',
             body: JSON.stringify({ target_version: targetVersion })
         })
-        revalidatePath('/admin/saas/modules')
+        revalidatePath('/saas/modules')
         return data
     } catch (e: any) {
         return { error: e.message }
@@ -138,7 +138,7 @@ export async function toggleOrgModule(orgId: string, moduleCode: string, action:
             method: 'POST',
             body: JSON.stringify({ module_code: moduleCode, action: action })
         })
-        revalidatePath('/admin/saas/organizations')
+        revalidatePath('/saas/organizations')
         return data
     } catch (e: any) {
         return { error: e.message }
@@ -151,7 +151,7 @@ export async function updateOrgModuleFeatures(orgId: string, moduleCode: string,
             method: 'POST',
             body: JSON.stringify({ module_code: moduleCode, features: features })
         })
-        revalidatePath('/admin/saas/organizations')
+        revalidatePath('/saas/organizations')
         return data
     } catch (e: any) {
         return { error: e.message }

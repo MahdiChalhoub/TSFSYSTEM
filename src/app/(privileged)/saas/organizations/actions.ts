@@ -28,8 +28,8 @@ export async function createOrganization(data: { name: string, slug: string }) {
             body: JSON.stringify(data)
         })
 
-        revalidatePath('/admin/saas/organizations')
-        revalidatePath('/admin/saas/dashboard')
+        revalidatePath('/saas/organizations')
+        revalidatePath('/saas/dashboard')
         return result
     } catch (error: any) {
         console.error("CRITICAL: Organization Provisioning Failed", error);
@@ -44,7 +44,7 @@ export async function toggleOrganizationStatus(id: string, currentStatus: boolea
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ is_active: !currentStatus })
         })
-        revalidatePath('/admin/saas/organizations')
+        revalidatePath('/saas/organizations')
     } catch (error) {
         console.error("Failed to toggle organization status:", error)
     }
