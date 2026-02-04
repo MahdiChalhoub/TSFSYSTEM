@@ -22,6 +22,19 @@ export async function getDynamicSidebar() {
     }
 }
 
+export async function getActiveModules() {
+    try {
+        const modules = await erpFetch('modules/')
+        if (Array.isArray(modules)) {
+            return modules.filter((m: any) => m.status === 'INSTALLED').map((m: any) => m.code)
+        }
+        return []
+    } catch (e) {
+        console.error("Failed to fetch active modules:", e)
+        return []
+    }
+}
+
 export async function syncModulesGlobal() {
     try {
         const data = await erpFetch('saas/modules/sync_global/', {

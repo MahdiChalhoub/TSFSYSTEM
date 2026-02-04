@@ -1,8 +1,7 @@
 import Link from 'next/link';
 import { Activity, ShoppingCart, Package, Plus, ChevronRight, Zap } from 'lucide-react';
-// import { getAdminDashboardStats } from '@/app/actions/finance/dashboard';
 import { getActiveWidgets, getActiveRecentActivity } from '@/lib/module-registry';
-// import { getOrgModules } from '@/app/actions/saas/modules';
+import { getActiveModules } from '@/app/actions/saas/modules';
 import { SafeModuleBoundary } from '@/components/SafeModuleBoundary';
 import { DashboardHeader } from '@/components/admin/DashboardHeader';
 
@@ -11,13 +10,10 @@ export default async function AdminDashboard() {
     // const statsData = await getAdminDashboardStats();
     const statsData = {}; // Blank state
 
-    // 2. Determine Installed Modules (Dynamic)
-    // [TEMPORARY] For this refactor, we simulate fetching installed modules
-    // In production, this comes from the database via `OrganizationModule`
-    // BLANC SYSTEM: No modules installed by default.
-    const installedModuleCodes: string[] = []; // TODO: Fetch dynamically
+    // 2. Determine Installed Modules (Truly Dynamic)
+    const installedModuleCodes = await getActiveModules();
 
-    // 3. Resolve Widgets
+    // 3. Resolve Widgets based on current registry
     const DynamicWidgets = getActiveWidgets(installedModuleCodes);
     const RecentActivityWidget = getActiveRecentActivity(installedModuleCodes);
 

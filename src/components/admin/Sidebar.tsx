@@ -137,18 +137,6 @@ const MENU_ITEMS = [
             { title: 'Sites & Branches', path: '/admin/settings/sites' },
         ]
     },
-    {
-        title: 'SaaS Panel',
-        icon: Briefcase,
-        module: 'core',
-        children: [
-            { title: 'Master Dashboard', path: '/admin/saas/dashboard' },
-            { title: 'Organizations', path: '/admin/saas/organizations' },
-            { title: 'Module Management', path: '/admin/saas/modules' },
-            { title: 'Instance Switcher', path: '/admin/saas/switcher' },
-            { title: 'Platform Health', path: '/admin/saas/health' },
-        ]
-    },
 ];
 
 export function Sidebar({ isSaas = false }: { isSaas?: boolean }) {
