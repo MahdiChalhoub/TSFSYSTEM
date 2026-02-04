@@ -111,15 +111,19 @@ export async function loginAction(prevState: any, formData: FormData) {
         })
 
         const token = responseData.token
+        const hStore = await import('next/headers');
+        const hList = await hStore.headers();
+        const isSecure = hList.get('x-forwarded-proto') === 'https';
+
         const cookieStore = await cookies()
         cookieStore.set('auth_token', token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
+            secure: isSecure,
             sameSite: 'lax',
             path: '/',
             maxAge: 60 * 60 * 24 * 7, // 7 days session for better DX
         })
-        console.log(`[AUTH_ACTION] Cookie set successfully for token: ${token.substring(0, 5)}...`);
+        console.log(`[AUTH_ACTION] Cookie set successfully (Secure: ${isSecure}) for token: ${token.substring(0, 5)}...`);
 
     } catch (error: any) {
         console.error('Login Tactical Error:', error)
