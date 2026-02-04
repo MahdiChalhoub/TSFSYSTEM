@@ -3,6 +3,7 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
+import { PLATFORM_CONFIG } from '@/lib/saas_config'
 
 // Original schema
 const LoginSchema = z.object({
@@ -130,7 +131,7 @@ export async function loginAction(prevState: any, formData: FormData) {
 
     } catch (error: any) {
         console.error('Login Tactical Error:', error)
-        let message = 'Vantage Uplink Failure'
+        let message = `${PLATFORM_CONFIG.name} Uplink Failure`
         try {
             const errData = JSON.parse(error.message)
             if (errData.non_field_errors) message = errData.non_field_errors[0]

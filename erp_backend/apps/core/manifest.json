@@ -1,8 +1,8 @@
 {
     "code": "core",
-    "name": "Core Platform",
+    "name": "Base Infrastructure",
     "version": "1.0.0",
-    "description": "Essential infrastructure, security, and tenant management for the TSFSYSTEM.",
+    "description": "Essential infrastructure, security, and tenant management services.",
     "dependencies": [],
     "required": true
 }
