@@ -5,12 +5,23 @@ import { getPlans, getPlanCategories, createPlan, createPlanCategory } from "./a
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Plus, Tag, Layers, Loader2 } from "lucide-react"
+import { Textarea } from "@/components/ui/textarea"
+import { Plus, Tag, Layers, Loader2, Check } from "lucide-react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
+
+const AVAILABLE_MODULES = [
+    { code: 'inventory', name: 'Inventory Management' },
+    { code: 'finance', name: 'Finance & Accounting' },
+    { code: 'pos', name: 'Point of Sale' },
+    { code: 'reports', name: 'Reports & Analytics' },
+    { code: 'hr', name: 'Human Resources' },
+    { code: 'crm', name: 'Customer Relations' },
+]
 
 export default function SubscriptionPlansPage() {
     const [plans, setPlans] = useState<any[]>([])
@@ -19,7 +30,12 @@ export default function SubscriptionPlansPage() {
 
     // New Plan Modal
     const [planOpen, setPlanOpen] = useState(false)
-    const [planForm, setPlanForm] = useState({ name: '', slug: '', monthly_price: '0', annual_price: '0', category: '' })
+    const [planForm, setPlanForm] = useState({
+        name: '', slug: '', monthly_price: '0', annual_price: '0', category: '',
+        limits: { max_users: '5', max_products: '1000', max_sites: '1', storage_gb: '5' },
+        modules: ['inventory'] as string[],
+        features: ''
+    })
     const [planSaving, setPlanSaving] = useState(false)
 
     // New Category Modal
@@ -52,23 +68,46 @@ export default function SubscriptionPlansPage() {
         }
         setPlanSaving(true)
         try {
+            const featuresList = planForm.features.split('\n').filter(f => f.trim())
             await createPlan({
                 name: planForm.name,
                 slug: planForm.slug,
                 monthly_price: parseFloat(planForm.monthly_price) || 0,
                 annual_price: parseFloat(planForm.annual_price) || 0,
                 category: parseInt(planForm.category),
-                is_active: true
+                is_active: true,
+                limits: {
+                    max_users: parseInt(planForm.limits.max_users) || 5,
+                    max_products: parseInt(planForm.limits.max_products) || 1000,
+                    max_sites: parseInt(planForm.limits.max_sites) || 1,
+                    storage_gb: parseInt(planForm.limits.storage_gb) || 5
+                },
+                modules: planForm.modules,
+                features: featuresList
             })
             toast.success("Plan created")
             setPlanOpen(false)
-            setPlanForm({ name: '', slug: '', monthly_price: '0', annual_price: '0', category: '' })
+            setPlanForm({
+                name: '', slug: '', monthly_price: '0', annual_price: '0', category: '',
+                limits: { max_users: '5', max_products: '1000', max_sites: '1', storage_gb: '5' },
+                modules: ['inventory'],
+                features: ''
+            })
             loadData()
         } catch (e: any) {
             toast.error(e.message || "Failed to create plan")
         } finally {
             setPlanSaving(false)
         }
+    }
+
+    function toggleModule(code: string) {
+        setPlanForm(f => ({
+            ...f,
+            modules: f.modules.includes(code)
+                ? f.modules.filter(m => m !== code)
+                : [...f.modules, code]
+        }))
     }
 
     async function handleCreateCategory() {
@@ -201,6 +240,74 @@ export default function SubscriptionPlansPage() {
                                             ))}
                                         </SelectContent>
                                     </Select>
+                                </div>
+
+                                {/* Limits Section */}
+                                <div className="border-t pt-4 mt-4">
+                                    <Label className="text-sm font-bold text-gray-700 mb-3 block">Usage Limits</Label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="space-y-1">
+                                            <Label className="text-xs text-gray-500">Max Users</Label>
+                                            <Input
+                                                type="number"
+                                                value={planForm.limits.max_users}
+                                                onChange={e => setPlanForm(f => ({ ...f, limits: { ...f.limits, max_users: e.target.value } }))}
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label className="text-xs text-gray-500">Max Products</Label>
+                                            <Input
+                                                type="number"
+                                                value={planForm.limits.max_products}
+                                                onChange={e => setPlanForm(f => ({ ...f, limits: { ...f.limits, max_products: e.target.value } }))}
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label className="text-xs text-gray-500">Max Sites</Label>
+                                            <Input
+                                                type="number"
+                                                value={planForm.limits.max_sites}
+                                                onChange={e => setPlanForm(f => ({ ...f, limits: { ...f.limits, max_sites: e.target.value } }))}
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label className="text-xs text-gray-500">Storage (GB)</Label>
+                                            <Input
+                                                type="number"
+                                                value={planForm.limits.storage_gb}
+                                                onChange={e => setPlanForm(f => ({ ...f, limits: { ...f.limits, storage_gb: e.target.value } }))}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Modules Section */}
+                                <div className="border-t pt-4">
+                                    <Label className="text-sm font-bold text-gray-700 mb-3 block">Enabled Modules</Label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {AVAILABLE_MODULES.map(m => (
+                                            <div key={m.code} className="flex items-center gap-2">
+                                                <Checkbox
+                                                    id={m.code}
+                                                    checked={planForm.modules.includes(m.code)}
+                                                    onCheckedChange={() => toggleModule(m.code)}
+                                                />
+                                                <label htmlFor={m.code} className="text-sm text-gray-700 cursor-pointer">{m.name}</label>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Features Section */}
+                                <div className="border-t pt-4">
+                                    <Label className="text-sm font-bold text-gray-700 mb-2 block">Feature Descriptions</Label>
+                                    <p className="text-xs text-gray-400 mb-2">One feature per line. Displayed on pricing pages.</p>
+                                    <Textarea
+                                        value={planForm.features}
+                                        onChange={e => setPlanForm(f => ({ ...f, features: e.target.value }))}
+                                        placeholder={"Up to 10 team members\n5,000 product SKUs\nPriority support"}
+                                        rows={4}
+                                    />
                                 </div>
                             </div>
                             <DialogFooter>
