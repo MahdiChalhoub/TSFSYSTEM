@@ -3,7 +3,8 @@ from .models import (
     Organization, Site, 
     Product, Warehouse, Inventory, InventoryMovement, Unit,
     Brand, Category, Parfum, ProductGroup, Country,
-    Contact, Employee, Role, TransactionSequence, BarcodeSettings, User
+    Contact, Employee, Role, TransactionSequence, BarcodeSettings, User,
+    PlanCategory, SubscriptionPlan, SubscriptionPayment
 )
 from apps.finance.serializers import (
     FinancialAccountSerializer, FiscalPeriodSerializer, FiscalYearSerializer,
@@ -217,4 +218,26 @@ class TransactionSequenceSerializer(serializers.ModelSerializer):
 class BarcodeSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = BarcodeSettings
+        fields = '__all__'
+
+# --- Subscription Serializers ---
+
+class PlanCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PlanCategory
+        fields = '__all__'
+
+class SubscriptionPlanSerializer(serializers.ModelSerializer):
+    category = PlanCategorySerializer(read_only=True)
+    category_id = serializers.PrimaryKeyRelatedField(queryset=PlanCategory.objects.all(), source='category', write_only=True)
+    
+    class Meta:
+        model = SubscriptionPlan
+        fields = '__all__'
+
+class SubscriptionPaymentSerializer(serializers.ModelSerializer):
+    plan_name = serializers.ReadOnlyField(source='plan.name')
+    
+    class Meta:
+        model = SubscriptionPayment
         fields = '__all__'
