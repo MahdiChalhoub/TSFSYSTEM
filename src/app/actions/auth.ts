@@ -135,7 +135,15 @@ export async function loginAction(prevState: any, formData: FormData) {
         return { error: { root: [message] } }
     }
 
-    redirect('/admin')
+    const headerStore = await import('next/headers');
+    const hList = await headerStore.headers();
+    const host = hList.get('host') || '';
+
+    if (data.slug === 'saas' || host.includes('saas')) {
+        redirect('/admin/saas/dashboard')
+    } else {
+        redirect('/admin')
+    }
 }
 
 export async function logoutAction() {
