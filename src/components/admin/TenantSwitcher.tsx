@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { Building, ChevronDown, Check, DoorOpen, ExternalLink } from 'lucide-react';
 import clsx from 'clsx';
+import { PLATFORM_CONFIG, getDynamicBranding } from '@/lib/saas_config';
 
 export function TenantSwitcher({ organizations, forcedSlug, user }: { organizations: any[], forcedSlug?: string, user?: any }) {
     const [isOpen, setIsOpen] = useState(false);
@@ -11,6 +12,7 @@ export function TenantSwitcher({ organizations, forcedSlug, user }: { organizati
     // Helper to get current subdomain/slug
     const currentSlug = forcedSlug || (typeof window !== 'undefined' ? window.location.hostname.split('.')[0] : '');
     const activeOrg = organizations.find(o => o.slug === currentSlug);
+    const branding = getDynamicBranding();
 
     // Only show Master Panel to authorized SaaS Staff (Superusers)
     // We allow Superusers to access the Master Panel even if they are currently inside a specific tenant context.
@@ -50,7 +52,7 @@ export function TenantSwitcher({ organizations, forcedSlug, user }: { organizati
                         {currentSlug === 'saas' ? 'Control Plane' : 'Workspace'}
                     </div>
                     <div className="text-sm font-bold text-gray-800 leading-none truncate max-w-[140px]">
-                        {currentSlug === 'saas' ? 'SaaS Platform' : (activeOrg?.name || 'Platform Root')}
+                        {currentSlug === 'saas' ? PLATFORM_CONFIG.name : (activeOrg?.name || 'Platform Root')}
                     </div>
                 </div>
                 {/* 
@@ -92,7 +94,7 @@ export function TenantSwitcher({ organizations, forcedSlug, user }: { organizati
                                         <div>
                                             <div className="text-sm font-bold">{org.name}</div>
                                             <div className={clsx("text-[10px] font-mono opacity-60")}>
-                                                {org.slug}.localhost
+                                                {org.slug}{branding.suffix}
                                             </div>
                                         </div>
                                     </div>
@@ -106,7 +108,7 @@ export function TenantSwitcher({ organizations, forcedSlug, user }: { organizati
                         {showMasterPanel && (
                             <div className="p-3 bg-gray-50/80 border-t border-gray-100">
                                 <button
-                                    onClick={() => window.location.href = 'http://saas.localhost:3000/saas/dashboard'}
+                                    onClick={() => window.location.href = `http://saas.${branding.domain}/saas/dashboard`}
                                     className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-gray-200 text-gray-500 hover:text-emerald-600 hover:border-emerald-200 hover:bg-white transition-all text-[10px] font-black uppercase tracking-widest shadow-sm"
                                 >
                                     <DoorOpen size={14} /> Master Panel

@@ -9,7 +9,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, AlertCircle, Building2, ShieldCheck, Sparkles, ArrowRight, CheckCircle2, Globe, Rocket } from "lucide-react";
-import { PLATFORM_CONFIG } from "@/lib/saas_config";
+import { PLATFORM_CONFIG, getDynamicBranding } from "@/lib/saas_config";
 
 const slugify = (text: string) => {
     return text
@@ -32,6 +32,7 @@ function BusinessRegisterContent() {
     // Multi-Step State
     const [step, setStep] = useState(1);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
+    const branding = getDynamicBranding();
 
     useEffect(() => {
         getPublicConfig().then(setConfig);
@@ -210,7 +211,7 @@ function BusinessRegisterContent() {
                                             onChange={(e) => { setSlug(e.target.value); setSlugManuallyEdited(true); }}
                                             className="bg-slate-900/50 border-white/10 h-14 rounded-xl font-mono text-amber-400 text-sm flex-1"
                                         />
-                                        <div className="bg-slate-900 border border-white/10 h-14 rounded-xl flex items-center px-4 font-mono text-[10px] text-slate-500">{PLATFORM_CONFIG.suffix}</div>
+                                        <div className="bg-slate-900 border border-white/10 h-14 rounded-xl flex items-center px-4 font-mono text-[10px] text-slate-500">{branding.suffix}</div>
                                     </div>
                                 </div>
 
