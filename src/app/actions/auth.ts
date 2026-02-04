@@ -139,10 +139,15 @@ export async function loginAction(prevState: any, formData: FormData) {
     const hList = await headerStore.headers();
     const host = hList.get('host') || '';
 
+    // FIX: Use PUBLIC URLs, not internal file paths
     if (data.slug === 'saas' || host.includes('saas')) {
-        redirect('/admin/saas/dashboard')
+        // Middleware maps /saas/* -> /admin/saas/*
+        redirect('/saas/dashboard')
     } else {
-        redirect('/admin')
+        // Tenants: Redirect to root. 
+        // If on subdomain: / -> /tenant/[slug]/page
+        // If on IP: This will go to Landing. Tenants via IP need full path support which is out of scope for login action.
+        redirect('/')
     }
 }
 
