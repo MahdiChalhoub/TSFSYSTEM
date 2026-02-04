@@ -129,17 +129,14 @@ const MENU_ITEMS = [
             { title: 'Access Control (Roles)', path: '/admin/hr/roles' },
         ]
     },
-    { title: 'Kernel Updates', path: '/saas/updates' },
-]
-    },
-{
-    title: 'System Settings',
+    {
+        title: 'System Settings',
         icon: Settings,
-            module: 'core',
-                children: [
-                    { title: 'Sites & Branches', path: '/admin/settings/sites' },
-                ]
-},
+        module: 'core',
+        children: [
+            { title: 'Sites & Branches', path: '/admin/settings/sites' },
+        ]
+    },
 ];
 
 export function Sidebar({
