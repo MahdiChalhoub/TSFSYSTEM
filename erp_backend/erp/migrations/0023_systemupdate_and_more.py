@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('erp', '0022_alter_employee_linked_account_and_more'),
+        ('erp', '0021_organizationmodule_active_features'),
     ]
 
     operations = [

@@ -127,7 +127,6 @@ class ProvisioningService:
                 "declareTVA": True,
                 "dualView": True,
                 "pricingCostBasis": "AMC"
-                "pricingCostBasis": "AMC"
             })
 
             # 9. SaaS Financial Integration (Client Linking)
