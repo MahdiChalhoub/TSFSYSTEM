@@ -9,8 +9,8 @@ class CoreConfig(AppConfig):
         from .services.system import CoreService
         try:
             CoreService.verify_system_integrity()
-            print("🚀 Platform Integrity Verified: PostgreSQL Engine Active.")
+            print("Platform Integrity Verified: PostgreSQL Engine Active.")
         except Exception as e:
-            print(f"🛑 PLATFORM SHUTDOWN: {str(e)}")
+            print(f"PLATFORM SHUTDOWN: {str(e)}")
             import sys
             sys.exit(1)
