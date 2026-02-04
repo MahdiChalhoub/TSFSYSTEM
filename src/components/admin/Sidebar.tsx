@@ -148,6 +148,7 @@ const MENU_ITEMS = [
             { title: 'Organizations', path: '/saas/organizations' },
             { title: 'Global Registry', path: '/saas/modules' },
             { title: 'Connector Control', path: '/saas/connector' },
+            { title: 'MCP AI Integration', path: '/saas/mcp' },
             { title: 'Instance Switcher', path: '/saas/switcher' },
             { title: 'Platform Health', path: '/saas/health' },
             { title: 'Kernel Updates', path: '/saas/updates' },
