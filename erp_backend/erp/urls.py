@@ -12,6 +12,7 @@ from .views import (
 )
 from .views_auth import login_view, logout_view, me_view
 from .views_saas_modules import SaaSModuleViewSet, OrgModuleViewSet
+from .views_system import SystemUpdateViewSet
 from .views_modules import ModuleListView, ModuleEnableView, ModuleDisableView
 from .views_manager import PendingUsersView, ApproveUserView, RejectUserView, RequestCorrectionView
 from .views_onboarding import PublicConfigView, BusinessRegistrationView, UserSignUpView
@@ -35,6 +36,7 @@ router.register(r'units', UnitViewSet)
 router.register(r'warehouses', WarehouseViewSet)
 router.register(r'inventory', InventoryViewSet)
 router.register(r'settings', SettingsViewSet, basename='settings')
+router.register(r'system/updates', SystemUpdateViewSet, basename='system-update')
 router.register(r'pos', POSViewSet, basename='pos')
 router.register(r'purchase', PurchaseViewSet, basename='purchase')
 router.register(r'dashboard', DashboardViewSet, basename='dashboard')
