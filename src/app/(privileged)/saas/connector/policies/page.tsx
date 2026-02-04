@@ -4,6 +4,10 @@
  * Connector Policies Configuration
  * ==================================
  * Configure fallback behaviors for different module states.
+ * Features:
+ * - Select from available modules (dropdown)
+ * - Source module specification
+ * - Auto-generate default policies
  */
 
 import { useEffect, useState } from 'react'
@@ -26,22 +30,24 @@ import {
     DialogDescription,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
     DialogFooter,
 } from '@/components/ui/dialog'
 import {
-    ArrowLeft, Plus, Trash2, Edit2, RefreshCw, Settings, Save
+    ArrowLeft, Plus, Trash2, Edit2, RefreshCw, Settings, Save, Wand2, ArrowRight
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
     getConnectorPolicies,
     createConnectorPolicy,
     updateConnectorPolicy,
-    deleteConnectorPolicy
+    deleteConnectorPolicy,
+    getAvailableModules,
+    autoGeneratePolicies
 } from '@/app/actions/saas/connector'
 
 interface Policy {
     id: number
+    source_module: string
     target_module: string
     target_endpoint: string
     when_missing_read: string
@@ -55,6 +61,12 @@ interface Policy {
     max_buffer_size: number
     priority: number
     is_active: boolean
+}
+
+interface ModuleInfo {
+    code: string
+    name: string
+    is_core: boolean
 }
 
 const READ_ACTIONS = [
@@ -76,6 +88,7 @@ const WRITE_ACTIONS = [
 ]
 
 const emptyPolicy = {
+    source_module: '*',
     target_module: '',
     target_endpoint: '*',
     when_missing_read: 'empty',
@@ -92,23 +105,33 @@ const emptyPolicy = {
 
 export default function ConnectorPoliciesPage() {
     const [policies, setPolicies] = useState<Policy[]>([])
+    const [modules, setModules] = useState<ModuleInfo[]>([])
     const [loading, setLoading] = useState(true)
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [editingPolicy, setEditingPolicy] = useState<Policy | null>(null)
     const [formData, setFormData] = useState(emptyPolicy)
     const [saving, setSaving] = useState(false)
+    const [generating, setGenerating] = useState(false)
 
     useEffect(() => {
-        loadPolicies()
+        loadData()
     }, [])
 
-    async function loadPolicies() {
+    async function loadData() {
         setLoading(true)
         try {
-            const data = await getConnectorPolicies()
-            setPolicies(data)
+            const [policiesData, modulesData] = await Promise.all([
+                getConnectorPolicies(),
+                getAvailableModules()
+            ])
+            setPolicies(policiesData)
+            // Add * (All) option at start
+            setModules([
+                { code: '*', name: 'All Modules (Global)', is_core: true },
+                ...modulesData.filter((m: ModuleInfo) => m.code !== '*')
+            ])
         } catch {
-            toast.error('Failed to load policies')
+            toast.error('Failed to load data')
         } finally {
             setLoading(false)
         }
@@ -117,6 +140,7 @@ export default function ConnectorPoliciesPage() {
     function handleEdit(policy: Policy) {
         setEditingPolicy(policy)
         setFormData({
+            source_module: policy.source_module || '*',
             target_module: policy.target_module,
             target_endpoint: policy.target_endpoint,
             when_missing_read: policy.when_missing_read,
@@ -157,7 +181,7 @@ export default function ConnectorPoliciesPage() {
                 toast.success('Policy created')
             }
             setIsDialogOpen(false)
-            await loadPolicies()
+            await loadData()
         } catch (e: any) {
             toast.error(e.message)
         } finally {
@@ -172,9 +196,25 @@ export default function ConnectorPoliciesPage() {
             const res = await deleteConnectorPolicy(id)
             if (!res.success) throw new Error(res.error)
             toast.success('Policy deleted')
-            await loadPolicies()
+            await loadData()
         } catch (e: any) {
             toast.error(e.message)
+        }
+    }
+
+    async function handleAutoGenerate() {
+        if (!confirm('This will create default policies for all modules that don\'t have one. Continue?')) return
+
+        setGenerating(true)
+        try {
+            const res = await autoGeneratePolicies()
+            if (!res.success) throw new Error(res.error)
+            toast.success(res.message)
+            await loadData()
+        } catch (e: any) {
+            toast.error(e.message)
+        } finally {
+            setGenerating(false)
         }
     }
 
@@ -195,9 +235,18 @@ export default function ConnectorPoliciesPage() {
                     <h2 className="text-3xl font-black text-gray-900 tracking-tight">Routing Policies</h2>
                     <p className="text-gray-500 mt-2 font-medium">Define fallback behaviors for module states</p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-3 flex-wrap">
                     <Button
-                        onClick={() => loadPolicies()}
+                        onClick={handleAutoGenerate}
+                        disabled={generating || loading}
+                        variant="outline"
+                        className="rounded-2xl px-6 py-5 font-bold text-amber-600 border-amber-200 hover:bg-amber-50"
+                    >
+                        <Wand2 size={18} className={generating ? 'animate-spin' : ''} />
+                        {generating ? 'Generating...' : 'Auto-Generate'}
+                    </Button>
+                    <Button
+                        onClick={() => loadData()}
                         disabled={loading}
                         variant="outline"
                         className="rounded-2xl px-6 py-5 font-bold"
@@ -226,31 +275,65 @@ export default function ConnectorPoliciesPage() {
                     </DialogHeader>
 
                     <div className="space-y-6 py-4">
-                        {/* Target */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label>Target Module</Label>
-                                <Input
+                        {/* Source & Target Modules */}
+                        <div className="grid grid-cols-5 gap-4 items-end">
+                            <div className="col-span-2 space-y-2">
+                                <Label>Source Module (Requester)</Label>
+                                <Select
+                                    value={formData.source_module}
+                                    onValueChange={(v) => setFormData({ ...formData, source_module: v })}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select source module" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {modules.map((m) => (
+                                            <SelectItem key={m.code} value={m.code}>
+                                                {m.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="flex items-center justify-center">
+                                <ArrowRight size={24} className="text-gray-300" />
+                            </div>
+                            <div className="col-span-2 space-y-2">
+                                <Label>Target Module (Destination)</Label>
+                                <Select
                                     value={formData.target_module}
-                                    onChange={(e) => setFormData({ ...formData, target_module: e.target.value })}
-                                    placeholder="inventory, finance, * (all)"
-                                />
+                                    onValueChange={(v) => setFormData({ ...formData, target_module: v })}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select target module" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {modules.map((m) => (
+                                            <SelectItem key={m.code} value={m.code}>
+                                                {m.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
-                            <div className="space-y-2">
-                                <Label>Target Endpoint</Label>
-                                <Input
-                                    value={formData.target_endpoint}
-                                    onChange={(e) => setFormData({ ...formData, target_endpoint: e.target.value })}
-                                    placeholder="products/, * (all)"
-                                />
-                            </div>
+                        </div>
+
+                        {/* Target Endpoint */}
+                        <div className="space-y-2">
+                            <Label>Target Endpoint Pattern</Label>
+                            <Input
+                                value={formData.target_endpoint}
+                                onChange={(e) => setFormData({ ...formData, target_endpoint: e.target.value })}
+                                placeholder="* (all), products/, categories/*"
+                            />
+                            <p className="text-xs text-gray-400">Use * for all endpoints, or specify a path pattern</p>
                         </div>
 
                         {/* MISSING State */}
                         <div className="p-4 rounded-xl bg-amber-50 border border-amber-100 space-y-4">
                             <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 rounded-full bg-amber-500" />
-                                <span className="font-bold text-amber-700">When MISSING</span>
+                                <span className="font-bold text-amber-700">When MISSING (module not installed)</span>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
@@ -292,7 +375,7 @@ export default function ConnectorPoliciesPage() {
                         <div className="p-4 rounded-xl bg-blue-50 border border-blue-100 space-y-4">
                             <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 rounded-full bg-blue-500" />
-                                <span className="font-bold text-blue-700">When DISABLED</span>
+                                <span className="font-bold text-blue-700">When DISABLED (module turned off for tenant)</span>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
@@ -334,7 +417,7 @@ export default function ConnectorPoliciesPage() {
                         <div className="p-4 rounded-xl bg-red-50 border border-red-100 space-y-4">
                             <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 rounded-full bg-red-500" />
-                                <span className="font-bold text-red-700">When UNAUTHORIZED</span>
+                                <span className="font-bold text-red-700">When UNAUTHORIZED (no permission)</span>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
@@ -430,14 +513,21 @@ export default function ConnectorPoliciesPage() {
                         <div className="text-center py-20 text-gray-400">
                             <Settings className="w-12 h-12 mx-auto mb-4 opacity-50" />
                             <p className="font-medium">No policies configured</p>
-                            <p className="text-sm mt-1">Create a policy to define fallback behaviors</p>
+                            <p className="text-sm mt-1">Click "Auto-Generate" to create default policies for all modules</p>
+                            <Button
+                                onClick={handleAutoGenerate}
+                                className="mt-4 bg-amber-500 hover:bg-amber-400"
+                            >
+                                <Wand2 size={16} />
+                                Auto-Generate Default Policies
+                            </Button>
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="w-full">
                                 <thead className="bg-gray-50 border-b border-gray-100">
                                     <tr>
-                                        <th className="text-left p-4 font-bold text-gray-600 text-sm">Target</th>
+                                        <th className="text-left p-4 font-bold text-gray-600 text-sm">Route</th>
                                         <th className="text-left p-4 font-bold text-gray-600 text-sm">MISSING</th>
                                         <th className="text-left p-4 font-bold text-gray-600 text-sm">DISABLED</th>
                                         <th className="text-left p-4 font-bold text-gray-600 text-sm">UNAUTHORIZED</th>
@@ -449,7 +539,13 @@ export default function ConnectorPoliciesPage() {
                                     {policies.map((policy) => (
                                         <tr key={policy.id} className="hover:bg-gray-50/50 transition-colors">
                                             <td className="p-4">
-                                                <div className="font-bold text-gray-900">{policy.target_module}</div>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <Badge variant="outline" className="text-xs font-mono bg-gray-50">
+                                                        {policy.source_module || '*'}
+                                                    </Badge>
+                                                    <ArrowRight size={14} className="text-gray-300" />
+                                                    <span className="font-bold text-gray-900">{policy.target_module}</span>
+                                                </div>
                                                 <div className="text-xs text-gray-400 font-mono">{policy.target_endpoint}</div>
                                             </td>
                                             <td className="p-4">
@@ -498,6 +594,16 @@ export default function ConnectorPoliciesPage() {
                     )}
                 </CardContent>
             </Card>
+
+            {/* Help Text */}
+            <div className="p-6 bg-indigo-50 rounded-2xl border border-indigo-100">
+                <h4 className="font-bold text-indigo-700 mb-2">Understanding Policies</h4>
+                <p className="text-sm text-indigo-600">
+                    Policies define how the Connector handles requests when a module is unavailable.
+                    <strong> Source Module</strong> is who makes the request, <strong>Target Module</strong> is the destination.
+                    Use <code className="bg-indigo-100 px-1 rounded">*</code> for all modules/endpoints.
+                </p>
+            </div>
         </div>
     )
 }

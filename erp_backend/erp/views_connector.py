@@ -50,7 +50,7 @@ class ConnectorPolicySerializer(serializers.ModelSerializer):
     class Meta:
         model = ConnectorPolicy
         fields = [
-            'id', 'target_module', 'target_endpoint',
+            'id', 'source_module', 'target_module', 'target_endpoint',
             'when_missing_read', 'when_missing_write',
             'when_disabled_read', 'when_disabled_write',
             'when_unauthorized_read', 'when_unauthorized_write',

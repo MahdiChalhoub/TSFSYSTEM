@@ -117,6 +117,13 @@ class ConnectorPolicy(models.Model):
         help_text="Specific endpoint or '*' for all endpoints"
     )
     
+    # Source module (who is making the request)
+    source_module = models.CharField(
+        max_length=100,
+        default='*',
+        help_text="Requesting module (e.g., 'pos') or '*' for any module"
+    )
+    
     # Policies for MISSING state (🟡)
     when_missing_read = models.CharField(
         max_length=20,
@@ -187,7 +194,7 @@ class ConnectorPolicy(models.Model):
         verbose_name = 'Connector Policy'
         verbose_name_plural = 'Connector Policies'
         ordering = ['-priority', 'target_module']
-        unique_together = ['target_module', 'target_endpoint']
+        unique_together = ['source_module', 'target_module', 'target_endpoint']
     
     def __str__(self):
         return f"Policy: {self.target_module}/{self.target_endpoint}"

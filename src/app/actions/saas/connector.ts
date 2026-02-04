@@ -55,6 +55,7 @@ export async function getConnectorPolicies() {
 export async function createConnectorPolicy(data: {
     target_module: string
     target_endpoint: string
+    source_module?: string
     when_missing_read: string
     when_missing_write: string
     when_disabled_read: string
@@ -192,5 +193,81 @@ export async function getModuleContracts() {
     } catch (e) {
         console.error('Failed to fetch contracts:', e)
         return []
+    }
+}
+
+// =============================================================================
+// AVAILABLE MODULES
+// =============================================================================
+
+export async function getAvailableModules() {
+    try {
+        // Get all system modules from the modules endpoint
+        const modules = await erpFetch('modules/') || []
+        return modules.map((m: any) => ({
+            code: m.code,
+            name: m.name,
+            is_core: m.is_core || false
+        }))
+    } catch (e) {
+        console.error('Failed to fetch available modules:', e)
+        // Return default core modules as fallback
+        return [
+            { code: '*', name: 'All Modules (Global)', is_core: true },
+            { code: 'inventory', name: 'Inventory', is_core: false },
+            { code: 'finance', name: 'Finance', is_core: false },
+            { code: 'pos', name: 'POS', is_core: false },
+            { code: 'crm', name: 'CRM', is_core: false },
+            { code: 'hr', name: 'HR', is_core: false },
+        ]
+    }
+}
+
+export async function autoGeneratePolicies() {
+    try {
+        const modules = await getAvailableModules()
+        const existingPolicies = await getConnectorPolicies()
+        const existingModules = new Set(existingPolicies.map((p: any) => p.target_module))
+
+        const created: string[] = []
+        const skipped: string[] = []
+
+        for (const mod of modules) {
+            if (mod.code === '*') continue // Skip global
+            if (existingModules.has(mod.code)) {
+                skipped.push(mod.code)
+                continue
+            }
+
+            // Create default policy for this module
+            const res = await createConnectorPolicy({
+                target_module: mod.code,
+                target_endpoint: '*',
+                source_module: '*',
+                when_missing_read: 'empty',
+                when_missing_write: 'buffer',
+                when_disabled_read: 'empty',
+                when_disabled_write: 'drop',
+                when_unauthorized_read: 'empty',
+                when_unauthorized_write: 'drop',
+                cache_ttl_seconds: 300,
+                buffer_ttl_seconds: 86400,
+                max_buffer_size: 100,
+                priority: 0
+            })
+
+            if (res.success) {
+                created.push(mod.code)
+            }
+        }
+
+        return {
+            success: true,
+            created,
+            skipped,
+            message: `Created ${created.length} policies, skipped ${skipped.length} (already exist)`
+        }
+    } catch (e: any) {
+        return { success: false, error: e.message || 'Failed to auto-generate policies' }
     }
 }
