@@ -21,6 +21,12 @@ from .serializers import (
 )
 from .services import InventoryService, ProvisioningService, ConfigurationService, POSService, PurchaseService, SequenceService, BarcodeService
 from rest_framework import permissions
+from .mixins import ConnectorAwareMixin
+from .permissions import (
+    InventoryReadOnlyOrManage, HRReadOnlyOrManage, CRMReadOnlyOrManage,
+    CanAccessPOS, CanProcessSales, CanViewPurchasing, CanCreatePO
+)
+
 
 class TenantModelViewSet(viewsets.ModelViewSet):
     """
@@ -348,10 +354,16 @@ class UnitViewSet(TenantModelViewSet):
     queryset = Unit.objects.all()
     serializer_class = UnitSerializer
 
-class ProductViewSet(TenantModelViewSet):
+class ProductViewSet(ConnectorAwareMixin, TenantModelViewSet):
+    """
+    Inventory Product management with Connector support.
+    Connector: Requests buffered if inventory module disabled.
+    """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    connector_module = 'inventory'  # Connector routing
     
+
     # Granular permission mapping (Rule 4: Granular Permission Registry)
     required_permissions = {
         'list': 'inventory.view_products',
@@ -577,13 +589,17 @@ class ProductViewSet(TenantModelViewSet):
             
         return Response(data)
 
-class WarehouseViewSet(TenantModelViewSet):
+class WarehouseViewSet(ConnectorAwareMixin, TenantModelViewSet):
+    """Warehouse management with Connector support."""
     queryset = Warehouse.objects.all()
     serializer_class = WarehouseSerializer
+    connector_module = 'inventory'
 
-class InventoryViewSet(TenantModelViewSet):
+class InventoryViewSet(ConnectorAwareMixin, TenantModelViewSet):
+    """Stock/Inventory management with Connector support."""
     queryset = Inventory.objects.all()
     serializer_class = InventorySerializer
+    connector_module = 'inventory'
     
     # Granular permission mapping (Rule 4: Granular Permission Registry)
     required_permissions = {
@@ -725,10 +741,12 @@ class InventoryViewSet(TenantModelViewSet):
             "totalCount": len(data)
         })
 
-class POSViewSet(viewsets.ViewSet):
+class POSViewSet(ConnectorAwareMixin, viewsets.ViewSet):
     """
-    Handles Point of Sale transactions.
+    Handles Point of Sale transactions with Connector support.
     """
+    connector_module = 'pos'
+    permission_classes = [permissions.IsAuthenticated, CanAccessPOS]
     @action(detail=False, methods=['post'])
     def checkout(self, request):
         organization_id = get_current_tenant_id()
@@ -768,10 +786,12 @@ class POSViewSet(viewsets.ViewSet):
             traceback.print_exc()
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-class PurchaseViewSet(viewsets.ViewSet):
+class PurchaseViewSet(ConnectorAwareMixin, viewsets.ViewSet):
     """
-    Handles Purchase Order (PO) operations.
+    Handles Purchase Order (PO) operations with Connector support.
     """
+    connector_module = 'purchasing'
+    permission_classes = [permissions.IsAuthenticated, CanViewPurchasing]
     def list(self, request):
         organization_id = get_current_tenant_id()
         if not organization_id: return Response({"error": "No organization context"}, status=status.HTTP_400_BAD_REQUEST)
@@ -860,8 +880,10 @@ class PurchaseViewSet(viewsets.ViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=400)
 
-class BrandViewSet(TenantModelViewSet):
+class BrandViewSet(ConnectorAwareMixin, TenantModelViewSet):
+    """Brand management with Connector support."""
     queryset = Brand.objects.all()
+    connector_module = 'inventory'
     
     def get_serializer_class(self):
         if self.action == 'retrieve':
@@ -962,9 +984,11 @@ class BrandViewSet(TenantModelViewSet):
         except Brand.DoesNotExist:
             return Response({"error": "Brand not found"}, status=404)
 
-class CategoryViewSet(TenantModelViewSet):
+class CategoryViewSet(ConnectorAwareMixin, TenantModelViewSet):
+    """Category management with Connector support."""
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    connector_module = 'inventory'
 
     @action(detail=False, methods=['get'])
     def with_counts(self, request):
@@ -997,9 +1021,11 @@ class CategoryViewSet(TenantModelViewSet):
         return Response({"success": True})
 
 
-class ParfumViewSet(TenantModelViewSet):
+class ParfumViewSet(ConnectorAwareMixin, TenantModelViewSet):
+    """Attribute (Parfum) management with Connector support."""
     queryset = Parfum.objects.all()
     serializer_class = ParfumSerializer
+    connector_module = 'inventory'
 
     @action(detail=False, methods=['get'])
     def by_category(self, request):
@@ -1291,9 +1317,12 @@ class CountryViewSet(TenantModelViewSet):
 
         return Response(data)
 
-class ContactViewSet(TenantModelViewSet):
+class ContactViewSet(ConnectorAwareMixin, TenantModelViewSet):
+    """CRM Contact management with Connector support."""
     queryset = Contact.objects.all()
     serializer_class = ContactSerializer
+    connector_module = 'crm'
+    permission_classes = [permissions.IsAuthenticated, CRMReadOnlyOrManage]
 
     def create(self, request, *args, **kwargs):
         organization_id = get_current_tenant_id()
@@ -1337,9 +1366,12 @@ class ContactViewSet(TenantModelViewSet):
             self.perform_create(serializer)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-class EmployeeViewSet(TenantModelViewSet):
+class EmployeeViewSet(ConnectorAwareMixin, TenantModelViewSet):
+    """HR Employee management with Connector support."""
     queryset = Employee.objects.all()
     serializer_class = EmployeeSerializer
+    connector_module = 'hr'
+    permission_classes = [permissions.IsAuthenticated, HRReadOnlyOrManage]
 
     def create(self, request, *args, **kwargs):
         organization_id = get_current_tenant_id()
@@ -1388,9 +1420,12 @@ class EmployeeViewSet(TenantModelViewSet):
             
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-class RoleViewSet(TenantModelViewSet):
+class RoleViewSet(ConnectorAwareMixin, TenantModelViewSet):
+    """HR Role management with Connector support."""
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
+    connector_module = 'hr'
+    permission_classes = [permissions.IsAuthenticated, HRReadOnlyOrManage]
 
 class BarcodeSettingsViewSet(viewsets.ViewSet):
     def list(self, request):

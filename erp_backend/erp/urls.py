@@ -117,8 +117,12 @@ urlpatterns = [
     path('connector/dashboard/', ConnectorDashboardView.as_view(), name='connector_dashboard'),
     path('connector/route/', ConnectorRouteView.as_view(), name='connector_route'),
 
+    # MCP AI Connector Module
+    path('mcp/', include('apps.mcp.urls')),
+
     # Modular Finance API
     path('', include('apps.finance.urls')),
 
     path('', include(router.urls)),
 ]
+

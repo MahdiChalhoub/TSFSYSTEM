@@ -1,0 +1,122 @@
+{
+    "code": "mcp",
+    "name": "MCP AI Connector",
+    "description": "Model Context Protocol integration for AI assistants. Exposes platform APIs as tools for external AI models.",
+    "version": "1.0.0",
+    "category": "integration",
+    "is_core": false,
+    "author": "Dajingo Platform",
+    "minimum_kernel_version": "8.3.0",
+    "dependencies": [
+        "core"
+    ],
+    "permissions": [
+        {
+            "code": "mcp.view",
+            "label": "View MCP Settings"
+        },
+        {
+            "code": "mcp.manage",
+            "label": "Manage MCP Configuration"
+        },
+        {
+            "code": "mcp.chat",
+            "label": "Use AI Chat"
+        },
+        {
+            "code": "mcp.tools",
+            "label": "Execute AI Tools"
+        },
+        {
+            "code": "mcp.admin",
+            "label": "Full MCP Administration"
+        }
+    ],
+    "models": [
+        "MCPProvider",
+        "MCPConnection",
+        "MCPTool",
+        "MCPConversation",
+        "MCPMessage",
+        "MCPUsageLog"
+    ],
+    "routes": [
+        {
+            "path": "/mcp",
+            "label": "MCP Dashboard"
+        },
+        {
+            "path": "/mcp/providers",
+            "label": "AI Providers"
+        },
+        {
+            "path": "/mcp/tools",
+            "label": "Tools"
+        },
+        {
+            "path": "/mcp/conversations",
+            "label": "Conversations"
+        },
+        {
+            "path": "/mcp/settings",
+            "label": "Settings"
+        }
+    ],
+    "sidebar_items": [
+        {
+            "label": "AI Integration",
+            "icon": "Bot",
+            "children": [
+                {
+                    "label": "Dashboard",
+                    "path": "/mcp",
+                    "icon": "LayoutDashboard"
+                },
+                {
+                    "label": "Providers",
+                    "path": "/mcp/providers",
+                    "icon": "Cloud"
+                },
+                {
+                    "label": "Tools",
+                    "path": "/mcp/tools",
+                    "icon": "Wrench"
+                },
+                {
+                    "label": "Conversations",
+                    "path": "/mcp/conversations",
+                    "icon": "MessageSquare"
+                },
+                {
+                    "label": "Settings",
+                    "path": "/mcp/settings",
+                    "icon": "Settings"
+                }
+            ]
+        }
+    ],
+    "settings_schema": {
+        "default_provider": {
+            "type": "string",
+            "default": "",
+            "label": "Default AI Provider"
+        },
+        "max_tokens_per_request": {
+            "type": "integer",
+            "default": 4096,
+            "label": "Max Tokens Per Request"
+        },
+        "rate_limit_per_minute": {
+            "type": "integer",
+            "default": 60,
+            "label": "Requests Per Minute Limit"
+        },
+        "enable_tool_execution": {
+            "type": "boolean",
+            "default": true,
+            "label": "Allow Tool Execution"
+        }
+    },
+    "created_at": "2026-02-04",
+    "updated_at": "2026-02-04"
+}

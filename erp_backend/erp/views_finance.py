@@ -1,5 +1,5 @@
 # Finance ViewSets
-# COA and related financial views
+# COA and related financial views with audit logging, permissions, and connector support
 
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -18,15 +18,41 @@ from apps.finance.serializers import (
     FiscalYearSerializer, FiscalPeriodSerializer,
     JournalEntrySerializer, LoanSerializer, FinancialEventSerializer
 )
+from .mixins import AuditLogMixin, ConnectorAwareMixin
+from .permissions import (
+    FinanceReadOnlyOrManage, CanManageFinance, CanPostJournalEntries,
+    CanCloseAccounting
+)
 
 
-class ChartOfAccountViewSet(viewsets.ModelViewSet):
+class ChartOfAccountViewSet(AuditLogMixin, ConnectorAwareMixin, viewsets.ModelViewSet):
     """
     ViewSet for Chart of Accounts management.
     Supports hierarchical account structure and balance calculations.
+    
+    Permissions:
+    - View: finance.view
+    - Manage: finance.manage
+    
+    Audit: All CRUD operations are logged.
+    Connector: Requests buffered if finance module disabled.
     """
     serializer_class = ChartOfAccountSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, FinanceReadOnlyOrManage]
+    
+    # Mixin configurations
+    audit_model_name = 'ChartOfAccount'
+    connector_module = 'finance'
+    
+    # Permission mapping for granular control
+    required_permissions = {
+        'list': 'finance.view',
+        'retrieve': 'finance.view',
+        'create': 'finance.manage',
+        'update': 'finance.manage',
+        'partial_update': 'finance.manage',
+        'destroy': 'finance.manage',
+    }
     
     def get_queryset(self):
         org_id = getattr(self.request, 'org_id', None)
@@ -149,60 +175,158 @@ class ChartOfAccountViewSet(viewsets.ModelViewSet):
         })
 
 
-class FinancialAccountViewSet(viewsets.ModelViewSet):
+class FinancialAccountViewSet(AuditLogMixin, ConnectorAwareMixin, viewsets.ModelViewSet):
     """ViewSet for cash/bank accounts."""
     serializer_class = FinancialAccountSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, FinanceReadOnlyOrManage]
+    audit_model_name = 'FinancialAccount'
+    connector_module = 'finance'
     
     def get_queryset(self):
         org_id = getattr(self.request, 'org_id', None)
         return FinancialAccount.objects.filter(organization_id=org_id)
 
 
-class FiscalYearViewSet(viewsets.ModelViewSet):
+class FiscalYearViewSet(AuditLogMixin, ConnectorAwareMixin, viewsets.ModelViewSet):
     """ViewSet for fiscal years."""
     serializer_class = FiscalYearSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, FinanceReadOnlyOrManage]
+    audit_model_name = 'FiscalYear'
+    connector_module = 'finance'
     
     def get_queryset(self):
         org_id = getattr(self.request, 'org_id', None)
         return FiscalYear.objects.filter(organization_id=org_id)
+    
+    @action(detail=True, methods=['post'])
+    def close(self, request, pk=None):
+        """Close a fiscal year. Requires finance.close_period permission."""
+        # Check permission
+        if not CanCloseAccounting().has_permission(request, self):
+            return Response(
+                {'error': 'Permission denied: finance.close_period required'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        fiscal_year = self.get_object()
+        fiscal_year.is_closed = True
+        fiscal_year.save()
+        
+        # Log the action
+        self._log_action('CLOSE', fiscal_year)
+        
+        return Response({'status': 'Fiscal year closed'})
 
 
-class FiscalPeriodViewSet(viewsets.ModelViewSet):
+class FiscalPeriodViewSet(AuditLogMixin, ConnectorAwareMixin, viewsets.ModelViewSet):
     """ViewSet for fiscal periods."""
     serializer_class = FiscalPeriodSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, FinanceReadOnlyOrManage]
+    audit_model_name = 'FiscalPeriod'
+    connector_module = 'finance'
     
     def get_queryset(self):
         org_id = getattr(self.request, 'org_id', None)
         return FiscalPeriod.objects.filter(fiscal_year__organization_id=org_id)
+    
+    @action(detail=True, methods=['post'])
+    def close(self, request, pk=None):
+        """Close a fiscal period. Requires finance.close_period permission."""
+        if not CanCloseAccounting().has_permission(request, self):
+            return Response(
+                {'error': 'Permission denied: finance.close_period required'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        period = self.get_object()
+        period.is_closed = True
+        period.save()
+        
+        self._log_action('CLOSE', period)
+        
+        return Response({'status': 'Fiscal period closed'})
 
 
-class JournalEntryViewSet(viewsets.ModelViewSet):
+class JournalEntryViewSet(AuditLogMixin, ConnectorAwareMixin, viewsets.ModelViewSet):
     """ViewSet for journal entries."""
     serializer_class = JournalEntrySerializer
     permission_classes = [IsAuthenticated]
+    audit_model_name = 'JournalEntry'
+    connector_module = 'finance'
+    
+    required_permissions = {
+        'list': 'finance.view',
+        'retrieve': 'finance.view',
+        'create': 'finance.post_entries',
+        'update': 'finance.post_entries',
+        'destroy': 'finance.manage',
+    }
     
     def get_queryset(self):
         org_id = getattr(self.request, 'org_id', None)
         return JournalEntry.objects.filter(organization_id=org_id)
+    
+    def create(self, request, *args, **kwargs):
+        """Create journal entry. Requires finance.post_entries permission."""
+        if not CanPostJournalEntries().has_permission(request, self):
+            return Response(
+                {'error': 'Permission denied: finance.post_entries required'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return super().create(request, *args, **kwargs)
+    
+    @action(detail=True, methods=['post'])
+    def post(self, request, pk=None):
+        """Post a journal entry (finalize it)."""
+        if not CanPostJournalEntries().has_permission(request, self):
+            return Response(
+                {'error': 'Permission denied: finance.post_entries required'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        entry = self.get_object()
+        entry.is_posted = True
+        entry.save()
+        
+        self._log_action('POST', entry)
+        
+        return Response({'status': 'Journal entry posted'})
+    
+    @action(detail=True, methods=['post'])
+    def reverse(self, request, pk=None):
+        """Reverse a journal entry. Requires finance.manage permission."""
+        if not CanManageFinance().has_permission(request, self):
+            return Response(
+                {'error': 'Permission denied: finance.manage required'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        entry = self.get_object()
+        # TODO: Create reversal entry
+        
+        self._log_action('REVERSE', entry)
+        
+        return Response({'status': 'Journal entry reversed'})
 
 
-class LoanViewSet(viewsets.ModelViewSet):
+class LoanViewSet(AuditLogMixin, ConnectorAwareMixin, viewsets.ModelViewSet):
     """ViewSet for loans."""
     serializer_class = LoanSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, FinanceReadOnlyOrManage]
+    audit_model_name = 'Loan'
+    connector_module = 'finance'
     
     def get_queryset(self):
         org_id = getattr(self.request, 'org_id', None)
         return Loan.objects.filter(organization_id=org_id)
 
 
-class FinancialEventViewSet(viewsets.ModelViewSet):
+class FinancialEventViewSet(AuditLogMixin, ConnectorAwareMixin, viewsets.ModelViewSet):
     """ViewSet for financial events."""
     serializer_class = FinancialEventSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, FinanceReadOnlyOrManage]
+    audit_model_name = 'FinancialEvent'
+    connector_module = 'finance'
     
     def get_queryset(self):
         org_id = getattr(self.request, 'org_id', None)
