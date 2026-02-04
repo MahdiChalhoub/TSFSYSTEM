@@ -10,7 +10,7 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: { si
 
     return (
         <header className="h-20 glass sticky top-0 z-40 flex items-center justify-between px-4 md:px-8 shrink-0 transition-all border-b border-gray-100">
-            <div className="flex items-center gap-2 md:gap-4 flex-1">
+            <div className="flex items-center gap-1.5 md:gap-4 flex-1">
                 <button
                     onClick={toggleSidebar}
                     suppressHydrationWarning={true}
