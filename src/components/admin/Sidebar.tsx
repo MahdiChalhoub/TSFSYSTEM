@@ -205,18 +205,24 @@ export function Sidebar({
     // Merge hardcoded core with dynamic
     const allItems = [...MENU_ITEMS, ...dynamicItems];
 
-    const filteredItems = allItems.filter(item => {
+    const processedItems = allItems.filter(item => {
         // 1. Filter by SaaS Panel visibility logic
         if (!isSaas && item.visibility === 'saas') return false;
 
         // 2. Filter by Installed Module
-        // If the item has a 'module' property, check if it's installed.
-        // We always allow 'core'
         if (item.module && item.module !== 'core' && !installedModules.has(item.module)) {
             return false;
         }
         return true;
     });
+
+    // Pin SaaS Control to top if in SaaS context
+    const filteredItems = isSaas
+        ? [
+            ...processedItems.filter(i => i.title === 'SaaS Control'),
+            ...processedItems.filter(i => i.title !== 'SaaS Control')
+        ]
+        : processedItems;
 
     return (
         <React.Fragment>
