@@ -39,7 +39,10 @@ export default function OrganizationsPage() {
         }
     }
 
-    async function handleToggle(id: string, status: boolean) {
+    async function handleToggle(id: string, status: boolean, slug: string) {
+        if (slug === 'saas') {
+            return toast.error("Cannot suspend the master SaaS organization.")
+        }
         try {
             await toggleOrganizationStatus(id, status)
             toast.success("Status updated")
@@ -50,6 +53,9 @@ export default function OrganizationsPage() {
     }
 
     async function handleDelete(org: any) {
+        if (org.slug === 'saas') {
+            return toast.error("Cannot delete the master SaaS organization.")
+        }
         if (!confirm(`Are you sure you want to delete "${org.name}"? This action cannot be undone.`)) return
         try {
             await deleteOrganization(org.id)
@@ -212,7 +218,7 @@ export default function OrganizationsPage() {
                                 <Button
                                     variant="outline"
                                     className="flex-1 py-6 rounded-2xl border-gray-100 bg-gray-50 hover:bg-white text-gray-400 hover:text-gray-900 transition-all font-bold"
-                                    onClick={() => handleToggle(org.id, org.isActive)}
+                                    onClick={() => handleToggle(org.id, org.isActive, org.slug)}
                                 >
                                     {org.isActive ? 'Suspend' : 'Activate'}
                                 </Button>
