@@ -1,0 +1,10 @@
+{
+    "name": "Vantage Core Platform",
+    "code": "coreplatform",
+    "version": "2.7.0",
+    "description": "The central orchestration engine. Manages multi-tenancy, modular injection, and security protocols.",
+    "is_core": true,
+    "dependencies": [],
+    "author": "TSF Cloud System",
+    "website": "https://tsf.ci"
+}
