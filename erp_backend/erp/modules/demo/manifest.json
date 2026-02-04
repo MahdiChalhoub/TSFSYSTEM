@@ -1,0 +1,10 @@
+{
+    "name": "Demo Feature",
+    "code": "demo",
+    "version": "1.0.0",
+    "description": "A lightweight test module to verify the Federation Installation system logic.",
+    "is_core": false,
+    "dependencies": [],
+    "author": "TSF Cloud System",
+    "website": " https://tsf.ci"
+}
