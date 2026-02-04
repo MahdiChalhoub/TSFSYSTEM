@@ -16,7 +16,8 @@ import {
     ShoppingCart,
     Layers,
     BarChart3,
-    Zap
+    Zap,
+    Package
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import clsx from 'clsx';
