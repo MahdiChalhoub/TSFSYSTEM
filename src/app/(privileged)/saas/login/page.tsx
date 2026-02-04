@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Loader2, Command } from "lucide-react";
+import { PLATFORM_CONFIG } from "@/lib/saas_config";
 
 const initialState: { error: any; success?: boolean } = {
     error: {},
@@ -73,7 +74,7 @@ export default function SaaSLoginContent() {
 
                     <div className="flex justify-center pt-4 opacity-30 hover:opacity-100 transition-opacity">
                         <p className="text-[9px] uppercase tracking-[0.2em] text-cyan-500 font-mono">
-                            TSF Cloud System v0.2.0-b1
+                            {PLATFORM_CONFIG.name} Control v{PLATFORM_CONFIG.version}
                         </p>
                     </div>
                 </CardContent>

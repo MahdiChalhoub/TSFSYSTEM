@@ -1,24 +1,21 @@
 "use client"
 
-import * as React from "react"
 import {
-    BookOpen,
-    Bot,
-    Command,
-    Frame,
-    LifeBuoy,
-    Map,
-    PieChart,
-    Send,
-    Settings2,
-    SquareTerminal,
     LayoutDashboard,
     Package,
     ShoppingCart,
     Users,
     Briefcase,
+    Settings2,
+    Command,
+    Globe,
+    ChevronRight,
+    Search,
+    Plus,
+    Box,
     Wallet
 } from "lucide-react"
+import { PLATFORM_CONFIG } from "@/lib/saas_config"
 
 import {
     Sidebar,
@@ -75,8 +72,8 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 }
 
 export function AppSidebar({ user, tenant, ...props }: AppSidebarProps) {
-    const tenantName = tenant?.name || "TSF Cloud";
-    const tenantSlug = tenant?.slug || "tsf"; // Fallback
+    const tenantName = tenant?.name || PLATFORM_CONFIG.name;
+    const tenantSlug = tenant?.slug || "hq"; // Generic fallback
 
     // Dynamic User Info
     const userName = user?.first_name ? `${user.first_name} ${user.last_name}` : (user?.username || "Guest User");

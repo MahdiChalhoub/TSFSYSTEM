@@ -8,6 +8,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, AlertCircle, CheckCircle2, UserPlus, ShieldCheck, Sparkles, ArrowRight } from "lucide-react";
+import { PLATFORM_CONFIG } from "@/lib/saas_config";
 
 export default function UserRegisterPage() {
     const [state, action, isPending] = useActionState(registerUserAction, null);
@@ -17,7 +18,7 @@ export default function UserRegisterPage() {
         getPublicConfig().then(setConfig);
     }, []);
 
-    const tenantName = config.tenant?.name || "TSF Command";
+    const tenantName = config.tenant?.name || PLATFORM_CONFIG.name;
     const roles = config.tenant?.roles || [];
     const tenantLogo = config.tenant?.logo;
 
@@ -174,7 +175,9 @@ export default function UserRegisterPage() {
                 <CardFooter className="bg-black/20 py-4 justify-center">
                     <div className="text-[9px] font-black text-slate-600 uppercase tracking-[0.3em] flex items-center gap-2">
                         <ShieldCheck size={12} className="text-cyan-500/50" />
-                        Infrastructure Secured by TSF Federation
+                        \u003cp className=\"text-[10px] text-slate-800 font-black uppercase tracking-[0.3em]\"\u003e
+                        Infrastructure Secured by {PLATFORM_CONFIG.federation_name}
+                        \u003c/p\u003e
                     </div>
                 </CardFooter>
             </Card>

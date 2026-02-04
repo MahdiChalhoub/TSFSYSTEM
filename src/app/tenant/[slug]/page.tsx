@@ -79,7 +79,7 @@ export default async function TenantWelcomePage({ params }: { params: Promise<{ 
                             <div className="flex justify-between items-center relative">
                                 <div className="space-y-1">
                                     <h2 className="text-xl font-bold text-white">Secure Access</h2>
-                                    <p className="text-[10px] text-slate-500 font-medium tracking-wide uppercase">{slug}{PLATFORM_CONFIG.suffix}</p>
+                                    <p className="text-[10px] text-slate-500 font-medium tracking-wide uppercase">{slug}{typeof window !== 'undefined' ? (window.location.host.includes('localhost') ? '.localhost' : PLATFORM_CONFIG.suffix) : PLATFORM_CONFIG.suffix}</p>
                                 </div>
                                 <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-white border border-white/10 group-hover:scale-110 transition-transform">
                                     <Lock size={20} />
@@ -110,7 +110,7 @@ export default async function TenantWelcomePage({ params }: { params: Promise<{ 
 
                         <div className="flex items-center gap-6 pt-4">
                             <a
-                                href={`http://saas.${PLATFORM_CONFIG.domain}`}
+                                href={`http://saas.${typeof window !== 'undefined' && window.location.host.includes('localhost') ? 'localhost:3000' : PLATFORM_CONFIG.domain}`}
                                 className="inline-flex items-center gap-2 text-[10px] text-slate-600 hover:text-emerald-500 font-bold uppercase tracking-[0.2em] transition-colors"
                             >
                                 <ShieldCheck size={14} /> Master Panel

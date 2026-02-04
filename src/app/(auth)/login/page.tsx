@@ -10,6 +10,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, AlertCircle, ShieldCheck, SquareTerminal, Command, Building2, Globe } from "lucide-react";
+import { PLATFORM_CONFIG } from "@/lib/saas_config";
 
 const initialState: { error: any; success?: boolean } = {
     error: {},
@@ -58,11 +59,11 @@ function LoginContent() {
     const isSaaS = subdomain === 'saas' || tenant?.slug === 'saas' || tenant?.name === 'SaaS Federation';
     const isRoot = (!tenant || !tenant.name) && !isSaaS;
 
-    const displayTitle = isSaaS ? "SaaS FEDERATION" : (isRoot ? "TSF CLOUD" : (tenant?.name || "TSF Cloud").toUpperCase());
+    const displayTitle = isSaaS ? "SAAS CONTROL" : (isRoot ? PLATFORM_CONFIG.name.toUpperCase() : (tenant?.name || PLATFORM_CONFIG.name).toUpperCase());
     const displaySubtitle = isSaaS
         ? "Global infrastructure management & orchestration."
         : (isRoot
-            ? "Enterprise Resource Federation Platform"
+            ? PLATFORM_CONFIG.tagline
             : "Secure enterprise gateway. Authorized personnel only.");
 
     return (
@@ -129,7 +130,7 @@ function LoginContent() {
                                             className="bg-[#1e293b] border-slate-700 h-14 rounded-lg text-white font-mono pl-4 pr-32 focus:ring-emerald-500 focus:border-emerald-500"
                                         />
                                         <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs font-mono select-none">
-                                            .tsfcloud
+                                            {typeof window !== 'undefined' ? (window.location.host.includes('localhost') ? '.localhost' : PLATFORM_CONFIG.suffix) : PLATFORM_CONFIG.suffix}
                                         </div>
                                     </div>
                                     <p className="text-[10px] text-slate-600">
