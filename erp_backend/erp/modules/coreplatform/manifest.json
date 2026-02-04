@@ -7,38 +7,5 @@
     "dependencies": [],
     "author": "TSF Cloud System",
     "website": "https://tsf.ci",
-    "sidebar_items": [
-        {
-            "title": "SaaS Control",
-            "icon": "ShieldCheck",
-            "module": "coreplatform",
-            "visibility": "saas",
-            "children": [
-                {
-                    "title": "SaaS Dashboard",
-                    "path": "/saas/dashboard"
-                },
-                {
-                    "title": "Organizations",
-                    "path": "/saas/organizations"
-                },
-                {
-                    "title": "Global Registry",
-                    "path": "/saas/modules"
-                },
-                {
-                    "title": "Instance Switcher",
-                    "path": "/saas/switcher"
-                },
-                {
-                    "title": "Platform Health",
-                    "path": "/saas/health"
-                },
-                {
-                    "title": "Kernel Updates",
-                    "path": "/saas/updates"
-                }
-            ]
-        }
-    ]
+    "sidebar_items": []
 }
