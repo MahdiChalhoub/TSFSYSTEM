@@ -130,6 +130,17 @@ const MENU_ITEMS = [
         ]
     },
     {
+        title: 'SaaS Control',
+        icon: ShieldCheck,
+        visibility: 'saas',
+        children: [
+            { title: 'SaaS Dashboard', path: '/saas/dashboard' },
+            { title: 'Organizations', path: '/saas/organizations' },
+            { title: 'Global Registry', path: '/saas/modules' },
+            { title: 'Kernel Updates', path: '/saas/updates' },
+        ]
+    },
+    {
         title: 'System Settings',
         icon: Settings,
         module: 'core',
@@ -180,7 +191,6 @@ export function Sidebar({ isSaas = false }: { isSaas?: boolean }) {
 
     const filteredItems = allItems.filter(item => {
         // 1. Filter by SaaS Panel visibility logic
-        if (!isSaas && item.title === 'SaaS Panel') return false;
         if (!isSaas && item.visibility === 'saas') return false;
 
         // 2. Filter by Installed Module
