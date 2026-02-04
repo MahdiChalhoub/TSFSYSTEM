@@ -15,6 +15,8 @@ import { getUser } from '@/app/actions/auth';
 
 import { headers } from 'next/headers';
 
+export const dynamic = 'force-dynamic';
+
 const outfit = Outfit({ subsets: ['latin'] });
 
 export default async function AdminLayout({
