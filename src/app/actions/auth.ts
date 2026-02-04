@@ -45,35 +45,48 @@ export async function loginAction(prevState: any, formData: FormData) {
 
     if (data.slug && data.slug.toString().trim() !== '') {
         const slug = data.slug.toString().trim();
-        // Force redirect to tenant domain
-        // In prod: slug.tsfcloud.com
-        // In local: slug.localhost:3000
 
-        // We need to know if we are local or prod to construct URL.
         const headerStore = await import('next/headers');
         const headersList = await headerStore.headers();
         const host = headersList.get('host') || "";
 
-        let protocol = "http";
-        if (headersList.get('x-forwarded-proto') === 'https' || host.includes('vercel.app')) {
-            protocol = "https";
-        }
+        // CHECK IF HOST IS AN IP ADDRESS (IPv4)
+        const isIp = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?::[0-9]+)?$/.test(host);
 
-        // Construct new host
-        let newHost = "";
-        if (host.includes('localhost')) {
-            newHost = `${slug}.localhost:3000`;
-        } else {
-            // Assume prod is *.domain.com
-            // If current host is `app.domain.com`, replace `app`? 
-            // Or if root `domain.com`, prepend slug.
-            // Simplest: `slug.tsfcloud.com` if we hardcode or env var.
-            const baseDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "tsfcloud.com";
-            newHost = `${slug}.${baseDomain}`;
+        if (isIp) {
+            // WE ARE ON AN IP ADDRESS via direct access (e.g. http://91.99.186.183:3000)
+            // We CANNOT redirect to saas.91.99.186.183
+            // So we skip the redirection and allow the login to proceed on this host.
+            // The user will just stay on the IP.
+            console.log(`[AUTH] IP Address detected (${host}). Skipping subdomain redirect for slug: ${slug}`);
         }
+        else {
+            // Domain-based logic (localhost or production domain)
+            let protocol = "http";
+            if (headersList.get('x-forwarded-proto') === 'https' || host.includes('vercel.app')) {
+                protocol = "https";
+            }
 
-        redirect(`${protocol}://${newHost}/login?u=${btoa(data.username as string)}`);
-        return; // Unreachable
+            let newHost = "";
+            if (host.includes('localhost')) {
+                newHost = `${slug}.localhost:3000`;
+            } else {
+                const baseDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "tsfcloud.com";
+                // Avoid double-slugging
+                if (host.includes(baseDomain) && !host.startsWith('www')) {
+                    // Already on a subdomain? Replacing it is safer.
+                    newHost = `${slug}.${baseDomain}`;
+                } else {
+                    newHost = `${slug}.${baseDomain}`;
+                }
+            }
+
+            // Only redirect if we are not already on that host
+            if (host !== newHost) {
+                redirect(`${protocol}://${newHost}/login?u=${btoa(data.username as string)}`);
+                return;
+            }
+        }
     }
 
     // Normal Login (Tenant Context detected or ignored)
