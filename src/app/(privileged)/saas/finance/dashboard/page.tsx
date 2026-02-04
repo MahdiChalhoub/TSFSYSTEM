@@ -1,5 +1,5 @@
 import { getFinancialDashboardStats } from '@/app/actions/finance/dashboard'
-import FinanceDashboardViewer from '@/app/(privileged)/admin/finance/dashboard/viewer'
+import FinanceDashboardViewer from '@/app/(privileged)/saas/finance/dashboard/viewer'
 
 import { cookies } from 'next/headers'
 

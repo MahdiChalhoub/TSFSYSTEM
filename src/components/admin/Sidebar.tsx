@@ -23,6 +23,8 @@ import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
 import { usePathname } from 'next/navigation';
 import { logoutAction } from "@/app/actions/auth";
+import { PLATFORM_CONFIG } from '@/lib/saas_config';
+
 import { getSaaSModules, getDynamicSidebar } from "@/app/actions/saas/modules";
 
 const ICON_MAP: Record<string, any> = {
@@ -95,23 +97,23 @@ const MENU_ITEMS = [
         icon: FileText,
         module: 'finance',
         children: [
-            { title: 'Performance Dashboard', path: '/admin/finance/dashboard' },
-            { title: 'Accounts & Drawers', path: '/admin/finance/accounts' },
-            { title: 'Chart of Accounts', path: '/admin/finance/chart-of-accounts' },
-            { title: 'COA Templates', path: '/admin/finance/chart-of-accounts/templates' },
-            { title: 'Migration Tool', path: '/admin/finance/chart-of-accounts/migrate' },
-            { title: 'General Ledger', path: '/admin/finance/ledger' },
-            { title: 'Opening Balances', path: '/admin/finance/ledger/opening' },
-            { title: 'Account Statement', path: '/admin/finance/reports/statement' },
-            { title: 'Trial Balance', path: '/admin/finance/reports/trial-balance' },
-            { title: 'Profit & Loss', path: '/admin/finance/reports/pnl' },
-            { title: 'Balance Sheet', path: '/admin/finance/reports/balance-sheet' },
-            { title: 'Fiscal Years', path: '/admin/finance/fiscal-years' },
-            { title: 'Pricing Engine', path: '/admin/finance/pricing' },
-            { title: 'Loan Contracts', path: '/admin/finance/loans' },
-            { title: 'Financial Events', path: '/admin/finance/events' },
-            { title: 'Posting Rules', path: '/admin/finance/settings/posting-rules' },
-            { title: 'Financial Settings', path: '/admin/finance/settings' },
+            { title: 'Performance Dashboard', path: '/saas/finance/dashboard' },
+            { title: 'Accounts & Drawers', path: '/saas/finance/accounts' },
+            { title: 'Chart of Accounts', path: '/saas/finance/chart-of-accounts' },
+            { title: 'COA Templates', path: '/saas/finance/chart-of-accounts/templates' },
+            { title: 'Migration Tool', path: '/saas/finance/chart-of-accounts/migrate' },
+            { title: 'General Ledger', path: '/saas/finance/ledger' },
+            { title: 'Opening Balances', path: '/saas/finance/ledger/opening' },
+            { title: 'Account Statement', path: '/saas/finance/reports/statement' },
+            { title: 'Trial Balance', path: '/saas/finance/reports/trial-balance' },
+            { title: 'Profit & Loss', path: '/saas/finance/reports/pnl' },
+            { title: 'Balance Sheet', path: '/saas/finance/reports/balance-sheet' },
+            { title: 'Fiscal Years', path: '/saas/finance/fiscal-years' },
+            { title: 'Pricing Engine', path: '/saas/finance/pricing' },
+            { title: 'Loan Contracts', path: '/saas/finance/loans' },
+            { title: 'Financial Events', path: '/saas/finance/events' },
+            { title: 'Posting Rules', path: '/saas/finance/settings/posting-rules' },
+            { title: 'Financial Settings', path: '/saas/finance/settings' },
         ]
     },
     {
@@ -245,7 +247,7 @@ export function Sidebar({
                         T
                     </div>
                     <div>
-                        <h1 className="text-xl font-bold text-white tracking-tight leading-none">TSF City</h1>
+                        <h1 className="text-xl font-bold text-white tracking-tight leading-none">{PLATFORM_CONFIG.name}</h1>
                         <p className="text-xs text-emerald-400 font-medium mt-1.5">{isSaas ? 'Federation Admin' : 'Workspace Admin'}</p>
                     </div>
                 </div>

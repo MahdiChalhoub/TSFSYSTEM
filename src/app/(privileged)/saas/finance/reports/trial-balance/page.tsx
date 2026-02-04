@@ -1,6 +1,6 @@
 import { getChartOfAccounts } from '@/app/actions/finance/accounts'
 import { getFiscalYears } from '@/app/actions/finance/fiscal-year'
-import TrialBalanceViewer from '@/app/(privileged)/admin/finance/reports/trial-balance/viewer'
+import TrialBalanceViewer from '@/app/(privileged)/saas/finance/reports/trial-balance/viewer'
 
 import { cookies } from 'next/headers'
 

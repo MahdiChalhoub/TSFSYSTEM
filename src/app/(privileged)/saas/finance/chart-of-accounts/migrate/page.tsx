@@ -1,6 +1,6 @@
 import { getChartOfAccounts } from '@/app/actions/finance/accounts'
 import { getAllTemplates } from '@/app/actions/finance/coa-templates'
-import CoaMigrationTool from '@/app/(privileged)/admin/finance/chart-of-accounts/migrate/viewer'
+import CoaMigrationTool from '@/app/(privileged)/saas/finance/chart-of-accounts/migrate/viewer'
 
 export default async function CoaMigrationPage() {
     // We get ALL accounts (including inactive) to catch balances stuck in old accounts
