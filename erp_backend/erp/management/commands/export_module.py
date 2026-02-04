@@ -35,10 +35,16 @@ class Command(BaseCommand):
             self._export_module(mod, apps_dir, output_dir)
 
     def _export_module(self, module_name, apps_dir, output_dir):
-        module_path = os.path.join(apps_dir, module_name)
+        # SEARCH LOCATIONS
+        search_paths = [
+            os.path.join(settings.BASE_DIR, 'apps', module_name),
+            os.path.join(settings.BASE_DIR, 'erp', 'modules', module_name)
+        ]
         
-        if not os.path.exists(module_path):
-            self.stdout.write(self.style.ERROR(f"❌ Module '{module_name}' not found in {apps_dir}"))
+        module_path = next((p for p in search_paths if os.path.exists(p)), None)
+        
+        if not module_path:
+            self.stdout.write(self.style.ERROR(f"❌ Module '{module_name}' not found locally."))
             return
 
         manifest_path = os.path.join(module_path, 'manifest.json')
