@@ -41,15 +41,19 @@ class SubscriptionPlanViewSet(viewsets.ReadOnlyModelViewSet):
         
         # Checking if payment required...
         if plan.monthly_price > 0:
-            # Create Pending Payment
+            # Create Payment (Mocking immediate success for MVP)
             payment = SubscriptionService.record_payment(
                 organization=organization,
                 plan=plan,
                 amount=plan.monthly_price, # Default to monthly
                 billing_cycle='MONTHLY'
             )
+            
+            # Immediately activate plan since record_payment sets status to COMPLETED
+            SubscriptionService.activate_plan(organization, plan)
+            
             return Response({
-                "message": "Payment initiated",
+                "message": "Plan upgraded successfully",
                 "payment_id": payment.id,
                 "amount": payment.amount
             })

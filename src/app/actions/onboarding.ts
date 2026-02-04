@@ -14,6 +14,16 @@ export async function getPublicConfig() {
     }
 }
 
+export async function getPublicPlans() {
+    try {
+        const data = await erpFetch('saas/plans/');
+        return Array.isArray(data) ? data : [];
+    } catch (error) {
+        console.error("Public plans fetch error:", error);
+        return [];
+    }
+}
+
 export async function registerBusinessAction(prevState: any, formData: FormData) {
     const rawData = Object.fromEntries(formData.entries());
 

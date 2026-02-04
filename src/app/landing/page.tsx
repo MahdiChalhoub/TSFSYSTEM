@@ -9,6 +9,7 @@ import { Building2, UserPlus, LogIn, ArrowRight, ShieldCheck, Zap, Globe, Sparkl
 import { toast } from "sonner"
 import { PLATFORM_CONFIG } from "@/lib/saas_config"
 import { checkWorkspace } from "@/app/actions/onboarding"
+import PricingSection from "@/components/landing/PricingSection"
 
 type AuthMode = 'login' | 'signup' | 'register'
 
@@ -287,6 +288,9 @@ export default function LandingPage() {
                     </div>
                 </div>
             </Card>
+
+            {/* Pricing Section */}
+            <PricingSection />
 
             {/* Bottom Credits */}
             <div className="mt-16 text-[11px] font-black text-slate-700 uppercase tracking-[0.8em] relative z-10 flex items-center gap-4">
