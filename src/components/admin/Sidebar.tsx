@@ -137,12 +137,6 @@ const MENU_ITEMS = [
             { title: 'Sites & Branches', path: '/admin/settings/sites' },
         ]
     },
-    {
-        title: 'System Updates',
-        icon: Zap,
-        path: '/saas/updates',
-        visibility: 'saas'
-    },
 ];
 
 export function Sidebar({ isSaas = false }: { isSaas?: boolean }) {
