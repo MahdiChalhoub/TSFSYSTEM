@@ -165,7 +165,26 @@ export default function MCPDashboardPage() {
             </div>
 
             {/* Navigation Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                <Link href="/saas/mcp/chat">
+                    <Card className="rounded-2xl shadow-lg border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50 hover:shadow-xl transition-shadow cursor-pointer group">
+                        <CardHeader className="pb-3">
+                            <div className="flex items-center justify-between">
+                                <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white">
+                                    <Bot size={24} />
+                                </div>
+                                <ArrowRight className="text-purple-300 group-hover:text-purple-500 transition-colors" />
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <CardTitle className="text-lg mb-1 text-purple-900">AI Chat</CardTitle>
+                            <p className="text-sm text-purple-600">
+                                Start a conversation with AI
+                            </p>
+                        </CardContent>
+                    </Card>
+                </Link>
+
                 <Link href="/saas/mcp/providers">
                     <Card className="rounded-2xl shadow-lg border-gray-100 hover:shadow-xl transition-shadow cursor-pointer group">
                         <CardHeader className="pb-3">
