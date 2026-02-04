@@ -23,6 +23,21 @@ class ModuleManager:
             f.write("LOCKED")
 
     @staticmethod
+    def get_module_path(module_name):
+        """
+        Returns the absolute path to a module on the filesystem.
+        Checks both new /apps and legacy /erp/modules.
+        """
+        paths = [
+            os.path.join(ModuleManager.MODULES_DIR, module_name),
+            os.path.join(ModuleManager.LEGACY_MODULES_DIR, module_name)
+        ]
+        for p in paths:
+            if os.path.exists(p) and os.path.isdir(p):
+                return p
+        return None
+
+    @staticmethod
     def release_lock():
         if os.path.exists(ModuleManager.LOCK_FILE):
             os.remove(ModuleManager.LOCK_FILE)

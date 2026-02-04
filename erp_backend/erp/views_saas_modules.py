@@ -131,7 +131,8 @@ class SaaSModuleViewSet(viewsets.ViewSet):
         
         # 2. Add items from ACTIVE modules
         # If no organization context, we treat as MASTER PANEL (is_saas)
-        is_saas = not hasattr(request, 'tenant') or request.tenant is None
+        # BUGFIX: Also treat 'saas' slug organization as SaaS context for panel visibility
+        is_saas = not hasattr(request, 'tenant') or request.tenant is None or getattr(request.tenant, 'slug', '') == 'saas'
         
         active_modules = SystemModule.objects.all()
         for m in active_modules:
