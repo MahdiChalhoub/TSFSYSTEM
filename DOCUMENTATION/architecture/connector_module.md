@@ -184,12 +184,22 @@ The Connector checks the Permission Engine to determine UNAUTHORIZED state.
 
 ## 9. Files Reference
 
+### Backend
 | File | Purpose |
 |------|---------|
 | [connector_models.py](file:///c:/tsfci/erp_backend/erp/connector_models.py) | Data models |
 | [connector_engine.py](file:///c:/tsfci/erp_backend/erp/connector_engine.py) | Runtime broker |
 | [views_connector.py](file:///c:/tsfci/erp_backend/erp/views_connector.py) | API views |
-| [connectors/index.ts](file:///c:/tsfci/src/lib/connectors/index.ts) | Frontend library |
+
+### Frontend
+| File | Purpose |
+|------|---------|
+| [connectors/index.ts](file:///c:/tsfci/src/lib/connectors/index.ts) | Frontend connector library |
+| [connector.ts](file:///c:/tsfci/src/app/actions/saas/connector.ts) | Server actions |
+| [/saas/connector/page.tsx](file:///c:/tsfci/src/app/(privileged)/saas/connector/page.tsx) | Dashboard |
+| [/saas/connector/policies/page.tsx](file:///c:/tsfci/src/app/(privileged)/saas/connector/policies/page.tsx) | Policy configuration |
+| [/saas/connector/buffer/page.tsx](file:///c:/tsfci/src/app/(privileged)/saas/connector/buffer/page.tsx) | Buffer queue |
+| [/saas/connector/logs/page.tsx](file:///c:/tsfci/src/app/(privileged)/saas/connector/logs/page.tsx) | Routing logs |
 
 ---
 
