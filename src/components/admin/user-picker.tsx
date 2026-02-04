@@ -17,7 +17,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
-import { getUsersList } from '@/app/(privileged)/admin/finance/accounts/picker-actions';
+import { getUsersList } from '@/app/(privileged)/saas/finance/accounts/picker-actions';
 
 export function UserPicker({ value, onChange, disabled = false }: {
     value?: string,

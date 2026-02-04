@@ -1,6 +1,6 @@
 import { getBalanceSheetReport } from '@/app/actions/finance/accounts'
 import { getFiscalYears } from '@/app/actions/finance/fiscal-year'
-import BalanceSheetViewer from '@/app/(privileged)/admin/finance/reports/balance-sheet/viewer'
+import BalanceSheetViewer from '@/app/(privileged)/saas/finance/reports/balance-sheet/viewer'
 
 import { cookies } from 'next/headers'
 
