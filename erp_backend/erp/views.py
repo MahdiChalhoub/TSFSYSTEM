@@ -320,6 +320,21 @@ class OrganizationViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.slug == 'saas':
+            protected_fields = ['is_active', 'current_plan', 'plan_expiry_at']
+            for field in protected_fields:
+                if field in request.data:
+                    return Response({"error": f"Cannot modify '{field}' on the master SaaS organization."}, status=status.HTTP_403_FORBIDDEN)
+        return super().update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.slug == 'saas':
+            return Response({"error": "Cannot delete the master SaaS organization."}, status=status.HTTP_403_FORBIDDEN)
+        return super().destroy(request, *args, **kwargs)
+
 from rest_framework import permissions
 
 
