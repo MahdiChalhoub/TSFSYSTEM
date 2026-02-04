@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { getPlans, getPlanCategories, createPlan, createPlanCategory } from "./actions"
+import { getSaaSModules } from "@/app/actions/saas/modules"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,18 +15,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 
-const AVAILABLE_MODULES = [
-    { code: 'inventory', name: 'Inventory Management' },
-    { code: 'finance', name: 'Finance & Accounting' },
-    { code: 'pos', name: 'Point of Sale' },
-    { code: 'reports', name: 'Reports & Analytics' },
-    { code: 'hr', name: 'Human Resources' },
-    { code: 'crm', name: 'Customer Relations' },
-]
-
 export default function SubscriptionPlansPage() {
     const [plans, setPlans] = useState<any[]>([])
     const [categories, setCategories] = useState<any[]>([])
+    const [availableModules, setAvailableModules] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
 
     // New Plan Modal
@@ -49,12 +42,14 @@ export default function SubscriptionPlansPage() {
 
     async function loadData() {
         try {
-            const [plansData, categoriesData] = await Promise.all([
+            const [plansData, categoriesData, modulesData] = await Promise.all([
                 getPlans(),
-                getPlanCategories()
+                getPlanCategories(),
+                getSaaSModules()
             ])
             setPlans(Array.isArray(plansData) ? plansData : [])
             setCategories(Array.isArray(categoriesData) ? categoriesData : [])
+            setAvailableModules(Array.isArray(modulesData) ? modulesData : [])
         } catch {
             toast.error("Failed to load subscription data")
         } finally {
@@ -285,7 +280,7 @@ export default function SubscriptionPlansPage() {
                                 <div className="border-t pt-4">
                                     <Label className="text-sm font-bold text-gray-700 mb-3 block">Enabled Modules</Label>
                                     <div className="grid grid-cols-2 gap-2">
-                                        {AVAILABLE_MODULES.map(m => (
+                                        {availableModules.map((m: any) => (
                                             <div key={m.code} className="flex items-center gap-2">
                                                 <Checkbox
                                                     id={m.code}
