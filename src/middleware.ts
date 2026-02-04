@@ -38,7 +38,10 @@ export default async function middleware(req: NextRequest) {
         }
 
         // Default to Landing Page
-        const isAuthRoute = url.pathname.startsWith('/login') || url.pathname.startsWith('/register');
+        const isAuthRoute = url.pathname.startsWith('/login')
+            || url.pathname.startsWith('/register')
+            || url.pathname === '/saas/login'; // EXPLICITLY ALLOW SAAS LOGIN
+
         if (isAuthRoute) {
             return NextResponse.next();
         }

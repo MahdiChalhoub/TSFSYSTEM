@@ -73,9 +73,29 @@ export default function LandingPage() {
 
                 const check = await checkWorkspace(formData.workspace)
                 if (check.exists) {
-                    const route = mode === 'login' ? '/login' : '/register/user'
-                    const host = window.location.host.includes('localhost') ? `http://${formData.workspace}.localhost:3000${route}` : `https://${formData.workspace}.${window.location.host}${route}`
-                    window.location.href = host
+                    const params = new URLSearchParams()
+                    // Special Handling for SaaS
+                    if (formData.workspace === 'saas') {
+                        window.location.href = '/saas/login'
+                        return
+                    }
+
+                    // Check if Host is IP
+                    const isIp = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?::[0-9]+)?$/.test(window.location.host);
+
+                    if (isIp) {
+                        // IP LOGIC: Path based or query based
+                        const route = mode === 'login' ? '/login' : '/register/user'
+                        // We pass slug as query param so login page knows context
+                        window.location.href = `${window.location.protocol}//${window.location.host}${route}?slug=${formData.workspace}`
+                    } else {
+                        // DOMAIN LOGIC: Subdomain
+                        const route = mode === 'login' ? '/login' : '/register/user'
+                        const host = window.location.host.includes('localhost')
+                            ? `${window.location.protocol}//${formData.workspace}.localhost:3000${route}`
+                            : `${window.location.protocol}//${formData.workspace}.${window.location.host}${route}`
+                        window.location.href = host
+                    }
                 } else {
                     setError(`Workspace '${formData.workspace}' not found in the federation.`)
                 }
