@@ -10,6 +10,9 @@ from .views import (
     CountryViewSet, ContactViewSet, EmployeeViewSet, RoleViewSet,
     BarcodeSettingsViewSet, TransactionSequenceViewSet
 )
+from .views_subscription import (
+    PlanCategoryViewSet, SubscriptionPlanViewSet, SubscriptionPaymentViewSet
+)
 from .views_auth import login_view, logout_view, me_view
 from .views_saas_modules import SaaSModuleViewSet, OrgModuleViewSet
 from .views_system import SystemUpdateViewSet
@@ -54,6 +57,11 @@ router.register(r'sequences', TransactionSequenceViewSet)
 # SaaS Management
 router.register(r'saas/modules', SaaSModuleViewSet, basename='saas-modules')
 router.register(r'saas/org-modules', OrgModuleViewSet, basename='saas-org-modules')
+
+# Subscription
+router.register(r'saas/plans/categories', PlanCategoryViewSet)
+router.register(r'saas/plans', SubscriptionPlanViewSet)
+router.register(r'saas/payments', SubscriptionPaymentViewSet, basename='subscription-payments')
 
 urlpatterns = [
     path('health/', health_check),
