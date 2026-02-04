@@ -33,6 +33,10 @@
                 {
                     "title": "Platform Health",
                     "path": "/admin/saas/health"
+                },
+                {
+                    "title": "System Updates",
+                    "path": "/admin/saas/updates"
                 }
             ]
         }
