@@ -27,7 +27,7 @@ export async function getTenantContext() {
 
     console.log(`[DEBUG] Subdomain detected: ${subdomain}`);
 
-    if (!subdomain || subdomain === "www") {
+    if (!subdomain || subdomain === "www" || subdomain === "saas") {
         // Root Domain only - No Tenant Context (Fallback)
         return null;
     }
