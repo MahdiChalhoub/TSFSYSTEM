@@ -62,8 +62,11 @@ export async function loginAction(prevState: any, formData: FormData) {
         }
         else {
             // Domain-based logic (localhost or production domain)
+            const baseDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "tsfcloud.com";
             let protocol = "http";
-            if (headersList.get('x-forwarded-proto') === 'https' || host.includes('vercel.app')) {
+
+            // Prefer HTTPS if header exists OR if we are on the production domain
+            if (headersList.get('x-forwarded-proto') === 'https' || host.includes(baseDomain) || host.includes('vercel.app')) {
                 protocol = "https";
             }
 
