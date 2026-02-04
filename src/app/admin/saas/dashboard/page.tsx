@@ -39,6 +39,11 @@ export default async function SaasMasterDashboard() {
                     <p className="text-gray-400 font-medium text-lg">Infrastructure & Tenant Management Engine</p>
                 </div>
                 <div className="flex gap-4">
+                    <Link href="/saas/updates">
+                        <Button variant="outline" className="border-indigo-500/20 bg-indigo-500/5 hover:bg-indigo-500/10 text-indigo-400 rounded-2xl px-6 py-6 font-bold flex gap-2 transition-all">
+                            <Zap size={18} fill="currentColor" /> System Updates
+                        </Button>
+                    </Link>
                     <Button variant="outline" className="border-gray-800 bg-gray-900/50 hover:bg-gray-800 text-white rounded-2xl px-6 py-6 font-bold flex gap-2">
                         <Activity size={18} /> System Health
                     </Button>

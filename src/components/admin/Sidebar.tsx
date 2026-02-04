@@ -137,6 +137,12 @@ const MENU_ITEMS = [
             { title: 'Sites & Branches', path: '/admin/settings/sites' },
         ]
     },
+    {
+        title: 'System Updates',
+        icon: Zap,
+        path: '/saas/updates',
+        visibility: 'saas'
+    },
 ];
 
 export function Sidebar({ isSaas = false }: { isSaas?: boolean }) {
@@ -181,6 +187,7 @@ export function Sidebar({ isSaas = false }: { isSaas?: boolean }) {
     const filteredItems = allItems.filter(item => {
         // 1. Filter by SaaS Panel visibility logic
         if (!isSaas && item.title === 'SaaS Panel') return false;
+        if (!isSaas && item.visibility === 'saas') return false;
 
         // 2. Filter by Installed Module
         // If the item has a 'module' property, check if it's installed.
