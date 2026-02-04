@@ -155,7 +155,14 @@ export async function hardLockFiscalYear(id: number) {
     }
 }
 
-export async function getFiscalGaps() {
+export type FiscalGap = {
+    days: number
+    after: string
+    startDate: string
+    endDate: string
+}
+
+export async function getFiscalGaps(): Promise<FiscalGap[]> {
     // This could remain client-side logic or be moved to Django.
     // For now, let's keep it simple and return empty or implement in Django if needed.
     return []

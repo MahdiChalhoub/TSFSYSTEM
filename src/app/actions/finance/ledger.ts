@@ -151,3 +151,20 @@ export async function getOpeningEntries() {
         return []
     }
 }
+
+export async function getJournalEntry(id: number) {
+    try {
+        const result = await erpFetch(`journal/${id}/`)
+        return result
+    } catch (error) {
+        console.error("Failed to fetch journal entry:", error)
+        return null
+    }
+}
+
+export async function createOpeningBalanceEntry(data: any) {
+    return createJournalEntry({
+        ...data,
+        entry_type: 'OPENING_BALANCE'
+    })
+}
