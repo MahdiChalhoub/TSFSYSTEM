@@ -9,7 +9,7 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: { si
     const { toggleSidebar } = useAdmin();
 
     return (
-        <header className="h-20 glass sticky top-0 z-40 flex items-center justify-between px-4 md:px-8 shrink-0 transition-all">
+        <header className="h-20 glass sticky top-0 z-40 flex items-center justify-between px-4 md:px-8 shrink-0 transition-all border-b border-gray-100">
             <div className="flex items-center gap-4">
                 <button
                     onClick={toggleSidebar}

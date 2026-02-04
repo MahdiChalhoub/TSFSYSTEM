@@ -161,15 +161,15 @@ export default function SaaSModulesPage() {
 
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 md:gap-4">
                 <div>
-                    <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight">Global Registry</h2>
-                    <p className="text-gray-400 mt-1 md:mt-2 font-medium text-sm md:text-base">Coordinate system features across all tenant distributions</p>
-                    {lastSynced && <p className="text-emerald-500/50 text-[10px] font-mono mt-2 uppercase tracking-widest">Last Synced: {lastSynced}</p>}
+                    <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">Global Registry</h2>
+                    <p className="text-gray-500 mt-1 md:mt-2 font-medium text-sm md:text-base">Coordinate system features across all tenant distributions</p>
+                    {lastSynced && <p className="text-emerald-600/50 text-[10px] font-mono mt-2 uppercase tracking-widest">Last Synced: {lastSynced}</p>}
                 </div>
                 <div className="flex flex-wrap gap-2 md:gap-4 w-full sm:w-auto">
                     <Button
                         onClick={() => fileInputRef.current?.click()}
                         disabled={syncing}
-                        className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-500 text-white px-4 md:px-6 py-4 md:py-6 rounded-2xl flex gap-2 font-bold transition-all shadow-lg shadow-emerald-900/40 text-xs md:text-sm"
+                        className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-500 text-white px-4 md:px-6 py-4 md:py-6 rounded-2xl flex gap-2 font-bold transition-all shadow-lg shadow-emerald-200 text-xs md:text-sm"
                     >
                         <UploadCloud size={18} />
                         {syncing ? "..." : "Upload"}
@@ -177,7 +177,7 @@ export default function SaaSModulesPage() {
                     <Button
                         onClick={handleSync}
                         disabled={syncing}
-                        className="flex-1 sm:flex-none bg-gray-800 hover:bg-gray-700 text-white px-4 md:px-6 py-4 md:py-6 rounded-2xl flex gap-2 font-bold transition-all shadow-xl text-xs md:text-sm"
+                        className="flex-1 sm:flex-none bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 md:px-6 py-4 md:py-6 rounded-2xl flex gap-2 font-bold transition-all shadow-sm text-xs md:text-sm"
                     >
                         <RefreshCw size={18} className={syncing ? "animate-spin" : ""} />
                         {syncing ? "..." : "Sync"}
@@ -191,41 +191,41 @@ export default function SaaSModulesPage() {
                 ) : modules.length === 0 ? (
                     <div className="col-span-full py-20 text-center text-gray-500 font-medium font-mono">No modules detected in filesystem.</div>
                 ) : modules.map((m) => (
-                    <Card key={m.code} className="bg-[#0F172A]/80 backdrop-blur-md border-gray-800 hover:border-emerald-500/50 transition-all rounded-[2.5rem] overflow-hidden group shadow-2xl flex flex-col">
+                    <Card key={m.code} className="bg-white border-gray-100 hover:border-emerald-500/30 transition-all rounded-[2.5rem] overflow-hidden group shadow-xl hover:shadow-2xl flex flex-col">
                         <CardHeader className="pb-4 relative">
                             <div className="flex justify-between items-start">
-                                <div className={`p-4 rounded-2xl ${m.is_core ? 'bg-indigo-500/10 text-indigo-400' : 'bg-emerald-500/10 text-emerald-400'}`}>
+                                <div className={`p-4 rounded-2xl shadow-sm border ${m.is_core ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
                                     <Box size={28} />
                                 </div>
                                 <div className="flex flex-col items-end gap-2">
                                     {m.is_core && (
-                                        <Badge className="bg-indigo-500/10 text-indigo-400 border-indigo-500/20 px-3 py-1 font-black uppercase text-[10px]">
+                                        <Badge className="bg-indigo-50 text-indigo-600 border-indigo-100 px-3 py-1 font-black uppercase text-[10px]">
                                             Core Module
                                         </Badge>
                                     )}
-                                    <div className="text-[10px] font-black text-gray-600 uppercase tracking-widest">{m.version}</div>
+                                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{m.version}</div>
                                 </div>
                             </div>
-                            <CardTitle className="text-2xl font-black text-white mt-6 tracking-tight">{m.name}</CardTitle>
-                            <CardDescription className="text-gray-500 text-xs font-mono">
+                            <CardTitle className="text-2xl font-black text-gray-900 mt-6 tracking-tight">{m.name}</CardTitle>
+                            <CardDescription className="text-gray-400 text-xs font-mono">
                                 ID: {m.code}
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6 flex-grow flex flex-col justify-between p-8 pt-2">
-                            <p className="text-sm text-gray-400 leading-relaxed font-medium">
+                            <p className="text-sm text-gray-500 leading-relaxed font-medium">
                                 {m.description || "No description provided for this module."}
                             </p>
 
-                            <div className="space-y-6 pt-6 border-t border-gray-800/50">
-                                <div className="flex justify-between items-center bg-black/20 p-4 rounded-2xl border border-gray-800/30">
-                                    <span className="text-[10px] text-gray-500 uppercase font-black tracking-widest leading-none">Global Coverage</span>
-                                    <span className="text-emerald-400 font-mono font-bold leading-none">{m.total_installs} Tenants</span>
+                            <div className="space-y-6 pt-6 border-t border-gray-100">
+                                <div className="flex justify-between items-center bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-inner">
+                                    <span className="text-[10px] text-gray-400 uppercase font-black tracking-widest leading-none">Global Coverage</span>
+                                    <span className="text-emerald-600 font-mono font-bold leading-none">{m.total_installs} Tenants</span>
                                 </div>
 
                                 {m.dependencies && m.dependencies.length > 0 && (
                                     <div className="flex flex-wrap gap-2">
                                         {m.dependencies.map((dep: string) => (
-                                            <span key={dep} className="px-3 py-1 bg-gray-900 border border-gray-800 text-[10px] text-gray-500 rounded-xl font-mono">
+                                            <span key={dep} className="px-3 py-1 bg-white border border-gray-200 text-[10px] text-gray-400 rounded-xl font-mono shadow-sm">
                                                 +{dep}
                                             </span>
                                         ))}
@@ -236,7 +236,7 @@ export default function SaaSModulesPage() {
                                     <Button
                                         onClick={() => handleGlobalInstall(m.code)}
                                         disabled={processing === m.code}
-                                        className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl py-6 font-black shadow-lg shadow-emerald-900/40 transition-all active:scale-95 flex gap-2"
+                                        className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl py-6 font-black shadow-lg shadow-emerald-200 transition-all active:scale-95 flex gap-2"
                                     >
                                         <Zap size={16} />
                                         Push
@@ -245,7 +245,7 @@ export default function SaaSModulesPage() {
                                         onClick={() => handleGlobalUninstall(m.code)}
                                         disabled={processing === m.code || m.is_core}
                                         variant="outline"
-                                        className="border-gray-800 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/50 text-gray-400 rounded-2xl py-6 font-black transition-all flex gap-2"
+                                        className="border-gray-100 bg-gray-50 hover:bg-red-50 hover:text-red-500 hover:border-red-100 text-gray-400 rounded-2xl py-6 font-black transition-all flex gap-2"
                                     >
                                         <XCircle size={16} />
                                         Revoke
