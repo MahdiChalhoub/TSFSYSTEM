@@ -289,6 +289,7 @@ class ModuleManager:
     def grant_access(module_name, organization_id):
         """
         Enables a module for a tenant.
+        Also triggers replay of any buffered requests for this module.
         """
         # Ensure it exists system-wide first
         if not SystemModule.objects.filter(name=module_name, status='INSTALLED').exists():
@@ -307,6 +308,17 @@ class ModuleManager:
                 'active_features': default_features
             }
         )
+        
+        # [CONNECTOR INTEGRATION] Replay any buffered requests
+        try:
+            from .connector_engine import connector_engine
+            replayed, failed = connector_engine.replay_buffered(module_name, organization_id)
+            if replayed > 0:
+                print(f"🔄 Connector: Replayed {replayed} buffered requests for {module_name}")
+        except Exception as e:
+            # Don't fail grant_access if replay fails
+            print(f"⚠️ Connector replay failed: {e}")
+        
         return True
 
     @staticmethod

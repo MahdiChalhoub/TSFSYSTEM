@@ -74,6 +74,17 @@ router.register(r'audit/approvals', ApprovalRequestViewSet, basename='approval-r
 router.register(r'audit/task-templates', TaskTemplateViewSet, basename='task-templates')
 router.register(r'audit/tasks', TaskQueueViewSet, basename='task-queue')
 
+# Connector Module (Core Infrastructure)
+from .views_connector import (
+    ModuleContractViewSet, ConnectorPolicyViewSet, BufferedRequestViewSet,
+    ConnectorLogViewSet, ModuleStateOverviewView, ConnectorDashboardView,
+    ConnectorRouteView
+)
+router.register(r'connector/contracts', ModuleContractViewSet, basename='connector-contracts')
+router.register(r'connector/policies', ConnectorPolicyViewSet, basename='connector-policies')
+router.register(r'connector/buffer', BufferedRequestViewSet, basename='connector-buffer')
+router.register(r'connector/logs', ConnectorLogViewSet, basename='connector-logs')
+
 urlpatterns = [
     path('health/', health_check),
     path('auth/login/', login_view, name='auth_login'),
@@ -94,6 +105,11 @@ urlpatterns = [
     path('modules/', ModuleListView.as_view(), name='module_list'),
     path('modules/<str:code>/enable/', ModuleEnableView.as_view(), name='module_enable'),
     path('modules/<str:code>/disable/', ModuleDisableView.as_view(), name='module_disable'),
+
+    # Connector Module (Core Infrastructure)
+    path('connector/states/', ModuleStateOverviewView.as_view(), name='connector_states'),
+    path('connector/dashboard/', ConnectorDashboardView.as_view(), name='connector_dashboard'),
+    path('connector/route/', ConnectorRouteView.as_view(), name='connector_route'),
 
     # Modular Finance API
     path('', include('apps.finance.urls')),
