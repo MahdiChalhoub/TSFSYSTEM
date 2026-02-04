@@ -1,3 +1,5 @@
+import { getOrganizationBySlug, getPublicProducts } from "./actions"
+import { notFound } from "next/navigation"
 import { ShieldCheck, Lock, ArrowRight, Building2, Globe, Command, Sparkles, Activity, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
