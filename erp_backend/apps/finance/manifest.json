@@ -1,36 +1,8 @@
 {
-    "name": "Finance & Accounting",
     "code": "finance",
+    "name": "Finance & Accounting",
     "version": "1.0.0",
-    "description": "Double-entry accounting, hierarchical COA, and financial reporting engine.",
-    "is_core": false,
+    "description": "Double-entry bookkeeping, multi-tenant ledger (COA), and fiscal management.",
     "dependencies": [],
-    "author": "TSF Cloud System",
-    "website": "https://tsf.ci",
-    "sidebar_items": [
-        {
-            "title": "Finance",
-            "icon": "BarChart3",
-            "module": "finance",
-            "visibility": "tenant",
-            "children": [
-                {
-                    "title": "Dashboard",
-                    "path": "/admin/finance/dashboard"
-                },
-                {
-                    "title": "Accounts & Drawers",
-                    "path": "/admin/finance/accounts"
-                },
-                {
-                    "title": "Chart of Accounts",
-                    "path": "/admin/finance/coa"
-                },
-                {
-                    "title": "General Ledger",
-                    "path": "/admin/finance/ledger"
-                }
-            ]
-        }
-    ]
+    "required": true
 }

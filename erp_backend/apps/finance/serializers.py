@@ -1,18 +1,15 @@
 from rest_framework import serializers
-from apps.finance.models import (
-    FinancialAccount, FiscalYear, FiscalPeriod, JournalEntry, 
-    JournalEntryLine, ChartOfAccount, Transaction, Loan, 
-    LoanInstallment, FinancialEvent
+from .models import (
+    FinancialAccount, FiscalPeriod, FiscalYear, ChartOfAccount,
+    JournalEntryLine, JournalEntry, LoanInstallment, Loan,
+    FinancialEvent, Transaction
 )
+from erp.serializers_shared import UserValueSerializer
 
 class FinancialAccountSerializer(serializers.ModelSerializer):
     site_name = serializers.ReadOnlyField(source='site.name')
     ledger_code = serializers.ReadOnlyField(source='ledger_account.code')
-    assignedUsers = serializers.SerializerMethodField()
-
-    def get_assignedUsers(self, obj):
-        from erp.serializers import UserValueSerializer
-        return UserValueSerializer(obj.assigned_users.all(), many=True).data
+    assignedUsers = UserValueSerializer(source='assigned_users', many=True, read_only=True)
 
     class Meta:
         model = FinancialAccount

@@ -1,8 +1,7 @@
 from django.db import models
 from decimal import Decimal
-from erp.models import TenantModel, Site, Contact, User
-# NOTE: We import from erp.models temporarily. 
-# In a perfect world, modules would depend on a 'core' package.
+import uuid
+from erp.models import TenantModel, Site, Contact, Employee, User
 
 class ChartOfAccount(TenantModel):
     ACCOUNT_TYPES = (
@@ -59,7 +58,7 @@ class FinancialAccount(TenantModel):
         unique_together = ('name', 'organization', 'site')
 
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.type})"
 
 class FiscalYear(TenantModel):
     name = models.CharField(max_length=100)
@@ -131,6 +130,7 @@ class JournalEntryLine(TenantModel):
     
     description = models.TextField(null=True, blank=True)
     
+    # Optional links to other domains
     contact_id = models.IntegerField(null=True, blank=True)
     employee_id = models.IntegerField(null=True, blank=True)
 
@@ -149,6 +149,7 @@ class Transaction(TenantModel):
     description = models.TextField(null=True, blank=True)
     reference_id = models.CharField(max_length=100, null=True, blank=True)
     scope = models.CharField(max_length=20, default='OFFICIAL')
+    
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -239,8 +240,11 @@ class FinancialEvent(TenantModel):
     contact = models.ForeignKey(Contact, on_delete=models.PROTECT, related_name='financial_events')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
     
+    # Links to accounting
     transaction = models.ForeignKey(Transaction, on_delete=models.SET_NULL, null=True, blank=True, related_name='financial_events')
     journal_entry = models.ForeignKey(JournalEntry, on_delete=models.SET_NULL, null=True, blank=True, related_name='financial_events')
+    
+    # Optional link to Loan if this event IS a loan disbursement
     loan = models.ForeignKey(Loan, on_delete=models.SET_NULL, null=True, blank=True, related_name='financial_events')
 
     created_at = models.DateTimeField(auto_now_add=True)
