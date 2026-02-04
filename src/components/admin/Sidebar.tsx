@@ -59,7 +59,13 @@ const MENU_ITEMS = [
         module: 'pos',
         children: [
             { title: 'POS Terminal', path: '/admin/sales' },
-            { title: 'Purchase Registry', path: '/admin/purchases' },
+            {
+                title: 'Purchase Registry',
+                children: [
+                    { title: 'Active Invoices', path: '/admin/purchases' },
+                    { title: 'Archived POs', path: '/admin/purchases/archived' },
+                ]
+            },
             { title: 'New PO Invoice', path: '/admin/purchases/new' },
         ]
     },
@@ -292,49 +298,76 @@ export function Sidebar({
     );
 }
 
-function MenuItem({ item, openTab, activeTab, installedModules }: { item: any, openTab: any, activeTab: string, installedModules: Set<string> }) {
+function MenuItem({
+    item,
+    openTab,
+    activeTab,
+    installedModules,
+    level = 0
+}: {
+    item: any,
+    openTab: any,
+    activeTab: string,
+    installedModules: Set<string>,
+    level?: number
+}) {
+    // 1. Module & Visibility Filter
+    if (item.module && item.module !== 'core' && !installedModules.has(item.module)) {
+        return null;
+    }
+
     const Icon = item.icon;
     const hasChildren = item.children && item.children.length > 0;
 
-    // Check if any child is active
-    const isChildActive = hasChildren && item.children.some((child: any) => child.path === activeTab);
+    // 2. Recursive Active State Detection
+    const checkActive = (it: any): boolean => {
+        if (it.path === activeTab) return true;
+        if (it.children) return it.children.some((c: any) => checkActive(c));
+        return false;
+    };
 
-    // Initialize state based on if child is active
+    const isChildActive = hasChildren && item.children.some((child: any) => checkActive(child));
+    const isActive = activeTab === item.path;
+
+    // 3. Expansion Logic
     const [expanded, setExpanded] = useState(isChildActive);
-
-    // Update expansion when route changes
     useEffect(() => {
         if (isChildActive) setExpanded(true);
     }, [activeTab, isChildActive]);
 
-    const isActive = activeTab === item.path;
-
     const handleClick = () => {
         if (hasChildren) {
             setExpanded(!expanded);
-        } else {
+        } else if (item.path) {
             openTab(item.title, item.path);
         }
     };
 
     return (
-        <div>
+        <div className={level > 0 ? "mt-1" : "mt-2"}>
             <div
                 onClick={handleClick}
                 className={clsx(
                     "flex items-center gap-4 px-4 py-3 rounded-2xl cursor-pointer select-none transition-all duration-200 group relative overflow-hidden",
                     isActive || isChildActive
                         ? "bg-emerald-600/10 text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.15)] ring-1 ring-emerald-500/20"
-                        : "text-gray-400 hover:bg-gray-800/60 hover:text-white"
+                        : "text-gray-400 hover:bg-gray-800/60 hover:text-white",
+                    level > 0 && "py-2.5 rounded-xl text-[13px]"
                 )}
             >
                 {/* Active Indicator Strip */}
-                {(isActive || isChildActive) && (
+                {isActive && (
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 rounded-r-full" />
                 )}
 
-                <Icon size={22} className={clsx(isActive || isChildActive ? "text-emerald-400" : "group-hover:text-white transition-colors")} />
-                <span className="flex-1 text-sm font-medium tracking-wide">{item.title}</span>
+                {Icon && (
+                    <Icon size={level === 0 ? 22 : 18} className={clsx(isActive || isChildActive ? "text-emerald-400" : "group-hover:text-white transition-colors")} />
+                )}
+
+                <span className={clsx("flex-1 truncate", level === 0 ? "font-medium" : "font-normal")}>
+                    {item.title}
+                </span>
+
                 {hasChildren && (
                     <div className={clsx("transition-transform duration-200 text-gray-500", expanded ? "rotate-90 text-emerald-500" : "")}>
                         <ChevronRight size={18} />
@@ -343,29 +376,17 @@ function MenuItem({ item, openTab, activeTab, installedModules }: { item: any, o
             </div>
 
             {hasChildren && expanded && (
-                <div className="ml-6 pl-5 border-l border-gray-800 my-2 space-y-1.5">
-                    {item.children.map((child: any, idx: number) => {
-                        // Skip if child is module-bound and module not installed
-                        if (child.module && child.module !== 'core' && !installedModules.has(child.module)) {
-                            return null;
-                        }
-
-                        const isCurrentChild = activeTab === child.path;
-                        return (
-                            <div
-                                key={idx}
-                                onClick={() => openTab(child.title, child.path)}
-                                className={clsx(
-                                    "text-sm py-2.5 px-4 rounded-xl cursor-pointer block truncate transition-all",
-                                    isCurrentChild
-                                        ? "text-emerald-400 font-medium bg-emerald-900/10"
-                                        : "text-gray-500 hover:text-gray-200 hover:translate-x-1"
-                                )}
-                            >
-                                {child.title}
-                            </div>
-                        )
-                    })}
+                <div className="ml-6 pl-4 border-l border-gray-800/50 my-1.5 space-y-1">
+                    {item.children.map((child: any, idx: number) => (
+                        <MenuItem
+                            key={idx}
+                            item={child}
+                            openTab={openTab}
+                            activeTab={activeTab}
+                            installedModules={installedModules}
+                            level={level + 1}
+                        />
+                    ))}
                 </div>
             )}
         </div>
