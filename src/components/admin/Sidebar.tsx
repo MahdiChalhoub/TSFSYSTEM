@@ -15,7 +15,8 @@ import {
     LogOut,
     ShoppingCart,
     Layers,
-    BarChart3
+    BarChart3,
+    Zap
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import clsx from 'clsx';
@@ -119,7 +120,13 @@ const MENU_ITEMS = [
         title: 'Demo Feature',
         icon: Box,
         module: 'demo',
-        path: '/admin/demo'
+        path: '/admin/saas/demo'
+    },
+    {
+        title: 'Vantage Voyager',
+        icon: Zap,
+        module: 'test_vantage',
+        path: '/admin/saas/test_vantage'
     },
     {
         title: 'SaaS Panel',
