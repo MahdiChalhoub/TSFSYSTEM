@@ -207,3 +207,110 @@ class TenantFilterMixin:
             serializer.save(organization_id=org_id)
         else:
             serializer.save()
+
+
+class PriceChangeApprovalRequired(Exception):
+    """Exception raised when a price change requires workflow approval."""
+    def __init__(self, approval_id, message="Price change requires approval"):
+        self.approval_id = approval_id
+        self.message = message
+        super().__init__(message)
+
+
+class PriceChangeWorkflowMixin:
+    """
+    Mixin to check if price changes require approval workflow.
+    
+    Usage:
+        class ProductViewSet(PriceChangeWorkflowMixin, viewsets.ModelViewSet):
+            pass
+    
+    When a price field is modified and a workflow requires PRE approval:
+    - Returns 202 Accepted with approval_request_id
+    - Change is NOT applied until approved
+    """
+    price_fields = ['cost_price', 'cost_price_ht', 'cost_price_ttc', 
+                    'selling_price_ht', 'selling_price_ttc']
+    
+    def check_price_change_workflow(self, instance, new_data, request):
+        """
+        Check if price change requires approval.
+        
+        Args:
+            instance: The existing model instance
+            new_data: Dict of new values being set
+            request: The HTTP request
+            
+        Returns:
+            Tuple of (requires_hold: bool, approval_id: UUID or None)
+        """
+        from decimal import Decimal
+        
+        # Detect if any price field is changing
+        price_changes = {}
+        for field in self.price_fields:
+            old_val = getattr(instance, field, None)
+            new_val = new_data.get(field)
+            
+            # Skip if not being updated
+            if new_val is None:
+                continue
+                
+            # Convert to Decimal for comparison
+            try:
+                old_decimal = Decimal(str(old_val)) if old_val else Decimal('0')
+                new_decimal = Decimal(str(new_val)) if new_val else Decimal('0')
+            except:
+                continue
+                
+            if old_decimal != new_decimal:
+                price_changes[field] = {
+                    'old': float(old_decimal),
+                    'new': float(new_decimal)
+                }
+        
+        if not price_changes:
+            return False, None  # No price changes
+        
+        # Check workflow
+        from .services_audit import WorkflowService
+        
+        org = getattr(instance, 'organization', None)
+        
+        result = WorkflowService.check_workflow(
+            event_type='product.price_change',
+            actor=request.user,
+            payload={
+                'product_id': str(instance.id),
+                'product_name': getattr(instance, 'name', str(instance)),
+                'sku': getattr(instance, 'sku', ''),
+                'changes': price_changes
+            },
+            organization=org,
+            target_table='Product',
+            target_id=str(instance.id)
+        )
+        
+        return result.requires_hold, result.request_id
+    
+    def perform_update_with_workflow(self, serializer):
+        """
+        Perform update with workflow check for price changes.
+        Call this from perform_update if you want workflow protection.
+        """
+        instance = self.get_object()
+        
+        # Check for price change workflow
+        requires_hold, approval_id = self.check_price_change_workflow(
+            instance,
+            serializer.validated_data,
+            self.request
+        )
+        
+        if requires_hold:
+            # Return 202 - change requires approval
+            raise PriceChangeApprovalRequired(approval_id)
+        
+        # Proceed with update
+        return serializer.save()
+
