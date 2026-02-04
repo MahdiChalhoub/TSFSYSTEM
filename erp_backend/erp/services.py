@@ -127,7 +127,34 @@ class ProvisioningService:
                 "declareTVA": True,
                 "dualView": True,
                 "pricingCostBasis": "AMC"
+                "pricingCostBasis": "AMC"
             })
+
+            # 9. SaaS Financial Integration (Client Linking)
+            # Find SaaS Provider Org (slug='saas') or skip if self IS saas
+            if slug != 'saas':
+                try:
+                    saas_org = Organization.objects.filter(slug='saas').first()
+                    if saas_org:
+                        # Create Contact in SaaS Ledger
+                        from .models import Contact
+                        client_contact = Contact.objects.create(
+                            organization=saas_org,
+                            type='CUSTOMER',
+                            customer_type='B2B',
+                            name=f"{name} (Tenant)",
+                            email=f"billing@{slug}.tsf-city.com", # Placeholder
+                            is_airsi_subject=False, # Default
+                            balance=Decimal('0.00'),
+                            credit_limit=Decimal('0.00')
+                        )
+                        
+                        # Link back
+                        org.billing_contact_id = client_contact.id
+                        org.save()
+                except Exception as e:
+                    # Non-blocking, but should log
+                    print(f"Warning: Failed to link SaaS billing contact: {e}")
 
             return org
 
