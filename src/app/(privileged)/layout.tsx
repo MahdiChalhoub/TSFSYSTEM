@@ -12,6 +12,7 @@ import { Outfit } from 'next/font/google';
 import { getSites } from '@/app/actions/sites';
 import { getOrganizations } from '@/app/(privileged)/saas/organizations/actions';
 import { getUser } from '@/app/actions/auth';
+import { getGlobalFinancialSettings } from '@/app/actions/settings';
 
 import { headers } from 'next/headers';
 
@@ -56,9 +57,10 @@ export default async function AdminLayout({
     }
 
     // 2. Fetch data in parallel ONLY if authenticated
-    const [sites, organizations] = await Promise.all([
+    const [sites, organizations, financialSettings] = await Promise.all([
         getSites(),
-        getOrganizations()
+        getOrganizations(),
+        getGlobalFinancialSettings()
     ]);
 
 
@@ -68,7 +70,11 @@ export default async function AdminLayout({
             <DevProvider>
                 <div className="flex h-screen bg-gray-50 overflow-hidden font-sans text-gray-900">
                     {/* Left Panel: Sidebar Tree */}
-                    <Sidebar isSaas={isSaas} />
+                    <Sidebar
+                        isSaas={isSaas}
+                        isSuperuser={user?.is_superuser || false}
+                        dualViewEnabled={financialSettings?.dualView || false}
+                    />
 
                     {/* Right Panel: Content */}
                     <div className="flex-1 flex flex-col min-w-0">

@@ -53,3 +53,12 @@ export async function saveProductNamingRule(rule: ProductNamingRule) {
         return { success: false, message: e.message };
     }
 }
+
+export async function getGlobalFinancialSettings() {
+    try {
+        return await erpFetch('settings/global_financial/');
+    } catch (e) {
+        console.error("Failed to fetch global financial settings:", e);
+        return { dualView: false };
+    }
+}

@@ -129,28 +129,28 @@ const MENU_ITEMS = [
             { title: 'Access Control (Roles)', path: '/admin/hr/roles' },
         ]
     },
-    {
-        title: 'SaaS Control',
-        icon: ShieldCheck,
-        visibility: 'saas',
-        children: [
-            { title: 'SaaS Dashboard', path: '/saas/dashboard' },
-            { title: 'Organizations', path: '/saas/organizations' },
-            { title: 'Global Registry', path: '/saas/modules' },
-            { title: 'Kernel Updates', path: '/saas/updates' },
-        ]
+    { title: 'Kernel Updates', path: '/saas/updates' },
+]
     },
-    {
-        title: 'System Settings',
+{
+    title: 'System Settings',
         icon: Settings,
-        module: 'core',
-        children: [
-            { title: 'Sites & Branches', path: '/admin/settings/sites' },
-        ]
-    },
+            module: 'core',
+                children: [
+                    { title: 'Sites & Branches', path: '/admin/settings/sites' },
+                ]
+},
 ];
 
-export function Sidebar({ isSaas = false }: { isSaas?: boolean }) {
+export function Sidebar({
+    isSaas = false,
+    isSuperuser = false,
+    dualViewEnabled = false
+}: {
+    isSaas?: boolean;
+    isSuperuser?: boolean;
+    dualViewEnabled?: boolean;
+}) {
     const { sidebarOpen, toggleSidebar, openTab, activeTab, viewScope, setViewScope } = useAdmin();
     const [installedModules, setInstalledModules] = useState<Set<string>>(new Set(['core']));
     const [dynamicItems, setDynamicItems] = useState<any[]>([]);
@@ -229,34 +229,36 @@ export function Sidebar({ isSaas = false }: { isSaas?: boolean }) {
                 </div>
 
                 {/* View Scope Switcher */}
-                <div className="mx-6 mt-6 p-1.5 bg-[#0B1120] rounded-2xl border border-gray-800 flex gap-1 shrink-0">
-                    <button
-                        onClick={() => setViewScope('OFFICIAL')}
-                        suppressHydrationWarning={true}
-                        className={clsx(
-                            "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
-                            viewScope === 'OFFICIAL'
-                                ? "bg-emerald-600 text-white shadow-lg shadow-emerald-900/40"
-                                : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
-                        )}
-                    >
-                        <Layers size={14} />
-                        Declared
-                    </button>
-                    <button
-                        onClick={() => setViewScope('INTERNAL')}
-                        suppressHydrationWarning={true}
-                        className={clsx(
-                            "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
-                            viewScope === 'INTERNAL'
-                                ? "bg-gray-700 text-white shadow-lg"
-                                : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
-                        )}
-                    >
-                        <BarChart3 size={14} />
-                        Both
-                    </button>
-                </div>
+                {(isSuperuser && dualViewEnabled) && (
+                    <div className="mx-6 mt-6 p-1.5 bg-[#0B1120] rounded-2xl border border-gray-800 flex gap-1 shrink-0">
+                        <button
+                            onClick={() => setViewScope('OFFICIAL')}
+                            suppressHydrationWarning={true}
+                            className={clsx(
+                                "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
+                                viewScope === 'OFFICIAL'
+                                    ? "bg-emerald-600 text-white shadow-lg shadow-emerald-900/40"
+                                    : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
+                            )}
+                        >
+                            <Layers size={14} />
+                            Declared
+                        </button>
+                        <button
+                            onClick={() => setViewScope('INTERNAL')}
+                            suppressHydrationWarning={true}
+                            className={clsx(
+                                "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
+                                viewScope === 'INTERNAL'
+                                    ? "bg-gray-700 text-white shadow-lg"
+                                    : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
+                            )}
+                        >
+                            <BarChart3 size={14} />
+                            Both
+                        </button>
+                    </div>
+                )}
 
                 <div className="p-6 space-y-2 flex-1 overflow-y-auto custom-scrollbar">
                     <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-6 px-3 mt-2">Main Menu</div>
