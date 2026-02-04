@@ -1,0 +1,10 @@
+{
+    "name": "Vantage Voyager",
+    "code": "test_vantage",
+    "version": "1.2.0",
+    "description": "Verification module for the TSF Cloud deployment pipeline. Tests automated packaging and dynamic route injection.",
+    "is_core": false,
+    "dependencies": [],
+    "author": "TSF Labs",
+    "website": "https://tsf.ci"
+}
