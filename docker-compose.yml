@@ -43,6 +43,7 @@ services:
     environment:
       - NEXT_PUBLIC_API_URL=/api
       - DJANGO_URL=http://backend:8000
+      - NEXT_PUBLIC_ROOT_DOMAIN=tsf.ci
     depends_on:
       - backend
     networks:
