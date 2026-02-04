@@ -6,8 +6,9 @@ from django.db import transaction
 from django.utils.text import slugify
 from erp.models import (
     Organization, User, Employee, Role, Site, 
-    BusinessType, GlobalCurrency, FinancialAccount, ChartOfAccount
+    BusinessType, GlobalCurrency
 )
+from apps.finance.models import FinancialAccount, ChartOfAccount
 from .serializers_onboarding import (
     BusinessRegistrationSerializer, UserSignUpSerializer,
     BusinessTypeSerializer, GlobalCurrencySerializer, PublicRoleSerializer
