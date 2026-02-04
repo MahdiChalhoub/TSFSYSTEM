@@ -144,32 +144,32 @@ export default async function SaasMasterDashboard() {
                 </Card>
 
                 {/* System Activity */}
-                <Card className="bg-[#0F172A] border-gray-800 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-8 opacity-10">
+                <Card className="bg-white border-gray-100 rounded-[2.5rem] shadow-xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-8 opacity-10 text-gray-200">
                         <Globe size={160} />
                     </div>
                     <CardHeader className="p-8 relative z-10">
-                        <CardTitle className="text-2xl font-black text-white flex items-center gap-3">
-                            <Zap className="text-yellow-400 fill-yellow-400" size={24} /> Platform Feed
+                        <CardTitle className="text-2xl font-black text-gray-900 flex items-center gap-3">
+                            <Zap className="text-indigo-600 fill-indigo-100" size={24} /> Platform Feed
                         </CardTitle>
-                        <CardDescription className="text-gray-400">Real-time infrastructure pulse</CardDescription>
+                        <CardDescription className="text-gray-500">Real-time infrastructure pulse</CardDescription>
                     </CardHeader>
                     <CardContent className="p-8 pt-2 relative z-10">
-                        <div className="space-y-8 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-gradient-to-b before:from-emerald-500/50 before:via-gray-800 before:to-transparent">
+                        <div className="space-y-8 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-gradient-to-b before:from-emerald-400 before:via-gray-100 before:to-transparent">
                             {[
-                                { title: "Isolation Hardened", desc: "Cross-tenant data separation logic enforced", time: "Now", icon: ShieldCheck, color: "emerald" },
+                                { title: "Isolation Hardened", desc: "Cross-tenant data separation logic enforced", time: "Now", icon: ShieldCheck, color: "indigo" },
                                 { title: "Context Synced", desc: "SaaS Platform recognized as management org", time: "2m ago", icon: Globe, color: "blue" },
                                 { title: "Switcher Refined", desc: "Client switcher filtering complete", time: "15m ago", icon: LayoutDashboard, color: "purple" },
                                 { title: "API Gateway Resilient", desc: "Missing context errors suppressed for root", time: "1h ago", icon: Activity, color: "emerald" },
                             ].map((event, i) => (
                                 <div key={i} className="relative pl-10">
-                                    <div className={`absolute left-0 top-1 w-6 h-6 rounded-full bg-[#0F172A] border-2 border-${event.color}-500 flex items-center justify-center z-10 shadow-[0_0_10px_rgba(0,0,0,0.5)]`}>
+                                    <div className={`absolute left-0 top-1 w-6 h-6 rounded-full bg-white border-2 border-${event.color}-500 flex items-center justify-center z-10 shadow-sm`}>
                                         <div className={`w-1.5 h-1.5 rounded-full bg-${event.color}-500`} />
                                     </div>
                                     <div>
-                                        <div className="text-sm font-bold text-white">{event.title}</div>
+                                        <div className="text-sm font-bold text-gray-900">{event.title}</div>
                                         <p className="text-xs text-gray-500 mt-0.5 font-medium leading-relaxed">{event.desc}</p>
-                                        <div className="text-[10px] font-bold text-gray-700 mt-2 uppercase tracking-wide">{event.time}</div>
+                                        <div className="text-[10px] font-bold text-gray-400 mt-2 uppercase tracking-wide">{event.time}</div>
                                     </div>
                                 </div>
                             ))}
