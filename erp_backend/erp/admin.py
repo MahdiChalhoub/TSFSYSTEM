@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import (
+    User, Organization, Site, Role, Permission,
+    TransactionSequence, 
     Product, ProductGroup, Brand, Category, Parfum, Warehouse, Inventory, InventoryMovement,
     Country, Unit, Contact, Employee, BarcodeSettings,
     PlanCategory, SubscriptionPlan, SubscriptionPayment

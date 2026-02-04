@@ -181,6 +181,9 @@ class Organization(models.Model):
     # Usage Tracking
     data_usage_bytes = models.BigIntegerField(default=0)
     reminder_config = models.JSONField(default=dict, blank=True, help_text="e.g. {'days_before': 5}")
+    
+    # Financial Integration
+    billing_contact_id = models.IntegerField(null=True, blank=True, help_text="ID of the Contact record in the SaaS Provider's ledger.")
 
     class Meta:
         db_table = 'Organization'
