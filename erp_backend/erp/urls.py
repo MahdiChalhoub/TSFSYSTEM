@@ -29,14 +29,20 @@ router.register(r'tenant', TenantResolutionView, basename='tenant')
 router.register(r'organizations', OrganizationViewSet)
 router.register(r'sites', SiteViewSet)
 
-# Finance ViewSets moved to apps.finance
-# router.register(r'accounts', FinancialAccountViewSet)
-# router.register(r'coa', ChartOfAccountViewSet)
-# router.register(r'fiscal-years', FiscalYearViewSet)
-# router.register(r'fiscal-periods', FiscalPeriodViewSet)
-# router.register(r'journal', JournalEntryViewSet)
-# router.register(r'loans', LoanViewSet)
-# router.register(r'financial-events', FinancialEventViewSet)
+# Finance ViewSets
+from .views_finance import (
+    ChartOfAccountViewSet, FinancialAccountViewSet,
+    FiscalYearViewSet, FiscalPeriodViewSet,
+    JournalEntryViewSet, LoanViewSet, FinancialEventViewSet
+)
+router.register(r'coa', ChartOfAccountViewSet, basename='coa')
+router.register(r'accounts', FinancialAccountViewSet, basename='accounts')
+router.register(r'fiscal-years', FiscalYearViewSet, basename='fiscal-years')
+router.register(r'fiscal-periods', FiscalPeriodViewSet, basename='fiscal-periods')
+router.register(r'journal', JournalEntryViewSet, basename='journal')
+router.register(r'loans', LoanViewSet, basename='loans')
+router.register(r'financial-events', FinancialEventViewSet, basename='financial-events')
+
 
 router.register(r'products', ProductViewSet)
 router.register(r'units', UnitViewSet)
