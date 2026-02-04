@@ -68,9 +68,13 @@ class SystemModuleLog(models.Model):
     """
     ERP-grade auditing for module operations.
     """
-    module = models.ForeignKey(SystemModule, on_delete=models.CASCADE, related_name='logs', null=True, blank=True)
-    action = models.CharField(max_length=50) # 'INSTALL', 'UPGRADE', 'UNINSTALL'
-    version = models.CharField(max_length=50)
+    module = models.ForeignKey(SystemModule, on_delete=models.SET_NULL, related_name='logs', null=True, blank=True)
+    module_name = models.CharField(max_length=100, null=True, blank=True)
+    action = models.CharField(max_length=50) # 'INSTALL', 'UPGRADE', 'UNINSTALL', 'DELETE'
+    from_version = models.CharField(max_length=50, null=True, blank=True)
+    to_version = models.CharField(max_length=50, null=True, blank=True)
+    status = models.CharField(max_length=20, default='SUCCESS') # 'SUCCESS', 'FAILURE'
+    logs = models.TextField(null=True, blank=True)
     details = models.JSONField(null=True, blank=True)
     performed_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -79,7 +83,7 @@ class SystemModuleLog(models.Model):
         db_table = 'SystemModuleLog'
 
     def __str__(self):
-        return f"{self.module.name}: {self.action} v{self.version}"
+        return f"{self.module_name or 'System'}: {self.action} ({self.status})"
 
 class OrganizationModule(models.Model):
     """

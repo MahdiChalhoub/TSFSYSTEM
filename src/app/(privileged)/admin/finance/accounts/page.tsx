@@ -1,0 +1,203 @@
+'use client'
+
+import { useEffect, useState } from "react"
+import { getFinancialAccounts, deleteFinancialAccount, assignUserToAccount, unassignUser } from "./actions"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Plus, Trash2, Wallet, User as UserIcon, Building, Smartphone, Link as LinkIcon, AlertCircle } from "lucide-react"
+import Link from "next/link"
+import { toast } from "sonner"
+import { Badge } from "@/components/ui/badge"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
+import { UserPicker } from "@/components/admin/user-picker" // Assuming this exists or I'll create one
+
+export default function FinancialAccountsPage() {
+    const [accounts, setAccounts] = useState<any[]>([])
+    const [loading, setLoading] = useState(true)
+
+    const load = async () => {
+        try {
+            const data = await getFinancialAccounts()
+            setAccounts(data)
+        } catch (e) {
+            console.error(e)
+            toast.error("Failed to load accounts")
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    useEffect(() => { load() }, [])
+
+    const handleDelete = async (id: number) => {
+        if (!confirm("Are you sure? This cannot be undone if transactions exist.")) return
+        try {
+            await deleteFinancialAccount(id)
+            toast.success("Account deleted")
+            load()
+        } catch (e: any) {
+            toast.error(e.message)
+        }
+    }
+
+    return (
+        <div className="space-y-6">
+            <div className="flex justify-between items-center">
+                <div>
+                    <h1 className="text-2xl font-bold">Financial Accounts</h1>
+                    <p className="text-muted-foreground">Manage cash drawers, bank accounts, and their ledger links.</p>
+                </div>
+                <Link href="/admin/finance/accounts/new">
+                    <Button><Plus className="mr-2 h-4 w-4" /> New Account</Button>
+                </Link>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {accounts.map(account => (
+                    <AccountCard
+                        key={account.id}
+                        account={account}
+                        onDelete={() => handleDelete(account.id)}
+                        onRefresh={load}
+                    />
+                ))}
+            </div>
+
+            {!loading && accounts.length === 0 && (
+                <div className="text-center py-10 text-muted-foreground border-2 border-dashed rounded-lg">
+                    No financial accounts found. Create one to get started.
+                </div>
+            )}
+        </div>
+    )
+}
+
+function AccountCard({ account, onDelete, onRefresh }: { account: any, onDelete: () => void, onRefresh: () => void }) {
+    const icon: Record<string, any> = {
+        'CASH': Wallet,
+        'BANK': Building,
+        'MOBILE': Smartphone
+    }
+
+    // Check Config Health
+    const isConfigured = !!account.ledgerAccount
+
+    const Icon = icon[account.type] || Wallet
+
+    return (
+        <Card className="relative group">
+            <CardHeader className="pb-2">
+                <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-2">
+                        <div className={`p-2 rounded-lg ${isConfigured ? 'bg-primary/10 text-primary' : 'bg-red-100 text-red-600'}`}>
+                            <Icon className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <CardTitle className="text-lg">{account.name}</CardTitle>
+                            <CardDescription>{account.currency}</CardDescription>
+                        </div>
+                    </div>
+                    <Button variant="ghost" size="icon" className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" onClick={onDelete}>
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+
+                {/* Ledger Link Status */}
+                <div className={`text-xs p-2 rounded-xl border flex items-center justify-between ${isConfigured ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-red-50 border-red-100 text-red-700'}`}>
+                    <div className="flex items-center gap-2 truncate">
+                        {isConfigured ? (
+                            <>
+                                <LinkIcon className="h-3 w-3" />
+                                <span className="truncate">Ledger: {account.ledgerAccount.code}</span>
+                            </>
+                        ) : (
+                            <>
+                                <AlertCircle className="h-4 w-4" />
+                                <span className="font-bold">Missing Ledger Link!</span>
+                            </>
+                        )}
+                    </div>
+                    {isConfigured && (
+                        <Badge variant="outline" className="text-[10px] bg-white text-emerald-600 border-emerald-200">System Managed</Badge>
+                    )}
+                </div>
+
+                {/* Assigned Users */}
+                <div>
+                    <div className="flex justify-between items-center mb-2">
+                        <h4 className="text-xs font-semibold uppercase text-muted-foreground">Assigned Users</h4>
+                        <AssignUserDialog accountId={account.id} onAssign={onRefresh} />
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        {account.assignedUsers && account.assignedUsers.length > 0 ? (
+                            account.assignedUsers.map((u: any) => (
+                                <Badge key={u.id} variant="secondary" className="flex items-center gap-1 pr-1">
+                                    <UserIcon className="h-3 w-3" />
+                                    {u.name}
+                                    <button
+                                        className="ml-1 hover:bg-slate-200 rounded-full p-0.5"
+                                        onClick={async () => {
+                                            if (confirm(`Unassign ${u.name}?`)) {
+                                                await unassignUser(u.id, account.id)
+                                                onRefresh()
+                                            }
+                                        }}
+                                    >
+                                        &times;
+                                    </button>
+                                </Badge>
+                            ))
+                        ) : (
+                            <span className="text-sm text-gray-400 italic">No active users</span>
+                        )}
+                    </div>
+                </div>
+
+            </CardContent>
+        </Card>
+    )
+}
+
+function AssignUserDialog({ accountId, onAssign }: { accountId: number, onAssign: () => void }) {
+    const [userId, setUserId] = useState<string>("")
+    const [open, setOpen] = useState(false)
+
+    const handleAssign = async () => {
+        if (!userId) return
+        try {
+            await assignUserToAccount(parseInt(userId), accountId)
+            toast.success("User assigned")
+            setOpen(false)
+            onAssign()
+        } catch (e: any) {
+            toast.error(e.message)
+        }
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="h-6 text-xs">+ Assign</Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Assign User</DialogTitle>
+                    <DialogDescription>Select a user to link to this cash drawer.</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                    <UserPicker value={userId} onChange={setUserId} />
+                    <Button onClick={handleAssign} disabled={!userId} className="w-full">Confirm Assignment</Button>
+                </div>
+            </DialogContent>
+        </Dialog>
+    )
+}

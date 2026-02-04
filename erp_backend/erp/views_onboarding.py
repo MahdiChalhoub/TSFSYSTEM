@@ -8,7 +8,7 @@ from erp.models import (
     Organization, User, Employee, Role, Site, 
     BusinessType, GlobalCurrency
 )
-from apps.finance.models import FinancialAccount, ChartOfAccount
+# from apps.finance.models import FinancialAccount, ChartOfAccount
 from .serializers_onboarding import (
     BusinessRegistrationSerializer, UserSignUpSerializer,
     BusinessTypeSerializer, GlobalCurrencySerializer, PublicRoleSerializer
