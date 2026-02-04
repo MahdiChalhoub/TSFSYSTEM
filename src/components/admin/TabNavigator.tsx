@@ -58,42 +58,49 @@ export function TabNavigator() {
             </div>
 
             {hiddenTabs.length > 0 && (
-                <div className="pb-1.5 ml-2 relative" ref={menuRef}>
+                <div className="pb-1.5 ml-1.5 relative" ref={menuRef}>
                     <button
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
                         className={clsx(
-                            "h-12 w-12 flex items-center justify-center rounded-xl bg-white border border-gray-200 text-gray-400 hover:text-emerald-600 hover:border-emerald-200 transition-all shadow-sm hover:shadow-md",
-                            isMenuOpen && "border-emerald-500 text-emerald-600 ring-2 ring-emerald-500/10"
+                            "h-11 w-11 flex items-center justify-center rounded-xl bg-white border border-gray-200 text-gray-400 hover:text-emerald-600 hover:border-emerald-200 transition-all shadow-sm hover:shadow-md",
+                            isMenuOpen && "border-emerald-500 text-emerald-600 ring-4 ring-emerald-500/5 bg-emerald-50/10"
                         )}
                     >
-                        <span className="relative">
+                        <span className="relative flex items-center justify-center">
                             <MoreHorizontal size={20} />
-                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white">
+                            <span className="absolute -top-2.5 -right-2.5 w-5 h-5 bg-emerald-600 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-sm">
                                 {hiddenTabs.length}
                             </span>
                         </span>
                     </button>
 
                     {isMenuOpen && (
-                        <div className="absolute top-full right-0 mt-2 w-72 bg-white/95 backdrop-blur-md border border-gray-200 rounded-[2rem] shadow-2xl z-[100] p-3 animate-in fade-in zoom-in duration-200 origin-top-right">
-                            <div className="px-4 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 mb-2">Overflow Workspaces</div>
-                            <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                        <div className="absolute top-full right-0 mt-3 w-72 bg-white/98 backdrop-blur-xl border border-gray-200/60 rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] z-[100] py-2 animate-in fade-in zoom-in-95 duration-200 origin-top-right ring-1 ring-black/5">
+                            <div className="px-5 py-2.5 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 mb-1">
+                                Workspace Hub
+                            </div>
+                            <div className="max-h-[340px] overflow-y-auto custom-scrollbar px-2">
                                 {hiddenTabs.map(tab => (
                                     <div
                                         key={tab.id}
                                         onClick={() => { openTab(tab.title, tab.path); setIsMenuOpen(false); }}
                                         className={clsx(
-                                            "flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all group mb-1",
-                                            activeTab === tab.id ? "bg-emerald-50 text-emerald-700 shadow-inner" : "hover:bg-gray-50 text-gray-600 hover:text-gray-900"
+                                            "flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all group mb-0.5",
+                                            activeTab === tab.id
+                                                ? "bg-emerald-50 text-emerald-700 font-bold"
+                                                : "hover:bg-gray-50 text-gray-600 hover:text-gray-900"
                                         )}
                                     >
                                         <div className="flex items-center gap-3 truncate">
-                                            <div className={clsx("w-2 h-2 rounded-full", activeTab === tab.id ? "bg-emerald-500 animate-pulse" : "bg-gray-300")} />
-                                            <span className="font-bold text-sm truncate">{tab.title}</span>
+                                            <div className={clsx(
+                                                "w-2 h-2 rounded-full shrink-0",
+                                                activeTab === tab.id ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-gray-300"
+                                            )} />
+                                            <span className="text-sm truncate tracking-tight">{tab.title}</span>
                                         </div>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); closeTab(tab.id); }}
-                                            className="p-1.5 rounded-xl hover:bg-red-50 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all border border-transparent hover:border-red-100"
+                                            className="p-1.5 rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
                                         >
                                             <X size={14} strokeWidth={3} />
                                         </button>
