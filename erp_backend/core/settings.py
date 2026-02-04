@@ -77,7 +77,20 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    # Rate Limiting (Throttling)
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '60/minute',       # Public endpoints
+        'user': '200/minute',      # Authenticated users
+        'login': '5/minute',       # Login attempts (custom)
+        'register': '3/minute',    # Registration attempts
+        'tenant_resolve': '30/minute',  # Tenant resolution
+    }
 }
+
 
 ROOT_URLCONF = 'core.urls'
 

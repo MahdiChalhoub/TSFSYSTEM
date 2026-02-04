@@ -21,12 +21,11 @@ from .serializers import (
 )
 from .services import InventoryService, ProvisioningService, ConfigurationService, POSService, PurchaseService, SequenceService, BarcodeService
 from rest_framework import permissions
-from .mixins import ConnectorAwareMixin
+from .mixins import ConnectorAwareMixin, PriceChangeWorkflowMixin, PriceChangeApprovalRequired
 from .permissions import (
     InventoryReadOnlyOrManage, HRReadOnlyOrManage, CRMReadOnlyOrManage,
     CanAccessPOS, CanProcessSales, CanViewPurchasing, CanCreatePO
 )
-
 
 class TenantModelViewSet(viewsets.ModelViewSet):
     """
@@ -354,16 +353,16 @@ class UnitViewSet(TenantModelViewSet):
     queryset = Unit.objects.all()
     serializer_class = UnitSerializer
 
-class ProductViewSet(ConnectorAwareMixin, TenantModelViewSet):
+class ProductViewSet(PriceChangeWorkflowMixin, ConnectorAwareMixin, TenantModelViewSet):
     """
-    Inventory Product management with Connector support.
-    Connector: Requests buffered if inventory module disabled.
+    Inventory Product management with Connector and Workflow support.
+    - Connector: Requests buffered if inventory module disabled.
+    - Workflow: Price changes may require approval if workflow configured.
     """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     connector_module = 'inventory'  # Connector routing
     
-
     # Granular permission mapping (Rule 4: Granular Permission Registry)
     required_permissions = {
         'list': 'inventory.view_products',
@@ -373,6 +372,35 @@ class ProductViewSet(ConnectorAwareMixin, TenantModelViewSet):
         'partial_update': 'inventory.edit_product',
         'destroy': 'inventory.delete_product',
     }
+    
+    def update(self, request, *args, **kwargs):
+        """Override update to check for price change workflow approval."""
+        try:
+            return super().update(request, *args, **kwargs)
+        except PriceChangeApprovalRequired as e:
+            return Response({
+                'status': 'approval_required',
+                'message': 'Price change requires manager approval',
+                'approval_request_id': str(e.approval_id) if e.approval_id else None,
+            }, status=status.HTTP_202_ACCEPTED)
+    
+    def perform_update(self, serializer):
+        """Override to check workflow before saving."""
+        instance = self.get_object()
+        
+        # Check for price change workflow
+        requires_hold, approval_id = self.check_price_change_workflow(
+            instance,
+            serializer.validated_data,
+            self.request
+        )
+        
+        if requires_hold:
+            raise PriceChangeApprovalRequired(approval_id)
+        
+        # Proceed with normal update (includes audit logging from TenantModelViewSet)
+        return super().perform_update(serializer)
+
     
     def get_permissions(self):
         """Return permission classes based on action."""
