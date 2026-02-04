@@ -9,7 +9,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, AlertCircle, Building2, ShieldCheck, Sparkles, ArrowRight, CheckCircle2, Globe, Rocket } from "lucide-react";
-import { PLATFORM_CONFIG, getDynamicBranding } from "@/lib/saas_config";
+import { PLATFORM_CONFIG, useDynamicBranding } from "@/lib/saas_config";
 
 const slugify = (text: string) => {
     return text
@@ -32,7 +32,7 @@ function BusinessRegisterContent() {
     // Multi-Step State
     const [step, setStep] = useState(1);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
-    const branding = getDynamicBranding();
+    const branding = useDynamicBranding();
 
     useEffect(() => {
         getPublicConfig().then(setConfig);

@@ -10,7 +10,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, AlertCircle, ShieldCheck, SquareTerminal, Command, Building2, Globe } from "lucide-react";
-import { PLATFORM_CONFIG, getDynamicBranding } from "@/lib/saas_config";
+import { PLATFORM_CONFIG, useDynamicBranding } from "@/lib/saas_config";
 
 const initialState: { error: any; success?: boolean } = {
     error: {},
@@ -20,7 +20,7 @@ function LoginContent() {
     const [state, action, isPending] = useActionState(loginAction, initialState);
     const [config, setConfig] = useState<any>({ tenant: null });
     const searchParams = useSearchParams();
-    const branding = getDynamicBranding();
+    const branding = useDynamicBranding();
 
     let prefilledUsername = "";
     const uParam = searchParams.get('u');

@@ -11,12 +11,12 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { PLATFORM_CONFIG, getDynamicBranding } from "@/lib/saas_config"
+import { PLATFORM_CONFIG, useDynamicBranding } from "@/lib/saas_config"
 
 export default function OrganizationsPage() {
     const [orgs, setOrgs] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
-    const branding = getDynamicBranding();
+    const branding = useDynamicBranding();
 
     useEffect(() => {
         loadData()
