@@ -175,9 +175,7 @@ export default function UserRegisterPage() {
                 <CardFooter className="bg-black/20 py-4 justify-center">
                     <div className="text-[9px] font-black text-slate-600 uppercase tracking-[0.3em] flex items-center gap-2">
                         <ShieldCheck size={12} className="text-cyan-500/50" />
-                        \u003cp className=\"text-[10px] text-slate-800 font-black uppercase tracking-[0.3em]\"\u003e
                         Infrastructure Secured by {PLATFORM_CONFIG.federation_name}
-                        \u003c/p\u003e
                     </div>
                 </CardFooter>
             </Card>

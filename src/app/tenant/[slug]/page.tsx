@@ -1,13 +1,12 @@
-import { getOrganizationBySlug, getPublicProducts } from "./actions"
-import { notFound } from "next/navigation"
-import { ShieldCheck, Activity, Zap, Globe, ArrowRight, Users, Lock } from "lucide-react"
+import { ShieldCheck, Lock, ArrowRight, Building2, Globe, Command, Sparkles, Activity, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { StorefrontCatalog } from "@/components/tenant/StorefrontCatalog"
-import { PLATFORM_CONFIG } from "@/lib/saas_config"
+import { PLATFORM_CONFIG, getDynamicBranding } from "@/lib/saas_config"
 
 export default async function TenantWelcomePage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params
+    const branding = getDynamicBranding();
     const org = await getOrganizationBySlug(slug)
     const products = await getPublicProducts(slug)
 
@@ -59,17 +58,17 @@ export default async function TenantWelcomePage({ params }: { params: Promise<{ 
                         {/* Telemetry Chips */}
                         <div className="flex flex-wrap gap-4">
                             <div className="px-6 py-4 bg-white/5 border border-white/5 rounded-3xl backdrop-blur-xl group hover:border-emerald-500/30 transition-all">
-                                <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Active Sites</div>
+                                <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Products</div>
                                 <div className="text-2xl font-black text-white flex items-center gap-2">
-                                    <Activity size={18} className="text-emerald-500" />
-                                    {org._count?.sites || 0}
+                                    <Sparkles size={18} className="text-emerald-500" />
+                                    {products.length || 0}
                                 </div>
                             </div>
                             <div className="px-6 py-4 bg-white/5 border border-white/5 rounded-3xl backdrop-blur-xl group hover:border-blue-500/30 transition-all">
-                                <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Authorization</div>
+                                <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Sites</div>
                                 <div className="text-2xl font-black text-white flex items-center gap-2">
-                                    <Users size={18} className="text-blue-500" />
-                                    {org._count?.users || 0}
+                                    <Building2 size={18} className="text-blue-500" />
+                                    {org._count?.sites || 0}
                                 </div>
                             </div>
                         </div>
@@ -79,7 +78,7 @@ export default async function TenantWelcomePage({ params }: { params: Promise<{ 
                             <div className="flex justify-between items-center relative">
                                 <div className="space-y-1">
                                     <h2 className="text-xl font-bold text-white">Secure Access</h2>
-                                    <p className="text-[10px] text-slate-500 font-medium tracking-wide uppercase">{slug}{typeof window !== 'undefined' ? (window.location.host.includes('localhost') ? '.localhost' : PLATFORM_CONFIG.suffix) : PLATFORM_CONFIG.suffix}</p>
+                                    <p className="text-[10px] text-slate-500 font-medium tracking-wide uppercase">{slug}{branding.suffix}</p>
                                 </div>
                                 <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-white border border-white/10 group-hover:scale-110 transition-transform">
                                     <Lock size={20} />
@@ -110,7 +109,7 @@ export default async function TenantWelcomePage({ params }: { params: Promise<{ 
 
                         <div className="flex items-center gap-6 pt-4">
                             <a
-                                href={`http://saas.${typeof window !== 'undefined' && window.location.host.includes('localhost') ? 'localhost:3000' : PLATFORM_CONFIG.domain}`}
+                                href={`http://saas.${branding.domain}/saas/dashboard`}
                                 className="inline-flex items-center gap-2 text-[10px] text-slate-600 hover:text-emerald-500 font-bold uppercase tracking-[0.2em] transition-colors"
                             >
                                 <ShieldCheck size={14} /> Master Panel

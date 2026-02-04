@@ -7,3 +7,19 @@ export const PLATFORM_CONFIG = {
     version: "2.8.0",
     support_email: "support@platform.com"
 };
+
+/**
+ * Centrally manages dynamic suffix and domain detection for white-labeling.
+ */
+export const getDynamicBranding = () => {
+    if (typeof window === 'undefined') return { suffix: PLATFORM_CONFIG.suffix, domain: PLATFORM_CONFIG.domain };
+
+    const host = window.location.host;
+    const isLocal = host.includes('localhost');
+
+    return {
+        suffix: isLocal ? '.localhost' : PLATFORM_CONFIG.suffix,
+        domain: isLocal ? 'localhost:3000' : PLATFORM_CONFIG.domain,
+        isLocal
+    };
+};

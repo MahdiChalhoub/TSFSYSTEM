@@ -10,7 +10,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, AlertCircle, ShieldCheck, SquareTerminal, Command, Building2, Globe } from "lucide-react";
-import { PLATFORM_CONFIG } from "@/lib/saas_config";
+import { PLATFORM_CONFIG, getDynamicBranding } from "@/lib/saas_config";
 
 const initialState: { error: any; success?: boolean } = {
     error: {},
@@ -20,6 +20,7 @@ function LoginContent() {
     const [state, action, isPending] = useActionState(loginAction, initialState);
     const [config, setConfig] = useState<any>({ tenant: null });
     const searchParams = useSearchParams();
+    const branding = getDynamicBranding();
 
     let prefilledUsername = "";
     const uParam = searchParams.get('u');
@@ -130,7 +131,7 @@ function LoginContent() {
                                             className="bg-[#1e293b] border-slate-700 h-14 rounded-lg text-white font-mono pl-4 pr-32 focus:ring-emerald-500 focus:border-emerald-500"
                                         />
                                         <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs font-mono select-none">
-                                            {typeof window !== 'undefined' ? (window.location.host.includes('localhost') ? '.localhost' : PLATFORM_CONFIG.suffix) : PLATFORM_CONFIG.suffix}
+                                            {branding.suffix}
                                         </div>
                                     </div>
                                     <p className="text-[10px] text-slate-600">
