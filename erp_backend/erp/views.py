@@ -28,6 +28,7 @@ class TenantModelViewSet(viewsets.ModelViewSet):
     Ensures users can ONLY interact with data belonging to their own organization.
     
     DAJINGO RULES ENFORCED:
+    - Rule 2: All mutations logged via AuditService (Universal Audit Logging)
     - Rule 3: All queries MUST be scoped by organization_id.
     - Rule 5: organization_id derived from auth user context or secure tenant header.
     - Rule 6: APIs automatically inject organization_id; manual override forbidden.
@@ -79,16 +80,103 @@ class TenantModelViewSet(viewsets.ModelViewSet):
              })
              
         # Rule 5: User cannot specify organization_id in body - we overwrite it here.
-        serializer.save(organization_id=organization_id)
+        instance = serializer.save(organization_id=organization_id)
+        
+        # Rule 2: Universal Audit Logging - Log CREATE event
+        self._log_audit_event('CREATE', instance, new_data=serializer.validated_data)
 
     def perform_update(self, serializer):
+        # Capture old state before update
+        instance = serializer.instance
+        old_data = self._serialize_instance(instance)
+        
         # Enforce Rule 5: cannot move records between organizations
         # Django Rest Framework usually handles this via get_queryset, 
         # but we ensure the organization_id is NEVER changed.
         if 'organization' in self.request.data or 'organization_id' in self.request.data:
              # SILENTLY ignore or raise error? Rule 5 says forbidden.
              pass 
-        serializer.save()
+        
+        updated_instance = serializer.save()
+        
+        # Rule 2: Universal Audit Logging - Log UPDATE event
+        self._log_audit_event('UPDATE', updated_instance, old_data=old_data, new_data=serializer.validated_data)
+
+    def perform_destroy(self, instance):
+        """Override to log DELETE events before deletion."""
+        old_data = self._serialize_instance(instance)
+        
+        # Rule 2: Universal Audit Logging - Log DELETE event
+        self._log_audit_event('DELETE', instance, old_data=old_data)
+        
+        # Perform the actual deletion
+        instance.delete()
+
+    def _log_audit_event(self, action, instance, old_data=None, new_data=None):
+        """Internal helper to log audit events via AuditService."""
+        try:
+            from .services_audit import AuditService
+            
+            # Get organization from instance or request context
+            organization = getattr(instance, 'organization', None)
+            if not organization and hasattr(instance, 'organization_id'):
+                from .models import Organization
+                try:
+                    organization = Organization.objects.get(id=instance.organization_id)
+                except Organization.DoesNotExist:
+                    organization = None
+            
+            if organization:
+                AuditService.log_event(
+                    actor=self.request.user,
+                    action=action,
+                    instance=instance,
+                    old_data=old_data,
+                    new_data=self._clean_audit_data(new_data),
+                    request=self.request,
+                    organization=organization,
+                    description=f"{action} on {instance._meta.model_name}"
+                )
+        except Exception as e:
+            # Don't let audit failures block business operations
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Audit logging failed for {action} on {instance}: {e}")
+
+    def _serialize_instance(self, instance):
+        """Serialize model instance to dict for audit logging."""
+        if not instance:
+            return None
+        try:
+            # Use the serializer if available
+            serializer_class = self.get_serializer_class()
+            return serializer_class(instance).data
+        except Exception:
+            # Fallback to basic serialization
+            return {k: str(v) for k, v in instance.__dict__.items() if not k.startswith('_')}
+
+    def _clean_audit_data(self, data):
+        """Clean data for audit logging (remove sensitive fields, convert types)."""
+        if not data:
+            return None
+        
+        sensitive_fields = {'password', 'token', 'secret', 'api_key'}
+        cleaned = {}
+        for key, value in data.items():
+            if key.lower() in sensitive_fields:
+                cleaned[key] = '[REDACTED]'
+            elif hasattr(value, 'pk'):
+                # Convert model instances to their primary key
+                cleaned[key] = str(value.pk)
+            else:
+                try:
+                    # Ensure JSON-serializable
+                    import json
+                    json.dumps(value)
+                    cleaned[key] = value
+                except (TypeError, ValueError):
+                    cleaned[key] = str(value)
+        return cleaned
 
 class TenantResolutionView(viewsets.ViewSet):
     """
@@ -248,6 +336,24 @@ class UnitViewSet(TenantModelViewSet):
 class ProductViewSet(TenantModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    
+    # Granular permission mapping (Rule 4: Granular Permission Registry)
+    required_permissions = {
+        'list': 'inventory.view_products',
+        'retrieve': 'inventory.view_products',
+        'create': 'inventory.add_product',
+        'update': 'inventory.edit_product',
+        'partial_update': 'inventory.edit_product',
+        'destroy': 'inventory.delete_product',
+    }
+    
+    def get_permissions(self):
+        """Return permission classes based on action."""
+        from .permissions import HasPermission
+        if self.action in ['storefront']:
+            # Public endpoint
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated(), HasPermission()]
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
     def storefront(self, request):
@@ -463,6 +569,17 @@ class WarehouseViewSet(TenantModelViewSet):
 class InventoryViewSet(TenantModelViewSet):
     queryset = Inventory.objects.all()
     serializer_class = InventorySerializer
+    
+    # Granular permission mapping (Rule 4: Granular Permission Registry)
+    required_permissions = {
+        'list': 'inventory.view_stock',
+        'retrieve': 'inventory.view_stock',
+    }
+    
+    def get_permissions(self):
+        """Return permission classes based on action."""
+        from .permissions import HasPermission
+        return [permissions.IsAuthenticated(), HasPermission()]
 
     def get_queryset(self):
         # We still want Read-Only essentially for list, 
@@ -471,6 +588,11 @@ class InventoryViewSet(TenantModelViewSet):
 
     @action(detail=False, methods=['post'])
     def receive_stock(self, request):
+        # Permission check via decorator
+        from .permissions import HasPermission
+        if not HasPermission.user_has_permission(request.user, 'inventory.receive_stock'):
+            if not (request.user.is_staff or request.user.is_superuser):
+                return Response({'error': 'Permission denied: inventory.receive_stock required'}, status=status.HTTP_403_FORBIDDEN)
         organization_id = get_current_tenant_id()
         if not organization_id:
             return Response({"error": "No organization context"}, status=status.HTTP_400_BAD_REQUEST)
