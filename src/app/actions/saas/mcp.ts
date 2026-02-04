@@ -6,7 +6,7 @@
  * Server-side functions for MCP API calls.
  */
 
-import { erpFetch } from '@/lib/erpFetch'
+import { erpFetch } from '@/lib/erp-api'
 
 // =============================================================================
 // PROVIDERS
