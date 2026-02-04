@@ -19,7 +19,7 @@ import {
     Zap,
     Package
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
 import { usePathname } from 'next/navigation';
 import { logoutAction } from "@/app/actions/auth";
@@ -140,7 +140,7 @@ const MENU_ITEMS = [
 ];
 
 export function Sidebar({ isSaas = false }: { isSaas?: boolean }) {
-    const { sidebarOpen, openTab, activeTab, viewScope, setViewScope } = useAdmin();
+    const { sidebarOpen, toggleSidebar, openTab, activeTab, viewScope, setViewScope } = useAdmin();
     const [installedModules, setInstalledModules] = useState<Set<string>>(new Set(['core']));
     const [dynamicItems, setDynamicItems] = useState<any[]>([]);
 
@@ -192,68 +192,81 @@ export function Sidebar({ isSaas = false }: { isSaas?: boolean }) {
         return true;
     });
 
-    if (!sidebarOpen) return null;
-
     return (
-        <aside className="w-80 bg-[#0F172A] border-r border-gray-800 flex flex-col shrink-0 overflow-y-auto h-full text-gray-300 shadow-2xl relative z-30 transition-all duration-300">
-            <div className="p-8 border-b border-gray-800/50 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-900/20 text-white font-bold text-xl">
-                    T
+        <React.Fragment>
+            {/* Mobile Overlay */}
+            {sidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+                    onClick={toggleSidebar}
+                />
+            )}
+
+            <aside className={clsx(
+                "fixed lg:relative inset-y-0 left-0 bg-[#0F172A] border-r border-gray-800 flex flex-col shrink-0 overflow-hidden h-full text-gray-300 shadow-2xl z-50 transition-all duration-300 transform",
+                sidebarOpen
+                    ? "w-72 md:w-80 translate-x-0 opacity-100"
+                    : "-translate-x-full lg:translate-x-0 lg:w-0 lg:opacity-0 lg:pointer-events-none"
+            )}>
+                <div className="p-8 border-b border-gray-800/50 flex items-center gap-4 shrink-0">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-900/20 text-white font-bold text-xl">
+                        T
+                    </div>
+                    <div>
+                        <h1 className="text-xl font-bold text-white tracking-tight leading-none">TSF City</h1>
+                        <p className="text-xs text-emerald-400 font-medium mt-1.5">{isSaas ? 'Federation Admin' : 'Workspace Admin'}</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 className="text-xl font-bold text-white tracking-tight leading-none">TSF City</h1>
-                    <p className="text-xs text-emerald-400 font-medium mt-1.5">{isSaas ? 'Federation Admin' : 'Workspace Admin'}</p>
+
+                {/* View Scope Switcher */}
+                <div className="mx-6 mt-6 p-1.5 bg-[#0B1120] rounded-2xl border border-gray-800 flex gap-1 shrink-0">
+                    <button
+                        onClick={() => setViewScope('OFFICIAL')}
+                        suppressHydrationWarning={true}
+                        className={clsx(
+                            "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
+                            viewScope === 'OFFICIAL'
+                                ? "bg-emerald-600 text-white shadow-lg shadow-emerald-900/40"
+                                : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
+                        )}
+                    >
+                        <Layers size={14} />
+                        Declared
+                    </button>
+                    <button
+                        onClick={() => setViewScope('INTERNAL')}
+                        suppressHydrationWarning={true}
+                        className={clsx(
+                            "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
+                            viewScope === 'INTERNAL'
+                                ? "bg-gray-700 text-white shadow-lg"
+                                : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
+                        )}
+                    >
+                        <BarChart3 size={14} />
+                        Both
+                    </button>
                 </div>
-            </div>
 
-            {/* View Scope Switcher */}
-            <div className="mx-6 mt-6 p-1.5 bg-[#0B1120] rounded-2xl border border-gray-800 flex gap-1">
-                <button
-                    onClick={() => setViewScope('OFFICIAL')}
-                    suppressHydrationWarning={true}
-                    className={clsx(
-                        "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
-                        viewScope === 'OFFICIAL'
-                            ? "bg-emerald-600 text-white shadow-lg shadow-emerald-900/40"
-                            : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
-                    )}
-                >
-                    <Layers size={14} />
-                    Declared
-                </button>
-                <button
-                    onClick={() => setViewScope('INTERNAL')}
-                    suppressHydrationWarning={true}
-                    className={clsx(
-                        "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
-                        viewScope === 'INTERNAL'
-                            ? "bg-gray-700 text-white shadow-lg"
-                            : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
-                    )}
-                >
-                    <BarChart3 size={14} />
-                    Both
-                </button>
-            </div>
+                <div className="p-6 space-y-2 flex-1 overflow-y-auto custom-scrollbar">
+                    <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-6 px-3 mt-2">Main Menu</div>
+                    {filteredItems.map((item, idx) => (
+                        <MenuItem key={idx} item={item} openTab={openTab} activeTab={activeTab} installedModules={installedModules} />
+                    ))}
+                </div>
 
-            <div className="p-6 space-y-2 flex-1">
-                <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-6 px-3 mt-2">Main Menu</div>
-                {filteredItems.map((item, idx) => (
-                    <MenuItem key={idx} item={item} openTab={openTab} activeTab={activeTab} installedModules={installedModules} />
-                ))}
-            </div>
-
-            <div className="p-6 border-t border-gray-800/50 bg-[#0B1120]">
-                <button
-                    onClick={() => logoutAction()}
-                    suppressHydrationWarning={true}
-                    className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl hover:bg-gray-800/50 text-gray-400 hover:text-white transition-all group"
-                >
-                    <LogOut size={20} className="group-hover:text-red-400 transition-colors" />
-                    <span className="text-sm font-medium">Sign Out</span>
-                </button>
-            </div>
-        </aside>
+                <div className="p-6 border-t border-gray-800/50 bg-[#0B1120] shrink-0">
+                    <button
+                        onClick={() => logoutAction()}
+                        suppressHydrationWarning={true}
+                        className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl hover:bg-gray-800/50 text-gray-400 hover:text-white transition-all group"
+                    >
+                        <LogOut size={20} className="group-hover:text-red-400 transition-colors" />
+                        <span className="text-sm font-medium">Sign Out</span>
+                    </button>
+                </div>
+            </aside>
+        </React.Fragment>
     );
 }
 
@@ -334,5 +347,5 @@ function MenuItem({ item, openTab, activeTab, installedModules }: { item: any, o
                 </div>
             )}
         </div>
-    )
+    );
 }
