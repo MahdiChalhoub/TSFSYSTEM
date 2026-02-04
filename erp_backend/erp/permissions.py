@@ -19,6 +19,15 @@ class IsOrgAdmin(permissions.BasePermission):
         return "Admin" in request.user.role.name
 
 
+class IsSuperAdmin(permissions.BasePermission):
+    """
+    Permission to only allow platform superadmins.
+    Used for Connector configuration and system-level operations.
+    """
+    def has_permission(self, request, view):
+        return request.user.is_superuser or request.user.is_staff
+
+
 class HasPermission(permissions.BasePermission):
     """
     Granular permission check using the Permission Registry pattern.
