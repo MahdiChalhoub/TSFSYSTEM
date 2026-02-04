@@ -1,10 +1,9 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import (
-    User, Organization, Site, Role, Permission,
-    TransactionSequence, 
     Product, ProductGroup, Brand, Category, Parfum, Warehouse, Inventory, InventoryMovement,
-    Country, Unit, Contact, Employee, BarcodeSettings
+    Country, Unit, Contact, Employee, BarcodeSettings,
+    PlanCategory, SubscriptionPlan, SubscriptionPayment
 )
 
 # User
@@ -95,3 +94,19 @@ class EmployeeAdmin(admin.ModelAdmin):
 @admin.register(BarcodeSettings)
 class BarcodeSettingsAdmin(admin.ModelAdmin):
     list_display = ('prefix', 'next_sequence', 'organization')
+
+# Subscription
+@admin.register(PlanCategory)
+class PlanCategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'type', 'country')
+    list_filter = ('type',)
+
+@admin.register(SubscriptionPlan)
+class SubscriptionPlanAdmin(admin.ModelAdmin):
+    list_display = ('name', 'category', 'monthly_price', 'annual_price', 'is_active')
+    list_filter = ('category', 'is_active')
+
+@admin.register(SubscriptionPayment)
+class SubscriptionPaymentAdmin(admin.ModelAdmin):
+    list_display = ('organization', 'plan', 'amount', 'billing_cycle', 'status', 'created_at')
+    list_filter = ('status', 'billing_cycle')
