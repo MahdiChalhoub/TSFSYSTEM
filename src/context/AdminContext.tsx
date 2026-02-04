@@ -16,22 +16,28 @@ type AdminContextType = {
     activeTab: string;
     openTab: (title: string, path: string) => void;
     closeTab: (id: string) => void;
+    clearTabs: () => void;
     viewScope: 'OFFICIAL' | 'INTERNAL';
     setViewScope: (scope: 'OFFICIAL' | 'INTERNAL') => void;
 };
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
-export function AdminProvider({ children }: { children: React.ReactNode }) {
+export function AdminProvider({ children, contextKey = 'default' }: { children: React.ReactNode, contextKey?: string }) {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [openTabs, setOpenTabs] = useState<Tab[]>([]);
     const [viewScope, setViewScope] = useState<'OFFICIAL' | 'INTERNAL'>('INTERNAL');
+    const [isLoaded, setIsLoaded] = useState(false);
     const pathname = usePathname();
     const router = useRouter();
 
-    // Load tabs and viewScope from localStorage on mount
+    const TABS_KEY = `tsf_tabs_${contextKey}`;
+    const SCOPE_KEY = `tsf_view_scope_${contextKey}`;
+
+    // Load tabs and viewScope from localStorage on contextKey change or mount
     useEffect(() => {
-        const savedTabs = localStorage.getItem('tsf_tabs');
+        setIsLoaded(false); // Reset load state while switching
+        const savedTabs = localStorage.getItem(TABS_KEY);
         if (savedTabs) {
             try {
                 const parsed = JSON.parse(savedTabs);
@@ -47,21 +53,25 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
                 setOpenTabs([{ id: 'dashboard', title: 'Dashboard', path: '/admin' }]);
             }
         } else {
-            setOpenTabs([{ id: 'dashboard', title: 'Dashboard', path: '/admin' }]);
+            // Default tabs per context
+            const defaultPath = contextKey === 'saas' ? '/saas/dashboard' : '/admin';
+            setOpenTabs([{ id: 'dashboard', title: 'Dashboard', path: defaultPath }]);
         }
 
-        const savedScope = localStorage.getItem('tsf_view_scope');
+        const savedScope = localStorage.getItem(SCOPE_KEY);
         if (savedScope === 'OFFICIAL' || savedScope === 'INTERNAL') {
             setViewScope(savedScope);
         }
-    }, []);
+        setIsLoaded(true);
+    }, [contextKey, TABS_KEY, SCOPE_KEY]);
 
     // Save viewScope to localStorage and Cookies
     useEffect(() => {
-        localStorage.setItem('tsf_view_scope', viewScope);
+        if (!isLoaded) return;
+        localStorage.setItem(SCOPE_KEY, viewScope);
         // Set cookie for server-side awareness (valid for 1 year)
         document.cookie = `tsf_view_scope=${viewScope}; path=/; max-age=31536000; SameSite=Lax`;
-    }, [viewScope]);
+    }, [viewScope, isLoaded, SCOPE_KEY]);
 
     const handleSetViewScope = (scope: 'OFFICIAL' | 'INTERNAL') => {
         setViewScope(scope);
@@ -71,10 +81,11 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
     // Save tabs to localStorage
     useEffect(() => {
+        if (!isLoaded) return;
         if (openTabs.length > 0) {
-            localStorage.setItem('tsf_tabs', JSON.stringify(openTabs));
+            localStorage.setItem(TABS_KEY, JSON.stringify(openTabs));
         }
-    }, [openTabs]);
+    }, [openTabs, isLoaded, TABS_KEY]);
 
     const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
@@ -97,8 +108,15 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         if (pathname === id && newTabs.length > 0) {
             router.push(newTabs[newTabs.length - 1].path);
         } else if (newTabs.length === 0) {
-            router.push('/admin'); // Fallback
+            const defaultPath = contextKey === 'saas' ? '/saas/dashboard' : '/admin';
+            router.push(defaultPath); // Fallback
         }
+    };
+
+    const clearTabs = () => {
+        const defaultPath = contextKey === 'saas' ? '/saas/dashboard' : '/admin';
+        setOpenTabs([{ id: 'dashboard', title: 'Dashboard', path: defaultPath }]);
+        router.push(defaultPath);
     };
 
     return (
@@ -109,6 +127,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
             activeTab: pathname,
             openTab,
             closeTab,
+            clearTabs,
             viewScope,
             setViewScope: handleSetViewScope
         }}>

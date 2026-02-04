@@ -66,7 +66,7 @@ export default async function AdminLayout({
 
 
     return (
-        <AdminProvider>
+        <AdminProvider contextKey={currentSlug}>
             <DevProvider>
                 <div className="flex h-screen bg-gray-50 overflow-hidden font-sans text-gray-900">
                     {/* Left Panel: Sidebar Tree */}
