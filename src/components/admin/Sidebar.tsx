@@ -137,6 +137,8 @@ const MENU_ITEMS = [
             { title: 'SaaS Dashboard', path: '/saas/dashboard' },
             { title: 'Organizations', path: '/saas/organizations' },
             { title: 'Global Registry', path: '/saas/modules' },
+            { title: 'Instance Switcher', path: '/saas/switcher' },
+            { title: 'Platform Health', path: '/saas/health' },
             { title: 'Kernel Updates', path: '/saas/updates' },
         ]
     },
