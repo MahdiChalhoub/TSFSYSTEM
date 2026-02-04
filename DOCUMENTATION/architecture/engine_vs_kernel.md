@@ -44,3 +44,14 @@ If the task involves:
 - Creating a new business module (e.g., "Add a module for HR").
 - Fixing logic inside a specific application area (Inventory, POS, etc.).
 **Action**: Work in **Engine Mode**. Ensure the module's `manifest.json` is updated and use the `ModuleManager` for lifecycle operations.
+
+---
+
+## ⛔ Strict Architectural Constraints
+
+To maintain the integrity of the TSFSYSTEM, all contributions must follow these rules:
+
+1.  **❌ No feature design without architectural classification**: You MUST explicitly state if a feature is Kernel or Engine before any code is written.
+2.  **❌ No Kernel logic inside Engine modules**: Engine modules must remain isolated. Core system logic (e.g., authentication, routing shell, global config) must stay in the Kernel.
+3.  **❌ No silent global changes**: Any change affecting the entire platform (white-labeling, sidebar icons, base CSS) MUST be documented and versioned.
+4.  **❌ No versionless updates**: Every change to a module or the kernel MUST increment the semantic version in the corresponding `manifest.json` or `PLATFORM_CONFIG`.
