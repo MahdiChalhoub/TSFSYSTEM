@@ -47,5 +47,19 @@ export async function toggleOrganizationStatus(id: string, currentStatus: boolea
         revalidatePath('/saas/organizations')
     } catch (error) {
         console.error("Failed to toggle organization status:", error)
+        throw error
+    }
+}
+
+export async function deleteOrganization(id: string) {
+    try {
+        await erpFetch(`organizations/${id}/`, {
+            method: 'DELETE'
+        })
+        revalidatePath('/saas/organizations')
+        revalidatePath('/saas/dashboard')
+    } catch (error) {
+        console.error("Failed to delete organization:", error)
+        throw error
     }
 }

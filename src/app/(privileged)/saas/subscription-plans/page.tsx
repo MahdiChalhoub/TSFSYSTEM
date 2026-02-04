@@ -1,17 +1,31 @@
 'use client'
 
 import { useEffect, useState } from "react"
-import { getPlans, getPlanCategories } from "./actions"
+import { getPlans, getPlanCategories, createPlan, createPlanCategory } from "./actions"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Plus, Tag, Layers } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Plus, Tag, Layers, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
 
 export default function SubscriptionPlansPage() {
     const [plans, setPlans] = useState<any[]>([])
     const [categories, setCategories] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
+
+    // New Plan Modal
+    const [planOpen, setPlanOpen] = useState(false)
+    const [planForm, setPlanForm] = useState({ name: '', slug: '', monthly_price: '0', annual_price: '0', category: '' })
+    const [planSaving, setPlanSaving] = useState(false)
+
+    // New Category Modal
+    const [catOpen, setCatOpen] = useState(false)
+    const [catForm, setCatForm] = useState({ name: '', slug: '', type: 'PUBLIC' })
+    const [catSaving, setCatSaving] = useState(false)
 
     useEffect(() => {
         loadData()
@@ -32,6 +46,49 @@ export default function SubscriptionPlansPage() {
         }
     }
 
+    async function handleCreatePlan() {
+        if (!planForm.name || !planForm.slug || !planForm.category) {
+            return toast.error("Please fill all required fields")
+        }
+        setPlanSaving(true)
+        try {
+            await createPlan({
+                name: planForm.name,
+                slug: planForm.slug,
+                monthly_price: parseFloat(planForm.monthly_price) || 0,
+                annual_price: parseFloat(planForm.annual_price) || 0,
+                category: parseInt(planForm.category),
+                is_active: true
+            })
+            toast.success("Plan created")
+            setPlanOpen(false)
+            setPlanForm({ name: '', slug: '', monthly_price: '0', annual_price: '0', category: '' })
+            loadData()
+        } catch (e: any) {
+            toast.error(e.message || "Failed to create plan")
+        } finally {
+            setPlanSaving(false)
+        }
+    }
+
+    async function handleCreateCategory() {
+        if (!catForm.name || !catForm.slug) {
+            return toast.error("Please fill all required fields")
+        }
+        setCatSaving(true)
+        try {
+            await createPlanCategory(catForm)
+            toast.success("Category created")
+            setCatOpen(false)
+            setCatForm({ name: '', slug: '', type: 'PUBLIC' })
+            loadData()
+        } catch (e: any) {
+            toast.error(e.message || "Failed to create category")
+        } finally {
+            setCatSaving(false)
+        }
+    }
+
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             <div className="flex justify-between items-end">
@@ -40,14 +97,119 @@ export default function SubscriptionPlansPage() {
                     <p className="text-gray-500 mt-2 font-medium">Manage pricing tiers and feature entitlements</p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" className="gap-2">
-                        <Tag size={16} />
-                        Categories
-                    </Button>
-                    <Button className="bg-emerald-600 hover:bg-emerald-500 gap-2 text-white">
-                        <Plus size={18} />
-                        New Plan
-                    </Button>
+                    <Dialog open={catOpen} onOpenChange={setCatOpen}>
+                        <DialogTrigger asChild>
+                            <Button variant="outline" className="gap-2">
+                                <Tag size={16} />
+                                New Category
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Create Plan Category</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4 py-4">
+                                <div className="space-y-2">
+                                    <Label>Name</Label>
+                                    <Input
+                                        value={catForm.name}
+                                        onChange={e => setCatForm(f => ({ ...f, name: e.target.value }))}
+                                        placeholder="e.g. Standard Plans"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Slug</Label>
+                                    <Input
+                                        value={catForm.slug}
+                                        onChange={e => setCatForm(f => ({ ...f, slug: e.target.value }))}
+                                        placeholder="e.g. standard"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Type</Label>
+                                    <Select value={catForm.type} onValueChange={v => setCatForm(f => ({ ...f, type: v }))}>
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="PUBLIC">Public</SelectItem>
+                                            <SelectItem value="ORGANIZATION">Organization-Specific</SelectItem>
+                                            <SelectItem value="INTERNAL">Internal</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button onClick={handleCreateCategory} disabled={catSaving} className="bg-emerald-600 hover:bg-emerald-500 text-white">
+                                    {catSaving ? <Loader2 className="animate-spin" size={16} /> : "Create Category"}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+
+                    <Dialog open={planOpen} onOpenChange={setPlanOpen}>
+                        <DialogTrigger asChild>
+                            <Button className="bg-emerald-600 hover:bg-emerald-500 gap-2 text-white">
+                                <Plus size={18} />
+                                New Plan
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Create Subscription Plan</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4 py-4">
+                                <div className="space-y-2">
+                                    <Label>Plan Name</Label>
+                                    <Input
+                                        value={planForm.name}
+                                        onChange={e => setPlanForm(f => ({ ...f, name: e.target.value }))}
+                                        placeholder="e.g. Pro Plan"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Slug</Label>
+                                    <Input
+                                        value={planForm.slug}
+                                        onChange={e => setPlanForm(f => ({ ...f, slug: e.target.value }))}
+                                        placeholder="e.g. pro"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label>Monthly Price ($)</Label>
+                                        <Input
+                                            type="number"
+                                            value={planForm.monthly_price}
+                                            onChange={e => setPlanForm(f => ({ ...f, monthly_price: e.target.value }))}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Annual Price ($)</Label>
+                                        <Input
+                                            type="number"
+                                            value={planForm.annual_price}
+                                            onChange={e => setPlanForm(f => ({ ...f, annual_price: e.target.value }))}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Category</Label>
+                                    <Select value={planForm.category} onValueChange={v => setPlanForm(f => ({ ...f, category: v }))}>
+                                        <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                                        <SelectContent>
+                                            {categories.map(c => (
+                                                <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button onClick={handleCreatePlan} disabled={planSaving} className="bg-emerald-600 hover:bg-emerald-500 text-white">
+                                    {planSaving ? <Loader2 className="animate-spin" size={16} /> : "Create Plan"}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </div>
             </div>
 

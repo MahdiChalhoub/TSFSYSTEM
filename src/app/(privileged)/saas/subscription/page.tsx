@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useState } from "react"
 import { getOrganizations } from "@/app/(privileged)/saas/organizations/actions"
 import { getSubscriptionPlans, subscribeToPlan } from "./actions"
@@ -159,7 +161,7 @@ export default function SubscriptionPage() {
                                     </div>
                                 </DialogContent>
                             </Dialog>
-                            <Button variant="outline" className="flex-1 border-emerald-200 text-emerald-700 hover:bg-emerald-50 h-12 rounded-xl font-bold bg-white">
+                            <Button variant="outline" className="flex-1 border-emerald-200 text-emerald-700 hover:bg-emerald-50 h-12 rounded-xl font-bold bg-white" onClick={() => toast.info("Payment integration coming soon. Please contact support.")}>
                                 Manage Billing
                             </Button>
                         </div>

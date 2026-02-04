@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from "react"
-import { getOrganizations, toggleOrganizationStatus, createOrganization } from "./actions"
+import { getOrganizations, toggleOrganizationStatus, createOrganization, deleteOrganization } from "./actions"
 import { getOrgModules, toggleOrgModule, updateOrgModuleFeatures } from "@/app/actions/saas/modules"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -46,6 +46,17 @@ export default function OrganizationsPage() {
             loadData()
         } catch {
             toast.error("Failed to update status")
+        }
+    }
+
+    async function handleDelete(org: any) {
+        if (!confirm(`Are you sure you want to delete "${org.name}"? This action cannot be undone.`)) return
+        try {
+            await deleteOrganization(org.id)
+            toast.success("Organization deleted")
+            loadData()
+        } catch {
+            toast.error("Failed to delete organization.")
         }
     }
 
@@ -212,7 +223,7 @@ export default function OrganizationsPage() {
                                 >
                                     <Settings2 size={20} />
                                 </Button>
-                                <Button variant="ghost" className="p-6 rounded-2xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all">
+                                <Button variant="ghost" className="p-6 rounded-2xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all" onClick={() => handleDelete(org)}>
                                     <Trash2 size={20} />
                                 </Button>
                             </div>
