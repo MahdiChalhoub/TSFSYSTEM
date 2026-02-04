@@ -5,14 +5,15 @@
  * ==================================
  * Configure fallback behaviors for different module states.
  * Features:
- * - Select from available modules (dropdown)
- * - Source module specification
+ * - Filter by source module, target module, actions
+ * - Visual route display (Source → Target)
+ * - Color-coded state actions
  * - Auto-generate default policies
  */
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -33,7 +34,8 @@ import {
     DialogFooter,
 } from '@/components/ui/dialog'
 import {
-    ArrowLeft, Plus, Trash2, Edit2, RefreshCw, Settings, Save, Wand2, ArrowRight
+    ArrowLeft, Plus, Trash2, Edit2, RefreshCw, Settings, Save, Wand2,
+    ArrowRight, Filter, X
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -105,6 +107,7 @@ const emptyPolicy = {
 
 export default function ConnectorPoliciesPage() {
     const [policies, setPolicies] = useState<Policy[]>([])
+    const [filteredPolicies, setFilteredPolicies] = useState<Policy[]>([])
     const [modules, setModules] = useState<ModuleInfo[]>([])
     const [loading, setLoading] = useState(true)
     const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -113,9 +116,19 @@ export default function ConnectorPoliciesPage() {
     const [saving, setSaving] = useState(false)
     const [generating, setGenerating] = useState(false)
 
+    // Filters
+    const [filterSource, setFilterSource] = useState<string>('')
+    const [filterTarget, setFilterTarget] = useState<string>('')
+    const [filterAction, setFilterAction] = useState<string>('')
+    const [showFilters, setShowFilters] = useState(false)
+
     useEffect(() => {
         loadData()
     }, [])
+
+    useEffect(() => {
+        applyFilters()
+    }, [policies, filterSource, filterTarget, filterAction])
 
     async function loadData() {
         setLoading(true)
@@ -125,7 +138,6 @@ export default function ConnectorPoliciesPage() {
                 getAvailableModules()
             ])
             setPolicies(policiesData)
-            // Add * (All) option at start
             setModules([
                 { code: '*', name: 'All Modules (Global)', is_core: true },
                 ...modulesData.filter((m: ModuleInfo) => m.code !== '*')
@@ -135,6 +147,35 @@ export default function ConnectorPoliciesPage() {
         } finally {
             setLoading(false)
         }
+    }
+
+    function applyFilters() {
+        let result = [...policies]
+
+        if (filterSource) {
+            result = result.filter(p => p.source_module === filterSource)
+        }
+        if (filterTarget) {
+            result = result.filter(p => p.target_module === filterTarget)
+        }
+        if (filterAction) {
+            result = result.filter(p =>
+                p.when_missing_read === filterAction ||
+                p.when_missing_write === filterAction ||
+                p.when_disabled_read === filterAction ||
+                p.when_disabled_write === filterAction ||
+                p.when_unauthorized_read === filterAction ||
+                p.when_unauthorized_write === filterAction
+            )
+        }
+
+        setFilteredPolicies(result)
+    }
+
+    function clearFilters() {
+        setFilterSource('')
+        setFilterTarget('')
+        setFilterAction('')
     }
 
     function handleEdit(policy: Policy) {
@@ -218,8 +259,29 @@ export default function ConnectorPoliciesPage() {
         }
     }
 
+    const getModuleName = (code: string) => {
+        const mod = modules.find(m => m.code === code)
+        return mod?.name || code
+    }
+
+    const getActionColor = (action: string) => {
+        const colors: Record<string, string> = {
+            'forward': 'bg-green-100 text-green-700 border-green-200',
+            'empty': 'bg-gray-100 text-gray-700 border-gray-200',
+            'buffer': 'bg-blue-100 text-blue-700 border-blue-200',
+            'cached': 'bg-purple-100 text-purple-700 border-purple-200',
+            'drop': 'bg-orange-100 text-orange-700 border-orange-200',
+            'error': 'bg-red-100 text-red-700 border-red-200',
+            'wait': 'bg-yellow-100 text-yellow-700 border-yellow-200',
+            'mock': 'bg-pink-100 text-pink-700 border-pink-200',
+        }
+        return colors[action] || 'bg-gray-100 text-gray-700 border-gray-200'
+    }
+
+    const hasActiveFilters = filterSource || filterTarget || filterAction
+
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-6 animate-in fade-in duration-500">
             {/* Header */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
                 <div>
@@ -233,9 +295,19 @@ export default function ConnectorPoliciesPage() {
                         </div>
                     </div>
                     <h2 className="text-3xl font-black text-gray-900 tracking-tight">Routing Policies</h2>
-                    <p className="text-gray-500 mt-2 font-medium">Define fallback behaviors for module states</p>
+                    <p className="text-gray-500 mt-2 font-medium">
+                        {filteredPolicies.length} policies {hasActiveFilters ? '(filtered)' : ''}
+                    </p>
                 </div>
                 <div className="flex gap-3 flex-wrap">
+                    <Button
+                        onClick={() => setShowFilters(!showFilters)}
+                        variant="outline"
+                        className={`rounded-2xl px-6 py-5 font-bold ${hasActiveFilters ? 'bg-indigo-50 border-indigo-200' : ''}`}
+                    >
+                        <Filter size={18} />
+                        Filters {hasActiveFilters && `(${[filterSource, filterTarget, filterAction].filter(Boolean).length})`}
+                    </Button>
                     <Button
                         onClick={handleAutoGenerate}
                         disabled={generating || loading}
@@ -252,7 +324,6 @@ export default function ConnectorPoliciesPage() {
                         className="rounded-2xl px-6 py-5 font-bold"
                     >
                         <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
-                        Refresh
                     </Button>
                     <Button
                         onClick={handleNew}
@@ -263,6 +334,68 @@ export default function ConnectorPoliciesPage() {
                     </Button>
                 </div>
             </div>
+
+            {/* Filters Panel */}
+            {showFilters && (
+                <Card className="rounded-2xl border-indigo-100 bg-indigo-50/50">
+                    <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-bold text-indigo-700">Filter Policies</h3>
+                            {hasActiveFilters && (
+                                <Button variant="ghost" size="sm" onClick={clearFilters} className="text-indigo-600">
+                                    <X size={14} /> Clear All
+                                </Button>
+                            )}
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="space-y-2">
+                                <Label className="text-indigo-700">Source Module (Requester)</Label>
+                                <Select value={filterSource} onValueChange={setFilterSource}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Any source" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="">Any source</SelectItem>
+                                        {modules.map((m) => (
+                                            <SelectItem key={m.code} value={m.code}>{m.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-indigo-700">Target Module (Destination)</Label>
+                                <Select value={filterTarget} onValueChange={setFilterTarget}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Any target" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="">Any target</SelectItem>
+                                        {modules.map((m) => (
+                                            <SelectItem key={m.code} value={m.code}>{m.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-indigo-700">Action Type</Label>
+                                <Select value={filterAction} onValueChange={setFilterAction}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Any action" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="">Any action</SelectItem>
+                                        <SelectItem value="empty">Return empty</SelectItem>
+                                        <SelectItem value="buffer">Buffer for replay</SelectItem>
+                                        <SelectItem value="drop">Drop silently</SelectItem>
+                                        <SelectItem value="error">Throw error</SelectItem>
+                                        <SelectItem value="cached">Return cached</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
 
             {/* Policy Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -502,107 +635,149 @@ export default function ConnectorPoliciesPage() {
                 </DialogContent>
             </Dialog>
 
-            {/* Policies Table */}
-            <Card className="rounded-3xl shadow-xl border-gray-100">
-                <CardContent className="p-0">
-                    {loading ? (
-                        <div className="flex items-center justify-center py-20">
-                            <RefreshCw className="w-8 h-8 animate-spin text-gray-400" />
-                        </div>
-                    ) : policies.length === 0 ? (
-                        <div className="text-center py-20 text-gray-400">
-                            <Settings className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                            <p className="font-medium">No policies configured</p>
-                            <p className="text-sm mt-1">Click "Auto-Generate" to create default policies for all modules</p>
-                            <Button
-                                onClick={handleAutoGenerate}
-                                className="mt-4 bg-amber-500 hover:bg-amber-400"
-                            >
-                                <Wand2 size={16} />
-                                Auto-Generate Default Policies
-                            </Button>
-                        </div>
-                    ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead className="bg-gray-50 border-b border-gray-100">
-                                    <tr>
-                                        <th className="text-left p-4 font-bold text-gray-600 text-sm">Route</th>
-                                        <th className="text-left p-4 font-bold text-gray-600 text-sm">MISSING</th>
-                                        <th className="text-left p-4 font-bold text-gray-600 text-sm">DISABLED</th>
-                                        <th className="text-left p-4 font-bold text-gray-600 text-sm">UNAUTHORIZED</th>
-                                        <th className="text-left p-4 font-bold text-gray-600 text-sm">Priority</th>
-                                        <th className="text-right p-4 font-bold text-gray-600 text-sm">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-50">
-                                    {policies.map((policy) => (
-                                        <tr key={policy.id} className="hover:bg-gray-50/50 transition-colors">
-                                            <td className="p-4">
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <Badge variant="outline" className="text-xs font-mono bg-gray-50">
-                                                        {policy.source_module || '*'}
-                                                    </Badge>
-                                                    <ArrowRight size={14} className="text-gray-300" />
-                                                    <span className="font-bold text-gray-900">{policy.target_module}</span>
-                                                </div>
-                                                <div className="text-xs text-gray-400 font-mono">{policy.target_endpoint}</div>
-                                            </td>
-                                            <td className="p-4">
-                                                <Badge variant="outline" className="font-mono text-amber-600 border-amber-200 bg-amber-50">
-                                                    R:{policy.when_missing_read} W:{policy.when_missing_write}
-                                                </Badge>
-                                            </td>
-                                            <td className="p-4">
-                                                <Badge variant="outline" className="font-mono text-blue-600 border-blue-200 bg-blue-50">
-                                                    R:{policy.when_disabled_read} W:{policy.when_disabled_write}
-                                                </Badge>
-                                            </td>
-                                            <td className="p-4">
-                                                <Badge variant="outline" className="font-mono text-red-600 border-red-200 bg-red-50">
-                                                    R:{policy.when_unauthorized_read} W:{policy.when_unauthorized_write}
-                                                </Badge>
-                                            </td>
-                                            <td className="p-4">
-                                                <span className="font-mono text-gray-600">{policy.priority}</span>
-                                            </td>
-                                            <td className="p-4 text-right">
-                                                <div className="flex gap-2 justify-end">
-                                                    <Button
-                                                        size="sm"
-                                                        variant="ghost"
-                                                        onClick={() => handleEdit(policy)}
-                                                        className="text-gray-500 hover:text-indigo-600"
-                                                    >
-                                                        <Edit2 size={16} />
-                                                    </Button>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="ghost"
-                                                        onClick={() => handleDelete(policy.id)}
-                                                        className="text-gray-500 hover:text-red-600"
-                                                    >
-                                                        <Trash2 size={16} />
-                                                    </Button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
+            {/* Policies Grid - Better visualization */}
+            <div className="grid gap-4">
+                {loading ? (
+                    <div className="flex items-center justify-center py-20">
+                        <RefreshCw className="w-8 h-8 animate-spin text-gray-400" />
+                    </div>
+                ) : filteredPolicies.length === 0 ? (
+                    <Card className="rounded-3xl shadow-xl border-gray-100">
+                        <CardContent className="p-0">
+                            <div className="text-center py-20 text-gray-400">
+                                <Settings className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                                <p className="font-medium">{hasActiveFilters ? 'No policies match filters' : 'No policies configured'}</p>
+                                <p className="text-sm mt-1">
+                                    {hasActiveFilters
+                                        ? 'Try adjusting your filters'
+                                        : 'Click "Auto-Generate" to create default policies'
+                                    }
+                                </p>
+                                {!hasActiveFilters && (
+                                    <Button
+                                        onClick={handleAutoGenerate}
+                                        className="mt-4 bg-amber-500 hover:bg-amber-400"
+                                    >
+                                        <Wand2 size={16} />
+                                        Auto-Generate Default Policies
+                                    </Button>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+                ) : (
+                    filteredPolicies.map((policy) => (
+                        <Card key={policy.id} className="rounded-2xl shadow-lg border-gray-100 hover:shadow-xl transition-shadow">
+                            <CardContent className="p-4">
+                                <div className="flex items-start justify-between gap-4">
+                                    {/* Route Display */}
+                                    <div className="flex-1">
+                                        {/* Source → Target */}
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <Badge variant="outline" className="px-3 py-1 text-sm font-bold bg-gray-50">
+                                                {getModuleName(policy.source_module || '*')}
+                                            </Badge>
+                                            <ArrowRight size={20} className="text-indigo-400" />
+                                            <Badge variant="outline" className="px-3 py-1 text-sm font-bold bg-indigo-50 text-indigo-700 border-indigo-200">
+                                                {getModuleName(policy.target_module)}
+                                            </Badge>
+                                            <span className="text-xs text-gray-400 font-mono">{policy.target_endpoint}</span>
+                                        </div>
 
-            {/* Help Text */}
-            <div className="p-6 bg-indigo-50 rounded-2xl border border-indigo-100">
-                <h4 className="font-bold text-indigo-700 mb-2">Understanding Policies</h4>
-                <p className="text-sm text-indigo-600">
-                    Policies define how the Connector handles requests when a module is unavailable.
-                    <strong> Source Module</strong> is who makes the request, <strong>Target Module</strong> is the destination.
-                    Use <code className="bg-indigo-100 px-1 rounded">*</code> for all modules/endpoints.
-                </p>
+                                        {/* State Actions Grid */}
+                                        <div className="grid grid-cols-3 gap-3">
+                                            {/* MISSING */}
+                                            <div className="p-3 rounded-xl bg-amber-50 border border-amber-100">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <div className="w-2 h-2 rounded-full bg-amber-500" />
+                                                    <span className="text-xs font-bold text-amber-700">MISSING</span>
+                                                </div>
+                                                <div className="flex gap-1">
+                                                    <Badge variant="outline" className={`text-xs ${getActionColor(policy.when_missing_read)}`}>
+                                                        R: {policy.when_missing_read}
+                                                    </Badge>
+                                                    <Badge variant="outline" className={`text-xs ${getActionColor(policy.when_missing_write)}`}>
+                                                        W: {policy.when_missing_write}
+                                                    </Badge>
+                                                </div>
+                                            </div>
+
+                                            {/* DISABLED */}
+                                            <div className="p-3 rounded-xl bg-blue-50 border border-blue-100">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <div className="w-2 h-2 rounded-full bg-blue-500" />
+                                                    <span className="text-xs font-bold text-blue-700">DISABLED</span>
+                                                </div>
+                                                <div className="flex gap-1">
+                                                    <Badge variant="outline" className={`text-xs ${getActionColor(policy.when_disabled_read)}`}>
+                                                        R: {policy.when_disabled_read}
+                                                    </Badge>
+                                                    <Badge variant="outline" className={`text-xs ${getActionColor(policy.when_disabled_write)}`}>
+                                                        W: {policy.when_disabled_write}
+                                                    </Badge>
+                                                </div>
+                                            </div>
+
+                                            {/* UNAUTHORIZED */}
+                                            <div className="p-3 rounded-xl bg-red-50 border border-red-100">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <div className="w-2 h-2 rounded-full bg-red-500" />
+                                                    <span className="text-xs font-bold text-red-700">UNAUTHORIZED</span>
+                                                </div>
+                                                <div className="flex gap-1">
+                                                    <Badge variant="outline" className={`text-xs ${getActionColor(policy.when_unauthorized_read)}`}>
+                                                        R: {policy.when_unauthorized_read}
+                                                    </Badge>
+                                                    <Badge variant="outline" className={`text-xs ${getActionColor(policy.when_unauthorized_write)}`}>
+                                                        W: {policy.when_unauthorized_write}
+                                                    </Badge>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div className="flex flex-col gap-2">
+                                        <Badge variant="outline" className="text-xs text-gray-500">
+                                            Priority: {policy.priority}
+                                        </Badge>
+                                        <div className="flex gap-1">
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                onClick={() => handleEdit(policy)}
+                                                className="text-gray-500 hover:text-indigo-600"
+                                            >
+                                                <Edit2 size={16} />
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                onClick={() => handleDelete(policy.id)}
+                                                className="text-gray-500 hover:text-red-600"
+                                            >
+                                                <Trash2 size={16} />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))
+                )}
+            </div>
+
+            {/* Legend */}
+            <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                <h4 className="font-bold text-gray-700 mb-3">Action Legend</h4>
+                <div className="flex flex-wrap gap-2">
+                    <Badge variant="outline" className={getActionColor('forward')}>forward</Badge>
+                    <Badge variant="outline" className={getActionColor('empty')}>empty</Badge>
+                    <Badge variant="outline" className={getActionColor('buffer')}>buffer</Badge>
+                    <Badge variant="outline" className={getActionColor('cached')}>cached</Badge>
+                    <Badge variant="outline" className={getActionColor('drop')}>drop</Badge>
+                    <Badge variant="outline" className={getActionColor('error')}>error</Badge>
+                </div>
             </div>
         </div>
     )
