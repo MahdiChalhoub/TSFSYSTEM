@@ -26,6 +26,21 @@ echo "☢️  Cleaning up old/corrupted containers..."
 docker-compose down --remove-orphans
 # Force kill any zombies
 docker rm -f $(docker ps -aq) 2>/dev/null || true
+
+# 2.5 Port 80 Conflict Resolution
+echo ""
+echo "🔍  Checking for Port 80 conflicts..."
+# Check if something is listening on port 80
+if lsof -Pi :80 -sTCP:LISTEN -t >/dev/null ; then
+    echo "⚠️  Port 80 is occupied! Stopping conflicting services..."
+    # Try stopping common services
+    service apache2 stop 2>/dev/null || true
+    service nginx stop 2>/dev/null || true
+    # Force kill if still running
+    fuser -k 80/tcp 2>/dev/null || true
+    echo "✅  Port 80 freed."
+fi
+
 echo "✅  Clean complete."
 
 # 3. Build & Start
