@@ -26,7 +26,7 @@ class SaaSModuleViewSet(viewsets.ViewSet):
                 'version': m.version,
                 'description': m.manifest.get('description', ''),
                 'dependencies': m.manifest.get('dependencies', []),
-                'is_core': m.manifest.get('required', False),
+                'is_core': m.manifest.get('is_core', False) or m.manifest.get('required', False) or m.name in ['core', 'coreplatform'],
                 'total_installs': install_count
             })
         return Response(data)
@@ -168,7 +168,7 @@ class OrgModuleViewSet(viewsets.ViewSet):
 
         data = []
         for m in all_modules:
-            is_core = m.manifest.get('required', False)
+            is_core = m.manifest.get('is_core', False) or m.manifest.get('required', False) or m.name in ['core', 'coreplatform']
             om_record = enabled_map.get(m.name)
             
             # [FEATURE FLAGS] Extract features from manifest
