@@ -55,3 +55,67 @@ To maintain the integrity of the TSFSYSTEM, all contributions must follow these 
 2.  **❌ No Kernel logic inside Engine modules**: Engine modules must remain isolated. Core system logic (e.g., authentication, routing shell, global config) must stay in the Kernel.
 3.  **❌ No silent global changes**: Any change affecting the entire platform (white-labeling, sidebar icons, base CSS) MUST be documented and versioned.
 4.  **❌ No versionless updates**: Every change to a module or the kernel MUST increment the semantic version in the corresponding `manifest.json` or `PLATFORM_CONFIG`.
+
+---
+
+## 🛡️ Platform Integrity Rules
+
+These rules enforce accountability, prevent duplication, and enable business-driven workflows.
+
+### Rule 1: "Uniqueness Before Creation" 🔍
+
+> **Before implementing a new page, class, or API endpoint, you MUST verify it does not already exist in any active module.**
+
+| Step | Action |
+|---|---|
+| 1 | Search existing modules in `erp_backend/apps/` and `src/app/(saas)/` for similar functionality. |
+| 2 | If a similar feature exists, **reuse or extend it** instead of creating a duplicate. |
+| 3 | If the feature is truly new, document its purpose in the `implementation_plan.md`. |
+
+**Violation**: Creating a duplicate feature is a **critical architectural violation**.
+
+---
+
+### Rule 2: "Universal Audit Logging" 📜
+
+> **All database mutations (CREATE, UPDATE, DELETE) and sensitive data access MUST be logged via the central `AuditLog` service.**
+
+- **Model**: `AuditLog` stores `actor`, `action`, `table_name`, `record_id`, `old_value`, `new_value`, `ip_address`, `timestamp`.
+- **Service**: `AuditService.log_event(...)` called from all ViewSets.
+- **Scope**: Applies to all **Engine Modules**. See [audit_and_workflow_engine.md](audit_and_workflow_engine.md) for schema details.
+
+---
+
+### Rule 3: "Conditional Approval Workflow" ✅
+
+> **Specific data changes can be configured to require approval before or after they take effect.**
+
+| Mode | Behavior |
+|---|---|
+| **Pre-Approval** | Change is **held** until a manager approves. |
+| **Post-Approval** | Change is **applied immediately** but flagged for review. |
+
+- **Criteria**: Event priority and actor role determine the mode.
+- **Task Generation**: Approved events can automatically create tasks (e.g., "Print Etiquette" -> Shelf Manager).
+- See [audit_and_workflow_engine.md](audit_and_workflow_engine.md) for `WorkflowDefinition` and `TaskQueue` schemas.
+
+---
+
+### Rule 4: "Granular Permission Registry" 🔐
+
+> **Every Module MUST declare a list of permissions in its `manifest.json`.**
+
+```json
+// Example: inventory/manifest.json
+{
+  "permissions": [
+    { "code": "inventory.view_products", "label": "View Products" },
+    { "code": "inventory.add_product", "label": "Add New Product" }
+  ]
+}
+```
+
+| Enforcement Point | Mechanism |
+|---|---|
+| **Backend** | `@permission_required('inventory.add_product')` decorator. |
+| **Frontend** | `useHasPermission('inventory.add_product')` hook. |
