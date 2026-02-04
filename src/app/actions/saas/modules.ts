@@ -13,6 +13,15 @@ export async function getSaaSModules() {
     }
 }
 
+export async function getDynamicSidebar() {
+    try {
+        return await erpFetch('saas/modules/sidebar/')
+    } catch (e) {
+        console.error("Failed to fetch dynamic sidebar:", e)
+        return []
+    }
+}
+
 export async function syncModulesGlobal() {
     try {
         const data = await erpFetch('saas/modules/sync_global/', {

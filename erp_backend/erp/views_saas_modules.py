@@ -123,6 +123,36 @@ class SaaSModuleViewSet(viewsets.ViewSet):
             if os.path.exists(full_path):
                 os.remove(full_path)
 
+    @action(detail=False, methods=['get'])
+    def sidebar(self, request):
+        """Returns aggregated sidebar items for the current session context"""
+        # 1. Start with Core items (Always visible)
+        items = []
+        
+        # 2. Add items from ACTIVE modules
+        # If no organization context, we treat as MASTER PANEL (is_saas)
+        is_saas = not hasattr(request, 'tenant') or request.tenant is None
+        
+        active_modules = SystemModule.objects.all()
+        for m in active_modules:
+            # Verify module exists in filesystem before trusting manifest
+            mod_path = ModuleManager.get_module_path(m.name)
+            if not mod_path:
+                continue
+                
+            # Extract sidebar items from manifest
+            mod_items = m.manifest.get('sidebar_items', [])
+            for item in mod_items:
+                # Visibility check: Some items only show in SaaS, some only in Tenant
+                if item.get('visibility') == 'saas' and not is_saas:
+                    continue
+                if item.get('visibility') == 'tenant' and is_saas:
+                    continue
+                    
+                items.append(item)
+                
+        return Response(items)
+
 class OrgModuleViewSet(viewsets.ViewSet):
     """Management of modules for a specific Organization (SaaS View)"""
     permission_classes = [permissions.IsAdminUser]
