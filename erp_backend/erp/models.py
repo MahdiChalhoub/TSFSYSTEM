@@ -40,24 +40,46 @@ class SystemModule(models.Model):
     def __str__(self):
         return f"{self.name} ({self.version})"
 
+class SystemUpdate(models.Model):
+    """
+    Dedicated table for Kernel/Platform updates.
+    Distinct from functional modules.
+    """
+    version = models.CharField(max_length=50, unique=True)
+    changelog = models.TextField(null=True, blank=True)
+    release_date = models.DateTimeField(null=True, blank=True)
+    
+    package_hash = models.CharField(max_length=255, null=True, blank=True)
+    is_applied = models.BooleanField(default=False)
+    applied_at = models.DateTimeField(null=True, blank=True)
+    
+    metadata = models.JSONField(default=dict, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'SystemUpdate'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Kernel Update v{self.version} ({'Applied' if self.is_applied else 'Pending'})"
+
 class SystemModuleLog(models.Model):
     """
     ERP-grade auditing for module operations.
     """
-    module_name = models.CharField(max_length=100)
-    from_version = models.CharField(max_length=50)
-    to_version = models.CharField(max_length=50)
-    action = models.CharField(max_length=20) # INSTALL, UPGRADE, DISABLE
-    status = models.CharField(max_length=20) # SUCCESS, FAILURE
-    logs = models.TextField()
+    module = models.ForeignKey(SystemModule, on_delete=models.CASCADE, related_name='logs', null=True, blank=True)
+    action = models.CharField(max_length=50) # 'INSTALL', 'UPGRADE', 'UNINSTALL'
+    version = models.CharField(max_length=50)
+    details = models.JSONField(null=True, blank=True)
     performed_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True)
-    timestamp = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = 'SystemModuleLog'
 
     def __str__(self):
-        return f"{self.module_name}: {self.action} {self.from_version} -> {self.to_version}"
+        return f"{self.module.name}: {self.action} v{self.version}"
 
 class OrganizationModule(models.Model):
     """
