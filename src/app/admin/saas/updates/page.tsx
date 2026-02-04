@@ -183,7 +183,7 @@ export default function SystemUpdatesPage() {
                         {loading ? (
                             <div className="py-20 text-center text-gray-600 italic">Scanning update logs...</div>
                         ) : history.length === 0 ? (
-                            <div className="py-20 border-2 border-dashed border-gray-800 rounded-[2rem] flex flex-col items-center justify-center text-gray-600 gap-4">
+                            <div className="py-20 border-2 border-dashed border-gray-100 rounded-[2rem] flex flex-col items-center justify-center text-gray-400 gap-4">
                                 <Info size={32} />
                                 <p className="font-medium">No system updates staged or recorded.</p>
                             </div>
