@@ -1,0 +1,49 @@
+﻿
+> tsfci@0.1.0 build
+> next build
+
+Γû▓ Next.js 16.1.4 (Turbopack)
+- Environments: .env.production, .env
+- Experiments (use with caution):
+  ┬╖ serverActions
+
+node.exe : ΓÜá The "middleware" file convention is deprecated. Please use 
+"proxy" instead. Learn more: 
+https://nextjs.org/docs/messages/middleware-to-proxy
+At C:\Program Files\nodejs\npm.ps1:29 char:3
++   & $NODE_EXE $NPM_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (ΓÜá The "middle...leware-to-pro 
+   xy:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  Creating an optimized production build ...
+Γ£ô Compiled successfully in 6.7s
+  Running TypeScript ...
+Failed to compile.
+
+./src/app/(privileged)/saas/finance/fiscal-years/page.tsx:31:48
+Type error: Property 'days' does not exist on type 'never'.
+
+[0m [90m 29 |[39m                             
+{gaps[33m.[39mmap((g[33m,[39m i) [33m=>[39m (
+ [90m 30 |[39m                                 [33m<[39m[33mdiv[39m 
+key[33m=[39m{i} className[33m=[39m[32m"text-xs text-amber-800 
+bg-white/50 px-2 py-1 rounded inline-block mr-2 border 
+border-amber-100"[39m[33m>[39m
+[31m[1m>[22m[39m[90m 31 |[39m                                     
+[33m<[39m[33mstrong[39m[33m>[39m{g[33m.[39mdays} [33mDay[39m 
+[33mGap[39m[33m<[39m[33m/[39m[33mstrong[39m[33m>[39m after 
+{g[33m.[39mafter}[33m:[39m
+ [90m    |[39m                                                
+[31m[1m^[22m[39m
+ [90m 32 |[39m                                     
+[33m<[39m[33mspan[39m className[33m=[39m[32m"ml-1 
+opacity-70"[39m[33m>[39m
+ [90m 33 |[39m                                         {[36mnew[39m 
+[33mDate[39m(g[33m.[39mstartDate)[33m.[39mtoLocaleDateString()} ΓÇö 
+{[36mnew[39m 
+[33mDate[39m(g[33m.[39mendDate)[33m.[39mtoLocaleDateString()}
+ [90m 34 |[39m                                     
+[33m<[39m[33m/[39m[33mspan[39m[33m>[39m[0m
+Next.js build worker exited with code: 1 and signal: null

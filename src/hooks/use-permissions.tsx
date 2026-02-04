@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { erpFetch } from '@/lib/erp-fetch';
+import { erpFetch } from '@/lib/erp-api';
 
 interface UserWithPermissions {
     id: number;
@@ -35,15 +35,15 @@ export function usePermissions(): { permissions: string[]; isAdmin: boolean; loa
         }
 
         // Fetch fresh data
-        erpFetch<UserWithPermissions>('/auth/me/')
-            .then((user) => {
+        erpFetch('/auth/me/')
+            .then((user: UserWithPermissions) => {
                 const perms = user.permissions || [];
                 const admin = user.is_staff || user.is_superuser;
                 setPermissions(perms);
                 setIsAdmin(admin);
                 localStorage.setItem('user_permissions', JSON.stringify({ permissions: perms, isAdmin: admin }));
             })
-            .catch((err) => {
+            .catch((err: any) => {
                 console.error('Failed to fetch permissions', err);
             })
             .finally(() => {

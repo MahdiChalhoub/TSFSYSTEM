@@ -48,7 +48,7 @@ export default function FinancialSettingsForm({ settings, lock }: Props) {
         startRecalc(async () => {
             try {
                 const res = await recalculateAccountBalances()
-                alert(`Success! Recalculated balances from ${res.count} ledger entries.`)
+                alert(res.success ? 'Balances recalculated successfully!' : 'Recalculation failed.')
             } catch (e: any) {
                 alert('Error: ' + e.message)
             }
