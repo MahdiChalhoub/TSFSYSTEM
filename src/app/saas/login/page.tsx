@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState } from "react";
 import { loginAction } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,7 @@ const initialState: { error: any; success?: boolean } = {
     error: {},
 };
 
-export default function SaaSLoginContent() {
+export default function SaaSLoginPage() {
     const [state, action, isPending] = useActionState(loginAction, initialState);
 
     return (
