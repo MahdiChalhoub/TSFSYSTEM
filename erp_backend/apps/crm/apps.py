@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
-class FinanceConfig(AppConfig):
+class CRMConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'apps.finance'
-    label = 'apps_finance'
+    name = 'apps.crm'
+    label = 'apps_crm'

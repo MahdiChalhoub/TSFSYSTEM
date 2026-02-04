@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
-class FinanceConfig(AppConfig):
+class HRConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'apps.finance'
-    label = 'apps_finance'
+    name = 'apps.hr'
+    label = 'apps_hr'
