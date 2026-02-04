@@ -150,7 +150,7 @@ export default function SaaSModulesPage() {
     }
 
     return (
-        <div className="p-8 space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500">
             <input
                 type="file"
                 ref={fileInputRef}
@@ -159,28 +159,28 @@ export default function SaaSModulesPage() {
                 onChange={handleFileUpload}
             />
 
-            <div className="flex justify-between items-end">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 md:gap-4">
                 <div>
-                    <h2 className="text-4xl font-black text-white tracking-tight">Global Module Registry</h2>
-                    <p className="text-gray-400 mt-2 font-medium">Coordinate system features across all tenant distributions</p>
+                    <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight">Global Registry</h2>
+                    <p className="text-gray-400 mt-1 md:mt-2 font-medium text-sm md:text-base">Coordinate system features across all tenant distributions</p>
                     {lastSynced && <p className="text-emerald-500/50 text-[10px] font-mono mt-2 uppercase tracking-widest">Last Synced: {lastSynced}</p>}
                 </div>
-                <div className="flex gap-4">
+                <div className="flex flex-wrap gap-2 md:gap-4 w-full sm:w-auto">
                     <Button
                         onClick={() => fileInputRef.current?.click()}
                         disabled={syncing}
-                        className="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-6 rounded-2xl flex gap-2 font-bold transition-all shadow-lg shadow-emerald-900/40"
+                        className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-500 text-white px-4 md:px-6 py-4 md:py-6 rounded-2xl flex gap-2 font-bold transition-all shadow-lg shadow-emerald-900/40 text-xs md:text-sm"
                     >
-                        <UploadCloud size={20} />
-                        {syncing ? "Uploading..." : "Upload .modpkg"}
+                        <UploadCloud size={18} />
+                        {syncing ? "..." : "Upload"}
                     </Button>
                     <Button
                         onClick={handleSync}
                         disabled={syncing}
-                        className="bg-gray-800 hover:bg-gray-700 text-white px-6 py-6 rounded-2xl flex gap-2 font-bold transition-all shadow-xl"
+                        className="flex-1 sm:flex-none bg-gray-800 hover:bg-gray-700 text-white px-4 md:px-6 py-4 md:py-6 rounded-2xl flex gap-2 font-bold transition-all shadow-xl text-xs md:text-sm"
                     >
-                        <RefreshCw size={20} className={syncing ? "animate-spin" : ""} />
-                        {syncing ? "Scanning..." : "Sync Registry"}
+                        <RefreshCw size={18} className={syncing ? "animate-spin" : ""} />
+                        {syncing ? "..." : "Sync"}
                     </Button>
                 </div>
             </div>
