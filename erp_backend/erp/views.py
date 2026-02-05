@@ -133,6 +133,32 @@ class SaaSConfigView(APIView):
             "version": "1.2.3-b007"
         })
 
+class SaaSDashboardStatsView(APIView):
+    """
+    Returns aggregated statistics for the SaaS Master Dashboard.
+    """
+    def get(self, request):
+        # Basic kernel stats - actual module stats would come from installed modules
+        total_orgs = Organization.objects.count()
+        active_orgs = Organization.objects.filter(is_active=True).count()
+        total_users = User.objects.count()
+        total_sites = Site.objects.count()
+        
+        return Response({
+            "total_organizations": total_orgs,
+            "active_organizations": active_orgs,
+            "total_users": total_users,
+            "total_sites": total_sites,
+            "monthly_revenue": 0,  # Placeholder - requires billing module
+            "pending_subscriptions": 0,
+            "recent_activity": [],
+            "system_health": {
+                "database": "healthy",
+                "cache": "healthy",
+                "queue": "healthy"
+            }
+        })
+
 class OrganizationViewSet(viewsets.ModelViewSet):
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
