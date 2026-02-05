@@ -145,6 +145,9 @@ class ConnectorEngine:
             self._ConnectorLog = ConnectorLog
             self._models_loaded = True
     
+    # Policy Cache for get_policy optimization
+    POLICY_CACHE = {}
+
     # =========================================================================
     # STATE EVALUATION
     # =========================================================================
@@ -224,12 +227,12 @@ class ConnectorEngine:
     ) -> Optional['ConnectorPolicy']:
         """
         Retrieve the most specific policy for a target module/endpoint.
-        
-        Priority order:
-        1. Exact match (module + endpoint)
-        2. Module wildcard (module + *)
-        3. Global wildcard (* + *)
+        Uses an internal cache to avoid redundant DB hits.
         """
+        cache_key = f"{target_module}:{endpoint}"
+        if cache_key in self.POLICY_CACHE:
+            return self.POLICY_CACHE[cache_key]
+
         self._load_models()
         
         # Try exact match first
@@ -239,26 +242,24 @@ class ConnectorEngine:
             is_active=True
         ).order_by('-priority').first()
         
-        if policy:
-            return policy
+        if not policy:
+            # Try module-level wildcard
+            policy = self._ConnectorPolicy.objects.filter(
+                target_module=target_module,
+                target_endpoint='*',
+                is_active=True
+            ).order_by('-priority').first()
         
-        # Try module-level wildcard
-        policy = self._ConnectorPolicy.objects.filter(
-            target_module=target_module,
-            target_endpoint='*',
-            is_active=True
-        ).order_by('-priority').first()
+        if not policy:
+            # Try global wildcard
+            policy = self._ConnectorPolicy.objects.filter(
+                target_module='*',
+                target_endpoint='*',
+                is_active=True
+            ).order_by('-priority').first()
         
-        if policy:
-            return policy
-        
-        # Try global wildcard
-        policy = self._ConnectorPolicy.objects.filter(
-            target_module='*',
-            target_endpoint='*',
-            is_active=True
-        ).order_by('-priority').first()
-        
+        # Cache the result (even if None)
+        self.POLICY_CACHE[cache_key] = policy
         return policy
     
     def get_fallback_action(

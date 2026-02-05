@@ -7,6 +7,7 @@ import { TopHeader } from '@/components/admin/TopHeader';
 import { TabNavigator } from '@/components/admin/TabNavigator';
 import { DevProvider } from '@/context/DevContext';
 import DebugOverlay from '@/components/dev/DebugOverlay';
+import { CoreInfoButton } from '@/components/CoreInfoButton';
 
 import { Outfit } from 'next/font/google';
 import { getSites } from '@/app/actions/sites';
@@ -112,8 +113,9 @@ export default async function AdminLayout({
                         <main className="flex-1 overflow-auto relative">
                             {children}
                         </main>
+                        <DebugOverlay />
+                        <CoreInfoButton />
                     </div>
-                    <DebugOverlay />
                 </div>
             </DevProvider>
         </AdminProvider>

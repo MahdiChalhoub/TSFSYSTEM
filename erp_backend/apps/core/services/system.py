@@ -4,11 +4,17 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
 class CoreService:
+    _INTEGRITY_CACHE = None
+
     @staticmethod
     def verify_system_integrity():
         """
         Ensures the system meets the philosophy requirements.
+        Caches the result to avoid redundant checks.
         """
+        if CoreService._INTEGRITY_CACHE:
+            return CoreService._INTEGRITY_CACHE
+
         # 1. PostgreSQL Check
         db_engine = settings.DATABASES.get('default', {}).get('ENGINE', '')
         if 'postgresql' not in db_engine.lower():
@@ -16,11 +22,14 @@ class CoreService:
 
         # 2. Environment Detection
         env = os.getenv('APP_ENV', 'development')
-        return {
+        
+        result = {
             'environment': env,
             'engine': 'PostgreSQL',
             'status': 'HEALTHY'
         }
+        CoreService._INTEGRITY_CACHE = result
+        return result
 
     @staticmethod
     def get_system_info():
