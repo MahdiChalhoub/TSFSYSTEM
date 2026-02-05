@@ -28,8 +28,8 @@ export async function createOrganization(data: { name: string, slug: string }) {
             body: JSON.stringify(data)
         })
 
-        revalidatePath('/saas/organizations')
-        revalidatePath('/saas/dashboard')
+        revalidatePath('/organizations')
+        revalidatePath('/dashboard')
         return result
     } catch (error: any) {
         console.error("CRITICAL: Organization Provisioning Failed", error);
@@ -44,7 +44,7 @@ export async function toggleOrganizationStatus(id: string, currentStatus: boolea
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ is_active: !currentStatus })
         })
-        revalidatePath('/saas/organizations')
+        revalidatePath('/organizations')
     } catch (error) {
         console.error("Failed to toggle organization status:", error)
         throw error
@@ -56,8 +56,8 @@ export async function deleteOrganization(id: string) {
         await erpFetch(`organizations/${id}/`, {
             method: 'DELETE'
         })
-        revalidatePath('/saas/organizations')
-        revalidatePath('/saas/dashboard')
+        revalidatePath('/organizations')
+        revalidatePath('/dashboard')
     } catch (error) {
         console.error("Failed to delete organization:", error)
         throw error

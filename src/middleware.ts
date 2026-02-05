@@ -34,17 +34,19 @@ export default async function middleware(req: NextRequest) {
     // ROOT / SAAS PLATFORM LOGIC
     if (isLocalhost || isVercel || isRootDomain || isSaaSSubdomain) {
 
-        // If on saas. domain, everything is an admin/saas route
-        // If on saas. domain, everything is an admin/saas route
         if (isSaaSSubdomain) {
-            // Special handling for login
-            if (url.pathname === '/login' || url.pathname === '/') {
-                return NextResponse.rewrite(new URL(`/saas/login`, req.url));
+            // 1. Redirect legacy /saas/xxx to /xxx (Clean URL enforcement)
+            if (url.pathname.startsWith('/saas')) {
+                const cleanPath = url.pathname.replace('/saas', '') || '/';
+                return NextResponse.redirect(new URL(`${cleanPath}${searchParams ? '?' + searchParams : ''}`, req.url));
             }
-            // Standard paths go to /saas/...
-            if (!url.pathname.startsWith('/admin') && !url.pathname.startsWith('/saas')) {
-                return NextResponse.rewrite(new URL(`/saas${path}`, req.url));
+
+            // 2. Redirect root / to /dashboard for SaaS subdomain (Resolves conflict with (store))
+            if (url.pathname === '/') {
+                return NextResponse.redirect(new URL(`/dashboard${searchParams ? '?' + searchParams : ''}`, req.url));
             }
+
+            return NextResponse.next();
         }
 
         // Special case: /saas is the Master Panel on root/IP
@@ -57,7 +59,9 @@ export default async function middleware(req: NextRequest) {
         const isAppRoute = url.pathname.startsWith('/login')
             || url.pathname.startsWith('/register')
             || url.pathname.startsWith('/admin')
-            || url.pathname.startsWith('/saas');
+            || url.pathname.startsWith('/dashboard')
+            || url.pathname.startsWith('/organizations')
+            || url.pathname.startsWith('/modules');
 
         if (isAppRoute) {
             return NextResponse.next();

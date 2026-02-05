@@ -18,8 +18,8 @@ export async function subscribeToPlan(planId: string) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         })
-        revalidatePath('/saas/subscription')
-        revalidatePath('/saas/dashboard')
+        revalidatePath('/subscription')
+        revalidatePath('/dashboard')
         return result
     } catch (error: any) {
         console.error("Subscription failed:", error);

@@ -29,7 +29,7 @@ export async function createPlan(data: any) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         })
-        revalidatePath('/saas/subscription-plans')
+        revalidatePath('/subscription-plans')
         return result
     } catch (error: any) {
         console.error("[SaaS] Created plan failed:", error);
@@ -44,7 +44,7 @@ export async function createPlanCategory(data: any) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         })
-        revalidatePath('/saas/subscription-plans')
+        revalidatePath('/subscription-plans')
         return result
     } catch (error: any) {
         console.error("[SaaS] Created plan category failed:", error);

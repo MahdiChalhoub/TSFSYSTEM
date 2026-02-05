@@ -108,7 +108,7 @@ export function TenantSwitcher({ organizations, forcedSlug, user }: { organizati
                         {showMasterPanel && (
                             <div className="p-3 bg-gray-50/80 border-t border-gray-100">
                                 <button
-                                    onClick={() => window.location.href = `http://saas.${branding.domain}/saas/dashboard`}
+                                    onClick={() => window.location.href = `http://saas.${branding.domain}/dashboard`}
                                     className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-gray-200 text-gray-500 hover:text-emerald-600 hover:border-emerald-200 hover:bg-white transition-all text-[10px] font-black uppercase tracking-widest shadow-sm"
                                 >
                                     <DoorOpen size={14} /> Master Panel
