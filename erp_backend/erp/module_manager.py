@@ -210,9 +210,10 @@ class ModuleManager:
             frontend_extract = os.path.join(temp_extract, 'frontend')
             if os.path.exists(frontend_extract):
                 print(f"🎨 Deploying frontend pages for {module_name}...")
-                frontend_target = os.path.join(settings.BASE_DIR, '..', 'src', 'app', '(privileged)', 'saas', module_name)
+                # NEW ISOLATION: Move to src/modules instead of src/app/(privileged)/saas/
+                frontend_target = os.path.join(settings.BASE_DIR, '..', 'src', 'modules', module_name)
                 if not os.path.exists(frontend_target):
-                    os.makedirs(frontend_target)
+                    os.makedirs(frontend_target, exist_ok=True)
                 shutil.copytree(frontend_extract, frontend_target, dirs_exist_ok=True)
 
             # Run Migrations
@@ -404,6 +405,11 @@ class ModuleManager:
         target_path = os.path.join(ModuleManager.MODULES_DIR, module_name)
         if os.path.exists(target_path):
             shutil.rmtree(target_path)
+            
+        # Clean up frontend isolation zone
+        frontend_path = os.path.join(settings.BASE_DIR, '..', 'src', 'modules', module_name)
+        if os.path.exists(frontend_path):
+            shutil.rmtree(frontend_path)
             
         SystemModuleLog.objects.create(
             module_name=module_name,
