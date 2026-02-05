@@ -59,51 +59,23 @@ This is a unified Business Operating System (BOS) for TSF.
 
 ## 3. Technology Stack (Implementation)
 
-**We are building this *inside* your existing Next.js project to utilize Server Actions for maximum performance.**
+**We are building this using a modern Next.js 15+ frontend and a robust Django 5+ backend (REST Framework).**
 
-### Database Schema (Prisma) - "The Golden Source"
-We need a robust schema to handle this complexity.
+### Database & Backend - "The Golden Source"
+The system utilizes a Django-managed PostgreSQL database, leveraging the **Connector Module Pattern** for multi-tenant isolation and transaction integrity.
 
-```prisma
-// 1. People & Access
-model User {
-  id        Int       @id @default(autoincrement())
-  email     String    @unique
-  role      String    // 'OWNER', 'MANAGER', 'STAFF'
-  tasks     Task[]    // Tasks assigned to this user
-}
+- **Authentication**: Custom Django-based JWT/Session authentication with Organization awareness.
+- **Audit engine**: Server-side mixins record every field change (Old -> New).
+- **APIs**: High-performance JSON APIs using Django Rest Framework.
 
-// 2. CRM
-model Contact {
-  id        Int       @id @default(autoincrement())
-  type      String    // 'SUPPLIER', 'CUSTOMER'
-  name      String
-  balance   Decimal   // Money they owe us (or we owe them)
-  orders    Order[]
-}
+## 4. Execution Plan
 
-// 3. Operations
-model Task {
-  id          Int      @id @default(autoincrement())
-  title       String
-  assignedTo  User     @relation(fields: [userId], references: [id])
-  status      String   // 'PENDING', 'DONE'
-  evaluation  Int?     // Manager rating (1-5 stars)
-}
-
-// ... Plus Inventory, Products, and Financials models
-```
-
-## 4. Execution Plan (How we build this massive system)
-
-We cannot build it all at once. We must layer it like a cake.
-
-*   **Layer 1 (Data Foundation)**: Install Prisma, Design DB, Auth System. **(REQUIRED FIRST)**
-*   **Layer 2 (Inventory)**: Products, Warehouses, Stock.
-*   **Layer 3 (CRM & Partners)**: Suppliers, Customers.
-*   **Layer 4 (Transactions)**: Buying and Selling.
-*   **Layer 5 (HR & Tasks)**: Managing the team.
+*   **Layer 1 (Core)**: Django Backend, Auth System, RBAC. **(COMPLETED)**
+*   **Layer 2 (Inventory)**: Products, Warehouses, Stock, Scanning.
+*   **Layer 3 (Finance)**: General Ledger, COA, Fiscal Management.
+*   **Layer 4 (Commercial)**: POS Terminal, Purchasing Workflow.
+*   **Layer 5 (HR & Productivity)**: Employee management and tasks.
 
 ---
 
-**Current Status**: We are at **Step 0**. We need to install the Database Engine to support *any* of this.
+**Current Status**: The core engine is stable. We are currently hardening the **Finance** and **Inventory** layers across the SaaS federation.
