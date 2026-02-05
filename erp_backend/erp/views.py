@@ -95,6 +95,44 @@ class MeView(APIView):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
 
+class TenantResolveView(APIView):
+    """
+    Resolves a workspace slug to its organization details.
+    Used by the frontend to verify federation membership.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        slug = request.query_params.get('slug')
+        if not slug:
+            return Response({"error": "Missing slug parameter"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            org = Organization.objects.get(slug=slug, is_active=True)
+            return Response({
+                "id": str(org.id),
+                "name": org.name,
+                "slug": org.slug,
+                "exists": True
+            })
+        except Organization.DoesNotExist:
+            return Response({"exists": False}, status=status.HTTP_404_NOT_FOUND)
+
+class SaaSConfigView(APIView):
+    """
+    Returns the SaaS root configuration, including a list of registered organizations.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        # For the landing page, return a list of active organizations
+        orgs = Organization.objects.filter(is_active=True).values('id', 'name', 'slug')
+        return Response({
+            "organizations": list(orgs),
+            "platform_name": "TSF City",
+            "version": "1.2.3-b007"
+        })
+
 class OrganizationViewSet(viewsets.ModelViewSet):
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
