@@ -28,6 +28,7 @@ FiscalYear = get_model('FiscalYear')
 ChartOfAccount = get_model('ChartOfAccount')
 SystemSettings = get_model('SystemSettings')
 Product = get_model('Product')
+SystemModule = get_model('SystemModule')
 
 def run_seed():
     print("🌱 Starting Django Seed...")
@@ -251,6 +252,46 @@ def run_seed():
             name=acc['name'], organization=org,
             defaults={'type': acc['type'], 'currency': acc['currency'], 'site': site}
         )
+
+    # 13. Core Modules (Global Registry)
+    core_modules = [
+        {
+            'name': 'core',
+            'version': '2.1.0',
+            'manifest': {
+                'name': 'Core Platform',
+                'description': 'The Spine of the system. Handles platform integrity, security, and multi-tenant infrastructure.',
+                'is_core': True,
+                'required': True,
+                'dependencies': [],
+                'sidebar_items': []
+            }
+        },
+        {
+            'name': 'coreplatform',
+            'version': '2.1.0',
+            'manifest': {
+                'name': 'Platform Engine',
+                'description': 'Central orchestration engine. Manages modular injection and request routing.',
+                'is_core': True,
+                'required': True,
+                'dependencies': ['core'],
+                'sidebar_items': []
+            }
+        },
+    ]
+    
+    for mod in core_modules:
+        SystemModule.objects.get_or_create(
+            name=mod['name'],
+            defaults={
+                'version': mod['version'],
+                'status': 'INSTALLED',
+                'manifest': mod['manifest'],
+                'checksum': 'KERNEL_EMBEDDED'
+            }
+        )
+    print(f"📦 Seeded {len(core_modules)} core modules to Global Registry")
 
     print("✅ Seed Complete!")
 
