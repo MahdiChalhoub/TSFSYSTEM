@@ -1,4 +1,4 @@
-from rest_framework import serializers
+﻿from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django.utils.translation import gettext_lazy as _
 from erp.models import User, Role
@@ -18,7 +18,7 @@ class LoginSerializer(serializers.Serializer):
         if username and password:
             # Check if user exists first to provide better feedback
             try:
-                from erp.middleware import get_current_tenant_id
+                from .middleware import get_current_tenant_id
                 tenant_id = get_current_tenant_id()
                 
                 # Filter by tenant if present, otherwise assume root/null org
@@ -32,13 +32,19 @@ class LoginSerializer(serializers.Serializer):
                     if not (user_obj.is_staff or user_obj.is_superuser):
                          raise serializers.ValidationError(_("Access Restricted. Only SaaS Federation Staff authorized."), code='forbidden')
 
-                # Note: registration_status check removed if model doesn't have it yet, 
-                # but I'll check model definition again.
+                if user_obj.registration_status == 'PENDING':
+                    raise serializers.ValidationError(_("Security Clearance Required. Your enlistment is still being processed."), code='pending')
+                if user_obj.registration_status == 'REJECTED':
+                    raise serializers.ValidationError(_("Access Denied. Your registration was not approved by command."), code='rejected')
             except (User.DoesNotExist, User.MultipleObjectsReturned):
+                # If we are at ROOT and user doesn't exist as NULL-org, 
+                # OR if we are in TENANT and user doesn't exist there,
+                # we pass to let verify_password fail generically to avoid enumeration,
+                # UNLESS we want to be specific.
                 pass
 
             user = authenticate(request=self.context.get('request'),
-                                username=username, password=password)
+                                username=username, password=password, organization_id=tenant_id)
 
             if not user:
                 msg = _('Unable to log in with provided credentials.')
@@ -53,7 +59,7 @@ class LoginSerializer(serializers.Serializer):
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Role
-        fields = ['id', 'name']
+        fields = ['id', 'name', 'description']
 
 class UserSerializer(serializers.ModelSerializer):
     role = RoleSerializer(read_only=True)

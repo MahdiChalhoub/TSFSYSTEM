@@ -5,13 +5,64 @@ from django.shortcuts import get_object_or_404
 from django.db import transaction
 
 from .models import (
-    Organization, Site, User, Role, Permission, SystemModule, SystemUpdate
+    Organization, Site, User, Role, Permission, SystemModule, SystemUpdate,
+    Contact, Product, Transaction, OrganizationModule
 )
 from .serializers import (
     OrganizationSerializer, SiteSerializer, UserSerializer, 
-    RoleSerializer, PermissionSerializer, SystemModuleSerializer, SystemUpdateSerializer
+    RoleSerializer, PermissionSerializer, SystemModuleSerializer, SystemUpdateSerializer,
+    TransactionSerializer
 )
 from .middleware import get_current_tenant_id
+
+class TenantResolutionView(viewsets.ViewSet):
+    """
+    Public endpoint to resolve tenant slug to ID.
+    """
+    permission_classes = [] 
+    authentication_classes = []
+
+    @action(detail=False, methods=['get'])
+    def resolve(self, request):
+        slug = request.query_params.get('slug')
+        if not slug:
+            return Response({"error": "Slug required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            org = Organization.objects.get(slug=slug)
+            return Response({
+                "id": str(org.id),
+                "slug": org.slug,
+                "name": org.name
+            })
+        except Organization.DoesNotExist:
+            return Response({"error": "Tenant not found"}, status=status.HTTP_404_NOT_FOUND)
+
+class DashboardViewSet(viewsets.ViewSet):
+    """
+    Dashboard Aggregation ViewSet
+    """
+    
+    @action(detail=False, methods=['get'])
+    def saas_stats(self, request):
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({"error": "Staff access required"}, status=403)
+            
+        from django.utils import timezone
+        total_tenants = Organization.objects.count()
+        active_tenants = Organization.objects.filter(is_active=True).count()
+        
+        total_modules = SystemModule.objects.count()
+        total_deployments = OrganizationModule.objects.filter(is_enabled=True).count()
+        
+        return Response({
+            "totalTenants": total_tenants,
+            "activeTenants": active_tenants,
+            "modules": total_modules,
+            "deployments": total_deployments,
+            "systemLoad": "Optimal",
+            "lastSync": timezone.now().strftime("%H:%M")
+        })
 
 class TenantModelViewSet(viewsets.ModelViewSet):
     """

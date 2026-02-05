@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const KERNEL_SPACE = path.join(__dirname, '../src/app/(privileged)/saas');
+const KERNEL_SPACE = path.join(__dirname, '../src/app/(privileged)/(saas)');
 const APPROVED_DIRS = [
     '[code]',
     'connector',
