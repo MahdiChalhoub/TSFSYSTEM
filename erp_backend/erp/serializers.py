@@ -1,53 +1,65 @@
 from rest_framework import serializers
 from .models import (
-    Organization, Site, 
-    Product, Warehouse, Inventory, InventoryMovement, Unit,
-    Brand, Category, Parfum, ProductGroup, Country,
-    Contact, Employee, Role, TransactionSequence, BarcodeSettings, User,
-    PlanCategory, SubscriptionPlan, SubscriptionPayment
-)
-from apps.finance.serializers import (
-    FinancialAccountSerializer, FiscalPeriodSerializer, FiscalYearSerializer,
-    ChartOfAccountSerializer, JournalEntryLineSerializer, JournalEntrySerializer,
-    LoanInstallmentSerializer, LoanSerializer, FinancialEventSerializer,
-    TransactionSerializer
+    Organization, Site, User, Role, Permission, SystemModule, SystemUpdate,
+    TransactionSequence, PlanCategory, SubscriptionPlan, SubscriptionPayment, Country
 )
 
 class OrganizationSerializer(serializers.ModelSerializer):
-    _count = serializers.SerializerMethodField()
-
-    def get__count(self, obj):
-        return {
-            "sites": obj.site_set.count() if hasattr(obj, 'site_set') else 0,
-            "users": obj.users.count() if hasattr(obj, 'users') else 0
-        }
-
     class Meta:
         model = Organization
         fields = '__all__'
-
-
 
 class SiteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Site
         fields = '__all__'
 
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'organization', 'is_active']
+
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Role
         fields = '__all__'
 
-class EmployeeSerializer(serializers.ModelSerializer):
-    user_email = serializers.ReadOnlyField(source='user.email')
-    user_id = serializers.ReadOnlyField(source='user.id')
-
+class PermissionSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Employee
+        model = Permission
         fields = '__all__'
-        read_only_fields = ('organization',)
+
+class SystemModuleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SystemModule
+        fields = '__all__'
+
+class SystemUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SystemUpdate
+        fields = '__all__'
 
 class TransactionSequenceSerializer(serializers.ModelSerializer):
     class Meta:
         model = TransactionSequence
+        fields = '__all__'
+
+class PlanCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PlanCategory
+        fields = '__all__'
+
+class SubscriptionPlanSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubscriptionPlan
+        fields = '__all__'
+
+class SubscriptionPaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubscriptionPayment
+        fields = '__all__'
+
+class CountrySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Country
         fields = '__all__'

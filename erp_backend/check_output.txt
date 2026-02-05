@@ -1,0 +1,24 @@
+﻿python : SystemCheckError: System check identified some issues:
+At line:1 char:1
++ python manage.py check 2>&1 | Out-File -FilePath check_output.txt -En ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (SystemCheckErro...ed some issue 
+   s::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+ERRORS:
+erp.PlanCategory.country: (fields.E300) Field defines a relation with model 
+'Country', which is either not installed, or is abstract.
+erp.PlanCategory.country: (fields.E307) The field erp.PlanCategory.country 
+was declared with a lazy reference to 'erp.country', but app 'erp' doesn't 
+provide model 'country'.
+
+WARNINGS:
+erp.User: (auth.W004) 'User.username' is named as the 'USERNAME_FIELD', but 
+it is not unique.
+	HINT: Ensure that your authentication backend(s) can handle non-unique 
+usernames.
+
+System check identified 3 issues (0 silenced).
+Platform Integrity Verified: PostgreSQL Engine Active.
