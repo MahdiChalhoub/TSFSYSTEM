@@ -18,7 +18,12 @@ import {
     BarChart3,
     Zap,
     Package,
-    CreditCard
+    CreditCard,
+    Bot,
+    Sparkles,
+    Cloud,
+    MessageSquare,
+    Wrench
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
@@ -40,9 +45,15 @@ const ICON_MAP: Record<string, any> = {
     Zap,
     Layers,
     BarChart3,
+    Zap,
     ShoppingCart,
     Package,
-    CreditCard
+    CreditCard,
+    Bot,
+    Sparkles,
+    Cloud,
+    MessageSquare,
+    Wrench
 };
 
 function getIcon(name: string) {
