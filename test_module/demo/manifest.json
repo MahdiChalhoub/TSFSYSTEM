@@ -1,0 +1,35 @@
+{
+    "code": "demo",
+    "name": "Demo Test Module",
+    "description": "A test module to verify the upload and registration workflow is working correctly.",
+    "version": "1.0.0",
+    "category": "testing",
+    "is_core": false,
+    "author": "TSF Platform",
+    "minimum_kernel_version": "1.0.0",
+    "dependencies": [],
+    "permissions": [
+        {
+            "code": "demo.view",
+            "label": "View Demo Features"
+        }
+    ],
+    "models": [],
+    "routes": [
+        {
+            "path": "/saas/demo",
+            "label": "Demo Dashboard"
+        }
+    ],
+    "sidebar_items": [
+        {
+            "title": "Demo Module",
+            "icon": "TestTube",
+            "path": "/saas/demo",
+            "visibility": "saas"
+        }
+    ],
+    "settings_schema": {},
+    "created_at": "2026-02-05",
+    "updated_at": "2026-02-05"
+}
