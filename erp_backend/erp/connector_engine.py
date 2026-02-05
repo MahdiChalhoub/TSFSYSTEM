@@ -649,24 +649,54 @@ class ConnectorEngine:
     ) -> Any:
         """
         Forward a read request to the actual module endpoint.
-        In a real implementation, this would call the internal API.
+        Uses Django's internal URL resolver to bypass HTTP.
         """
-        # For now, we'll use Django's URL resolver
-        # This is a stub that should be replaced with actual routing
         from django.test import RequestFactory
-        from django.urls import reverse, resolve
+        from django.urls import resolve, Resolver404
         
-        # Build the internal URL
-        # This assumes modules register their APIs under /api/v1/{module}/
-        url = f"/api/v1/{target_module}/{endpoint}"
+        # Standardize paths
+        clean_endpoint = endpoint.strip('/')
+        # Try module-prefixed first (modular pattern) then root (legacy erp pattern)
+        paths = [
+            f"/api/{target_module}/{clean_endpoint}/",
+            f"/api/{clean_endpoint}/"
+        ] if clean_endpoint else [f"/api/{target_module}/", "/api/"]
+
+        factory = RequestFactory()
         
-        # For development, we'll return a placeholder
-        # In production, this would make an internal HTTP call or direct function call
-        logger.debug(f"Forward READ: {url} (org={organization_id})")
-        
-        # TODO: Implement actual internal routing
-        # For now, return None to trigger fallback in calling code
-        raise NotImplementedError("Direct routing not yet implemented - use erpFetch on frontend")
+        for p in paths:
+            try:
+                match = resolve(p)
+                request = factory.get(p, data=params or {})
+                
+                # Internal Bypass: Attach a system user for permission checks
+                from erp.models import User
+                system_user = User.objects.filter(is_superuser=True).first()
+                request.user = system_user
+                request.org_id = organization_id
+                
+                # Call the view directly
+                response = match.func(request, *match.args, **match.kwargs)
+                
+                # Check for DRF response errors
+                if hasattr(response, 'status_code') and response.status_code >= 400:
+                    logger.warning(f"Internal dispatch returned error {response.status_code}: {getattr(response, 'data', 'No Data')}")
+                
+                # DRF responses need explicit rendering outside middleware
+                if hasattr(response, 'render') and callable(response.render):
+                    response.render()
+                
+                data = response.data if hasattr(response, 'data') else response
+                if data is not None:
+                    return data
+            except Resolver404:
+                continue
+            except Exception as e:
+                logger.error(f"Internal read dispatch failed for {p}: {e}")
+                continue
+                
+        logger.error(f"Connector failed to resolve internal READ path for {target_module}: {endpoint}")
+        return None
     
     def _forward_write_request(
         self,
@@ -677,11 +707,42 @@ class ConnectorEngine:
         method: str = 'POST'
     ) -> Any:
         """Forward a write request to the actual module endpoint."""
-        url = f"/api/v1/{target_module}/{endpoint}"
-        logger.debug(f"Forward WRITE ({method}): {url} (org={organization_id})")
+        from django.test import RequestFactory
+        from django.urls import resolve, Resolver404
         
-        # TODO: Implement actual internal routing
-        raise NotImplementedError("Direct routing not yet implemented - use erpFetch on frontend")
+        clean_endpoint = endpoint.strip('/')
+        paths = [
+            f"/api/{target_module}/{clean_endpoint}/",
+            f"/api/{clean_endpoint}/"
+        ] if clean_endpoint else [f"/api/{target_module}/", "/api/"]
+
+        factory = RequestFactory()
+        
+        for p in paths:
+            try:
+                match = resolve(p)
+                dispatch = getattr(factory, method.lower())
+                request = dispatch(p, data=data, content_type='application/json')
+                
+                # Internal Bypass: Attach a system user
+                from erp.models import User
+                system_user = User.objects.filter(is_superuser=True).first()
+                request.user = system_user
+                request.org_id = organization_id
+                
+                response = match.func(request, *match.args, **match.kwargs)
+                if hasattr(response, 'render') and callable(response.render):
+                    response.render()
+                
+                return response.data if hasattr(response, 'data') else response
+            except Resolver404:
+                continue
+            except Exception as e:
+                logger.error(f"Internal write dispatch failed for {p}: {e}")
+                continue
+
+        logger.error(f"Connector failed to resolve internal WRITE path for {target_module}: {endpoint}")
+        return None
     
     def _deliver_event(
         self,
