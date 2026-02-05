@@ -37,6 +37,21 @@ Before implementing ANY feature, ask:
 - `REQUIRE_PACKAGE_SIGNATURES = True` in production
 - Use `sign_package.py` before distribution
 
+### 5. Feature Completeness Checklist
+Every page, feature, or module MUST include:
+
+| Component | Description |
+|-----------|-------------|
+| ✅ **Permissions** | Role-based access control (who can access?) |
+| ✅ **API Endpoints** | Backend REST API with proper auth |
+| ✅ **Audit Logs** | Log user actions for compliance/debugging |
+| ✅ **MCP Tools** | AI tool definitions if feature is AI-accessible |
+| ✅ **Validation** | Input validation on both frontend and backend |
+| ✅ **Error Handling** | Proper error messages and recovery |
+| ✅ **Documentation** | What it does, how to use, data flow |
+
+**DO NOT** ship a feature that is just a frontend shell. Every feature must be production-ready.
+
 ---
 
 ## 📋 DEFERRED WORK BACKLOG
