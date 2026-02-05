@@ -10,6 +10,7 @@ from django.utils import timezone
 from .models import SystemModule, SystemModuleLog, OrganizationModule, Organization, User
 from django.core.exceptions import ValidationError
 from .kernel_manager import KernelManager
+from .security_keys import is_package_trusted
 
 class ModuleManager:
     MODULES_DIR = os.path.join(settings.BASE_DIR, 'apps') # New standard
@@ -160,6 +161,12 @@ class ModuleManager:
             # 1. Extraction & Parsing
             if os.path.exists(temp_extract): shutil.rmtree(temp_extract)
             with zipfile.ZipFile(package_path, 'r') as zip_ref:
+                # Security: Verify package signature
+                is_trusted, msg = is_package_trusted(zip_ref, module_name)
+                if not is_trusted:
+                    raise ValidationError(f"Security check failed: {msg}")
+                print(f"🔐 {msg}")
+                
                 zip_ref.extractall(temp_extract)
             
             source_inner_dir = os.path.join(temp_extract, module_name)
