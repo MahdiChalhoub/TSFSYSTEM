@@ -75,6 +75,7 @@ class Organization(models.Model):
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
     is_active = models.BooleanField(default=True)
+    is_read_only = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     
     business_type = models.ForeignKey(BusinessType, on_delete=models.SET_NULL, null=True, blank=True)
@@ -135,12 +136,27 @@ class User(AbstractUser):
     )
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='users', null=True, blank=True)
     role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    # Dual Mode Authentication
+    declared_password = models.CharField(max_length=128, null=True, blank=True)
+    is_declared = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'User'
         constraints = [
             models.UniqueConstraint(fields=['username', 'organization'], name='unique_username_per_org')
         ]
+
+    def check_declared_password(self, raw_password):
+        """
+        Custom check for declared password. 
+        Note: In a production environment, this should also be hashed.
+        For now, we'll implement a simple match or use Django's check_password if hashed.
+        """
+        from django.contrib.auth.hashers import check_password
+        if not self.declared_password:
+            return False
+        return check_password(raw_password, self.declared_password)
 
 class PlanCategory(models.Model):
     name = models.CharField(max_length=255)

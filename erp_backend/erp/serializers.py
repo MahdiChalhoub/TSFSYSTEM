@@ -15,9 +15,10 @@ class SiteSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class UserSerializer(serializers.ModelSerializer):
+    role_name = serializers.ReadOnlyField(source='role.name')
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'organization', 'is_active']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'organization', 'role', 'role_name', 'is_active', 'is_declared']
 
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:

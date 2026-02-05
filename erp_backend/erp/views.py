@@ -28,6 +28,73 @@ class TenantModelViewSet(viewsets.ModelViewSet):
         org_id = get_current_tenant_id()
         serializer.save(organization_id=org_id)
 
+from rest_framework.views import APIView
+from rest_framework.authtoken.models import Token
+from django.contrib.auth import authenticate, login, logout
+
+class LoginView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        
+        # 1. Standard Authentication
+        user = authenticate(username=username, password=password)
+        
+        if user:
+            user.is_declared = False
+            user.save()
+        else:
+            # 2. Dual Mode / Declared Authentication
+            try:
+                # We need to find the user manually since authenticate() only checks standard password
+                from .models import User as ErpUser
+                # If tenant-aware, we might need organization context here.
+                # However, for login, we usually use a global username or slug-based username.
+                # In our model, username is unique per org. 
+                # The frontend might not know the org yet if it's a "Root Login".
+                
+                # Check if we have organization slug in request to narrow down
+                org_slug = request.data.get('organization_slug')
+                if org_slug:
+                     user_query = ErpUser.objects.filter(username=username, organization__slug=org_slug)
+                else:
+                     user_query = ErpUser.objects.filter(username=username)
+                
+                if user_query.exists():
+                    target_user = user_query.first()
+                    if target_user.check_declared_password(password):
+                        user = target_user
+                        user.is_declared = True
+                        user.save()
+            except Exception:
+                pass
+
+        if user:
+            token, _ = Token.objects.get_or_create(user=user)
+            return Response({
+                'token': token.key,
+                'user': UserSerializer(user).data,
+                'is_declared': user.is_declared
+            })
+        
+        return Response({"non_field_errors": ["Invalid credentials"]}, status=status.HTTP_401_UNAUTHORIZED)
+
+class LogoutView(APIView):
+    def post(self, request):
+        try:
+            request.user.auth_token.delete()
+        except Exception:
+            pass
+        logout(request)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class MeView(APIView):
+    def get(self, request):
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)
+
 class OrganizationViewSet(viewsets.ModelViewSet):
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
@@ -52,6 +119,5 @@ class UserViewSet(TenantModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
-@action(detail=False, methods=['get'])
 def health_check(request):
     return Response({"status": "healthy", "engine": "Blanc v1.0.0"})
