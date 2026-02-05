@@ -73,15 +73,24 @@ export default function LandingPage() {
                 // Discovery for Login/Signup
                 if (!formData.workspace) throw new Error("Workspace ID required for uplink.")
 
+                // Special Handling for SaaS (Bypass Resolve Check for the Control Plane)
+                if (formData.workspace === 'saas') {
+                    const isIp = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?::[0-9]+)?$/.test(window.location.host);
+
+                    if (isIp) {
+                        window.location.href = `/login?slug=saas`
+                    } else {
+                        const host = window.location.host.includes('localhost')
+                            ? `${window.location.protocol}//saas.localhost:3000/login`
+                            : `${window.location.protocol}//saas.${window.location.host}/login`
+                        window.location.href = host
+                    }
+                    return
+                }
+
                 const check = await checkWorkspace(formData.workspace)
                 if (check.exists) {
                     const params = new URLSearchParams()
-                    // Special Handling for SaaS
-                    if (formData.workspace === 'saas') {
-                        window.location.href = '/saas/login'
-                        return
-                    }
-
                     // Check if Host is IP
                     const isIp = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?::[0-9]+)?$/.test(window.location.host);
 
