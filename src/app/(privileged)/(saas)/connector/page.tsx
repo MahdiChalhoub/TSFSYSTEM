@@ -271,7 +271,7 @@ export default function ConnectorDashboardPage() {
 
             {/* Quick Links */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Link href="/saas/connector/policies">
+                <Link href="/connector/policies">
                     <Card className="rounded-3xl border-gray-100 hover:border-indigo-300 hover:shadow-lg transition-all cursor-pointer group">
                         <CardContent className="p-6 flex items-center gap-4">
                             <div className="p-4 rounded-2xl bg-indigo-100 text-indigo-600 group-hover:bg-indigo-500 group-hover:text-white transition-all">
@@ -286,7 +286,7 @@ export default function ConnectorDashboardPage() {
                     </Card>
                 </Link>
 
-                <Link href="/saas/connector/buffer">
+                <Link href="/connector/buffer">
                     <Card className="rounded-3xl border-gray-100 hover:border-amber-300 hover:shadow-lg transition-all cursor-pointer group">
                         <CardContent className="p-6 flex items-center gap-4">
                             <div className="p-4 rounded-2xl bg-amber-100 text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-all">
@@ -301,7 +301,7 @@ export default function ConnectorDashboardPage() {
                     </Card>
                 </Link>
 
-                <Link href="/saas/connector/logs">
+                <Link href="/connector/logs">
                     <Card className="rounded-3xl border-gray-100 hover:border-emerald-300 hover:shadow-lg transition-all cursor-pointer group">
                         <CardContent className="p-6 flex items-center gap-4">
                             <div className="p-4 rounded-2xl bg-emerald-100 text-emerald-600 group-hover:bg-emerald-500 group-hover:text-white transition-all">

@@ -380,7 +380,7 @@ function BackupList({ moduleCode, onRollback, currentVersion }: { moduleCode: st
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        getModuleBackups(moduleCode).then(data => {
+        getModuleBackups(moduleCode).then((data: any[]) => {
             setBackups(data)
             setLoading(false)
         })

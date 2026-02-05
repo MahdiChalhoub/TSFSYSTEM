@@ -64,7 +64,7 @@ const MENU_ITEMS = [
     {
         title: 'Dashboard',
         icon: LayoutDashboard,
-        path: '/saas/dashboard',
+        path: '/dashboard',
         module: 'core'
     },
     {
@@ -72,15 +72,15 @@ const MENU_ITEMS = [
         icon: ShoppingBag,
         module: 'pos',
         children: [
-            { title: 'POS Terminal', path: '/saas/sales' },
+            { title: 'POS Terminal', path: '/sales' },
             {
                 title: 'Purchase Registry',
                 children: [
-                    { title: 'Active Invoices', path: '/saas/purchases' },
-                    { title: 'Archived POs', path: '/saas/purchases/archived' },
+                    { title: 'Active Invoices', path: '/purchases' },
+                    { title: 'Archived POs', path: '/purchases/archived' },
                 ]
             },
-            { title: 'New PO Invoice', path: '/saas/purchases/new' },
+            { title: 'New PO Invoice', path: '/purchases/new' },
         ]
     },
     {
@@ -88,20 +88,20 @@ const MENU_ITEMS = [
         icon: Box,
         module: 'inventory',
         children: [
-            { title: 'Product Master', path: '/saas/products' },
-            { title: 'Product Groups', path: '/saas/products?view=grouped' },
-            { title: 'New Product Group', path: '/saas/products/create-group' },
-            { title: 'Barcode Configuration', path: '/saas/inventory/barcode', module: 'inventory' },
-            { title: 'Warehouses & Zones', path: '/saas/inventory/warehouses' },
-            { title: 'Stock Adjustments', path: '/saas/inventory/adjustments' },
-            { title: 'Global Inventory', path: '/saas/inventory/global' },
-            { title: 'Categories', path: '/saas/inventory/categories' },
-            { title: 'Categories Audit', path: '/saas/inventory/categories/maintenance' },
-            { title: 'Units & Packaging', path: '/saas/inventory/units' },
-            { title: 'Brands', path: '/saas/inventory/brands' },
-            { title: 'Countries', path: '/saas/inventory/countries' },
-            { title: 'Attributes', path: '/saas/inventory/attributes' },
-            { title: 'System Maintenance', path: '/saas/inventory/maintenance' },
+            { title: 'Product Master', path: '/products' },
+            { title: 'Product Groups', path: '/products?view=grouped' },
+            { title: 'New Product Group', path: '/products/create-group' },
+            { title: 'Barcode Configuration', path: '/inventory/barcode', module: 'inventory' },
+            { title: 'Warehouses & Zones', path: '/inventory/warehouses' },
+            { title: 'Stock Adjustments', path: '/inventory/adjustments' },
+            { title: 'Global Inventory', path: '/inventory/global' },
+            { title: 'Categories', path: '/inventory/categories' },
+            { title: 'Categories Audit', path: '/inventory/categories/maintenance' },
+            { title: 'Units & Packaging', path: '/inventory/units' },
+            { title: 'Brands', path: '/inventory/brands' },
+            { title: 'Countries', path: '/inventory/countries' },
+            { title: 'Attributes', path: '/inventory/attributes' },
+            { title: 'System Maintenance', path: '/inventory/maintenance' },
         ]
     },
     {
@@ -109,23 +109,23 @@ const MENU_ITEMS = [
         icon: FileText,
         module: 'finance',
         children: [
-            { title: 'Performance Dashboard', path: '/saas/finance/dashboard' },
-            { title: 'Accounts & Drawers', path: '/saas/finance/accounts' },
-            { title: 'Chart of Accounts', path: '/saas/finance/chart-of-accounts' },
-            { title: 'COA Templates', path: '/saas/finance/chart-of-accounts/templates' },
-            { title: 'Migration Tool', path: '/saas/finance/chart-of-accounts/migrate' },
-            { title: 'General Ledger', path: '/saas/finance/ledger' },
-            { title: 'Opening Balances', path: '/saas/finance/ledger/opening' },
-            { title: 'Account Statement', path: '/saas/finance/reports/statement' },
-            { title: 'Trial Balance', path: '/saas/finance/reports/trial-balance' },
-            { title: 'Profit & Loss', path: '/saas/finance/reports/pnl' },
-            { title: 'Balance Sheet', path: '/saas/finance/reports/balance-sheet' },
-            { title: 'Fiscal Years', path: '/saas/finance/fiscal-years' },
-            { title: 'Pricing Engine', path: '/saas/finance/pricing' },
-            { title: 'Loan Contracts', path: '/saas/finance/loans' },
-            { title: 'Financial Events', path: '/saas/finance/events' },
-            { title: 'Posting Rules', path: '/saas/finance/settings/posting-rules' },
-            { title: 'Financial Settings', path: '/saas/finance/settings' },
+            { title: 'Performance Dashboard', path: '/finance/dashboard' },
+            { title: 'Accounts & Drawers', path: '/finance/accounts' },
+            { title: 'Chart of Accounts', path: '/finance/chart-of-accounts' },
+            { title: 'COA Templates', path: '/finance/chart-of-accounts/templates' },
+            { title: 'Migration Tool', path: '/finance/chart-of-accounts/migrate' },
+            { title: 'General Ledger', path: '/finance/ledger' },
+            { title: 'Opening Balances', path: '/finance/ledger/opening' },
+            { title: 'Account Statement', path: '/finance/reports/statement' },
+            { title: 'Trial Balance', path: '/finance/reports/trial-balance' },
+            { title: 'Profit & Loss', path: '/finance/reports/pnl' },
+            { title: 'Balance Sheet', path: '/finance/reports/balance-sheet' },
+            { title: 'Fiscal Years', path: '/finance/fiscal-years' },
+            { title: 'Pricing Engine', path: '/finance/pricing' },
+            { title: 'Loan Contracts', path: '/finance/loans' },
+            { title: 'Financial Events', path: '/finance/events' },
+            { title: 'Posting Rules', path: '/finance/settings/posting-rules' },
+            { title: 'Financial Settings', path: '/finance/settings' },
         ]
     },
     {
@@ -133,9 +133,9 @@ const MENU_ITEMS = [
         icon: Users,
         module: 'crm',
         children: [
-            { title: 'Contact Center', path: '/saas/crm/contacts' },
-            { title: 'Customer Loyalty', path: '/saas/crm/loyalty' },
-            { title: 'Supplier Portals', path: '/saas/crm/suppliers' },
+            { title: 'Contact Center', path: '/crm/contacts' },
+            { title: 'Customer Loyalty', path: '/crm/loyalty' },
+            { title: 'Supplier Portals', path: '/crm/suppliers' },
         ]
     },
     {
@@ -143,10 +143,10 @@ const MENU_ITEMS = [
         icon: ShieldCheck,
         module: 'hr',
         children: [
-            { title: 'Employee Manager', path: '/saas/hr/employees' },
-            { title: 'Payroll & Accruals', path: '/saas/hr/payroll' },
-            { title: 'Enlistment Approvals', path: '/saas/users/approvals' },
-            { title: 'Access Control (Roles)', path: '/saas/hr/roles' },
+            { title: 'Employee Manager', path: '/hr/employees' },
+            { title: 'Payroll & Accruals', path: '/hr/payroll' },
+            { title: 'Enlistment Approvals', path: '/users/approvals' },
+            { title: 'Access Control (Roles)', path: '/hr/roles' },
         ]
     },
     {
@@ -154,14 +154,14 @@ const MENU_ITEMS = [
         icon: ShieldCheck,
         visibility: 'saas',
         children: [
-            { title: 'SaaS Dashboard', path: '/saas/dashboard' },
-            { title: 'Organizations', path: '/saas/organizations' },
-            { title: 'Global Registry', path: '/saas/modules' },
-            { title: 'Connector Control', path: '/saas/connector' },
-            { title: 'Instance Switcher', path: '/saas/switcher' },
-            { title: 'Platform Health', path: '/saas/health' },
-            { title: 'Kernel Updates', path: '/saas/updates' },
-            { title: 'Subscription Plans', path: '/saas/subscription-plans' },
+            { title: 'SaaS Dashboard', path: '/dashboard' },
+            { title: 'Organizations', path: '/organizations' },
+            { title: 'Global Registry', path: '/modules' },
+            { title: 'Connector Control', path: '/connector' },
+            { title: 'Instance Switcher', path: '/switcher' },
+            { title: 'Platform Health', path: '/health' },
+            { title: 'Kernel Updates', path: '/updates' },
+            { title: 'Subscription Plans', path: '/subscription-plans' },
         ]
     },
     {
@@ -169,8 +169,8 @@ const MENU_ITEMS = [
         icon: Settings,
         module: 'core',
         children: [
-            { title: 'Sites & Branches', path: '/saas/settings/sites' },
-            { title: 'Billing & Subscription', path: '/saas/subscription', icon: CreditCard },
+            { title: 'Sites & Branches', path: '/settings/sites' },
+            { title: 'Billing & Subscription', path: '/subscription', icon: CreditCard },
         ]
     },
 ];

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Loader2, Building, ArrowRight, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
-import { getOrganizations } from "@/app/(privileged)/saas/organizations/actions"
+import { getOrganizations } from "@/app/(privileged)/(saas)/organizations/actions"
 
 export default function SwitcherPage() {
     const [orgs, setOrgs] = useState<any[]>([])
@@ -28,7 +28,7 @@ export default function SwitcherPage() {
 
     function handleSwitch(slug: string) {
         if (slug === 'saas') {
-            window.location.href = '/saas/dashboard'
+            window.location.href = '/dashboard'
         } else {
             // Redirect to tenant subdomain
             const host = window.location.host

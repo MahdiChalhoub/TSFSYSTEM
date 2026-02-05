@@ -54,7 +54,7 @@ export function AdminProvider({ children, contextKey = 'default' }: { children: 
             }
         } else {
             // Default tabs per context
-            const defaultPath = contextKey === 'saas' ? '/saas/dashboard' : '/admin';
+            const defaultPath = contextKey === 'saas' ? '/dashboard' : '/admin';
             setOpenTabs([{ id: 'dashboard', title: 'Dashboard', path: defaultPath }]);
         }
 
@@ -108,13 +108,13 @@ export function AdminProvider({ children, contextKey = 'default' }: { children: 
         if (pathname === id && newTabs.length > 0) {
             router.push(newTabs[newTabs.length - 1].path);
         } else if (newTabs.length === 0) {
-            const defaultPath = contextKey === 'saas' ? '/saas/dashboard' : '/admin';
+            const defaultPath = contextKey === 'saas' ? '/dashboard' : '/admin';
             router.push(defaultPath); // Fallback
         }
     };
 
     const clearTabs = () => {
-        const defaultPath = contextKey === 'saas' ? '/saas/dashboard' : '/admin';
+        const defaultPath = contextKey === 'saas' ? '/dashboard' : '/admin';
         setOpenTabs([{ id: 'dashboard', title: 'Dashboard', path: defaultPath }]);
         router.push(defaultPath);
     };
