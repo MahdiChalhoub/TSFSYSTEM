@@ -1,1 +1,0 @@
-# MCP AI Connector Module
