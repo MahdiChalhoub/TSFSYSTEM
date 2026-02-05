@@ -84,7 +84,7 @@ function BusinessRegisterContent() {
             {/* Ambient Background Elements */}
             <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-amber-500/5 blur-[160px] rounded-full" />
             <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-500/5 blur-[160px] rounded-full" />
-            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] pointer-events-none" />
+
 
             <div className="text-center mb-12 space-y-4 relative z-10 w-full max-w-lg">
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-amber-500/5 border border-amber-500/10 rounded-full text-[10px] font-black uppercase tracking-[0.3em] text-amber-400 mb-4 backdrop-blur-xl">

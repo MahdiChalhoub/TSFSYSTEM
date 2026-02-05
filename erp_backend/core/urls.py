@@ -16,6 +16,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 from erp.views import health_check
 
 urlpatterns = [
@@ -23,3 +25,6 @@ urlpatterns = [
     path('api/', include('erp.urls')),
     path('health/', health_check),
 ]
+
+# Serve static files in all environments (nginx proxies to this)
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
