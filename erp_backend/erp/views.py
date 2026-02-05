@@ -628,6 +628,7 @@ class InventoryViewSet(ConnectorAwareMixin, TenantModelViewSet):
     queryset = Inventory.objects.all()
     serializer_class = InventorySerializer
     connector_module = 'inventory'
+    connector_bypass_actions = ['list', 'retrieve', 'valuation', 'financial_status', 'viewer']
     
     # Granular permission mapping (Rule 4: Granular Permission Registry)
     required_permissions = {
@@ -774,6 +775,7 @@ class POSViewSet(ConnectorAwareMixin, viewsets.ViewSet):
     Handles Point of Sale transactions with Connector support.
     """
     connector_module = 'pos'
+    connector_bypass_actions = ['sales_today']
     permission_classes = [permissions.IsAuthenticated, CanAccessPOS]
     @action(detail=False, methods=['post'])
     def checkout(self, request):
@@ -813,6 +815,39 @@ class POSViewSet(ConnectorAwareMixin, viewsets.ViewSet):
             import traceback
             traceback.print_exc()
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['get'])
+    def sales_today(self, request):
+        """
+        Statistics for today's sales.
+        Used by MCP AI tools.
+        """
+        from erp.models import Order, Organization
+        from django.db.models import Sum, Count
+        from django.utils import timezone
+        
+        organization_id = getattr(request, 'org_id', None) or request.user.organization_id
+        if not organization_id:
+            return Response({"error": "No organization context"}, status=400)
+            
+        today = timezone.now().date()
+        
+        stats = Order.objects.filter(
+            organization_id=organization_id,
+            type='SALE',
+            status='COMPLETED',
+            created_at__date=today
+        ).aggregate(
+            total_sales=Sum('total_amount'),
+            transaction_count=Count('id')
+        )
+        
+        return Response({
+            "date": today.isoformat(),
+            "total_sales": float(stats['total_sales'] or 0),
+            "transaction_count": stats['transaction_count'] or 0,
+            "status": "success"
+        })
 
 class PurchaseViewSet(ConnectorAwareMixin, viewsets.ViewSet):
     """

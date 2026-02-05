@@ -6,3 +6,5 @@ python-dotenv
 gunicorn
 whitenoise
 Pillow
+httpx
+cryptography

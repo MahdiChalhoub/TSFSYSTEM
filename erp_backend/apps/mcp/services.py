@@ -587,7 +587,7 @@ DEFAULT_TOOLS = [
         'name': 'get_products',
         'description': 'Get list of products from inventory',
         'category': 'inventory',
-        'internal_endpoint': 'inventory/products/',
+        'internal_endpoint': 'products/',
         'http_method': 'GET',
         'parameters_schema': {
             'type': 'object',
@@ -597,13 +597,13 @@ DEFAULT_TOOLS = [
                 'limit': {'type': 'integer', 'description': 'Max results'}
             }
         },
-        'required_permissions': ['inventory.view']
+        'required_permissions': ['inventory.view_products']
     },
     {
         'name': 'get_product_stock',
         'description': 'Get stock levels for a product',
         'category': 'inventory',
-        'internal_endpoint': 'inventory/stock-levels/',
+        'internal_endpoint': 'inventory/',
         'http_method': 'GET',
         'parameters_schema': {
             'type': 'object',
@@ -612,28 +612,25 @@ DEFAULT_TOOLS = [
             },
             'required': ['product_id']
         },
-        'required_permissions': ['inventory.view']
+        'required_permissions': ['inventory.view_stock']
     },
     {
-        'name': 'get_financial_summary',
-        'description': 'Get financial summary for a period',
-        'category': 'finance',
-        'internal_endpoint': 'finance/reports/summary/',
+        'name': 'get_inventory_valuation',
+        'description': 'Get total inventory valuation and financial status',
+        'category': 'inventory',
+        'internal_endpoint': 'inventory/valuation/',
         'http_method': 'GET',
         'parameters_schema': {
             'type': 'object',
-            'properties': {
-                'start_date': {'type': 'string', 'description': 'Start date (YYYY-MM-DD)'},
-                'end_date': {'type': 'string', 'description': 'End date (YYYY-MM-DD)'}
-            }
+            'properties': {}
         },
-        'required_permissions': ['finance.view']
+        'required_permissions': ['inventory.view_stock']
     },
     {
         'name': 'get_sales_today',
         'description': 'Get today\'s sales summary',
         'category': 'pos',
-        'internal_endpoint': 'pos/sales/today/',
+        'internal_endpoint': 'pos/sales_today/',
         'http_method': 'GET',
         'parameters_schema': {
             'type': 'object',
@@ -645,7 +642,7 @@ DEFAULT_TOOLS = [
         'name': 'get_customers',
         'description': 'Search customers',
         'category': 'crm',
-        'internal_endpoint': 'crm/customers/',
+        'internal_endpoint': 'contacts/',
         'http_method': 'GET',
         'parameters_schema': {
             'type': 'object',
@@ -654,7 +651,7 @@ DEFAULT_TOOLS = [
                 'limit': {'type': 'integer', 'description': 'Max results'}
             }
         },
-        'required_permissions': ['crm.view']
+        'required_permissions': ['contacts.view']
     },
 ]
 
