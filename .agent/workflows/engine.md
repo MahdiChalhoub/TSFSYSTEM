@@ -71,6 +71,38 @@ Modules should NOT import each other directly. Use:
 2. **Events** - Django signals for cross-module notifications
 3. **Shared Models** - Only core models in `erp/models.py`
 4. **Feature Flags** - Check if module is enabled via `OrganizationModule`
+5. **Model Connector** - Registry pattern to link module models to core
+
+### Model Connector Pattern
+When a module needs to reference another module's data:
+
+```python
+# In core: erp/connectors.py
+class ModelRegistry:
+    _models = {}
+    
+    @classmethod
+    def register(cls, name, model):
+        cls._models[name] = model
+    
+    @classmethod
+    def get(cls, name):
+        return cls._models.get(name)
+
+# In module: apps/finance/apps.py
+def ready(self):
+    from erp.connectors import ModelRegistry
+    from .models import Invoice
+    ModelRegistry.register('finance.Invoice', Invoice)
+
+# In another module that needs it:
+Invoice = ModelRegistry.get('finance.Invoice')
+if Invoice:
+    # Module is installed, use it
+    invoices = Invoice.objects.filter(...)
+```
+
+This allows modules to discover and use each other's models without hard dependencies.
 
 ---
 
