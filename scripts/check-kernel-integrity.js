@@ -7,6 +7,7 @@ const APPROVED_DIRS = [
     'connector',
     'dashboard',
     'health',
+    'kernel',       // Kernel version management (core infrastructure)
     'modules',
     'organizations',
     'settings',
