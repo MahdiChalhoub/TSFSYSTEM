@@ -6,8 +6,10 @@ import hashlib
 from django.conf import settings
 from django.db import transaction
 from django.core.management import call_command
+from django.utils import timezone
 from .models import SystemModule, SystemModuleLog, OrganizationModule, Organization, User
 from django.core.exceptions import ValidationError
+from .kernel_manager import KernelManager
 
 class ModuleManager:
     MODULES_DIR = os.path.join(settings.BASE_DIR, 'apps') # New standard
@@ -104,6 +106,17 @@ class ModuleManager:
         return True
 
     @staticmethod
+    def check_dependencies(manifest):
+        """
+        Verifies that all required dependencies are installed.
+        """
+        dependencies = manifest.get('dependencies', [])
+        for dep in dependencies:
+            if not SystemModule.objects.filter(name=dep, status='INSTALLED').exists():
+                raise ValidationError(f"Missing dependency: {dep}. Please install it first.")
+        return True
+
+    @staticmethod
     def run_lifecycle_hook(target_path, hook_name):
         """
         Executes a lifecycle hook script if present.
@@ -162,7 +175,10 @@ class ModuleManager:
             # 2. Strict Validation
             ModuleManager.validate_manifest(new_manifest)
             new_version = new_manifest.get('version')
-            if new_version <= old_version:
+            # Allow same version for re-install/repair, only block downgrades
+            # Simple string comparison is fine for semver if formatted consistently
+            # Skip version check for first-time installs
+            if old_version != "0.0.0" and new_version < old_version:
                 raise ValidationError(f"Version must be higher than current {old_version}")
             
             # Dependency resolution
