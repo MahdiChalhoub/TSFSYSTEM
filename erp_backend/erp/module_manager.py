@@ -271,9 +271,9 @@ class ModuleManager:
         Checks if a module is enabled for an organization.
         Core modules (if defined in manifest as required) are always enabled.
         """
-        # Core Platform is ALWAYS enabled if it exists
-        if module_name == 'core':
-             return SystemModule.objects.filter(name='core', status='INSTALLED').exists()
+        # Core and Core Platform are ALWAYS enabled if they exist
+        if module_name in ['core', 'coreplatform']:
+             return SystemModule.objects.filter(name=module_name, status='INSTALLED').exists()
 
         # 1. System-wide check
         try:

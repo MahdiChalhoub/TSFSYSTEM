@@ -1,0 +1,11 @@
+{
+    "name": "Core Platform",
+    "code": "coreplatform",
+    "version": "2.7.0",
+    "description": "The central orchestration engine. Manages multi-tenancy, modular injection, and security protocols.",
+    "is_core": true,
+    "required": true,
+    "author": "Platform Team",
+    "website": "http://localhost:3000",
+    "sidebar_items": []
+}

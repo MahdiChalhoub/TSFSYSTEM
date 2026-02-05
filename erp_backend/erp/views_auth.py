@@ -1,5 +1,5 @@
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes, throttle_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes, authentication_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
@@ -21,6 +21,7 @@ class RegisterThrottle(AnonRateThrottle):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@authentication_classes([])
 @throttle_classes([LoginThrottle])
 def login_view(request):
     """
