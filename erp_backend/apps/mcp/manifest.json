@@ -2,7 +2,7 @@
     "code": "mcp",
     "name": "MCP AI Connector",
     "description": "Model Context Protocol integration for AI assistants. Exposes platform APIs as tools for external AI models.",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "category": "integration",
     "is_core": false,
     "author": "Dajingo Platform",
@@ -64,37 +64,37 @@
     ],
     "sidebar_items": [
         {
-            "label": "AI Integration",
+            "title": "AI Integration",
             "icon": "Bot",
             "visibility": "saas",
             "children": [
                 {
-                    "label": "Dashboard",
+                    "title": "Dashboard",
                     "path": "/saas/mcp",
                     "icon": "LayoutDashboard"
                 },
                 {
-                    "label": "Providers",
+                    "title": "Providers",
                     "path": "/saas/mcp/providers",
                     "icon": "Cloud"
                 },
                 {
-                    "label": "Tools",
+                    "title": "Tools",
                     "path": "/saas/mcp/tools",
                     "icon": "Wrench"
                 },
                 {
-                    "label": "AI Chat",
+                    "title": "AI Chat",
                     "path": "/saas/mcp/chat",
                     "icon": "Sparkles"
                 },
                 {
-                    "label": "Conversations",
+                    "title": "Conversations",
                     "path": "/saas/mcp/conversations",
                     "icon": "MessageSquare"
                 },
                 {
-                    "label": "Settings",
+                    "title": "Settings",
                     "path": "/saas/mcp/settings",
                     "icon": "Settings"
                 }
