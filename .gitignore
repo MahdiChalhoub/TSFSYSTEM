@@ -56,9 +56,8 @@ __pycache__/
 # local development
 .agent/
 .gemini/
-scripts/*.js
-scripts/*.ts
-!scripts/test_*.ts
+# Engine Guard Scripts are essential
+!scripts/
 
 # Heavy data and backups
 pg_data_bak_*/
