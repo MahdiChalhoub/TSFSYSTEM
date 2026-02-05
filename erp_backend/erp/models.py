@@ -60,6 +60,8 @@ class SystemUpdate(models.Model):
     is_applied = models.BooleanField(default=False)
     applied_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    package_hash = models.CharField(max_length=64, null=True, blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
 
     class Meta:
         db_table = 'SystemUpdate'
