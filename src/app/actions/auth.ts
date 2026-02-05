@@ -185,7 +185,12 @@ export async function getUser() {
     try {
         const user = await erpFetch('auth/me/')
         return user
-    } catch (error) {
-        return null
+    } catch (error: any) {
+        // Only return null if backend explicitly said "Go away"
+        const isAuthError = error.message?.includes('401') || error.message?.includes('403') || error.message?.includes('credentials');
+        if (isAuthError) return null;
+
+        // Otherwise throw so layout can show "Reconnecting" or error boundary
+        throw error;
     }
 }

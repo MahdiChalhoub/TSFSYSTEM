@@ -46,7 +46,31 @@ export default async function AdminLayout({
 
     // Parallel data fetching
     // 1. Authenticate FIRST (Sequential check to prevent 401 floods)
-    const user = await getUser();
+    let user;
+    try {
+        user = await getUser();
+    } catch (e) {
+        // Backend is likely restarting or down.
+        // We catch this to prevent immediate redirect to login.
+        return (
+            <div className="flex flex-col items-center justify-center h-screen bg-gray-50 p-8 text-center">
+                <div className="w-16 h-16 rounded-3xl bg-emerald-100 flex items-center justify-center text-emerald-600 mb-6 animate-pulse">
+                    <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+                </div>
+                <h2 className="text-2xl font-black text-gray-900 tracking-tight">Reconnecting to Platform Uplink...</h2>
+                <p className="text-gray-500 mt-2 font-medium max-w-sm mx-auto">
+                    The platform backend is applying updates. Your session is safe.
+                    Checking link status...
+                </p>
+                <div className="mt-8 flex gap-2 justify-center">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '0s' }} />
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '0.2s' }} />
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '0.4s' }} />
+                </div>
+                <script dangerouslySetInnerHTML={{ __html: 'setTimeout(() => window.location.reload(), 2000)' }} />
+            </div>
+        );
+    }
 
     if (!user) {
         // If we are in SaaS context, redirect to SaaS login
