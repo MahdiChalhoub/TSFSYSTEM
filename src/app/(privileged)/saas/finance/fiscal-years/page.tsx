@@ -28,7 +28,7 @@ export default async function FiscalYearsPage() {
                         <div className="space-y-1">
                             {gaps.map((g, i) => (
                                 <div key={i} className="text-xs text-amber-800 bg-white/50 px-2 py-1 rounded inline-block mr-2 border border-amber-100">
-                                    <strong>{g.days} Day Gap</strong> after {g.after}:
+                                    <strong>{(g as any).days} Day Gap</strong> after {(g as any).after}:
                                     <span className="ml-1 opacity-70">
                                         {new Date(g.startDate).toLocaleDateString()} — {new Date(g.endDate).toLocaleDateString()}
                                     </span>

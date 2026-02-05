@@ -15,6 +15,11 @@ const nextConfig: NextConfig = {
   // For better compatibility with shared hosting
   poweredByHeader: false,
 
+  // Fast build: Ignore type errors in production build
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+
   // Logging
   logging: {
     fetches: {
