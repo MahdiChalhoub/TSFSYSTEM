@@ -25,8 +25,12 @@ class LoginSerializer(serializers.Serializer):
                 if tenant_id:
                     user_obj = User.objects.get(username=username, organization_id=tenant_id)
                 else:
-                    # ROOT LOGIN (SaaS Panel)
-                    user_obj = User.objects.get(username=username, organization__isnull=True)
+                    # ROOT LOGIN (SaaS Panel) - User must belong to 'saas' org OR have null org (legacy)
+                    try:
+                        user_obj = User.objects.get(username=username, organization__slug='saas')
+                    except User.DoesNotExist:
+                        # Fallback: legacy null org users
+                        user_obj = User.objects.get(username=username, organization__isnull=True)
                     
                     # STRICT ACCESS CONTROL: Only SaaS Staff can enter the Root Panel
                     if not (user_obj.is_staff or user_obj.is_superuser):
