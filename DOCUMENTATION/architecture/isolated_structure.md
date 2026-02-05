@@ -29,5 +29,28 @@ Modules are independent units (like Odoo apps) that can be installed, updated, o
 3. **Upload**: Use "Global Registry" UI to upload ZIP.
 4. **Deploy**: Kernel extracts files to isolation zones and runs migrations.
 
+## Hardening & Resilience (v2.1.0)
+
+To achieve enterprise-grade reliability, the architecture implements the following safety patterns:
+
+### 1. Atomic Updates (Swap & Rollback)
+Both **Kernel** and **Modules** use an atomic-style directory swap during updates:
+1.  **Stage**: Extract package to a temporary directory.
+2.  **Verify**: Validate manifest, kernel compatibility, and file integrity.
+3.  **Backup**: Move the current live version to the `backups/` directory.
+4.  **Swap**: Move the staged version into the live system.
+5.  **Migrate**: Run database migrations. If this fails, the system **automatically** wipes the new files and restores the backup.
+
+### 2. Connector Circuit Breaker
+The **ConnectorEngine** (Nervous System) monitors module reliability:
+-   **Failure Threshold**: If a module crashes more than 5 times within a 10-minute window, the Circuit Breaker trips.
+-   **Self-Healing**: The Connector automatically marks the module as `MISSING` to protect the core, applying the configured fallback (Empty/Cached/Mock) instead of crashing the system.
+
+### 3. Strict Manifest Enforcement
+Modules must declare:
+-   `kernel_compat`: Minimum kernel version required.
+-   `requires`: Dependency map with version constraints.
+-   `lifecycle`: Hooks (`pre_install.py`, `post_install.py`) for custom setup.
+
 ---
 *Created by Antigravity AI for TSF Ultimate Enterprise Suite.*

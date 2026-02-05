@@ -12,7 +12,7 @@ from .views import (
     UserViewSet
 )
 from .views_auth import login_view, logout_view, me_view, PublicConfigView
-from .views_saas_modules import SaaSModuleViewSet, OrgModuleViewSet
+from .views_saas_modules import SaaSModuleViewSet, OrgModuleViewSet, SaaSUpdateViewSet
 from .views_modules import ModuleListView, ModuleEnableView, ModuleDisableView
 
 router = DefaultRouter()
@@ -49,6 +49,7 @@ router.register(r'users', UserViewSet)
 # SaaS Management
 router.register(r'saas/modules', SaaSModuleViewSet, basename='saas-modules')
 router.register(r'saas/org-modules', OrgModuleViewSet, basename='saas-org-modules')
+router.register(r'saas/updates', SaaSUpdateViewSet, basename='saas-updates')
 
 urlpatterns = [
     path('health/', health_check),
