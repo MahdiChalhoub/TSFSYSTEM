@@ -33,7 +33,7 @@ Data isolation is handled at the database level using the `organizationId` colum
   5. The user is redirected to `slug.localhost`.
 
 ## Data Movement
-- **Registration**: Landing Page -> `registerBusiness` Action -> Prisma Transaction -> Database.
+- **Registration**: Landing Page -> `registerBusiness` Action -> Django Backend -> Database.
 - **Login**: Tenant Login Page -> Authentication Service -> Organization Context.
 
 ## Relevant Tables

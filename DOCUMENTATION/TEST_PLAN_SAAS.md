@@ -3,9 +3,8 @@
 This plan outlines how to verify the Hybrid SaaS Architecture (Next.js + Django + PostgreSQL).
 
 ## 1. Database Initialization
-- [ ] **Next.js (Prisma)**: 
-    - Ensure `.env` has a valid `DATABASE_URL`.
-    - Run `npx prisma db push` to apply the organization-aware schema.
+- [ ] **Frontend Environment**: 
+    - Verify `.env.local` or `.env.production` has correct `DATABASE_URL` if needed, although primary data is via `erpFetch`.
 - [ ] **Django (ERP Core)**:
     - Ensure `erp_backend/core/settings.py` has the correct `DATABASES` config.
     - Run `cd erp_backend ; python manage.py makemigrations erp ; python manage.py migrate`.

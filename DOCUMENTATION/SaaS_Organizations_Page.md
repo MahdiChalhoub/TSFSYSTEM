@@ -7,11 +7,11 @@ The goal of this page is to provide a master interface for managing multi-tenant
 
 ### Data READ
 - **Source**: `getOrganizations()` server action.
-- **Method**: Prisma query fetching `organization` records with counts for `sites` and `users`.
+- **Method**: API call fetching `organization` records with counts for `sites` and `users`.
 
-### Data SAVE
-- **Target**: `createOrganization(data)`, `toggleOrganizationStatus(id, currentStatus)` server actions.
-- **Method**: Prisma mutations. `createOrganization` uses a transaction to provision the organization, a default site, and an initial Chart of Accounts skeleton.
+### Organization Provisioning
+- **Goal**: Register a new business and setup their initial workspace.
+- **Method**: Django backend registration. `BusinessRegistrationView` handles the provisioning of the organization, a default site, and an initial Chart of Accounts skeleton.
 
 ## User Interaction Variables
 - `orgs`: Array of organization objects fetched from the database.
@@ -40,4 +40,4 @@ The goal of this page is to provide a master interface for managing multi-tenant
 - **Icons**: Uses `Building`, `Plus`, `Zap`, `Trash2` from `lucide-react`.
 - **Styling**: Premium dark-mode design using Tailwind CSS with glassmorphism effects and emerald accents.
 - **Optimization**: Uses `revalidatePath` in server actions to ensure fresh data after mutations.
-- **Data Integrity**: Uses Prisma transactions for provisioning to ensure all related records (Site, Accounts) are created atomically.
+- **Data Integrity**: Uses backend database transactions for provisioning to ensure all related records (Site, Accounts) are created atomically.
