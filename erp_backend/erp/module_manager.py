@@ -43,6 +43,43 @@ class ModuleManager:
             os.remove(ModuleManager.LOCK_FILE)
 
     @staticmethod
+    def sync():
+        """
+        Scans the filesystem for modules and registers them in the database.
+        Returns list of module names found.
+        """
+        found_modules = []
+        
+        # Scan both paths
+        for modules_dir in [ModuleManager.MODULES_DIR, ModuleManager.LEGACY_MODULES_DIR]:
+            if not os.path.exists(modules_dir):
+                continue
+                
+            for item in os.listdir(modules_dir):
+                item_path = os.path.join(modules_dir, item)
+                manifest_path = os.path.join(item_path, 'manifest.json')
+                
+                if os.path.isdir(item_path) and os.path.exists(manifest_path):
+                    try:
+                        with open(manifest_path, 'r') as f:
+                            manifest = json.load(f)
+                        
+                        SystemModule.objects.update_or_create(
+                            name=item,
+                            defaults={
+                                'version': manifest.get('version', '0.0.0'),
+                                'status': 'INSTALLED',
+                                'manifest': manifest,
+                                'checksum': ModuleManager.get_checksum(manifest_path)
+                            }
+                        )
+                        found_modules.append(item)
+                    except Exception as e:
+                        print(f"⚠️ Failed to register {item}: {e}")
+        
+        return found_modules
+
+    @staticmethod
     def get_checksum(file_path):
         sha256_hash = hashlib.sha256()
         with open(file_path, "rb") as f:
