@@ -22,7 +22,7 @@ export default async function DynamicModulePage({ params }: AppPageProps) {
     // 2. Dynamically import the module entry point from src/modules
     // We use a safe-guard to prevent arbitrary path traversal
     const ModuleEntry = dynamic(
-        () => import(`../../../../../modules/${code}`).catch(() => ({
+        () => import(`../../modules/${code}`).catch(() => ({
             default: () => notFound()
         })),
         {

@@ -4,7 +4,6 @@ import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import {
     getSaaSModules,
-    // ... imports
     syncModulesGlobal,
     installModuleGlobal,
     uninstallModuleGlobal,
@@ -57,6 +56,20 @@ export default function SaaSModulesPage() {
             toast.error("Failed to load modules")
         } finally {
             setLoading(false)
+        }
+    }
+
+    async function handleInstall(data: unknown) { // Changed 'any' to 'unknown' as 'data' is not used in the provided snippet
+        setSyncing(true)
+        try {
+            const res = await syncModulesGlobal()
+            if (res.error) throw new Error(res.error)
+            toast.success(res.message)
+            await loadModules()
+        } catch (e: any) {
+            toast.error(e.message)
+        } finally {
+            setSyncing(false)
         }
     }
 

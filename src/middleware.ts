@@ -25,11 +25,12 @@ export default async function middleware(req: NextRequest) {
     }
 
     // IP Address or Localhost handling for Root
-    const isLocalhost = hostname.includes("localhost") || hostname.includes("127.0.0.1") || hostname.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/);
+    const isLocalhost = hostname.endsWith("localhost") || hostname.includes("127.0.0.1") || hostname.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/);
     const isVercel = hostname.includes("vercel.app"); // Fallback for previews
-    const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "";
+    const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost";
     const isRootDomain = hostname === rootDomain || hostname === `www.${rootDomain}`;
-    const isSaaSSubdomain = hostname === `saas.${rootDomain}`;
+    // Enhanced Localhost Subdomain detection
+    const isSaaSSubdomain = hostname === `saas.${rootDomain}` || (hostname.startsWith("saas.") && hostname.includes("localhost"));
 
     // ROOT / SAAS PLATFORM LOGIC
     if (isLocalhost || isVercel || isRootDomain || isSaaSSubdomain) {

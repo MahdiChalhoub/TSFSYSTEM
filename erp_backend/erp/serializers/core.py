@@ -1,7 +1,8 @@
 from rest_framework import serializers
-from .models import (
+from erp.models import (
     Organization, Site, User, Role, Permission, SystemModule, SystemUpdate,
-    TransactionSequence, PlanCategory, SubscriptionPlan, SubscriptionPayment, Country
+    TransactionSequence, PlanCategory, SubscriptionPlan, SubscriptionPayment, Country,
+    Contact, Product, Transaction, OrganizationModule
 )
 
 class OrganizationSerializer(serializers.ModelSerializer):
@@ -14,19 +15,14 @@ class SiteSerializer(serializers.ModelSerializer):
         model = Site
         fields = '__all__'
 
-class UserSerializer(serializers.ModelSerializer):
+class PermissionSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'organization', 'is_active']
+        model = Permission
+        fields = '__all__'
 
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Role
-        fields = '__all__'
-
-class PermissionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Permission
         fields = '__all__'
 
 class SystemModuleSerializer(serializers.ModelSerializer):
@@ -62,4 +58,24 @@ class SubscriptionPaymentSerializer(serializers.ModelSerializer):
 class CountrySerializer(serializers.ModelSerializer):
     class Meta:
         model = Country
+        fields = '__all__'
+
+class ContactSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Contact
+        fields = '__all__'
+
+class ProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = '__all__'
+
+class TransactionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transaction
+        fields = '__all__'
+
+class OrganizationModuleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrganizationModule
         fields = '__all__'

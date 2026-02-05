@@ -127,20 +127,134 @@ class Role(TenantModel):
 
 class User(AbstractUser):
     username_validator = UnicodeUsernameValidator()
+
     username = models.CharField(
         _('username'),
         max_length=150,
-        unique=False,
+        unique=False, 
+        help_text=_('Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.'),
         validators=[username_validator],
     )
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='users', null=True, blank=True)
-    role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True)
 
     class Meta:
         db_table = 'User'
         constraints = [
             models.UniqueConstraint(fields=['username', 'organization'], name='unique_username_per_org')
         ]
+    
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='users', null=True, blank=True)
+    role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True, related_name='users')
+    home_site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True, related_name='home_users')
+    is_active_account = models.BooleanField(default=True)
+    
+    REGISTRATION_STATUS = (
+        ('PENDING', 'Pending Approval'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+        ('NEEDS_CORRECTION', 'Needs Correction'),
+    )
+    registration_status = models.CharField(max_length=50, choices=REGISTRATION_STATUS, default='APPROVED')
+    correction_notes = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return self.email if self.email else self.username
+
+class OrganizationModule(models.Model):
+    organization = models.ForeignKey('Organization', on_delete=models.CASCADE, related_name='enabled_modules')
+    module_name = models.CharField(max_length=100, default='legacy')
+    is_enabled = models.BooleanField(default=True)
+    granted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'OrganizationModule'
+        unique_together = ('organization', 'module_name')
+
+class Unit(TenantModel):
+    code = models.CharField(max_length=50)
+    name = models.CharField(max_length=255)
+    conversion_factor = models.DecimalField(max_digits=15, decimal_places=6, default=1.0)
+
+    class Meta:
+        db_table = 'Unit'
+        unique_together = ('code', 'organization')
+
+class ProductGroup(TenantModel):
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        db_table = 'ProductGroup'
+
+class Parfum(TenantModel):
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        db_table = 'Parfum'
+        unique_together = ('name', 'organization')
+
+class Category(TenantModel):
+    name = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'Category'
+        unique_together = ('name', 'organization')
+
+class Brand(TenantModel):
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        db_table = 'Brand'
+        unique_together = ('name', 'organization')
+
+class Product(TenantModel):
+    sku = models.CharField(max_length=100)
+    barcode = models.CharField(max_length=100, null=True, blank=True)
+    name = models.CharField(max_length=255)
+    status = models.CharField(max_length=20, default='ACTIVE')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'Product'
+        unique_together = (('sku', 'organization'), ('barcode', 'organization'))
+
+class ChartOfAccount(TenantModel):
+    code = models.CharField(max_length=50)
+    name = models.CharField(max_length=255)
+    type = models.CharField(max_length=20)
+
+    class Meta:
+        db_table = 'ChartOfAccount'
+        unique_together = ('code', 'organization')
+
+class Contact(TenantModel):
+    TYPES = (
+        ('SUPPLIER', 'Supplier'),
+        ('CUSTOMER', 'Customer'),
+        ('LEAD', 'Lead')
+    )
+    type = models.CharField(max_length=20, choices=TYPES)
+    name = models.CharField(max_length=255)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'Contact'
+
+class FinancialAccount(TenantModel):
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        db_table = 'FinancialAccount'
+
+class Transaction(TenantModel):
+    account = models.ForeignKey(FinancialAccount, on_delete=models.CASCADE, related_name='transactions')
+    amount = models.DecimalField(max_digits=15, decimal_places=2)
+    type = models.CharField(max_length=10)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'Transaction'
 
 class PlanCategory(models.Model):
     name = models.CharField(max_length=255)
@@ -155,7 +269,6 @@ class SubscriptionPlan(models.Model):
     name = models.CharField(max_length=255)
     monthly_price = models.DecimalField(max_digits=15, decimal_places=2)
     annual_price = models.DecimalField(max_digits=15, decimal_places=2)
-    modules = models.JSONField(default=list)
 
     class Meta:
         db_table = 'SubscriptionPlan'
