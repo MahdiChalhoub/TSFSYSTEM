@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('erp', '0027_connector_source_module'),
+        ('erp', '0001_initial'),  # Use base migration for compatibility
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
