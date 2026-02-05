@@ -14,6 +14,7 @@ from .views import (
 from .views_auth import login_view, logout_view, me_view, PublicConfigView
 from .views_saas_modules import SaaSModuleViewSet, OrgModuleViewSet, SaaSUpdateViewSet
 from .views_modules import ModuleListView, ModuleEnableView, ModuleDisableView
+from .views_kernel import KernelViewSet
 
 router = DefaultRouter()
 router.register(r'tenant', TenantResolutionView, basename='tenant')
@@ -50,6 +51,7 @@ router.register(r'users', UserViewSet)
 router.register(r'saas/modules', SaaSModuleViewSet, basename='saas-modules')
 router.register(r'saas/org-modules', OrgModuleViewSet, basename='saas-org-modules')
 router.register(r'saas/updates', SaaSUpdateViewSet, basename='saas-updates')
+router.register(r'kernel', KernelViewSet, basename='kernel')
 
 urlpatterns = [
     path('health/', health_check),
