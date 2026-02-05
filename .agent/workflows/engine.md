@@ -78,6 +78,47 @@ When resuming work from a previous session:
 
 ---
 
+## 👥 MULTI-AGENT COLLABORATION
+
+When multiple agents may be working on the project:
+
+### Before Starting ANY Work
+1. **Check `WORK_IN_PROGRESS.md`** - See what others are working on
+2. **Claim your work area** - Add entry to `WORK_IN_PROGRESS.md`:
+   ```markdown
+   ## [Agent/Session ID] - [Timestamp]
+   - Working on: [feature/module name]
+   - Files: [list of files being modified]
+   - Status: IN_PROGRESS
+   ```
+3. **Pull latest** - `git pull origin main` before any edits
+
+### During Work
+- **Stay in your lane** - Only edit files you claimed
+- **Frequent commits** - Push often to reduce conflicts
+- **Don't touch core without approval** - `erp/models.py`, `settings.py`, `urls.py`
+
+### After Completing Work
+1. **Update `WORK_IN_PROGRESS.md`** - Mark status as DONE
+2. **Update deferred backlog** if you discovered new items
+3. **Push and notify** - Others can now work on related areas
+
+### Conflict Resolution
+If you find uncommitted changes or conflicts:
+1. **DO NOT force push**
+2. Check `WORK_IN_PROGRESS.md` for owner
+3. If no owner claimed, proceed carefully with `git stash` → `git pull` → `git stash pop`
+
+### Directory Ownership (Soft Lock)
+| Area | Owner |
+|------|-------|
+| `erp/` | Core team only - requires approval |
+| `apps/{module}/` | Module developer |
+| `src/modules/{module}/` | Module developer |
+| `DOCUMENTATION/` | Anyone can update |
+
+---
+
 ## 🔌 MODULE COMMUNICATION
 
 Modules should NOT import each other directly. Use:
