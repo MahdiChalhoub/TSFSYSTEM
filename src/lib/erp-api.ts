@@ -56,7 +56,10 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
 
     // [AUTH RESTORATION]
     // Crucial: Inject auth token from cookies if not already present
-    if (!headersRaw.has('Authorization')) {
+    // EXCEPT for login endpoint - sending stale token causes "Invalid token" error
+    const isLoginEndpoint = path.includes('auth/login');
+
+    if (!headersRaw.has('Authorization') && !isLoginEndpoint) {
         try {
             const { cookies } = await import('next/headers');
             const cookieStore = await cookies();
@@ -70,6 +73,8 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
         } catch (e) {
             console.log(`[ERP_API] Cookies not available in this context for ${path}`);
         }
+    } else if (isLoginEndpoint) {
+        console.log(`[ERP_API] Skipping token injection for login endpoint`);
     } else {
         console.log(`[ERP_API] Authorization header already present for ${path}`);
     }
