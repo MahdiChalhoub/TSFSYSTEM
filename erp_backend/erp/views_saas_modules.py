@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import permissions
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from django.conf import settings
 from .models import SystemModule, Organization, OrganizationModule, SystemUpdate
 from .module_manager import ModuleManager
 from .kernel_manager import KernelManager
