@@ -17,37 +17,35 @@ class OrganizationAdmin(admin.ModelAdmin):
 
 @admin.register(Site)
 class SiteAdmin(admin.ModelAdmin):
-    list_display = ('name', 'code', 'organization', 'city', 'is_active')
-    list_filter = ('organization', 'is_active')
+    list_display = ('name', 'code', 'is_active')
     search_fields = ('name', 'code')
 
 @admin.register(Role)
 class RoleAdmin(admin.ModelAdmin):
-    list_display = ('name', 'organization', 'created_at')
+    list_display = ('name', 'organization')
     list_filter = ('organization',)
 
 @admin.register(Permission)
 class PermissionAdmin(admin.ModelAdmin):
-    list_display = ('code', 'name', 'description')
+    list_display = ('code', 'name')
     search_fields = ('code', 'name')
 
 @admin.register(TransactionSequence)
 class TransactionSequenceAdmin(admin.ModelAdmin):
-    list_display = ('type', 'prefix', 'suffix', 'next_number', 'padding', 'organization')
+    list_display = ('type', 'prefix', 'next_number', 'organization')
     list_filter = ('organization', 'type')
 
 # Subscription
 @admin.register(PlanCategory)
 class PlanCategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'type', 'country')
-    list_filter = ('type',)
 
 @admin.register(SubscriptionPlan)
 class SubscriptionPlanAdmin(admin.ModelAdmin):
-    list_display = ('name', 'category', 'monthly_price', 'annual_price', 'is_active')
-    list_filter = ('category', 'is_active')
+    list_display = ('name', 'category', 'monthly_price', 'annual_price')
+    list_filter = ('category',)
 
 @admin.register(SubscriptionPayment)
 class SubscriptionPaymentAdmin(admin.ModelAdmin):
-    list_display = ('organization', 'plan', 'amount', 'billing_cycle', 'status', 'created_at')
-    list_filter = ('status', 'billing_cycle')
+    list_display = ('organization', 'plan', 'amount', 'status', 'created_at')
+    list_filter = ('status',)
