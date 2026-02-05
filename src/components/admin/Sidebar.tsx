@@ -201,15 +201,22 @@ export function Sidebar({
                 }
 
                 if (Array.isArray(sidebarData)) {
-                    // Convert icon strings to Components
-                    const parsed = sidebarData.map(item => ({
-                        ...item,
-                        icon: getIcon(item.icon),
-                        children: item.children?.map((c: any) => ({
-                            ...c,
-                            icon: c.icon ? getIcon(c.icon) : undefined
-                        }))
-                    }));
+                    // Convert icon strings to Components and prefix paths for isolation
+                    const parsed = sidebarData.map(item => {
+                        const moduleCode = item.module || 'core';
+                        const prefix = moduleCode !== 'core' ? `/m/${moduleCode}` : '';
+
+                        return {
+                            ...item,
+                            icon: getIcon(item.icon),
+                            path: item.path && !item.path.startsWith('/saas') ? `/saas${prefix}${item.path}` : item.path,
+                            children: item.children?.map((c: any) => ({
+                                ...c,
+                                icon: c.icon ? getIcon(c.icon) : undefined,
+                                path: c.path && !c.path.startsWith('/saas') ? `/saas${prefix}${c.path}` : c.path,
+                            }))
+                        };
+                    });
                     setDynamicItems(parsed);
                 }
             } catch (e) {

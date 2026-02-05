@@ -100,11 +100,12 @@ class KernelManager:
             update.applied_at = timezone.now()
             update.save()
             
-            # 3. TODO: Run automated system checks/migrations if needed
-            # call_command('migrate', 'erp', interactive=False)
+            # 3. Clean up staging
+            if os.path.exists(staged_path):
+                os.remove(staged_path)
             
-            # 4. Cleanup
-            os.remove(staged_path)
+            # 4. Success Log
+            print(f"✅ Kernel Update {update.version} applied successfully.")
             
         return update
 
