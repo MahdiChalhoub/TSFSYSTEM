@@ -32,12 +32,22 @@ Product = get_model('Product')
 def run_seed():
     print("🌱 Starting Django Seed...")
 
-    # 1. Organization
+    # 0. SaaS Platform Organization (REQUIRED - All superusers belong here)
+    saas_org, created = Organization.objects.get_or_create(
+        slug='saas',
+        defaults={
+            'name': 'SaaS Platform',
+            'is_active': True,
+        }
+    )
+    print(f"🔧 SaaS Platform Org: {'Created' if created else 'Exists'} (ID: {saas_org.id})")
+
+    # 1. Demo Business Organization
     org, created = Organization.objects.get_or_create(
         slug='tsf-global',
         defaults={'name': 'TSF Global', 'is_active': True}
     )
-    print(f"🏢 Organization: {org.name}")
+    print(f"🏢 Business Organization: {org.name}")
 
     # 2. Roles
     roles_data = [
@@ -63,7 +73,7 @@ def run_seed():
     )
     print(f"📍 Site: {site.name}")
 
-    # 4. Users (Admin)
+    # 4. Users (Admin - belongs to SaaS Platform org)
     User = get_user_model()
     admin_email = 'admin@tsfci.com'
     if not User.objects.filter(email=admin_email).exists():
@@ -76,14 +86,19 @@ def run_seed():
         user.name = 'Admin User'
         user.role = admin_role
         user.home_site = site
-        user.organization = org
+        user.organization = saas_org  # SaaS admin belongs to platform org
         user.is_active = True
         user.is_staff = True
         user.is_superuser = True
         user.save()
-        print(f"👤 Admin User Created: {admin_email}")
+        print(f"👤 Admin User Created: {admin_email} (SaaS Platform)")
     else:
         print("👤 Admin User already exists")
+
+    # Link ALL existing superusers to SaaS org (idempotent fix)
+    updated_count = User.objects.filter(is_superuser=True, organization__isnull=True).update(organization=saas_org)
+    if updated_count:
+        print(f"🔗 Linked {updated_count} orphan superuser(s) to SaaS Platform")
 
     # 5. Countries
     countries = [
