@@ -19,27 +19,6 @@ class BusinessType(models.Model):
     def __str__(self):
         return self.name
 
-class GlobalCurrency(models.Model):
-    name = models.CharField(max_length=100)
-    code = models.CharField(max_length=10, unique=True)
-    symbol = models.CharField(max_length=10)
-    
-    class Meta:
-        db_table = 'GlobalCurrency'
-
-    def __str__(self):
-        return f"{self.name} ({self.code})"
-
-class Country(models.Model):
-    name = models.CharField(max_length=255)
-    code = models.CharField(max_length=10, unique=True)
-    
-    class Meta:
-        db_table = 'Country'
-
-    def __str__(self):
-        return self.name
-
 class SystemModule(models.Model):
     STATUS_CHOICES = (
         ('INSTALLED', 'Installed'),
@@ -58,6 +37,22 @@ class SystemModule(models.Model):
     class Meta:
         db_table = 'SystemModule'
 
+    def __str__(self):
+        return f"{self.name} ({self.version})"
+
+class SystemModuleLog(models.Model):
+    """
+    ERP-grade auditing for module operations.
+    """
+    module_name = models.CharField(max_length=100)
+    from_version = models.CharField(max_length=50)
+    to_version = models.CharField(max_length=50)
+    action = models.CharField(max_length=20) # INSTALL, UPGRADE, DISABLE
+    status = models.CharField(max_length=20) # SUCCESS, FAILURE
+    logs = models.TextField()
+    performed_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
 class SystemUpdate(models.Model):
     version = models.CharField(max_length=50, unique=True)
     changelog = models.TextField(null=True, blank=True)
@@ -70,12 +65,36 @@ class SystemUpdate(models.Model):
         db_table = 'SystemUpdate'
         ordering = ['-created_at']
 
+class GlobalCurrency(models.Model):
+    name = models.CharField(max_length=100)
+    code = models.CharField(max_length=10, unique=True)
+    symbol = models.CharField(max_length=10)
+    
+    class Meta:
+        db_table = 'GlobalCurrency'
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
 class Organization(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    logo = models.ImageField(upload_to='logos/', null=True, blank=True)
+    business_email = models.EmailField(null=True, blank=True)
+    phone = models.CharField(max_length=50, null=True, blank=True)
+    website = models.URLField(null=True, blank=True)
+    
+    address = models.TextField(null=True, blank=True)
+    city = models.CharField(max_length=100, null=True, blank=True)
+    state = models.CharField(max_length=100, null=True, blank=True)
+    zip_code = models.CharField(max_length=20, null=True, blank=True)
+    country = models.CharField(max_length=100, null=True, blank=True)
+    timezone = models.CharField(max_length=50, default='UTC')
     
     business_type = models.ForeignKey(BusinessType, on_delete=models.SET_NULL, null=True, blank=True)
     base_currency = models.ForeignKey(GlobalCurrency, on_delete=models.SET_NULL, null=True, blank=True)
@@ -101,10 +120,27 @@ class TenantModel(models.Model):
     class Meta:
         abstract = True
 
+class OrganizationModule(models.Model):
+    organization = models.ForeignKey('Organization', on_delete=models.CASCADE, related_name='enabled_modules')
+    module_name = models.CharField(max_length=100, default='legacy')
+    is_enabled = models.BooleanField(default=True)
+    active_features = models.JSONField(default=list, blank=True)
+    granted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'OrganizationModule'
+        unique_together = ('organization', 'module_name')
+
 class Site(TenantModel):
     name = models.CharField(max_length=255)
     code = models.CharField(max_length=50, null=True, blank=True)
+    address = models.TextField(null=True, blank=True)
+    city = models.CharField(max_length=100, null=True, blank=True)
+    phone = models.CharField(max_length=50, null=True, blank=True)
+    vat_number = models.CharField(max_length=100, null=True, blank=True)
     is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'Site'
@@ -113,12 +149,14 @@ class Site(TenantModel):
 class Permission(models.Model):
     code = models.CharField(max_length=100, unique=True)
     name = models.CharField(max_length=255)
+    description = models.TextField(null=True, blank=True)
 
     class Meta:
         db_table = 'Permission'
 
 class Role(TenantModel):
     name = models.CharField(max_length=100)
+    description = models.TextField(null=True, blank=True)
     permissions = models.ManyToManyField(Permission, related_name='roles')
 
     class Meta:
@@ -147,27 +185,21 @@ class User(AbstractUser):
     home_site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True, related_name='home_users')
     is_active_account = models.BooleanField(default=True)
     
-    REGISTRATION_STATUS = (
-        ('PENDING', 'Pending Approval'),
-        ('APPROVED', 'Approved'),
-        ('REJECTED', 'Rejected'),
-        ('NEEDS_CORRECTION', 'Needs Correction'),
-    )
-    registration_status = models.CharField(max_length=50, choices=REGISTRATION_STATUS, default='APPROVED')
+    registration_status = models.CharField(max_length=50, default='APPROVED')
     correction_notes = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return self.email if self.email else self.username
 
-class OrganizationModule(models.Model):
-    organization = models.ForeignKey('Organization', on_delete=models.CASCADE, related_name='enabled_modules')
-    module_name = models.CharField(max_length=100, default='legacy')
-    is_enabled = models.BooleanField(default=True)
-    granted_at = models.DateTimeField(auto_now_add=True)
-
+class Country(models.Model):
+    code = models.CharField(max_length=10, unique=True)
+    name = models.CharField(max_length=255)
+    
     class Meta:
-        db_table = 'OrganizationModule'
-        unique_together = ('organization', 'module_name')
+        db_table = 'Country'
+
+    def __str__(self):
+        return self.name
 
 class Unit(TenantModel):
     code = models.CharField(max_length=50)
@@ -201,6 +233,7 @@ class Category(TenantModel):
 
 class Brand(TenantModel):
     name = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = 'Brand'
@@ -210,6 +243,10 @@ class Product(TenantModel):
     sku = models.CharField(max_length=100)
     barcode = models.CharField(max_length=100, null=True, blank=True)
     name = models.CharField(max_length=255)
+    
+    cost_price = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    selling_price_ttc = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    
     status = models.CharField(max_length=20, default='ACTIVE')
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -223,6 +260,7 @@ class ChartOfAccount(TenantModel):
     code = models.CharField(max_length=50)
     name = models.CharField(max_length=255)
     type = models.CharField(max_length=20)
+    balance = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
 
     class Meta:
         db_table = 'ChartOfAccount'
@@ -237,15 +275,106 @@ class Contact(TenantModel):
     type = models.CharField(max_length=20, choices=TYPES)
     name = models.CharField(max_length=255)
     is_active = models.BooleanField(default=True)
+    balance = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
 
     class Meta:
         db_table = 'Contact'
 
-class FinancialAccount(TenantModel):
+class Employee(TenantModel):
+    employee_id = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=255)
+    
+    class Meta:
+        db_table = 'Employee'
+
+class Warehouse(TenantModel):
+    site = models.ForeignKey(Site, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
 
     class Meta:
+        db_table = 'Warehouse'
+
+class Inventory(TenantModel):
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+    
+    class Meta:
+        db_table = 'Inventory'
+        unique_together = ('warehouse', 'product', 'organization')
+
+class Order(TenantModel):
+    type = models.CharField(max_length=20)
+    status = models.CharField(max_length=20, default='DRAFT')
+    total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'Order'
+
+class OrderLine(TenantModel):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='lines')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.DecimalField(max_digits=15, decimal_places=2)
+    unit_price = models.DecimalField(max_digits=15, decimal_places=2)
+
+    class Meta:
+        db_table = 'OrderLine'
+
+class InventoryMovement(TenantModel):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE)
+    type = models.CharField(max_length=20)
+    quantity = models.DecimalField(max_digits=15, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'InventoryMovement'
+
+class FinancialAccount(TenantModel):
+    name = models.CharField(max_length=255)
+    balance = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+
+    class Meta:
         db_table = 'FinancialAccount'
+
+class FiscalYear(TenantModel):
+    name = models.CharField(max_length=100)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    is_closed = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'FiscalYear'
+        unique_together = ('name', 'organization')
+
+class FiscalPeriod(TenantModel):
+    fiscal_year = models.ForeignKey(FiscalYear, on_delete=models.CASCADE, related_name='periods')
+    name = models.CharField(max_length=100)
+    start_date = models.DateField()
+    end_date = models.DateField()
+
+    class Meta:
+        db_table = 'FiscalPeriod'
+        unique_together = ('name', 'fiscal_year')
+
+class JournalEntry(TenantModel):
+    transaction_date = models.DateTimeField()
+    description = models.TextField()
+    fiscal_year = models.ForeignKey(FiscalYear, on_delete=models.PROTECT)
+    status = models.CharField(max_length=20, default='DRAFT')
+
+    class Meta:
+        db_table = 'JournalEntry'
+
+class JournalEntryLine(TenantModel):
+    journal_entry = models.ForeignKey(JournalEntry, on_delete=models.CASCADE, related_name='lines')
+    account = models.ForeignKey(ChartOfAccount, on_delete=models.PROTECT)
+    debit = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    credit = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+
+    class Meta:
+        db_table = 'JournalEntryLine'
 
 class Transaction(TenantModel):
     account = models.ForeignKey(FinancialAccount, on_delete=models.CASCADE, related_name='transactions')
@@ -256,6 +385,47 @@ class Transaction(TenantModel):
     class Meta:
         db_table = 'Transaction'
 
+class TransactionSequence(TenantModel):
+    type = models.CharField(max_length=50)
+    prefix = models.CharField(max_length=20, null=True, blank=True)
+    next_number = models.IntegerField(default=1)
+
+    class Meta:
+        db_table = 'TransactionSequence'
+        unique_together = ('type', 'organization')
+
+class BarcodeSettings(TenantModel):
+    prefix = models.CharField(max_length=10, default="200")
+    next_sequence = models.IntegerField(default=1000)
+
+    class Meta:
+        db_table = 'BarcodeSettings'
+
+class Loan(TenantModel):
+    contact = models.ForeignKey(Contact, on_delete=models.PROTECT, related_name='loans')
+    principal_amount = models.DecimalField(max_digits=15, decimal_places=2)
+    status = models.CharField(max_length=20, default='DRAFT')
+
+    class Meta:
+        db_table = 'Loan'
+
+class LoanInstallment(TenantModel):
+    loan = models.ForeignKey(Loan, on_delete=models.CASCADE, related_name='installments')
+    due_date = models.DateField()
+    total_amount = models.DecimalField(max_digits=15, decimal_places=2)
+
+    class Meta:
+        db_table = 'LoanInstallment'
+
+class FinancialEvent(TenantModel):
+    event_type = models.CharField(max_length=50)
+    amount = models.DecimalField(max_digits=15, decimal_places=2)
+    contact = models.ForeignKey(Contact, on_delete=models.PROTECT)
+
+    class Meta:
+        db_table = 'FinancialEvent'
+
+# SaaS Specific Tables
 class PlanCategory(models.Model):
     name = models.CharField(max_length=255)
     type = models.CharField(max_length=20)
@@ -282,12 +452,3 @@ class SubscriptionPayment(models.Model):
 
     class Meta:
         db_table = 'SubscriptionPayment'
-
-class TransactionSequence(TenantModel):
-    type = models.CharField(max_length=50)
-    prefix = models.CharField(max_length=20, null=True, blank=True)
-    next_number = models.IntegerField(default=1)
-
-    class Meta:
-        db_table = 'TransactionSequence'
-        unique_together = ('type', 'organization')

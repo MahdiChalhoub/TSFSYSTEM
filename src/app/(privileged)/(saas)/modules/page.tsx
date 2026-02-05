@@ -59,7 +59,7 @@ export default function SaaSModulesPage() {
         }
     }
 
-    async function handleInstall(data: unknown) { // Changed 'any' to 'unknown' as 'data' is not used in the provided snippet
+    async function handleInstall() {
         setSyncing(true)
         try {
             const res = await syncModulesGlobal()
@@ -381,7 +381,7 @@ export default function SaaSModulesPage() {
                     </p>
                 </div>
             </div>
-            {/* ... rest of existing code ... */}
+    // No data parameter needed here
         </div>
     )
 
