@@ -26,6 +26,11 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover"
 
 export default function SaaSModulesPage() {
     const router = useRouter()
@@ -190,104 +195,165 @@ export default function SaaSModulesPage() {
                     <div className="col-span-full py-20 text-center text-gray-500 font-medium italic">Scanning core modules...</div>
                 ) : modules.length === 0 ? (
                     <div className="col-span-full py-20 text-center text-gray-500 font-medium font-mono">No modules detected in filesystem.</div>
-                ) : modules.map((m) => (
-                    <Card key={m.code} className="bg-white border-gray-100 hover:border-emerald-500/30 transition-all rounded-[2.5rem] overflow-hidden group shadow-xl hover:shadow-2xl flex flex-col">
-                        <CardHeader className="pb-4 relative">
-                            <div className="flex justify-between items-start">
-                                <div className={`p-4 rounded-2xl shadow-sm border ${m.is_core ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
-                                    <Box size={28} />
-                                </div>
-                                <div className="flex flex-col items-end gap-2">
-                                    {m.is_core && (
-                                        <Badge className="bg-indigo-50 text-indigo-600 border-indigo-100 px-3 py-1 font-black uppercase text-[10px]">
-                                            Core Module
-                                        </Badge>
-                                    )}
-                                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{m.version}</div>
-                                </div>
-                            </div>
-                            <CardTitle className="text-2xl font-black text-gray-900 mt-6 tracking-tight">{m.name}</CardTitle>
-                            <CardDescription className="text-gray-400 text-xs font-mono">
-                                ID: {m.code}
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-6 flex-grow flex flex-col justify-between p-8 pt-2">
-                            <p className="text-sm text-gray-500 leading-relaxed font-medium">
-                                {m.description || "No description provided for this module."}
-                            </p>
+                ) : modules.map((m) => {
+                    const isCore = m.code === 'core' || m.code === 'coreplatform';
+                    const coreDetails = m.code === 'core' ? {
+                        description: 'The "Spine" of the system. Handles platform integrity, security protocols, and essential multi-tenant infrastructure.',
+                        workflows: [
+                            'PostgreSQL Integrity Philosophy',
+                            'Global System Bootloader',
+                            'Security & Authentication Baseline'
+                        ]
+                    } : m.code === 'coreplatform' ? {
+                        description: 'The central orchestration engine. Manages modular injection and safe request routing between modules.',
+                        workflows: [
+                            'Modular Request Orchestration',
+                            'Connector Engine (Brokerage)',
+                            'Fallback & Graceful Degradation'
+                        ]
+                    } : null;
 
-                            <div className="space-y-6 pt-6 border-t border-gray-100">
-                                <div className="flex justify-between items-center bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-inner">
-                                    <span className="text-[10px] text-gray-400 uppercase font-black tracking-widest leading-none">Global Coverage</span>
-                                    <span className="text-emerald-600 font-mono font-bold leading-none">{m.total_installs} Tenants</span>
-                                </div>
-
-                                {m.dependencies && m.dependencies.length > 0 && (
-                                    <div className="flex flex-wrap gap-2">
-                                        {m.dependencies.map((dep: string) => (
-                                            <span key={dep} className="px-3 py-1 bg-white border border-gray-200 text-[10px] text-gray-400 rounded-xl font-mono shadow-sm">
-                                                +{dep}
-                                            </span>
-                                        ))}
+                    return (
+                        <Card key={m.code} className="bg-white border-gray-100 hover:border-emerald-500/30 transition-all rounded-[2.5rem] overflow-hidden group shadow-xl hover:shadow-2xl flex flex-col">
+                            <CardHeader className="pb-4 relative">
+                                <div className="flex justify-between items-start">
+                                    <div className={`p-4 rounded-2xl shadow-sm border ${m.is_core ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
+                                        <Box size={28} />
                                     </div>
-                                )}
-
-                                <div className="grid grid-cols-2 gap-3">
-                                    <Button
-                                        onClick={() => handleGlobalInstall(m.code)}
-                                        disabled={processing === m.code}
-                                        className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl py-6 font-black shadow-lg shadow-emerald-200 transition-all active:scale-95 flex gap-2"
-                                    >
-                                        <Zap size={16} />
-                                        Push
-                                    </Button>
-                                    <Button
-                                        onClick={() => handleGlobalUninstall(m.code)}
-                                        disabled={processing === m.code || m.is_core}
-                                        variant="outline"
-                                        className="border-gray-100 bg-gray-50 hover:bg-red-50 hover:text-red-500 hover:border-red-100 text-gray-400 rounded-2xl py-6 font-black transition-all flex gap-2"
-                                    >
-                                        <XCircle size={16} />
-                                        Revoke
-                                    </Button>
-
-                                    {/* Rollback & History Dialog */}
-                                    <Dialog>
-                                        <DialogTrigger asChild>
-                                            <Button
-                                                disabled={processing === m.code}
-                                                variant="outline"
-                                                className="col-span-2 border-gray-800 hover:bg-blue-500/10 hover:text-blue-400 hover:border-blue-500/50 text-gray-400 rounded-2xl py-4 font-bold transition-all flex gap-2"
-                                            >
-                                                <HistoryIcon size={16} />
-                                                History & Rollback
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent className="bg-[#0F172A] border-gray-800 text-white sm:max-w-md">
-                                            <DialogHeader>
-                                                <DialogTitle>Version History: {m.name}</DialogTitle>
-                                                <DialogDescription>
-                                                    Select a previous version to restore. This will replace the source code but <strong>will not revert database schemas</strong>.
-                                                </DialogDescription>
-                                            </DialogHeader>
-                                            <BackupList moduleCode={m.code} onRollback={(v) => handleRollback(m.code, v)} currentVersion={m.version} />
-                                        </DialogContent>
-                                    </Dialog>
-
-                                    <Button
-                                        onClick={() => handleDelete(m.code)}
-                                        disabled={processing === m.code || m.is_core}
-                                        variant="ghost"
-                                        className="col-span-2 text-gray-600 hover:text-red-600 hover:bg-red-950/20 font-bold rounded-2xl py-4 text-xs flex gap-2"
-                                    >
-                                        <Trash2 size={14} />
-                                        Delete from System
-                                    </Button>
+                                    <div className="flex flex-col items-end gap-2">
+                                        <div className="flex items-center gap-2">
+                                            {m.is_core && (
+                                                <Badge className="bg-indigo-50 text-indigo-600 border-indigo-100 px-3 py-1 font-black uppercase text-[10px]">
+                                                    Core Module
+                                                </Badge>
+                                            )}
+                                            <Popover>
+                                                <PopoverTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl text-gray-400 hover:text-indigo-600 hover:bg-indigo-50">
+                                                        <Info size={16} />
+                                                    </Button>
+                                                </PopoverTrigger>
+                                                <PopoverContent className="w-80 bg-white p-6 rounded-3xl shadow-2xl border-gray-100 animate-in fade-in zoom-in-95 duration-200">
+                                                    <div className="space-y-4">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className={`p-2 rounded-lg ${m.is_core ? 'bg-indigo-600 text-white' : 'bg-emerald-600 text-white'}`}>
+                                                                <Info size={14} />
+                                                            </div>
+                                                            <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest">Module Responsibility</span>
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <h4 className="text-sm font-black text-gray-900">{m.name}</h4>
+                                                            <p className="text-[11px] text-gray-500 font-medium leading-relaxed">
+                                                                {coreDetails?.description || m.description || "No detailed description available."}
+                                                            </p>
+                                                        </div>
+                                                        {coreDetails?.workflows && (
+                                                            <div className="pt-4 border-t border-gray-100 space-y-2">
+                                                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider">Key Workflows</span>
+                                                                <div className="space-y-1">
+                                                                    {coreDetails.workflows.map((wf, idx) => (
+                                                                        <div key={idx} className="flex items-center gap-2">
+                                                                            <ShieldCheck size={10} className="text-emerald-500" />
+                                                                            <span className="text-[10px] font-bold text-gray-600">{wf}</span>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                        <div className="pt-4 border-t border-gray-100 flex justify-between items-center">
+                                                            <span className="text-[9px] font-black text-gray-400 uppercase">Version</span>
+                                                            <span className="text-[9px] font-mono font-bold text-indigo-600">v{m.version}</span>
+                                                        </div>
+                                                    </div>
+                                                </PopoverContent>
+                                            </Popover>
+                                        </div>
+                                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{m.version}</div>
+                                    </div>
                                 </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
+                                <CardTitle className="text-2xl font-black text-gray-900 mt-6 tracking-tight">{m.name}</CardTitle>
+                                <CardDescription className="text-gray-400 text-xs font-mono">
+                                    ID: {m.code}
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-6 flex-grow flex flex-col justify-between p-8 pt-2">
+                                <p className="text-sm text-gray-500 leading-relaxed font-medium">
+                                    {m.description || "No description provided for this module."}
+                                </p>
+
+                                <div className="space-y-6 pt-6 border-t border-gray-100">
+                                    <div className="flex justify-between items-center bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-inner">
+                                        <span className="text-[10px] text-gray-400 uppercase font-black tracking-widest leading-none">Global Coverage</span>
+                                        <span className="text-emerald-600 font-mono font-bold leading-none">{m.total_installs} Tenants</span>
+                                    </div>
+
+                                    {m.dependencies && m.dependencies.length > 0 && (
+                                        <div className="flex flex-wrap gap-2">
+                                            {m.dependencies.map((dep: string) => (
+                                                <span key={dep} className="px-3 py-1 bg-white border border-gray-200 text-[10px] text-gray-400 rounded-xl font-mono shadow-sm">
+                                                    +{dep}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <Button
+                                            onClick={() => handleGlobalInstall(m.code)}
+                                            disabled={processing === m.code}
+                                            className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl py-6 font-black shadow-lg shadow-emerald-200 transition-all active:scale-95 flex gap-2"
+                                        >
+                                            <Zap size={16} />
+                                            Push
+                                        </Button>
+                                        <Button
+                                            onClick={() => handleGlobalUninstall(m.code)}
+                                            disabled={processing === m.code || m.is_core}
+                                            variant="outline"
+                                            className="border-gray-100 bg-gray-50 hover:bg-red-50 hover:text-red-500 hover:border-red-100 text-gray-400 rounded-2xl py-6 font-black transition-all flex gap-2"
+                                        >
+                                            <XCircle size={16} />
+                                            Revoke
+                                        </Button>
+
+                                        {/* Rollback & History Dialog */}
+                                        <Dialog>
+                                            <DialogTrigger asChild>
+                                                <Button
+                                                    disabled={processing === m.code}
+                                                    variant="outline"
+                                                    className="col-span-2 border-gray-800 hover:bg-blue-500/10 hover:text-blue-400 hover:border-blue-500/50 text-gray-400 rounded-2xl py-4 font-bold transition-all flex gap-2"
+                                                >
+                                                    <HistoryIcon size={16} />
+                                                    History & Rollback
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent className="bg-[#0F172A] border-gray-800 text-white sm:max-w-md">
+                                                <DialogHeader>
+                                                    <DialogTitle>Version History: {m.name}</DialogTitle>
+                                                    <DialogDescription>
+                                                        Select a previous version to restore. This will replace the source code but <strong>will not revert database schemas</strong>.
+                                                    </DialogDescription>
+                                                </DialogHeader>
+                                                <BackupList moduleCode={m.code} onRollback={(v) => handleRollback(m.code, v)} currentVersion={m.version} />
+                                            </DialogContent>
+                                        </Dialog>
+
+                                        <Button
+                                            onClick={() => handleDelete(m.code)}
+                                            disabled={processing === m.code || m.is_core}
+                                            variant="ghost"
+                                            className="col-span-2 text-gray-600 hover:text-red-600 hover:bg-red-950/20 font-bold rounded-2xl py-4 text-xs flex gap-2"
+                                        >
+                                            <Trash2 size={14} />
+                                            Delete from System
+                                        </Button>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    );
+                })}
             </div>
 
             <div className="p-8 bg-emerald-500/5 rounded-[3rem] border border-emerald-500/10 flex gap-6 items-center shadow-2xl">
