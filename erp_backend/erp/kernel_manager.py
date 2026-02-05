@@ -8,6 +8,7 @@ from django.db import transaction
 from django.utils import timezone
 from .models import SystemUpdate
 from django.core.exceptions import ValidationError
+from .security_keys import is_package_trusted
 
 class KernelManager:
     KERNEL_UPDATES_DIR = os.path.join(settings.BASE_DIR, 'tmp', 'kernel_updates')
@@ -40,6 +41,13 @@ class KernelManager:
             
         try:
             with zipfile.ZipFile(temp_path, 'r') as zipf:
+                # Security: Verify package signature
+                is_trusted, msg = is_package_trusted(zipf, 'kernel')
+                if not is_trusted:
+                    os.remove(temp_path)
+                    raise ValidationError(f"Security check failed: {msg}")
+                print(f"🔐 {msg}")
+                
                 if 'update.json' not in zipf.namelist():
                     raise ValidationError("Invalid kernel package: Missing update.json")
                 
