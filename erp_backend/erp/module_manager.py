@@ -206,6 +206,15 @@ class ModuleManager:
 
             shutil.copytree(source_inner_dir, target_path, dirs_exist_ok=True)
             
+            # 3b. Deploy Frontend Files (if present)
+            frontend_extract = os.path.join(temp_extract, 'frontend')
+            if os.path.exists(frontend_extract):
+                print(f"🎨 Deploying frontend pages for {module_name}...")
+                frontend_target = os.path.join(settings.BASE_DIR, '..', 'src', 'app', '(privileged)', 'saas', module_name)
+                if not os.path.exists(frontend_target):
+                    os.makedirs(frontend_target)
+                shutil.copytree(frontend_extract, frontend_target, dirs_exist_ok=True)
+
             # Run Migrations
             print(f"⚙️ Applying migrations for {module_name}...")
             call_command('migrate', no_input=True)

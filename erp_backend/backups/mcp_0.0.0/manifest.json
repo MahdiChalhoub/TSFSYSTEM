@@ -42,23 +42,23 @@
     ],
     "routes": [
         {
-            "path": "/saas/mcp",
+            "path": "/mcp",
             "label": "MCP Dashboard"
         },
         {
-            "path": "/saas/mcp/providers",
+            "path": "/mcp/providers",
             "label": "AI Providers"
         },
         {
-            "path": "/saas/mcp/tools",
+            "path": "/mcp/tools",
             "label": "Tools"
         },
         {
-            "path": "/saas/mcp/conversations",
+            "path": "/mcp/conversations",
             "label": "Conversations"
         },
         {
-            "path": "/saas/mcp/settings",
+            "path": "/mcp/settings",
             "label": "Settings"
         }
     ],
@@ -66,36 +66,30 @@
         {
             "label": "AI Integration",
             "icon": "Bot",
-            "visibility": "saas",
             "children": [
                 {
                     "label": "Dashboard",
-                    "path": "/saas/mcp",
+                    "path": "/mcp",
                     "icon": "LayoutDashboard"
                 },
                 {
                     "label": "Providers",
-                    "path": "/saas/mcp/providers",
+                    "path": "/mcp/providers",
                     "icon": "Cloud"
                 },
                 {
                     "label": "Tools",
-                    "path": "/saas/mcp/tools",
+                    "path": "/mcp/tools",
                     "icon": "Wrench"
                 },
                 {
-                    "label": "AI Chat",
-                    "path": "/saas/mcp/chat",
-                    "icon": "Sparkles"
-                },
-                {
                     "label": "Conversations",
-                    "path": "/saas/mcp/conversations",
+                    "path": "/mcp/conversations",
                     "icon": "MessageSquare"
                 },
                 {
                     "label": "Settings",
-                    "path": "/saas/mcp/settings",
+                    "path": "/mcp/settings",
                     "icon": "Settings"
                 }
             ]

@@ -61,6 +61,7 @@ class Command(BaseCommand):
             zip_path = os.path.join(output_dir, zip_filename)
 
             with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                # 1. Export Backend Files
                 for root, dirs, files in os.walk(module_path):
                     for file in files:
                         if '__pycache__' in root or '.git' in root or file.endswith('.pyc'):
@@ -69,6 +70,17 @@ class Command(BaseCommand):
                         file_path = os.path.join(root, file)
                         arcname = os.path.relpath(file_path, module_path)
                         zipf.write(file_path, arcname)
+
+                # 2. Export Frontend Files (Optional)
+                frontend_source = os.path.join(settings.BASE_DIR, '..', 'src', 'app', '(privileged)', 'saas', module_name)
+                if os.path.exists(frontend_source):
+                    self.stdout.write(f"🎨 Including frontend pages for {module_name}...")
+                    for root, dirs, files in os.walk(frontend_source):
+                        for file in files:
+                            file_path = os.path.join(root, file)
+                            # Put under 'frontend/' prefix in zip
+                            arcname = os.path.join('frontend', os.path.relpath(file_path, frontend_source))
+                            zipf.write(file_path, arcname)
 
             self.stdout.write(self.style.SUCCESS(f"✅ Exported: {zip_filename}"))
 
