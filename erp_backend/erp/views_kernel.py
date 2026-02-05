@@ -10,9 +10,9 @@ from .models import SystemUpdate
 class KernelViewSet(viewsets.ViewSet):
     """
     ViewSet for Kernel version management and updates.
-    Requires Staff/Superuser permissions.
+    Viewing requires authentication, modifying requires staff/admin.
     """
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [permissions.IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def list(self, request):
