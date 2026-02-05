@@ -159,6 +159,29 @@ class SaaSDashboardStatsView(APIView):
             }
         })
 
+class SaaSPlansView(APIView):
+    """
+    Returns available subscription plans.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        from .models import SubscriptionPlan, PlanCategory
+        plans = SubscriptionPlan.objects.all().values(
+            'id', 'name', 'monthly_price', 'annual_price', 'modules', 'category__name'
+        )
+        return Response(list(plans))
+
+class SaaSModulesView(APIView):
+    """
+    Returns available system modules.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        modules = SystemModule.objects.all()
+        return Response(SystemModuleSerializer(modules, many=True).data)
+
 class OrganizationViewSet(viewsets.ModelViewSet):
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
