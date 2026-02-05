@@ -166,11 +166,8 @@ class SaaSPlansView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        from .models import SubscriptionPlan, PlanCategory
-        plans = SubscriptionPlan.objects.all().values(
-            'id', 'name', 'monthly_price', 'annual_price', 'modules', 'category__name'
-        )
-        return Response(list(plans))
+        # Stub - SubscriptionPlan model is part of billing module (not in kernel)
+        return Response([])
 
 class SaaSModulesView(APIView):
     """
