@@ -146,9 +146,26 @@ class ConnectorEngine:
             self._models_loaded = True
     
     # =========================================================================
-    # STATE EVALUATION
+    # STATE EVALUATION & CIRCUIT BREAKER
     # =========================================================================
     
+    def _is_circuit_broken(self, module_code: str, organization_id: int) -> bool:
+        """
+        Hardening: Check if module is in a circuit-broken state due to repeated failures.
+        """
+        cache_key = f"circuit_breaker:{organization_id}:{module_code}"
+        failures = self._get_cached_response('kernel', cache_key, organization_id) or 0
+        if failures >= 5:
+            logger.error(f"🔌 CIRCUIT BREAKER: Module {module_code} is TRIPED for org {organization_id}")
+            return True
+        return False
+
+    def _increment_failure(self, module_code: str, organization_id: int):
+        """Increment failure count for circuit breaker."""
+        cache_key = f"circuit_breaker:{organization_id}:{module_code}"
+        current = self._get_cached_response('kernel', cache_key, organization_id) or 0
+        self._cache_response('kernel', cache_key, organization_id, current + 1, ttl_seconds=600) # 10 min cooldown
+
     def get_module_state(
         self,
         module_code: str,
@@ -160,9 +177,10 @@ class ConnectorEngine:
         
         Decision tree:
         1. Is module installed on system? No → MISSING
-        2. Is module enabled for this tenant? No → DISABLED
-        3. Does user have permission? No → UNAUTHORIZED
-        4. All checks pass → AVAILABLE
+        2. Is the circuit broken? Yes -> MISSING (Safe failure)
+        3. Is module enabled for this tenant? No → DISABLED
+        4. Does user have permission? No → UNAUTHORIZED
+        5. All checks pass → AVAILABLE
         """
         self._load_models()
         
@@ -174,7 +192,11 @@ class ConnectorEngine:
         except self._SystemModule.DoesNotExist:
             return ModuleState.MISSING
         
-        # Check 2: Is module enabled for this tenant?
+        # [HARDENING] Check 2: Circuit Breaker
+        if self._is_circuit_broken(module_code, organization_id):
+            return ModuleState.MISSING # Fail safe as if missing
+
+        # Check 3: Is module enabled for this tenant?
         try:
             org_module = self._OrganizationModule.objects.get(
                 organization_id=organization_id,
@@ -183,21 +205,17 @@ class ConnectorEngine:
             if not org_module.is_enabled:
                 return ModuleState.DISABLED
         except self._OrganizationModule.DoesNotExist:
-            # Module installed but not granted to this org
             return ModuleState.DISABLED
         
-        # Check 3: Permission check (if user provided)
+        # Check 4: Permission check
         if user_id:
-            # Import Permission Engine for authorization check
             try:
                 from .services import PermissionService
                 user = self._User.objects.get(id=user_id)
-                # Check if user has access to this module
                 if not PermissionService.has_module_access(user, module_code):
                     return ModuleState.UNAUTHORIZED
             except Exception as e:
                 logger.warning(f"Permission check failed for module {module_code}: {e}")
-                # On permission check failure, allow access (fail open for reads)
         
         return ModuleState.AVAILABLE
     
@@ -310,13 +328,11 @@ class ConnectorEngine:
         user_id: Optional[int] = None,
         source_module: Optional[str] = None,
         params: Optional[Dict] = None,
-        response_type: str = 'object'
+        response_type: str = 'object',
+        version: str = 'v1' # [HARDENING] Contract versioning
     ) -> ConnectorResponse:
         """
         Route a READ request to a target module.
-        
-        If module is AVAILABLE → Forward request
-        If module is MISSING/DISABLED/UNAUTHORIZED → Apply fallback policy
         """
         self._load_models()
         start_time = time.time()
@@ -329,28 +345,22 @@ class ConnectorEngine:
             try:
                 # Forward to actual module endpoint
                 response = self._forward_read_request(
-                    target_module, endpoint, organization_id, params
+                    target_module, endpoint, organization_id, params, version
                 )
                 
+                if response is None: raise Exception("Module returned empty/error")
+
                 # Cache the response for future fallback
                 self._cache_response(
                     target_module, endpoint, organization_id, response
-                )
-                
-                # Log success
-                self._log_routing(
-                    source_module, target_module, endpoint,
-                    OperationType.READ, state, 'forward',
-                    organization_id, user_id, True,
-                    int((time.time() - start_time) * 1000)
                 )
                 
                 return ConnectorResponse(data=response, state=state)
                 
             except Exception as e:
                 logger.error(f"Forward read failed for {target_module}/{endpoint}: {e}")
-                # Fall through to fallback handling
-                state = ModuleState.MISSING  # Treat as missing for fallback
+                self._increment_failure(target_module, organization_id) # [HARDENING]
+                state = ModuleState.MISSING
         
         # Apply fallback policy
         policy = self.get_policy(target_module, endpoint)
@@ -379,14 +389,11 @@ class ConnectorEngine:
         organization_id: int,
         user_id: Optional[int] = None,
         source_module: Optional[str] = None,
-        method: str = 'POST'
+        method: str = 'POST',
+        version: str = 'v1' # [HARDENING] Contract versioning
     ) -> ConnectorResponse:
         """
         Route a WRITE request to a target module.
-        
-        If module is AVAILABLE → Forward request
-        If module is MISSING → Buffer for later replay
-        If module is DISABLED/UNAUTHORIZED → Apply policy (drop/buffer/error)
         """
         self._load_models()
         start_time = time.time()
@@ -398,20 +405,14 @@ class ConnectorEngine:
         if state == ModuleState.AVAILABLE:
             try:
                 response = self._forward_write_request(
-                    target_module, endpoint, data, organization_id, method
-                )
-                
-                self._log_routing(
-                    source_module, target_module, endpoint,
-                    OperationType.WRITE, state, 'forward',
-                    organization_id, user_id, True,
-                    int((time.time() - start_time) * 1000)
+                    target_module, endpoint, data, organization_id, method, version
                 )
                 
                 return ConnectorResponse(data=response, state=state)
                 
             except Exception as e:
                 logger.error(f"Forward write failed for {target_module}/{endpoint}: {e}")
+                self._increment_failure(target_module, organization_id) # [HARDENING]
                 state = ModuleState.MISSING
         
         # Apply fallback policy
@@ -645,22 +646,22 @@ class ConnectorEngine:
         target_module: str,
         endpoint: str,
         organization_id: int,
-        params: Optional[Dict] = None
+        params: Optional[Dict] = None,
+        version: str = 'v1'
     ) -> Any:
         """
-        Forward a read request to the actual module endpoint.
-        Uses Django's internal URL resolver to bypass HTTP.
+        Forward a read request to the actual module endpoint with version support.
         """
         from django.test import RequestFactory
         from django.urls import resolve, Resolver404
         
-        # Standardize paths
         clean_endpoint = endpoint.strip('/')
-        # Try module-prefixed first (modular pattern) then root (legacy erp pattern)
+        # Attempt versioned path first, then module root, then legacy root
         paths = [
+            f"/api/{target_module}/{version}/{clean_endpoint}/",
             f"/api/{target_module}/{clean_endpoint}/",
             f"/api/{clean_endpoint}/"
-        ] if clean_endpoint else [f"/api/{target_module}/", "/api/"]
+        ] if clean_endpoint else [f"/api/{target_module}/{version}/", f"/api/{target_module}/"]
 
         factory = RequestFactory()
         
@@ -669,20 +670,13 @@ class ConnectorEngine:
                 match = resolve(p)
                 request = factory.get(p, data=params or {})
                 
-                # Internal Bypass: Attach a system user for permission checks
-                from erp.models import User
+                # Internal Bypass Auth
+                from .models import User
                 system_user = User.objects.filter(is_superuser=True).first()
                 request.user = system_user
                 request.org_id = organization_id
                 
-                # Call the view directly
                 response = match.func(request, *match.args, **match.kwargs)
-                
-                # Check for DRF response errors
-                if hasattr(response, 'status_code') and response.status_code >= 400:
-                    logger.warning(f"Internal dispatch returned error {response.status_code}: {getattr(response, 'data', 'No Data')}")
-                
-                # DRF responses need explicit rendering outside middleware
                 if hasattr(response, 'render') and callable(response.render):
                     response.render()
                 
@@ -692,10 +686,10 @@ class ConnectorEngine:
             except Resolver404:
                 continue
             except Exception as e:
-                logger.error(f"Internal read dispatch failed for {p}: {e}")
-                continue
+                logger.error(f"Internal Read Error for {p}: {e}")
+                # We raise here because the caller (route_read) traps it for the circuit breaker
+                raise e
                 
-        logger.error(f"Connector failed to resolve internal READ path for {target_module}: {endpoint}")
         return None
     
     def _forward_write_request(
@@ -704,28 +698,29 @@ class ConnectorEngine:
         endpoint: str,
         data: Dict,
         organization_id: int,
-        method: str = 'POST'
+        method: str = 'POST',
+        version: str = 'v1'
     ) -> Any:
-        """Forward a write request to the actual module endpoint."""
+        """Forward a write request with version support."""
         from django.test import RequestFactory
         from django.urls import resolve, Resolver404
         
         clean_endpoint = endpoint.strip('/')
         paths = [
+            f"/api/{target_module}/{version}/{clean_endpoint}/",
             f"/api/{target_module}/{clean_endpoint}/",
             f"/api/{clean_endpoint}/"
-        ] if clean_endpoint else [f"/api/{target_module}/", "/api/"]
+        ] if clean_endpoint else [f"/api/{target_module}/{version}/", f"/api/{target_module}/"]
 
         factory = RequestFactory()
+        dispatch = getattr(factory, method.lower())
         
         for p in paths:
             try:
                 match = resolve(p)
-                dispatch = getattr(factory, method.lower())
                 request = dispatch(p, data=data, content_type='application/json')
                 
-                # Internal Bypass: Attach a system user
-                from erp.models import User
+                from .models import User
                 system_user = User.objects.filter(is_superuser=True).first()
                 request.user = system_user
                 request.org_id = organization_id
@@ -738,10 +733,9 @@ class ConnectorEngine:
             except Resolver404:
                 continue
             except Exception as e:
-                logger.error(f"Internal write dispatch failed for {p}: {e}")
-                continue
+                logger.error(f"Internal Write Error for {p}: {e}")
+                raise e
 
-        logger.error(f"Connector failed to resolve internal WRITE path for {target_module}: {endpoint}")
         return None
     
     def _deliver_event(

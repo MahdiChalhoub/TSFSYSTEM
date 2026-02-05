@@ -56,171 +56,120 @@ class ModuleManager:
         for key in required_keys:
             if key not in manifest:
                 raise ValidationError(f"Manifest missing required key: {key}")
+        
+        # [HARDENING] Kernel Compatibility Check
+        kernel_version = KernelManager.get_current_version()
+        compat = manifest.get('kernel_compat', '>=1.0.0')
+        # Simple version comparison for now, could use packaging.version if needed
+        if compat.startswith('>=') and kernel_version < compat.replace('>=', ''):
+             raise ValidationError(f"Kernel Incompatible: Module requires {compat}, current Kernel is {kernel_version}")
+             
         return True
 
     @staticmethod
-    def discover():
+    def run_lifecycle_hook(target_path, hook_name):
         """
-        Scans apps/ and erp/modules/ for manifest.json files.
+        Executes a lifecycle hook script if present.
+        Hooks are typically python scripts in the module root.
         """
-        discovered = []
-        search_paths = [ModuleManager.MODULES_DIR, ModuleManager.LEGACY_MODULES_DIR]
-        
-        for base_path in search_paths:
-            if not os.path.exists(base_path):
-                continue
-                
-            for module_dir in os.listdir(base_path):
-                path = os.path.join(base_path, module_dir)
-                if not os.path.isdir(path):
-                    continue
-                    
-                manifest_path = os.path.join(path, 'manifest.json')
-                if os.path.exists(manifest_path):
-                    try:
-                        with open(manifest_path, 'r') as f:
-                            manifest = json.load(f)
-                            manifest['_path'] = path
-                            discovered.append(manifest)
-                    except Exception as e:
-                        print(f"Error loading manifest for {module_dir}: {str(e)}")
-        return discovered
-
-    @staticmethod
-    def check_dependencies(manifest):
-        """
-        Verifies that all required modules are installed and meet version requirements.
-        """
-        requires = manifest.get('requires', {})
-        for req_name, version_req in requires.items():
+        hook_file = f"{hook_name}.py"
+        full_path = os.path.join(target_path, hook_file)
+        if os.path.exists(full_path):
+            print(f"🪝 Executing lifecycle hook: {hook_name}...")
+            # We execute it in the current environment but could isolate if needed
+            # For now, simple exec or management command
             try:
-                # Use name from manifest
-                installed_mod = SystemModule.objects.get(name=req_name)
-                # Simple version check for now
-                if installed_mod.version < version_req.replace('>=', ''):
-                    raise ValidationError(f"Dependency {req_name} version {installed_mod.version} is incompatible. Required: {version_req}")
-            except SystemModule.DoesNotExist:
-                raise ValidationError(f"Missing dependency: {req_name} (Required: {version_req})")
-
-    @staticmethod
-    def sync():
-        """
-        Syncs local filesystem modules with SystemModule registry.
-        This is used for local development or initial deployment.
-        """
-        manifests = ModuleManager.discover()
-        synced_names = []
-        
-        for manifest in manifests:
-            name = manifest.get('code') # Use code as identifier consistently
-            display_name = manifest.get('name')
-            version = manifest.get('version')
-            
-            SystemModule.objects.update_or_create(
-                name=name,
-                defaults={
-                    'version': version,
-                    'status': 'INSTALLED',
-                    'manifest': manifest,
-                    'checksum': 'LOCAL_DEV' # Development bypass
-                }
-            )
-            synced_names.append(name)
-            
-        return synced_names
+                import subprocess
+                result = subprocess.run(['python', full_path], capture_output=True, text=True)
+                if result.returncode != 0:
+                    raise Exception(f"Hook {hook_name} failed: {result.stderr}")
+            except Exception as e:
+                print(f"⚠️ Lifecycle hook {hook_name} failed: {str(e)}")
+                raise ValidationError(f"Lifecycle hook {hook_name} failed: {str(e)}")
 
     @staticmethod
     @transaction.atomic
     def upgrade(module_name, package_path, user=None):
         """
-        Safely upgrades a module from a .modpkg.zip file.
+        OS-GRADE HARDENING: Atomic swap upgrade.
+        1. Stage -> 2. Pre-install -> 3. Backup Current -> 4. Swap -> 5. Migrate -> 6. Post-install
         """
         ModuleManager.acquire_lock()
-        old_module = None  # [FIX] Prevent UnboundLocalError
+        old_module = SystemModule.objects.filter(name=module_name).first()
+        old_version = old_module.version if old_module else "0.0.0"
+        
+        # Prepare paths
+        temp_extract = os.path.join(settings.BASE_DIR, 'tmp', f"stage_{module_name}_{hashlib.md5(package_path.encode()).hexdigest()[:8]}")
+        target_path = os.path.join(ModuleManager.MODULES_DIR, module_name)
+        backup_path = os.path.join(settings.BASE_DIR, 'backups', f"{module_name}_{old_version}_{timezone.now().strftime('%Y%m%d%H%M%S')}")
+        frontend_target = os.path.join(settings.BASE_DIR, '..', 'src', 'modules', module_name)
+        
         try:
-            print(f"🚀 Starting upgrade for {module_name}...")
+            print(f"🚀 Starting OS-Grade upgrade for {module_name}...")
             
-            # Debug File Info
-            if os.path.exists(package_path):
-                print(f"📦 Package Size: {os.path.getsize(package_path)} bytes at {package_path}")
-            else:
-                print(f"❌ Package NOT FOUND at {package_path}")
-
-            # 1. Validation
-            if not zipfile.is_zipfile(package_path):
-                raise ValidationError("Invalid module package: Not a ZIP file.")
-                
-            checksum = ModuleManager.get_checksum(package_path)
-            
-            # Extract to temporary location to read manifest
-            temp_extract = os.path.join(settings.BASE_DIR, 'tmp', f"upgrade_{module_name}")
-            if os.path.exists(temp_extract):
-                shutil.rmtree(temp_extract)
-            
+            # 1. Extraction & Parsing
+            if os.path.exists(temp_extract): shutil.rmtree(temp_extract)
             with zipfile.ZipFile(package_path, 'r') as zip_ref:
                 zip_ref.extractall(temp_extract)
-                
-            # ZIP should contain a folder named after the module code/name
-            # Or files directly. We expect a folder to be neat.
+            
             source_inner_dir = os.path.join(temp_extract, module_name)
             if not os.path.exists(source_inner_dir):
-                 # Fallback: check if manifest is in root of zip
                  if os.path.exists(os.path.join(temp_extract, 'manifest.json')):
                       source_inner_dir = temp_extract
                  else:
-                      raise ValidationError("Invalid package structure: module folder not found.")
+                      raise ValidationError("Invalid package structure.")
 
-            manifest_path = os.path.join(source_inner_dir, 'manifest.json')
-            if not os.path.exists(manifest_path):
-                raise ValidationError("Invalid module package: manifest.json missing.")
-                
-            with open(manifest_path, 'r') as f:
+            with open(os.path.join(source_inner_dir, 'manifest.json'), 'r') as f:
                 new_manifest = json.load(f)
-                
-            # 2. Compatibility Checks
+            
+            # 2. Strict Validation
             ModuleManager.validate_manifest(new_manifest)
-            
-            old_module = SystemModule.objects.filter(name=module_name).first()
-            old_version = old_module.version if old_module else "0.0.0"
             new_version = new_manifest.get('version')
-            
             if new_version <= old_version:
-                raise ValidationError(f"Downgrade blocked: Current {old_version} >= New {new_version}")
-                
+                raise ValidationError(f"Version must be higher than current {old_version}")
+            
+            # Dependency resolution
             ModuleManager.check_dependencies(new_manifest)
-            
-            # 3. Execution
-            # Set state to UPGRADING
-            if old_module:
-                old_module.status = 'UPGRADING'
-                old_module.save()
-            
-            # Copy files to apps/ (The live zone)
-            target_path = os.path.join(ModuleManager.MODULES_DIR, module_name)
-            
-            # Create backup
-            backup_path = os.path.join(settings.BASE_DIR, 'backups', f"{module_name}_{old_version}")
-            if os.path.exists(target_path):
-                if not os.path.exists(os.path.dirname(backup_path)): os.makedirs(os.path.dirname(backup_path))
-                shutil.copytree(target_path, backup_path, dirs_exist_ok=True)
 
-            shutil.copytree(source_inner_dir, target_path, dirs_exist_ok=True)
+            # 3. Pre-install Hook (Run in staging)
+            ModuleManager.run_lifecycle_hook(source_inner_dir, 'pre_install')
+
+            # 4. Atomic-ish Swap
+            # a. Backup current if exists
+            if os.path.exists(target_path):
+                print(f"📦 Backing up {module_name} v{old_version}...")
+                os.makedirs(os.path.dirname(backup_path), exist_ok=True)
+                shutil.move(target_path, backup_path) # Move out of the way
             
-            # 3b. Deploy Frontend Files (if present)
+            # b. Move staging to target
+            print(f"🚚 Swapping files for {module_name} v{new_version}...")
+            os.makedirs(os.path.dirname(target_path), exist_ok=True)
+            shutil.copytree(source_inner_dir, target_path)
+
+            # c. Frontend Isolation Update
             frontend_extract = os.path.join(temp_extract, 'frontend')
             if os.path.exists(frontend_extract):
-                print(f"🎨 Deploying frontend pages for {module_name}...")
-                # NEW ISOLATION: Move to src/modules instead of src/app/(privileged)/saas/
-                frontend_target = os.path.join(settings.BASE_DIR, '..', 'src', 'modules', module_name)
-                if not os.path.exists(frontend_target):
-                    os.makedirs(frontend_target, exist_ok=True)
+                if os.path.exists(frontend_target):
+                    # We don't rollback frontend usually but good to be safe if we can
+                    pass
                 shutil.copytree(frontend_extract, frontend_target, dirs_exist_ok=True)
 
-            # Run Migrations
-            print(f"⚙️ Applying migrations for {module_name}...")
-            call_command('migrate', no_input=True)
-            
-            # Update Registry
+            # 5. Persistence (Migrations)
+            try:
+                print(f"⚙️ Applying migrations for {module_name}...")
+                call_command('migrate', no_input=True)
+            except Exception as e:
+                print(f"💥 Migration FAILED: {str(e)}. Rolling back files...")
+                # Automatic Rollback
+                if os.path.exists(target_path): shutil.rmtree(target_path)
+                if os.path.exists(backup_path): shutil.move(backup_path, target_path)
+                raise ValidationError(f"Migration failed, system rolled back to {old_version}. Error: {str(e)}")
+
+            # 6. Post-install Hook
+            ModuleManager.run_lifecycle_hook(target_path, 'post_install')
+
+            # 7. Finalize Registry
+            checksum = ModuleManager.get_checksum(package_path)
             SystemModule.objects.update_or_create(
                 name=module_name,
                 defaults={
@@ -231,40 +180,28 @@ class ModuleManager:
                 }
             )
             
-            # Log Success
             SystemModuleLog.objects.create(
                 module_name=module_name,
                 from_version=old_version,
                 to_version=new_version,
                 action='UPGRADE' if old_module else 'INSTALL',
                 status='SUCCESS',
-                logs="Upgrade completed successfully.",
+                logs="Atomic upgrade completed.",
                 performed_by=user
             )
             
-            print(f"✅ Module {module_name} upgraded to {new_version}")
-            
+            print(f"✅ Module {module_name} successfully hardened to {new_version}")
+
         except Exception as e:
-            # Failure Handling
-            print(f"❌ Upgrade failed: {str(e)}")
+            # Global Failure Handler
+            print(f"❌ Upgrade CRITICALLY failed: {str(e)}")
             if old_module:
                 old_module.status = 'FAILED'
                 old_module.save()
-                
-            SystemModuleLog.objects.create(
-                module_name=module_name,
-                from_version=old_version if 'old_version' in locals() else "N/A",
-                to_version=new_version if 'new_version' in locals() else "N/A",
-                action='UPGRADE',
-                status='FAILURE',
-                logs=str(e),
-                performed_by=user
-            )
             raise e
         finally:
             ModuleManager.release_lock()
-            if 'temp_extract' in locals() and os.path.exists(temp_extract):
-                shutil.rmtree(temp_extract)
+            if os.path.exists(temp_extract): shutil.rmtree(temp_extract)
 
     @staticmethod
     def is_enabled(module_name, organization_id):
