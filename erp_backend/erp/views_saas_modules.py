@@ -178,12 +178,20 @@ class SaaSModuleViewSet(viewsets.ViewSet):
                 destination.write(chunk)
 
         try:
-            # Re-read name handling
-            module_code = file_obj.name.split('_')[0]
+            # Extract module code from filename: module_v1.0.0.modpkg.zip OR module.modpkg.zip
+            base_name = file_obj.name.replace('.modpkg.zip', '')
+            if '_v' in base_name:
+                module_code = base_name.split('_v')[0]
+            elif '_' in base_name:
+                module_code = base_name.split('_')[0]
+            else:
+                module_code = base_name
             
             ModuleManager.upgrade(module_code, full_path, user=request.user)
             return Response({'message': f'Module {module_code} uploaded and installed successfully'})
         except Exception as e:
+            import traceback
+            traceback.print_exc()  # Log full error to console
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         finally:
             if os.path.exists(full_path):
