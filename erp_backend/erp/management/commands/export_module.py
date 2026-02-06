@@ -71,11 +71,13 @@ class Command(BaseCommand):
                         arcname = os.path.relpath(file_path, module_path)
                         zipf.write(file_path, arcname)
 
-                # 2. Export Frontend Files (Optional)
-                frontend_source = os.path.join(settings.BASE_DIR, '..', 'src', 'app', '(privileged)', 'saas', module_name)
+                # 2. Export Frontend Files (from src/modules/)
+                frontend_source = os.path.join(settings.BASE_DIR, '..', 'src', 'modules', module_name)
                 if os.path.exists(frontend_source):
-                    self.stdout.write(f"🎨 Including frontend pages for {module_name}...")
+                    self.stdout.write(f"🎨 Including frontend from src/modules/{module_name}...")
                     for root, dirs, files in os.walk(frontend_source):
+                        # Skip __pycache__, node_modules
+                        dirs[:] = [d for d in dirs if d not in ['__pycache__', 'node_modules', '.next']]
                         for file in files:
                             file_path = os.path.join(root, file)
                             # Put under 'frontend/' prefix in zip
