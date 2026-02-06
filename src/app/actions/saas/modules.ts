@@ -72,13 +72,16 @@ export async function uninstallModuleGlobal(code: string) {
 }
 
 export async function deleteModule(code: string) {
+    console.log(`[deleteModule] Starting delete for module: ${code}`)
     try {
         const data = await erpFetch(`saas/modules/${code}/delete_module/`, {
             method: 'POST'
         })
+        console.log(`[deleteModule] Success:`, data)
         revalidatePath('/modules')
         return data
     } catch (e: any) {
+        console.error(`[deleteModule] Error:`, e.message)
         return { error: e.message }
     }
 }
@@ -108,6 +111,7 @@ export async function rollbackModule(code: string, targetVersion: string) {
 }
 
 export async function uploadModule(formData: FormData) {
+    console.log(`[uploadModule] Starting upload...`)
     try {
         // erpFetch needs to be careful with FormData (browser handles boundaries usually)
         // For server actions, we need to pass it through.
@@ -116,9 +120,11 @@ export async function uploadModule(formData: FormData) {
             body: formData,
             // DO NOT set Content-Type header manually for FormData
         })
+        console.log(`[uploadModule] Success:`, res)
         revalidatePath('/modules')
         return res
     } catch (e: any) {
+        console.error(`[uploadModule] Error:`, e.message)
         return { error: e.message }
     }
 }
