@@ -68,9 +68,6 @@ urlpatterns = [
     path('modules/', ModuleListView.as_view(), name='module_list'),
     path('modules/<str:code>/enable/', ModuleEnableView.as_view(), name='module_enable'),
     path('modules/<str:code>/disable/', ModuleDisableView.as_view(), name='module_disable'),
-    
-    # MCP
-    path('mcp/', include('apps.mcp.urls')),
 
     path('', include(router.urls)),
 ]
