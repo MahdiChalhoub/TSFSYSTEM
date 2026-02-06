@@ -28,3 +28,7 @@ To allow new business owners to register their organization in the Vantage OS fe
 - **Visual Feedback**: Ribbon stepper and dynamic validation errors.
 - **File Upload**: Supports Logo upload via `FormData`.
 - **Validation**: Fields like Website and Phone are optional but validated if provided.
+- **Controlled Select Components**: Business Type and Currency use React state (`businessTypeId`, `currencyId`) to avoid HTML5 validation issues with hidden fields in multi-step forms.
+
+## Technical Notes
+- **Select Validation Fix (v1.2.8-b720)**: The `business_type_id` and `currency_id` Select components use controlled state instead of HTML5 `required` attribute. This prevents the "invalid form control is not focusable" browser error that occurs when required hidden fields exist in multi-step forms.
