@@ -11,30 +11,20 @@ def seed_baseline_version(apps, schema_editor):
     
     # Check if any version is already applied
     if not SystemUpdate.objects.filter(is_applied=True).exists():
-        # Seed the baseline version
+        # Seed the baseline version with only basic fields
         SystemUpdate.objects.create(
             version='1.2.9',
             changelog='Blanc Engine v1.2.9 - Package Storage & Deployment Center',
             release_date=timezone.now(),
             is_applied=True,
-            applied_at=timezone.now(),
-            package_hash='baseline',
-            metadata={
-                'type': 'baseline',
-                'features': [
-                    'Package Storage Center',
-                    'Module Management',
-                    'Kernel Updates',
-                    'Multi-Tenancy'
-                ]
-            }
+            applied_at=timezone.now()
         )
         print("✅ Seeded baseline kernel version: 1.2.9")
 
 
 def rollback(apps, schema_editor):
     SystemUpdate = apps.get_model('erp', 'SystemUpdate')
-    SystemUpdate.objects.filter(version='1.2.9', metadata__type='baseline').delete()
+    SystemUpdate.objects.filter(version='1.2.9').delete()
 
 
 class Migration(migrations.Migration):
