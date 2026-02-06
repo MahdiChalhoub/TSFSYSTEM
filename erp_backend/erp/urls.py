@@ -15,7 +15,7 @@ from .views_auth import login_view, logout_view, me_view, PublicConfigView
 from .views_saas_modules import SaaSModuleViewSet, OrgModuleViewSet, SaaSUpdateViewSet
 from .views_modules import ModuleListView, ModuleEnableView, ModuleDisableView
 from .views_kernel import KernelViewSet
-from .views.package_views import PackageViewSet
+from .views_packages import PackageViewSet
 
 router = DefaultRouter()
 router.register(r'tenant', TenantResolutionView, basename='tenant')
