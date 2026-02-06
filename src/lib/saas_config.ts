@@ -26,9 +26,23 @@ export const getDynamicBranding = (host?: string) => {
     const currentHost = host || (typeof window !== 'undefined' ? window.location.host : PLATFORM_CONFIG.domain);
     const isLocal = currentHost.includes('localhost');
 
+    // Dynamically extract suffix from the actual hostname
+    // e.g., "powersport.tsf.ci" -> ".tsf.ci"
+    // e.g., "subdomain.example.com" -> ".example.com"
+    let dynamicSuffix = PLATFORM_CONFIG.suffix;
+    if (!isLocal) {
+        const hostWithoutPort = currentHost.split(':')[0]; // Remove port if any
+        const parts = hostWithoutPort.split('.');
+        if (parts.length >= 2) {
+            // Extract everything after the first subdomain (tenant slug)
+            // e.g., ["powersport", "tsf", "ci"] -> ".tsf.ci"
+            dynamicSuffix = '.' + parts.slice(1).join('.');
+        }
+    }
+
     return {
-        suffix: isLocal ? '.localhost' : PLATFORM_CONFIG.suffix,
-        domain: isLocal ? 'localhost:3000' : PLATFORM_CONFIG.domain,
+        suffix: isLocal ? '.localhost' : dynamicSuffix,
+        domain: isLocal ? 'localhost:3000' : currentHost,
         isLocal
     };
 };
