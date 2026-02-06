@@ -9,7 +9,7 @@ import uuid
 
 class Migration(migrations.Migration):
     dependencies = [
-        ('erp', '0027_connector_source_module'),
+        ('erp', '0003_remove_organization_is_read_only_and_more'),
     ]
 
     operations = [
