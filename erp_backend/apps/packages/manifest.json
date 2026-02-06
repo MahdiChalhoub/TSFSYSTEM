@@ -1,0 +1,52 @@
+{
+    "code": "packages",
+    "name": "Package Storage Center",
+    "version": "1.0.0",
+    "description": "Upload, manage, and deploy kernel and module packages",
+    "is_core": false,
+    "author": "TSF Platform",
+    "dependencies": [],
+    "minimum_kernel_version": "1.2.9",
+    "category": "infrastructure",
+    "permissions": [
+        {
+            "code": "packages.view",
+            "label": "View Packages"
+        },
+        {
+            "code": "packages.upload",
+            "label": "Upload Packages"
+        },
+        {
+            "code": "packages.deploy",
+            "label": "Deploy Packages"
+        },
+        {
+            "code": "packages.rollback",
+            "label": "Rollback Packages"
+        }
+    ],
+    "models": [
+        "PackageUpload"
+    ],
+    "routes": [
+        {
+            "path": "/packages",
+            "label": "Package Storage"
+        }
+    ],
+    "sidebar_items": [
+        {
+            "id": "packages",
+            "label": "Packages",
+            "icon": "Package",
+            "path": "/packages",
+            "roles": [
+                "admin",
+                "saas_admin"
+            ]
+        }
+    ],
+    "settings_schema": {},
+    "saas_only": true
+}
