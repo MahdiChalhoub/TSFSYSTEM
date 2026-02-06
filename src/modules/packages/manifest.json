@@ -1,0 +1,34 @@
+{
+    "name": "packages",
+    "display_name": "Package Storage Center",
+    "version": "1.0.0",
+    "description": "Upload, manage, and deploy kernel and module packages",
+    "type": "infrastructure",
+    "sidebar_items": [
+        {
+            "id": "packages",
+            "label": "Packages",
+            "icon": "Package",
+            "path": "/packages",
+            "roles": [
+                "admin",
+                "saas_admin"
+            ]
+        }
+    ],
+    "routes": [
+        {
+            "path": "/packages",
+            "component": "page.tsx"
+        }
+    ],
+    "features": [
+        "package_upload",
+        "package_deploy",
+        "package_rollback"
+    ],
+    "required_permissions": [
+        "saas_admin"
+    ],
+    "saas_only": true
+}
