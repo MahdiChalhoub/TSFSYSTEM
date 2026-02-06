@@ -20,6 +20,7 @@ services:
       context: ./erp_backend
       dockerfile: Dockerfile.backend
     container_name: tsf_backend
+    restart: unless-stopped
     volumes:
       - ./erp_backend:/app
     ports:
@@ -33,12 +34,19 @@ services:
       - db
     networks:
       - tsf_network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 256M
 
   frontend:
     build:
       context: .
       dockerfile: Dockerfile.frontend
     container_name: tsf_frontend
+    restart: unless-stopped
     # Ports removed (internal only)
     environment:
       - NEXT_PUBLIC_API_URL=/api
@@ -48,6 +56,12 @@ services:
       - backend
     networks:
       - tsf_network
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 512M
 
   nginx:
     image: nginx:alpine
