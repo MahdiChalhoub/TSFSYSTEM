@@ -32,6 +32,8 @@ function BusinessRegisterContent() {
     // Multi-Step State
     const [step, setStep] = useState(1);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
+    const [businessTypeId, setBusinessTypeId] = useState<string>("");
+    const [currencyId, setCurrencyId] = useState<string>("1");
     const branding = useDynamicBranding();
 
     useEffect(() => {
@@ -218,7 +220,7 @@ function BusinessRegisterContent() {
                                 <div className="grid grid-cols-2 gap-8">
                                     <div className="space-y-2 text-left">
                                         <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Industry Vector</Label>
-                                        <Select name="business_type_id" required>
+                                        <Select name="business_type_id" value={businessTypeId} onValueChange={setBusinessTypeId}>
                                             <SelectTrigger className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium">
                                                 <SelectValue placeholder="Select Sector" />
                                             </SelectTrigger>
@@ -231,7 +233,7 @@ function BusinessRegisterContent() {
                                     </div>
                                     <div className="space-y-2 text-left">
                                         <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Monetary Standard (Currency)</Label>
-                                        <Select name="currency_id" required defaultValue="1">
+                                        <Select name="currency_id" value={currencyId} onValueChange={setCurrencyId}>
                                             <SelectTrigger className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium">
                                                 <SelectValue placeholder="Select Standard" />
                                             </SelectTrigger>
@@ -247,7 +249,17 @@ function BusinessRegisterContent() {
 
                             <div className="pt-8 flex gap-4">
                                 <Button type="button" onClick={() => setStep(1)} variant="outline" className="h-16 flex-1 rounded-2xl border-white/10 text-slate-400 hover:bg-white/5">Back</Button>
-                                <Button type="button" onClick={() => setStep(3)} className="h-16 flex-[2] bg-amber-600 hover:bg-amber-500 text-white font-black text-lg rounded-2xl shadow-xl">
+                                <Button
+                                    type="button"
+                                    onClick={() => {
+                                        if (!businessTypeId) {
+                                            alert("Please select an Industry Vector (Business Type)");
+                                            return;
+                                        }
+                                        setStep(3);
+                                    }}
+                                    className="h-16 flex-[2] bg-amber-600 hover:bg-amber-500 text-white font-black text-lg rounded-2xl shadow-xl"
+                                >
                                     Next: Location Setup <ArrowRight className="ml-2" />
                                 </Button>
                             </div>
