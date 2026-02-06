@@ -45,12 +45,12 @@ class SystemModuleLog(models.Model):
     ERP-grade auditing for module operations.
     """
     module_name = models.CharField(max_length=100)
-    from_version = models.CharField(max_length=50)
-    to_version = models.CharField(max_length=50)
+    from_version = models.CharField(max_length=50, default='N/A')
+    to_version = models.CharField(max_length=50, default='N/A')
     action = models.CharField(max_length=20) # INSTALL, UPGRADE, DISABLE
     status = models.CharField(max_length=20) # SUCCESS, FAILURE
-    logs = models.TextField()
-    performed_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True)
+    logs = models.TextField(blank=True, default='')
+    performed_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
 class SystemUpdate(models.Model):
