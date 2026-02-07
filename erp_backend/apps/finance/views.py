@@ -179,7 +179,7 @@ class ChartOfAccountViewSet(TenantModelViewSet):
         
         result = LedgerService.get_account_statement(organization, pk, start_date, end_date, scope)
         
-        from erp.serializers import JournalEntryLineSerializer
+        from apps.finance.serializers import JournalEntryLineSerializer
         account_data = ChartOfAccountSerializer(result['account']).data
         lines_data = JournalEntryLineSerializer(result['lines'], many=True).data
         
