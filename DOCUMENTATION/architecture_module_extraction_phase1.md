@@ -1,82 +1,85 @@
 # Architecture Module Extraction – Phase 1
 
 ## Goal
-Migrate all business models, serializers, and URL scaffolding out of the Kernel (`erp/`) into isolated module directories (`apps/[module]/`), following the **Engine → Kernel → Core → Modules** layered architecture.
+Migrate all business models, serializers, services, and URL scaffolding out of the Kernel (`erp/`) into isolated module directories (`apps/[module]/`), following the **Engine → Kernel → Core → Modules** layered architecture.
 
 ## Modules Created
 
 ### 1. Finance Module (`apps/finance/`)
 **Purpose:** Handles all accounting, ledger, tax, and financial management.
 
-**Models:** ChartOfAccount, FinancialAccount, FiscalYear, FiscalPeriod, JournalEntry, JournalEntryLine, Transaction, TransactionSequence, BarcodeSettings, Loan, LoanInstallment, FinancialEvent
+**Models (12):** ChartOfAccount, FinancialAccount, FiscalYear, FiscalPeriod, JournalEntry, JournalEntryLine, Transaction, TransactionSequence, BarcodeSettings, Loan, LoanInstallment, FinancialEvent
 
-**Data READ from:** `ChartOfAccount`, `FinancialAccount`, `JournalEntry`, `FiscalYear`, `Transaction` tables
+**Services (7):** LedgerService, FinancialAccountService, SequenceService, BarcodeService, LoanService, FinancialEventService, TaxService
+
+**Serializers (12):** One per model
+
+**Data READ from:** ChartOfAccount, FinancialAccount, JournalEntry, FiscalYear, Transaction tables
 
 **Data SAVED to:** Same tables (all use explicit `db_table`)
-
-**Key Variables:** account code, balance, debit, credit, fiscal year dates, loan amounts
 
 ---
 
 ### 2. Inventory Module (`apps/inventory/`)
 **Purpose:** Handles product catalog, stock management, and warehouse operations.
 
-**Models:** Product, Unit, Category, Brand, Parfum, ProductGroup, Warehouse, Inventory, InventoryMovement
+**Models (9):** Product, Unit, Category, Brand, Parfum, ProductGroup, Warehouse, Inventory, InventoryMovement
 
-**Data READ from:** `Product`, `Inventory`, `Warehouse`, `Category`, `Brand` tables
+**Services (1):** InventoryService (stock reception, valuation, reduction)
 
-**Data SAVED to:** Same tables
-
-**Key Variables:** SKU, barcode, cost_price, selling_price, quantity, min_stock_level
+**Serializers (11):** Including ProductCreateSerializer and BrandDetailSerializer variants
 
 ---
 
 ### 3. POS Module (`apps/pos/`)
 **Purpose:** Handles sales orders, purchases, and transactions.
 
-**Models:** Order, OrderLine
+**Models (2):** Order, OrderLine
 
-**Data READ from:** `Order`, `OrderLine` tables
+**Services (2):** POSService (checkout), PurchaseService (authorize, receive, quick_purchase, invoice_po)
 
-**Data SAVED to:** Same tables
-
-**Key Variables:** order type (SALE/PURCHASE), status, total_amount, quantity, unit_price
+**Serializers (2):** OrderSerializer, OrderLineSerializer
 
 ---
 
 ### 4. CRM Module (`apps/crm/`)
 **Purpose:** Handles customer and supplier contact management.
 
-**Models:** Contact
+**Models (1):** Contact
 
-**Data READ from:** `Contact` table
-
-**Data SAVED to:** `Contact` table
-
-**Key Variables:** type (CUSTOMER/SUPPLIER/LEAD), name, linked_account, balance
+**Serializers (1):** ContactSerializer
 
 ---
 
 ### 5. HR Module (`apps/hr/`)
 **Purpose:** Handles employee management.
 
-**Models:** Employee
+**Models (1):** Employee
 
-**Data READ from:** `Employee` table
+**Serializers (1):** EmployeeSerializer
 
-**Data SAVED to:** `Employee` table
+---
 
-**Key Variables:** employee_id, name, salary, linked_account, department
+## Kernel (What Remains in `erp/`)
+
+### Infrastructure Models (in `erp/models.py`)
+Organization, TenantModel, User, Role, Permission, Site, SystemModule, OrganizationModule, SystemSettings, SystemUpdate, BusinessType, GlobalCurrency, Country, PlanCategory, SubscriptionPlan, SubscriptionPayment, PackageUpload, StockBatch
+
+### Infrastructure Services (in `erp/services.py`)
+ProvisioningService, ConfigurationService
+
+### ViewSets (in `erp/views.py`)
+All ViewSets remain in the kernel for now. They work correctly through backward-compatible re-exports from `erp/models.py`, `erp/serializers/core.py`, and `erp/services.py`.
 
 ---
 
 ## Architecture Flow
 
-### How models are migrated:
-1. Model definitions move from `erp/models.py` → `apps/[module]/models.py`
+### How code is migrated:
+1. Code definitions move from `erp/` → `apps/[module]/`
 2. All models retain their original `db_table` → **zero database changes**
-3. `erp/models.py` adds backward-compatible re-exports → **zero code breakage**
-4. Module models import `TenantModel` from kernel → **correct dependency direction**
+3. Kernel files add backward-compatible re-exports → **zero code breakage**
+4. Module code imports `TenantModel` from kernel → **correct dependency direction**
 
 ### Dependency Direction:
 ```
@@ -93,20 +96,24 @@ Foreign keys between modules use Django string references:
 
 ## Files Modified
 
-### Kernel (cleaned)
-- `erp/models.py` — Now contains only infrastructure models + re-exports
-- `erp/serializers/core.py` — Now contains only kernel serializers + re-exports
+### Kernel (cleaned with re-exports)
+| File | Infrastructure | Re-exports |
+|------|:-:|:-:|
+| `erp/models.py` | 18+ models | 25 re-exports |
+| `erp/serializers/core.py` | 10 serializers | 27 re-exports |
+| `erp/services.py` | 2 services | 10 re-exports |
 
 ### New Module Files
-| Module | `__init__.py` | `apps.py` | `models.py` | `serializers.py` | `urls.py` |
-|--------|:---:|:---:|:---:|:---:|:---:|
-| finance | ✓ | ✓ | ✓ | ✓ | ✓ |
-| inventory | ✓ | ✓ | ✓ | ✓ | ✓ |
-| pos | ✓ | ✓ | ✓ | ✓ | ✓ |
-| crm | ✓ | ✓ | ✓ | ✓ | ✓ |
-| hr | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Module | `models.py` | `serializers.py` | `services.py` | `urls.py` |
+|--------|:---:|:---:|:---:|:---:|
+| finance | ✓ (12) | ✓ (12) | ✓ (7) | ✓ |
+| inventory | ✓ (9) | ✓ (11) | ✓ (1) | ✓ |
+| pos | ✓ (2) | ✓ (2) | ✓ (2) | ✓ |
+| crm | ✓ (1) | ✓ (1) | — | ✓ |
+| hr | ✓ (1) | ✓ (1) | — | ✓ |
 
 ## Verification
-- `python manage.py check` passes with only pre-existing auth.W004 warning
+- `python manage.py check` ✓ passes (only pre-existing auth.W004 warning)
 - All backward-compatible re-exports verified working
 - No circular import issues
+- Zero database changes required
