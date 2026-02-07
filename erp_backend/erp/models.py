@@ -1,3 +1,13 @@
+"""
+Kernel Models — erp/models.py
+Contains ONLY infrastructure and platform-level models.
+All business models have been migrated to their respective module directories:
+  - apps/finance/models.py  (ChartOfAccount, JournalEntry, FiscalYear, etc.)
+  - apps/inventory/models.py (Product, Warehouse, Inventory, etc.)
+  - apps/pos/models.py      (Order, OrderLine)
+  - apps/crm/models.py      (Contact)
+  - apps/hr/models.py       (Employee)
+"""
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
@@ -7,6 +17,11 @@ import uuid
 import json
 from decimal import Decimal
 from .middleware import get_current_tenant_id
+
+
+# =============================================================================
+# GLOBAL PLATFORM MODELS (Not tenant-scoped)
+# =============================================================================
 
 class BusinessType(models.Model):
     name = models.CharField(max_length=255)
@@ -18,6 +33,7 @@ class BusinessType(models.Model):
     
     def __str__(self):
         return self.name
+
 
 class SystemModule(models.Model):
     STATUS_CHOICES = (
@@ -40,18 +56,17 @@ class SystemModule(models.Model):
     def __str__(self):
         return f"{self.name} ({self.version})"
 
+
 class SystemModuleLog(models.Model):
-    """
-    ERP-grade auditing for module operations.
-    """
     module_name = models.CharField(max_length=100)
     from_version = models.CharField(max_length=50, default='N/A')
     to_version = models.CharField(max_length=50, default='N/A')
-    action = models.CharField(max_length=20) # INSTALL, UPGRADE, DISABLE
-    status = models.CharField(max_length=20) # SUCCESS, FAILURE
+    action = models.CharField(max_length=20)
+    status = models.CharField(max_length=20)
     logs = models.TextField(blank=True, default='')
     performed_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
+
 
 class SystemUpdate(models.Model):
     version = models.CharField(max_length=50, unique=True)
@@ -67,6 +82,7 @@ class SystemUpdate(models.Model):
         db_table = 'SystemUpdate'
         ordering = ['-created_at']
 
+
 class GlobalCurrency(models.Model):
     name = models.CharField(max_length=100)
     code = models.CharField(max_length=10, unique=True)
@@ -77,6 +93,22 @@ class GlobalCurrency(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.code})"
+
+
+class Country(models.Model):
+    code = models.CharField(max_length=10, unique=True)
+    name = models.CharField(max_length=255)
+    
+    class Meta:
+        db_table = 'Country'
+
+    def __str__(self):
+        return self.name
+
+
+# =============================================================================
+# ORGANIZATION & MULTI-TENANCY INFRASTRUCTURE
+# =============================================================================
 
 class Organization(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -101,11 +133,15 @@ class Organization(models.Model):
     business_type = models.ForeignKey(BusinessType, on_delete=models.SET_NULL, null=True, blank=True)
     base_currency = models.ForeignKey(GlobalCurrency, on_delete=models.SET_NULL, null=True, blank=True)
 
+    # Organization-level settings stored as JSON
+    settings = models.JSONField(default=dict, blank=True)
+
     class Meta:
         db_table = 'Organization'
 
     def __str__(self):
         return self.name
+
 
 class TenantManager(models.Manager):
     def get_queryset(self):
@@ -114,13 +150,16 @@ class TenantManager(models.Manager):
             return super().get_queryset().filter(organization_id=tenant_id)
         return super().get_queryset()
 
+
 class TenantModel(models.Model):
+    """Base model for all tenant-scoped data. Provides automatic organization filtering."""
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
     objects = TenantManager()
     original_objects = models.Manager()
 
     class Meta:
         abstract = True
+
 
 class OrganizationModule(models.Model):
     organization = models.ForeignKey('Organization', on_delete=models.CASCADE, related_name='enabled_modules')
@@ -132,6 +171,7 @@ class OrganizationModule(models.Model):
     class Meta:
         db_table = 'OrganizationModule'
         unique_together = ('organization', 'module_name')
+
 
 class Site(TenantModel):
     name = models.CharField(max_length=255)
@@ -148,6 +188,11 @@ class Site(TenantModel):
         db_table = 'Site'
         unique_together = ('code', 'organization')
 
+
+# =============================================================================
+# RBAC (Role-Based Access Control) — Kernel Infrastructure
+# =============================================================================
+
 class Permission(models.Model):
     code = models.CharField(max_length=100, unique=True)
     name = models.CharField(max_length=255)
@@ -155,6 +200,7 @@ class Permission(models.Model):
 
     class Meta:
         db_table = 'Permission'
+
 
 class Role(TenantModel):
     name = models.CharField(max_length=100)
@@ -164,6 +210,7 @@ class Role(TenantModel):
     class Meta:
         db_table = 'Role'
         unique_together = ('name', 'organization')
+
 
 class User(AbstractUser):
     username_validator = UnicodeUsernameValidator()
@@ -185,6 +232,7 @@ class User(AbstractUser):
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='users', null=True, blank=True)
     role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True, related_name='users')
     home_site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True, related_name='home_users')
+    cash_register = models.ForeignKey('finance.FinancialAccount', on_delete=models.SET_NULL, null=True, blank=True)
     is_active_account = models.BooleanField(default=True)
     
     registration_status = models.CharField(max_length=50, default='APPROVED')
@@ -193,241 +241,11 @@ class User(AbstractUser):
     def __str__(self):
         return self.email if self.email else self.username
 
-class Country(models.Model):
-    code = models.CharField(max_length=10, unique=True)
-    name = models.CharField(max_length=255)
-    
-    class Meta:
-        db_table = 'Country'
 
-    def __str__(self):
-        return self.name
+# =============================================================================
+# SAAS PLATFORM MODELS
+# =============================================================================
 
-class Unit(TenantModel):
-    code = models.CharField(max_length=50)
-    name = models.CharField(max_length=255)
-    conversion_factor = models.DecimalField(max_digits=15, decimal_places=6, default=1.0)
-
-    class Meta:
-        db_table = 'Unit'
-        unique_together = ('code', 'organization')
-
-class ProductGroup(TenantModel):
-    name = models.CharField(max_length=255)
-
-    class Meta:
-        db_table = 'ProductGroup'
-
-class Parfum(TenantModel):
-    name = models.CharField(max_length=255)
-
-    class Meta:
-        db_table = 'Parfum'
-        unique_together = ('name', 'organization')
-
-class Category(TenantModel):
-    name = models.CharField(max_length=255)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = 'Category'
-        unique_together = ('name', 'organization')
-
-class Brand(TenantModel):
-    name = models.CharField(max_length=255)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = 'Brand'
-        unique_together = ('name', 'organization')
-
-class Product(TenantModel):
-    sku = models.CharField(max_length=100)
-    barcode = models.CharField(max_length=100, null=True, blank=True)
-    name = models.CharField(max_length=255)
-    
-    cost_price = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
-    selling_price_ttc = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
-    
-    status = models.CharField(max_length=20, default='ACTIVE')
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        db_table = 'Product'
-        unique_together = (('sku', 'organization'), ('barcode', 'organization'))
-
-class ChartOfAccount(TenantModel):
-    code = models.CharField(max_length=50)
-    name = models.CharField(max_length=255)
-    type = models.CharField(max_length=20)
-    balance = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
-
-    class Meta:
-        db_table = 'ChartOfAccount'
-        unique_together = ('code', 'organization')
-
-class Contact(TenantModel):
-    TYPES = (
-        ('SUPPLIER', 'Supplier'),
-        ('CUSTOMER', 'Customer'),
-        ('LEAD', 'Lead')
-    )
-    type = models.CharField(max_length=20, choices=TYPES)
-    name = models.CharField(max_length=255)
-    is_active = models.BooleanField(default=True)
-    balance = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
-
-    class Meta:
-        db_table = 'Contact'
-
-class Employee(TenantModel):
-    employee_id = models.CharField(max_length=100, unique=True)
-    name = models.CharField(max_length=255)
-    
-    class Meta:
-        db_table = 'Employee'
-
-class Warehouse(TenantModel):
-    site = models.ForeignKey(Site, on_delete=models.CASCADE)
-    name = models.CharField(max_length=255)
-
-    class Meta:
-        db_table = 'Warehouse'
-
-class Inventory(TenantModel):
-    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    quantity = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
-    
-    class Meta:
-        db_table = 'Inventory'
-        unique_together = ('warehouse', 'product', 'organization')
-
-class Order(TenantModel):
-    type = models.CharField(max_length=20)
-    status = models.CharField(max_length=20, default='DRAFT')
-    total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = 'Order'
-
-class OrderLine(TenantModel):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='lines')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    quantity = models.DecimalField(max_digits=15, decimal_places=2)
-    unit_price = models.DecimalField(max_digits=15, decimal_places=2)
-
-    class Meta:
-        db_table = 'OrderLine'
-
-class InventoryMovement(TenantModel):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE)
-    type = models.CharField(max_length=20)
-    quantity = models.DecimalField(max_digits=15, decimal_places=2)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = 'InventoryMovement'
-
-class FinancialAccount(TenantModel):
-    name = models.CharField(max_length=255)
-    balance = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
-
-    class Meta:
-        db_table = 'FinancialAccount'
-
-class FiscalYear(TenantModel):
-    name = models.CharField(max_length=100)
-    start_date = models.DateField()
-    end_date = models.DateField()
-    is_closed = models.BooleanField(default=False)
-
-    class Meta:
-        db_table = 'FiscalYear'
-        unique_together = ('name', 'organization')
-
-class FiscalPeriod(TenantModel):
-    fiscal_year = models.ForeignKey(FiscalYear, on_delete=models.CASCADE, related_name='periods')
-    name = models.CharField(max_length=100)
-    start_date = models.DateField()
-    end_date = models.DateField()
-
-    class Meta:
-        db_table = 'FiscalPeriod'
-        unique_together = ('name', 'fiscal_year')
-
-class JournalEntry(TenantModel):
-    transaction_date = models.DateTimeField()
-    description = models.TextField()
-    fiscal_year = models.ForeignKey(FiscalYear, on_delete=models.PROTECT)
-    status = models.CharField(max_length=20, default='DRAFT')
-
-    class Meta:
-        db_table = 'JournalEntry'
-
-class JournalEntryLine(TenantModel):
-    journal_entry = models.ForeignKey(JournalEntry, on_delete=models.CASCADE, related_name='lines')
-    account = models.ForeignKey(ChartOfAccount, on_delete=models.PROTECT)
-    debit = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
-    credit = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
-
-    class Meta:
-        db_table = 'JournalEntryLine'
-
-class Transaction(TenantModel):
-    account = models.ForeignKey(FinancialAccount, on_delete=models.CASCADE, related_name='transactions')
-    amount = models.DecimalField(max_digits=15, decimal_places=2)
-    type = models.CharField(max_length=10)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = 'Transaction'
-
-class TransactionSequence(TenantModel):
-    type = models.CharField(max_length=50)
-    prefix = models.CharField(max_length=20, null=True, blank=True)
-    next_number = models.IntegerField(default=1)
-
-    class Meta:
-        db_table = 'TransactionSequence'
-        unique_together = ('type', 'organization')
-
-class BarcodeSettings(TenantModel):
-    prefix = models.CharField(max_length=10, default="200")
-    next_sequence = models.IntegerField(default=1000)
-
-    class Meta:
-        db_table = 'BarcodeSettings'
-
-class Loan(TenantModel):
-    contact = models.ForeignKey(Contact, on_delete=models.PROTECT, related_name='loans')
-    principal_amount = models.DecimalField(max_digits=15, decimal_places=2)
-    status = models.CharField(max_length=20, default='DRAFT')
-
-    class Meta:
-        db_table = 'Loan'
-
-class LoanInstallment(TenantModel):
-    loan = models.ForeignKey(Loan, on_delete=models.CASCADE, related_name='installments')
-    due_date = models.DateField()
-    total_amount = models.DecimalField(max_digits=15, decimal_places=2)
-
-    class Meta:
-        db_table = 'LoanInstallment'
-
-class FinancialEvent(TenantModel):
-    event_type = models.CharField(max_length=50)
-    amount = models.DecimalField(max_digits=15, decimal_places=2)
-    contact = models.ForeignKey(Contact, on_delete=models.PROTECT)
-
-    class Meta:
-        db_table = 'FinancialEvent'
-
-# SaaS Specific Tables
 class PlanCategory(models.Model):
     name = models.CharField(max_length=255)
     type = models.CharField(max_length=20)
@@ -435,6 +253,7 @@ class PlanCategory(models.Model):
 
     class Meta:
         db_table = 'PlanCategory'
+
 
 class SubscriptionPlan(models.Model):
     category = models.ForeignKey(PlanCategory, on_delete=models.CASCADE, related_name='plans')
@@ -444,6 +263,7 @@ class SubscriptionPlan(models.Model):
 
     class Meta:
         db_table = 'SubscriptionPlan'
+
 
 class SubscriptionPayment(models.Model):
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
@@ -461,10 +281,6 @@ class SubscriptionPayment(models.Model):
 # =============================================================================
 
 class PackageUpload(models.Model):
-    """
-    Tracks uploaded packages (kernel, frontend, module) for deployment.
-    Supports chunked uploads, progress tracking, and scheduled deployment.
-    """
     PACKAGE_TYPES = (
         ('kernel', 'Backend Kernel'),
         ('frontend', 'Frontend Kernel'),
@@ -485,28 +301,22 @@ class PackageUpload(models.Model):
     name = models.CharField(max_length=100)
     version = models.CharField(max_length=50)
     
-    # File storage
     file = models.FileField(upload_to='packages/', null=True, blank=True)
     file_size = models.BigIntegerField(default=0)
-    upload_progress = models.IntegerField(default=0)  # 0-100%
-    checksum = models.CharField(max_length=64, null=True, blank=True)  # SHA-256
+    upload_progress = models.IntegerField(default=0)
+    checksum = models.CharField(max_length=64, null=True, blank=True)
     
-    # Status and metadata
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='uploading')
     changelog = models.TextField(blank=True)
     error_message = models.TextField(null=True, blank=True)
     
-    # Deployment tracking
     uploaded_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, related_name='uploaded_packages')
     uploaded_at = models.DateTimeField(auto_now_add=True)
-    scheduled_for = models.DateTimeField(null=True, blank=True)  # Optional scheduled deployment
+    scheduled_for = models.DateTimeField(null=True, blank=True)
     applied_at = models.DateTimeField(null=True, blank=True)
     applied_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True, related_name='applied_packages')
     
-    # Package manifest (from update.json / manifest.json)
     manifest = models.JSONField(default=dict, blank=True)
-    
-    # Backup reference for rollback
     backup_path = models.CharField(max_length=500, null=True, blank=True)
     
     class Meta:
@@ -515,3 +325,32 @@ class PackageUpload(models.Model):
     
     def __str__(self):
         return f"{self.name} v{self.version} ({self.get_package_type_display()})"
+
+
+# =============================================================================
+# BACKWARD-COMPATIBLE RE-EXPORTS
+# Business models now live in their respective module directories.
+# These re-exports ensure existing code continues to work during transition.
+# =============================================================================
+
+# Finance Module
+from apps.finance.models import (  # noqa: E402, F401
+    ChartOfAccount, FinancialAccount, FiscalYear, FiscalPeriod,
+    JournalEntry, JournalEntryLine, Transaction, TransactionSequence,
+    BarcodeSettings, Loan, LoanInstallment, FinancialEvent
+)
+
+# Inventory Module
+from apps.inventory.models import (  # noqa: E402, F401
+    Product, Unit, Category, Brand, Parfum, ProductGroup,
+    Warehouse, Inventory, InventoryMovement
+)
+
+# POS Module
+from apps.pos.models import Order, OrderLine  # noqa: E402, F401
+
+# CRM Module
+from apps.crm.models import Contact  # noqa: E402, F401
+
+# HR Module
+from apps.hr.models import Employee  # noqa: E402, F401
