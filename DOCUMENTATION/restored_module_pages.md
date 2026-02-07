@@ -1,54 +1,117 @@
-# Restored Module Frontend Pages
+# Restored Frontend Module Pages
 
 ## Goal
-Recover all deleted module frontend pages (CRM, Finance, Inventory, HR, POS, Products, Purchases) from git history into a `restored/` staging folder for future integration.
+Restore all frontend module pages that were deleted during the architecture migration (engine → kernel → core → modules). Files were recovered from git history into `restored/` and then moved into the live application.
 
-## Where Data is READ
-- Git history (deleted files from various commits)
-- Primary deletion commits: `5b21322`, `22c9cca`, `003024d`
+## Pages Restored
 
-## Where Data is SAVED
-- `restored/` folder at project root (staging only, NOT in live `src/`)
+### Finance Module (`src/app/(privileged)/finance/`)
+- **Dashboard** — Finance overview with recent transactions, P&L preview, quick actions
+- **Chart of Accounts** — Hierarchical CoA viewer with migrate & templates tools
+- **Ledger** — Journal entry list, create new, opening entries, edit
+- **Events** — Financial event tracking (create, view detail)
+- **Loans** — Loan management (create, view detail, disburse)
+- **Accounts** — Financial account management (cash, bank, mobile)
+- **Settings** — Financial settings, posting rules
+- **Reports** — P&L, Balance Sheet, Trial Balance, Statement
 
-## Contents (278 files)
+### Inventory Module (`src/app/(privileged)/inventory/`)
+- **Categories** — Category tree hierarchy with maintenance tool
+- **Brands** — Brand management with detail pages
+- **Units** — Unit hierarchy with calculator
+- **Countries** — Country management with detail pages
+- **Attributes** — Attribute management
+- **Maintenance** — Unified reassignment tool for reorganizing inventory
 
-| Module | Location in `restored/` | Files | Type |
-|--------|------------------------|-------|------|
-| CRM | `src/app/admin/crm/` | 3 | Pages (contacts) |
-| Finance | `src/app/(privileged)/saas/finance/` | 48 | Pages, forms, viewers |
-| HR | `src/app/admin/hr/` | 3 | Pages (employees) |
-| Inventory | `src/app/(privileged)/admin/inventory/` | 17 | Pages |
-| Products | `src/app/(privileged)/admin/products/` | 6 | Pages |
-| Purchases | `src/app/admin/purchases/` | 3 | Pages |
-| Actions | `src/app/actions/` | 23 | Server actions |
-| Components | `src/components/` | 9 | Shared components |
-| Lib | `src/lib/` | 3 | Utility functions |
+### Products Module (`src/app/(privileged)/products/`)
+- **Product List** — Paginated product list
+- **New Product** — Form with category selector
+- **Create Group** — Grouped product creation
+- **Edit Group** — Group edit form
 
-## Important Notes
+### CRM Module (`src/app/(privileged)/crm/`)
+- **Contacts** — Contact management (customers, suppliers)
+- **Contact Form** — Modal for creating contacts
 
-1. **Do NOT copy directly to `src/`** — the restored pages have OLD import paths that must be updated:
-   - `@/app/(privileged)/saas/` → `@/app/(privileged)/(saas)/`
-   - `@/app/admin/` → `@/app/(privileged)/(saas)/`
-   - Some import missing UI components (`progress`, `tabs`)
-   - Some import old `@/lib/api` (now uses `@/lib/erp-api`)
+### HR Module (`src/app/(privileged)/hr/`)
+- **Employees** — Employee management
+- **Employee Form** — Modal for creating employees with system login access
 
-2. **Each page must be migrated individually**:
-   - Update import paths
-   - Replace Prisma calls with `erpFetch()` API calls
-   - Verify against current backend API endpoints
-   - Test in isolation before adding to live app
+### Purchases Module (`src/app/(privileged)/purchases/`)
+- **Purchase Orders** — Purchase order management
 
-3. **The catch-all route** (`src/app/(privileged)/(saas)/[...slug]/page.tsx`) shows "Under Construction" for any unmigrated module pages.
+### Sales Module (`src/app/(privileged)/sales/`)
+- **POS** — Point of sale interface
 
-## Step-by-step Workflow for Migrating a Page
+### Users Module (`src/app/(privileged)/users/`)
+- **User Management** — User profiles and access
 
-1. Pick a page from `restored/`
-2. Copy it to the correct `src/app/(privileged)/(saas)/` path
-3. Update all import paths
-4. Replace any Prisma/direct DB calls with `erpFetch()` calls
-5. Create any missing dependencies (UI components, server actions)
-6. Test the page in dev mode
-7. Commit and push
+## Server Actions Restored (`src/app/actions/`)
+- `finance/` — accounts, ledger, loans, events, posting-rules, fiscal-year, settings, pricing, coa-templates, inventory-integration, financial-events
+- `inventory/` — warehouses, movements, snapshots, adjustments
+- `crm/` — contacts
+- `commercial/` — purchase orders
 
-## Tables Affected
-None — this is a frontend-only reference folder.
+### Root Actions
+- `attributes.ts`, `barcode-settings.ts`, `brands.ts`, `categories.ts`, `countries.ts`, `inventory.ts`, `maintenance.ts`, `product-groups.ts`
+
+## Components Restored (`src/components/`)
+- `admin/` — 11 components: AttributeFormModal, BrandFormModal, BrandManager, CategoryTreeSelector, CountryManager, CreateUnitButton, GroupedProductForm, NamingRuleEditor, UnitCalculator, UnitFormModal, UnitTree
+- `admin/categories/` — CategoryTree, CreateCategoryButton
+- `admin/maintenance/` — MaintenanceSidebar, UnifiedReassignmentTable
+- `pos/` — ProductGrid, TicketSidebar
+- `modules/` — Module component utilities
+
+## Data Flow
+
+### Read From
+- Django backend at `http://127.0.0.1:8000/api/` via `erpFetch()` utility
+- Auth token from cookies (DRF `Token` authentication)
+- Tenant context resolved from request subdomain
+
+### Write To
+- Django backend via POST/PATCH/DELETE calls through `erpFetch()`
+- Page cache via `revalidatePath()` after mutations
+
+## Import Path Mapping
+| Old Path | New Path |
+|----------|----------|
+| `@/app/admin/*` | `@/app/(privileged)/*` |
+| `/admin/finance/*` (href) | `/finance/*` |
+| `/admin/inventory/*` (href) | `/inventory/*` |
+| `revalidatePath('/admin/...')` | `revalidatePath('/...')` |
+
+## API Endpoints Used
+All endpoints are accessed via `erpFetch('endpoint/')` → `http://127.0.0.1:8000/api/endpoint/`
+
+| Endpoint | Status | Module |
+|----------|--------|--------|
+| `auth/me/` | ✅ 200 | Kernel |
+| `organizations/` | ✅ 200 | Kernel |
+| `dashboard/saas_stats/` | ✅ 200 | Dashboard |
+| `categories/` | ✅ 200 | Inventory |
+| `brands/` | ✅ 200 | Inventory |
+| `products/` | ✅ 200 | Products |
+| `units/` | ✅ 200 | Inventory |
+| `countries/` | ✅ 200 | Kernel |
+| `roles/` | ✅ 200 | Kernel |
+| `contacts/` | ✅ 200 | CRM |
+| `sites/` | ✅ 200 | Kernel |
+| `accounts/` | ✅ 200 | Finance |
+| `coa/` | ✅ 200 | Finance |
+| `fiscal-years/` | ✅ 200 | Finance |
+| `fiscal-periods/` | ✅ 200 | Finance |
+| `journal/` | ✅ 200 | Finance |
+| `loans/` | ✅ 200 | Finance |
+| `financial-events/` | ✅ 200 | Finance |
+| `sequences/` | ✅ 200 | Finance |
+| `warehouses/` | ✅ 200 | Inventory |
+| `employees/` | ✅ 200 | HR |
+
+## Verification
+- `npx next build` → **Compiled successfully** (18.0s, exit 0)
+- All 21 backend API endpoints return 200 OK
+- No remaining `@/app/admin/` import references
+- No remaining `/admin/` URL hrefs in page files
+- No remaining `revalidatePath('/admin/...')` in action files
+- No remaining `erpFetch('/api/...')` double prefix issues

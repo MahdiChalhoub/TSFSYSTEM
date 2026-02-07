@@ -44,8 +44,8 @@ export async function saveProductNamingRule(rule: ProductNamingRule) {
             headers: { 'Content-Type': 'application/json' }
         });
 
-        revalidatePath('/admin/settings');
-        revalidatePath('/admin/products/new');
+        revalidatePath('/settings');
+        revalidatePath('/products/new');
 
         return { success: true };
     } catch (e: any) {
