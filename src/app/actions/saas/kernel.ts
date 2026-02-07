@@ -3,7 +3,7 @@
 import { erpFetch } from "@/lib/erp-fetch"
 
 export async function getKernelInfo() {
-    const res = await erpFetch('/api/kernel/')
+    const res = await erpFetch('kernel/')
     if (!res.ok) {
         const error = await res.json().catch(() => ({ error: 'Failed to fetch kernel info' }))
         return { error: error.error || error.detail || 'Unknown error' }
@@ -12,7 +12,7 @@ export async function getKernelInfo() {
 }
 
 export async function getKernelVersion() {
-    const res = await erpFetch('/api/kernel/version/')
+    const res = await erpFetch('kernel/version/')
     if (!res.ok) {
         return { version: 'Unknown' }
     }
@@ -20,7 +20,7 @@ export async function getKernelVersion() {
 }
 
 export async function stageKernelUpdate(formData: FormData) {
-    const res = await erpFetch('/api/kernel/stage/', {
+    const res = await erpFetch('kernel/stage/', {
         method: 'POST',
         body: formData,
     })

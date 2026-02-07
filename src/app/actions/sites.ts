@@ -63,7 +63,7 @@ export async function createSite(prevState: SiteState, formData: FormData): Prom
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         })
-        revalidatePath('/admin/settings/sites');
+        revalidatePath('/settings/sites');
         return { message: 'success' };
     } catch (e: any) {
         return { message: 'Database Error: ' + e.message };
@@ -87,7 +87,7 @@ export async function updateSite(id: number, prevState: SiteState, formData: For
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         })
-        revalidatePath('/admin/settings/sites');
+        revalidatePath('/settings/sites');
         return { message: 'success' };
     } catch (e: any) {
         return { message: 'Database Error: ' + e.message };
@@ -99,7 +99,7 @@ export async function deleteSite(id: number) {
         await erpFetch(`sites/${id}/`, {
             method: 'DELETE'
         })
-        revalidatePath('/admin/settings/sites');
+        revalidatePath('/settings/sites');
         return { success: true };
     } catch (e: any) {
         return { success: false, message: e.message };

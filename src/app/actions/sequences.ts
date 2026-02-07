@@ -34,12 +34,12 @@ export async function updateTransactionSequence(data: {
             padding: data.padding
         }
 
-        await erpFetch(`/api/sequences/${data.id}/`, {
+        await erpFetch(`sequences/${data.id}/`, {
             method: 'PATCH',
             body: JSON.stringify(payload)
         })
 
-        revalidatePath('/admin/settings/sequences')
+        revalidatePath('/settings/sequences')
         return { success: true }
     } catch (error) {
         console.error("Failed to update sequence", error)

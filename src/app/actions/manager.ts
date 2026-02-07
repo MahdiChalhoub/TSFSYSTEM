@@ -17,7 +17,7 @@ export async function approveUserAction(userId: number) {
         await erpFetch(`manager/approvals/${userId}/approve/`, {
             method: 'POST'
         });
-        revalidatePath('/admin/users/approvals');
+        revalidatePath('/users/approvals');
         return { success: true };
     } catch (e) {
         return { error: e instanceof Error ? e.message : "Failed to approve" };
@@ -29,7 +29,7 @@ export async function rejectUserAction(userId: number) {
         await erpFetch(`manager/approvals/${userId}/reject/`, {
             method: 'POST'
         });
-        revalidatePath('/admin/users/approvals');
+        revalidatePath('/users/approvals');
         return { success: true };
     } catch (e) {
         return { error: e instanceof Error ? e.message : "Failed to reject" };
@@ -43,7 +43,7 @@ export async function requestCorrectionAction(userId: number, notes: string) {
             body: JSON.stringify({ notes }),
             headers: { 'Content-Type': 'application/json' }
         });
-        revalidatePath('/admin/users/approvals');
+        revalidatePath('/users/approvals');
         return { success: true };
     } catch (e) {
         return { error: e instanceof Error ? e.message : "Failed to request correction" };

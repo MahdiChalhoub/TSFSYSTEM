@@ -149,7 +149,7 @@ export async function loginAction(prevState: any, formData: FormData) {
 
     // FIX: Use PUBLIC URLs, not internal file paths
     if (data.slug === 'saas' || host.includes('saas')) {
-        // Middleware maps /saas/* -> /admin/saas/*
+        // Middleware maps /saas/* -> /saas/*
         redirect('/dashboard')
     } else {
         // Tenants: Redirect to root. 
