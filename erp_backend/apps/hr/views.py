@@ -44,7 +44,7 @@ class EmployeeViewSet(TenantModelViewSet):
                     )
                 parent_account_id = parent.id
 
-            fullName = f"{data.get('first_name')} {data.get('last_name')}"
+            fullName = f"{data.get('first_name', '')} {data.get('last_name', '')}".strip()
             linked_acc = LedgerService.create_linked_account(
                 organization=organization,
                 name=f"Payable to {fullName}",

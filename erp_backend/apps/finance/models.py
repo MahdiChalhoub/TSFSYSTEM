@@ -37,7 +37,7 @@ class FinancialAccount(TenantModel):
     currency = models.CharField(max_length=10, default='USD')
     balance = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
     site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True)
-    linked_coa = models.ForeignKey(ChartOfAccount, on_delete=models.SET_NULL, null=True, blank=True)
+    linked_coa = models.ForeignKey(ChartOfAccount, on_delete=models.SET_NULL, null=True, blank=True, db_column='ledger_account_id')
 
     class Meta:
         db_table = 'FinancialAccount'
@@ -153,15 +153,17 @@ class BarcodeSettings(TenantModel):
 # =============================================================================
 
 class Loan(TenantModel):
+    contract_number = models.CharField(max_length=100, null=True, blank=True)
     contact = models.ForeignKey('crm.Contact', on_delete=models.PROTECT, related_name='loans')
     principal_amount = models.DecimalField(max_digits=15, decimal_places=2)
     interest_rate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'))
+    interest_type = models.CharField(max_length=50, default='SIMPLE')
     term_months = models.IntegerField(default=12)
     start_date = models.DateField(null=True, blank=True)
-    deduction_method = models.CharField(max_length=50, default='MANUAL')
+    payment_frequency = models.CharField(max_length=50, default='MONTHLY')
     status = models.CharField(max_length=20, default='DRAFT')
-    remaining_balance = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'Loan'
