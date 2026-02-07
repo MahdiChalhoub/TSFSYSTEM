@@ -4,7 +4,7 @@ Routes for product catalog, stock management, and warehouse operations.
 """
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from erp.views import (
+from apps.inventory.views import (
     ProductViewSet, UnitViewSet, WarehouseViewSet, InventoryViewSet,
     BrandViewSet, CategoryViewSet, ParfumViewSet, ProductGroupViewSet
 )
