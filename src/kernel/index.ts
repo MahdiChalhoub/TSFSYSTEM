@@ -21,17 +21,20 @@
 import * as auth from './auth';
 import * as tenant from './tenant';
 import * as modules from './modules';
+import * as permissions from './permissions';
 
 export const Kernel = {
     auth,
     tenant,
     modules,
+    permissions,
 } as const;
 
 // Named re-exports for tree-shaking
 export * as KernelAuth from './auth';
 export * as KernelTenant from './tenant';
 export * as KernelModules from './modules';
+export * as KernelPermissions from './permissions';
 
 // Type re-exports
 export type {
