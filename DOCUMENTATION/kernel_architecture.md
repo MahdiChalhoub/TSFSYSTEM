@@ -30,7 +30,7 @@ The Kernel is the system's brain — main controller for auth, tenant resolution
 
 | File | Purpose |
 |------|---------|
-| `index.ts` | Unified `Kernel` export with `auth`, `tenant`, `modules` namespaces |
+| `index.ts` | Unified `Kernel` export with `auth`, `tenant`, `modules`, `permissions` namespaces |
 | `types.ts` | Shared types: `ModuleManifest`, `KernelUser`, `TenantContext` |
 | `auth.ts` | `Kernel.auth.getUser()`, `isAuthenticated()`, `hasPermission()` |
 | `tenant.ts` | `Kernel.tenant.getContext()`, `getSlug()`, `isSaaSContext()` |
@@ -95,6 +95,29 @@ Each module declares its identity, routes, permissions, and dependencies:
 | hr | — | `apps.hr` |
 | purchases | inventory, finance | `apps.purchases` |
 | sales | inventory, finance | `apps.sales` |
+
+## Permissions (`src/kernel/permissions.ts`)
+
+Route-level permission checking using module manifest permissions.
+
+```typescript
+import { Kernel } from '@/kernel'
+
+// Check a specific permission
+const allowed = await Kernel.permissions.hasPermission('write:journal')
+
+// Check module access (is module enabled + user has access)
+const canAccess = await Kernel.permissions.canAccessModule('finance')
+
+// Guard a server action (throws on denied)
+await Kernel.permissions.requirePermission('write:journal')
+await Kernel.permissions.requireModuleAccess('finance')
+
+// Get all user permissions
+const perms = await Kernel.permissions.getUserPermissions()
+```
+
+**Current behavior:** Superusers and staff get full access. When RBAC is fully implemented, permissions will check role-based grants against manifest permission keys.
 
 ## Adding a New Module
 
