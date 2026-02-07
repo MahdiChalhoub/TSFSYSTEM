@@ -101,7 +101,6 @@ class Product(TenantModel):
     selling_price_ht = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     selling_price_ttc = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     tva_rate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'))
-    size = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     min_stock_level = models.IntegerField(default=10)
     is_expiry_tracked = models.BooleanField(default=False)
 
