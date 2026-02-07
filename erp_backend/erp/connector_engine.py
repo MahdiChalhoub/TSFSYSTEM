@@ -745,11 +745,54 @@ class ConnectorEngine:
         payload: Dict,
         organization_id: int
     ):
-        """Deliver an event to a module's event handler."""
-        logger.debug(f"Deliver EVENT: {event_name} -> {target_module} (org={organization_id})")
+        """
+        Deliver an event to a module's event handler.
         
-        # TODO: Implement event bus integration
-        pass
+        Discovery order:
+        1. Module event handler: apps.{module}.events.handle_event(event_name, payload, org_id)
+        2. Django signal: connector_event signal with module/event/payload
+        
+        Each module can create an `events.py` file with a `handle_event` function
+        to receive inter-module events routed by the ConnectorEngine.
+        """
+        import importlib
+        
+        logger.info(f"📡 EVENT BUS: {event_name} -> {target_module} (org={organization_id})")
+        
+        # Strategy 1: Direct module handler discovery
+        handler_module_path = f"apps.{target_module}.events"
+        try:
+            event_module = importlib.import_module(handler_module_path)
+            handler = getattr(event_module, 'handle_event', None)
+            
+            if handler and callable(handler):
+                handler(event_name, payload, organization_id)
+                logger.info(f"✅ Event delivered via handler: {handler_module_path}")
+                return
+            else:
+                logger.debug(f"No handle_event() in {handler_module_path}")
+        except ImportError:
+            logger.debug(f"No events module at {handler_module_path}")
+        except Exception as e:
+            logger.error(f"Event handler error in {handler_module_path}: {e}")
+            raise
+        
+        # Strategy 2: Django signal dispatch (allows loose coupling)
+        try:
+            from .signals import connector_event
+            connector_event.send(
+                sender=self.__class__,
+                target_module=target_module,
+                event_name=event_name,
+                payload=payload,
+                organization_id=organization_id
+            )
+            logger.info(f"✅ Event dispatched via signal: {event_name} -> {target_module}")
+        except ImportError:
+            logger.debug(f"No signals module configured, event {event_name} dropped for {target_module}")
+        except Exception as e:
+            logger.error(f"Signal dispatch error for {event_name}: {e}")
+            raise
     
     def _apply_read_fallback(
         self,
