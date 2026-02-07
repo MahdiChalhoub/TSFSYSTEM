@@ -1,66 +1,98 @@
 # Modular Architecture Documentation
 
 ## Goal
-The modular architecture allows the TSF ERP system to expand its features (HRM, Inventory, Accounting, POS) as independent, pluggable components. This ensures a clean "Core" platform while allowing organizations to enable/disable features as needed.
+The Dajingo ERP platform uses a 4-layer modular architecture: **Engine → Kernel → Core → Modules**. Business logic is physically isolated into independent Django apps under `apps/`, while the kernel (`erp/`) provides infrastructure, multi-tenancy, and backward-compatible re-exports.
+
+## Architecture Overview
+
+```
+erp/                              ← KERNEL (infrastructure only)
+├── models.py       (356 lines)    Organization, User, Site, TenantModel + re-exports
+├── services.py     (260 lines)    ProvisioningService, ConfigurationService + re-exports
+├── serializers/    (75 lines)     Kernel serializers + re-exports
+├── views.py        (516 lines)    TenantModelViewSet, Dashboard, Settings + re-exports
+├── urls.py                        Auth/SaaS routes + include() for 5 modules
+├── connector_engine.py            Module-to-module runtime broker
+├── connector_models.py            Connector data models
+└── middleware.py                   Tenant context middleware
+
+apps/                             ← MODULES (business logic)
+├── finance/                       12 models, 12 serializers, 7 services, 9 ViewSets
+├── inventory/                     9 models, 11 serializers, 1 service, 8 ViewSets
+├── pos/                           2 models, 2 serializers, 2 services, 2 ViewSets
+├── crm/                           1 model, 1 serializer, 1 ViewSet
+└── hr/                            1 model, 1 serializer, 1 ViewSet
+
+src/engine/                       ← FRONTEND ENGINE (zero-logic infra)
+src/modules/                      ← FRONTEND MODULES (isolated UI components)
+```
 
 ## Database Tables
 
-### Module (Global Catalog)
-- **Purpose**: Tracks all modules available in the physical filesystem.
-- **Columns**:
-    - `code`: Unique identifier (slug).
-    - `name`: Human-readable name.
-    - `version`: Semantic versioning.
-    - `dependencies`: JSON list of other module codes required.
-    - `is_core`: Boolean. If true, cannot be disabled.
+### SystemModule (Global Catalog)
+- **Purpose**: Tracks all modules installed in the system
+- **Columns**: name, version, description, manifest (JSON), status, checksum
+- **Read by**: SaaS Panel, ConnectorEngine, Module Manager
+- **Written by**: Module upload/install workflow
 
 ### OrganizationModule (Tenant Attachment)
-- **Purpose**: Links a global module to a specific organization/tenant.
-- **Columns**:
-    - `organization_id`: Reference to Organization.
-    - `module_id`: Reference to Module.
-    - `status`: `INSTALLED`, `DISABLED`, or `UNINSTALLED`.
+- **Purpose**: Links modules to specific organizations
+- **Columns**: organization_id, module_name, is_enabled, active_features (JSON)
+- **Read by**: ConnectorEngine (state checks), Module Manager
+- **Written by**: SaaS admin panel, tenant Module Manager
 
-## SaaS Master Panel Integration
+## Kernel ViewSets (erp/views.py)
+- **TenantModelViewSet**: Base class for multi-tenant data isolation
+- **UserViewSet**: User management
+- **OrganizationViewSet**: SaaS organization lifecycle
+- **SiteViewSet**: Multi-site support
+- **CountryViewSet**: Country reference data + product hierarchy
+- **RoleViewSet**: Role management
+- **TenantResolutionView**: Public slug-to-ID resolver
+- **SettingsViewSet**: Configuration and posting rules
+- **DashboardViewSet**: Cross-module aggregation (admin, SaaS, financial stats)
+- **health_check**: System status endpoint
 
-The SaaS panel provides centralized authority over the entire module ecosystem. This allows platform administrators to maintain consistency and enforce subscription boundaries across all tenants.
+## Module ViewSets (apps/X/views.py)
 
-### Global Module Registry (/admin/saas/modules)
-- **Global Sync**: Scans the physical code directory and updates the global `Module` table.
-- **Push to All**: A high-privilege action that installs/enables a specific module for EVERY organization in the system simultaneously.
+### Finance (apps/finance/views.py)
+FinancialAccountViewSet, ChartOfAccountViewSet, FiscalYearViewSet, FiscalPeriodViewSet, JournalEntryViewSet, BarcodeSettingsViewSet, LoanViewSet, FinancialEventViewSet, TransactionSequenceViewSet
 
-### Granular Tenant Control (/admin/saas/organizations)
-- SaaS admins can manage specific features for individual companies via the Organization Management modal. 
-- This bypasses tenant-level restrictions and allows for manual entitlement adjustments.
+### Inventory (apps/inventory/views.py)
+ProductViewSet, UnitViewSet, WarehouseViewSet, InventoryViewSet, BrandViewSet, CategoryViewSet, ParfumViewSet, ProductGroupViewSet
 
-## Workflow: Global Module Deployment
-1. **Develop**: Create module folder and manifest in `erp/modules`.
-2. **Sync**: Run "Sync Registry" in the SaaS Panel.
-3. **Deploy**: Click "Push to All" for mandatory features, or let tenants discover the new feature in their own Module Manager.
+### POS (apps/pos/views.py)
+POSViewSet, PurchaseViewSet
 
----
+### CRM (apps/crm/views.py)
+ContactViewSet
 
-## Workflow: Module Management (Tenant Level)
-- **Action**: User clicks "Install" in Settings -> Module Manager.
-- **Logic**:
-    1. Check if dependencies are met (in `OrganizationModule`).
-    2. Create/Update `OrganizationModule` entry with status `INSTALLED`.
-    3. (Future) Trigger migrations if needed.
+### HR (apps/hr/views.py)
+EmployeeViewSet
 
-### 3. Module Deactivation (Soft Disable)
-- **Action**: User clicks "Disable" in Settings -> Module Manager.
-- **Logic**:
-    1. Block if it's a `core` module.
-    2. Check if other active modules depend on this one.
-    3. Update status to `DISABLED`.
-- **Safety**: Data is KEPT, but UI elements/APIs should check for active status.
+## ConnectorEngine (Inter-Module Communication)
+The ConnectorEngine routes requests between modules using URL-based dispatch (`django.urls.resolve()`). It:
+1. Evaluates module state (AVAILABLE, MISSING, DISABLED, UNAUTHORIZED)
+2. Forwards requests if available, applies fallback if not
+3. Supports circuit breaking, caching, buffering, and event dispatch
+4. No direct ViewSet imports — works automatically with any URL structure
+
+## Import Rules
+- **Canonical**: `from apps.finance.models import ChartOfAccount`
+- **Backward-compatible**: `from erp.models import ChartOfAccount` (re-export)
+- **Module → Kernel**: Always allowed (`from erp.models import TenantModel`)
+- **Kernel → Module**: Only via re-exports at bottom of kernel files
+- **Module → Module**: Only via ConnectorEngine, never direct imports
 
 ## Data Movement
-- **Read from**: `Module` table for list, `OrganizationModule` for per-org status.
-- **Save to**: `OrganizationModule` for installs/deactivations.
+- **Read from**: Module models via module services and ViewSets
+- **Save to**: Module models via module services (never direct model writes from views)
+- **Cross-module**: Via ConnectorEngine `route_read()` and `route_write()`
 
-## Step-by-Step for Developers
-1. Create a folder in `erp/modules/{module_name}`.
-2. Add a `manifest.json`.
-3. Run `python manage.py sync_modules`.
-4. Implement your models/views inside the erp app (for now) and check `ModuleManager.is_enabled(code, org_id)` in your logic.
+## Developer Workflow
+1. All business code goes in `apps/{module_name}/`
+2. Each module has: models.py, views.py, urls.py, serializers.py, services.py, apps.py
+3. Module URLs are included via `erp/urls.py` → `path('api/', include('apps.X.urls'))`
+4. Use `TenantModelViewSet` as base class for tenant-scoped views
+5. Use `from erp.middleware import get_current_tenant_id` for tenant context
+6. Cross-module operations go through `connector_engine.route_read/route_write`

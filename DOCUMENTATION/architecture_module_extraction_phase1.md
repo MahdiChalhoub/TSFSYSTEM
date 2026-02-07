@@ -15,16 +15,16 @@ Migrate business logic from monolithic Kernel (`erp/`) into isolated module dire
 | `services.py` | ProvisioningService, ConfigurationService + re-exports |
 | `serializers/core.py` | Kernel serializers + re-exports |
 | `urls.py` | Auth, SaaS, Settings routes + `include()` for module URLs |
-| `views.py` | All ViewSets (transitional, will move to modules later) |
+| `views.py` | TenantModelViewSet, Dashboard, Settings, kernel-only ViewSets + re-exports |
 
 ### Modules (`apps/`)
-| Module | Models | Serializers | Services | URLs |
-|--------|:---:|:---:|:---:|:---:|
-| `apps/finance/` | 12 | 12 | 7 | ✓ |
-| `apps/inventory/` | 9 | 11 | 1 | ✓ |
-| `apps/pos/` | 2 | 2 | 2 | ✓ |
-| `apps/crm/` | 1 | 1 | — | ✓ |
-| `apps/hr/` | 1 | 1 | — | ✓ |
+| Module | Models | Serializers | Services | ViewSets | URLs |
+|--------|:---:|:---:|:---:|:---:|:---:|
+| `apps/finance/` | 12 | 12 | 7 | 9 | ✓ |
+| `apps/inventory/` | 9 | 11 | 1 | 8 | ✓ |
+| `apps/pos/` | 2 | 2 | 2 | 2 | ✓ |
+| `apps/crm/` | 1 | 1 | — | 1 | ✓ |
+| `apps/hr/` | 1 | 1 | — | 1 | ✓ |
 
 ### Key Principles
 - All models use `db_table` → **zero database changes**
@@ -79,3 +79,8 @@ import { AICharts } from '@/modules/mcp'
 | `v1.3.0-b002` | Services → 3 modules |
 | `v1.3.0-b003` | URL splitting + migration fix |
 | `v1.3.0-b004` | Engine layer + module isolation |
+| `v1.3.0-b005` | Test imports → canonical paths |
+| `v1.3.0-b006` | 21 ViewSets → 5 module views |
+| `v1.3.0-b007` | Clean kernel views.py (2029→516 lines) |
+| `v1.3.0-b008` | Delete 11 stale backup files |
+| `v1.3.0-b009` | Delete debug + backups directory |
