@@ -1,0 +1,26 @@
+{
+    "code": "finance",
+    "name": "Finance & Accounting",
+    "version": "1.0.0",
+    "description": "General ledger, chart of accounts, journal entries, financial events, loans, trial balance, P&L, and balance sheet reporting.",
+    "category": "first-party",
+    "isolation": "shared",
+    "icon": "Landmark",
+    "routes": [
+        "/finance/*"
+    ],
+    "permissions": [
+        "read:chart-of-accounts",
+        "write:chart-of-accounts",
+        "read:journal",
+        "write:journal",
+        "read:financial-events",
+        "write:financial-events",
+        "read:loans",
+        "write:loans",
+        "read:reports",
+        "manage:fiscal-years"
+    ],
+    "dependencies": [],
+    "backendApp": "apps.finance"
+}

@@ -1,0 +1,22 @@
+{
+    "code": "products",
+    "name": "Product Catalog",
+    "version": "1.0.0",
+    "description": "Product listing, creation, grouped products, and product management.",
+    "category": "first-party",
+    "isolation": "shared",
+    "icon": "ShoppingBag",
+    "routes": [
+        "/products/*"
+    ],
+    "permissions": [
+        "read:products",
+        "write:products",
+        "read:product-groups",
+        "write:product-groups"
+    ],
+    "dependencies": [
+        "inventory"
+    ],
+    "backendApp": "apps.inventory"
+}

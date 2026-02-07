@@ -1,0 +1,18 @@
+{
+    "code": "crm",
+    "name": "Customer Relationship Management",
+    "version": "1.0.0",
+    "description": "Contact management, customer profiles, and relationship tracking.",
+    "category": "first-party",
+    "isolation": "shared",
+    "icon": "Users",
+    "routes": [
+        "/crm/*"
+    ],
+    "permissions": [
+        "read:contacts",
+        "write:contacts"
+    ],
+    "dependencies": [],
+    "backendApp": "apps.crm"
+}

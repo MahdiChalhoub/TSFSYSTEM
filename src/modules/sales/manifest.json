@@ -1,0 +1,22 @@
+{
+    "code": "sales",
+    "name": "Sales & POS",
+    "version": "1.0.0",
+    "description": "Point of sale interface, sales transactions, and order management.",
+    "category": "first-party",
+    "isolation": "shared",
+    "icon": "CreditCard",
+    "routes": [
+        "/sales/*"
+    ],
+    "permissions": [
+        "read:sales",
+        "write:sales",
+        "operate:pos"
+    ],
+    "dependencies": [
+        "inventory",
+        "finance"
+    ],
+    "backendApp": "apps.sales"
+}
