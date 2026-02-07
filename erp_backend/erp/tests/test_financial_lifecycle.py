@@ -2,8 +2,12 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 from django.utils import timezone
-from erp.models import Organization, FiscalYear, FiscalPeriod, FinancialAccount, ChartOfAccount, JournalEntry, Loan, FinancialEvent, User, Contact, Employee
-from erp.services import LedgerService, ProvisioningService, ConfigurationService, LoanService, FinancialEventService
+from erp.models import Organization, User
+from apps.finance.models import FiscalYear, FiscalPeriod, FinancialAccount, ChartOfAccount, JournalEntry, Loan, FinancialEvent
+from apps.crm.models import Contact
+from apps.hr.models import Employee
+from erp.services import ProvisioningService, ConfigurationService
+from apps.finance.services import LedgerService, LoanService, FinancialEventService
 import datetime
 from decimal import Decimal
 

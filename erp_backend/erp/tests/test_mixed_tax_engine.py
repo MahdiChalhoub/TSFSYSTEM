@@ -1,7 +1,11 @@
 from rest_framework.test import APITestCase
 from django.utils import timezone
-from erp.models import Organization, ChartOfAccount, JournalEntry, Order, OrderLine, FinancialAccount
-from erp.services import PurchaseService, ConfigurationService, ProvisioningService, TaxService
+from erp.models import Organization
+from apps.finance.models import ChartOfAccount, JournalEntry, FinancialAccount
+from apps.pos.models import Order, OrderLine
+from erp.services import ConfigurationService, ProvisioningService
+from apps.pos.services import PurchaseService
+from apps.finance.services import TaxService
 from decimal import Decimal
 import datetime
 
@@ -25,7 +29,7 @@ class MixedTaxEngineTests(APITestCase):
         rules['purchases']['tax'] = tax_acc.id
         ConfigurationService.save_posting_rules(self.org, rules)
 
-        from erp.models import Product
+        from apps.inventory.models import Product
         self.product = Product.objects.create(
             organization=self.org,
             name="Test Item",
@@ -34,18 +38,20 @@ class MixedTaxEngineTests(APITestCase):
             tva_rate=Decimal('0.18')
         )
         
-        from erp.models import Contact
+        from apps.crm.models import Contact
         self.supplier = Contact.objects.create(
             organization=self.org,
             name="Supplier A",
             type="SUPPLIER"
         )
         
-        from erp.models import Warehouse, Site, User
+        from apps.inventory.models import Warehouse
+        from erp.models import Site, User
         self.site = Site.objects.get(organization=self.org, code="MAIN")
         self.warehouse = Warehouse.objects.get(organization=self.org, code="WH01")
         
-        from erp.models import Warehouse, Site, User, Role
+        from apps.inventory.models import Warehouse
+        from erp.models import Site, User, Role
         self.site = Site.objects.get(organization=self.org, code="MAIN")
         self.warehouse = Warehouse.objects.get(organization=self.org, code="WH01")
         
