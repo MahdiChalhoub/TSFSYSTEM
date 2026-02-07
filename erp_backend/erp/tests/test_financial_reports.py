@@ -1,7 +1,9 @@
 from rest_framework.test import APITestCase
 from django.utils import timezone
-from erp.models import Organization, ChartOfAccount, JournalEntry, FiscalYear
-from erp.services import LedgerService, ProvisioningService
+from erp.models import Organization
+from apps.finance.models import ChartOfAccount, JournalEntry, FiscalYear
+from erp.services import ProvisioningService
+from apps.finance.services import LedgerService
 from decimal import Decimal
 
 class FinancialReportTests(APITestCase):
