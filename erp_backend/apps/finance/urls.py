@@ -5,9 +5,8 @@ Routes for all accounting, ledger, tax, and financial management endpoints.
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
-# ViewSets still live in erp/views.py (via re-exports from module serializers/services)
-# They will be migrated to module-level views in a future phase
-from erp.views import (
+# ViewSets live in module-level views (canonical location)
+from apps.finance.views import (
     FinancialAccountViewSet, ChartOfAccountViewSet,
     FiscalYearViewSet, FiscalPeriodViewSet, JournalEntryViewSet,
     BarcodeSettingsViewSet, LoanViewSet, FinancialEventViewSet,

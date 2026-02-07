@@ -4,7 +4,7 @@ Routes for sales and purchase transactions.
 """
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from erp.views import POSViewSet, PurchaseViewSet
+from apps.pos.views import POSViewSet, PurchaseViewSet
 
 router = DefaultRouter()
 router.register(r'pos', POSViewSet, basename='pos')

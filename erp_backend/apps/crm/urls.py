@@ -4,7 +4,7 @@ Routes for contact management.
 """
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from erp.views import ContactViewSet
+from apps.crm.views import ContactViewSet
 
 router = DefaultRouter()
 router.register(r'contacts', ContactViewSet)
