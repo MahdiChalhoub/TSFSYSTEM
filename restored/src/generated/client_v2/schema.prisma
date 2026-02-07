@@ -1,0 +1,604 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/client_v2"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id             String           @id @default(uuid()) @db.Uuid
+  name           String           @db.VarChar(255)
+  slug           String           @unique @db.VarChar(50)
+  isActive       Boolean          @map("is_active")
+  createdAt      DateTime         @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  contacts       Contact[]
+  Employee       Employee[]
+  InventoryLevel InventoryLevel[]
+  order          Order[]
+  orderLine      OrderLine[]
+  stockBatch     StockBatch[]
+
+  @@index([slug], map: "Organization_slug_06169c56_like")
+}
+
+model Country {
+  id   BigInt @id @default(autoincrement())
+  code String @unique @db.VarChar(5)
+  name String @db.VarChar(100)
+
+  @@index([code], map: "Country_code_0773191a_like")
+}
+
+model Unit {
+  id                BigInt  @id @default(autoincrement())
+  code              String  @db.VarChar(50)
+  name              String  @db.VarChar(100)
+  conversion_factor Decimal @db.Decimal(15, 5)
+  organizationId    String  @map("organization_id") @db.Uuid
+
+  @@unique([code, organizationId], map: "Unit_code_organization_id_f2c47683_uniq")
+  @@index([organizationId], map: "Unit_organization_id_f6938226")
+}
+
+model FinancialAccount {
+  id                BigInt  @id @default(autoincrement())
+  name              String  @db.VarChar(255)
+  type              String  @db.VarChar(20)
+  currency          String  @db.VarChar(10)
+  balance           Decimal @db.Decimal(15, 2)
+  ledger_account_id BigInt? @unique
+  organizationId    String  @map("organization_id") @db.Uuid
+  site_id           BigInt?
+
+  @@unique([name, organizationId, site_id], map: "FinancialAccount_name_organization_id_site_id_f9b170ac_uniq")
+  @@index([organizationId], map: "FinancialAccount_organization_id_4590eee8")
+  @@index([site_id], map: "FinancialAccount_site_id_a753dd62")
+}
+
+model Transaction {
+  id             BigInt   @id @default(autoincrement())
+  amount         Decimal  @db.Decimal(15, 2)
+  type           String   @db.VarChar(10)
+  description    String?
+  reference_id   String?  @db.VarChar(100)
+  scope          String   @db.VarChar(20)
+  createdAt      DateTime @map("created_at") @db.Timestamptz(6)
+  account_id     BigInt
+  organizationId String   @map("organization_id") @db.Uuid
+  site_id        BigInt?
+
+  @@index([account_id], map: "Transaction_account_id_88a389e9")
+  @@index([organizationId], map: "Transaction_organization_id_fff4577a")
+  @@index([site_id], map: "Transaction_site_id_ac463c03")
+}
+
+model User {
+  id                BigInt    @id @default(autoincrement())
+  password          String    @db.VarChar(128)
+  last_login        DateTime? @db.Timestamptz(6)
+  is_superuser      Boolean
+  username          String    @unique @db.VarChar(150)
+  first_name        String    @db.VarChar(150)
+  last_name         String    @db.VarChar(150)
+  email             String    @db.VarChar(254)
+  is_staff          Boolean
+  isActive          Boolean   @map("is_active")
+  date_joined       DateTime  @db.Timestamptz(6)
+  is_active_account Boolean
+  organizationId    String?   @map("organization_id") @db.Uuid
+  roleId            BigInt?   @map("role_id")
+  homeSiteId        BigInt?   @map("home_site_id")
+  Employee          Employee?
+  orders            Order[]   @relation("StaffOrders")
+
+  @@index([homeSiteId], map: "User_home_site_id_a6640f94")
+  @@index([organizationId], map: "User_organization_id_b8824f58")
+  @@index([roleId], map: "User_role_id_0ae7280f")
+  @@index([username], map: "User_username_3851fdce_like")
+}
+
+model Role {
+  id             BigInt   @id @default(autoincrement())
+  name           String   @db.VarChar(100)
+  description    String?
+  createdAt      DateTime @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  organizationId String   @map("organization_id") @db.Uuid
+
+  @@unique([name, organizationId], map: "Role_name_organization_id_d3ac21a4_uniq")
+  @@index([organizationId], map: "Role_organization_id_48179e40")
+}
+
+model Permission {
+  id          BigInt   @id @default(autoincrement())
+  code        String   @unique @db.VarChar(100)
+  name        String   @db.VarChar(255)
+  description String?
+  createdAt   DateTime @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([code], map: "Permission_code_22f9e668_like")
+}
+
+model Contact {
+  id               BigInt          @id @default(autoincrement())
+  type             String          @db.VarChar(20)
+  name             String          @db.VarChar(255)
+  email            String?         @db.VarChar(255)
+  phone            String?         @db.VarChar(50)
+  address          String?
+  vatId            String?         @map("vat_id") @db.VarChar(100)
+  balance          Decimal         @db.Decimal(15, 2)
+  creditLimit      Decimal         @map("credit_limit") @db.Decimal(15, 2)
+  createdAt        DateTime        @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+  homeSiteId       BigInt?         @map("home_site_id")
+  linkedAccountId  BigInt?         @unique @map("linked_account_id")
+  organizationId   String          @map("organization_id") @db.Uuid
+  homeSite         Site?           @relation(fields: [homeSiteId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Contact_home_site_id_157a7c48_fk_Site_id")
+  linkedAccount    ChartOfAccount? @relation("ContactAccount", fields: [linkedAccountId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Contact_linked_account_id_f72d4f32_fk_ChartOfAccount_id")
+  organization     Organization    @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Contact_organization_id_08d88e28_fk_Organization_id")
+  orders           Order[]
+  suppliedProducts Product[]       @relation("ProductSupplier")
+
+  @@index([homeSiteId], map: "Contact_home_site_id_157a7c48")
+  @@index([organizationId], map: "Contact_organization_id_08d88e28")
+}
+
+model Employee {
+  id              BigInt          @id @default(autoincrement())
+  employeeId      String          @unique @map("employee_id") @db.VarChar(100)
+  firstName       String          @map("first_name") @db.VarChar(100)
+  lastName        String          @map("last_name") @db.VarChar(100)
+  phone           String?         @db.VarChar(50)
+  email           String?         @db.VarChar(254)
+  jobTitle        String?         @map("job_title") @db.VarChar(100)
+  salary          Decimal?        @db.Decimal(15, 2)
+  createdAt       DateTime        @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+  linkedAccountId BigInt?         @unique @map("linked_account_id")
+  organization_id String          @db.Uuid
+  user_id         BigInt?         @unique
+  linkedAccount   ChartOfAccount? @relation("EmployeeAccount", fields: [linkedAccountId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Employee_linked_account_id_6138d796_fk_ChartOfAccount_id")
+  Organization    Organization    @relation(fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Employee_organization_id_7ab29110_fk_Organization_id")
+  User            User?           @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Employee_user_id_1c533b7d_fk_User_id")
+
+  @@index([employeeId], map: "Employee_employee_id_fe00240c_like")
+  @@index([organization_id], map: "Employee_organization_id_7ab29110")
+}
+
+model Product {
+  id              BigInt           @id @default(autoincrement())
+  sku             String           @db.VarChar(100)
+  barcode         String?          @db.VarChar(100)
+  name            String           @db.VarChar(255)
+  description     String?
+  costPrice       Decimal          @map("cost_price") @db.Decimal(15, 2)
+  costPriceHT     Decimal          @map("cost_price_ht") @db.Decimal(15, 2)
+  costPriceTTC    Decimal          @map("cost_price_ttc") @db.Decimal(15, 2)
+  tvaRate         Decimal          @map("tva_rate") @db.Decimal(15, 2)
+  sellingPriceHT  Decimal          @map("selling_price_ht") @db.Decimal(15, 2)
+  sellingPriceTTC Decimal          @map("selling_price_ttc") @db.Decimal(15, 2)
+  isExpiryTracked Boolean          @map("is_expiry_tracked")
+  minStockLevel   Int              @map("min_stock_level")
+  is_active       Boolean
+  created_at      DateTime         @db.Timestamptz(6)
+  updated_at      DateTime         @db.Timestamptz(6)
+  brandId         BigInt?          @map("brand_id")
+  categoryId      BigInt?          @map("category_id")
+  countryId       BigInt?          @map("country_id")
+  organizationId  String           @map("organization_id") @db.Uuid
+  parfumId        BigInt?          @map("parfum_id")
+  productGroupId  BigInt?          @map("product_group_id")
+  unitId          BigInt?          @map("unit_id")
+  status          String           @db.VarChar(20)
+  supplierId      BigInt?          @map("supplier_id")
+  InventoryLevel  InventoryLevel[]
+  orderLines      OrderLine[]
+  supplier        Contact?         @relation("ProductSupplier", fields: [supplierId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Product_supplier_id_993ea89f_fk_Contact_id")
+  StockBatch      StockBatch[]
+
+  @@unique([barcode, organizationId], map: "Product_barcode_organization_id_ef60e086_uniq")
+  @@unique([sku, organizationId], map: "Product_sku_organization_id_e7fc9452_uniq")
+  @@index([brandId], map: "Product_brand_id_bb588269")
+  @@index([categoryId], map: "Product_category_id_0a9a7411")
+  @@index([countryId], map: "Product_country_id_4ad891c8")
+  @@index([organizationId], map: "Product_organization_id_623da968")
+  @@index([parfumId], map: "Product_parfum_id_4e3e7c92")
+  @@index([productGroupId], map: "Product_product_group_id_46ff89f1")
+  @@index([supplierId], map: "Product_supplier_id_993ea89f")
+  @@index([unitId], map: "Product_unit_id_8c078f0d")
+}
+
+model ProductGroup {
+  id             BigInt  @id @default(autoincrement())
+  name           String  @db.VarChar(255)
+  description    String?
+  image          String? @db.VarChar(255)
+  organizationId String  @map("organization_id") @db.Uuid
+
+  @@index([organizationId], map: "ProductGroup_organization_id_63ca6f47")
+}
+
+model Category {
+  id             BigInt   @id @default(autoincrement())
+  name           String   @db.VarChar(255)
+  created_at     DateTime @db.Timestamptz(6)
+  organizationId String   @map("organization_id") @db.Uuid
+
+  @@unique([name, organizationId], map: "Category_name_organization_id_2bc313a0_uniq")
+  @@index([organizationId], map: "Category_organization_id_0c63f8e5")
+}
+
+model Brand {
+  id             BigInt   @id @default(autoincrement())
+  name           String   @db.VarChar(255)
+  created_at     DateTime @db.Timestamptz(6)
+  organizationId String   @map("organization_id") @db.Uuid
+
+  @@unique([name, organizationId], map: "Brand_name_organization_id_849709bc_uniq")
+}
+
+model Parfum {
+  id             BigInt  @id @default(autoincrement())
+  name           String  @db.VarChar(255)
+  short_name     String? @db.VarChar(100)
+  organizationId String  @map("organization_id") @db.Uuid
+
+  @@unique([name, organizationId], map: "Parfum_name_organization_id_3f7c47f9_uniq")
+  @@index([organizationId], map: "Parfum_organization_id_535e12a1")
+}
+
+model Warehouse {
+  id             BigInt  @id @default(autoincrement())
+  name           String  @db.VarChar(255)
+  code           String? @db.VarChar(50)
+  type           String  @db.VarChar(50)
+  can_sell       Boolean
+  isActive       Boolean @map("is_active")
+  organizationId String  @map("organization_id") @db.Uuid
+  site_id        BigInt
+
+  @@unique([name, site_id], map: "Warehouse_name_site_id_3d549713_uniq")
+  @@index([organizationId], map: "Warehouse_organization_id_c15c0734")
+  @@index([site_id], map: "Warehouse_site_id_18b45d8f")
+}
+
+model StockBatch {
+  id             BigInt       @id @default(autoincrement())
+  batch_code     String       @db.VarChar(100)
+  expiry_date    DateTime?    @db.Timestamptz(6)
+  cost_price     Decimal      @db.Decimal(15, 2)
+  created_at     DateTime     @db.Timestamptz(6)
+  organizationId String       @map("organization_id") @db.Uuid
+  product_id     BigInt
+  Inventory      Inventory[]
+  OrderLine      OrderLine[]
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "StockBatch_organization_id_03ed910e_fk_Organization_id")
+  Product        Product      @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "StockBatch_product_id_a2407416_fk_Product_id")
+
+  @@index([organizationId], map: "StockBatch_organization_id_03ed910e")
+  @@index([product_id], map: "StockBatch_product_id_a2407416")
+}
+
+model Inventory {
+  id             BigInt      @id @default(autoincrement())
+  quantity       Decimal     @db.Decimal(15, 2)
+  organizationId String      @map("organization_id") @db.Uuid
+  product_id     BigInt
+  warehouse_id   BigInt
+  batch_id       BigInt?
+  StockBatch     StockBatch? @relation(fields: [batch_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Inventory_batch_id_22dfd017_fk_StockBatch_id")
+
+  @@unique([warehouse_id, product_id, batch_id, organizationId], map: "Inventory_warehouse_id_product_id__570ed674_uniq")
+  @@index([batch_id], map: "Inventory_batch_id_22dfd017")
+  @@index([organizationId], map: "Inventory_organization_id_59e27ef0")
+  @@index([product_id], map: "Inventory_product_id_8a67ec14")
+  @@index([warehouse_id], map: "Inventory_warehouse_id_befa68d4")
+}
+
+model Order {
+  id             BigInt       @id @default(autoincrement())
+  type           String       @db.VarChar(20)
+  status         String       @db.VarChar(20)
+  totalAmount    Decimal      @map("total_amount") @db.Decimal(15, 2)
+  taxAmount      Decimal      @map("tax_amount") @db.Decimal(15, 2)
+  discount       Decimal      @db.Decimal(15, 2)
+  isVerified     Boolean      @map("is_verified")
+  isLocked       Boolean      @map("is_locked")
+  notes          String?
+  createdAt      DateTime     @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+  contactId      BigInt?      @map("contact_id")
+  organizationId String       @map("organization_id") @db.Uuid
+  siteId         BigInt?      @map("site_id")
+  userId         BigInt       @map("user_id")
+  contact        Contact?     @relation(fields: [contactId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Order_contact_id_455b24a4_fk_Contact_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Order_organization_id_2be9e1a8_fk_Organization_id")
+  site           Site?        @relation(fields: [siteId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Order_site_id_27210688_fk_Site_id")
+  user           User         @relation("StaffOrders", fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Order_user_id_24066048_fk_User_id")
+  lines          OrderLine[]
+
+  @@index([contactId], map: "Order_contact_id_455b24a4")
+  @@index([organizationId], map: "Order_organization_id_2be9e1a8")
+  @@index([siteId], map: "Order_site_id_27210688")
+  @@index([userId], map: "Order_user_id_24066048")
+}
+
+model OrderLine {
+  id             BigInt       @id @default(autoincrement())
+  quantity       Decimal      @db.Decimal(15, 2)
+  unitPrice      Decimal      @map("unit_price") @db.Decimal(15, 2)
+  taxRate        Decimal      @map("tax_rate") @db.Decimal(15, 2)
+  total          Decimal      @db.Decimal(15, 2)
+  unitCostHT     Decimal      @map("unit_cost_ht") @db.Decimal(15, 2)
+  effectiveCost  Decimal      @map("effective_cost") @db.Decimal(15, 2)
+  orderId        BigInt       @map("order_id")
+  organizationId String       @map("organization_id") @db.Uuid
+  productId      BigInt       @map("product_id")
+  batchId        BigInt?      @map("batch_id")
+  StockBatch     StockBatch?  @relation(fields: [batchId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "OrderLine_batch_id_3b521aeb_fk_StockBatch_id")
+  order          Order        @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "OrderLine_order_id_7a514c82_fk_Order_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "OrderLine_organization_id_978ae015_fk_Organization_id")
+  product        Product      @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "OrderLine_product_id_77048367_fk_Product_id")
+
+  @@index([batchId], map: "OrderLine_batch_id_3b521aeb")
+  @@index([orderId], map: "OrderLine_order_id_7a514c82")
+  @@index([organizationId], map: "OrderLine_organization_id_978ae015")
+  @@index([productId], map: "OrderLine_product_id_77048367")
+}
+
+model SystemSettings {
+  id             BigInt @id @default(autoincrement())
+  key            String @db.VarChar(100)
+  value          String
+  organizationId String @map("organization_id") @db.Uuid
+
+  @@unique([key, organizationId], map: "SystemSettings_key_organization_id_7a38c1ff_uniq")
+  @@index([organizationId], map: "SystemSettings_organization_id_9f090703")
+}
+
+model FiscalYear {
+  id             BigInt   @id @default(autoincrement())
+  name           String   @db.VarChar(100)
+  start_date     DateTime @db.Date
+  end_date       DateTime @db.Date
+  is_closed      Boolean
+  organizationId String   @map("organization_id") @db.Uuid
+
+  @@unique([name, organizationId], map: "FiscalYear_name_organization_id_6be0b0f5_uniq")
+  @@index([organizationId], map: "FiscalYear_organization_id_54594568")
+}
+
+model FiscalPeriod {
+  id             BigInt   @id @default(autoincrement())
+  name           String   @db.VarChar(100)
+  start_date     DateTime @db.Date
+  end_date       DateTime @db.Date
+  is_closed      Boolean
+  fiscal_year_id BigInt
+  organizationId String   @map("organization_id") @db.Uuid
+
+  @@unique([name, fiscal_year_id], map: "FiscalPeriod_name_fiscal_year_id_651d7563_uniq")
+  @@index([fiscal_year_id], map: "FiscalPeriod_fiscal_year_id_db4b565c")
+  @@index([organizationId], map: "FiscalPeriod_organization_id_3aa5ecb6")
+}
+
+model ChartOfAccount {
+  id                    BigInt    @id @default(autoincrement())
+  code                  String    @db.VarChar(50)
+  name                  String    @db.VarChar(255)
+  type                  String    @db.VarChar(20)
+  sub_type              String?   @db.VarChar(50)
+  is_system_only        Boolean
+  isActive              Boolean   @map("is_active")
+  balance               Decimal   @db.Decimal(15, 2)
+  createdAt             DateTime  @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  parent_id             BigInt?
+  organizationId        String    @map("organization_id") @db.Uuid
+  balance_official      Decimal   @db.Decimal(15, 2)
+  description           String?
+  is_hidden             Boolean
+  requires_zero_balance Boolean
+  syscohada_class       String?   @db.VarChar(100)
+  syscohada_code        String?   @db.VarChar(50)
+  linkedContact         Contact?  @relation("ContactAccount")
+  linkedEmployee        Employee? @relation("EmployeeAccount")
+
+  @@unique([code, organizationId], map: "ChartOfAccount_code_organization_id_e65686b1_uniq")
+  @@index([organizationId], map: "ChartOfAccount_organization_id_5169a865")
+  @@index([parent_id], map: "ChartOfAccount_parent_id_9bd2a2f4")
+}
+
+model JournalEntry {
+  id               BigInt    @id @default(autoincrement())
+  transaction_date DateTime  @db.Timestamptz(6)
+  description      String
+  reference        String    @unique @db.VarChar(100)
+  status           String    @db.VarChar(20)
+  scope            String    @db.VarChar(20)
+  is_verified      Boolean
+  is_locked        Boolean
+  posted_at        DateTime? @db.Timestamptz(6)
+  createdAt        DateTime  @map("created_at") @db.Timestamptz(6)
+  updated_at       DateTime  @db.Timestamptz(6)
+  fiscal_period_id BigInt
+  fiscal_year_id   BigInt
+  organizationId   String    @map("organization_id") @db.Uuid
+  site_id          BigInt?
+
+  @@index([fiscal_period_id], map: "JournalEntry_fiscal_period_id_2d7114e1")
+  @@index([fiscal_year_id], map: "JournalEntry_fiscal_year_id_fcb54137")
+  @@index([organizationId], map: "JournalEntry_organization_id_89470a53")
+  @@index([reference], map: "JournalEntry_reference_cf7e4abf_like")
+  @@index([site_id], map: "JournalEntry_site_id_c57ed51a")
+}
+
+model JournalEntryLine {
+  id               BigInt  @id @default(autoincrement())
+  debit            Decimal @db.Decimal(15, 2)
+  credit           Decimal @db.Decimal(15, 2)
+  description      String?
+  contact_id       Int?
+  employee_id      Int?
+  account_id       BigInt
+  journal_entry_id BigInt
+  organizationId   String  @map("organization_id") @db.Uuid
+
+  @@index([account_id], map: "JournalEntryLine_account_id_bf54cf4a")
+  @@index([journal_entry_id], map: "JournalEntryLine_journal_entry_id_f2c9b50c")
+  @@index([organizationId], map: "JournalEntryLine_organization_id_27d631d5")
+}
+
+model Site {
+  id             BigInt           @id @default(autoincrement())
+  name           String           @db.VarChar(255)
+  code           String?          @db.VarChar(50)
+  address        String?
+  city           String?          @db.VarChar(100)
+  phone          String?          @db.VarChar(50)
+  vat_number     String?          @db.VarChar(100)
+  isActive       Boolean          @map("is_active")
+  createdAt      DateTime         @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  organizationId String           @map("organization_id") @db.Uuid
+  contacts       Contact[]
+  InventoryLevel InventoryLevel[]
+  orders         Order[]
+
+  @@unique([code, organizationId], map: "Site_code_organization_id_1dbc360c_uniq")
+  @@index([organizationId], map: "Site_organization_id_addcb3d6")
+}
+
+model InventoryLevel {
+  id              BigInt       @id @default(autoincrement())
+  quantity        Decimal      @db.Decimal(15, 2)
+  organization_id String       @db.Uuid
+  product_id      BigInt
+  site_id         BigInt
+  Organization    Organization @relation(fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "InventoryLevel_organization_id_26e5d99a_fk_Organization_id")
+  Product         Product      @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "InventoryLevel_product_id_06c9f82d_fk_Product_id")
+  Site            Site         @relation(fields: [site_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "InventoryLevel_site_id_354f746f_fk_Site_id")
+
+  @@unique([site_id, product_id, organization_id], map: "InventoryLevel_site_id_product_id_organization_id_c3854548_uniq")
+  @@index([organization_id], map: "InventoryLevel_organization_id_26e5d99a")
+  @@index([product_id], map: "InventoryLevel_product_id_06c9f82d")
+  @@index([site_id], map: "InventoryLevel_site_id_354f746f")
+}
+
+model InventoryMovement {
+  id              BigInt   @id @default(autoincrement())
+  type            String   @db.VarChar(20)
+  quantity        Decimal  @db.Decimal(15, 2)
+  cost_price      Decimal  @db.Decimal(15, 2)
+  reference       String?  @db.VarChar(100)
+  reason          String?
+  created_at      DateTime @db.Timestamptz(6)
+  organization_id String   @db.Uuid
+  product_id      BigInt
+  warehouse_id    BigInt
+
+  @@index([organization_id], map: "InventoryMovement_organization_id_89f7a0f0")
+  @@index([product_id], map: "InventoryMovement_product_id_d80d62ec")
+  @@index([warehouse_id], map: "InventoryMovement_warehouse_id_646337ea")
+}
+
+model Role_permissions {
+  id            BigInt @id @default(autoincrement())
+  role_id       BigInt
+  permission_id BigInt
+
+  @@unique([role_id, permission_id], map: "Role_permissions_role_id_permission_id_5fdb6249_uniq")
+  @@index([permission_id], map: "Role_permissions_permission_id_850a6e31")
+  @@index([role_id], map: "Role_permissions_role_id_476eef83")
+}
+
+model User_groups {
+  id       BigInt @id @default(autoincrement())
+  user_id  BigInt
+  group_id Int
+
+  @@unique([user_id, group_id], map: "User_groups_user_id_group_id_d63e199e_uniq")
+  @@index([group_id], map: "User_groups_group_id_328392a3")
+  @@index([user_id], map: "User_groups_user_id_8f675f72")
+}
+
+model User_user_permissions {
+  id            BigInt @id @default(autoincrement())
+  user_id       BigInt
+  permission_id Int
+
+  @@unique([user_id, permission_id], map: "User_user_permissions_user_id_permission_id_af0f54ec_uniq")
+  @@index([permission_id], map: "User_user_permissions_permission_id_8e998ba4")
+  @@index([user_id], map: "User_user_permissions_user_id_2c6da4d4")
+}
+
+model auth_group {
+  id   Int    @id @default(autoincrement())
+  name String @unique @db.VarChar(150)
+
+  @@index([name], map: "auth_group_name_a6ea08ec_like")
+}
+
+model auth_group_permissions {
+  id            BigInt @id @default(autoincrement())
+  group_id      Int
+  permission_id Int
+
+  @@unique([group_id, permission_id], map: "auth_group_permissions_group_id_permission_id_0cd325b0_uniq")
+  @@index([group_id], map: "auth_group_permissions_group_id_b120cbf9")
+  @@index([permission_id], map: "auth_group_permissions_permission_id_84c5c92e")
+}
+
+model auth_permission {
+  id              Int    @id @default(autoincrement())
+  name            String @db.VarChar(255)
+  content_type_id Int
+  codename        String @db.VarChar(100)
+
+  @@unique([content_type_id, codename], map: "auth_permission_content_type_id_codename_01ab375a_uniq")
+  @@index([content_type_id], map: "auth_permission_content_type_id_2f476e4b")
+}
+
+model django_admin_log {
+  id              Int      @id @default(autoincrement())
+  action_time     DateTime @db.Timestamptz(6)
+  object_id       String?
+  object_repr     String   @db.VarChar(200)
+  action_flag     Int      @db.SmallInt
+  change_message  String
+  content_type_id Int?
+  user_id         BigInt
+
+  @@index([content_type_id], map: "django_admin_log_content_type_id_c4bce8eb")
+  @@index([user_id], map: "django_admin_log_user_id_c564eba6")
+}
+
+model django_content_type {
+  id        Int    @id @default(autoincrement())
+  app_label String @db.VarChar(100)
+  model     String @db.VarChar(100)
+
+  @@unique([app_label, model], map: "django_content_type_app_label_model_76bd3d3b_uniq")
+}
+
+model django_migrations {
+  id      BigInt   @id @default(autoincrement())
+  app     String   @db.VarChar(255)
+  name    String   @db.VarChar(255)
+  applied DateTime @db.Timestamptz(6)
+}
+
+model django_session {
+  session_key  String   @id @db.VarChar(40)
+  session_data String
+  expire_date  DateTime @db.Timestamptz(6)
+
+  @@index([expire_date], map: "django_session_expire_date_a5c62663")
+  @@index([session_key], map: "django_session_session_key_c0390e0f_like")
+}
