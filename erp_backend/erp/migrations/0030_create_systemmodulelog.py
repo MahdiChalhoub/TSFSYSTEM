@@ -5,7 +5,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('erp', '0029_alter_packageupload_status'),
+        ('erp', '0029_seed_kernel_version'),
     ]
 
     operations = [
