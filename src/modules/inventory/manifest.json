@@ -1,0 +1,26 @@
+{
+    "code": "inventory",
+    "name": "Inventory Management",
+    "version": "1.0.0",
+    "description": "Categories, brands, units of measure, attributes, countries, stock levels, and inventory maintenance tools.",
+    "category": "first-party",
+    "isolation": "shared",
+    "icon": "Warehouse",
+    "routes": [
+        "/inventory/*"
+    ],
+    "permissions": [
+        "read:categories",
+        "write:categories",
+        "read:brands",
+        "write:brands",
+        "read:units",
+        "write:units",
+        "read:attributes",
+        "write:attributes",
+        "read:stock",
+        "write:stock"
+    ],
+    "dependencies": [],
+    "backendApp": "apps.inventory"
+}

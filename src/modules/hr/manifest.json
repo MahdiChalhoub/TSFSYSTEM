@@ -1,0 +1,18 @@
+{
+    "code": "hr",
+    "name": "Human Resources",
+    "version": "1.0.0",
+    "description": "Employee management, profiles, and HR workflows.",
+    "category": "first-party",
+    "isolation": "shared",
+    "icon": "UserCog",
+    "routes": [
+        "/hr/*"
+    ],
+    "permissions": [
+        "read:employees",
+        "write:employees"
+    ],
+    "dependencies": [],
+    "backendApp": "apps.hr"
+}

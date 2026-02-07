@@ -1,0 +1,23 @@
+{
+    "code": "purchases",
+    "name": "Purchasing",
+    "version": "1.0.0",
+    "description": "Purchase order creation, supplier management, and procurement workflows.",
+    "category": "first-party",
+    "isolation": "shared",
+    "icon": "Truck",
+    "routes": [
+        "/purchases/*"
+    ],
+    "permissions": [
+        "read:purchase-orders",
+        "write:purchase-orders",
+        "read:suppliers",
+        "write:suppliers"
+    ],
+    "dependencies": [
+        "inventory",
+        "finance"
+    ],
+    "backendApp": "apps.purchases"
+}
