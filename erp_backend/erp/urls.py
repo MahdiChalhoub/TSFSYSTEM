@@ -11,7 +11,7 @@ from .views import (
     UserViewSet
 )
 from .views_auth import login_view, logout_view, me_view, PublicConfigView
-from .views_saas_modules import SaaSModuleViewSet, OrgModuleViewSet, SaaSUpdateViewSet
+from .views_saas_modules import SaaSModuleViewSet, OrgModuleViewSet, SaaSUpdateViewSet, SaaSPlansViewSet
 from .views_modules import ModuleListView, ModuleEnableView, ModuleDisableView
 from .views_kernel import KernelViewSet
 from .views_packages import PackageViewSet
@@ -31,6 +31,7 @@ router.register(r'users', UserViewSet)
 router.register(r'saas/modules', SaaSModuleViewSet, basename='saas-modules')
 router.register(r'saas/org-modules', OrgModuleViewSet, basename='saas-org-modules')
 router.register(r'saas/updates', SaaSUpdateViewSet, basename='saas-updates')
+router.register(r'saas/plans', SaaSPlansViewSet, basename='saas-plans')
 router.register(r'kernel', KernelViewSet, basename='kernel')
 router.register(r'packages', PackageViewSet, basename='packages')
 

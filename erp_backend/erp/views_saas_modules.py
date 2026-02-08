@@ -229,6 +229,81 @@ class SaaSModuleViewSet(viewsets.ViewSet):
                 
         return Response(items)
 
+
+class SaaSPlansViewSet(viewsets.ViewSet):
+    """SaaS Subscription Plans Management"""
+    permission_classes = [permissions.IsAdminUser]
+
+    def list(self, request):
+        """List all subscription plans"""
+        from erp.models import SubscriptionPlan
+        plans = SubscriptionPlan.objects.select_related('category').all().order_by('monthly_price')
+        data = [{
+            'id': str(p.id),
+            'name': p.name,
+            'description': p.description or '',
+            'monthly_price': str(p.monthly_price),
+            'annual_price': str(p.annual_price),
+            'modules': p.modules or [],
+            'features': p.features or {},
+            'limits': p.limits or {},
+            'is_active': p.is_active,
+            'category': {
+                'id': str(p.category.id),
+                'name': p.category.name,
+                'type': p.category.type,
+            } if p.category else None,
+            'created_at': p.created_at.isoformat() if p.created_at else None,
+        } for p in plans]
+        return Response(data)
+
+    def create(self, request):
+        """Create a new subscription plan"""
+        from erp.models import SubscriptionPlan, PlanCategory
+        name = request.data.get('name', '').strip()
+        if not name:
+            return Response({'error': 'Plan name is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        category_id = request.data.get('category_id')
+        try:
+            category = PlanCategory.objects.get(id=category_id) if category_id else PlanCategory.objects.first()
+        except PlanCategory.DoesNotExist:
+            return Response({'error': 'Category not found'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not category:
+            return Response({'error': 'No plan categories exist. Create one first.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            plan = SubscriptionPlan.objects.create(
+                name=name,
+                description=request.data.get('description', ''),
+                monthly_price=request.data.get('monthly_price', 0),
+                annual_price=request.data.get('annual_price', 0),
+                modules=request.data.get('modules', []),
+                features=request.data.get('features', {}),
+                limits=request.data.get('limits', {}),
+                category=category,
+                is_active=True,
+            )
+            return Response({'message': f'Plan "{name}" created', 'id': str(plan.id)}, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['get', 'post'])
+    def categories(self, request):
+        """List or create plan categories"""
+        from erp.models import PlanCategory
+        if request.method == 'GET':
+            cats = PlanCategory.objects.all().order_by('name')
+            data = [{'id': str(c.id), 'name': c.name, 'type': c.type} for c in cats]
+            return Response(data)
+        else:
+            name = request.data.get('name', '').strip()
+            cat_type = request.data.get('type', 'SAAS').strip()
+            if not name:
+                return Response({'error': 'Category name is required'}, status=status.HTTP_400_BAD_REQUEST)
+            cat, created = PlanCategory.objects.get_or_create(name=name, defaults={'type': cat_type})
+            return Response({'id': str(cat.id), 'name': cat.name, 'type': cat.type, 'created': created}, status=status.HTTP_201_CREATED)
 class OrgModuleViewSet(viewsets.ViewSet):
     """Management of modules for a specific Organization (SaaS View)"""
     permission_classes = [permissions.IsAdminUser]
