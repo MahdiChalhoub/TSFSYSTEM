@@ -29,10 +29,12 @@ Mark items `[x]` when done. Stay focused — finish one before starting the next
   - ConfigurationService: rewrote to use `Organization.settings` JSON
   - Finance events: fixed `linked_coa` kwarg
 
-### 2. [ ] Module Contracts Registration
-- Create Django migration or management command to register ModuleContract records
-- Each module declares what events it subscribes to
-- Verify contract-based discovery path works alongside filesystem scan
+### 2. [x] Module Contracts Registration ✅
+- Created `register_contracts` management command
+- Registered 5 contracts: finance, crm, inventory, hr, pos
+- Each contract declares: provides (endpoints, events), needs (event subscriptions), rules (degradation)
+- Provisioning test verified dual discovery (DB contracts + filesystem scan) works
+- Documentation: `DOCUMENTATION/module_contracts.md`
 
 ### 3. [ ] Event Replay Mechanism
 - Build management command: `python manage.py replay_buffered_events`
