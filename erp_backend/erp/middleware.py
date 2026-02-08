@@ -13,29 +13,16 @@ class TenantMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        # Capture from Proxy Header
+        # 1. Explicit header from frontend (tenant-aware pages)
         tenant_id = request.headers.get('X-Tenant-Id')
         
-        # [SAAS FIX] If no tenant header, resolve user from auth token
-        # and fall back to their organization. This ensures SaaS admin users
-        # (on saas.localhost with no subdomain context) can access business data.
-        # NOTE: DRF token auth runs AFTER middleware, so we resolve manually here.
+        # 2. No header? Resolve from auth token → user.organization
+        #    Since every user MUST have an org, this always works for authenticated users.
+        #    NOTE: DRF token auth runs AFTER middleware, so we resolve manually here.
         if not tenant_id:
             user = self._resolve_user_from_token(request)
-            if user:
-                # Try the user's own organization
-                org = getattr(user, 'organization', None)
-                if org:
-                    tenant_id = str(org.id)
-                # Superuser fallback: use the first active organization
-                elif user.is_superuser:
-                    try:
-                        from .models import Organization
-                        first_org = Organization.objects.filter(is_active=True).first()
-                        if first_org:
-                            tenant_id = str(first_org.id)
-                    except Exception:
-                        pass
+            if user and user.organization_id:
+                tenant_id = str(user.organization_id)
         
         set_current_tenant_id(tenant_id)
         
