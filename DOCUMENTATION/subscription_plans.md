@@ -8,6 +8,7 @@ Full CRUD management of subscription plans, including per-plan visibility (publi
 - `GET /api/saas/plans/{id}/` — Plan detail with orgs and addons
 - `GET /api/saas/plans/categories/` — Plan categories
 - `GET /api/saas/plans/addons/` — All add-ons
+- `GET /api/saas/plans/module-features/` — Available features per module (from manifests)
 - `GET /api/saas/pricing/` — Public plans only (no auth, landing page)
 
 ## Where Data is SAVED
@@ -29,11 +30,12 @@ Full CRUD management of subscription plans, including per-plan visibility (publi
 | monthly_price | Decimal | Monthly cost (-1 = custom) |
 | annual_price | Decimal | Annual cost (-1 = custom) |
 | modules | JSONField | List of module codes |
-| features | JSONField | Feature flags dict |
+| features | JSONField | `{module_code: [feature_codes]}` — per-module feature control |
 | limits | JSONField | Resource limits (max_users, max_sites, etc.) |
 | is_active | Boolean | Whether plan is active |
 | is_public | Boolean | Show on landing page pricing section |
 | sort_order | Integer | Display order (lower = first) |
+| trial_days | Integer | Free trial duration in days (0 = no trial) |
 | category | FK(PlanCategory) | Plan category |
 
 ### PlanAddon

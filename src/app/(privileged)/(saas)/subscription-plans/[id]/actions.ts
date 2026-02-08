@@ -55,3 +55,12 @@ export async function deleteAddon(id: string) {
         method: 'DELETE',
     })
 }
+
+export async function getModuleFeatures() {
+    try {
+        return await erpFetch('saas/plans/module-features/')
+    } catch (error: any) {
+        console.error("[SaaS] Error fetching module features:", error)
+        return {}
+    }
+}

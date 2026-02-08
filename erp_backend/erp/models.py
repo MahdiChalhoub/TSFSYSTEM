@@ -270,11 +270,12 @@ class SubscriptionPlan(models.Model):
     monthly_price = models.DecimalField(max_digits=15, decimal_places=2)
     annual_price = models.DecimalField(max_digits=15, decimal_places=2)
     modules = models.JSONField(default=list)       # List of module codes included
-    features = models.JSONField(default=dict)      # Feature flags
+    features = models.JSONField(default=dict)      # {module_code: [active_feature_codes]}
     limits = models.JSONField(default=dict)        # {"max_users": 5, "max_sites": 1, ...}
     is_active = models.BooleanField(default=True)
     is_public = models.BooleanField(default=True, help_text="Public plans show on landing/pricing page. Private plans are org-specific.")
     sort_order = models.IntegerField(default=0, help_text="Display order on pricing pages (lower = first)")
+    trial_days = models.IntegerField(default=0, help_text="Free trial duration in days. 0 = no trial.")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

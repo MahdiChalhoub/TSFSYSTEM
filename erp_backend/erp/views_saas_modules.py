@@ -271,6 +271,7 @@ class SaaSPlansViewSet(viewsets.ViewSet):
             'is_active': p.is_active,
             'is_public': p.is_public,
             'sort_order': p.sort_order,
+            'trial_days': p.trial_days,
             'category': {
                 'id': str(p.category.id),
                 'name': p.category.name,
@@ -332,6 +333,7 @@ class SaaSPlansViewSet(viewsets.ViewSet):
         if 'is_active' in d: plan.is_active = d['is_active']
         if 'is_public' in d: plan.is_public = d['is_public']
         if 'sort_order' in d: plan.sort_order = d['sort_order']
+        if 'trial_days' in d: plan.trial_days = d['trial_days']
         if 'category_id' in d:
             try:
                 plan.category = PlanCategory.objects.get(id=d['category_id'])
@@ -369,6 +371,7 @@ class SaaSPlansViewSet(viewsets.ViewSet):
                 is_active=request.data.get('is_active', True),
                 is_public=request.data.get('is_public', True),
                 sort_order=request.data.get('sort_order', 0),
+                trial_days=request.data.get('trial_days', 0),
             )
             return Response({'message': f'Plan "{name}" created', 'id': str(plan.id)}, status=status.HTTP_201_CREATED)
         except Exception as e:
@@ -385,6 +388,21 @@ class SaaSPlansViewSet(viewsets.ViewSet):
         plan.is_public = not plan.is_public
         plan.save()
         return Response({'is_public': plan.is_public, 'message': f'Plan is now {"public" if plan.is_public else "private"}'})
+
+    @action(detail=False, methods=['get'], url_path='module-features')
+    def module_features(self, request):
+        """Return available features for each module (from manifest)"""
+        from erp.models import SystemModule
+        result = {}
+        for m in SystemModule.objects.all():
+            code = m.manifest.get('code', m.name.lower())
+            feats = m.manifest.get('features', [])
+            if feats:
+                result[code] = {
+                    'name': m.name,
+                    'features': feats,  # [{code, name, default}, ...]
+                }
+        return Response(result)
 
     @action(detail=False, methods=['get', 'post'])
     def categories(self, request):
