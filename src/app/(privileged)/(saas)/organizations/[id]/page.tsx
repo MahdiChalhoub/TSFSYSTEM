@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { getOrganization, getOrgUsage, getOrgBilling, getOrgModules, toggleOrgModule, updateModuleFeatures, getOrgUsers, createOrgUser, resetOrgUserPassword, getOrgSites, createOrgSite, toggleOrgSite } from "./actions"
+import { getOrganization, getOrgUsage, getOrgBilling, getOrgModules, toggleOrgModule, updateModuleFeatures, changeOrgPlan, getOrgUsers, createOrgUser, resetOrgUserPassword, getOrgSites, createOrgSite, toggleOrgSite } from "./actions"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -621,23 +621,102 @@ export default function OrganizationDetailPage() {
                     {/* Available Plans */}
                     {usage?.available_plans?.length > 0 && (
                         <Card className="border-gray-100 shadow-sm">
-                            <CardHeader><CardTitle className="font-bold">Available Plans</CardTitle></CardHeader>
+                            <CardHeader>
+                                <div className="flex justify-between items-center">
+                                    <CardTitle className="font-bold">Available Plans</CardTitle>
+                                    <Badge className="bg-gray-100 text-gray-500 text-[10px]">{usage.available_plans.length} plans</Badge>
+                                </div>
+                                <CardDescription className="text-xs text-gray-400">Select a plan to assign to this organization. Plans are managed from the <a href="/subscription-plans" className="text-emerald-600 underline hover:text-emerald-700 font-bold">Subscription Plans</a> page.</CardDescription>
+                            </CardHeader>
                             <CardContent>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                    {usage.available_plans.map((p: any) => (
-                                        <div key={p.id} className={`p-4 rounded-2xl border transition-all ${usage.plan?.id === p.id
-                                            ? 'border-emerald-300 bg-emerald-50/50 shadow-sm'
-                                            : 'border-gray-100 hover:border-gray-200'}`}>
-                                            <div className="text-center">
-                                                <p className="font-bold text-gray-900">{p.name}</p>
-                                                <p className="text-2xl font-black text-gray-900 mt-2">${p.monthly_price}<span className="text-sm text-gray-400 font-medium">/mo</span></p>
-                                                {p.category && <p className="text-[10px] text-gray-400 mt-1">{p.category}</p>}
-                                                {usage.plan?.id === p.id && (
-                                                    <Badge className="mt-2 bg-emerald-100 text-emerald-700 text-[10px]">Current</Badge>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {usage.available_plans.map((p: any) => {
+                                        const isCurrent = usage.plan?.id === p.id
+                                        const isCustom = parseFloat(p.monthly_price) < 0
+                                        const isFree = parseFloat(p.monthly_price) === 0
+                                        const limits = p.limits || {}
+
+                                        return (
+                                            <div key={p.id} className={`p-5 rounded-2xl border-2 transition-all flex flex-col ${isCurrent
+                                                ? 'border-emerald-300 bg-emerald-50/50 shadow-md'
+                                                : 'border-gray-100 hover:border-gray-200 hover:shadow-sm bg-white'}`}>
+                                                <div className="flex items-start justify-between mb-3">
+                                                    <div>
+                                                        <p className="font-black text-gray-900">{p.name}</p>
+                                                        {p.category && <span className="text-[10px] text-gray-400 font-medium">{p.category}</span>}
+                                                    </div>
+                                                    <div className="flex flex-col items-end gap-1">
+                                                        {isCurrent && <Badge className="bg-emerald-100 text-emerald-700 text-[9px]">Current</Badge>}
+                                                        {p.is_public && <Badge className="bg-blue-50 text-blue-500 text-[9px]">🌐 Public</Badge>}
+                                                        {p.trial_days > 0 && <Badge className="bg-amber-50 text-amber-600 text-[9px]">{p.trial_days}d Trial</Badge>}
+                                                    </div>
+                                                </div>
+
+                                                {/* Price */}
+                                                <div className="mb-3">
+                                                    {isCustom ? (
+                                                        <span className="text-xl font-black text-purple-600">Custom</span>
+                                                    ) : isFree ? (
+                                                        <span className="text-xl font-black text-emerald-600">Free</span>
+                                                    ) : (
+                                                        <>
+                                                            <span className="text-2xl font-black text-gray-900">${parseFloat(p.monthly_price).toFixed(0)}</span>
+                                                            <span className="text-xs text-gray-400 font-bold ml-1">/mo</span>
+                                                        </>
+                                                    )}
+                                                </div>
+
+                                                {/* Description */}
+                                                {p.description && <p className="text-[11px] text-gray-400 mb-3 line-clamp-2">{p.description}</p>}
+
+                                                {/* Modules */}
+                                                {p.modules?.length > 0 && (
+                                                    <div className="flex flex-wrap gap-1 mb-3">
+                                                        {p.modules.slice(0, 4).map((m: string) => (
+                                                            <Badge key={m} className="bg-gray-50 text-gray-500 text-[9px] border border-gray-100 uppercase">{m}</Badge>
+                                                        ))}
+                                                        {p.modules.length > 4 && (
+                                                            <Badge className="bg-gray-50 text-gray-400 text-[9px] border border-gray-100">+{p.modules.length - 4}</Badge>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {/* Limits */}
+                                                {Object.keys(limits).length > 0 && (
+                                                    <div className="grid grid-cols-2 gap-1 mb-3 text-[10px] text-gray-400">
+                                                        {limits.max_users != null && <span>👥 {limits.max_users < 0 ? '∞' : limits.max_users} users</span>}
+                                                        {limits.max_sites != null && <span>🏢 {limits.max_sites < 0 ? '∞' : limits.max_sites} sites</span>}
+                                                    </div>
+                                                )}
+
+                                                <div className="flex-1" />
+
+                                                {/* Switch Plan Button */}
+                                                {!isCurrent && (
+                                                    <Button size="sm"
+                                                        className="w-full mt-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs"
+                                                        onClick={async () => {
+                                                            try {
+                                                                const result = await changeOrgPlan(orgId, p.id)
+                                                                toast.success(result.message || `Switched to ${p.name}`)
+                                                                // Refresh usage data
+                                                                const newUsage = await getOrgUsage(orgId)
+                                                                setUsage(newUsage)
+                                                            } catch (err: any) {
+                                                                toast.error(err.message || 'Failed to change plan')
+                                                            }
+                                                        }}>
+                                                        Switch to This Plan
+                                                    </Button>
+                                                )}
+                                                {isCurrent && (
+                                                    <div className="text-center mt-3 text-[11px] text-emerald-600 font-black uppercase tracking-wider">
+                                                        ✓ Active Plan
+                                                    </div>
                                                 )}
                                             </div>
-                                        </div>
-                                    ))}
+                                        )
+                                    })}
                                 </div>
                             </CardContent>
                         </Card>

@@ -67,6 +67,19 @@ export async function updateModuleFeatures(orgId: string, moduleCode: string, fe
     }
 }
 
+export async function changeOrgPlan(orgId: string, planId: string) {
+    try {
+        return await erpFetch(`saas/org-modules/${orgId}/change-plan/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ plan_id: planId })
+        })
+    } catch (error) {
+        console.error("[SaaS] Error changing plan:", error)
+        throw error
+    }
+}
+
 // ─── User Management ─────────────────────────────────────────────
 
 export async function getOrgUsers(orgId: string) {

@@ -47,13 +47,16 @@ export default function PricingSection() {
 
                     return (
                         <Card key={plan.id} className={`backdrop-blur-xl rounded-[2rem] overflow-hidden flex flex-col transition-all hover:-translate-y-2 duration-300 group ${isCustom
-                                ? 'bg-gradient-to-br from-purple-900/40 via-indigo-900/40 to-pink-900/40 border-purple-500/20 hover:border-purple-400/40'
-                                : 'bg-[#0f172a]/40 border-white/5 hover:border-emerald-500/30'
+                            ? 'bg-gradient-to-br from-purple-900/40 via-indigo-900/40 to-pink-900/40 border-purple-500/20 hover:border-purple-400/40'
+                            : 'bg-[#0f172a]/40 border-white/5 hover:border-emerald-500/30'
                             }`}>
                             <CardHeader className="p-8 pb-0">
                                 <div className="flex items-center justify-between">
                                     <CardTitle className="text-2xl font-black text-white">{plan.name}</CardTitle>
-                                    {isCustom && <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-[10px]">Enterprise</Badge>}
+                                    <div className="flex gap-1.5">
+                                        {plan.trial_days > 0 && <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[10px]">{plan.trial_days}d Free Trial</Badge>}
+                                        {isCustom && <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-[10px]">Enterprise</Badge>}
+                                    </div>
                                 </div>
                                 <CardDescription className="text-slate-400 mt-2 min-h-[40px]">
                                     {plan.description || "Enterprise-grade features for scaling businesses."}
