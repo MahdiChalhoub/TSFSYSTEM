@@ -6,7 +6,7 @@ import { getOrganizations, toggleOrganizationStatus, createOrganization, deleteO
 import { getOrgModules, toggleOrgModule, updateOrgModuleFeatures } from "@/app/actions/saas/modules"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Building, Plus, Globe, ShieldCheck, Activity, Trash2, Zap, Settings2, Power, Lock, Users, Layers, Clock, Mail, Phone, MapPin } from "lucide-react"
+import { Building, Plus, Globe, ShieldCheck, Activity, Trash2, Zap, Settings2, Power, Lock, Users, Layers, Clock, Mail, Phone, MapPin, Search, Filter, X } from "lucide-react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
@@ -19,6 +19,30 @@ export default function OrganizationsPage() {
     const [loading, setLoading] = useState(true)
     const branding = useDynamicBranding();
     const router = useRouter();
+
+    // ─── Filters ─────────────────────────────────────────────
+    const [search, setSearch] = useState('')
+    const [filterPlan, setFilterPlan] = useState('all')
+    const [filterType, setFilterType] = useState('all')
+    const [filterCountry, setFilterCountry] = useState('all')
+    const [filterStatus, setFilterStatus] = useState('all')
+
+    // Derive unique filter options from data
+    const uniquePlans = [...new Set(orgs.map(o => o.current_plan_name || 'Free Tier'))].sort()
+    const uniqueTypes = [...new Set(orgs.map(o => o.business_type_name || '').filter(Boolean))].sort()
+    const uniqueCountries = [...new Set(orgs.map(o => o.country || '').filter(Boolean))].sort()
+
+    // Apply filters
+    const filteredOrgs = orgs.filter(o => {
+        if (search && !o.name.toLowerCase().includes(search.toLowerCase()) && !o.slug.toLowerCase().includes(search.toLowerCase())) return false
+        if (filterPlan !== 'all' && (o.current_plan_name || 'Free Tier') !== filterPlan) return false
+        if (filterType !== 'all' && (o.business_type_name || '') !== filterType) return false
+        if (filterCountry !== 'all' && (o.country || '') !== filterCountry) return false
+        if (filterStatus === 'active' && !o.is_active) return false
+        if (filterStatus === 'suspended' && o.is_active) return false
+        return true
+    })
+    const hasFilters = search || filterPlan !== 'all' || filterType !== 'all' || filterCountry !== 'all' || filterStatus !== 'all'
 
     useEffect(() => {
         loadData()
@@ -257,12 +281,55 @@ export default function OrganizationsPage() {
                 </Dialog>
             </div>
 
+            {/* ─── Filter Bar ────────────────────────────────────────── */}
+            <div className="flex flex-wrap items-center gap-3 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                <div className="relative flex-1 min-w-[200px]">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input type="text" placeholder="Search by name or slug..." value={search} onChange={e => setSearch(e.target.value)}
+                        className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-100 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-300" />
+                </div>
+                <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
+                    className="text-xs font-bold border border-gray-100 rounded-xl px-3 py-2.5 bg-gray-50 text-gray-700 focus:ring-2 focus:ring-emerald-500/30">
+                    <option value="all">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="suspended">Suspended</option>
+                </select>
+                <select value={filterPlan} onChange={e => setFilterPlan(e.target.value)}
+                    className="text-xs font-bold border border-gray-100 rounded-xl px-3 py-2.5 bg-gray-50 text-gray-700 focus:ring-2 focus:ring-emerald-500/30">
+                    <option value="all">All Plans</option>
+                    {uniquePlans.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+                {uniqueTypes.length > 0 && (
+                    <select value={filterType} onChange={e => setFilterType(e.target.value)}
+                        className="text-xs font-bold border border-gray-100 rounded-xl px-3 py-2.5 bg-gray-50 text-gray-700 focus:ring-2 focus:ring-emerald-500/30">
+                        <option value="all">All Types</option>
+                        {uniqueTypes.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                )}
+                {uniqueCountries.length > 0 && (
+                    <select value={filterCountry} onChange={e => setFilterCountry(e.target.value)}
+                        className="text-xs font-bold border border-gray-100 rounded-xl px-3 py-2.5 bg-gray-50 text-gray-700 focus:ring-2 focus:ring-emerald-500/30">
+                        <option value="all">All Countries</option>
+                        {uniqueCountries.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                )}
+                {hasFilters && (
+                    <button onClick={() => { setSearch(''); setFilterPlan('all'); setFilterType('all'); setFilterCountry('all'); setFilterStatus('all') }}
+                        className="text-xs font-bold text-red-500 hover:text-red-700 flex items-center gap-1 px-3 py-2.5 rounded-xl border border-red-100 hover:bg-red-50 transition-all">
+                        <X size={12} /> Clear
+                    </button>
+                )}
+                <span className="text-[10px] text-gray-400 font-bold">{filteredOrgs.length} of {orgs.length}</span>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {loading ? (
                     <div className="col-span-full py-20 text-center text-gray-500 font-medium">Loading platform data...</div>
-                ) : orgs.length === 0 ? (
-                    <div className="col-span-full py-20 text-center text-gray-500 font-medium">No organizations found.</div>
-                ) : orgs.map((org) => {
+                ) : filteredOrgs.length === 0 ? (
+                    <div className="col-span-full py-20 text-center text-gray-500 font-medium">
+                        {hasFilters ? 'No organizations match the current filters.' : 'No organizations found.'}
+                    </div>
+                ) : filteredOrgs.map((org) => {
                     const isSaasOrg = org.slug === 'saas'
 
                     return (

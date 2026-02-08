@@ -233,6 +233,51 @@ class OrgModuleViewSet(viewsets.ViewSet):
     """Management of modules for a specific Organization (SaaS View)"""
     permission_classes = [permissions.IsAdminUser]
 
+    # Default feature definitions for modules whose manifests lack a 'features' key
+    DEFAULT_FEATURES = {
+        'finance': [
+            {'code': 'chart_of_accounts', 'name': 'Chart of Accounts'},
+            {'code': 'journal_entries', 'name': 'Journal Entries'},
+            {'code': 'fiscal_years', 'name': 'Fiscal Years'},
+            {'code': 'loans', 'name': 'Loans & Installments'},
+            {'code': 'financial_reports', 'name': 'Financial Reports'},
+        ],
+        'inventory': [
+            {'code': 'products', 'name': 'Product Management'},
+            {'code': 'warehouses', 'name': 'Warehouses'},
+            {'code': 'stock_movements', 'name': 'Stock Movements'},
+            {'code': 'brands', 'name': 'Brands & Categories'},
+            {'code': 'barcode', 'name': 'Barcode System'},
+        ],
+        'pos': [
+            {'code': 'sales', 'name': 'Sales & Orders'},
+            {'code': 'returns', 'name': 'Returns & Refunds'},
+            {'code': 'receipts', 'name': 'Receipt Printing'},
+            {'code': 'cash_register', 'name': 'Cash Register'},
+            {'code': 'pos_terminal', 'name': 'POS Terminal'},
+        ],
+        'crm': [
+            {'code': 'contacts', 'name': 'Contact Management'},
+            {'code': 'leads', 'name': 'Leads & Pipelines'},
+        ],
+        'hr': [
+            {'code': 'employees', 'name': 'Employee Management'},
+            {'code': 'payroll', 'name': 'Payroll'},
+            {'code': 'attendance', 'name': 'Attendance Tracking'},
+        ],
+        'core': [
+            {'code': 'organizations', 'name': 'Organizations'},
+            {'code': 'sites', 'name': 'Sites / Locations'},
+            {'code': 'users', 'name': 'User Management'},
+            {'code': 'roles', 'name': 'Roles & Permissions'},
+        ],
+        'coreplatform': [
+            {'code': 'modules', 'name': 'Module Registry'},
+            {'code': 'system_updates', 'name': 'System Updates'},
+            {'code': 'platform_settings', 'name': 'Platform Settings'},
+        ],
+    }
+
     @action(detail=True, methods=['get'])
     def modules(self, request, pk=None):
         org = Organization.objects.get(id=pk)
@@ -246,8 +291,10 @@ class OrgModuleViewSet(viewsets.ViewSet):
             is_core = m.manifest.get('is_core', False) or m.manifest.get('required', False) or m.name in ['core', 'coreplatform']
             om_record = enabled_map.get(m.name)
             
-            # [FEATURE FLAGS] Extract features from manifest
+            # [FEATURE FLAGS] Extract features from manifest, fallback to defaults
             available_features = m.manifest.get('features', [])
+            if not available_features:
+                available_features = self.DEFAULT_FEATURES.get(m.name, [])
             
             data.append({
                 'code': m.name,
@@ -294,29 +341,55 @@ class OrgModuleViewSet(viewsets.ViewSet):
 
     @action(detail=True, methods=['get'])
     def usage(self, request, pk=None):
-        """Returns live usage metrics for an organization"""
-        from erp.models import Site, User, SubscriptionPayment
+        """Returns live usage metrics for an organization — reads real plan data"""
+        from erp.models import Site, User, SubscriptionPlan, SubscriptionPayment
         try:
             org = Organization.objects.get(id=pk)
         except Organization.DoesNotExist:
             return Response({'error': 'Organization not found'}, status=status.HTTP_404_NOT_FOUND)
 
-        # Current plan limits (defaults if no plan)
+        # Read real plan from DB
         plan = org.current_plan
         max_users = 5
         max_sites = 1
         max_storage_mb = 500
         max_invoices = 100
 
-        if plan and hasattr(plan, 'monthly_price'):
-            # Scale limits based on plan price tier
-            price = float(plan.monthly_price)
-            if price >= 200:
-                max_users, max_sites, max_storage_mb, max_invoices = 50, 10, 10000, 5000
-            elif price >= 100:
-                max_users, max_sites, max_storage_mb, max_invoices = 25, 5, 5000, 2000
-            elif price >= 50:
-                max_users, max_sites, max_storage_mb, max_invoices = 10, 3, 2000, 500
+        plan_data = {
+            'id': None,
+            'name': 'Free Tier',
+            'monthly_price': '0.00',
+            'annual_price': '0.00',
+            'category': None,
+            'expiry': org.plan_expiry_at.isoformat() if org.plan_expiry_at else None,
+        }
+
+        if plan:
+            # Read limits from plan.limits JSONB field
+            limits = plan.limits or {}
+            max_users = limits.get('max_users', max_users)
+            max_sites = limits.get('max_sites', max_sites)
+            max_storage_mb = limits.get('max_storage_mb', max_storage_mb)
+            max_invoices = limits.get('max_invoices', max_invoices)
+
+            plan_data = {
+                'id': str(plan.id),
+                'name': plan.name,
+                'monthly_price': str(plan.monthly_price),
+                'annual_price': str(plan.annual_price),
+                'category': plan.category.name if plan.category else None,
+                'expiry': org.plan_expiry_at.isoformat() if org.plan_expiry_at else None,
+            }
+
+        # Also fetch all available plans for display
+        all_plans = SubscriptionPlan.objects.all().order_by('monthly_price')
+        available_plans = [{
+            'id': str(p.id),
+            'name': p.name,
+            'monthly_price': str(p.monthly_price),
+            'annual_price': str(p.annual_price),
+            'category': p.category.name if p.category else None,
+        } for p in all_plans]
 
         user_count = User.objects.filter(organization=org).count()
         site_count = Site.original_objects.filter(organization=org).count()
@@ -338,11 +411,8 @@ class OrgModuleViewSet(viewsets.ViewSet):
             'storage': {'current_mb': storage_mb, 'limit_mb': max_storage_mb, 'percent': round(storage_mb / max_storage_mb * 100)},
             'modules': {'current': module_count, 'total_available': SystemModule.objects.count()},
             'invoices': {'current': invoices_month, 'limit': max_invoices, 'percent': round(invoices_month / max_invoices * 100) if max_invoices else 0},
-            'plan': {
-                'name': plan.name if plan else 'Free Tier',
-                'monthly_price': str(plan.monthly_price) if plan else '0.00',
-                'expiry': org.plan_expiry_at.isoformat() if org.plan_expiry_at else None,
-            }
+            'plan': plan_data,
+            'available_plans': available_plans,
         })
 
     @action(detail=True, methods=['get'])
@@ -367,4 +437,99 @@ class OrgModuleViewSet(viewsets.ViewSet):
         } for p in payments]
 
         return Response(data)
+
+    # ─── User Management Endpoints ────────────────────────────────────
+
+    @action(detail=True, methods=['get'])
+    def users(self, request, pk=None):
+        """List all users for an organization"""
+        from erp.models import User
+        try:
+            org = Organization.objects.get(id=pk)
+        except Organization.DoesNotExist:
+            return Response({'error': 'Organization not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        users = User.objects.filter(organization=org).select_related('role').order_by('-date_joined')
+        data = [{
+            'id': str(u.id),
+            'username': u.username,
+            'email': u.email or '',
+            'first_name': u.first_name or '',
+            'last_name': u.last_name or '',
+            'is_superuser': u.is_superuser,
+            'is_staff': u.is_staff,
+            'is_active': u.is_active,
+            'role': u.role.name if u.role else None,
+            'date_joined': u.date_joined.isoformat() if u.date_joined else None,
+        } for u in users]
+
+        return Response(data)
+
+    @action(detail=True, methods=['post'])
+    def create_user(self, request, pk=None):
+        """Create a new user in an organization"""
+        from erp.models import User
+        try:
+            org = Organization.objects.get(id=pk)
+        except Organization.DoesNotExist:
+            return Response({'error': 'Organization not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        username = request.data.get('username', '').strip()
+        email = request.data.get('email', '').strip()
+        password = request.data.get('password', '').strip()
+        is_superuser = request.data.get('is_superuser', False)
+        first_name = request.data.get('first_name', '').strip()
+        last_name = request.data.get('last_name', '').strip()
+
+        if not username or not password:
+            return Response({'error': 'Username and password are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check unique username per org
+        if User.objects.filter(username=username, organization=org).exists():
+            return Response({'error': f'Username "{username}" already exists in this organization'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+                organization=org,
+                first_name=first_name,
+                last_name=last_name,
+                is_superuser=is_superuser,
+                is_staff=is_superuser,  # superusers are also staff
+            )
+            return Response({
+                'message': f'User "{username}" created successfully',
+                'user': {
+                    'id': str(user.id),
+                    'username': user.username,
+                    'email': user.email,
+                    'is_superuser': user.is_superuser,
+                }
+            }, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def reset_password(self, request, pk=None):
+        """Reset a user's password"""
+        from erp.models import User
+        user_id = request.data.get('user_id')
+        new_password = request.data.get('new_password', '').strip()
+
+        if not user_id or not new_password:
+            return Response({'error': 'user_id and new_password are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if len(new_password) < 6:
+            return Response({'error': 'Password must be at least 6 characters'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(id=user_id, organization_id=pk)
+            user.set_password(new_password)
+            user.save(update_fields=['password'])
+            return Response({'message': f'Password reset for "{user.username}"'})
+        except User.DoesNotExist:
+            return Response({'error': 'User not found in this organization'}, status=status.HTTP_404_NOT_FOUND)
+
 

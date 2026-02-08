@@ -53,3 +53,51 @@ export async function toggleOrgModule(orgId: string, moduleCode: string, action:
         throw error
     }
 }
+
+export async function updateModuleFeatures(orgId: string, moduleCode: string, features: string[]) {
+    try {
+        return await erpFetch(`saas/org-modules/${orgId}/update_features/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ module_code: moduleCode, features })
+        })
+    } catch (error) {
+        console.error("[SaaS] Error updating features:", error)
+        throw error
+    }
+}
+
+// ─── User Management ─────────────────────────────────────────────
+
+export async function getOrgUsers(orgId: string) {
+    try {
+        return await erpFetch(`saas/org-modules/${orgId}/users/`)
+    } catch (error) {
+        console.error("[SaaS] Error fetching users:", error)
+        return []
+    }
+}
+
+export async function createOrgUser(orgId: string, data: {
+    username: string
+    email?: string
+    password: string
+    first_name?: string
+    last_name?: string
+    is_superuser?: boolean
+}) {
+    return await erpFetch(`saas/org-modules/${orgId}/create_user/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+}
+
+export async function resetOrgUserPassword(orgId: string, userId: string, newPassword: string) {
+    return await erpFetch(`saas/org-modules/${orgId}/reset_password/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, new_password: newPassword })
+    })
+}
+

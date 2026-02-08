@@ -15,6 +15,8 @@ class OrganizationSerializer(serializers.ModelSerializer):
     site_count = serializers.SerializerMethodField()
     user_count = serializers.SerializerMethodField()
     module_count = serializers.SerializerMethodField()
+    current_plan_name = serializers.SerializerMethodField()
+    business_type_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Organization
@@ -24,8 +26,10 @@ class OrganizationSerializer(serializers.ModelSerializer):
             'address', 'city', 'state', 'zip_code', 'country', 'timezone',
             'business_type', 'base_currency', 'settings',
             'site_count', 'user_count', 'module_count',
+            'current_plan_name', 'business_type_name',
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'site_count', 'user_count', 'module_count']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'site_count', 'user_count', 'module_count',
+                            'current_plan_name', 'business_type_name']
 
     def get_site_count(self, obj):
         return Site.original_objects.filter(organization=obj).count()
@@ -40,6 +44,12 @@ class OrganizationSerializer(serializers.ModelSerializer):
             # Fallback: count all installed SystemModules (global)
             count = SystemModule.objects.filter(status='INSTALLED').count()
         return count
+
+    def get_current_plan_name(self, obj):
+        return obj.current_plan.name if obj.current_plan else 'Free Tier'
+
+    def get_business_type_name(self, obj):
+        return obj.business_type.name if obj.business_type else None
 
 
 class SiteSerializer(serializers.ModelSerializer):

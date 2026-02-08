@@ -2,26 +2,24 @@
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { getOrganization, getOrgUsage, getOrgBilling, getOrgModules, toggleOrgModule } from "./actions"
+import { getOrganization, getOrgUsage, getOrgBilling, getOrgModules, toggleOrgModule, updateModuleFeatures, getOrgUsers, createOrgUser, resetOrgUserPassword } from "./actions"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { toast } from "sonner"
 import {
     ArrowLeft, Users, MapPin, HardDrive, FileText,
     Package, ShieldCheck, AlertTriangle, Loader2,
     ToggleLeft, ToggleRight, Crown, Layers, Activity,
-    CreditCard, TrendingUp, ChevronRight
+    CreditCard, TrendingUp, ChevronRight, Plus, KeyRound,
+    UserCog, Eye, EyeOff, Check
 } from "lucide-react"
 
-// ─── Usage Meter Component ───────────────────────────────────────────────────
+// ─── Usage Meter ─────────────────────────────────────────────────────────────
 function UsageMeter({ label, icon: Icon, current, limit, percent, unit = '' }: {
-    label: string
-    icon: any
-    current: number
-    limit: number
-    percent: number
-    unit?: string
+    label: string; icon: any; current: number; limit: number; percent: number; unit?: string
 }) {
     const isWarning = percent >= 80
     const isDanger = percent >= 95
@@ -40,10 +38,7 @@ function UsageMeter({ label, icon: Icon, current, limit, percent, unit = '' }: {
                 </span>
             </div>
             <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div
-                    className={`h-full rounded-full transition-all duration-500 ${barColor}`}
-                    style={{ width: `${Math.min(percent, 100)}%` }}
-                />
+                <div className={`h-full rounded-full transition-all duration-500 ${barColor}`} style={{ width: `${Math.min(percent, 100)}%` }} />
             </div>
             {isDanger && (
                 <p className="text-[10px] text-red-500 font-bold mt-2 flex items-center gap-1">
@@ -54,27 +49,24 @@ function UsageMeter({ label, icon: Icon, current, limit, percent, unit = '' }: {
     )
 }
 
-// ─── Module Card Component ───────────────────────────────────────────────────
-function ModuleCard({ module, onToggle, toggling }: {
-    module: any
-    onToggle: (code: string, status: string) => void
-    toggling: string | null
+// ─── Module Card ─────────────────────────────────────────────────────────────
+function ModuleCard({ module, onToggle, toggling, onFeatureToggle }: {
+    module: any; onToggle: (code: string, status: string) => void; toggling: string | null
+    onFeatureToggle: (code: string, featureCode: string, enabled: boolean) => void
 }) {
     const isInstalled = module.status === 'INSTALLED'
     const isCore = module.is_core
 
     return (
         <div className={`p-5 rounded-2xl border transition-all group ${isInstalled
-                ? 'bg-white border-emerald-100 hover:border-emerald-300 shadow-sm'
-                : 'bg-gray-50 border-gray-100 hover:border-gray-200'
+            ? 'bg-white border-emerald-100 hover:border-emerald-300 shadow-sm'
+            : 'bg-gray-50 border-gray-100 hover:border-gray-200'
             }`}>
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isCore
-                            ? 'bg-indigo-50 text-indigo-500'
-                            : isInstalled
-                                ? 'bg-emerald-50 text-emerald-500'
-                                : 'bg-gray-100 text-gray-400'
+                        ? 'bg-indigo-50 text-indigo-500'
+                        : isInstalled ? 'bg-emerald-50 text-emerald-500' : 'bg-gray-100 text-gray-400'
                         }`}>
                         {isCore ? <Crown size={18} /> : <Package size={18} />}
                     </div>
@@ -91,9 +83,7 @@ function ModuleCard({ module, onToggle, toggling }: {
                         {isInstalled ? 'Active' : 'Inactive'}
                     </Badge>
                     {isCore ? (
-                        <div className="text-[9px] text-indigo-500 font-black uppercase bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100">
-                            Core
-                        </div>
+                        <div className="text-[9px] text-indigo-500 font-black uppercase bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100">Core</div>
                     ) : (
                         <button
                             onClick={() => onToggle(module.code, module.status)}
@@ -117,14 +107,24 @@ function ModuleCard({ module, onToggle, toggling }: {
                 <div className="mt-4 pt-3 border-t border-gray-100">
                     <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-2">Capabilities</p>
                     <div className="flex flex-wrap gap-1.5">
-                        {module.available_features.map((f: any) => (
-                            <span key={f.code || f} className={`text-[10px] px-2 py-0.5 rounded-md font-medium ${module.active_features?.includes(f.code || f)
-                                    ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                                    : 'bg-gray-50 text-gray-400 border border-gray-100'
-                                }`}>
-                                {f.name || f}
-                            </span>
-                        ))}
+                        {module.available_features.map((f: any) => {
+                            const fCode = f.code || f
+                            const fName = f.name || f
+                            const isActive = module.active_features?.includes(fCode)
+                            return (
+                                <button
+                                    key={fCode}
+                                    onClick={() => onFeatureToggle(module.code, fCode, !isActive)}
+                                    className={`text-[10px] px-2 py-0.5 rounded-md font-medium cursor-pointer transition-all ${isActive
+                                        ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 hover:bg-emerald-100'
+                                        : 'bg-gray-50 text-gray-400 border border-gray-100 hover:bg-gray-100'
+                                        }`}
+                                >
+                                    {isActive && <Check size={8} className="inline mr-0.5" />}
+                                    {fName}
+                                </button>
+                            )
+                        })}
                     </div>
                 </div>
             )}
@@ -142,23 +142,37 @@ export default function OrganizationDetailPage() {
     const [usage, setUsage] = useState<any>(null)
     const [billing, setBilling] = useState<any[]>([])
     const [modules, setModules] = useState<any[]>([])
+    const [users, setUsers] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
-    const [activeTab, setActiveTab] = useState<'overview' | 'modules' | 'usage' | 'billing'>('overview')
+    const [activeTab, setActiveTab] = useState<'overview' | 'modules' | 'usage' | 'billing' | 'users'>('overview')
     const [toggling, setToggling] = useState<string | null>(null)
+
+    // User creation dialog
+    const [showCreateUser, setShowCreateUser] = useState(false)
+    const [newUser, setNewUser] = useState({ username: '', email: '', password: '', first_name: '', last_name: '', is_superuser: false })
+    const [creating, setCreating] = useState(false)
+
+    // Reset password dialog
+    const [resetTarget, setResetTarget] = useState<any>(null)
+    const [newPassword, setNewPassword] = useState('')
+    const [showPass, setShowPass] = useState(false)
+    const [resetting, setResetting] = useState(false)
 
     useEffect(() => {
         async function load() {
             try {
-                const [orgData, usageData, billingData, modulesData] = await Promise.all([
+                const [orgData, usageData, billingData, modulesData, usersData] = await Promise.all([
                     getOrganization(orgId),
                     getOrgUsage(orgId),
                     getOrgBilling(orgId),
-                    getOrgModules(orgId)
+                    getOrgModules(orgId),
+                    getOrgUsers(orgId),
                 ])
                 setOrg(orgData)
                 setUsage(usageData)
                 setBilling(Array.isArray(billingData) ? billingData : [])
                 setModules(Array.isArray(modulesData) ? modulesData : [])
+                setUsers(Array.isArray(usersData) ? usersData : [])
             } catch {
                 toast.error("Failed to load organization details")
             } finally {
@@ -174,18 +188,54 @@ export default function OrganizationDetailPage() {
             const action = currentStatus === 'INSTALLED' ? 'disable' : 'enable'
             await toggleOrgModule(orgId, code, action)
             toast.success(`Module ${code} ${action}d`)
-            // Refresh
-            const [modulesData, usageData] = await Promise.all([
-                getOrgModules(orgId),
-                getOrgUsage(orgId)
-            ])
+            const [modulesData, usageData] = await Promise.all([getOrgModules(orgId), getOrgUsage(orgId)])
             setModules(Array.isArray(modulesData) ? modulesData : [])
             setUsage(usageData)
-        } catch {
-            toast.error("Failed to toggle module")
-        } finally {
-            setToggling(null)
-        }
+        } catch { toast.error("Failed to toggle module") }
+        finally { setToggling(null) }
+    }
+
+    async function handleFeatureToggle(moduleCode: string, featureCode: string, enabled: boolean) {
+        const mod = modules.find(m => m.code === moduleCode)
+        if (!mod) return
+        const current: string[] = mod.active_features || []
+        const updated = enabled ? [...current, featureCode] : current.filter((f: string) => f !== featureCode)
+        try {
+            await updateModuleFeatures(orgId, moduleCode, updated)
+            const modulesData = await getOrgModules(orgId)
+            setModules(Array.isArray(modulesData) ? modulesData : [])
+            toast.success(`Feature ${featureCode} ${enabled ? 'enabled' : 'disabled'}`)
+        } catch { toast.error("Failed to update feature") }
+    }
+
+    async function handleCreateUser() {
+        if (!newUser.username || !newUser.password) return toast.error("Username and password required")
+        setCreating(true)
+        try {
+            const result = await createOrgUser(orgId, newUser)
+            toast.success(result.message || 'User created')
+            setShowCreateUser(false)
+            setNewUser({ username: '', email: '', password: '', first_name: '', last_name: '', is_superuser: false })
+            const usersData = await getOrgUsers(orgId)
+            setUsers(Array.isArray(usersData) ? usersData : [])
+        } catch (e: any) {
+            const msg = e.message ? JSON.parse(e.message)?.error : 'Failed to create user'
+            toast.error(msg)
+        } finally { setCreating(false) }
+    }
+
+    async function handleResetPassword() {
+        if (!newPassword || newPassword.length < 6) return toast.error("Password must be at least 6 characters")
+        setResetting(true)
+        try {
+            const result = await resetOrgUserPassword(orgId, resetTarget.id, newPassword)
+            toast.success(result.message || 'Password reset')
+            setResetTarget(null)
+            setNewPassword('')
+        } catch (e: any) {
+            const msg = e.message ? JSON.parse(e.message)?.error : 'Failed to reset password'
+            toast.error(msg)
+        } finally { setResetting(false) }
     }
 
     if (loading) return (
@@ -200,15 +250,14 @@ export default function OrganizationDetailPage() {
     if (!org) return (
         <div className="p-12 text-center">
             <h2 className="text-xl font-bold text-gray-800">Organization Not Found</h2>
-            <Button variant="ghost" onClick={() => router.push('/organizations')} className="mt-4">
-                ← Back to Organizations
-            </Button>
+            <Button variant="ghost" onClick={() => router.push('/organizations')} className="mt-4">← Back to Organizations</Button>
         </div>
     )
 
     const tabs = [
         { key: 'overview', label: 'Overview', icon: Activity },
         { key: 'modules', label: 'Modules', icon: Layers },
+        { key: 'users', label: `Users (${users.length})`, icon: Users },
         { key: 'usage', label: 'Usage', icon: TrendingUp },
         { key: 'billing', label: 'Billing', icon: CreditCard },
     ]
@@ -222,21 +271,13 @@ export default function OrganizationDetailPage() {
             {/* Header */}
             <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => router.push('/organizations')}
-                        className="text-gray-400 hover:text-gray-900 rounded-xl"
-                    >
+                    <Button variant="ghost" size="sm" onClick={() => router.push('/organizations')} className="text-gray-400 hover:text-gray-900 rounded-xl">
                         <ArrowLeft size={18} />
                     </Button>
                     <div>
                         <div className="flex items-center gap-3">
                             <h1 className="text-3xl font-black text-gray-900 tracking-tight">{org.name}</h1>
-                            <Badge className={org.is_active
-                                ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-                                : "bg-red-50 text-red-600 border-red-100"
-                            }>
+                            <Badge className={org.is_active ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-red-50 text-red-600 border-red-100"}>
                                 {org.is_active ? 'Active' : 'Suspended'}
                             </Badge>
                         </div>
@@ -251,24 +292,18 @@ export default function OrganizationDetailPage() {
             {/* Tab Bar */}
             <div className="flex gap-1 p-1 bg-gray-100 rounded-2xl w-fit">
                 {tabs.map(t => (
-                    <button
-                        key={t.key}
-                        onClick={() => setActiveTab(t.key as any)}
+                    <button key={t.key} onClick={() => setActiveTab(t.key as any)}
                         className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === t.key
-                                ? 'bg-white text-gray-900 shadow-sm'
-                                : 'text-gray-500 hover:text-gray-700'
-                            }`}
+                            ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                     >
-                        <t.icon size={14} />
-                        {t.label}
+                        <t.icon size={14} />{t.label}
                     </button>
                 ))}
             </div>
 
-            {/* ─── Overview Tab ─────────────────────────────────────────────── */}
+            {/* ─── Overview Tab ─────────────────────────────────────────── */}
             {activeTab === 'overview' && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Quick Stats */}
                     <Card className="lg:col-span-2 border-gray-100 shadow-sm">
                         <CardHeader className="pb-2">
                             <CardTitle className="text-lg font-bold">Resource Overview</CardTitle>
@@ -288,48 +323,38 @@ export default function OrganizationDetailPage() {
                         </CardContent>
                     </Card>
 
-                    {/* Plan + Quick Module Summary */}
                     <div className="space-y-6">
                         <Card className="border-emerald-100 bg-emerald-50/30 shadow-sm">
-                            <CardHeader>
-                                <CardTitle className="text-lg font-bold text-emerald-900">Current Plan</CardTitle>
-                            </CardHeader>
+                            <CardHeader><CardTitle className="text-lg font-bold text-emerald-900">Current Plan</CardTitle></CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="text-center py-4">
                                     <div className="text-3xl font-black text-emerald-700">
-                                        ${usage?.plan?.monthly_price || '0'}<span className="text-sm font-medium text-emerald-500">/mo</span>
+                                        ${usage?.plan?.monthly_price || '0.00'}<span className="text-sm font-medium text-emerald-500">/mo</span>
                                     </div>
                                     <p className="text-emerald-600 font-bold mt-1">{usage?.plan?.name || 'Free Tier'}</p>
+                                    {usage?.plan?.annual_price && usage.plan.annual_price !== '0.00' && (
+                                        <p className="text-xs text-gray-500 mt-1">${usage.plan.annual_price}/yr</p>
+                                    )}
                                     {usage?.plan?.expiry && (
-                                        <p className="text-xs text-gray-500 mt-2">
-                                            Renews: {new Date(usage.plan.expiry).toLocaleDateString()}
-                                        </p>
+                                        <p className="text-xs text-gray-500 mt-2">Renews: {new Date(usage.plan.expiry).toLocaleDateString()}</p>
                                     )}
                                 </div>
-                                <Button
-                                    variant="outline"
-                                    className="w-full border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-xl font-bold"
-                                    onClick={() => setActiveTab('billing')}
-                                >
+                                <Button variant="outline" className="w-full border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-xl font-bold"
+                                    onClick={() => setActiveTab('billing')}>
                                     Manage Plan <ChevronRight size={14} />
                                 </Button>
                             </CardContent>
                         </Card>
 
                         <Card className="border-gray-100 shadow-sm">
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-lg font-bold">Modules</CardTitle>
-                            </CardHeader>
+                            <CardHeader className="pb-2"><CardTitle className="text-lg font-bold">Modules</CardTitle></CardHeader>
                             <CardContent>
                                 <div className="text-center py-4">
                                     <div className="text-3xl font-black text-gray-900">{activeModules}</div>
                                     <p className="text-xs text-gray-500">of {modules.length} active</p>
                                 </div>
-                                <Button
-                                    variant="outline"
-                                    className="w-full border-gray-200 text-gray-700 hover:bg-gray-50 rounded-xl font-bold"
-                                    onClick={() => setActiveTab('modules')}
-                                >
+                                <Button variant="outline" className="w-full border-gray-200 text-gray-700 hover:bg-gray-50 rounded-xl font-bold"
+                                    onClick={() => setActiveTab('modules')}>
                                     Manage Modules <ChevronRight size={14} />
                                 </Button>
                             </CardContent>
@@ -338,38 +363,91 @@ export default function OrganizationDetailPage() {
                 </div>
             )}
 
-            {/* ─── Modules Tab ──────────────────────────────────────────────── */}
+            {/* ─── Modules Tab ──────────────────────────────────────────── */}
             {activeTab === 'modules' && (
                 <div className="space-y-8">
-                    {/* Core modules */}
                     {coreModules.length > 0 && (
                         <div>
                             <h3 className="text-xs font-black uppercase tracking-widest text-indigo-500 mb-4 flex items-center gap-2">
                                 <Crown size={14} /> Core Infrastructure
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {coreModules.map(m => (
-                                    <ModuleCard key={m.code} module={m} onToggle={handleToggle} toggling={toggling} />
-                                ))}
+                                {coreModules.map(m => <ModuleCard key={m.code} module={m} onToggle={handleToggle} toggling={toggling} onFeatureToggle={handleFeatureToggle} />)}
                             </div>
                         </div>
                     )}
-
-                    {/* Business modules */}
                     <div>
                         <h3 className="text-xs font-black uppercase tracking-widest text-emerald-600 mb-4 flex items-center gap-2">
                             <Package size={14} /> Business Modules
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {businessModules.map(m => (
-                                <ModuleCard key={m.code} module={m} onToggle={handleToggle} toggling={toggling} />
-                            ))}
+                            {businessModules.map(m => <ModuleCard key={m.code} module={m} onToggle={handleToggle} toggling={toggling} onFeatureToggle={handleFeatureToggle} />)}
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* ─── Usage Tab ────────────────────────────────────────────────── */}
+            {/* ─── Users Tab ────────────────────────────────────────────── */}
+            {activeTab === 'users' && (
+                <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="text-lg font-bold text-gray-900">Organization Users</h3>
+                            <p className="text-sm text-gray-500">{users.length} user{users.length !== 1 ? 's' : ''} in this organization</p>
+                        </div>
+                        <Button onClick={() => setShowCreateUser(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-md">
+                            <Plus size={16} className="mr-2" /> Create User
+                        </Button>
+                    </div>
+
+                    {users.length === 0 ? (
+                        <Card className="border-gray-100 shadow-sm">
+                            <CardContent className="py-12 text-center text-gray-400 italic">No users found for this organization.</CardContent>
+                        </Card>
+                    ) : (
+                        <div className="space-y-2">
+                            {users.map(user => (
+                                <div key={user.id} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 hover:border-gray-200 shadow-sm transition-all">
+                                    <div className="flex items-center gap-4">
+                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black ${user.is_superuser
+                                            ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
+                                            : 'bg-gray-50 text-gray-600 border border-gray-100'
+                                            }`}>
+                                            {user.username.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-bold text-gray-900 text-sm">{user.username}</span>
+                                                {user.is_superuser && (
+                                                    <Badge className="bg-indigo-50 text-indigo-600 border-indigo-100 text-[9px] font-black">SUPER</Badge>
+                                                )}
+                                                {user.is_staff && !user.is_superuser && (
+                                                    <Badge className="bg-blue-50 text-blue-600 border-blue-100 text-[9px] font-black">STAFF</Badge>
+                                                )}
+                                                {!user.is_active && (
+                                                    <Badge className="bg-red-50 text-red-500 border-red-100 text-[9px]">Inactive</Badge>
+                                                )}
+                                            </div>
+                                            <p className="text-xs text-gray-400">{user.email || 'No email'} {user.role ? `· ${user.role}` : ''}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[10px] text-gray-400">
+                                            {user.date_joined ? new Date(user.date_joined).toLocaleDateString() : ''}
+                                        </span>
+                                        <Button variant="outline" size="sm" onClick={() => { setResetTarget(user); setNewPassword('') }}
+                                            className="rounded-xl border-gray-200 text-gray-500 hover:text-gray-900 text-xs font-bold">
+                                            <KeyRound size={12} className="mr-1" /> Reset
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* ─── Usage Tab ────────────────────────────────────────────── */}
             {activeTab === 'usage' && (
                 <div className="space-y-6">
                     <Card className="border-gray-100 shadow-sm">
@@ -384,7 +462,6 @@ export default function OrganizationDetailPage() {
                                     <UsageMeter label="Sites / Locations" icon={MapPin} current={usage.sites.current} limit={usage.sites.limit} percent={usage.sites.percent} />
                                     <UsageMeter label="Data Storage" icon={HardDrive} current={usage.storage.current_mb} limit={usage.storage.limit_mb} percent={usage.storage.percent} unit=" MB" />
                                     <UsageMeter label="Invoices This Month" icon={FileText} current={usage.invoices.current} limit={usage.invoices.limit} percent={usage.invoices.percent} />
-
                                     <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100 mt-6">
                                         <div className="flex items-center justify-between">
                                             <div>
@@ -393,9 +470,7 @@ export default function OrganizationDetailPage() {
                                                     {usage.modules.current} <span className="text-sm font-medium text-gray-400">/ {usage.modules.total_available} available</span>
                                                 </p>
                                             </div>
-                                            <Button variant="outline" size="sm" className="rounded-xl" onClick={() => setActiveTab('modules')}>
-                                                Manage
-                                            </Button>
+                                            <Button variant="outline" size="sm" className="rounded-xl" onClick={() => setActiveTab('modules')}>Manage</Button>
                                         </div>
                                     </div>
                                 </>
@@ -407,7 +482,7 @@ export default function OrganizationDetailPage() {
                 </div>
             )}
 
-            {/* ─── Billing Tab ──────────────────────────────────────────────── */}
+            {/* ─── Billing Tab ──────────────────────────────────────────── */}
             {activeTab === 'billing' && (
                 <div className="space-y-6">
                     <Card className="border-emerald-100 bg-emerald-50/30 shadow-sm">
@@ -417,9 +492,7 @@ export default function OrganizationDetailPage() {
                                     <CardTitle className="text-xl font-bold text-emerald-900">Subscription</CardTitle>
                                     <CardDescription className="text-emerald-700">Current active plan</CardDescription>
                                 </div>
-                                <Badge className="bg-emerald-600 text-white text-lg px-4 py-1">
-                                    {usage?.plan?.name || 'Free Tier'}
-                                </Badge>
+                                <Badge className="bg-emerald-600 text-white text-lg px-4 py-1">{usage?.plan?.name || 'Free Tier'}</Badge>
                             </div>
                         </CardHeader>
                         <CardContent>
@@ -427,55 +500,64 @@ export default function OrganizationDetailPage() {
                                 <div>
                                     <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Status</p>
                                     {org.is_active ? (
-                                        <div className="flex items-center gap-2 text-emerald-600 font-black text-lg">
-                                            <ShieldCheck size={20} /> ACTIVE
-                                        </div>
+                                        <div className="flex items-center gap-2 text-emerald-600 font-black text-lg"><ShieldCheck size={20} /> ACTIVE</div>
                                     ) : (
-                                        <div className="flex items-center gap-2 text-red-600 font-black text-lg">
-                                            <AlertTriangle size={20} /> SUSPENDED
-                                        </div>
+                                        <div className="flex items-center gap-2 text-red-600 font-black text-lg"><AlertTriangle size={20} /> SUSPENDED</div>
                                     )}
                                 </div>
                                 <div className="text-right">
                                     <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Monthly</p>
-                                    <p className="text-2xl font-black text-gray-900">
-                                        ${usage?.plan?.monthly_price || '0.00'}
-                                    </p>
+                                    <p className="text-2xl font-black text-gray-900">${usage?.plan?.monthly_price || '0.00'}</p>
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
 
+                    {/* Available Plans */}
+                    {usage?.available_plans?.length > 0 && (
+                        <Card className="border-gray-100 shadow-sm">
+                            <CardHeader><CardTitle className="font-bold">Available Plans</CardTitle></CardHeader>
+                            <CardContent>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    {usage.available_plans.map((p: any) => (
+                                        <div key={p.id} className={`p-4 rounded-2xl border transition-all ${usage.plan?.id === p.id
+                                            ? 'border-emerald-300 bg-emerald-50/50 shadow-sm'
+                                            : 'border-gray-100 hover:border-gray-200'}`}>
+                                            <div className="text-center">
+                                                <p className="font-bold text-gray-900">{p.name}</p>
+                                                <p className="text-2xl font-black text-gray-900 mt-2">${p.monthly_price}<span className="text-sm text-gray-400 font-medium">/mo</span></p>
+                                                {p.category && <p className="text-[10px] text-gray-400 mt-1">{p.category}</p>}
+                                                {usage.plan?.id === p.id && (
+                                                    <Badge className="mt-2 bg-emerald-100 text-emerald-700 text-[10px]">Current</Badge>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
                     <Card className="border-gray-100 shadow-sm">
-                        <CardHeader>
-                            <CardTitle className="font-bold">Payment History</CardTitle>
-                        </CardHeader>
+                        <CardHeader><CardTitle className="font-bold">Payment History</CardTitle></CardHeader>
                         <CardContent>
                             {billing.length === 0 ? (
-                                <div className="text-center py-12 text-gray-400 text-sm italic">
-                                    No billing records found for this organization.
-                                </div>
+                                <div className="text-center py-12 text-gray-400 text-sm italic">No billing records found for this organization.</div>
                             ) : (
                                 <div className="space-y-2">
                                     {billing.map(p => (
                                         <div key={p.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-gray-200 transition-all">
                                             <div>
                                                 <p className="font-bold text-gray-900 text-sm">{p.plan_name}</p>
-                                                <p className="text-xs text-gray-400">
-                                                    {new Date(p.created_at).toLocaleDateString()}
-                                                </p>
+                                                <p className="text-xs text-gray-400">{new Date(p.created_at).toLocaleDateString()}</p>
                                             </div>
                                             <div className="flex items-center gap-3">
                                                 <span className="font-black text-gray-900">${p.amount}</span>
                                                 <Badge className={
-                                                    p.status === 'PAID'
-                                                        ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-                                                        : p.status === 'PENDING'
-                                                            ? "bg-amber-50 text-amber-600 border-amber-100"
+                                                    p.status === 'PAID' ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                                                        : p.status === 'PENDING' ? "bg-amber-50 text-amber-600 border-amber-100"
                                                             : "bg-red-50 text-red-600 border-red-100"
-                                                }>
-                                                    {p.status}
-                                                </Badge>
+                                                }>{p.status}</Badge>
                                             </div>
                                         </div>
                                     ))}
@@ -485,6 +567,86 @@ export default function OrganizationDetailPage() {
                     </Card>
                 </div>
             )}
+
+            {/* ─── Create User Dialog ───────────────────────────────────── */}
+            <Dialog open={showCreateUser} onOpenChange={setShowCreateUser}>
+                <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
+                    <DialogHeader>
+                        <DialogTitle className="font-bold">Create New User</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="text-xs font-bold text-gray-500 mb-1 block">First Name</label>
+                                <Input value={newUser.first_name} onChange={e => setNewUser({ ...newUser, first_name: e.target.value })} placeholder="John" className="rounded-xl" />
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-gray-500 mb-1 block">Last Name</label>
+                                <Input value={newUser.last_name} onChange={e => setNewUser({ ...newUser, last_name: e.target.value })} placeholder="Doe" className="rounded-xl" />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="text-xs font-bold text-gray-500 mb-1 block">Username *</label>
+                            <Input value={newUser.username} onChange={e => setNewUser({ ...newUser, username: e.target.value })} placeholder="johndoe" className="rounded-xl" />
+                        </div>
+                        <div>
+                            <label className="text-xs font-bold text-gray-500 mb-1 block">Email</label>
+                            <Input type="email" value={newUser.email} onChange={e => setNewUser({ ...newUser, email: e.target.value })} placeholder="john@company.com" className="rounded-xl" />
+                        </div>
+                        <div>
+                            <label className="text-xs font-bold text-gray-500 mb-1 block">Password *</label>
+                            <Input type="password" value={newUser.password} onChange={e => setNewUser({ ...newUser, password: e.target.value })} placeholder="••••••••" className="rounded-xl" />
+                        </div>
+                        <div className="flex items-center gap-3 p-3 bg-indigo-50 rounded-xl border border-indigo-100">
+                            <button onClick={() => setNewUser({ ...newUser, is_superuser: !newUser.is_superuser })}
+                                className="transition-transform hover:scale-110">
+                                {newUser.is_superuser ? <ToggleRight size={28} className="text-indigo-600" /> : <ToggleLeft size={28} className="text-gray-300" />}
+                            </button>
+                            <div>
+                                <p className="text-sm font-bold text-gray-900">Superuser Access</p>
+                                <p className="text-[10px] text-gray-500">Full admin access to this organization</p>
+                            </div>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setShowCreateUser(false)} className="rounded-xl">Cancel</Button>
+                        <Button onClick={handleCreateUser} disabled={creating} className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold">
+                            {creating ? <Loader2 size={16} className="animate-spin mr-2" /> : <UserCog size={16} className="mr-2" />}
+                            Create User
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* ─── Reset Password Dialog ────────────────────────────────── */}
+            <Dialog open={!!resetTarget} onOpenChange={(o) => { if (!o) setResetTarget(null) }}>
+                <DialogContent className="sm:max-w-sm" aria-describedby={undefined}>
+                    <DialogHeader>
+                        <DialogTitle className="font-bold">Reset Password</DialogTitle>
+                    </DialogHeader>
+                    {resetTarget && (
+                        <div className="space-y-4 py-4">
+                            <p className="text-sm text-gray-500">
+                                Set a new password for <strong className="text-gray-900">{resetTarget.username}</strong>
+                            </p>
+                            <div className="relative">
+                                <Input type={showPass ? 'text' : 'password'} value={newPassword}
+                                    onChange={e => setNewPassword(e.target.value)} placeholder="New password (min 6 chars)" className="rounded-xl pr-10" />
+                                <button onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                                    {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setResetTarget(null)} className="rounded-xl">Cancel</Button>
+                        <Button onClick={handleResetPassword} disabled={resetting} className="bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold">
+                            {resetting ? <Loader2 size={16} className="animate-spin mr-2" /> : <KeyRound size={16} className="mr-2" />}
+                            Reset Password
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
