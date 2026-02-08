@@ -339,26 +339,42 @@ class PackageUpload(models.Model):
 # BACKWARD-COMPATIBLE RE-EXPORTS
 # Business models now live in their respective module directories.
 # These re-exports ensure existing code continues to work during transition.
+# Each is gated — kernel boots even if a module is removed.
 # =============================================================================
 
 # Finance Module
-from apps.finance.models import (  # noqa: E402, F401
-    ChartOfAccount, FinancialAccount, FiscalYear, FiscalPeriod,
-    JournalEntry, JournalEntryLine, Transaction, TransactionSequence,
-    BarcodeSettings, Loan, LoanInstallment, FinancialEvent
-)
+try:
+    from apps.finance.models import (  # noqa: E402, F401
+        ChartOfAccount, FinancialAccount, FiscalYear, FiscalPeriod,
+        JournalEntry, JournalEntryLine, Transaction, TransactionSequence,
+        BarcodeSettings, Loan, LoanInstallment, FinancialEvent
+    )
+except ImportError:
+    pass
 
 # Inventory Module
-from apps.inventory.models import (  # noqa: E402, F401
-    Product, Unit, Category, Brand, Parfum, ProductGroup,
-    Warehouse, Inventory, InventoryMovement
-)
+try:
+    from apps.inventory.models import (  # noqa: E402, F401
+        Product, Unit, Category, Brand, Parfum, ProductGroup,
+        Warehouse, Inventory, InventoryMovement
+    )
+except ImportError:
+    pass
 
 # POS Module
-from apps.pos.models import Order, OrderLine  # noqa: E402, F401
+try:
+    from apps.pos.models import Order, OrderLine  # noqa: E402, F401
+except ImportError:
+    pass
 
 # CRM Module
-from apps.crm.models import Contact  # noqa: E402, F401
+try:
+    from apps.crm.models import Contact  # noqa: E402, F401
+except ImportError:
+    pass
 
 # HR Module
-from apps.hr.models import Employee  # noqa: E402, F401
+try:
+    from apps.hr.models import Employee  # noqa: E402, F401
+except ImportError:
+    pass

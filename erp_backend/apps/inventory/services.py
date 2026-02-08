@@ -43,16 +43,21 @@ class InventoryService:
             InventoryMovement.objects.create(organization=organization, product=product, warehouse=warehouse, type='IN', quantity=inbound_qty, cost_price=effective_cost, reference=reference)
             
             # Cross-module: create journal entry for stock reception
+            # Gated — inventory works even without finance module
             from erp.services import ConfigurationService
             rules = ConfigurationService.get_posting_rules(organization)
             inv_acc = rules.get('sales', {}).get('inventory')
             susp_acc = rules.get('suspense', {}).get('reception')
             if inv_acc and susp_acc:
-                from apps.finance.services import LedgerService
-                LedgerService.create_journal_entry(organization=organization, transaction_date=timezone.now(), description=f"Stock Reception: {product.name}", reference=reference, status='POSTED', site_id=warehouse.site_id, lines=[
-                    {"account_id": inv_acc, "debit": inbound_value, "credit": Decimal('0')},
-                    {"account_id": susp_acc, "debit": Decimal('0'), "credit": inbound_value}
-                ])
+                try:
+                    from apps.finance.services import LedgerService
+                    LedgerService.create_journal_entry(organization=organization, transaction_date=timezone.now(), description=f"Stock Reception: {product.name}", reference=reference, status='POSTED', site_id=warehouse.site_id, lines=[
+                        {"account_id": inv_acc, "debit": inbound_value, "credit": Decimal('0')},
+                        {"account_id": susp_acc, "debit": Decimal('0'), "credit": inbound_value}
+                    ])
+                except ImportError:
+                    import logging
+                    logging.getLogger(__name__).warning(f"Finance module unavailable — journal entry skipped for {reference}")
             return inventory
 
     @staticmethod

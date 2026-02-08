@@ -7,7 +7,13 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from erp.middleware import get_current_tenant_id
 from erp.models import Organization
-from apps.inventory.models import Warehouse
+
+# Gated cross-module imports
+try:
+    from apps.inventory.models import Warehouse
+except ImportError:
+    Warehouse = None
+
 from apps.pos.models import Order
 from apps.pos.services import POSService, PurchaseService
 
