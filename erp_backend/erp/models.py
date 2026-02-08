@@ -266,11 +266,21 @@ class PlanCategory(models.Model):
 class SubscriptionPlan(models.Model):
     category = models.ForeignKey(PlanCategory, on_delete=models.CASCADE, related_name='plans')
     name = models.CharField(max_length=255)
+    description = models.TextField(null=True, blank=True)
     monthly_price = models.DecimalField(max_digits=15, decimal_places=2)
     annual_price = models.DecimalField(max_digits=15, decimal_places=2)
+    modules = models.JSONField(default=list)       # List of module codes included
+    features = models.JSONField(default=dict)      # Feature flags
+    limits = models.JSONField(default=dict)        # {"max_users": 5, "max_sites": 1, ...}
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'SubscriptionPlan'
+
+    def __str__(self):
+        return f"{self.name} (${self.monthly_price}/mo)"
 
 
 class SubscriptionPayment(models.Model):
