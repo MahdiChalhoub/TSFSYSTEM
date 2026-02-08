@@ -99,21 +99,41 @@ class SystemUpdateSerializer(serializers.ModelSerializer):
 
 # =============================================================================
 # BACKWARD-COMPATIBLE RE-EXPORTS
+# Each is gated — kernel boots even if a module is removed.
 # =============================================================================
-from apps.finance.serializers import (  # noqa: E402, F401
-    ChartOfAccountSerializer, FinancialAccountSerializer,
-    FiscalYearSerializer, FiscalPeriodSerializer,
-    JournalEntrySerializer, JournalEntryLineSerializer,
-    TransactionSerializer, TransactionSequenceSerializer,
-    BarcodeSettingsSerializer, LoanSerializer, LoanInstallmentSerializer,
-    FinancialEventSerializer
-)
-from apps.inventory.serializers import (  # noqa: E402, F401
-    ProductSerializer, ProductCreateSerializer, UnitSerializer,
-    CategorySerializer, BrandSerializer, BrandDetailSerializer,
-    ParfumSerializer, ProductGroupSerializer,
-    WarehouseSerializer, InventorySerializer, InventoryMovementSerializer
-)
-from apps.pos.serializers import OrderSerializer, OrderLineSerializer  # noqa: E402, F401
-from apps.crm.serializers import ContactSerializer  # noqa: E402, F401
-from apps.hr.serializers import EmployeeSerializer  # noqa: E402, F401
+try:
+    from apps.finance.serializers import (  # noqa: E402, F401
+        ChartOfAccountSerializer, FinancialAccountSerializer,
+        FiscalYearSerializer, FiscalPeriodSerializer,
+        JournalEntrySerializer, JournalEntryLineSerializer,
+        TransactionSerializer, TransactionSequenceSerializer,
+        BarcodeSettingsSerializer, LoanSerializer, LoanInstallmentSerializer,
+        FinancialEventSerializer
+    )
+except ImportError:
+    pass
+
+try:
+    from apps.inventory.serializers import (  # noqa: E402, F401
+        ProductSerializer, ProductCreateSerializer, UnitSerializer,
+        CategorySerializer, BrandSerializer, BrandDetailSerializer,
+        ParfumSerializer, ProductGroupSerializer,
+        WarehouseSerializer, InventorySerializer, InventoryMovementSerializer
+    )
+except ImportError:
+    pass
+
+try:
+    from apps.pos.serializers import OrderSerializer, OrderLineSerializer  # noqa: E402, F401
+except ImportError:
+    pass
+
+try:
+    from apps.crm.serializers import ContactSerializer  # noqa: E402, F401
+except ImportError:
+    pass
+
+try:
+    from apps.hr.serializers import EmployeeSerializer  # noqa: E402, F401
+except ImportError:
+    pass

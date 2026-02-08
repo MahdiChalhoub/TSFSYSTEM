@@ -656,27 +656,43 @@ class DashboardViewSet(viewsets.ViewSet):
 #  BACKWARD-COMPATIBLE RE-EXPORTS
 #  These allow `from erp.views import XViewSet` to continue working.
 #  Canonical imports should use `from apps.X.views import XViewSet`.
+#  Each is gated — kernel boots even if a module is removed.
 # ============================================================================
 
 # Finance
-from apps.finance.views import (  # noqa: F401, E402
-    FinancialAccountViewSet, ChartOfAccountViewSet,
-    FiscalYearViewSet, FiscalPeriodViewSet, JournalEntryViewSet,
-    BarcodeSettingsViewSet, LoanViewSet, FinancialEventViewSet,
-    TransactionSequenceViewSet,
-)
+try:
+    from apps.finance.views import (  # noqa: F401, E402
+        FinancialAccountViewSet, ChartOfAccountViewSet,
+        FiscalYearViewSet, FiscalPeriodViewSet, JournalEntryViewSet,
+        BarcodeSettingsViewSet, LoanViewSet, FinancialEventViewSet,
+        TransactionSequenceViewSet,
+    )
+except ImportError:
+    pass
 
 # Inventory
-from apps.inventory.views import (  # noqa: F401, E402
-    ProductViewSet, UnitViewSet, WarehouseViewSet, InventoryViewSet,
-    BrandViewSet, CategoryViewSet, ParfumViewSet, ProductGroupViewSet,
-)
+try:
+    from apps.inventory.views import (  # noqa: F401, E402
+        ProductViewSet, UnitViewSet, WarehouseViewSet, InventoryViewSet,
+        BrandViewSet, CategoryViewSet, ParfumViewSet, ProductGroupViewSet,
+    )
+except ImportError:
+    pass
 
 # POS
-from apps.pos.views import POSViewSet, PurchaseViewSet  # noqa: F401, E402
+try:
+    from apps.pos.views import POSViewSet, PurchaseViewSet  # noqa: F401, E402
+except ImportError:
+    pass
 
 # CRM
-from apps.crm.views import ContactViewSet  # noqa: F401, E402
+try:
+    from apps.crm.views import ContactViewSet  # noqa: F401, E402
+except ImportError:
+    pass
 
 # HR
-from apps.hr.views import EmployeeViewSet  # noqa: F401, E402
+try:
+    from apps.hr.views import EmployeeViewSet  # noqa: F401, E402
+except ImportError:
+    pass

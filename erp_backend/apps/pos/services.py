@@ -1,22 +1,49 @@
 """
 POS Module Services
 Canonical home for all POS/sales/purchase business logic.
+
+Cross-module imports are gated with try/except to prevent crashes
+when dependent modules are removed. Side-effects (journal entries,
+stock adjustments) are dispatched via ConnectorEngine events.
 """
 from django.db import transaction
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from decimal import Decimal
 import uuid
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+def _safe_import(module_path, names):
+    """
+    Safely import names from a module. Returns None for each
+    name if the module is not installed.
+    """
+    try:
+        mod = __import__(module_path, fromlist=names)
+        return tuple(getattr(mod, n) for n in names)
+    except ImportError:
+        logger.warning(f"Module '{module_path}' not installed — import skipped")
+        return tuple(None for _ in names)
 
 
 class POSService:
     @staticmethod
     def checkout(organization, user, warehouse, payment_account_id, items):
         from apps.pos.models import Order, OrderLine
-        from apps.inventory.models import Product
-        from apps.inventory.services import InventoryService
-        from apps.finance.services import LedgerService
         from erp.services import ConfigurationService
+        
+        # Gated cross-module imports
+        (Product,) = _safe_import('apps.inventory.models', ['Product'])
+        (InventoryService,) = _safe_import('apps.inventory.services', ['InventoryService'])
+        (LedgerService,) = _safe_import('apps.finance.services', ['LedgerService'])
+        
+        if not Product or not InventoryService:
+            raise ValidationError("Inventory module is required for POS checkout.")
+        if not LedgerService:
+            raise ValidationError("Finance module is required for POS checkout.")
         """
         items: list of {'product_id': id, 'quantity': q, 'unit_price': p}
         """
@@ -80,9 +107,11 @@ class POSService:
             if not all([rev_acc, inv_acc, cogs_acc]):
                 raise ValidationError("Missing sales posting rules mapping.")
             
-            from apps.finance.models import FinancialAccount
-            fin_acc = FinancialAccount.objects.filter(id=payment_account_id, organization=organization).first()
-            actual_payment_acc_id = fin_acc.ledger_account_id if fin_acc else payment_account_id
+            (FinancialAccount,) = _safe_import('apps.finance.models', ['FinancialAccount'])
+            actual_payment_acc_id = payment_account_id
+            if FinancialAccount:
+                fin_acc = FinancialAccount.objects.filter(id=payment_account_id, organization=organization).first()
+                actual_payment_acc_id = fin_acc.ledger_account_id if fin_acc else payment_account_id
 
             LedgerService.create_journal_entry(
                 organization=organization,
@@ -119,8 +148,13 @@ class PurchaseService:
     @staticmethod
     def receive_po(organization, order_id, warehouse_id, is_tax_recoverable=True):
         from apps.pos.models import Order
-        from apps.inventory.models import Warehouse
-        from apps.inventory.services import InventoryService
+        
+        # Gated cross-module imports
+        (Warehouse,) = _safe_import('apps.inventory.models', ['Warehouse'])
+        (InventoryService,) = _safe_import('apps.inventory.services', ['InventoryService'])
+        
+        if not Warehouse or not InventoryService:
+            raise ValidationError("Inventory module is required for PO reception.")
         """
         Processes physical reception of all items in the PO.
         """
@@ -149,12 +183,21 @@ class PurchaseService:
     @staticmethod
     def quick_purchase(organization, supplier_id, warehouse_id, site_id, scope, invoice_price_type, vat_recoverable, lines, notes=None, ref_code=None, user=None):
         from apps.pos.models import Order, OrderLine
-        from apps.inventory.models import Product, Inventory
-        from apps.crm.models import Contact
-        from apps.finance.models import ChartOfAccount
-        from apps.finance.services import LedgerService
         from erp.services import ConfigurationService
         from erp.models import StockBatch
+        
+        # Gated cross-module imports
+        (Product, Inventory) = _safe_import('apps.inventory.models', ['Product', 'Inventory'])
+        (Contact,) = _safe_import('apps.crm.models', ['Contact'])
+        (ChartOfAccount,) = _safe_import('apps.finance.models', ['ChartOfAccount'])
+        (LedgerService,) = _safe_import('apps.finance.services', ['LedgerService'])
+        
+        if not Product or not Inventory:
+            raise ValidationError("Inventory module is required for purchases.")
+        if not Contact:
+            raise ValidationError("CRM module is required for supplier purchases.")
+        if not LedgerService:
+            raise ValidationError("Finance module is required for purchase accounting.")
 
         with transaction.atomic():
             settings = ConfigurationService.get_global_settings(organization)
@@ -340,8 +383,12 @@ class PurchaseService:
     @staticmethod
     def invoice_po(organization, order_id, invoice_number, invoice_date=None):
         from apps.pos.models import Order
-        from apps.finance.services import LedgerService
         from erp.services import ConfigurationService
+        
+        # Gated cross-module import
+        (LedgerService,) = _safe_import('apps.finance.services', ['LedgerService'])
+        if not LedgerService:
+            raise ValidationError("Finance module is required for invoice processing.")
         """
         Converts the 'Accrued Reception' liability into a formal 'Accounts Payable'.
         """

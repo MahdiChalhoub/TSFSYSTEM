@@ -9,11 +9,23 @@ from erp.views import TenantModelViewSet
 from erp.middleware import get_current_tenant_id
 from erp.models import Organization
 from erp.services import ConfigurationService
+import logging
+
+logger = logging.getLogger(__name__)
 
 from apps.hr.models import Employee
 from apps.hr.serializers import EmployeeSerializer
-from apps.finance.models import ChartOfAccount
-from apps.finance.services import LedgerService
+
+# Gated cross-module imports
+try:
+    from apps.finance.models import ChartOfAccount
+except ImportError:
+    ChartOfAccount = None
+
+try:
+    from apps.finance.services import LedgerService
+except ImportError:
+    LedgerService = None
 
 
 class EmployeeViewSet(TenantModelViewSet):
@@ -29,33 +41,38 @@ class EmployeeViewSet(TenantModelViewSet):
         data['organization'] = organization.id
 
         with transaction.atomic():
-            rules = ConfigurationService.get_posting_rules(organization)
-            parent_account_id = rules.get('payroll', {}).get('root')
-            
-            if not parent_account_id:
-                parent = ChartOfAccount.objects.filter(organization=organization, code='2200').first()
-                if not parent:
-                    parent = ChartOfAccount.objects.create(
-                        organization=organization,
-                        code='2200',
-                        name='Accrued Payroll & Salaries',
-                        type='LIABILITY',
-                        sub_type='PAYABLE'
-                    )
-                parent_account_id = parent.id
+            # Finance integration (gated — HR works without Finance)
+            if ChartOfAccount and LedgerService:
+                rules = ConfigurationService.get_posting_rules(organization)
+                parent_account_id = rules.get('payroll', {}).get('root')
+                
+                if not parent_account_id:
+                    parent = ChartOfAccount.objects.filter(organization=organization, code='2200').first()
+                    if not parent:
+                        parent = ChartOfAccount.objects.create(
+                            organization=organization,
+                            code='2200',
+                            name='Accrued Payroll & Salaries',
+                            type='LIABILITY',
+                            sub_type='PAYABLE'
+                        )
+                    parent_account_id = parent.id
 
-            fullName = f"{data.get('first_name', '')} {data.get('last_name', '')}".strip()
-            linked_acc = LedgerService.create_linked_account(
-                organization=organization,
-                name=f"Payable to {fullName}",
-                type='LIABILITY',
-                sub_type='PAYABLE',
-                parent_id=parent_account_id
-            )
-            data['linked_account'] = linked_acc.id
+                fullName = f"{data.get('first_name', '')} {data.get('last_name', '')}".strip()
+                linked_acc = LedgerService.create_linked_account(
+                    organization=organization,
+                    name=f"Payable to {fullName}",
+                    type='LIABILITY',
+                    sub_type='PAYABLE',
+                    parent_id=parent_account_id
+                )
+                data['linked_account'] = linked_acc.id
+            else:
+                logger.warning("Finance module unavailable — employee created without linked ledger account")
 
             serializer = self.get_serializer(data=data)
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
             
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+

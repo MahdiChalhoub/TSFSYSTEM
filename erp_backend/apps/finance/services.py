@@ -1,6 +1,9 @@
 """
 Finance Module Services
 Canonical home for all finance/accounting business logic.
+
+Cross-module imports are gated with try/except to prevent crashes
+when dependent modules are removed or disabled.
 """
 from django.db import transaction
 from django.utils import timezone
@@ -9,6 +12,9 @@ from decimal import Decimal
 from django.db.models import Sum, F
 import uuid
 import math
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class LedgerService:
@@ -315,7 +321,11 @@ class BarcodeService:
     @staticmethod
     def generate_barcode(organization):
         from apps.finance.models import BarcodeSettings
-        from apps.inventory.models import Product
+        # Gated cross-module import
+        try:
+            from apps.inventory.models import Product
+        except ImportError:
+            raise ValidationError("Inventory module is required for barcode generation.")
         with transaction.atomic():
             settings, created = BarcodeSettings.objects.get_or_create(
                 organization=organization,
@@ -407,7 +417,11 @@ class LoanService:
     @staticmethod
     def create_contract(organization, data):
         from apps.finance.models import Loan, LoanInstallment
-        from apps.crm.models import Contact
+        # Gated cross-module import
+        try:
+            from apps.crm.models import Contact
+        except ImportError:
+            raise ValidationError("CRM module is required for loan contracts.")
         """
         Creates a Loan and its Installments in DRAFT status.
         """
@@ -511,7 +525,11 @@ class FinancialEventService:
     @staticmethod
     def create_event(organization, event_type, amount, date, contact_id, reference=None, notes=None, loan_id=None, account_id=None):
         from apps.finance.models import FinancialEvent
-        from apps.crm.models import Contact
+        # Gated cross-module import
+        try:
+            from apps.crm.models import Contact
+        except ImportError:
+            raise ValidationError("CRM module is required for financial events.")
         with transaction.atomic():
             contact = Contact.objects.get(id=contact_id, organization=organization)
             
@@ -616,7 +634,11 @@ class TaxService:
         """
         Generates the 'Virtual Reclassification' Report for Mixed/Regular modes.
         """
-        from apps.pos.models import Order, OrderLine
+        # Gated cross-module import
+        try:
+            from apps.pos.models import Order, OrderLine
+        except ImportError:
+            raise ValidationError("POS module is required for tax reports.")
         from erp.services import ConfigurationService
         from django.db.models import Sum
         
