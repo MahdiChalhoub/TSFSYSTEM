@@ -171,3 +171,50 @@ export async function forceSyncBeforeAction(): Promise<boolean> {
     // Only allow action if queue is fully drained
     return remaining === 0;
 }
+
+// ── Online-Only Mode: For critical operations ───────────────────
+// When active, the app REFUSES cached/offline data and blocks
+// all actions if connectivity drops. Use for:
+//   - Live inventory counts
+//   - Accounting audits
+//   - Financial reconciliation
+
+let onlineOnlyMode = false;
+let onlineOnlyReason = '';
+
+export function enableOnlineOnlyMode(reason: string = 'Critical operation in progress'): void {
+    if (!isOnline()) {
+        throw new Error('Cannot enter Online-Only Mode while offline. Connect first.');
+    }
+    onlineOnlyMode = true;
+    onlineOnlyReason = reason;
+    console.log(`[OnlineOnly] ENABLED: ${reason}`);
+}
+
+export function disableOnlineOnlyMode(): void {
+    onlineOnlyMode = false;
+    onlineOnlyReason = '';
+    console.log('[OnlineOnly] DISABLED');
+}
+
+export function isOnlineOnlyMode(): boolean {
+    return onlineOnlyMode;
+}
+
+export function getOnlineOnlyReason(): string {
+    return onlineOnlyReason;
+}
+
+/**
+ * Call before any data read/write in a critical workflow.
+ * Throws if connectivity is lost during Online-Only Mode.
+ */
+export function requireOnline(): void {
+    if (onlineOnlyMode && !isOnline()) {
+        throw new Error(
+            `🔒 Online-Only Mode: ${onlineOnlyReason}. ` +
+            'Cannot proceed — live server connection required. ' +
+            'Reconnect to continue.'
+        );
+    }
+}
