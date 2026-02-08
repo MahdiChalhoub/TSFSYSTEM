@@ -23,6 +23,12 @@ Provides SaaS admins with a complete management view for each tenant organizatio
 | Update features | `OrganizationModule.active_features` | `POST /api/saas/org-modules/{id}/update_features/` |
 | Create user | `User` | `POST /api/saas/org-modules/{id}/create_user/` |
 | Reset password | `User.password` | `POST /api/saas/org-modules/{id}/reset_password/` |
+| Create site | `Site` | `POST /api/saas/org-modules/{id}/create_site/` |
+| Toggle site | `Site.is_active` | `POST /api/saas/org-modules/{id}/toggle_site/` |
+| List business types | `BusinessType` | `GET /api/saas/org-modules/business_types/` |
+| List plans | `SubscriptionPlan` | `GET /api/saas/plans/` |
+| Create plan | `SubscriptionPlan` | `POST /api/saas/plans/` |
+| Plan categories | `PlanCategory` | `GET/POST /api/saas/plans/categories/` |
 
 ## Variables User Interacts With
 
