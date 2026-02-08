@@ -12,6 +12,7 @@ Provides SaaS admins with a complete management view for each tenant organizatio
 | Billing history | `SubscriptionPayment` | `GET /api/saas/org-modules/{id}/billing/` |
 | Modules & features | `SystemModule`, `OrganizationModule` | `GET /api/saas/org-modules/{id}/modules/` |
 | Users | `User` | `GET /api/saas/org-modules/{id}/users/` |
+| Sites | `Site` | `GET /api/saas/org-modules/{id}/sites/` |
 | Plan limits | `SubscriptionPlan.limits` (JSONB) | Included in usage response |
 
 ## Where Data is SAVED
