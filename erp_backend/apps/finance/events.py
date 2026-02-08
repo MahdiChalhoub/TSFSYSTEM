@@ -165,7 +165,7 @@ def _on_org_provisioned(payload: dict, organization_id: int) -> dict:
                         type="CASH",
                         currency="USD",
                         site_id=site_id,
-                        ledger_account=cash_ledger
+                        linked_coa=cash_ledger
                     )
             
             # ── Step 4: Auto-map Posting Rules ────────────────────

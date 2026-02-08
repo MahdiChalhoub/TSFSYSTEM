@@ -125,6 +125,8 @@ class Warehouse(TenantModel):
     site = models.ForeignKey(Site, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     code = models.CharField(max_length=50, null=True, blank=True)
+    type = models.CharField(max_length=50, default='GENERAL')
+    can_sell = models.BooleanField(default=True)
     is_active = models.BooleanField(default=True)
 
     class Meta:

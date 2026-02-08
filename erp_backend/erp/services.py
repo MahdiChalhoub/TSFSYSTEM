@@ -66,8 +66,7 @@ class ProvisioningService:
                 organization=org,
                 site=site,
                 name="Main Warehouse",
-                code="WH01",
-                can_sell=True
+                code="WH01"
             )
         
         # ── MODULE EVENTS (outside transaction — each module handles its own) ──
@@ -109,8 +108,7 @@ class ProvisioningService:
 class ConfigurationService:
     @staticmethod
     def get_posting_rules(organization):
-        from .models import SystemSettings
-        setting = SystemSettings.objects.filter(organization=organization, key='finance_posting_rules').first()
+        """Read posting rules from Organization.settings JSON."""
         default_config = {
             "sales": {"receivable": None, "revenue": None, "cogs": None, "inventory": None},
             "purchases": {"payable": None, "inventory": None, "tax": None},
@@ -120,19 +118,26 @@ class ConfigurationService:
             "suspense": {"reception": None},
             "partners": {"capital": None, "loan": None, "withdrawal": None}
         }
-        if not setting: return default_config
+        stored = organization.settings.get('finance_posting_rules')
+        if not stored:
+            return default_config
         try:
-            stored = json.loads(setting.value)
+            if isinstance(stored, str):
+                stored = json.loads(stored)
             for key in default_config:
                 if key in stored and isinstance(stored[key], dict):
                     default_config[key].update({k: v for k, v in stored[key].items() if k in default_config[key]})
             return default_config
-        except: return default_config
+        except Exception:
+            return default_config
 
     @staticmethod
     def save_posting_rules(organization, config):
-        from .models import SystemSettings
-        SystemSettings.objects.update_or_create(organization=organization, key='finance_posting_rules', defaults={'value': json.dumps(config)})
+        """Save posting rules into Organization.settings JSON."""
+        if not organization.settings:
+            organization.settings = {}
+        organization.settings['finance_posting_rules'] = config
+        organization.save(update_fields=['settings'])
         return True
 
     @staticmethod
@@ -198,34 +203,46 @@ class ConfigurationService:
 
     @staticmethod
     def get_global_settings(organization):
-        from .models import SystemSettings
-        setting = SystemSettings.objects.filter(organization=organization, key='global_financial_settings').first()
-        if not setting: return {"worksInTTC": True, "dualView": False, "pricingCostBasis": "AMC"}
-        try: return json.loads(setting.value)
-        except: return {}
+        """Read global financial settings from Organization.settings JSON."""
+        stored = organization.settings.get('global_financial_settings')
+        if not stored:
+            return {"worksInTTC": True, "dualView": False, "pricingCostBasis": "AMC"}
+        if isinstance(stored, str):
+            try:
+                return json.loads(stored)
+            except Exception:
+                return {}
+        return stored
 
     @staticmethod
     def save_global_settings(organization, config):
-        from .models import SystemSettings
-        SystemSettings.objects.update_or_create(organization=organization, key='global_financial_settings', defaults={'value': json.dumps(config)})
+        """Save global financial settings into Organization.settings JSON."""
+        if not organization.settings:
+            organization.settings = {}
+        organization.settings['global_financial_settings'] = config
+        organization.save(update_fields=['settings'])
         return True
 
     @staticmethod
     def get_setting(organization, key, default=None):
-        from .models import SystemSettings
-        setting = SystemSettings.objects.filter(organization=organization, key=key).first()
-        if not setting: return default
-        try: return json.loads(setting.value)
-        except: return default
+        """Read a single setting from Organization.settings JSON."""
+        value = organization.settings.get(key)
+        if value is None:
+            return default
+        if isinstance(value, str):
+            try:
+                return json.loads(value)
+            except Exception:
+                return value
+        return value
 
     @staticmethod
     def save_setting(organization, key, value):
-        from .models import SystemSettings
-        SystemSettings.objects.update_or_create(
-            organization=organization, 
-            key=key, 
-            defaults={'value': json.dumps(value)}
-        )
+        """Save a single setting into Organization.settings JSON."""
+        if not organization.settings:
+            organization.settings = {}
+        organization.settings[key] = value
+        organization.save(update_fields=['settings'])
         return True
 
 
