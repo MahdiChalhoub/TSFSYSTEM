@@ -126,3 +126,52 @@ export function usePendingOrders() {
 
     return { count, syncing, triggerSync, refreshCount };
 }
+
+// ── useOnlineOnlyMode ───────────────────────────────────────────
+// Use on pages that MUST have live server data (inventory audits,
+// accounting reconciliation). Blocks all operations if offline.
+
+export function useOnlineOnlyMode(reason: string) {
+    const { isOnline: online } = useOnlineStatus();
+    const [active, setActive] = useState(false);
+    const [blocked, setBlocked] = useState(false);
+
+    const enable = useCallback(() => {
+        try {
+            const { enableOnlineOnlyMode: enable } = require('./sync');
+            enable(reason);
+            setActive(true);
+            setBlocked(false);
+        } catch {
+            setBlocked(true);
+        }
+    }, [reason]);
+
+    const disable = useCallback(() => {
+        const { disableOnlineOnlyMode: disable } = require('./sync');
+        disable();
+        setActive(false);
+        setBlocked(false);
+    }, []);
+
+    // If online-only is active and we go offline → blocked
+    useEffect(() => {
+        if (active && !online) {
+            setBlocked(true);
+        } else if (active && online) {
+            setBlocked(false);
+        }
+    }, [active, online]);
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            if (active) {
+                const { disableOnlineOnlyMode: disable } = require('./sync');
+                disable();
+            }
+        };
+    }, [active]);
+
+    return { active, blocked, enable, disable };
+}
