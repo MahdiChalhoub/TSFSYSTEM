@@ -445,36 +445,141 @@ class ConnectorEngine:
     ) -> Dict[str, bool]:
         """
         Dispatch an event to all listening modules.
-        Events are fire-and-forget with best-effort delivery.
+        
+        Discovery strategy (belt AND suspenders):
+        1. ModuleContract DB records (modules declare what events they subscribe to)
+        2. Direct filesystem scan (find all apps.*/events.py that have handle_event)
+        
+        Strategy 2 ensures events are delivered even before contracts are registered,
+        which is critical during initial provisioning.
         
         Returns dict of {module: success} for each listener.
+        Handler results are stored in payload['_results'] for chained events.
         """
         self._load_models()
         results = {}
+        handler_results = {}  # Store return values for chained events
+        delivered_modules = set()  # Avoid double-delivery
         
-        # Find modules that subscribe to this event
-        contracts = self._ModuleContract.objects.filter(
-            needs__events_from__contains=[{'event': event_name}]
+        # ── Strategy 1: Contract-based discovery ──────────────────
+        try:
+            contracts = self._ModuleContract.objects.filter(
+                needs__events_from__contains=[{'event': event_name}]
+            )
+            
+            for contract in contracts:
+                module_code = contract.module.name
+                if module_code in delivered_modules:
+                    continue
+                    
+                delivered_modules.add(module_code)
+                success, result = self._try_deliver_event(
+                    module_code, event_name, payload, organization_id
+                )
+                results[module_code] = success
+                if result:
+                    handler_results[module_code] = result
+        except Exception as e:
+            logger.debug(f"Contract-based event discovery skipped: {e}")
+        
+        # ── Strategy 2: Direct module scanning ────────────────────
+        # Scan all installed apps for events.py with handle_event()
+        discovered_modules = self._discover_event_handlers(event_name)
+        
+        for module_code in discovered_modules:
+            if module_code in delivered_modules:
+                continue
+                
+            delivered_modules.add(module_code)
+            success, result = self._try_deliver_event(
+                module_code, event_name, payload, organization_id
+            )
+            results[module_code] = success
+            if result:
+                handler_results[module_code] = result
+        
+        # Store results for potential chained events
+        if handler_results:
+            payload['_results'] = handler_results
+        
+        logger.info(
+            f"📡 EVENT DISPATCH: '{event_name}' from '{source_module}' "
+            f"→ delivered to {len(delivered_modules)} modules: {results}"
         )
         
-        for contract in contracts:
-            module_code = contract.module.name
-            state = self.get_module_state(module_code, organization_id)
-            
-            if state == ModuleState.AVAILABLE:
-                try:
-                    # Deliver event to module
-                    self._deliver_event(module_code, event_name, payload, organization_id)
-                    results[module_code] = True
-                except Exception as e:
-                    logger.error(f"Event delivery failed to {module_code}: {e}")
-                    results[module_code] = False
-            else:
-                # Module not available - log but don't fail
-                logger.info(f"Skipping event to {module_code} (state: {state})")
-                results[module_code] = False
-        
         return results
+    
+    def _discover_event_handlers(self, event_name: str) -> list:
+        """
+        Scan all installed apps under 'apps/' for events.py modules
+        that contain a handle_event function.
+        
+        This is the fallback discovery mechanism that works even
+        without ModuleContract DB records being registered.
+        """
+        import importlib
+        from django.conf import settings
+        
+        discovered = []
+        
+        for app_config_name in settings.INSTALLED_APPS:
+            # Only scan our module apps
+            if not app_config_name.startswith('apps.'):
+                continue
+            
+            # Extract module name (e.g., 'apps.finance' → 'finance')
+            module_code = app_config_name.split('.')[1]
+            
+            # Try to import the events module
+            handler_path = f"apps.{module_code}.events"
+            try:
+                event_module = importlib.import_module(handler_path)
+                handler = getattr(event_module, 'handle_event', None)
+                if handler and callable(handler):
+                    discovered.append(module_code)
+            except ImportError:
+                continue
+            except Exception as e:
+                logger.debug(f"Error scanning {handler_path}: {e}")
+        
+        return discovered
+    
+    def _try_deliver_event(
+        self,
+        module_code: str,
+        event_name: str,
+        payload: Dict,
+        organization_id: int
+    ) -> tuple:
+        """
+        Attempt to deliver an event to a specific module.
+        
+        Returns: (success: bool, result: Any)
+        - If module is available → delivers event, returns handler result
+        - If module is unavailable → buffers event for replay
+        """
+        try:
+            result = self._deliver_event(module_code, event_name, payload, organization_id)
+            return True, result
+        except Exception as e:
+            logger.error(f"Event delivery failed to {module_code}: {e}")
+            
+            # Buffer the event for retry when module becomes available
+            try:
+                self.buffer_request(
+                    target_module=module_code,
+                    endpoint=f'_event/{event_name}',
+                    data={'event_name': event_name, 'payload': payload},
+                    organization_id=organization_id,
+                    source_module='kernel',
+                    method='EVENT',
+                    ttl_seconds=86400  # 24h TTL for events
+                )
+                logger.info(f"📦 Event '{event_name}' buffered for {module_code}")
+            except Exception as buffer_err:
+                logger.error(f"Failed to buffer event for {module_code}: {buffer_err}")
+            
+            return False, None
     
     # =========================================================================
     # BUFFERING AND REPLAY
@@ -754,6 +859,8 @@ class ConnectorEngine:
         
         Each module can create an `events.py` file with a `handle_event` function
         to receive inter-module events routed by the ConnectorEngine.
+        
+        Returns the handler result (dict) for chained event support.
         """
         import importlib
         
@@ -766,9 +873,9 @@ class ConnectorEngine:
             handler = getattr(event_module, 'handle_event', None)
             
             if handler and callable(handler):
-                handler(event_name, payload, organization_id)
+                result = handler(event_name, payload, organization_id)
                 logger.info(f"✅ Event delivered via handler: {handler_module_path}")
-                return
+                return result
             else:
                 logger.debug(f"No handle_event() in {handler_module_path}")
         except ImportError:
@@ -788,11 +895,14 @@ class ConnectorEngine:
                 organization_id=organization_id
             )
             logger.info(f"✅ Event dispatched via signal: {event_name} -> {target_module}")
+            return None
         except ImportError:
             logger.debug(f"No signals module configured, event {event_name} dropped for {target_module}")
         except Exception as e:
             logger.error(f"Signal dispatch error for {event_name}: {e}")
             raise
+        
+        return None
     
     def _apply_read_fallback(
         self,
