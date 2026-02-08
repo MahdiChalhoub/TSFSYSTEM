@@ -202,6 +202,16 @@ class OrganizationViewSet(viewsets.ModelViewSet):
     """
     SaaS level view of organizations.
     Admin staff can see all. Regular users see only their bound org.
+    
+    Permissions:
+      - LIST/RETRIEVE: Authenticated (scoped by role)
+      - CREATE/UPDATE/DELETE: Staff or Superuser only
+    
+    Delete Safety Rules:
+      1. Cannot delete the master SaaS organization (slug='saas')
+      2. Must deactivate first (is_active=False)
+      3. After deactivation, must wait 24 hours before deletion
+      4. If org has data, deletion is blocked (must backup first)
     """
     permission_classes = [permissions.IsAuthenticated]
     queryset = Organization.objects.all()
@@ -210,33 +220,134 @@ class OrganizationViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         
-        # 1. ROOT PLATFORM ADMIN (Global SaaS View)
-        if (user.is_superuser or user.is_staff) and not user.organization_id:
-            return Organization.objects.all()
+        # 1. PLATFORM ADMIN (Global SaaS View)
+        if user.is_superuser or user.is_staff:
+            return Organization.objects.all().order_by('-created_at')
 
         # 2. CROSS-TENANT IDENTITY (Federated View)
         if user.email:
             org_ids = User.objects.filter(email=user.email).values_list('organization_id', flat=True)
             return Organization.objects.filter(id__in=org_ids)
             
-        # 3. JAILED VIEW (Fallback)
-        if user.organization_id:
-            return Organization.objects.filter(id=user.organization_id)
-            
-        return Organization.objects.none()
+        # 3. JAILED VIEW (regular user sees only their org)
+        return Organization.objects.filter(id=user.organization_id)
 
     def create(self, request, *args, **kwargs):
         if not (request.user.is_staff or request.user.is_superuser):
-             return Response({"error": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
-             
+            return Response({"error": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+        
+        name = request.data.get('name', '').strip()
+        slug = request.data.get('slug', '').strip().lower()
+        
+        if not name or not slug:
+            return Response({"error": "Business name and slug are required."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if Organization.objects.filter(slug=slug).exists():
+            return Response({"error": f"Slug '{slug}' is already taken."}, status=status.HTTP_400_BAD_REQUEST)
+        
         try:
-            org = ProvisioningService.provision_organization(
-                name=request.data.get('name'),
-                slug=request.data.get('slug')
-            )
+            org = ProvisioningService.provision_organization(name=name, slug=slug)
+            
+            # Update optional fields after provisioning
+            extra_fields = {}
+            for field in ['business_email', 'phone', 'country', 'timezone', 'address', 'city']:
+                val = request.data.get(field, '').strip()
+                if val:
+                    extra_fields[field] = val
+            
+            if extra_fields:
+                for k, v in extra_fields.items():
+                    setattr(org, k, v)
+                org.save(update_fields=list(extra_fields.keys()))
+            
             return Response(self.get_serializer(org).data, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def partial_update(self, request, *args, **kwargs):
+        """Handle suspend/activate and other field updates."""
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({"error": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+        
+        org = self.get_object()
+        
+        # Protect master SaaS org from suspension
+        if org.slug == 'saas' and 'is_active' in request.data:
+            return Response(
+                {"error": "Cannot change the status of the master SaaS organization."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Delete with safety rules:
+        1. Cannot delete master SaaS org
+        2. Must be deactivated first
+        3. Must wait 24h after deactivation
+        4. Block if org has meaningful data without backup
+        """
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({"error": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+        
+        org = self.get_object()
+        
+        # Rule 1: Protect SaaS master org
+        if org.slug == 'saas':
+            return Response(
+                {"error": "Cannot delete the master SaaS organization."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Rule 2: Must be deactivated first
+        if org.is_active:
+            return Response(
+                {"error": "Organization must be deactivated before deletion. Suspend it first."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Rule 3: 24h cooldown after deactivation
+        from django.utils import timezone as tz
+        if org.updated_at and (tz.now() - org.updated_at).total_seconds() < 86400:
+            hours_left = 24 - int((tz.now() - org.updated_at).total_seconds() / 3600)
+            return Response(
+                {"error": f"Organization was recently deactivated. Please wait ~{hours_left}h before deletion."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Rule 4: Check for data existence
+        has_data = (
+            Product.objects.filter(organization=org).exists() or
+            Contact.objects.filter(organization=org).exists() or
+            Transaction.objects.filter(organization=org).exists()
+        )
+        
+        if has_data:
+            return Response(
+                {"error": "Organization has existing data. Please create a backup before deletion, or contact support."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        org_name = org.name
+        org.delete()
+        return Response({"message": f"Organization '{org_name}' has been permanently deleted."})
+
+    @action(detail=True, methods=['get'])
+    def permissions_list(self, request, pk=None):
+        """Returns what the current user is allowed to do with this org."""
+        org = self.get_object()
+        is_admin = request.user.is_staff or request.user.is_superuser
+        is_saas_org = org.slug == 'saas'
+        
+        return Response({
+            "can_suspend": is_admin and not is_saas_org,
+            "can_activate": is_admin and not is_saas_org,
+            "can_delete": is_admin and not is_saas_org,
+            "can_manage_features": is_admin,
+            "can_edit": is_admin,
+            "is_protected": is_saas_org,
+        })
 
 
 class SiteViewSet(TenantModelViewSet):

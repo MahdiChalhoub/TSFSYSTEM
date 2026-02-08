@@ -12,9 +12,29 @@ from erp.models import (
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
+    site_count = serializers.SerializerMethodField()
+    user_count = serializers.SerializerMethodField()
+    module_count = serializers.SerializerMethodField()
+
     class Meta:
         model = Organization
-        fields = '__all__'
+        fields = [
+            'id', 'name', 'slug', 'is_active', 'created_at', 'updated_at',
+            'logo', 'business_email', 'phone', 'website',
+            'address', 'city', 'state', 'zip_code', 'country', 'timezone',
+            'business_type', 'base_currency', 'settings',
+            'site_count', 'user_count', 'module_count',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'site_count', 'user_count', 'module_count']
+
+    def get_site_count(self, obj):
+        return obj.sites.count() if hasattr(obj, 'sites') else 0
+
+    def get_user_count(self, obj):
+        return User.objects.filter(organization=obj).count()
+
+    def get_module_count(self, obj):
+        return OrganizationModule.objects.filter(organization=obj, is_enabled=True).count()
 
 
 class SiteSerializer(serializers.ModelSerializer):

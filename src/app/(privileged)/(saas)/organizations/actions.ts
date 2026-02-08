@@ -1,14 +1,12 @@
 'use server'
 
 import { revalidatePath } from "next/cache"
-
 import { erpFetch } from "@/lib/erp-api"
 
 export async function getOrganizations() {
     try {
         return await erpFetch('organizations/')
     } catch (error: any) {
-        // Suppress auth or context errors (expected for unauthenticated users or during SaaS root layout load)
         if (error.message && (
             error.message.includes('Authentication credentials') ||
             error.message.includes('No organization context')
@@ -20,7 +18,14 @@ export async function getOrganizations() {
     }
 }
 
-export async function createOrganization(data: { name: string, slug: string }) {
+export async function createOrganization(data: {
+    name: string,
+    slug: string,
+    business_email?: string,
+    phone?: string,
+    country?: string,
+    timezone?: string,
+}) {
     try {
         const result = await erpFetch('organizations/', {
             method: 'POST',
@@ -39,12 +44,13 @@ export async function createOrganization(data: { name: string, slug: string }) {
 
 export async function toggleOrganizationStatus(id: string, currentStatus: boolean) {
     try {
-        await erpFetch(`organizations/${id}/`, {
+        const result = await erpFetch(`organizations/${id}/`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ is_active: !currentStatus })
         })
         revalidatePath('/organizations')
+        return result
     } catch (error) {
         console.error("Failed to toggle organization status:", error)
         throw error
@@ -53,13 +59,30 @@ export async function toggleOrganizationStatus(id: string, currentStatus: boolea
 
 export async function deleteOrganization(id: string) {
     try {
-        await erpFetch(`organizations/${id}/`, {
+        const result = await erpFetch(`organizations/${id}/`, {
             method: 'DELETE'
         })
         revalidatePath('/organizations')
         revalidatePath('/dashboard')
+        return result
     } catch (error) {
         console.error("Failed to delete organization:", error)
         throw error
+    }
+}
+
+export async function getOrgPermissions(id: string) {
+    try {
+        return await erpFetch(`organizations/${id}/permissions_list/`)
+    } catch (error) {
+        console.error("Failed to get org permissions:", error)
+        return {
+            can_suspend: false,
+            can_activate: false,
+            can_delete: false,
+            can_manage_features: false,
+            can_edit: false,
+            is_protected: true
+        }
     }
 }
