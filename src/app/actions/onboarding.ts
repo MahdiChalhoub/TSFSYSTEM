@@ -16,7 +16,7 @@ export async function getPublicConfig() {
 
 export async function getPublicPlans() {
     try {
-        const data = await erpFetch('saas/plans/');
+        const data = await erpFetch('saas/pricing/');
         return Array.isArray(data) ? data : [];
     } catch (error) {
         console.error("Public plans fetch error:", error);

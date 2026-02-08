@@ -273,11 +273,14 @@ class SubscriptionPlan(models.Model):
     features = models.JSONField(default=dict)      # Feature flags
     limits = models.JSONField(default=dict)        # {"max_users": 5, "max_sites": 1, ...}
     is_active = models.BooleanField(default=True)
+    is_public = models.BooleanField(default=True, help_text="Public plans show on landing/pricing page. Private plans are org-specific.")
+    sort_order = models.IntegerField(default=0, help_text="Display order on pricing pages (lower = first)")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'SubscriptionPlan'
+        ordering = ['sort_order', 'monthly_price']
 
     def __str__(self):
         return f"{self.name} (${self.monthly_price}/mo)"
@@ -292,6 +295,33 @@ class SubscriptionPayment(models.Model):
 
     class Meta:
         db_table = 'SubscriptionPayment'
+
+
+class PlanAddon(models.Model):
+    ADDON_TYPES = [
+        ('users', 'Extra Users'),
+        ('sites', 'Extra Sites'),
+        ('storage', 'Extra Storage (GB)'),
+        ('products', 'Extra Products'),
+        ('invoices', 'Extra Invoices/Month'),
+        ('customers', 'Extra Customers'),
+    ]
+    name = models.CharField(max_length=255)
+    addon_type = models.CharField(max_length=20, choices=ADDON_TYPES)
+    quantity = models.IntegerField(help_text="How much this add-on provides (e.g. 10 users, 50 GB)")
+    monthly_price = models.DecimalField(max_digits=15, decimal_places=2)
+    annual_price = models.DecimalField(max_digits=15, decimal_places=2)
+    is_active = models.BooleanField(default=True)
+    plans = models.ManyToManyField(SubscriptionPlan, related_name='addons', blank=True, help_text="Plans that can use this add-on. Empty = available to all.")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'PlanAddon'
+        ordering = ['addon_type', 'monthly_price']
+
+    def __str__(self):
+        return f"{self.name} (+{self.quantity} {self.addon_type}) ${self.monthly_price}/mo"
 
 
 # =============================================================================

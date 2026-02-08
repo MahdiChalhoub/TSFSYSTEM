@@ -1,13 +1,15 @@
 'use client'
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { getPlans, getPlanCategories, createPlan, createPlanCategory } from "./actions"
+import { getAddons, createAddon, deleteAddon } from "./[id]/actions"
 import { getSaaSModules } from "@/app/actions/saas/modules"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Plus, Tag, Layers, Loader2, Check } from "lucide-react"
+import { Plus, Tag, Layers, Loader2, Check, Globe, Lock, Trash2, Users, Building2, HardDrive, Package, FileText, UserCheck } from "lucide-react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
@@ -15,11 +17,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 
+const ADDON_TYPE_ICONS: Record<string, any> = { users: Users, sites: Building2, storage: HardDrive, products: Package, invoices: FileText, customers: UserCheck }
+const ADDON_TYPE_LABELS: Record<string, string> = { users: 'Extra Users', sites: 'Extra Sites', storage: 'Extra Storage (GB)', products: 'Extra Products', invoices: 'Extra Invoices/Month', customers: 'Extra Customers' }
+
 export default function SubscriptionPlansPage() {
+    const router = useRouter()
     const [plans, setPlans] = useState<any[]>([])
     const [categories, setCategories] = useState<any[]>([])
     const [availableModules, setAvailableModules] = useState<any[]>([])
+    const [addons, setAddons] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
+
+    // Add-on modal
+    const [addonOpen, setAddonOpen] = useState(false)
+    const [addonForm, setAddonForm] = useState({ name: '', addon_type: 'users', quantity: '10', monthly_price: '5', annual_price: '50', plan_ids: [] as string[] })
+    const [addonSaving, setAddonSaving] = useState(false)
 
     // New Plan Modal
     const [planOpen, setPlanOpen] = useState(false)
@@ -42,14 +54,16 @@ export default function SubscriptionPlansPage() {
 
     async function loadData() {
         try {
-            const [plansData, categoriesData, modulesData] = await Promise.all([
+            const [plansData, categoriesData, modulesData, addonsData] = await Promise.all([
                 getPlans(),
                 getPlanCategories(),
-                getSaaSModules()
+                getSaaSModules(),
+                getAddons(),
             ])
             setPlans(Array.isArray(plansData) ? plansData : [])
             setCategories(Array.isArray(categoriesData) ? categoriesData : [])
             setAvailableModules(Array.isArray(modulesData) ? modulesData : [])
+            setAddons(Array.isArray(addonsData) ? addonsData : [])
         } catch {
             toast.error("Failed to load subscription data")
         } finally {
@@ -333,13 +347,17 @@ export default function SubscriptionPlansPage() {
                                     const limits = plan.limits || {}
 
                                     return (
-                                        <Card key={plan.id} className={`transition-all shadow-sm hover:shadow-lg group overflow-hidden ${isCustom
+                                        <Card key={plan.id} className={`transition-all shadow-sm hover:shadow-lg group overflow-hidden cursor-pointer ${isCustom
                                             ? 'bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 border-purple-200 hover:border-purple-400'
                                             : 'bg-white hover:border-emerald-500/30'
-                                            }`}>
+                                            }`}
+                                            onClick={() => router.push(`/subscription-plans/${plan.id}`)}>
                                             <CardHeader className="pb-3">
                                                 <div className="flex justify-between items-start">
-                                                    <CardTitle className={`text-lg font-bold ${isCustom ? 'text-purple-900' : ''}`}>{plan.name}</CardTitle>
+                                                    <div className="flex items-center gap-2">
+                                                        <CardTitle className={`text-lg font-bold ${isCustom ? 'text-purple-900' : ''}`}>{plan.name}</CardTitle>
+                                                        {plan.is_public === false && <Lock size={12} className="text-amber-500" />}
+                                                    </div>
                                                     <Badge className={plan.is_active ? "bg-emerald-50 text-emerald-600" : "bg-gray-100 text-gray-500"}>
                                                         {plan.is_active ? 'Active' : 'Draft'}
                                                     </Badge>
@@ -455,6 +473,156 @@ export default function SubscriptionPlansPage() {
                             No categories found. Start by creating a plan category.
                         </div>
                     )}
+
+                    {/* ─── Add-ons Section ─── */}
+                    <div className="space-y-4 mt-8">
+                        <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+                            <div>
+                                <h3 className="text-xl font-bold text-gray-800">Plan Add-ons</h3>
+                                <p className="text-xs text-gray-400 mt-1">Per-item upgrades clients can purchase (monthly recurring)</p>
+                            </div>
+                            <Dialog open={addonOpen} onOpenChange={setAddonOpen}>
+                                <DialogTrigger asChild>
+                                    <Button className="bg-indigo-600 hover:bg-indigo-500 gap-2 text-white">
+                                        <Plus size={16} /> New Add-on
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <DialogHeader>
+                                        <DialogTitle>Create Plan Add-on</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="space-y-4 py-4">
+                                        <div className="space-y-2">
+                                            <Label>Name</Label>
+                                            <Input value={addonForm.name} onChange={e => setAddonForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Extra 10 Users" />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label>Type</Label>
+                                                <Select value={addonForm.addon_type} onValueChange={v => setAddonForm(f => ({ ...f, addon_type: v }))}>
+                                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                                                    <SelectContent>
+                                                        {Object.entries(ADDON_TYPE_LABELS).map(([k, v]) => (
+                                                            <SelectItem key={k} value={k}>{v}</SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Quantity</Label>
+                                                <Input type="number" value={addonForm.quantity} onChange={e => setAddonForm(f => ({ ...f, quantity: e.target.value }))} />
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label>Monthly Price ($)</Label>
+                                                <Input type="number" value={addonForm.monthly_price} onChange={e => setAddonForm(f => ({ ...f, monthly_price: e.target.value }))} />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Annual Price ($)</Label>
+                                                <Input type="number" value={addonForm.annual_price} onChange={e => setAddonForm(f => ({ ...f, annual_price: e.target.value }))} />
+                                            </div>
+                                        </div>
+                                        <div className="border-t pt-4">
+                                            <Label className="text-sm font-bold text-gray-700 mb-3 block">Available for Plans</Label>
+                                            <p className="text-xs text-gray-400 mb-2">Leave all unchecked = available to all plans</p>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                {plans.map((p: any) => (
+                                                    <div key={p.id} className="flex items-center gap-2">
+                                                        <Checkbox id={`addon-plan-${p.id}`}
+                                                            checked={addonForm.plan_ids.includes(p.id)}
+                                                            onCheckedChange={() => setAddonForm(f => ({
+                                                                ...f,
+                                                                plan_ids: f.plan_ids.includes(p.id) ? f.plan_ids.filter(x => x !== p.id) : [...f.plan_ids, p.id]
+                                                            }))} />
+                                                        <label htmlFor={`addon-plan-${p.id}`} className="text-sm text-gray-700 cursor-pointer">{p.name}</label>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <DialogFooter>
+                                        <Button onClick={async () => {
+                                            if (!addonForm.name.trim()) return toast.error('Name is required')
+                                            setAddonSaving(true)
+                                            try {
+                                                await createAddon({
+                                                    name: addonForm.name,
+                                                    addon_type: addonForm.addon_type,
+                                                    quantity: parseInt(addonForm.quantity) || 1,
+                                                    monthly_price: parseFloat(addonForm.monthly_price) || 0,
+                                                    annual_price: parseFloat(addonForm.annual_price) || 0,
+                                                    plan_ids: addonForm.plan_ids,
+                                                })
+                                                toast.success('Add-on created')
+                                                setAddonOpen(false)
+                                                setAddonForm({ name: '', addon_type: 'users', quantity: '10', monthly_price: '5', annual_price: '50', plan_ids: [] })
+                                                loadData()
+                                            } catch { toast.error('Failed to create add-on') }
+                                            finally { setAddonSaving(false) }
+                                        }} disabled={addonSaving} className="bg-indigo-600 hover:bg-indigo-500 text-white">
+                                            {addonSaving ? <Loader2 className="animate-spin" size={16} /> : 'Create Add-on'}
+                                        </Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
+                        </div>
+
+                        {addons.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                {addons.map((addon: any) => {
+                                    const Icon = ADDON_TYPE_ICONS[addon.addon_type] || Package
+                                    return (
+                                        <Card key={addon.id} className="bg-white shadow-sm hover:shadow-md transition-all border-indigo-100 hover:border-indigo-300">
+                                            <CardContent className="pt-5 pb-4">
+                                                <div className="flex items-start justify-between">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center">
+                                                            <Icon size={18} className="text-indigo-600" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-bold text-gray-800 text-sm">{addon.name}</p>
+                                                            <p className="text-[10px] text-gray-400 uppercase font-bold">{ADDON_TYPE_LABELS[addon.addon_type] || addon.addon_type}</p>
+                                                        </div>
+                                                    </div>
+                                                    <button onClick={async () => {
+                                                        if (confirm('Delete this add-on?')) {
+                                                            await deleteAddon(addon.id)
+                                                            toast.success('Add-on deleted')
+                                                            loadData()
+                                                        }
+                                                    }} className="text-gray-300 hover:text-red-500 transition-colors">
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
+                                                <div className="mt-3 flex items-end gap-2">
+                                                    <span className="text-lg font-black text-indigo-600">${parseFloat(addon.monthly_price).toFixed(0)}</span>
+                                                    <span className="text-xs text-gray-400 font-bold">/mo</span>
+                                                    <span className="text-xs text-gray-300 mx-1">|</span>
+                                                    <span className="text-sm font-bold text-gray-500">${parseFloat(addon.annual_price).toFixed(0)}/yr</span>
+                                                </div>
+                                                <div className="mt-2">
+                                                    <Badge className="bg-indigo-50 text-indigo-700 text-[10px]">+{addon.quantity} {addon.addon_type}</Badge>
+                                                    {addon.plan_ids?.length > 0 && (
+                                                        <span className="text-[10px] text-gray-400 ml-2">
+                                                            {addon.plan_ids.length} plan(s)
+                                                        </span>
+                                                    )}
+                                                    {(!addon.plan_ids || addon.plan_ids.length === 0) && (
+                                                        <span className="text-[10px] text-gray-400 ml-2">All plans</span>
+                                                    )}
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    )
+                                })}
+                            </div>
+                        ) : (
+                            <div className="py-8 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200 text-gray-400 text-sm">
+                                No add-ons created yet. Add-ons let clients upgrade specific limits.
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
         </div>
