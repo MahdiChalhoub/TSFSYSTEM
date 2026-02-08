@@ -68,6 +68,19 @@ class ProvisioningService:
                 name="Main Warehouse",
                 code="WH01"
             )
+
+            # 4. Auto-grant all installed modules to new org
+            from .models import SystemModule, OrganizationModule
+            installed_modules = SystemModule.objects.filter(status='INSTALLED')
+            for sm in installed_modules:
+                OrganizationModule.objects.get_or_create(
+                    organization=org,
+                    module_name=sm.name,
+                    defaults={'is_enabled': True}
+                )
+            logger.info(
+                f"📦 Auto-granted {installed_modules.count()} modules to '{slug}'"
+            )
         
         # ── MODULE EVENTS (outside transaction — each module handles its own) ──
         event_payload = {

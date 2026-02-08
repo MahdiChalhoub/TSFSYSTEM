@@ -131,7 +131,7 @@ export async function uploadModule(formData: FormData) {
 
 export async function getOrgModules(orgId: string) {
     try {
-        return await erpFetch(`/api/saas/org-modules/${orgId}/modules/`)
+        return await erpFetch(`saas/org-modules/${orgId}/modules/`)
     } catch (e) {
         console.error("Failed to fetch org modules:", e)
         return []
@@ -140,7 +140,7 @@ export async function getOrgModules(orgId: string) {
 
 export async function toggleOrgModule(orgId: string, moduleCode: string, action: 'enable' | 'disable') {
     try {
-        const data = await erpFetch(`/api/saas/org-modules/${orgId}/toggle_module/`, {
+        const data = await erpFetch(`saas/org-modules/${orgId}/toggle_module/`, {
             method: 'POST',
             body: JSON.stringify({ module_code: moduleCode, action: action })
         })
@@ -153,7 +153,7 @@ export async function toggleOrgModule(orgId: string, moduleCode: string, action:
 
 export async function updateOrgModuleFeatures(orgId: string, moduleCode: string, features: string[]) {
     try {
-        const data = await erpFetch(`/api/saas/org-modules/${orgId}/update_features/`, {
+        const data = await erpFetch(`saas/org-modules/${orgId}/update_features/`, {
             method: 'POST',
             body: JSON.stringify({ module_code: moduleCode, features: features })
         })
