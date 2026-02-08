@@ -164,6 +164,10 @@ export default function OrganizationDetailPage() {
     const [newSite, setNewSite] = useState({ name: '', code: '', address: '', city: '', phone: '', vat_number: '' })
     const [creatingSite, setCreatingSite] = useState(false)
 
+    // Plan switch confirmation dialog
+    const [planSwitchTarget, setPlanSwitchTarget] = useState<any>(null)
+    const [switching, setSwitching] = useState(false)
+
     useEffect(() => {
         async function load() {
             try {
@@ -695,17 +699,7 @@ export default function OrganizationDetailPage() {
                                                 {!isCurrent && (
                                                     <Button size="sm"
                                                         className="w-full mt-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs"
-                                                        onClick={async () => {
-                                                            try {
-                                                                const result = await changeOrgPlan(orgId, p.id)
-                                                                toast.success(result.message || `Switched to ${p.name}`)
-                                                                // Refresh usage data
-                                                                const newUsage = await getOrgUsage(orgId)
-                                                                setUsage(newUsage)
-                                                            } catch (err: any) {
-                                                                toast.error(err.message || 'Failed to change plan')
-                                                            }
-                                                        }}>
+                                                        onClick={() => setPlanSwitchTarget(p)}>
                                                         Switch to This Plan
                                                     </Button>
                                                 )}
@@ -729,19 +723,34 @@ export default function OrganizationDetailPage() {
                                 <div className="text-center py-12 text-gray-400 text-sm italic">No billing records found for this organization.</div>
                             ) : (
                                 <div className="space-y-2">
-                                    {billing.map(p => (
+                                    {billing.map((p: any) => (
                                         <div key={p.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-gray-200 transition-all">
-                                            <div>
-                                                <p className="font-bold text-gray-900 text-sm">{p.plan_name}</p>
-                                                <p className="text-xs text-gray-400">{new Date(p.created_at).toLocaleDateString()}</p>
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <Badge className={{
+                                                        'PURCHASE': 'bg-emerald-50 text-emerald-600 border-emerald-100',
+                                                        'CREDIT_NOTE': 'bg-amber-50 text-amber-600 border-amber-100',
+                                                        'RENEWAL': 'bg-blue-50 text-blue-600 border-blue-100',
+                                                    }[p.type as string] || 'bg-gray-50 text-gray-500'}
+                                                    >{p.type === 'CREDIT_NOTE' ? 'Credit Note' : p.type === 'PURCHASE' ? 'Purchase' : p.type || 'Invoice'}</Badge>
+                                                    <p className="font-bold text-gray-900 text-sm">{p.plan_name}</p>
+                                                    {p.previous_plan_name && (
+                                                        <span className="text-[10px] text-gray-400">← from {p.previous_plan_name}</span>
+                                                    )}
+                                                </div>
+                                                {p.notes && <p className="text-[11px] text-gray-400 line-clamp-1">{p.notes}</p>}
+                                                <p className="text-xs text-gray-400 mt-0.5">{new Date(p.created_at).toLocaleDateString()} {new Date(p.created_at).toLocaleTimeString()}</p>
                                             </div>
                                             <div className="flex items-center gap-3">
-                                                <span className="font-black text-gray-900">${p.amount}</span>
-                                                <Badge className={
-                                                    p.status === 'PAID' ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-                                                        : p.status === 'PENDING' ? "bg-amber-50 text-amber-600 border-amber-100"
-                                                            : "bg-red-50 text-red-600 border-red-100"
-                                                }>{p.status}</Badge>
+                                                <span className={`font-black ${p.type === 'CREDIT_NOTE' ? 'text-amber-600' : 'text-gray-900'}`}>
+                                                    {p.type === 'CREDIT_NOTE' ? '-' : ''}${p.amount}
+                                                </span>
+                                                <Badge className={{
+                                                    'COMPLETED': 'bg-emerald-50 text-emerald-600 border-emerald-100',
+                                                    'PAID': 'bg-emerald-50 text-emerald-600 border-emerald-100',
+                                                    'PENDING': 'bg-amber-50 text-amber-600 border-amber-100',
+                                                }[p.status as string] || 'bg-red-50 text-red-600 border-red-100'}
+                                                >{p.status}</Badge>
                                             </div>
                                         </div>
                                     ))}
@@ -873,6 +882,104 @@ export default function OrganizationDetailPage() {
                         <Button onClick={handleCreateSite} disabled={creatingSite} className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold">
                             {creatingSite ? <Loader2 size={16} className="animate-spin mr-2" /> : <Building2 size={16} className="mr-2" />}
                             Create Site
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* ─── Plan Switch Confirmation Dialog ─────────────────────── */}
+            <Dialog open={!!planSwitchTarget} onOpenChange={(open) => !open && setPlanSwitchTarget(null)}>
+                <DialogContent className="rounded-2xl max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="font-black text-lg">Confirm Plan Switch</DialogTitle>
+                    </DialogHeader>
+                    {planSwitchTarget && (() => {
+                        const currentPrice = parseFloat(usage?.plan?.monthly_price || '0')
+                        const targetPrice = parseFloat(planSwitchTarget.monthly_price)
+                        const isUpgrade = targetPrice > currentPrice
+                        const isDowngrade = targetPrice < currentPrice
+                        const diff = Math.abs(targetPrice - currentPrice)
+                        return (
+                            <div className="space-y-4">
+                                <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 space-y-3">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-xs text-gray-400 font-bold uppercase">Current Plan</span>
+                                        <span className="font-bold text-gray-900">{usage?.plan?.name || 'Free Tier'}</span>
+                                    </div>
+                                    <div className="border-t border-dashed border-gray-200" />
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-xs text-gray-400 font-bold uppercase">New Plan</span>
+                                        <span className="font-black text-gray-900">{planSwitchTarget.name}</span>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center justify-between p-4 rounded-xl border-2 border-dashed" style={{
+                                    borderColor: isUpgrade ? '#10b981' : isDowngrade ? '#f59e0b' : '#9ca3af',
+                                    background: isUpgrade ? '#ecfdf5' : isDowngrade ? '#fffbeb' : '#f9fafb'
+                                }}>
+                                    <div>
+                                        <Badge className={isUpgrade ? 'bg-emerald-100 text-emerald-700' : isDowngrade ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600'}>
+                                            {isUpgrade ? '⬆ Upgrade' : isDowngrade ? '⬇ Downgrade' : '↔ Switch'}
+                                        </Badge>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-xs text-gray-400 font-bold">Price {isUpgrade ? 'Increase' : isDowngrade ? 'Decrease' : 'Change'}</p>
+                                        <p className={`text-lg font-black ${isUpgrade ? 'text-emerald-600' : isDowngrade ? 'text-amber-600' : 'text-gray-600'}`}>
+                                            {isUpgrade ? '+' : isDowngrade ? '-' : ''}${diff.toFixed(2)}/mo
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {isUpgrade && (
+                                    <p className="text-[11px] text-gray-400">A <strong>Purchase Invoice</strong> of ${diff.toFixed(2)}/mo will be generated for the price difference.</p>
+                                )}
+                                {isDowngrade && (
+                                    <p className="text-[11px] text-gray-400">A <strong>Credit Note</strong> of ${diff.toFixed(2)}/mo will be issued, plus a new <strong>Purchase Invoice</strong> for ${targetPrice.toFixed(2)}/mo.</p>
+                                )}
+
+                                {planSwitchTarget.modules?.length > 0 && (
+                                    <div>
+                                        <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Modules in new plan:</p>
+                                        <div className="flex flex-wrap gap-1">
+                                            {planSwitchTarget.modules.map((m: string) => (
+                                                <Badge key={m} className="bg-gray-50 text-gray-500 text-[9px] border border-gray-100 uppercase">{m}</Badge>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )
+                    })()}
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setPlanSwitchTarget(null)} className="rounded-xl">Cancel</Button>
+                        <Button
+                            disabled={switching}
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold"
+                            onClick={async () => {
+                                if (!planSwitchTarget) return
+                                setSwitching(true)
+                                try {
+                                    const result = await changeOrgPlan(orgId, planSwitchTarget.id)
+                                    toast.success(result.message || `Switched to ${planSwitchTarget.name}`)
+                                    if (result.modules_disabled?.length > 0) {
+                                        toast.info(`Disabled modules: ${result.modules_disabled.join(', ')}`)
+                                    }
+                                    // Refresh usage + billing data
+                                    const [newUsage, newBilling] = await Promise.all([
+                                        getOrgUsage(orgId),
+                                        getOrgBilling(orgId),
+                                    ])
+                                    setUsage(newUsage)
+                                    setBilling(Array.isArray(newBilling) ? newBilling : [])
+                                    setPlanSwitchTarget(null)
+                                } catch (err: any) {
+                                    toast.error(err.message || 'Failed to change plan')
+                                } finally {
+                                    setSwitching(false)
+                                }
+                            }}>
+                            {switching ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
+                            Confirm Switch
                         </Button>
                     </DialogFooter>
                 </DialogContent>
