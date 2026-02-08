@@ -317,16 +317,17 @@ export default function OrganizationsPage() {
                     <option value="all">All Plans</option>
                     {uniquePlans.map(p => <option key={p} value={p}>{p}</option>)}
                 </select>
-                {businessTypes.length > 0 && (
+                {businessTypes.length > 0 ? (
                     <select value={filterType} onChange={e => setFilterType(e.target.value)}
                         className="text-xs font-bold border border-gray-100 rounded-xl px-3 py-2.5 bg-gray-50 text-gray-700 focus:ring-2 focus:ring-emerald-500/30">
                         <option value="all">All Types</option>
                         {businessTypes.map(bt => <option key={bt.id} value={bt.name}>{bt.name}</option>)}
                     </select>
-                )}
+                ) : null}
                 <input type="text" placeholder="Filter by country..." value={filterCountry === 'all' ? '' : filterCountry}
                     onChange={e => setFilterCountry(e.target.value || 'all')}
-                    className="text-xs font-bold border border-gray-100 rounded-xl px-3 py-2.5 bg-gray-50 text-gray-700 focus:ring-2 focus:ring-emerald-500/30 w-[140px]" />
+                    className="text-xs font-bold border border-gray-100 rounded-xl px-3 py-2.5 bg-gray-50 text-gray-700 focus:ring-2 focus:ring-emerald-500/30 w-[140px]"
+                    suppressHydrationWarning />
                 {hasFilters && (
                     <button onClick={() => { setSearch(''); setFilterPlan('all'); setFilterType('all'); setFilterCountry('all'); setFilterStatus('all') }}
                         className="text-xs font-bold text-red-500 hover:text-red-700 flex items-center gap-1 px-3 py-2.5 rounded-xl border border-red-100 hover:bg-red-50 transition-all">
