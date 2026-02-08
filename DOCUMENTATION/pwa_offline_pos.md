@@ -22,6 +22,15 @@ Three object stores powered by the `idb` library:
 - `registerBackgroundSync()` — Registers browser Background Sync if supported
 - Retry logic: max 3 retries before marking as `failed`
 
+### Sync Rules
+| Rule | Function | When |
+|------|----------|------|
+| **Online Priority** | Network-first in SW | Always prefer live server data |
+| **Auto Sync** | `startAutoSync()` | Every 30s while online |
+| **Force Sync on Checkout** | `forceSyncBeforeAction()` | Before completing a new sale |
+| **Force Sync on Close Drawer** | `forceSyncBeforeAction()` | Before closing cash drawer at end of shift |
+| **Online-Only Mode** | `enableOnlineOnlyMode()` | During inventory audits, accounting reconciliation |
+
 ### React Hooks (`src/lib/offline/hooks.ts`)
 - `useOnlineStatus()` — Reactive online/offline state, auto-syncs on reconnect
 - `useOfflineProducts()` — Loads product cache from IndexedDB

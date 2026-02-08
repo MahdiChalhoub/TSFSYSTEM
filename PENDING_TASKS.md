@@ -50,10 +50,10 @@ Mark items `[x]` when done. Stay focused — finish one before starting the next
 - Offline indicator component + ProductGrid offline fallback
 - Documentation: `DOCUMENTATION/pwa_offline_pos.md`
 
-### 5. [ ] Frontend Module Isolation
-- Audit Next.js frontend for hardcoded module imports
-- Dynamic module loading based on tenant's enabled modules
-- Sidebar/routes only show enabled modules
+### 5. [x] Frontend Module Isolation ✅
+- Sidebar already had `module` field + `installedModules` filtering
+- Added `ModuleGate` route guard for direct URL access
+- Documentation: `DOCUMENTATION/frontend_module_isolation.md`
 
 ### 6. [ ] Per-Module API Routing
 - Each module gets own URL namespace: `/api/v1/finance/`, `/api/v1/pos/`
