@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { getOrganization, getOrgUsage, getOrgBilling, getOrgModules, toggleOrgModule, updateModuleFeatures, getOrgUsers, createOrgUser, resetOrgUserPassword } from "./actions"
+import { getOrganization, getOrgUsage, getOrgBilling, getOrgModules, toggleOrgModule, updateModuleFeatures, getOrgUsers, createOrgUser, resetOrgUserPassword, getOrgSites, createOrgSite, toggleOrgSite } from "./actions"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -14,7 +14,7 @@ import {
     Package, ShieldCheck, AlertTriangle, Loader2,
     ToggleLeft, ToggleRight, Crown, Layers, Activity,
     CreditCard, TrendingUp, ChevronRight, Plus, KeyRound,
-    UserCog, Eye, EyeOff, Check
+    UserCog, Eye, EyeOff, Check, Building2, Power
 } from "lucide-react"
 
 // ─── Usage Meter ─────────────────────────────────────────────────────────────
@@ -143,8 +143,9 @@ export default function OrganizationDetailPage() {
     const [billing, setBilling] = useState<any[]>([])
     const [modules, setModules] = useState<any[]>([])
     const [users, setUsers] = useState<any[]>([])
+    const [sites, setSites] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
-    const [activeTab, setActiveTab] = useState<'overview' | 'modules' | 'usage' | 'billing' | 'users'>('overview')
+    const [activeTab, setActiveTab] = useState<'overview' | 'modules' | 'usage' | 'billing' | 'users' | 'sites'>('overview')
     const [toggling, setToggling] = useState<string | null>(null)
 
     // User creation dialog
@@ -158,21 +159,28 @@ export default function OrganizationDetailPage() {
     const [showPass, setShowPass] = useState(false)
     const [resetting, setResetting] = useState(false)
 
+    // Site creation dialog
+    const [showCreateSite, setShowCreateSite] = useState(false)
+    const [newSite, setNewSite] = useState({ name: '', code: '', address: '', city: '', phone: '', vat_number: '' })
+    const [creatingSite, setCreatingSite] = useState(false)
+
     useEffect(() => {
         async function load() {
             try {
-                const [orgData, usageData, billingData, modulesData, usersData] = await Promise.all([
+                const [orgData, usageData, billingData, modulesData, usersData, sitesData] = await Promise.all([
                     getOrganization(orgId),
                     getOrgUsage(orgId),
                     getOrgBilling(orgId),
                     getOrgModules(orgId),
                     getOrgUsers(orgId),
+                    getOrgSites(orgId),
                 ])
                 setOrg(orgData)
                 setUsage(usageData)
                 setBilling(Array.isArray(billingData) ? billingData : [])
                 setModules(Array.isArray(modulesData) ? modulesData : [])
                 setUsers(Array.isArray(usersData) ? usersData : [])
+                setSites(Array.isArray(sitesData) ? sitesData : [])
             } catch {
                 toast.error("Failed to load organization details")
             } finally {
@@ -238,6 +246,31 @@ export default function OrganizationDetailPage() {
         } finally { setResetting(false) }
     }
 
+    async function handleCreateSite() {
+        if (!newSite.name) return toast.error("Site name is required")
+        setCreatingSite(true)
+        try {
+            const result = await createOrgSite(orgId, newSite)
+            toast.success(result.message || 'Site created')
+            setShowCreateSite(false)
+            setNewSite({ name: '', code: '', address: '', city: '', phone: '', vat_number: '' })
+            const sitesData = await getOrgSites(orgId)
+            setSites(Array.isArray(sitesData) ? sitesData : [])
+        } catch (e: any) {
+            const msg = e.message ? JSON.parse(e.message)?.error : 'Failed to create site'
+            toast.error(msg)
+        } finally { setCreatingSite(false) }
+    }
+
+    async function handleToggleSite(siteId: string) {
+        try {
+            const result = await toggleOrgSite(orgId, siteId)
+            toast.success(result.message)
+            const sitesData = await getOrgSites(orgId)
+            setSites(Array.isArray(sitesData) ? sitesData : [])
+        } catch { toast.error("Failed to toggle site") }
+    }
+
     if (loading) return (
         <div className="flex items-center justify-center min-h-[60vh]">
             <div className="text-center space-y-4">
@@ -258,6 +291,7 @@ export default function OrganizationDetailPage() {
         { key: 'overview', label: 'Overview', icon: Activity },
         { key: 'modules', label: 'Modules', icon: Layers },
         { key: 'users', label: `Users (${users.length})`, icon: Users },
+        { key: 'sites', label: `Sites (${sites.length})`, icon: Building2 },
         { key: 'usage', label: 'Usage', icon: TrendingUp },
         { key: 'billing', label: 'Billing', icon: CreditCard },
     ]
@@ -439,6 +473,77 @@ export default function OrganizationDetailPage() {
                                             className="rounded-xl border-gray-200 text-gray-500 hover:text-gray-900 text-xs font-bold">
                                             <KeyRound size={12} className="mr-1" /> Reset
                                         </Button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* ─── Sites Tab ────────────────────────────────────────────── */}
+            {activeTab === 'sites' && (
+                <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="text-lg font-bold text-gray-900">Organization Sites</h3>
+                            <p className="text-sm text-gray-500">{sites.length} site{sites.length !== 1 ? 's' : ''} — branches, warehouses, locations</p>
+                        </div>
+                        <Button onClick={() => setShowCreateSite(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md">
+                            <Plus size={16} className="mr-2" /> Add Site
+                        </Button>
+                    </div>
+
+                    {sites.length === 0 ? (
+                        <Card className="border-gray-100 shadow-sm">
+                            <CardContent className="py-12 text-center text-gray-400 italic">No sites found. Create the first site for this organization.</CardContent>
+                        </Card>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {sites.map(site => (
+                                <div key={site.id} className={`p-5 rounded-2xl border transition-all ${site.is_active
+                                    ? 'bg-white border-gray-100 hover:border-indigo-200 shadow-sm'
+                                    : 'bg-gray-50 border-gray-100 opacity-60'
+                                    }`}>
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${site.is_active
+                                                ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
+                                                : 'bg-gray-100 text-gray-400 border border-gray-200'
+                                                }`}>
+                                                <Building2 size={18} />
+                                            </div>
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-bold text-gray-900 text-sm">{site.name}</span>
+                                                    {site.code && (
+                                                        <span className="text-[9px] font-mono text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">{site.code}</span>
+                                                    )}
+                                                    <Badge className={site.is_active
+                                                        ? "bg-emerald-50 text-emerald-600 border-emerald-100 text-[9px]"
+                                                        : "bg-red-50 text-red-500 border-red-100 text-[9px]"
+                                                    }>
+                                                        {site.is_active ? 'Active' : 'Inactive'}
+                                                    </Badge>
+                                                </div>
+                                                <div className="flex items-center gap-3 mt-1">
+                                                    {site.city && <span className="text-xs text-gray-400 flex items-center gap-1"><MapPin size={10} />{site.city}</span>}
+                                                    {site.phone && <span className="text-xs text-gray-400">{site.phone}</span>}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button onClick={() => handleToggleSite(site.id)} className="transition-transform hover:scale-110">
+                                            <Power size={18} className={site.is_active ? 'text-emerald-500' : 'text-gray-300'} />
+                                        </button>
+                                    </div>
+                                    {(site.address || site.vat_number) && (
+                                        <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between text-xs text-gray-400">
+                                            {site.address && <span>{site.address}</span>}
+                                            {site.vat_number && <span>VAT: {site.vat_number}</span>}
+                                        </div>
+                                    )}
+                                    <div className="mt-2 text-[10px] text-gray-300">
+                                        Created: {site.created_at ? new Date(site.created_at).toLocaleDateString() : 'N/A'}
                                     </div>
                                 </div>
                             ))}
@@ -643,6 +748,52 @@ export default function OrganizationDetailPage() {
                         <Button onClick={handleResetPassword} disabled={resetting} className="bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold">
                             {resetting ? <Loader2 size={16} className="animate-spin mr-2" /> : <KeyRound size={16} className="mr-2" />}
                             Reset Password
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* ─── Create Site Dialog ───────────────────────────────────── */}
+            <Dialog open={showCreateSite} onOpenChange={setShowCreateSite}>
+                <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
+                    <DialogHeader>
+                        <DialogTitle className="font-bold">Add New Site</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="text-xs font-bold text-gray-500 mb-1 block">Site Name *</label>
+                                <Input value={newSite.name} onChange={e => setNewSite({ ...newSite, name: e.target.value })} placeholder="Main Branch" className="rounded-xl" />
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-gray-500 mb-1 block">Code</label>
+                                <Input value={newSite.code} onChange={e => setNewSite({ ...newSite, code: e.target.value.toUpperCase() })} placeholder="BR001" className="rounded-xl font-mono" />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="text-xs font-bold text-gray-500 mb-1 block">Address</label>
+                            <Input value={newSite.address} onChange={e => setNewSite({ ...newSite, address: e.target.value })} placeholder="123 Main Street" className="rounded-xl" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="text-xs font-bold text-gray-500 mb-1 block">City</label>
+                                <Input value={newSite.city} onChange={e => setNewSite({ ...newSite, city: e.target.value })} placeholder="Beirut" className="rounded-xl" />
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-gray-500 mb-1 block">Phone</label>
+                                <Input value={newSite.phone} onChange={e => setNewSite({ ...newSite, phone: e.target.value })} placeholder="+961 1 234567" className="rounded-xl" />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="text-xs font-bold text-gray-500 mb-1 block">VAT Number</label>
+                            <Input value={newSite.vat_number} onChange={e => setNewSite({ ...newSite, vat_number: e.target.value })} placeholder="LB123456789" className="rounded-xl font-mono" />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setShowCreateSite(false)} className="rounded-xl">Cancel</Button>
+                        <Button onClick={handleCreateSite} disabled={creatingSite} className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold">
+                            {creatingSite ? <Loader2 size={16} className="animate-spin mr-2" /> : <Building2 size={16} className="mr-2" />}
+                            Create Site
                         </Button>
                     </DialogFooter>
                 </DialogContent>

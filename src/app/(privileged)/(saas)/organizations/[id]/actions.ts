@@ -101,3 +101,36 @@ export async function resetOrgUserPassword(orgId: string, userId: string, newPas
     })
 }
 
+// ─── Site Management ─────────────────────────────────────────────
+
+export async function getOrgSites(orgId: string) {
+    try {
+        return await erpFetch(`saas/org-modules/${orgId}/sites/`)
+    } catch (error) {
+        console.error("[SaaS] Error fetching sites:", error)
+        return []
+    }
+}
+
+export async function createOrgSite(orgId: string, data: {
+    name: string
+    code?: string
+    address?: string
+    city?: string
+    phone?: string
+    vat_number?: string
+}) {
+    return await erpFetch(`saas/org-modules/${orgId}/create_site/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+}
+
+export async function toggleOrgSite(orgId: string, siteId: string) {
+    return await erpFetch(`saas/org-modules/${orgId}/toggle_site/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ site_id: siteId })
+    })
+}
