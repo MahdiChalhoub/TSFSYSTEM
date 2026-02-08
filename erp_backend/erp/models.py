@@ -297,14 +297,25 @@ class SubscriptionPlan(models.Model):
 
 
 class SubscriptionPayment(models.Model):
+    TYPE_CHOICES = (
+        ('PURCHASE', 'Purchase Invoice'),
+        ('CREDIT_NOTE', 'Credit Note'),
+        ('RENEWAL', 'Renewal'),
+    )
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
-    plan = models.ForeignKey(SubscriptionPlan, on_delete=models.PROTECT)
+    plan = models.ForeignKey(SubscriptionPlan, on_delete=models.PROTECT, related_name='payments')
+    previous_plan = models.ForeignKey(SubscriptionPlan, on_delete=models.SET_NULL, null=True, blank=True, related_name='upgrade_payments', help_text="Plan before the switch (for audit)")
     amount = models.DecimalField(max_digits=15, decimal_places=2)
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='PURCHASE')
     status = models.CharField(max_length=20, default='PENDING')
+    notes = models.TextField(blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = 'SubscriptionPayment'
+
+    def __str__(self):
+        return f"{self.organization.name} — {self.type} — ${self.amount}"
 
 
 class PlanAddon(models.Model):

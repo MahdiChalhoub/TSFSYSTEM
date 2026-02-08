@@ -716,8 +716,19 @@ class OrgModuleViewSet(viewsets.ViewSet):
 
     @action(detail=True, methods=['post'], url_path='change-plan')
     def change_plan(self, request, pk=None):
-        """Change the subscription plan for an organization"""
-        from erp.models import SubscriptionPlan
+        """
+        Change the subscription plan for an organization.
+        
+        Handles:
+        - Upgrade: creates Purchase Invoice for price difference
+        - Downgrade: creates Credit Note + Purchase Invoice
+        - Module sync: enables new plan modules, disables modules not in new plan
+        - Feature sync: applies plan features to org modules
+        - Connector hook: notifies Finance module via ConnectorEngine
+        """
+        from erp.models import SubscriptionPlan, SubscriptionPayment
+        from decimal import Decimal
+
         try:
             org = Organization.objects.get(id=pk)
         except Organization.DoesNotExist:
@@ -728,17 +739,101 @@ class OrgModuleViewSet(viewsets.ViewSet):
             return Response({'error': 'plan_id is required'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            plan = SubscriptionPlan.objects.get(id=plan_id, is_active=True)
+            new_plan = SubscriptionPlan.objects.get(id=plan_id, is_active=True)
         except SubscriptionPlan.DoesNotExist:
             return Response({'error': 'Plan not found or inactive'}, status=status.HTTP_404_NOT_FOUND)
 
-        # Update org plan
-        org.current_plan = plan
+        old_plan = org.current_plan
+        old_price = old_plan.monthly_price if old_plan else Decimal('0.00')
+        new_price = new_plan.monthly_price
+        old_plan_name = old_plan.name if old_plan else 'Free Tier'
+
+        # ─── 1. Determine direction ─────────────────────────────────
+        invoices_created = []
+
+        if new_price > old_price:
+            # UPGRADE: Purchase Invoice for the difference
+            diff = new_price - old_price
+            payment = SubscriptionPayment.objects.create(
+                organization=org,
+                plan=new_plan,
+                previous_plan=old_plan,
+                amount=diff,
+                type='PURCHASE',
+                status='COMPLETED',
+                notes=f'Upgrade from "{old_plan_name}" (${old_price}/mo) to "{new_plan.name}" (${new_price}/mo). Difference: ${diff}/mo.'
+            )
+            invoices_created.append({
+                'type': 'PURCHASE',
+                'amount': str(diff),
+                'description': f'Upgrade to {new_plan.name}',
+            })
+
+        elif new_price < old_price:
+            # DOWNGRADE: Credit Note (refund old) + Purchase Invoice (new)
+            refund = old_price - new_price
+            SubscriptionPayment.objects.create(
+                organization=org,
+                plan=old_plan,
+                previous_plan=old_plan,
+                amount=refund,
+                type='CREDIT_NOTE',
+                status='COMPLETED',
+                notes=f'Credit for downgrade from "{old_plan_name}" (${old_price}/mo). Refund: ${refund}/mo.'
+            )
+            invoices_created.append({
+                'type': 'CREDIT_NOTE',
+                'amount': str(refund),
+                'description': f'Credit for {old_plan_name} downgrade',
+            })
+
+            SubscriptionPayment.objects.create(
+                organization=org,
+                plan=new_plan,
+                previous_plan=old_plan,
+                amount=new_price,
+                type='PURCHASE',
+                status='COMPLETED',
+                notes=f'New subscription: "{new_plan.name}" (${new_price}/mo). Downgraded from "{old_plan_name}".'
+            )
+            invoices_created.append({
+                'type': 'PURCHASE',
+                'amount': str(new_price),
+                'description': f'New plan: {new_plan.name}',
+            })
+
+        else:
+            # Same price (lateral move): Purchase Invoice for continuity
+            if new_price > Decimal('0.00'):
+                SubscriptionPayment.objects.create(
+                    organization=org,
+                    plan=new_plan,
+                    previous_plan=old_plan,
+                    amount=new_price,
+                    type='PURCHASE',
+                    status='COMPLETED',
+                    notes=f'Plan switch from "{old_plan_name}" to "{new_plan.name}" (same price: ${new_price}/mo).'
+                )
+                invoices_created.append({
+                    'type': 'PURCHASE',
+                    'amount': str(new_price),
+                    'description': f'Switch to {new_plan.name}',
+                })
+
+        # ─── 2. Update org plan ──────────────────────────────────────
+        org.current_plan = new_plan
         org.save(update_fields=['current_plan'])
 
-        # Sync modules: ensure the org has OrganizationModule for each plan module
-        plan_modules = plan.modules or []
-        for mod_code in plan_modules:
+        # ─── 3. Sync modules ────────────────────────────────────────
+        new_plan_modules = set(new_plan.modules or [])
+        old_plan_modules = set(old_plan.modules or []) if old_plan else set()
+
+        modules_enabled = []
+        modules_disabled = []
+
+        # Enable new plan modules
+        for mod_code in new_plan_modules:
+            sm = None
             try:
                 sm = SystemModule.objects.get(name=mod_code)
             except SystemModule.DoesNotExist:
@@ -753,14 +848,63 @@ class OrgModuleViewSet(viewsets.ViewSet):
             if not om.is_enabled:
                 om.is_enabled = True
                 om.save(update_fields=['is_enabled'])
+            modules_enabled.append(sm.name)
+
+        # Disable modules that are NOT in the new plan but were in the old plan
+        modules_to_disable = old_plan_modules - new_plan_modules
+        for mod_code in modules_to_disable:
+            OrganizationModule.objects.filter(
+                organization=org, module_name=mod_code, is_enabled=True
+            ).update(is_enabled=False)
+            modules_disabled.append(mod_code)
+
+        # ─── 4. Sync features ───────────────────────────────────────
+        plan_features = new_plan.features or {}
+        for mod_code, features_list in plan_features.items():
+            OrganizationModule.objects.filter(
+                organization=org, module_name=mod_code
+            ).update(active_features=features_list)
+
+        # ─── 5. Connector hook — notify Finance module ──────────────
+        try:
+            from erp.connector_engine import ConnectorEngine
+            engine = ConnectorEngine()
+            for inv in invoices_created:
+                engine.route_write(
+                    source_module='saas',
+                    target_module='finance',
+                    endpoint='billing/plan-change/',
+                    data={
+                        'organization_id': str(org.id),
+                        'organization_name': org.name,
+                        'type': inv['type'],
+                        'amount': inv['amount'],
+                        'description': inv['description'],
+                        'plan_name': new_plan.name,
+                        'previous_plan_name': old_plan_name,
+                    },
+                    organization_id=str(org.id),
+                    user=request.user,
+                )
+        except Exception as e:
+            # Connector is best-effort — don't fail the plan change
+            import logging
+            logging.getLogger('erp').warning(f"Connector hook failed for plan change: {e}")
+
+        direction = 'upgrade' if new_price > old_price else ('downgrade' if new_price < old_price else 'switch')
 
         return Response({
-            'message': f'Plan changed to "{plan.name}"',
+            'message': f'Plan {direction}d to "{new_plan.name}"',
+            'direction': direction,
             'plan': {
-                'id': str(plan.id),
-                'name': plan.name,
-                'monthly_price': str(plan.monthly_price),
+                'id': str(new_plan.id),
+                'name': new_plan.name,
+                'monthly_price': str(new_plan.monthly_price),
             },
+            'previous_plan': old_plan_name,
+            'invoices': invoices_created,
+            'modules_enabled': modules_enabled,
+            'modules_disabled': modules_disabled,
         })
 
     @action(detail=True, methods=['get'])
@@ -780,7 +924,10 @@ class OrgModuleViewSet(viewsets.ViewSet):
             'id': str(p.id),
             'plan_name': p.plan.name if p.plan else 'Unknown',
             'amount': str(p.amount),
+            'type': p.type,
             'status': p.status,
+            'notes': p.notes,
+            'previous_plan_name': p.previous_plan.name if p.previous_plan else None,
             'created_at': p.created_at.isoformat(),
         } for p in payments]
 
