@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { getOrganizations, toggleOrganizationStatus, createOrganization, deleteOrganization } from "./actions"
 import { getOrgModules, toggleOrgModule, updateOrgModuleFeatures } from "@/app/actions/saas/modules"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -17,6 +18,7 @@ export default function OrganizationsPage() {
     const [orgs, setOrgs] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const branding = useDynamicBranding();
+    const router = useRouter();
 
     useEffect(() => {
         loadData()
@@ -264,7 +266,7 @@ export default function OrganizationsPage() {
                     const isSaasOrg = org.slug === 'saas'
 
                     return (
-                        <Card key={org.id} className="bg-white border-gray-100 hover:border-emerald-500/30 transition-all rounded-3xl overflow-hidden group shadow-xl hover:shadow-2xl">
+                        <Card key={org.id} className="bg-white border-gray-100 hover:border-emerald-500/30 transition-all rounded-3xl overflow-hidden group shadow-xl hover:shadow-2xl cursor-pointer" onClick={() => router.push(`/organizations/${org.id}`)}>
                             <CardHeader className="pb-4">
                                 <div className="flex justify-between items-start">
                                     <div className={`p-3 rounded-2xl shadow-sm border ${isSaasOrg ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
@@ -313,10 +315,10 @@ export default function OrganizationsPage() {
                                     <Button
                                         variant="outline"
                                         className={`flex-1 py-5 rounded-2xl border-gray-100 font-bold text-sm transition-all ${isSaasOrg
-                                                ? 'bg-gray-50 text-gray-300 cursor-not-allowed'
-                                                : org.is_active
-                                                    ? 'bg-gray-50 hover:bg-orange-50 text-gray-400 hover:text-orange-600 hover:border-orange-200'
-                                                    : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600 hover:border-emerald-200'
+                                            ? 'bg-gray-50 text-gray-300 cursor-not-allowed'
+                                            : org.is_active
+                                                ? 'bg-gray-50 hover:bg-orange-50 text-gray-400 hover:text-orange-600 hover:border-orange-200'
+                                                : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600 hover:border-emerald-200'
                                             }`}
                                         onClick={() => handleToggle(org.id, org.is_active, org.slug)}
                                         disabled={isSaasOrg}
@@ -338,8 +340,8 @@ export default function OrganizationsPage() {
                                     <Button
                                         variant="ghost"
                                         className={`px-5 py-5 rounded-2xl transition-all ${isSaasOrg
-                                                ? 'text-gray-200 cursor-not-allowed'
-                                                : 'text-gray-400 hover:text-red-500 hover:bg-red-50'
+                                            ? 'text-gray-200 cursor-not-allowed'
+                                            : 'text-gray-400 hover:text-red-500 hover:bg-red-50'
                                             }`}
                                         onClick={() => handleDelete(org)}
                                         disabled={isSaasOrg}

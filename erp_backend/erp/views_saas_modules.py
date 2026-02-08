@@ -291,3 +291,80 @@ class OrgModuleViewSet(viewsets.ViewSet):
             return Response({'message': 'Features updated successfully', 'features': features})
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['get'])
+    def usage(self, request, pk=None):
+        """Returns live usage metrics for an organization"""
+        from erp.models import Site, User, SubscriptionPayment
+        try:
+            org = Organization.objects.get(id=pk)
+        except Organization.DoesNotExist:
+            return Response({'error': 'Organization not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Current plan limits (defaults if no plan)
+        plan = org.current_plan
+        max_users = 5
+        max_sites = 1
+        max_storage_mb = 500
+        max_invoices = 100
+
+        if plan and hasattr(plan, 'monthly_price'):
+            # Scale limits based on plan price tier
+            price = float(plan.monthly_price)
+            if price >= 200:
+                max_users, max_sites, max_storage_mb, max_invoices = 50, 10, 10000, 5000
+            elif price >= 100:
+                max_users, max_sites, max_storage_mb, max_invoices = 25, 5, 5000, 2000
+            elif price >= 50:
+                max_users, max_sites, max_storage_mb, max_invoices = 10, 3, 2000, 500
+
+        user_count = User.objects.filter(organization=org).count()
+        site_count = Site.objects.filter(organization=org).count()
+        module_count = OrganizationModule.objects.filter(organization=org, is_enabled=True).count()
+        storage_mb = round(org.data_usage_bytes / (1024 * 1024), 1) if org.data_usage_bytes else 0
+
+        # Invoice count this month (from SubscriptionPayment)
+        from django.utils import timezone
+        now = timezone.now()
+        invoices_month = SubscriptionPayment.objects.filter(
+            organization=org,
+            created_at__year=now.year,
+            created_at__month=now.month
+        ).count()
+
+        return Response({
+            'users': {'current': user_count, 'limit': max_users, 'percent': round(user_count / max_users * 100)},
+            'sites': {'current': site_count, 'limit': max_sites, 'percent': round(site_count / max_sites * 100)},
+            'storage': {'current_mb': storage_mb, 'limit_mb': max_storage_mb, 'percent': round(storage_mb / max_storage_mb * 100)},
+            'modules': {'current': module_count, 'total_available': SystemModule.objects.count()},
+            'invoices': {'current': invoices_month, 'limit': max_invoices, 'percent': round(invoices_month / max_invoices * 100) if max_invoices else 0},
+            'plan': {
+                'name': plan.name if plan else 'Free Tier',
+                'monthly_price': str(plan.monthly_price) if plan else '0.00',
+                'expiry': org.plan_expiry_at.isoformat() if org.plan_expiry_at else None,
+            }
+        })
+
+    @action(detail=True, methods=['get'])
+    def billing(self, request, pk=None):
+        """Returns billing/payment history for an organization"""
+        from erp.models import SubscriptionPayment
+        try:
+            org = Organization.objects.get(id=pk)
+        except Organization.DoesNotExist:
+            return Response({'error': 'Organization not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        payments = SubscriptionPayment.objects.filter(
+            organization=org
+        ).select_related('plan').order_by('-created_at')[:50]
+
+        data = [{
+            'id': str(p.id),
+            'plan_name': p.plan.name if p.plan else 'Unknown',
+            'amount': str(p.amount),
+            'status': p.status,
+            'created_at': p.created_at.isoformat(),
+        } for p in payments]
+
+        return Response(data)
+
