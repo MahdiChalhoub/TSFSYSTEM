@@ -328,37 +328,119 @@ export default function SubscriptionPlansPage() {
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                {plans.filter(p => p.category?.id === cat.id).map(plan => (
-                                    <Card key={plan.id} className="bg-white hover:border-emerald-500/30 transition-all shadow-sm hover:shadow-md group">
-                                        <CardHeader>
-                                            <div className="flex justify-between items-start">
-                                                <CardTitle className="text-lg font-bold">{plan.name}</CardTitle>
-                                                <Badge className={plan.is_active ? "bg-emerald-50 text-emerald-600" : "bg-gray-100 text-gray-500"}>
-                                                    {plan.is_active ? 'Active' : 'Draft'}
-                                                </Badge>
-                                            </div>
-                                            <CardDescription className="line-clamp-2 min-h-[40px]">
-                                                {plan.description || "No description provided."}
-                                            </CardDescription>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <div className="space-y-4">
-                                                <div>
-                                                    <p className="text-sm text-gray-500 uppercase font-bold text-[10px] tracking-wider">Monthly</p>
-                                                    <p className="text-2xl font-black text-emerald-600">
-                                                        ${parseFloat(plan.monthly_price).toFixed(2)}
-                                                    </p>
+                                {plans.filter(p => p.category?.id === cat.id).map(plan => {
+                                    const isCustom = parseFloat(plan.monthly_price) < 0 || plan.limits?.custom
+                                    const limits = plan.limits || {}
+
+                                    return (
+                                        <Card key={plan.id} className={`transition-all shadow-sm hover:shadow-lg group overflow-hidden ${isCustom
+                                            ? 'bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 border-purple-200 hover:border-purple-400'
+                                            : 'bg-white hover:border-emerald-500/30'
+                                            }`}>
+                                            <CardHeader className="pb-3">
+                                                <div className="flex justify-between items-start">
+                                                    <CardTitle className={`text-lg font-bold ${isCustom ? 'text-purple-900' : ''}`}>{plan.name}</CardTitle>
+                                                    <Badge className={plan.is_active ? "bg-emerald-50 text-emerald-600" : "bg-gray-100 text-gray-500"}>
+                                                        {plan.is_active ? 'Active' : 'Draft'}
+                                                    </Badge>
                                                 </div>
-                                                <div>
-                                                    <p className="text-sm text-gray-500 uppercase font-bold text-[10px] tracking-wider">Annual</p>
-                                                    <p className="text-xl font-bold text-gray-700">
-                                                        ${parseFloat(plan.annual_price).toFixed(2)}
-                                                    </p>
+                                                <CardDescription className={`line-clamp-2 min-h-[40px] ${isCustom ? 'text-purple-600' : ''}`}>
+                                                    {plan.description || "No description provided."}
+                                                </CardDescription>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <div className="space-y-4">
+                                                    {isCustom ? (
+                                                        <>
+                                                            <div className="text-center py-4">
+                                                                <p className="text-3xl font-black text-purple-700">Custom</p>
+                                                                <p className="text-sm text-purple-500 mt-1">Tailored to your needs</p>
+                                                            </div>
+                                                            <a href="mailto:sales@tsf-city.com?subject=Custom%20Plan%20Inquiry"
+                                                                className="block w-full text-center py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm transition-all shadow-md hover:shadow-lg hover:scale-[1.02]">
+                                                                Contact Us →
+                                                            </a>
+                                                            <div className="flex flex-wrap gap-1.5">
+                                                                <Badge className="bg-purple-100 text-purple-700 text-[10px]">Dedicated Support</Badge>
+                                                                <Badge className="bg-purple-100 text-purple-700 text-[10px]">SLA</Badge>
+                                                                <Badge className="bg-purple-100 text-purple-700 text-[10px]">White-label</Badge>
+                                                                <Badge className="bg-purple-100 text-purple-700 text-[10px]">All Modules</Badge>
+                                                            </div>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <div className="flex items-end gap-3">
+                                                                <div>
+                                                                    <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Monthly</p>
+                                                                    <p className="text-2xl font-black text-emerald-600">
+                                                                        {parseFloat(plan.monthly_price) === 0 ? 'Free' : `$${parseFloat(plan.monthly_price).toFixed(0)}`}
+                                                                    </p>
+                                                                </div>
+                                                                {parseFloat(plan.annual_price) > 0 && (
+                                                                    <div className="pb-0.5">
+                                                                        <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Annual</p>
+                                                                        <p className="text-lg font-bold text-gray-500">
+                                                                            ${parseFloat(plan.annual_price).toFixed(0)}<span className="text-xs font-normal">/yr</span>
+                                                                        </p>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+
+                                                            {/* Limits */}
+                                                            <div className="grid grid-cols-3 gap-2 text-center">
+                                                                {limits.max_users != null && (
+                                                                    <div className="p-2 bg-gray-50 rounded-xl">
+                                                                        <div className="text-[9px] text-gray-400 font-bold uppercase">Users</div>
+                                                                        <div className="text-sm font-bold text-gray-800">{limits.max_users}</div>
+                                                                    </div>
+                                                                )}
+                                                                {limits.max_sites != null && (
+                                                                    <div className="p-2 bg-gray-50 rounded-xl">
+                                                                        <div className="text-[9px] text-gray-400 font-bold uppercase">Sites</div>
+                                                                        <div className="text-sm font-bold text-gray-800">{limits.max_sites}</div>
+                                                                    </div>
+                                                                )}
+                                                                {limits.max_storage_gb != null && (
+                                                                    <div className="p-2 bg-gray-50 rounded-xl">
+                                                                        <div className="text-[9px] text-gray-400 font-bold uppercase">Storage</div>
+                                                                        <div className="text-sm font-bold text-gray-800">{limits.max_storage_gb} GB</div>
+                                                                    </div>
+                                                                )}
+                                                                {limits.max_products != null && (
+                                                                    <div className="p-2 bg-gray-50 rounded-xl">
+                                                                        <div className="text-[9px] text-gray-400 font-bold uppercase">Products</div>
+                                                                        <div className="text-sm font-bold text-gray-800">{limits.max_products >= 100000 ? `${(limits.max_products / 1000).toFixed(0)}K` : limits.max_products.toLocaleString()}</div>
+                                                                    </div>
+                                                                )}
+                                                                {limits.max_invoices_per_month != null && (
+                                                                    <div className="p-2 bg-gray-50 rounded-xl">
+                                                                        <div className="text-[9px] text-gray-400 font-bold uppercase">Invoices</div>
+                                                                        <div className="text-sm font-bold text-gray-800">{limits.max_invoices_per_month >= 10000 ? `${(limits.max_invoices_per_month / 1000).toFixed(0)}K` : limits.max_invoices_per_month.toLocaleString()}<span className="text-[8px] text-gray-400">/mo</span></div>
+                                                                    </div>
+                                                                )}
+                                                                {limits.max_customers != null && (
+                                                                    <div className="p-2 bg-gray-50 rounded-xl">
+                                                                        <div className="text-[9px] text-gray-400 font-bold uppercase">Customers</div>
+                                                                        <div className="text-sm font-bold text-gray-800">{limits.max_customers >= 10000 ? `${(limits.max_customers / 1000).toFixed(0)}K` : limits.max_customers.toLocaleString()}</div>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+
+                                                            {/* Modules */}
+                                                            {Array.isArray(plan.modules) && plan.modules.length > 0 && (
+                                                                <div className="flex flex-wrap gap-1">
+                                                                    {plan.modules.map((m: string) => (
+                                                                        <Badge key={m} className="bg-emerald-50 text-emerald-700 text-[10px] font-semibold capitalize">{m}</Badge>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                        </>
+                                                    )}
                                                 </div>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                ))}
+                                            </CardContent>
+                                        </Card>
+                                    )
+                                })}
                                 {plans.filter(p => p.category?.id === cat.id).length === 0 && (
                                     <div className="col-span-full py-8 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200 text-gray-400 text-sm">
                                         No plans in this category yet.
