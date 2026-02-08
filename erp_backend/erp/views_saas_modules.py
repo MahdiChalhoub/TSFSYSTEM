@@ -233,6 +233,13 @@ class OrgModuleViewSet(viewsets.ViewSet):
     """Management of modules for a specific Organization (SaaS View)"""
     permission_classes = [permissions.IsAdminUser]
 
+    @action(detail=False, methods=['get'])
+    def business_types(self, request):
+        """List all available business types"""
+        from erp.models import BusinessType
+        data = [{'id': str(bt.id), 'name': bt.name, 'slug': bt.slug, 'description': bt.description or ''} for bt in BusinessType.objects.all().order_by('name')]
+        return Response(data)
+
     # Default feature definitions for modules whose manifests lack a 'features' key
     DEFAULT_FEATURES = {
         'finance': [
