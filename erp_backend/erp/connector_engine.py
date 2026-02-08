@@ -628,6 +628,9 @@ class ConnectorEngine:
         Replay all buffered requests for a module that just became available.
         Called automatically when ModuleManager.grant_access is invoked.
         
+        Handles both WRITE requests (forwarded via _forward_write_request)
+        and EVENT requests (delivered via _deliver_event).
+        
         Returns: (replayed_count, failed_count)
         """
         self._load_models()
@@ -645,14 +648,25 @@ class ConnectorEngine:
         
         for request in pending:
             try:
-                # Attempt to forward the buffered request
-                self._forward_write_request(
-                    request.target_module,
-                    request.target_endpoint,
-                    request.payload,
-                    organization_id,
-                    request.method
-                )
+                if request.method == 'EVENT':
+                    # Event replay: extract event_name from payload and deliver
+                    event_name = request.payload.get('event_name', '')
+                    event_payload = request.payload.get('payload', {})
+                    self._deliver_event(
+                        request.target_module,
+                        event_name,
+                        event_payload,
+                        organization_id
+                    )
+                else:
+                    # Write replay: forward as normal write request
+                    self._forward_write_request(
+                        request.target_module,
+                        request.target_endpoint,
+                        request.payload,
+                        organization_id,
+                        request.method
+                    )
                 
                 # Mark as replayed
                 request.status = 'replayed'
@@ -677,6 +691,63 @@ class ConnectorEngine:
         )
         
         return replayed, failed
+    
+    def replay_all_pending(self) -> Dict[str, Tuple[int, int]]:
+        """
+        Replay ALL pending buffered requests across all modules and orgs.
+        Groups by (target_module, organization_id) and replays each group.
+        
+        Returns: dict of { 'module:org_id': (replayed, failed) }
+        """
+        self._load_models()
+        
+        # Find distinct (module, org) combinations with pending buffers
+        from django.db.models import Count
+        groups = (
+            self._BufferedRequest.objects
+            .filter(status='pending', expires_at__gt=timezone.now())
+            .values('target_module', 'organization_id')
+            .annotate(count=Count('id'))
+        )
+        
+        results = {}
+        for group in groups:
+            module = group['target_module']
+            org_id = group['organization_id']
+            replayed, failed = self.replay_buffered(module, org_id)
+            results[f"{module}:{org_id}"] = (replayed, failed)
+        
+        return results
+    
+    def get_buffer_stats(self) -> Dict[str, Any]:
+        """
+        Get statistics about the buffer queue.
+        Used by admin UI and management commands.
+        """
+        self._load_models()
+        
+        from django.db.models import Count
+        
+        by_status = dict(
+            self._BufferedRequest.objects
+            .values_list('status')
+            .annotate(count=Count('id'))
+            .values_list('status', 'count')
+        )
+        
+        by_module = dict(
+            self._BufferedRequest.objects
+            .filter(status='pending')
+            .values_list('target_module')
+            .annotate(count=Count('id'))
+            .values_list('target_module', 'count')
+        )
+        
+        return {
+            'total': self._BufferedRequest.objects.count(),
+            'by_status': by_status,
+            'pending_by_module': by_module,
+        }
     
     def cleanup_expired_buffers(self) -> int:
         """

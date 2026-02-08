@@ -36,10 +36,11 @@ Mark items `[x]` when done. Stay focused — finish one before starting the next
 - Provisioning test verified dual discovery (DB contracts + filesystem scan) works
 - Documentation: `DOCUMENTATION/module_contracts.md`
 
-### 3. [ ] Event Replay Mechanism
-- Build management command: `python manage.py replay_buffered_events`
-- Or periodic Celery task to auto-replay when modules come online
-- Add admin UI to view/manage buffered events
+### 3. [x] Event Replay Mechanism ✅
+- Fixed `replay_buffered()` to handle EVENT-type requests via `_deliver_event()`
+- Added `replay_all_pending()` and `get_buffer_stats()` to ConnectorEngine
+- Created `replay_buffered_events` command: `--stats`, `--cleanup`, `--module`, `--org` flags
+- Documentation: `DOCUMENTATION/event_replay_mechanism.md`
 
 ### 4. [ ] PWA Offline Mode for POS
 - Service Worker for offline caching
