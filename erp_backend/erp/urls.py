@@ -11,7 +11,7 @@ from .views import (
     UserViewSet
 )
 from .views_auth import login_view, logout_view, me_view, PublicConfigView
-from .views_saas_modules import SaaSModuleViewSet, OrgModuleViewSet, SaaSUpdateViewSet, SaaSPlansViewSet
+from .views_saas_modules import SaaSModuleViewSet, OrgModuleViewSet, SaaSUpdateViewSet, SaaSPlansViewSet, PublicPricingView
 from .views_modules import ModuleListView, ModuleEnableView, ModuleDisableView
 from .views_kernel import KernelViewSet
 from .views_packages import PackageViewSet
@@ -43,6 +43,7 @@ urlpatterns = [
     
     # Onboarding
     path('auth/config/', PublicConfigView.as_view(), name='auth_config'),
+    path('saas/pricing/', PublicPricingView.as_view(), name='public_pricing'),
     
     # Module Management (Tenant Side)
     path('modules/', ModuleListView.as_view(), name='module_list'),

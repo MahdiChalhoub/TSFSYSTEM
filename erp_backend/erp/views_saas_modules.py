@@ -1,4 +1,4 @@
-﻿from rest_framework import viewsets, status
+﻿from rest_framework import viewsets, status, views
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import permissions
@@ -230,14 +230,16 @@ class SaaSModuleViewSet(viewsets.ViewSet):
         return Response(items)
 
 
-class SaaSPlansViewSet(viewsets.ViewSet):
-    """SaaS Subscription Plans Management"""
-    permission_classes = [permissions.IsAdminUser]
+class PublicPricingView(views.APIView):
+    """Public pricing endpoint — no auth required. Returns only active, public plans."""
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = []
 
-    def list(self, request):
-        """List all subscription plans"""
+    def get(self, request):
         from erp.models import SubscriptionPlan
-        plans = SubscriptionPlan.objects.select_related('category').all().order_by('monthly_price')
+        plans = SubscriptionPlan.objects.select_related('category').filter(
+            is_active=True, is_public=True
+        ).order_by('sort_order', 'monthly_price')
         data = [{
             'id': str(p.id),
             'name': p.name,
@@ -248,14 +250,95 @@ class SaaSPlansViewSet(viewsets.ViewSet):
             'features': p.features or {},
             'limits': p.limits or {},
             'is_active': p.is_active,
+        } for p in plans]
+        return Response(data)
+
+
+class SaaSPlansViewSet(viewsets.ViewSet):
+    """SaaS Subscription Plans Management"""
+    permission_classes = [permissions.IsAdminUser]
+
+    def _serialize_plan(self, p, include_orgs=False):
+        data = {
+            'id': str(p.id),
+            'name': p.name,
+            'description': p.description or '',
+            'monthly_price': str(p.monthly_price),
+            'annual_price': str(p.annual_price),
+            'modules': p.modules or [],
+            'features': p.features or {},
+            'limits': p.limits or {},
+            'is_active': p.is_active,
+            'is_public': p.is_public,
+            'sort_order': p.sort_order,
             'category': {
                 'id': str(p.category.id),
                 'name': p.category.name,
                 'type': p.category.type,
             } if p.category else None,
             'created_at': p.created_at.isoformat() if p.created_at else None,
-        } for p in plans]
-        return Response(data)
+        }
+        if include_orgs:
+            data['organizations'] = [
+                {'id': str(o.id), 'name': o.name, 'slug': o.slug, 'is_active': o.is_active}
+                for o in p.organizations.all()
+            ]
+            data['addons'] = [self._serialize_addon(a) for a in p.addons.all()]
+        return data
+
+    def _serialize_addon(self, a):
+        return {
+            'id': str(a.id),
+            'name': a.name,
+            'addon_type': a.addon_type,
+            'quantity': a.quantity,
+            'monthly_price': str(a.monthly_price),
+            'annual_price': str(a.annual_price),
+            'is_active': a.is_active,
+            'plan_ids': [str(p.id) for p in a.plans.all()],
+        }
+
+    def list(self, request):
+        """List all subscription plans"""
+        from erp.models import SubscriptionPlan
+        plans = SubscriptionPlan.objects.select_related('category').all()
+        return Response([self._serialize_plan(p) for p in plans])
+
+    def retrieve(self, request, pk=None):
+        """Get plan detail with organizations and addons"""
+        from erp.models import SubscriptionPlan
+        try:
+            plan = SubscriptionPlan.objects.select_related('category').prefetch_related('organizations', 'addons__plans').get(pk=pk)
+        except SubscriptionPlan.DoesNotExist:
+            return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response(self._serialize_plan(plan, include_orgs=True))
+
+    def partial_update(self, request, pk=None):
+        """Update a plan (PATCH)"""
+        from erp.models import SubscriptionPlan, PlanCategory
+        try:
+            plan = SubscriptionPlan.objects.get(pk=pk)
+        except SubscriptionPlan.DoesNotExist:
+            return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        d = request.data
+        if 'name' in d: plan.name = d['name']
+        if 'description' in d: plan.description = d['description']
+        if 'monthly_price' in d: plan.monthly_price = d['monthly_price']
+        if 'annual_price' in d: plan.annual_price = d['annual_price']
+        if 'modules' in d: plan.modules = d['modules']
+        if 'features' in d: plan.features = d['features']
+        if 'limits' in d: plan.limits = d['limits']
+        if 'is_active' in d: plan.is_active = d['is_active']
+        if 'is_public' in d: plan.is_public = d['is_public']
+        if 'sort_order' in d: plan.sort_order = d['sort_order']
+        if 'category_id' in d:
+            try:
+                plan.category = PlanCategory.objects.get(id=d['category_id'])
+            except PlanCategory.DoesNotExist:
+                return Response({'error': 'Category not found'}, status=status.HTTP_400_BAD_REQUEST)
+        plan.save()
+        return Response(self._serialize_plan(plan))
 
     def create(self, request):
         """Create a new subscription plan"""
@@ -264,7 +347,7 @@ class SaaSPlansViewSet(viewsets.ViewSet):
         if not name:
             return Response({'error': 'Plan name is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-        category_id = request.data.get('category_id')
+        category_id = request.data.get('category_id') or request.data.get('category')
         try:
             category = PlanCategory.objects.get(id=category_id) if category_id else PlanCategory.objects.first()
         except PlanCategory.DoesNotExist:
@@ -283,11 +366,25 @@ class SaaSPlansViewSet(viewsets.ViewSet):
                 features=request.data.get('features', {}),
                 limits=request.data.get('limits', {}),
                 category=category,
-                is_active=True,
+                is_active=request.data.get('is_active', True),
+                is_public=request.data.get('is_public', True),
+                sort_order=request.data.get('sort_order', 0),
             )
             return Response({'message': f'Plan "{name}" created', 'id': str(plan.id)}, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def toggle_public(self, request, pk=None):
+        """Toggle plan public/private visibility"""
+        from erp.models import SubscriptionPlan
+        try:
+            plan = SubscriptionPlan.objects.get(pk=pk)
+        except SubscriptionPlan.DoesNotExist:
+            return Response({'error': 'Plan not found'}, status=status.HTTP_404_NOT_FOUND)
+        plan.is_public = not plan.is_public
+        plan.save()
+        return Response({'is_public': plan.is_public, 'message': f'Plan is now {"public" if plan.is_public else "private"}'})
 
     @action(detail=False, methods=['get', 'post'])
     def categories(self, request):
@@ -304,6 +401,62 @@ class SaaSPlansViewSet(viewsets.ViewSet):
                 return Response({'error': 'Category name is required'}, status=status.HTTP_400_BAD_REQUEST)
             cat, created = PlanCategory.objects.get_or_create(name=name, defaults={'type': cat_type})
             return Response({'id': str(cat.id), 'name': cat.name, 'type': cat.type, 'created': created}, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['get', 'post'], url_path='addons')
+    def addon_list(self, request):
+        """List or create add-ons"""
+        from erp.models import PlanAddon
+        if request.method == 'GET':
+            addons = PlanAddon.objects.prefetch_related('plans').all()
+            return Response([self._serialize_addon(a) for a in addons])
+        else:
+            d = request.data
+            name = d.get('name', '').strip()
+            if not name:
+                return Response({'error': 'Add-on name is required'}, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                addon = PlanAddon.objects.create(
+                    name=name,
+                    addon_type=d.get('addon_type', 'users'),
+                    quantity=d.get('quantity', 1),
+                    monthly_price=d.get('monthly_price', 0),
+                    annual_price=d.get('annual_price', 0),
+                    is_active=d.get('is_active', True),
+                )
+                plan_ids = d.get('plan_ids', [])
+                if plan_ids:
+                    from erp.models import SubscriptionPlan
+                    addon.plans.set(SubscriptionPlan.objects.filter(id__in=plan_ids))
+                return Response(self._serialize_addon(addon), status=status.HTTP_201_CREATED)
+            except Exception as e:
+                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['patch', 'delete'], url_path='addons/(?P<addon_id>[^/.]+)')
+    def addon_detail(self, request, addon_id=None):
+        """Update or delete an add-on"""
+        from erp.models import PlanAddon
+        try:
+            addon = PlanAddon.objects.get(pk=addon_id)
+        except PlanAddon.DoesNotExist:
+            return Response({'error': 'Add-on not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        if request.method == 'DELETE':
+            addon.delete()
+            return Response({'message': 'Add-on deleted'})
+
+        d = request.data
+        if 'name' in d: addon.name = d['name']
+        if 'addon_type' in d: addon.addon_type = d['addon_type']
+        if 'quantity' in d: addon.quantity = d['quantity']
+        if 'monthly_price' in d: addon.monthly_price = d['monthly_price']
+        if 'annual_price' in d: addon.annual_price = d['annual_price']
+        if 'is_active' in d: addon.is_active = d['is_active']
+        addon.save()
+        if 'plan_ids' in d:
+            from erp.models import SubscriptionPlan
+            addon.plans.set(SubscriptionPlan.objects.filter(id__in=d['plan_ids']))
+        return Response(self._serialize_addon(addon))
+
 class OrgModuleViewSet(viewsets.ViewSet):
     """Management of modules for a specific Organization (SaaS View)"""
     permission_classes = [permissions.IsAdminUser]
