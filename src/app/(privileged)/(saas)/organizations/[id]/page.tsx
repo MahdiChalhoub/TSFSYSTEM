@@ -1,0 +1,490 @@
+'use client'
+
+import { useEffect, useState } from "react"
+import { useParams, useRouter } from "next/navigation"
+import { getOrganization, getOrgUsage, getOrgBilling, getOrgModules, toggleOrgModule } from "./actions"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { toast } from "sonner"
+import {
+    ArrowLeft, Users, MapPin, HardDrive, FileText,
+    Package, ShieldCheck, AlertTriangle, Loader2,
+    ToggleLeft, ToggleRight, Crown, Layers, Activity,
+    CreditCard, TrendingUp, ChevronRight
+} from "lucide-react"
+
+// ─── Usage Meter Component ───────────────────────────────────────────────────
+function UsageMeter({ label, icon: Icon, current, limit, percent, unit = '' }: {
+    label: string
+    icon: any
+    current: number
+    limit: number
+    percent: number
+    unit?: string
+}) {
+    const isWarning = percent >= 80
+    const isDanger = percent >= 95
+    const barColor = isDanger ? 'bg-red-500' : isWarning ? 'bg-amber-500' : 'bg-emerald-500'
+    const bgColor = isDanger ? 'bg-red-50 border-red-100' : isWarning ? 'bg-amber-50 border-amber-100' : 'bg-white border-gray-100'
+
+    return (
+        <div className={`p-5 rounded-2xl border transition-all ${bgColor}`}>
+            <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                    <Icon size={16} className={isDanger ? 'text-red-500' : isWarning ? 'text-amber-500' : 'text-gray-400'} />
+                    <span className="text-xs font-bold uppercase tracking-wider text-gray-500">{label}</span>
+                </div>
+                <span className="text-sm font-black text-gray-900">
+                    {current}{unit} <span className="text-gray-400 font-medium">/ {limit}{unit}</span>
+                </span>
+            </div>
+            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                    className={`h-full rounded-full transition-all duration-500 ${barColor}`}
+                    style={{ width: `${Math.min(percent, 100)}%` }}
+                />
+            </div>
+            {isDanger && (
+                <p className="text-[10px] text-red-500 font-bold mt-2 flex items-center gap-1">
+                    <AlertTriangle size={10} /> Approaching limit — consider upgrading
+                </p>
+            )}
+        </div>
+    )
+}
+
+// ─── Module Card Component ───────────────────────────────────────────────────
+function ModuleCard({ module, onToggle, toggling }: {
+    module: any
+    onToggle: (code: string, status: string) => void
+    toggling: string | null
+}) {
+    const isInstalled = module.status === 'INSTALLED'
+    const isCore = module.is_core
+
+    return (
+        <div className={`p-5 rounded-2xl border transition-all group ${isInstalled
+                ? 'bg-white border-emerald-100 hover:border-emerald-300 shadow-sm'
+                : 'bg-gray-50 border-gray-100 hover:border-gray-200'
+            }`}>
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isCore
+                            ? 'bg-indigo-50 text-indigo-500'
+                            : isInstalled
+                                ? 'bg-emerald-50 text-emerald-500'
+                                : 'bg-gray-100 text-gray-400'
+                        }`}>
+                        {isCore ? <Crown size={18} /> : <Package size={18} />}
+                    </div>
+                    <div>
+                        <h4 className="font-bold text-gray-900 text-sm">{module.name}</h4>
+                        <p className="text-[10px] text-gray-400 font-mono uppercase tracking-widest">{module.code}</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-3">
+                    <Badge className={isInstalled
+                        ? "bg-emerald-50 text-emerald-600 border-emerald-100 text-[10px]"
+                        : "bg-gray-100 text-gray-500 border-gray-200 text-[10px]"
+                    }>
+                        {isInstalled ? 'Active' : 'Inactive'}
+                    </Badge>
+                    {isCore ? (
+                        <div className="text-[9px] text-indigo-500 font-black uppercase bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100">
+                            Core
+                        </div>
+                    ) : (
+                        <button
+                            onClick={() => onToggle(module.code, module.status)}
+                            disabled={toggling === module.code}
+                            className="transition-transform hover:scale-110 disabled:opacity-50"
+                        >
+                            {toggling === module.code ? (
+                                <Loader2 size={24} className="animate-spin text-gray-400" />
+                            ) : isInstalled ? (
+                                <ToggleRight size={28} className="text-emerald-500" />
+                            ) : (
+                                <ToggleLeft size={28} className="text-gray-300" />
+                            )}
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            {/* Feature flags */}
+            {isInstalled && module.available_features?.length > 0 && (
+                <div className="mt-4 pt-3 border-t border-gray-100">
+                    <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-2">Capabilities</p>
+                    <div className="flex flex-wrap gap-1.5">
+                        {module.available_features.map((f: any) => (
+                            <span key={f.code || f} className={`text-[10px] px-2 py-0.5 rounded-md font-medium ${module.active_features?.includes(f.code || f)
+                                    ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                                    : 'bg-gray-50 text-gray-400 border border-gray-100'
+                                }`}>
+                                {f.name || f}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    )
+}
+
+// ─── Main Page ───────────────────────────────────────────────────────────────
+export default function OrganizationDetailPage() {
+    const params = useParams()
+    const router = useRouter()
+    const orgId = params.id as string
+
+    const [org, setOrg] = useState<any>(null)
+    const [usage, setUsage] = useState<any>(null)
+    const [billing, setBilling] = useState<any[]>([])
+    const [modules, setModules] = useState<any[]>([])
+    const [loading, setLoading] = useState(true)
+    const [activeTab, setActiveTab] = useState<'overview' | 'modules' | 'usage' | 'billing'>('overview')
+    const [toggling, setToggling] = useState<string | null>(null)
+
+    useEffect(() => {
+        async function load() {
+            try {
+                const [orgData, usageData, billingData, modulesData] = await Promise.all([
+                    getOrganization(orgId),
+                    getOrgUsage(orgId),
+                    getOrgBilling(orgId),
+                    getOrgModules(orgId)
+                ])
+                setOrg(orgData)
+                setUsage(usageData)
+                setBilling(Array.isArray(billingData) ? billingData : [])
+                setModules(Array.isArray(modulesData) ? modulesData : [])
+            } catch {
+                toast.error("Failed to load organization details")
+            } finally {
+                setLoading(false)
+            }
+        }
+        load()
+    }, [orgId])
+
+    async function handleToggle(code: string, currentStatus: string) {
+        setToggling(code)
+        try {
+            const action = currentStatus === 'INSTALLED' ? 'disable' : 'enable'
+            await toggleOrgModule(orgId, code, action)
+            toast.success(`Module ${code} ${action}d`)
+            // Refresh
+            const [modulesData, usageData] = await Promise.all([
+                getOrgModules(orgId),
+                getOrgUsage(orgId)
+            ])
+            setModules(Array.isArray(modulesData) ? modulesData : [])
+            setUsage(usageData)
+        } catch {
+            toast.error("Failed to toggle module")
+        } finally {
+            setToggling(null)
+        }
+    }
+
+    if (loading) return (
+        <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="text-center space-y-4">
+                <Loader2 size={40} className="animate-spin text-emerald-500 mx-auto" />
+                <p className="text-gray-400 font-medium text-sm">Loading organization...</p>
+            </div>
+        </div>
+    )
+
+    if (!org) return (
+        <div className="p-12 text-center">
+            <h2 className="text-xl font-bold text-gray-800">Organization Not Found</h2>
+            <Button variant="ghost" onClick={() => router.push('/organizations')} className="mt-4">
+                ← Back to Organizations
+            </Button>
+        </div>
+    )
+
+    const tabs = [
+        { key: 'overview', label: 'Overview', icon: Activity },
+        { key: 'modules', label: 'Modules', icon: Layers },
+        { key: 'usage', label: 'Usage', icon: TrendingUp },
+        { key: 'billing', label: 'Billing', icon: CreditCard },
+    ]
+
+    const coreModules = modules.filter(m => m.is_core)
+    const businessModules = modules.filter(m => !m.is_core)
+    const activeModules = modules.filter(m => m.status === 'INSTALLED').length
+
+    return (
+        <div className="space-y-6 animate-in fade-in duration-500 max-w-6xl mx-auto py-6 px-4">
+            {/* Header */}
+            <div className="flex items-start justify-between">
+                <div className="flex items-center gap-4">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => router.push('/organizations')}
+                        className="text-gray-400 hover:text-gray-900 rounded-xl"
+                    >
+                        <ArrowLeft size={18} />
+                    </Button>
+                    <div>
+                        <div className="flex items-center gap-3">
+                            <h1 className="text-3xl font-black text-gray-900 tracking-tight">{org.name}</h1>
+                            <Badge className={org.is_active
+                                ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                                : "bg-red-50 text-red-600 border-red-100"
+                            }>
+                                {org.is_active ? 'Active' : 'Suspended'}
+                            </Badge>
+                        </div>
+                        <p className="text-emerald-600 font-mono text-xs tracking-widest uppercase mt-1">{org.slug}</p>
+                    </div>
+                </div>
+                <Badge variant="outline" className="px-4 py-2 text-sm font-mono border-gray-200 text-gray-500">
+                    {usage?.plan?.name || 'Free Tier'}
+                </Badge>
+            </div>
+
+            {/* Tab Bar */}
+            <div className="flex gap-1 p-1 bg-gray-100 rounded-2xl w-fit">
+                {tabs.map(t => (
+                    <button
+                        key={t.key}
+                        onClick={() => setActiveTab(t.key as any)}
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === t.key
+                                ? 'bg-white text-gray-900 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-700'
+                            }`}
+                    >
+                        <t.icon size={14} />
+                        {t.label}
+                    </button>
+                ))}
+            </div>
+
+            {/* ─── Overview Tab ─────────────────────────────────────────────── */}
+            {activeTab === 'overview' && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Quick Stats */}
+                    <Card className="lg:col-span-2 border-gray-100 shadow-sm">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-lg font-bold">Resource Overview</CardTitle>
+                            <CardDescription>Current consumption vs plan limits</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                            {usage ? (
+                                <>
+                                    <UsageMeter label="Users" icon={Users} current={usage.users.current} limit={usage.users.limit} percent={usage.users.percent} />
+                                    <UsageMeter label="Sites" icon={MapPin} current={usage.sites.current} limit={usage.sites.limit} percent={usage.sites.percent} />
+                                    <UsageMeter label="Storage" icon={HardDrive} current={usage.storage.current_mb} limit={usage.storage.limit_mb} percent={usage.storage.percent} unit=" MB" />
+                                    <UsageMeter label="Invoices / Month" icon={FileText} current={usage.invoices.current} limit={usage.invoices.limit} percent={usage.invoices.percent} />
+                                </>
+                            ) : (
+                                <div className="py-8 text-center text-gray-400 italic">Usage data unavailable</div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Plan + Quick Module Summary */}
+                    <div className="space-y-6">
+                        <Card className="border-emerald-100 bg-emerald-50/30 shadow-sm">
+                            <CardHeader>
+                                <CardTitle className="text-lg font-bold text-emerald-900">Current Plan</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="text-center py-4">
+                                    <div className="text-3xl font-black text-emerald-700">
+                                        ${usage?.plan?.monthly_price || '0'}<span className="text-sm font-medium text-emerald-500">/mo</span>
+                                    </div>
+                                    <p className="text-emerald-600 font-bold mt-1">{usage?.plan?.name || 'Free Tier'}</p>
+                                    {usage?.plan?.expiry && (
+                                        <p className="text-xs text-gray-500 mt-2">
+                                            Renews: {new Date(usage.plan.expiry).toLocaleDateString()}
+                                        </p>
+                                    )}
+                                </div>
+                                <Button
+                                    variant="outline"
+                                    className="w-full border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-xl font-bold"
+                                    onClick={() => setActiveTab('billing')}
+                                >
+                                    Manage Plan <ChevronRight size={14} />
+                                </Button>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="border-gray-100 shadow-sm">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-lg font-bold">Modules</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-center py-4">
+                                    <div className="text-3xl font-black text-gray-900">{activeModules}</div>
+                                    <p className="text-xs text-gray-500">of {modules.length} active</p>
+                                </div>
+                                <Button
+                                    variant="outline"
+                                    className="w-full border-gray-200 text-gray-700 hover:bg-gray-50 rounded-xl font-bold"
+                                    onClick={() => setActiveTab('modules')}
+                                >
+                                    Manage Modules <ChevronRight size={14} />
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
+            )}
+
+            {/* ─── Modules Tab ──────────────────────────────────────────────── */}
+            {activeTab === 'modules' && (
+                <div className="space-y-8">
+                    {/* Core modules */}
+                    {coreModules.length > 0 && (
+                        <div>
+                            <h3 className="text-xs font-black uppercase tracking-widest text-indigo-500 mb-4 flex items-center gap-2">
+                                <Crown size={14} /> Core Infrastructure
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {coreModules.map(m => (
+                                    <ModuleCard key={m.code} module={m} onToggle={handleToggle} toggling={toggling} />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Business modules */}
+                    <div>
+                        <h3 className="text-xs font-black uppercase tracking-widest text-emerald-600 mb-4 flex items-center gap-2">
+                            <Package size={14} /> Business Modules
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {businessModules.map(m => (
+                                <ModuleCard key={m.code} module={m} onToggle={handleToggle} toggling={toggling} />
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ─── Usage Tab ────────────────────────────────────────────────── */}
+            {activeTab === 'usage' && (
+                <div className="space-y-6">
+                    <Card className="border-gray-100 shadow-sm">
+                        <CardHeader>
+                            <CardTitle className="text-lg font-bold">Detailed Usage Metrics</CardTitle>
+                            <CardDescription>Real-time resource consumption for this organization</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {usage ? (
+                                <>
+                                    <UsageMeter label="Users" icon={Users} current={usage.users.current} limit={usage.users.limit} percent={usage.users.percent} />
+                                    <UsageMeter label="Sites / Locations" icon={MapPin} current={usage.sites.current} limit={usage.sites.limit} percent={usage.sites.percent} />
+                                    <UsageMeter label="Data Storage" icon={HardDrive} current={usage.storage.current_mb} limit={usage.storage.limit_mb} percent={usage.storage.percent} unit=" MB" />
+                                    <UsageMeter label="Invoices This Month" icon={FileText} current={usage.invoices.current} limit={usage.invoices.limit} percent={usage.invoices.percent} />
+
+                                    <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100 mt-6">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Active Modules</p>
+                                                <p className="text-2xl font-black text-gray-900 mt-1">
+                                                    {usage.modules.current} <span className="text-sm font-medium text-gray-400">/ {usage.modules.total_available} available</span>
+                                                </p>
+                                            </div>
+                                            <Button variant="outline" size="sm" className="rounded-xl" onClick={() => setActiveTab('modules')}>
+                                                Manage
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="py-12 text-center text-gray-400 italic">Usage data unavailable</div>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
+
+            {/* ─── Billing Tab ──────────────────────────────────────────────── */}
+            {activeTab === 'billing' && (
+                <div className="space-y-6">
+                    <Card className="border-emerald-100 bg-emerald-50/30 shadow-sm">
+                        <CardHeader>
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <CardTitle className="text-xl font-bold text-emerald-900">Subscription</CardTitle>
+                                    <CardDescription className="text-emerald-700">Current active plan</CardDescription>
+                                </div>
+                                <Badge className="bg-emerald-600 text-white text-lg px-4 py-1">
+                                    {usage?.plan?.name || 'Free Tier'}
+                                </Badge>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="p-5 bg-white rounded-2xl border border-emerald-100/50 flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Status</p>
+                                    {org.is_active ? (
+                                        <div className="flex items-center gap-2 text-emerald-600 font-black text-lg">
+                                            <ShieldCheck size={20} /> ACTIVE
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-2 text-red-600 font-black text-lg">
+                                            <AlertTriangle size={20} /> SUSPENDED
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Monthly</p>
+                                    <p className="text-2xl font-black text-gray-900">
+                                        ${usage?.plan?.monthly_price || '0.00'}
+                                    </p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-gray-100 shadow-sm">
+                        <CardHeader>
+                            <CardTitle className="font-bold">Payment History</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            {billing.length === 0 ? (
+                                <div className="text-center py-12 text-gray-400 text-sm italic">
+                                    No billing records found for this organization.
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    {billing.map(p => (
+                                        <div key={p.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-gray-200 transition-all">
+                                            <div>
+                                                <p className="font-bold text-gray-900 text-sm">{p.plan_name}</p>
+                                                <p className="text-xs text-gray-400">
+                                                    {new Date(p.created_at).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <span className="font-black text-gray-900">${p.amount}</span>
+                                                <Badge className={
+                                                    p.status === 'PAID'
+                                                        ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                                                        : p.status === 'PENDING'
+                                                            ? "bg-amber-50 text-amber-600 border-amber-100"
+                                                            : "bg-red-50 text-red-600 border-red-100"
+                                                }>
+                                                    {p.status}
+                                                </Badge>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
+        </div>
+    )
+}
