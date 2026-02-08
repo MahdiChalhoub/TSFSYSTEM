@@ -674,13 +674,19 @@ class OrgModuleViewSet(viewsets.ViewSet):
                 'expiry': org.plan_expiry_at.isoformat() if org.plan_expiry_at else None,
             }
 
-        # Also fetch all available plans for display
-        all_plans = SubscriptionPlan.objects.all().order_by('monthly_price')
+        # Also fetch all available plans for display (only active ones)
+        all_plans = SubscriptionPlan.objects.filter(is_active=True).select_related('category').order_by('sort_order', 'monthly_price')
         available_plans = [{
             'id': str(p.id),
             'name': p.name,
+            'description': p.description or '',
             'monthly_price': str(p.monthly_price),
             'annual_price': str(p.annual_price),
+            'modules': p.modules or [],
+            'features': p.features or {},
+            'limits': p.limits or {},
+            'trial_days': p.trial_days,
+            'is_public': p.is_public,
             'category': p.category.name if p.category else None,
         } for p in all_plans]
 
@@ -706,6 +712,55 @@ class OrgModuleViewSet(viewsets.ViewSet):
             'invoices': {'current': invoices_month, 'limit': max_invoices, 'percent': round(invoices_month / max_invoices * 100) if max_invoices else 0},
             'plan': plan_data,
             'available_plans': available_plans,
+        })
+
+    @action(detail=True, methods=['post'], url_path='change-plan')
+    def change_plan(self, request, pk=None):
+        """Change the subscription plan for an organization"""
+        from erp.models import SubscriptionPlan
+        try:
+            org = Organization.objects.get(id=pk)
+        except Organization.DoesNotExist:
+            return Response({'error': 'Organization not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        plan_id = request.data.get('plan_id')
+        if not plan_id:
+            return Response({'error': 'plan_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            plan = SubscriptionPlan.objects.get(id=plan_id, is_active=True)
+        except SubscriptionPlan.DoesNotExist:
+            return Response({'error': 'Plan not found or inactive'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Update org plan
+        org.current_plan = plan
+        org.save(update_fields=['current_plan'])
+
+        # Sync modules: ensure the org has OrganizationModule for each plan module
+        plan_modules = plan.modules or []
+        for mod_code in plan_modules:
+            try:
+                sm = SystemModule.objects.get(name=mod_code)
+            except SystemModule.DoesNotExist:
+                try:
+                    sm = SystemModule.objects.get(manifest__code=mod_code)
+                except SystemModule.DoesNotExist:
+                    continue
+            om, created = OrganizationModule.objects.get_or_create(
+                organization=org, module_name=sm.name,
+                defaults={'is_enabled': True, 'module_version': sm.version}
+            )
+            if not om.is_enabled:
+                om.is_enabled = True
+                om.save(update_fields=['is_enabled'])
+
+        return Response({
+            'message': f'Plan changed to "{plan.name}"',
+            'plan': {
+                'id': str(plan.id),
+                'name': plan.name,
+                'monthly_price': str(plan.monthly_price),
+            },
         })
 
     @action(detail=True, methods=['get'])
