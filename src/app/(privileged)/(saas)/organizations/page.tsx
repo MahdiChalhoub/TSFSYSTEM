@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button"
 import { Building, Plus, Globe, ShieldCheck, Activity, Trash2, Zap, Settings2, Power, Lock, Users, Layers, Clock, Mail, Phone, MapPin } from "lucide-react"
 import { toast } from "sonner"
-import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -267,7 +266,7 @@ export default function OrganizationsPage() {
                     const isSaasOrg = org.slug === 'saas'
 
                     return (
-                        <Link key={org.id} href={`/organizations/${org.id}`}>
+                        <div key={org.id} onClick={() => router.push(`/organizations/${org.id}`)} role="button" tabIndex={0}>
                             <Card className="bg-white border-gray-100 hover:border-emerald-500/30 transition-all rounded-3xl overflow-hidden group shadow-xl hover:shadow-2xl cursor-pointer">
                                 <CardHeader className="pb-4">
                                     <div className="flex justify-between items-start">
@@ -322,7 +321,7 @@ export default function OrganizationsPage() {
                                                     ? 'bg-gray-50 hover:bg-orange-50 text-gray-400 hover:text-orange-600 hover:border-orange-200'
                                                     : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600 hover:border-emerald-200'
                                                 }`}
-                                            onClick={(e) => { e.stopPropagation(); e.preventDefault(); handleToggle(org.id, org.is_active, org.slug) }}
+                                            onClick={(e) => { e.stopPropagation(); handleToggle(org.id, org.is_active, org.slug) }}
                                             disabled={isSaasOrg}
                                         >
                                             <Power size={16} className="mr-2" />
@@ -333,7 +332,7 @@ export default function OrganizationsPage() {
                                         <Button
                                             variant="outline"
                                             className="px-5 py-5 rounded-2xl border-emerald-100 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-all font-bold shadow-sm"
-                                            onClick={(e) => { e.stopPropagation(); e.preventDefault(); handleOpenModules(org) }}
+                                            onClick={(e) => { e.stopPropagation(); handleOpenModules(org) }}
                                         >
                                             <Settings2 size={18} />
                                         </Button>
@@ -345,7 +344,7 @@ export default function OrganizationsPage() {
                                                 ? 'text-gray-200 cursor-not-allowed'
                                                 : 'text-gray-400 hover:text-red-500 hover:bg-red-50'
                                                 }`}
-                                            onClick={(e) => { e.stopPropagation(); e.preventDefault(); handleDelete(org) }}
+                                            onClick={(e) => { e.stopPropagation(); handleDelete(org) }}
                                             disabled={isSaasOrg}
                                         >
                                             <Trash2 size={18} />
@@ -353,7 +352,7 @@ export default function OrganizationsPage() {
                                     </div>
                                 </CardContent>
                             </Card>
-                        </Link>
+                        </div>
                     )
                 })}
             </div>
