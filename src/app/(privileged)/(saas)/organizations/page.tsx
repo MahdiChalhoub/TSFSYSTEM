@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { getOrganizations, toggleOrganizationStatus, createOrganization, deleteOrganization } from "./actions"
+import { getOrganizations, toggleOrganizationStatus, createOrganization, deleteOrganization, getBusinessTypes } from "./actions"
 import { getOrgModules, toggleOrgModule, updateOrgModuleFeatures } from "@/app/actions/saas/modules"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -16,6 +16,7 @@ import { PLATFORM_CONFIG, useDynamicBranding } from "@/lib/saas_config"
 
 export default function OrganizationsPage() {
     const [orgs, setOrgs] = useState<any[]>([])
+    const [businessTypes, setBusinessTypes] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const branding = useDynamicBranding();
     const router = useRouter();
@@ -50,13 +51,17 @@ export default function OrganizationsPage() {
 
     async function loadData() {
         try {
-            const data = await getOrganizations()
+            const [data, btData] = await Promise.all([
+                getOrganizations(),
+                getBusinessTypes(),
+            ])
             if (Array.isArray(data)) {
                 setOrgs(data)
             } else {
                 setOrgs([])
                 toast.error("Invalid data format received")
             }
+            if (Array.isArray(btData)) setBusinessTypes(btData)
         } catch {
             toast.error("Failed to load organizations")
         } finally {
@@ -112,7 +117,7 @@ export default function OrganizationsPage() {
         return e?.message || "Unknown error"
     }
 
-    const [newOrg, setNewOrg] = useState({ name: '', slug: '', business_email: '', phone: '', country: '' })
+    const [newOrg, setNewOrg] = useState({ name: '', slug: '', business_email: '', phone: '', country: '', business_type: '' })
     const [isCreating, setIsCreating] = useState(false)
     const [open, setOpen] = useState(false)
 
@@ -127,7 +132,7 @@ export default function OrganizationsPage() {
             } else {
                 toast.success("Organization provisioned successfully")
                 setOpen(false)
-                setNewOrg({ name: '', slug: '', business_email: '', phone: '', country: '' })
+                setNewOrg({ name: '', slug: '', business_email: '', phone: '', country: '', business_type: '' })
                 loadData()
             }
         } catch (e: any) {
@@ -248,14 +253,27 @@ export default function OrganizationsPage() {
                                         />
                                     </div>
                                 </div>
-                                <div className="space-y-1.5 mt-3">
-                                    <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1"><MapPin size={10} /> Country</Label>
-                                    <Input
-                                        placeholder="e.g. United States"
-                                        className="bg-gray-50 border-gray-100 rounded-xl py-5 text-sm"
-                                        value={newOrg.country}
-                                        onChange={(e) => setNewOrg({ ...newOrg, country: e.target.value })}
-                                    />
+                                <div className="grid grid-cols-2 gap-3 mt-3">
+                                    <div className="space-y-1.5">
+                                        <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1"><Building size={10} /> Business Type</Label>
+                                        <select
+                                            className="w-full bg-gray-50 border border-gray-100 rounded-xl py-2.5 px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                                            value={newOrg.business_type}
+                                            onChange={(e) => setNewOrg({ ...newOrg, business_type: e.target.value })}
+                                        >
+                                            <option value="">Select type...</option>
+                                            {businessTypes.map(bt => <option key={bt.id} value={bt.id}>{bt.name}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1"><MapPin size={10} /> Country</Label>
+                                        <Input
+                                            placeholder="e.g. Lebanon"
+                                            className="bg-gray-50 border-gray-100 rounded-xl py-5 text-sm"
+                                            value={newOrg.country}
+                                            onChange={(e) => setNewOrg({ ...newOrg, country: e.target.value })}
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
@@ -299,11 +317,11 @@ export default function OrganizationsPage() {
                     <option value="all">All Plans</option>
                     {uniquePlans.map(p => <option key={p} value={p}>{p}</option>)}
                 </select>
-                {uniqueTypes.length > 0 && (
+                {businessTypes.length > 0 && (
                     <select value={filterType} onChange={e => setFilterType(e.target.value)}
                         className="text-xs font-bold border border-gray-100 rounded-xl px-3 py-2.5 bg-gray-50 text-gray-700 focus:ring-2 focus:ring-emerald-500/30">
                         <option value="all">All Types</option>
-                        {uniqueTypes.map(t => <option key={t} value={t}>{t}</option>)}
+                        {businessTypes.map(bt => <option key={bt.id} value={bt.name}>{bt.name}</option>)}
                     </select>
                 )}
                 {uniqueCountries.length > 0 && (

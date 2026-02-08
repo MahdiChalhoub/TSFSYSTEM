@@ -25,6 +25,7 @@ export async function createOrganization(data: {
     phone?: string,
     country?: string,
     timezone?: string,
+    business_type?: string,
 }) {
     try {
         const result = await erpFetch('organizations/', {
@@ -84,5 +85,14 @@ export async function getOrgPermissions(id: string) {
             can_edit: false,
             is_protected: true
         }
+    }
+}
+
+export async function getBusinessTypes() {
+    try {
+        return await erpFetch('saas/org-modules/business_types/')
+    } catch (error) {
+        console.error("[SaaS] Error fetching business types:", error)
+        return []
     }
 }
