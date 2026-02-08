@@ -31,7 +31,6 @@ order:completed ──→ finance, inventory
 order:voided ──→ inventory
 inventory:adjusted ──→ finance
 subscription:renewed ──→ finance
-payroll:processed ──→ hr
 payment:received ──→ pos
 inventory:low_stock ──→ pos
 ```

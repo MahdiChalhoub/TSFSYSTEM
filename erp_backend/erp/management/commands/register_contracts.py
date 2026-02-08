@@ -163,7 +163,6 @@ MODULE_CONTRACTS = {
         'needs': {
             'events_from': [
                 {'module': 'kernel', 'event': 'org:provisioned'},
-                {'module': 'hr', 'event': 'payroll:processed'},
             ],
             'data_from': [
                 {'module': 'finance', 'endpoint': 'chart-of-accounts/', 'blocking': False},
