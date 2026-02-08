@@ -333,93 +333,94 @@ export default function OrganizationsPage() {
                     const isSaasOrg = org.slug === 'saas'
 
                     return (
-                        <div key={org.id} onClick={() => router.push(`/organizations/${org.id}`)} role="button" tabIndex={0}>
-                            <Card className="bg-white border-gray-100 hover:border-emerald-500/30 transition-all rounded-3xl overflow-hidden group shadow-xl hover:shadow-2xl cursor-pointer">
-                                <CardHeader className="pb-4">
-                                    <div className="flex justify-between items-start">
-                                        <div className={`p-3 rounded-2xl shadow-sm border ${isSaasOrg ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
-                                            {isSaasOrg ? <ShieldCheck size={24} /> : <Building size={24} />}
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            {isSaasOrg && (
-                                                <Badge className="bg-indigo-50 text-indigo-600 border-indigo-100 text-[9px] font-black uppercase tracking-widest">
-                                                    <Lock size={10} className="mr-1" /> Protected
-                                                </Badge>
-                                            )}
-                                            <Badge className={org.is_active ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-red-50 text-red-600 border-red-100"}>
-                                                {org.is_active ? 'Active' : 'Suspended'}
+                        <Card key={org.id}
+                            className="bg-white border-gray-100 hover:border-emerald-500/30 transition-all rounded-3xl overflow-hidden group shadow-xl hover:shadow-2xl cursor-pointer"
+                            onClick={() => router.push(`/organizations/${org.id}`)}
+                        >
+                            <CardHeader className="pb-4">
+                                <div className="flex justify-between items-start">
+                                    <div className={`p-3 rounded-2xl shadow-sm border ${isSaasOrg ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
+                                        {isSaasOrg ? <ShieldCheck size={24} /> : <Building size={24} />}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        {isSaasOrg && (
+                                            <Badge className="bg-indigo-50 text-indigo-600 border-indigo-100 text-[9px] font-black uppercase tracking-widest">
+                                                <Lock size={10} className="mr-1" /> Protected
                                             </Badge>
-                                        </div>
+                                        )}
+                                        <Badge className={org.is_active ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-red-50 text-red-600 border-red-100"}>
+                                            {org.is_active ? 'Active' : 'Suspended'}
+                                        </Badge>
                                     </div>
-                                    <CardTitle className="text-2xl font-bold text-gray-900 mt-4">{org.name}</CardTitle>
-                                    <CardDescription className="text-emerald-600 font-mono text-[10px] tracking-widest uppercase mt-1">
-                                        {org.slug}{branding.suffix}
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-6">
-                                    <div className="grid grid-cols-3 gap-2">
-                                        <div className="p-3 bg-gray-50 rounded-2xl border border-gray-100 text-center">
-                                            <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">Sites</div>
-                                            <div className="text-lg font-bold text-gray-900">{org.site_count ?? 0}</div>
-                                        </div>
-                                        <div className="p-3 bg-gray-50 rounded-2xl border border-gray-100 text-center">
-                                            <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">Users</div>
-                                            <div className="text-lg font-bold text-gray-900">{org.user_count ?? 0}</div>
-                                        </div>
-                                        <div className="p-3 bg-gray-50 rounded-2xl border border-gray-100 text-center">
-                                            <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">Modules</div>
-                                            <div className="text-lg font-bold text-gray-900">{org.module_count ?? 0}</div>
-                                        </div>
+                                </div>
+                                <CardTitle className="text-2xl font-bold text-gray-900 mt-4">{org.name}</CardTitle>
+                                <CardDescription className="text-emerald-600 font-mono text-[10px] tracking-widest uppercase mt-1">
+                                    {org.slug}{branding.suffix}
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                <div className="grid grid-cols-3 gap-2">
+                                    <div className="p-3 bg-gray-50 rounded-2xl border border-gray-100 text-center">
+                                        <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">Sites</div>
+                                        <div className="text-lg font-bold text-gray-900">{org.site_count ?? 0}</div>
                                     </div>
-
-                                    {org.business_email && (
-                                        <div className="text-xs text-gray-400 flex items-center gap-2 px-1">
-                                            <Mail size={12} /> {org.business_email}
-                                        </div>
-                                    )}
-
-                                    <div className="flex gap-2">
-                                        {/* Suspend / Activate */}
-                                        <Button
-                                            variant="outline"
-                                            className={`flex-1 py-5 rounded-2xl border-gray-100 font-bold text-sm transition-all ${isSaasOrg
-                                                ? 'bg-gray-50 text-gray-300 cursor-not-allowed'
-                                                : org.is_active
-                                                    ? 'bg-gray-50 hover:bg-orange-50 text-gray-400 hover:text-orange-600 hover:border-orange-200'
-                                                    : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600 hover:border-emerald-200'
-                                                }`}
-                                            onClick={(e) => { e.stopPropagation(); handleToggle(org.id, org.is_active, org.slug) }}
-                                            disabled={isSaasOrg}
-                                        >
-                                            <Power size={16} className="mr-2" />
-                                            {org.is_active ? 'Suspend' : 'Activate'}
-                                        </Button>
-
-                                        {/* Features / Modules */}
-                                        <Button
-                                            variant="outline"
-                                            className="px-5 py-5 rounded-2xl border-emerald-100 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-all font-bold shadow-sm"
-                                            onClick={(e) => { e.stopPropagation(); handleOpenModules(org) }}
-                                        >
-                                            <Settings2 size={18} />
-                                        </Button>
-
-                                        {/* Delete */}
-                                        <Button
-                                            variant="ghost"
-                                            className={`px-5 py-5 rounded-2xl transition-all ${isSaasOrg
-                                                ? 'text-gray-200 cursor-not-allowed'
-                                                : 'text-gray-400 hover:text-red-500 hover:bg-red-50'
-                                                }`}
-                                            onClick={(e) => { e.stopPropagation(); handleDelete(org) }}
-                                            disabled={isSaasOrg}
-                                        >
-                                            <Trash2 size={18} />
-                                        </Button>
+                                    <div className="p-3 bg-gray-50 rounded-2xl border border-gray-100 text-center">
+                                        <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">Users</div>
+                                        <div className="text-lg font-bold text-gray-900">{org.user_count ?? 0}</div>
                                     </div>
-                                </CardContent>
-                            </Card>
-                        </div>
+                                    <div className="p-3 bg-gray-50 rounded-2xl border border-gray-100 text-center">
+                                        <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">Modules</div>
+                                        <div className="text-lg font-bold text-gray-900">{org.module_count ?? 0}</div>
+                                    </div>
+                                </div>
+
+                                {org.business_email && (
+                                    <div className="text-xs text-gray-400 flex items-center gap-2 px-1">
+                                        <Mail size={12} /> {org.business_email}
+                                    </div>
+                                )}
+
+                                <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                                    {/* Suspend / Activate */}
+                                    <Button
+                                        variant="outline"
+                                        className={`flex-1 py-5 rounded-2xl border-gray-100 font-bold text-sm transition-all ${isSaasOrg
+                                            ? 'bg-gray-50 text-gray-300 cursor-not-allowed'
+                                            : org.is_active
+                                                ? 'bg-gray-50 hover:bg-orange-50 text-gray-400 hover:text-orange-600 hover:border-orange-200'
+                                                : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600 hover:border-emerald-200'
+                                            }`}
+                                        onClick={() => handleToggle(org.id, org.is_active, org.slug)}
+                                        disabled={isSaasOrg}
+                                    >
+                                        <Power size={16} className="mr-2" />
+                                        {org.is_active ? 'Suspend' : 'Activate'}
+                                    </Button>
+
+                                    {/* Features / Modules */}
+                                    <Button
+                                        variant="outline"
+                                        className="px-5 py-5 rounded-2xl border-emerald-100 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-all font-bold shadow-sm"
+                                        onClick={() => handleOpenModules(org)}
+                                    >
+                                        <Settings2 size={18} />
+                                    </Button>
+
+                                    {/* Delete */}
+                                    <Button
+                                        variant="ghost"
+                                        className={`px-5 py-5 rounded-2xl transition-all ${isSaasOrg
+                                            ? 'text-gray-200 cursor-not-allowed'
+                                            : 'text-gray-400 hover:text-red-500 hover:bg-red-50'
+                                            }`}
+                                        onClick={() => handleDelete(org)}
+                                        disabled={isSaasOrg}
+                                    >
+                                        <Trash2 size={18} />
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
                     )
                 })}
             </div>
