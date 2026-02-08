@@ -38,7 +38,7 @@ export default function OrganizationsPage() {
         if (search && !o.name.toLowerCase().includes(search.toLowerCase()) && !o.slug.toLowerCase().includes(search.toLowerCase())) return false
         if (filterPlan !== 'all' && (o.current_plan_name || 'Free Tier') !== filterPlan) return false
         if (filterType !== 'all' && (o.business_type_name || '') !== filterType) return false
-        if (filterCountry !== 'all' && (o.country || '') !== filterCountry) return false
+        if (filterCountry !== 'all' && !(o.country || '').toLowerCase().includes(filterCountry.toLowerCase())) return false
         if (filterStatus === 'active' && !o.is_active) return false
         if (filterStatus === 'suspended' && o.is_active) return false
         return true
@@ -324,13 +324,9 @@ export default function OrganizationsPage() {
                         {businessTypes.map(bt => <option key={bt.id} value={bt.name}>{bt.name}</option>)}
                     </select>
                 )}
-                {uniqueCountries.length > 0 && (
-                    <select value={filterCountry} onChange={e => setFilterCountry(e.target.value)}
-                        className="text-xs font-bold border border-gray-100 rounded-xl px-3 py-2.5 bg-gray-50 text-gray-700 focus:ring-2 focus:ring-emerald-500/30">
-                        <option value="all">All Countries</option>
-                        {uniqueCountries.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                )}
+                <input type="text" placeholder="Filter by country..." value={filterCountry === 'all' ? '' : filterCountry}
+                    onChange={e => setFilterCountry(e.target.value || 'all')}
+                    className="text-xs font-bold border border-gray-100 rounded-xl px-3 py-2.5 bg-gray-50 text-gray-700 focus:ring-2 focus:ring-emerald-500/30 w-[140px]" />
                 {hasFilters && (
                     <button onClick={() => { setSearch(''); setFilterPlan('all'); setFilterType('all'); setFilterCountry('all'); setFilterStatus('all') }}
                         className="text-xs font-bold text-red-500 hover:text-red-700 flex items-center gap-1 px-3 py-2.5 rounded-xl border border-red-100 hover:bg-red-50 transition-all">
