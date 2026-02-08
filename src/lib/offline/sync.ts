@@ -3,10 +3,16 @@
  * ====================================
  * Handles syncing pending orders to the backend when connectivity resumes.
  * Supports both Background Sync API and manual poll-based sync.
+ * 
+ * Rules:
+ *   - ONLINE PRIORITY: When online, always fetch fresh data from server
+ *   - AUTO SYNC: Periodic sync every 30s while online
+ *   - FORCE SYNC: Block critical actions (checkout) until queue is drained
  */
 
 import {
     getPendingOrders,
+    getPendingOrderCount,
     updateOrderStatus,
     deleteOrder,
     addSyncLog,
@@ -120,4 +126,48 @@ export async function triggerSwSync(): Promise<void> {
         const registration = await navigator.serviceWorker.ready;
         registration.active?.postMessage({ type: 'SYNC_NOW' });
     }
+}
+
+// ── Auto Sync: Periodic interval while online ───────────────────
+
+const AUTO_SYNC_INTERVAL_MS = 30_000; // 30 seconds
+let autoSyncTimer: ReturnType<typeof setInterval> | null = null;
+
+export function startAutoSync(): void {
+    stopAutoSync();
+    autoSyncTimer = setInterval(async () => {
+        if (isOnline()) {
+            const count = await getPendingOrderCount();
+            if (count > 0) {
+                console.log(`[AutoSync] ${count} pending orders, syncing...`);
+                await syncPendingOrders();
+            }
+        }
+    }, AUTO_SYNC_INTERVAL_MS);
+}
+
+export function stopAutoSync(): void {
+    if (autoSyncTimer) {
+        clearInterval(autoSyncTimer);
+        autoSyncTimer = null;
+    }
+}
+
+// ── Force Sync Rule: Block actions until queue is drained ───────
+
+export async function forceSyncBeforeAction(): Promise<boolean> {
+    const count = await getPendingOrderCount();
+    if (count === 0) return true; // Queue empty, proceed
+
+    if (!isOnline()) {
+        // Can't sync while offline
+        return false;
+    }
+
+    // Attempt to drain the queue
+    const result = await syncPendingOrders();
+    const remaining = await getPendingOrderCount();
+
+    // Only allow action if queue is fully drained
+    return remaining === 0;
 }
