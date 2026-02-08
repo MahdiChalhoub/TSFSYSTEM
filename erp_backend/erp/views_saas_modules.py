@@ -319,7 +319,7 @@ class OrgModuleViewSet(viewsets.ViewSet):
                 max_users, max_sites, max_storage_mb, max_invoices = 10, 3, 2000, 500
 
         user_count = User.objects.filter(organization=org).count()
-        site_count = Site.objects.filter(organization=org).count()
+        site_count = Site.original_objects.filter(organization=org).count()
         module_count = OrganizationModule.objects.filter(organization=org, is_enabled=True).count()
         storage_mb = round(org.data_usage_bytes / (1024 * 1024), 1) if org.data_usage_bytes else 0
 

@@ -28,7 +28,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'updated_at', 'site_count', 'user_count', 'module_count']
 
     def get_site_count(self, obj):
-        return Site.objects.filter(organization=obj).count()
+        return Site.original_objects.filter(organization=obj).count()
 
     def get_user_count(self, obj):
         return User.objects.filter(organization=obj).count()
