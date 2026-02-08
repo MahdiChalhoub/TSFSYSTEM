@@ -3,7 +3,9 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { getPosProducts } from '@/app/(privileged)/sales/actions';
 import clsx from 'clsx';
-import { AlertCircle, Loader2, PackageX } from 'lucide-react';
+import { AlertCircle, Loader2, PackageX, WifiOff } from 'lucide-react';
+import { cacheProducts, getCachedProducts, type OfflineProduct } from '@/lib/offline/db';
+import { useOnlineStatus } from '@/lib/offline/hooks';
 
 const ITEMS_PER_LOAD = 50; // Load 50 products at a time
 const SEARCH_DEBOUNCE_MS = 300; // Wait 300ms after user stops typing
@@ -14,9 +16,57 @@ export function ProductGrid({ searchQuery, onAddToCart }: { searchQuery: string,
     const [error, setError] = useState<string | null>(null);
     const [hasMore, setHasMore] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
+    const [offlineMode, setOfflineMode] = useState(false);
 
+    const { isOnline } = useOnlineStatus();
     const observerTarget = useRef<HTMLDivElement>(null);
     const searchTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+
+    // Cache products to IndexedDB after successful fetch
+    const cacheToOffline = useCallback(async (data: any[]) => {
+        try {
+            const offlineData: OfflineProduct[] = data.map(p => ({
+                id: p.id,
+                name: p.name,
+                price: Number(p.basePrice || p.price || 0),
+                taxRate: Number(p.taxRate || 0),
+                isTaxIncluded: Boolean(p.isTaxIncluded),
+                category: p.category?.name || '',
+                sku: p.sku || '',
+                stock: p.stock,
+                cachedAt: Date.now(),
+            }));
+            await cacheProducts(offlineData);
+        } catch (e) {
+            console.warn('Failed to cache products offline:', e);
+        }
+    }, []);
+
+    // Load from IndexedDB cache when offline
+    const loadFromCache = useCallback(async () => {
+        try {
+            const cached = await getCachedProducts();
+            if (cached.length > 0) {
+                // Map back to component format
+                const mapped = cached.map(p => ({
+                    id: p.id,
+                    name: p.name,
+                    basePrice: p.price,
+                    taxRate: p.taxRate,
+                    isTaxIncluded: p.isTaxIncluded,
+                    sku: p.sku || '',
+                    category: { name: p.category },
+                }));
+                setProducts(mapped);
+                setOfflineMode(true);
+                setHasMore(false);
+                return true;
+            }
+        } catch {
+            // IndexedDB not available
+        }
+        return false;
+    }, []);
 
     // Debounced search handler
     const debouncedSearch = useCallback((query: string) => {
@@ -39,14 +89,19 @@ export function ProductGrid({ searchQuery, onAddToCart }: { searchQuery: string,
                 });
                 setProducts(data);
                 setHasMore(data.length >= ITEMS_PER_LOAD);
+                setOfflineMode(false);
+                cacheToOffline(data);
             } catch (err) {
                 console.error('Search error:', err);
-                setError('Failed to search products. Please try again.');
+                const loaded = await loadFromCache();
+                if (!loaded) {
+                    setError('Failed to search products. Please try again.');
+                }
             } finally {
                 setLoading(false);
             }
         }, SEARCH_DEBOUNCE_MS);
-    }, []);
+    }, [cacheToOffline, loadFromCache]);
 
     // Initial load
     useEffect(() => {
@@ -57,16 +112,21 @@ export function ProductGrid({ searchQuery, onAddToCart }: { searchQuery: string,
                 const data = await getPosProducts({ limit: ITEMS_PER_LOAD });
                 setProducts(data);
                 setHasMore(data.length >= ITEMS_PER_LOAD);
+                setOfflineMode(false);
+                cacheToOffline(data);
             } catch (err) {
                 console.error('Initial load error:', err);
-                setError('Failed to load products. Please refresh the page.');
+                const loaded = await loadFromCache();
+                if (!loaded) {
+                    setError('Failed to load products. Please refresh the page.');
+                }
             } finally {
                 setLoading(false);
             }
         };
 
         loadInitial();
-    }, []);
+    }, [cacheToOffline, loadFromCache]);
 
     // Handle search changes
     useEffect(() => {
@@ -204,6 +264,15 @@ export function ProductGrid({ searchQuery, onAddToCart }: { searchQuery: string,
 
     return (
         <div className="space-y-4">
+            {/* Offline Mode Banner */}
+            {offlineMode && (
+                <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-sm">
+                    <WifiOff size={16} />
+                    <span className="font-medium">Offline Mode</span>
+                    <span className="text-amber-600">— Showing cached products. Orders will sync when you reconnect.</span>
+                </div>
+            )}
+
             {/* Product Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {products.map(product => (

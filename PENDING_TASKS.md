@@ -42,10 +42,13 @@ Mark items `[x]` when done. Stay focused — finish one before starting the next
 - Created `replay_buffered_events` command: `--stats`, `--cleanup`, `--module`, `--org` flags
 - Documentation: `DOCUMENTATION/event_replay_mechanism.md`
 
-### 4. [ ] PWA Offline Mode for POS
-- Service Worker for offline caching
-- IndexedDB for offline transaction storage
-- Sync queue that replays through ConnectorEngine on reconnect
+### 4. [x] PWA Offline Mode for POS ✅
+- Service Worker with cache-first/network-first strategies
+- IndexedDB offline storage: products cache + pending order queue
+- Sync queue with Background Sync + manual replay
+- React hooks: `useOnlineStatus`, `useOfflineProducts`, `usePendingOrders`
+- Offline indicator component + ProductGrid offline fallback
+- Documentation: `DOCUMENTATION/pwa_offline_pos.md`
 
 ### 5. [ ] Frontend Module Isolation
 - Audit Next.js frontend for hardcoded module imports
