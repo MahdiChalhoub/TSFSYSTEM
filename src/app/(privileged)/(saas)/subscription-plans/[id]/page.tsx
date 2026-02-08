@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { getPlanDetail, updatePlan, togglePlanPublic } from "./actions"
+import { getPlanDetail, updatePlan, togglePlanPublic, getModuleFeatures } from "./actions"
 import { getSaaSModules } from "@/app/actions/saas/modules"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -11,7 +11,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ArrowLeft, Save, Globe, Lock, Loader2, Users, Building2, HardDrive, Package, FileText, UserCheck, Pencil } from "lucide-react"
+import { Switch } from "@/components/ui/switch"
+import { ArrowLeft, Save, Globe, Lock, Loader2, Users, Building2, HardDrive, Package, FileText, UserCheck, Pencil, ChevronDown, ChevronRight, Clock } from "lucide-react"
 import { toast } from "sonner"
 
 export default function PlanDetailPage() {
@@ -23,13 +24,15 @@ export default function PlanDetailPage() {
     const [tab, setTab] = useState<'overview' | 'modules' | 'limits' | 'orgs'>('overview')
     const [editing, setEditing] = useState(false)
     const [availableModules, setAvailableModules] = useState<any[]>([])
+    const [moduleFeatures, setModuleFeatures] = useState<Record<string, { name: string, features: { code: string, name: string, default: boolean }[] }>>({})
+    const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set())
 
     // Editable state
     const [form, setForm] = useState({
         name: '', description: '', monthly_price: '0', annual_price: '0',
-        is_public: true, sort_order: 0,
+        is_public: true, sort_order: 0, trial_days: 0,
         modules: [] as string[],
-        features: {} as Record<string, any>,
+        features: {} as Record<string, string[]>,
         limits: {} as Record<string, number>,
     })
 
@@ -37,12 +40,24 @@ export default function PlanDetailPage() {
 
     async function loadData() {
         try {
-            const [planData, modulesData] = await Promise.all([
+            const [planData, modulesData, featuresData] = await Promise.all([
                 getPlanDetail(id as string),
                 getSaaSModules(),
+                getModuleFeatures(),
             ])
             if (planData && !planData.error) {
                 setPlan(planData)
+
+                // Normalize features: old format might be a flat list, new format is {module: [features]}
+                let normalizedFeatures: Record<string, string[]> = {}
+                if (planData.features && typeof planData.features === 'object' && !Array.isArray(planData.features)) {
+                    // Check if it's already the new format
+                    const firstVal = Object.values(planData.features)[0]
+                    if (Array.isArray(firstVal)) {
+                        normalizedFeatures = planData.features
+                    }
+                }
+
                 setForm({
                     name: planData.name || '',
                     description: planData.description || '',
@@ -50,8 +65,9 @@ export default function PlanDetailPage() {
                     annual_price: planData.annual_price || '0',
                     is_public: planData.is_public ?? true,
                     sort_order: planData.sort_order || 0,
+                    trial_days: planData.trial_days || 0,
                     modules: planData.modules || [],
-                    features: planData.features || {},
+                    features: normalizedFeatures,
                     limits: planData.limits || {},
                 })
             } else {
@@ -59,6 +75,7 @@ export default function PlanDetailPage() {
                 router.push('/subscription-plans')
             }
             if (Array.isArray(modulesData)) setAvailableModules(modulesData)
+            if (featuresData && typeof featuresData === 'object') setModuleFeatures(featuresData)
         } catch {
             toast.error("Failed to load plan")
         } finally {
@@ -92,12 +109,52 @@ export default function PlanDetailPage() {
     }
 
     function toggleModule(code: string) {
-        setForm(f => ({
-            ...f,
-            modules: f.modules.includes(code)
+        setForm(f => {
+            const included = f.modules.includes(code)
+            const newModules = included
                 ? f.modules.filter(m => m !== code)
                 : [...f.modules, code]
-        }))
+
+            // When adding a module, auto-enable default features
+            const newFeatures = { ...f.features }
+            if (!included && moduleFeatures[code]) {
+                const defaults = moduleFeatures[code].features
+                    .filter(feat => feat.default)
+                    .map(feat => feat.code)
+                newFeatures[code] = defaults
+            }
+            // When removing, clear its features
+            if (included) {
+                delete newFeatures[code]
+            }
+
+            return { ...f, modules: newModules, features: newFeatures }
+        })
+    }
+
+    function toggleFeature(moduleCode: string, featureCode: string) {
+        setForm(f => {
+            const current = f.features[moduleCode] || []
+            const has = current.includes(featureCode)
+            return {
+                ...f,
+                features: {
+                    ...f.features,
+                    [moduleCode]: has
+                        ? current.filter(fc => fc !== featureCode)
+                        : [...current, featureCode]
+                }
+            }
+        })
+    }
+
+    function toggleExpandModule(code: string) {
+        setExpandedModules(prev => {
+            const next = new Set(prev)
+            if (next.has(code)) next.delete(code)
+            else next.add(code)
+            return next
+        })
     }
 
     function updateLimit(key: string, value: string) {
@@ -141,6 +198,7 @@ export default function PlanDetailPage() {
                             {form.is_public ? <><Globe size={12} className="mr-1" /> Public</> : <><Lock size={12} className="mr-1" /> Private</>}
                         </Badge>
                         {isCustom && <Badge className="bg-purple-100 text-purple-700">Custom</Badge>}
+                        {form.trial_days > 0 && <Badge className="bg-blue-50 text-blue-700"><Clock size={12} className="mr-1" />{form.trial_days}d trial</Badge>}
                     </div>
                     <p className="text-gray-500 mt-1 text-sm">{plan.description || 'No description'}</p>
                 </div>
@@ -195,11 +253,27 @@ export default function PlanDetailPage() {
                                     onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                                     className="bg-gray-50 border-gray-100 rounded-xl" />
                             </div>
-                            <div className="space-y-2">
-                                <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Sort Order</Label>
-                                <Input type="number" value={form.sort_order} disabled={!editing}
-                                    onChange={e => setForm(f => ({ ...f, sort_order: parseInt(e.target.value) || 0 }))}
-                                    className="bg-gray-50 border-gray-100 rounded-xl w-24" />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Sort Order</Label>
+                                    <Input type="number" value={form.sort_order} disabled={!editing}
+                                        onChange={e => setForm(f => ({ ...f, sort_order: parseInt(e.target.value) || 0 }))}
+                                        className="bg-gray-50 border-gray-100 rounded-xl" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                                        <Clock size={12} /> Trial Duration (days)
+                                    </Label>
+                                    <Input type="number" value={form.trial_days} disabled={!editing}
+                                        onChange={e => setForm(f => ({ ...f, trial_days: parseInt(e.target.value) || 0 }))}
+                                        className="bg-gray-50 border-gray-100 rounded-xl"
+                                        placeholder="0 = no trial" />
+                                    {form.trial_days > 0 && (
+                                        <p className="text-[10px] text-blue-500 font-bold">
+                                            {form.trial_days} days = ~{Math.round(form.trial_days / 30)} month(s) free trial
+                                        </p>
+                                    )}
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
@@ -271,40 +345,105 @@ export default function PlanDetailPage() {
 
             {/* Modules & Features Tab */}
             {tab === 'modules' && (
-                <Card className="bg-white shadow-sm">
-                    <CardHeader>
-                        <CardTitle className="text-lg font-bold">Included Modules</CardTitle>
-                        <CardDescription>Select which modules are available in this plan</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {availableModules.map((m: any) => {
-                                const isIncluded = form.modules.includes(m.code)
-                                return (
-                                    <div key={m.code}
-                                        className={`p-4 rounded-2xl border-2 transition-all cursor-pointer ${isIncluded
-                                            ? 'border-emerald-300 bg-emerald-50'
-                                            : 'border-gray-100 bg-gray-50 opacity-60'
-                                            } ${!editing ? 'pointer-events-none' : 'hover:shadow-md'}`}
-                                        onClick={() => editing && toggleModule(m.code)}
-                                    >
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <p className="font-bold text-gray-800">{m.name}</p>
-                                                <p className="text-xs text-gray-400 font-mono">{m.code}</p>
+                <div className="space-y-4">
+                    <Card className="bg-white shadow-sm">
+                        <CardHeader>
+                            <CardTitle className="text-lg font-bold">Included Modules & Features</CardTitle>
+                            <CardDescription>
+                                Toggle modules on/off, then expand each module to select specific features.
+                                {!editing && <span className="text-amber-600 ml-2 font-bold">Click "Edit Plan" to modify.</span>}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                            {availableModules
+                                .filter((m: any) => !['core', 'coreplatform'].includes(m.manifest?.code || m.code || ''))
+                                .map((m: any) => {
+                                    const code = m.manifest?.code || m.code || m.name.toLowerCase()
+                                    const isIncluded = form.modules.includes(code)
+                                    const modFeats = moduleFeatures[code]
+                                    const activeFeatures = form.features[code] || []
+                                    const isExpanded = expandedModules.has(code)
+                                    const hasFeatures = modFeats && modFeats.features.length > 0
+
+                                    return (
+                                        <div key={code} className={`rounded-2xl border-2 transition-all overflow-hidden ${isIncluded
+                                                ? 'border-emerald-200 bg-white'
+                                                : 'border-gray-100 bg-gray-50/50'
+                                            }`}>
+                                            {/* Module header row */}
+                                            <div className={`flex items-center gap-4 p-4 ${editing ? 'cursor-pointer' : ''}`}
+                                                onClick={() => editing && toggleModule(code)}>
+                                                <Switch
+                                                    checked={isIncluded}
+                                                    disabled={!editing}
+                                                    onCheckedChange={() => editing && toggleModule(code)}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                />
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2">
+                                                        <p className={`font-bold ${isIncluded ? 'text-gray-800' : 'text-gray-400'}`}>{m.name}</p>
+                                                        <span className="text-[10px] font-mono text-gray-300">{code}</span>
+                                                        {m.version && <Badge className="bg-gray-100 text-gray-500 text-[9px]">v{m.version}</Badge>}
+                                                    </div>
+                                                    {hasFeatures && isIncluded && (
+                                                        <p className="text-[11px] text-gray-400 mt-0.5">
+                                                            {activeFeatures.length}/{modFeats.features.length} features active
+                                                        </p>
+                                                    )}
+                                                </div>
+
+                                                {/* Expand/collapse features */}
+                                                {hasFeatures && isIncluded && (
+                                                    <Button variant="ghost" size="sm"
+                                                        className="text-gray-400 hover:text-gray-700 gap-1"
+                                                        onClick={(e) => { e.stopPropagation(); toggleExpandModule(code) }}>
+                                                        {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                                                        <span className="text-xs">Features</span>
+                                                    </Button>
+                                                )}
                                             </div>
-                                            <Checkbox checked={isIncluded} disabled={!editing} />
+
+                                            {/* Feature toggles */}
+                                            {hasFeatures && isIncluded && isExpanded && (
+                                                <div className="border-t border-gray-100 bg-gray-50/50 px-4 py-3">
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                                                        {modFeats.features.map(feat => {
+                                                            const isActive = activeFeatures.includes(feat.code)
+                                                            return (
+                                                                <div key={feat.code}
+                                                                    className={`flex items-center gap-3 p-3 rounded-xl transition-all ${isActive
+                                                                            ? 'bg-emerald-50 border border-emerald-100'
+                                                                            : 'bg-white border border-gray-100'
+                                                                        } ${editing ? 'cursor-pointer hover:shadow-sm' : ''}`}
+                                                                    onClick={() => editing && toggleFeature(code, feat.code)}>
+                                                                    <Checkbox
+                                                                        checked={isActive}
+                                                                        disabled={!editing}
+                                                                        onCheckedChange={() => editing && toggleFeature(code, feat.code)}
+                                                                        onClick={(e) => e.stopPropagation()}
+                                                                    />
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <p className={`text-sm font-medium ${isActive ? 'text-gray-800' : 'text-gray-400'}`}>{feat.name}</p>
+                                                                        <p className="text-[10px] text-gray-300 font-mono">{feat.code}</p>
+                                                                    </div>
+                                                                    {feat.default && (
+                                                                        <Badge className="bg-blue-50 text-blue-500 text-[8px]">default</Badge>
+                                                                    )}
+                                                                </div>
+                                                            )
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
-                                        {isIncluded && m.version && (
-                                            <Badge className="mt-2 bg-emerald-100 text-emerald-700 text-[10px]">v{m.version}</Badge>
-                                        )}
-                                    </div>
-                                )
-                            })}
-                        </div>
-                        <p className="text-xs text-gray-400 mt-4 font-medium">{form.modules.length} module(s) included in this plan</p>
-                    </CardContent>
-                </Card>
+                                    )
+                                })}
+                        </CardContent>
+                    </Card>
+                    <p className="text-xs text-gray-400 font-medium px-2">
+                        {form.modules.length} module(s) included · Core modules (core, coreplatform) are always available.
+                    </p>
+                </div>
             )}
 
             {/* Limits Tab */}
