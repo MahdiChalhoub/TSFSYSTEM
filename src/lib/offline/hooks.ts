@@ -8,7 +8,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { isOnline, syncPendingOrders, registerBackgroundSync } from './sync';
+import { isOnline, syncPendingOrders, registerBackgroundSync, startAutoSync, stopAutoSync } from './sync';
 import { getCachedProducts, getPendingOrderCount, type OfflineProduct } from './db';
 
 // ── useOnlineStatus ─────────────────────────────────────────────
@@ -20,6 +20,8 @@ export function useOnlineStatus() {
     useEffect(() => {
         // Set initial state
         setOnline(isOnline());
+        // Start auto-sync on mount if online
+        if (isOnline()) startAutoSync();
 
         const handleOnline = () => {
             setOnline(true);
@@ -27,10 +29,12 @@ export function useOnlineStatus() {
             // Auto-sync when coming back online
             syncPendingOrders().catch(console.error);
             registerBackgroundSync().catch(console.error);
+            startAutoSync(); // Resume periodic sync
         };
 
         const handleOffline = () => {
             setOnline(false);
+            stopAutoSync(); // Pause periodic sync
         };
 
         window.addEventListener('online', handleOnline);
@@ -39,6 +43,7 @@ export function useOnlineStatus() {
         return () => {
             window.removeEventListener('online', handleOnline);
             window.removeEventListener('offline', handleOffline);
+            stopAutoSync(); // Cleanup on unmount
         };
     }, []);
 
