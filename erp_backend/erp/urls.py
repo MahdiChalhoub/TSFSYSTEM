@@ -48,13 +48,50 @@ urlpatterns = [
     path('modules/<str:code>/enable/', ModuleEnableView.as_view(), name='module_enable'),
     path('modules/<str:code>/disable/', ModuleDisableView.as_view(), name='module_disable'),
 
-    # ── Business Module URLs (included from module directories) ──────────
-    path('', include('apps.finance.urls')),
-    path('', include('apps.inventory.urls')),
-    path('', include('apps.pos.urls')),
-    path('', include('apps.crm.urls')),
-    path('', include('apps.hr.urls')),
-
     # Kernel Router
     path('', include(router.urls)),
 ]
+
+# ── Dynamic Module URL Registration ─────────────────────────────────────────
+# Auto-discover urls.py from any installed module in apps/ directory.
+# Dual-mount: flat paths (backward compat) + namespaced paths (new standard).
+#
+# Example for apps/finance/urls.py:
+#   /api/accounts/          → flat mount (backward compatible)
+#   /api/finance/accounts/  → namespaced mount (new standard)
+#
+import importlib
+from pathlib import Path as _Path
+import logging
+
+_logger = logging.getLogger(__name__)
+_APPS_DIR = _Path(__file__).resolve().parent.parent / 'apps'
+
+# Modules managed by kernel (not auto-included)
+_KERNEL_MANAGED = {'packages'}
+
+if _APPS_DIR.exists():
+    for _app_dir in sorted(_APPS_DIR.iterdir()):
+        if not _app_dir.is_dir():
+            continue
+        if not (_app_dir / 'urls.py').exists():
+            continue
+        
+        _module_code = _app_dir.name
+        if _module_code in _KERNEL_MANAGED:
+            continue
+        
+        _module_path = f'apps.{_module_code}.urls'
+        try:
+            # Verify the module can be imported before adding
+            importlib.import_module(_module_path)
+            
+            # 1. Flat mount (backward compatible) — /api/accounts/
+            urlpatterns.insert(0, path('', include(_module_path)))
+            # 2. Namespaced mount (new standard) — /api/finance/accounts/
+            urlpatterns.insert(1, path(f'{_module_code}/', include(_module_path)))
+            
+            _logger.info(f"[URLs] Registered module: {_module_code} (flat + namespaced)")
+        except Exception as _e:
+            _logger.warning(f"[URLs] Skipping module {_module_code}: {_e}")
+

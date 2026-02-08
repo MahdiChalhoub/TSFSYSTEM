@@ -55,10 +55,11 @@ Mark items `[x]` when done. Stay focused — finish one before starting the next
 - Added `ModuleGate` route guard for direct URL access
 - Documentation: `DOCUMENTATION/frontend_module_isolation.md`
 
-### 6. [ ] Per-Module API Routing
-- Each module gets own URL namespace: `/api/v1/finance/`, `/api/v1/pos/`
-- Dynamic URL registration based on INSTALLED_APPS
-- Remove centralized `erp/urls.py` hardcoded routes
+### 6. [x] Per-Module API Routing ✅
+- Dynamic URL auto-discovery from `apps/` directory
+- Dual-mount: flat (backward compat) + namespaced (new standard)
+- Zero frontend changes needed
+- Documentation: `DOCUMENTATION/per_module_api_routing.md`
 
 ---
 
