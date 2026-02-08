@@ -42,9 +42,17 @@ class SystemModule(models.Model):
         ('FAILED', 'Failed'),
         ('DISABLED', 'Disabled'),
     )
+    VISIBILITY_CHOICES = (
+        ('public', 'Public – shown on landing page'),
+        ('organization', 'Organization – only visible to assigned orgs'),
+        ('private', 'Private – hidden/internal only'),
+    )
     name = models.CharField(max_length=100, unique=True)
     version = models.CharField(max_length=50)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='INSTALLED')
+    visibility = models.CharField(max_length=20, choices=VISIBILITY_CHOICES, default='public')
+    description = models.TextField(blank=True, default='', help_text="Short description shown on landing page and plan pages")
+    icon = models.CharField(max_length=50, blank=True, default='', help_text="Lucide icon name (e.g. 'shopping-cart', 'bar-chart')")
     manifest = models.JSONField(default=dict)
     checksum = models.CharField(max_length=64)
     installed_at = models.DateTimeField(auto_now_add=True)
@@ -55,6 +63,7 @@ class SystemModule(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.version})"
+
 
 
 class SystemModuleLog(models.Model):

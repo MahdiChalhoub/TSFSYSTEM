@@ -367,8 +367,8 @@ export default function PlanDetailPage() {
 
                                     return (
                                         <div key={code} className={`rounded-2xl border-2 transition-all overflow-hidden ${isIncluded
-                                                ? 'border-emerald-200 bg-white'
-                                                : 'border-gray-100 bg-gray-50/50'
+                                            ? 'border-emerald-200 bg-white'
+                                            : 'border-gray-100 bg-gray-50/50'
                                             }`}>
                                             {/* Module header row */}
                                             <div className={`flex items-center gap-4 p-4 ${editing ? 'cursor-pointer' : ''}`}
@@ -380,13 +380,24 @@ export default function PlanDetailPage() {
                                                     onClick={(e) => e.stopPropagation()}
                                                 />
                                                 <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2">
+                                                    <div className="flex items-center gap-2 flex-wrap">
                                                         <p className={`font-bold ${isIncluded ? 'text-gray-800' : 'text-gray-400'}`}>{m.name}</p>
                                                         <span className="text-[10px] font-mono text-gray-300">{code}</span>
                                                         {m.version && <Badge className="bg-gray-100 text-gray-500 text-[9px]">v{m.version}</Badge>}
+                                                        <Badge className={`text-[9px] ${m.visibility === 'public' ? 'bg-emerald-50 text-emerald-600' :
+                                                                m.visibility === 'organization' ? 'bg-blue-50 text-blue-600' :
+                                                                    'bg-gray-100 text-gray-500'
+                                                            }`}>
+                                                            {m.visibility === 'public' ? '🌐 Public' :
+                                                                m.visibility === 'organization' ? '🏢 Org Only' :
+                                                                    '🔒 Private'}
+                                                        </Badge>
                                                     </div>
+                                                    {m.description && (
+                                                        <p className="text-[11px] text-gray-400 mt-0.5 line-clamp-1">{m.description}</p>
+                                                    )}
                                                     {hasFeatures && isIncluded && (
-                                                        <p className="text-[11px] text-gray-400 mt-0.5">
+                                                        <p className="text-[11px] text-emerald-500 font-medium mt-0.5">
                                                             {activeFeatures.length}/{modFeats.features.length} features active
                                                         </p>
                                                     )}
@@ -412,8 +423,8 @@ export default function PlanDetailPage() {
                                                             return (
                                                                 <div key={feat.code}
                                                                     className={`flex items-center gap-3 p-3 rounded-xl transition-all ${isActive
-                                                                            ? 'bg-emerald-50 border border-emerald-100'
-                                                                            : 'bg-white border border-gray-100'
+                                                                        ? 'bg-emerald-50 border border-emerald-100'
+                                                                        : 'bg-white border border-gray-100'
                                                                         } ${editing ? 'cursor-pointer hover:shadow-sm' : ''}`}
                                                                     onClick={() => editing && toggleFeature(code, feat.code)}>
                                                                     <Checkbox

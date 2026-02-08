@@ -85,18 +85,50 @@ class SaaSModuleViewSet(viewsets.ViewSet):
         modules = SystemModule.objects.all().order_by('name')
         data = []
         for m in modules:
+            code = m.manifest.get('code', m.name)
             # Count how many orgs have this installed
             install_count = OrganizationModule.objects.filter(module_name=m.name, is_enabled=True).count()
             data.append({
-                'code': m.name,
+                'code': code,
                 'name': m.manifest.get('name', m.name),
                 'version': m.version,
-                'description': m.manifest.get('description', ''),
+                'description': m.description or m.manifest.get('description', ''),
+                'icon': m.icon or '',
+                'visibility': m.visibility,
+                'features': m.manifest.get('features', []),
                 'dependencies': m.manifest.get('dependencies', []),
-                'is_core': m.manifest.get('is_core', False) or m.manifest.get('required', False) or m.name in ['core', 'coreplatform'],
+                'is_core': m.manifest.get('is_core', False) or m.manifest.get('required', False) or code in ['core', 'coreplatform'],
                 'total_installs': install_count
             })
         return Response(data)
+
+    @action(detail=True, methods=['patch'], url_path='update')
+    def update_module(self, request, pk=None):
+        """Update module visibility, description, icon"""
+        try:
+            m = SystemModule.objects.get(name=pk)
+        except SystemModule.DoesNotExist:
+            try:
+                m = SystemModule.objects.get(manifest__code=pk)
+            except SystemModule.DoesNotExist:
+                return Response({'error': 'Module not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        d = request.data
+        if 'visibility' in d and d['visibility'] in ['public', 'organization', 'private']:
+            m.visibility = d['visibility']
+        if 'description' in d:
+            m.description = d['description']
+        if 'icon' in d:
+            m.icon = d['icon']
+        m.save()
+        return Response({
+            'code': m.manifest.get('code', m.name),
+            'visibility': m.visibility,
+            'description': m.description,
+            'icon': m.icon,
+            'message': f'Module {m.name} updated'
+        })
+
 
     @action(detail=False, methods=['post'])
     def sync_global(self, request):
@@ -236,20 +268,28 @@ class PublicPricingView(views.APIView):
     authentication_classes = []
 
     def get(self, request):
-        from erp.models import SubscriptionPlan
+        from erp.models import SubscriptionPlan, SystemModule as SM
         plans = SubscriptionPlan.objects.select_related('category').filter(
             is_active=True, is_public=True
         ).order_by('sort_order', 'monthly_price')
+
+        # Only show publicly-visible modules on the landing page
+        public_modules = set(
+            sm.manifest.get('code', sm.name)
+            for sm in SM.objects.filter(visibility='public')
+        )
+
         data = [{
             'id': str(p.id),
             'name': p.name,
             'description': p.description or '',
             'monthly_price': str(p.monthly_price),
             'annual_price': str(p.annual_price),
-            'modules': p.modules or [],
+            'modules': [m for m in (p.modules or []) if m in public_modules],
             'features': p.features or {},
             'limits': p.limits or {},
             'is_active': p.is_active,
+            'trial_days': p.trial_days,
         } for p in plans]
         return Response(data)
 
