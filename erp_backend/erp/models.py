@@ -115,6 +115,7 @@ class Organization(models.Model):
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
     is_active = models.BooleanField(default=True)
+    is_read_only = models.BooleanField(default=False)  # Middleware blocks writes when True (expired subscription)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -135,6 +136,13 @@ class Organization(models.Model):
 
     # Organization-level settings stored as JSON
     settings = models.JSONField(default=dict, blank=True)
+
+    # SaaS Subscription & Billing (added in migration 0025)
+    billing_contact_id = models.IntegerField(null=True, blank=True, help_text="ID of the Contact record in the SaaS Provider's ledger.")
+    data_usage_bytes = models.BigIntegerField(default=0)
+    plan_expiry_at = models.DateTimeField(null=True, blank=True)
+    reminder_config = models.JSONField(default=dict, blank=True, help_text="e.g. {'days_before': 5}")
+    current_plan = models.ForeignKey('SubscriptionPlan', on_delete=models.SET_NULL, null=True, blank=True, related_name='organizations')
 
     class Meta:
         db_table = 'Organization'
