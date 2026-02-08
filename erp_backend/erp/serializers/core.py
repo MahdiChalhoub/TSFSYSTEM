@@ -28,13 +28,18 @@ class OrganizationSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'updated_at', 'site_count', 'user_count', 'module_count']
 
     def get_site_count(self, obj):
-        return obj.sites.count() if hasattr(obj, 'sites') else 0
+        return Site.objects.filter(organization=obj).count()
 
     def get_user_count(self, obj):
         return User.objects.filter(organization=obj).count()
 
     def get_module_count(self, obj):
-        return OrganizationModule.objects.filter(organization=obj, is_enabled=True).count()
+        # Count explicitly enabled modules for this org
+        count = OrganizationModule.objects.filter(organization=obj, is_enabled=True).count()
+        if count == 0:
+            # Fallback: count all installed SystemModules (global)
+            count = SystemModule.objects.filter(status='INSTALLED').count()
+        return count
 
 
 class SiteSerializer(serializers.ModelSerializer):
