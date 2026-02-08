@@ -18,8 +18,24 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en" className="dark scroll-smooth" suppressHydrationWarning data-scroll-behavior="smooth">
+            <head>
+                <link rel="manifest" href="/manifest.json" />
+                <meta name="theme-color" content="#6366f1" />
+            </head>
             <body className={outfit.className}>
                 {children}
+                <script dangerouslySetInnerHTML={{
+                    __html: `
+                    if ('serviceWorker' in navigator) {
+                        window.addEventListener('load', function() {
+                            navigator.serviceWorker.register('/sw.js').then(function(reg) {
+                                console.log('[SW] Registered:', reg.scope);
+                            }).catch(function(err) {
+                                console.warn('[SW] Registration failed:', err);
+                            });
+                        });
+                    }
+                `}} />
             </body>
         </html>
     );
