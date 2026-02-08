@@ -18,12 +18,16 @@ Mark items `[x]` when done. Stay focused — finish one before starting the next
 
 ## 🔜 Next Up
 
-### 1. [ ] End-to-End Provisioning Test
-- Provision a new tenant org through the UI or API
-- Verify `org:provisioned` event fires and all handlers execute
-- Confirm Finance creates: FiscalYear, 12 Periods, CoA, Cash Drawer, Settings
-- Confirm CRM creates: Billing Contact linked to new org
-- Fix any runtime issues discovered
+### 1. [x] End-to-End Provisioning Test ✅
+- Provisioned a new tenant org and verified full event chain
+- Finance: FiscalYear=1, Periods=12, CoA=18, CashDrawer=1, PostingRules+Settings saved
+- CRM: Billing Contact created in SaaS org, billing_contact_id linked
+- **Bonus fixes discovered during test:**
+  - Warehouse model: added missing `type`/`can_sell` NOT NULL fields
+  - ChartOfAccount model: added 6 missing NOT NULL fields
+  - Order model: removed orphaned `warehouse` FK not in DB
+  - ConfigurationService: rewrote to use `Organization.settings` JSON
+  - Finance events: fixed `linked_coa` kwarg
 
 ### 2. [ ] Module Contracts Registration
 - Create Django migration or management command to register ModuleContract records

@@ -27,7 +27,8 @@ class Order(TenantModel):
     ref_code = models.CharField(max_length=100, null=True, blank=True)
     contact = models.ForeignKey('crm.Contact', on_delete=models.SET_NULL, null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    warehouse = models.ForeignKey('inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True)
+    # Note: warehouse context comes via site or is set at checkout time
+    # The `warehouse` column was never added to the DB, so we don't model it here.
     site = models.ForeignKey('erp.Site', on_delete=models.SET_NULL, null=True, blank=True)
     
     total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
