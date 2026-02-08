@@ -8,8 +8,7 @@ import {
     ShieldCheck,
     Zap,
     Building,
-    Clock,
-    LayoutDashboard
+    Clock
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -44,9 +43,11 @@ export default async function SaasMasterDashboard() {
                             <Zap size={16} fill="currentColor" /> Updates
                         </Button>
                     </Link>
-                    <Button variant="outline" className="border-gray-200 bg-white hover:bg-gray-50 text-gray-600 rounded-2xl px-4 md:px-6 py-4 md:py-6 font-bold flex gap-2 text-xs md:text-sm shadow-sm">
-                        <Activity size={16} /> Health
-                    </Button>
+                    <Link href="/health">
+                        <Button variant="outline" className="border-gray-200 bg-white hover:bg-gray-50 text-gray-600 rounded-2xl px-4 md:px-6 py-4 md:py-6 font-bold flex gap-2 text-xs md:text-sm shadow-sm">
+                            <Activity size={16} /> Health
+                        </Button>
+                    </Link>
                     <Link href="/organizations">
                         <Button className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl px-6 md:px-8 py-4 md:py-6 font-bold shadow-xl shadow-emerald-900/40 flex gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] text-xs md:text-sm">
                             <Plus size={18} /> Provision
@@ -143,35 +144,37 @@ export default async function SaasMasterDashboard() {
                     </CardContent>
                 </Card>
 
-                {/* System Activity */}
+                {/* Quick Actions */}
                 <Card className="bg-white border-gray-100 rounded-[2.5rem] shadow-xl relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-8 opacity-10 text-gray-200">
                         <Globe size={160} />
                     </div>
                     <CardHeader className="p-8 relative z-10">
                         <CardTitle className="text-2xl font-black text-gray-900 flex items-center gap-3">
-                            <Zap className="text-indigo-600 fill-indigo-100" size={24} /> Platform Feed
+                            <Zap className="text-indigo-600 fill-indigo-100" size={24} /> Quick Actions
                         </CardTitle>
-                        <CardDescription className="text-gray-500">Real-time infrastructure pulse</CardDescription>
+                        <CardDescription className="text-gray-500">Platform management shortcuts</CardDescription>
                     </CardHeader>
                     <CardContent className="p-8 pt-2 relative z-10">
-                        <div className="space-y-8 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-gradient-to-b before:from-emerald-400 before:via-gray-100 before:to-transparent">
+                        <div className="space-y-3">
                             {[
-                                { title: "Isolation Hardened", desc: "Cross-tenant data separation logic enforced", time: "Now", icon: ShieldCheck, color: "indigo" },
-                                { title: "Context Synced", desc: "SaaS Platform recognized as management org", time: "2m ago", icon: Globe, color: "blue" },
-                                { title: "Switcher Refined", desc: "Client switcher filtering complete", time: "15m ago", icon: LayoutDashboard, color: "purple" },
-                                { title: "API Gateway Resilient", desc: "Missing context errors suppressed for root", time: "1h ago", icon: Activity, color: "emerald" },
-                            ].map((event, i) => (
-                                <div key={i} className="relative pl-10">
-                                    <div className={`absolute left-0 top-1 w-6 h-6 rounded-full bg-white border-2 border-${event.color}-500 flex items-center justify-center z-10 shadow-sm`}>
-                                        <div className={`w-1.5 h-1.5 rounded-full bg-${event.color}-500`} />
+                                { title: "Global Registry", desc: "Manage modules across all tenants", href: "/modules", icon: Database, color: "purple" },
+                                { title: "Platform Health", desc: "System diagnostics & status", href: "/health", icon: Activity, color: "emerald" },
+                                { title: "Kernel Updates", desc: "Apply core platform patches", href: "/updates", icon: Zap, color: "indigo" },
+                                { title: "Connector Control", desc: "API gateway & integrations", href: "/connector", icon: Globe, color: "blue" },
+                            ].map((action, i) => (
+                                <Link key={i} href={action.href} className="block group">
+                                    <div className="flex items-center gap-4 p-4 rounded-2xl hover:bg-gray-50 transition-all border border-transparent hover:border-gray-100 cursor-pointer">
+                                        <div className={`p-3 rounded-xl bg-${action.color}-500/10 text-${action.color}-500 group-hover:scale-110 transition-transform`}>
+                                            <action.icon size={18} />
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="text-sm font-bold text-gray-900 group-hover:text-emerald-600 transition-colors">{action.title}</div>
+                                            <p className="text-xs text-gray-400 mt-0.5 font-medium">{action.desc}</p>
+                                        </div>
+                                        <TrendingUp size={14} className="text-gray-300 group-hover:text-emerald-400 transition-colors" />
                                     </div>
-                                    <div>
-                                        <div className="text-sm font-bold text-gray-900">{event.title}</div>
-                                        <p className="text-xs text-gray-500 mt-0.5 font-medium leading-relaxed">{event.desc}</p>
-                                        <div className="text-[10px] font-bold text-gray-400 mt-2 uppercase tracking-wide">{event.time}</div>
-                                    </div>
-                                </div>
+                                </Link>
                             ))}
                         </div>
                     </CardContent>
