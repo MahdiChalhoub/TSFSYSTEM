@@ -719,7 +719,79 @@ class OrgModuleViewSet(viewsets.ViewSet):
                 'phone': org.client.phone,
                 'company_name': org.client.company_name,
             } if org.client else None,
+            'warnings': self._get_org_warnings(org, plan, user_count, site_count, module_count),
         })
+
+    def _get_org_warnings(self, org, plan, user_count, site_count, module_count):
+        """Check org integrity and return actionable warnings"""
+        warnings = []
+        
+        # Missing client (account owner)
+        if not org.client:
+            warnings.append({
+                'level': 'critical',
+                'code': 'NO_CLIENT',
+                'message': 'No account owner assigned',
+                'suggestion': 'Assign a client to this organization from the Overview tab. Every instance must have an account owner for billing and communication.',
+            })
+        
+        # No plan
+        if not plan:
+            warnings.append({
+                'level': 'warning',
+                'code': 'NO_PLAN',
+                'message': 'No subscription plan assigned',
+                'suggestion': 'Assign a subscription plan from the Billing tab to define resource limits and enable billing.',
+            })
+        
+        # Expired plan
+        if org.plan_expiry_at:
+            from django.utils import timezone as tz
+            if org.plan_expiry_at < tz.now():
+                warnings.append({
+                    'level': 'critical',
+                    'code': 'PLAN_EXPIRED',
+                    'message': f'Subscription expired on {org.plan_expiry_at.strftime("%b %d, %Y")}',
+                    'suggestion': 'Renew the subscription or switch to a new plan to avoid service interruption.',
+                })
+        
+        # No modules enabled
+        if module_count == 0:
+            warnings.append({
+                'level': 'warning',
+                'code': 'NO_MODULES',
+                'message': 'No modules enabled',
+                'suggestion': 'Enable at least the core modules from the Modules tab so the organization can function.',
+            })
+        
+        # Missing business email
+        if not org.business_email:
+            warnings.append({
+                'level': 'info',
+                'code': 'NO_EMAIL',
+                'message': 'No business email configured',
+                'suggestion': 'Set a business email for this organization for notifications and correspondence.',
+            })
+        
+        # No users
+        if user_count == 0:
+            warnings.append({
+                'level': 'warning',
+                'code': 'NO_USERS',
+                'message': 'No users in this organization',
+                'suggestion': 'Create at least one admin user from the Users tab so the organization can be accessed.',
+            })
+        
+        # No sites
+        if site_count == 0:
+            warnings.append({
+                'level': 'info',
+                'code': 'NO_SITES',
+                'message': 'No sites/locations configured',
+                'suggestion': 'Create at least one site from the Sites tab for POS and inventory operations.',
+            })
+        
+        return warnings
 
     @action(detail=True, methods=['post'], url_path='set-client')
     def set_client(self, request, pk=None):
