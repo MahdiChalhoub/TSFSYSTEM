@@ -3,6 +3,7 @@ const path = require('path');
 
 const KERNEL_SPACE = path.join(__dirname, '../src/app/(privileged)/(saas)');
 const APPROVED_DIRS = [
+    '[...slug]', // Next.js catch-all dynamic route
     '[code]',
     'connector',
     'dashboard',
