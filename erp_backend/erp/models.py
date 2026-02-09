@@ -116,6 +116,44 @@ class Country(models.Model):
 
 
 # =============================================================================
+# SAAS CLIENT (ACCOUNT OWNER)
+# =============================================================================
+
+class SaaSClient(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    email = models.EmailField(unique=True)
+    phone = models.CharField(max_length=50, blank=True, default='')
+    company_name = models.CharField(max_length=255, blank=True, default='', help_text='Legal company name if different from person name')
+    address = models.TextField(blank=True, default='')
+    city = models.CharField(max_length=100, blank=True, default='')
+    country = models.CharField(max_length=100, blank=True, default='')
+    is_active = models.BooleanField(default=True)
+    notes = models.TextField(blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'SaaSClient'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        name = f"{self.first_name} {self.last_name}".strip()
+        if self.company_name:
+            return f"{name} ({self.company_name})"
+        return name
+
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}".strip()
+
+    @property
+    def organization_count(self):
+        return self.organizations.count()
+
+
+# =============================================================================
 # ORGANIZATION & MULTI-TENANCY INFRASTRUCTURE
 # =============================================================================
 
@@ -146,8 +184,8 @@ class Organization(models.Model):
     # Organization-level settings stored as JSON
     settings = models.JSONField(default=dict, blank=True)
 
-    # SaaS Subscription & Billing (added in migration 0025)
-    billing_contact_id = models.IntegerField(null=True, blank=True, help_text="ID of the Contact record in the SaaS Provider's ledger.")
+    # SaaS Subscription & Billing
+    client = models.ForeignKey('SaaSClient', on_delete=models.SET_NULL, null=True, blank=True, related_name='organizations', help_text='Account owner / billing contact')
     data_usage_bytes = models.BigIntegerField(default=0)
     plan_expiry_at = models.DateTimeField(null=True, blank=True)
     reminder_config = models.JSONField(default=dict, blank=True, help_text="e.g. {'days_before': 5}")

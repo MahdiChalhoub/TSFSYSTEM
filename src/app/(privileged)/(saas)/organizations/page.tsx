@@ -401,6 +401,11 @@ export default function OrganizationsPage() {
                                         <Mail size={12} /> {org.business_email}
                                     </div>
                                 )}
+                                {org.client_name && (
+                                    <div className="text-xs text-gray-400 flex items-center gap-2 px-1">
+                                        <Users size={12} /> <span className="font-semibold text-gray-500">{org.client_name}</span>
+                                    </div>
+                                )}
 
                                 <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                                     {/* Suspend / Activate */}
