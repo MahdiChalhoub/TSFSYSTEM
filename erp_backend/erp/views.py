@@ -260,6 +260,33 @@ class OrganizationViewSet(viewsets.ModelViewSet):
                     setattr(org, k, v)
                 org.save(update_fields=list(extra_fields.keys()))
             
+            # ── Auto-create SaaSClient (account owner) ──
+            from erp.models import SaaSClient
+            client_email = extra_fields.get('business_email', f'{slug}@tenant.local')
+            client_phone = extra_fields.get('phone', '')
+            client_country = extra_fields.get('country', '')
+            client_city = extra_fields.get('city', '')
+            
+            # Split org name into first/last for the client record
+            name_parts = name.split(' ', 1)
+            first_name = name_parts[0]
+            last_name = name_parts[1] if len(name_parts) > 1 else 'Admin'
+            
+            # Reuse existing client if email matches, or create new
+            client, created = SaaSClient.objects.get_or_create(
+                email=client_email,
+                defaults={
+                    'first_name': first_name,
+                    'last_name': last_name,
+                    'company_name': name,
+                    'phone': client_phone,
+                    'city': client_city,
+                    'country': client_country,
+                }
+            )
+            org.client = client
+            org.save(update_fields=['client'])
+            
             return Response(self.get_serializer(org).data, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

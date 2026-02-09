@@ -349,107 +349,136 @@ export default function OrganizationDetailPage() {
 
             {/* ─── Overview Tab ─────────────────────────────────────────── */}
             {activeTab === 'overview' && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <Card className="lg:col-span-2 border-gray-100 shadow-sm">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-lg font-bold">Resource Overview</CardTitle>
-                            <CardDescription>Current consumption vs plan limits</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                            {usage ? (
-                                <>
-                                    <UsageMeter label="Users" icon={Users} current={usage.users.current} limit={usage.users.limit} percent={usage.users.percent} />
-                                    <UsageMeter label="Sites" icon={MapPin} current={usage.sites.current} limit={usage.sites.limit} percent={usage.sites.percent} />
-                                    <UsageMeter label="Storage" icon={HardDrive} current={usage.storage.current_mb} limit={usage.storage.limit_mb} percent={usage.storage.percent} unit=" MB" />
-                                    <UsageMeter label="Invoices / Month" icon={FileText} current={usage.invoices.current} limit={usage.invoices.limit} percent={usage.invoices.percent} />
-                                </>
-                            ) : (
-                                <div className="py-8 text-center text-gray-400 italic">Usage data unavailable</div>
-                            )}
-                        </CardContent>
-                    </Card>
-
-                    <div className="space-y-6">
-                        <Card className="border-emerald-100 bg-emerald-50/30 shadow-sm">
-                            <CardHeader><CardTitle className="text-lg font-bold text-emerald-900">Current Plan</CardTitle></CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="text-center py-4">
-                                    <div className="text-3xl font-black text-emerald-700">
-                                        ${usage?.plan?.monthly_price || '0.00'}<span className="text-sm font-medium text-emerald-500">/mo</span>
+                <div className="space-y-6">
+                    {/* Integrity Warnings */}
+                    {usage?.warnings?.length > 0 && (
+                        <div className="space-y-2">
+                            {usage.warnings.map((w: any) => {
+                                const styles: Record<string, string> = {
+                                    critical: 'bg-red-50 border-red-200 text-red-800',
+                                    warning: 'bg-amber-50 border-amber-200 text-amber-800',
+                                    info: 'bg-blue-50 border-blue-200 text-blue-700',
+                                }
+                                const icons: Record<string, any> = {
+                                    critical: <AlertTriangle size={14} className="text-red-500 shrink-0 mt-0.5" />,
+                                    warning: <AlertTriangle size={14} className="text-amber-500 shrink-0 mt-0.5" />,
+                                    info: <Activity size={14} className="text-blue-400 shrink-0 mt-0.5" />,
+                                }
+                                return (
+                                    <div key={w.code} className={`flex items-start gap-3 p-3 rounded-xl border ${styles[w.level as string] || styles.info}`}>
+                                        {icons[w.level as string] || icons.info}
+                                        <div className="min-w-0">
+                                            <p className="font-bold text-sm">{w.message}</p>
+                                            <p className="text-xs opacity-75 mt-0.5">{w.suggestion}</p>
+                                        </div>
                                     </div>
-                                    <p className="text-emerald-600 font-bold mt-1">{usage?.plan?.name || 'Free Tier'}</p>
-                                    {usage?.plan?.annual_price && usage.plan.annual_price !== '0.00' && (
-                                        <p className="text-xs text-gray-500 mt-1">${usage.plan.annual_price}/yr</p>
-                                    )}
-                                    {usage?.plan?.expiry && (
-                                        <p className="text-xs text-gray-500 mt-2">Renews: {new Date(usage.plan.expiry).toLocaleDateString()}</p>
-                                    )}
-                                </div>
-                                <Button variant="outline" className="w-full border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-xl font-bold"
-                                    onClick={() => setActiveTab('billing')}>
-                                    Manage Plan <ChevronRight size={14} />
-                                </Button>
-                            </CardContent>
-                        </Card>
+                                )
+                            })}
+                        </div>
+                    )}
 
-                        <Card className="border-gray-100 shadow-sm">
-                            <CardHeader className="pb-2"><CardTitle className="text-lg font-bold">Modules</CardTitle></CardHeader>
-                            <CardContent>
-                                <div className="text-center py-4">
-                                    <div className="text-3xl font-black text-gray-900">{activeModules}</div>
-                                    <p className="text-xs text-gray-500">of {modules.length} active</p>
-                                </div>
-                                <Button variant="outline" className="w-full border-gray-200 text-gray-700 hover:bg-gray-50 rounded-xl font-bold"
-                                    onClick={() => setActiveTab('modules')}>
-                                    Manage Modules <ChevronRight size={14} />
-                                </Button>
-                            </CardContent>
-                        </Card>
-
-                        {/* Client / Account Owner Card */}
-                        <Card className="border-gray-100 shadow-sm">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <Card className="lg:col-span-2 border-gray-100 shadow-sm">
                             <CardHeader className="pb-2">
-                                <CardTitle className="text-lg font-bold flex items-center gap-2">
-                                    <UserCircle size={16} className="text-gray-400" /> Account Owner
-                                </CardTitle>
+                                <CardTitle className="text-lg font-bold">Resource Overview</CardTitle>
+                                <CardDescription>Current consumption vs plan limits</CardDescription>
                             </CardHeader>
-                            <CardContent>
-                                {usage?.client ? (
-                                    <div className="space-y-2">
-                                        <p className="font-black text-gray-900">{usage.client.full_name}</p>
-                                        {usage.client.company_name && (
-                                            <p className="text-xs text-gray-500">{usage.client.company_name}</p>
-                                        )}
-                                        <p className="text-xs text-gray-400">{usage.client.email}</p>
-                                        {usage.client.phone && (
-                                            <p className="text-xs text-gray-400">{usage.client.phone}</p>
-                                        )}
-                                        <Button variant="outline" size="sm"
-                                            className="w-full border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl text-xs mt-2"
-                                            onClick={async () => {
-                                                const data = await listClients()
-                                                setAllClients(Array.isArray(data) ? data : [])
-                                                setShowClientDialog(true)
-                                            }}>
-                                            Change Client
-                                        </Button>
-                                    </div>
+                            <CardContent className="space-y-3">
+                                {usage ? (
+                                    <>
+                                        <UsageMeter label="Users" icon={Users} current={usage.users.current} limit={usage.users.limit} percent={usage.users.percent} />
+                                        <UsageMeter label="Sites" icon={MapPin} current={usage.sites.current} limit={usage.sites.limit} percent={usage.sites.percent} />
+                                        <UsageMeter label="Storage" icon={HardDrive} current={usage.storage.current_mb} limit={usage.storage.limit_mb} percent={usage.storage.percent} unit=" MB" />
+                                        <UsageMeter label="Invoices / Month" icon={FileText} current={usage.invoices.current} limit={usage.invoices.limit} percent={usage.invoices.percent} />
+                                    </>
                                 ) : (
-                                    <div className="text-center py-3">
-                                        <p className="text-xs text-gray-400 italic mb-3">No client assigned</p>
-                                        <Button size="sm"
-                                            className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs"
-                                            onClick={async () => {
-                                                const data = await listClients()
-                                                setAllClients(Array.isArray(data) ? data : [])
-                                                setShowClientDialog(true)
-                                            }}>
-                                            Assign Client
-                                        </Button>
-                                    </div>
+                                    <div className="py-8 text-center text-gray-400 italic">Usage data unavailable</div>
                                 )}
                             </CardContent>
                         </Card>
+
+                        <div className="space-y-6">
+                            <Card className="border-emerald-100 bg-emerald-50/30 shadow-sm">
+                                <CardHeader><CardTitle className="text-lg font-bold text-emerald-900">Current Plan</CardTitle></CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="text-center py-4">
+                                        <div className="text-3xl font-black text-emerald-700">
+                                            ${usage?.plan?.monthly_price || '0.00'}<span className="text-sm font-medium text-emerald-500">/mo</span>
+                                        </div>
+                                        <p className="text-emerald-600 font-bold mt-1">{usage?.plan?.name || 'Free Tier'}</p>
+                                        {usage?.plan?.annual_price && usage.plan.annual_price !== '0.00' && (
+                                            <p className="text-xs text-gray-500 mt-1">${usage.plan.annual_price}/yr</p>
+                                        )}
+                                        {usage?.plan?.expiry && (
+                                            <p className="text-xs text-gray-500 mt-2">Renews: {new Date(usage.plan.expiry).toLocaleDateString()}</p>
+                                        )}
+                                    </div>
+                                    <Button variant="outline" className="w-full border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-xl font-bold"
+                                        onClick={() => setActiveTab('billing')}>
+                                        Manage Plan <ChevronRight size={14} />
+                                    </Button>
+                                </CardContent>
+                            </Card>
+
+                            <Card className="border-gray-100 shadow-sm">
+                                <CardHeader className="pb-2"><CardTitle className="text-lg font-bold">Modules</CardTitle></CardHeader>
+                                <CardContent>
+                                    <div className="text-center py-4">
+                                        <div className="text-3xl font-black text-gray-900">{activeModules}</div>
+                                        <p className="text-xs text-gray-500">of {modules.length} active</p>
+                                    </div>
+                                    <Button variant="outline" className="w-full border-gray-200 text-gray-700 hover:bg-gray-50 rounded-xl font-bold"
+                                        onClick={() => setActiveTab('modules')}>
+                                        Manage Modules <ChevronRight size={14} />
+                                    </Button>
+                                </CardContent>
+                            </Card>
+
+                            {/* Client / Account Owner Card */}
+                            <Card className="border-gray-100 shadow-sm">
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-lg font-bold flex items-center gap-2">
+                                        <UserCircle size={16} className="text-gray-400" /> Account Owner
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    {usage?.client ? (
+                                        <div className="space-y-2">
+                                            <p className="font-black text-gray-900">{usage.client.full_name}</p>
+                                            {usage.client.company_name && (
+                                                <p className="text-xs text-gray-500">{usage.client.company_name}</p>
+                                            )}
+                                            <p className="text-xs text-gray-400">{usage.client.email}</p>
+                                            {usage.client.phone && (
+                                                <p className="text-xs text-gray-400">{usage.client.phone}</p>
+                                            )}
+                                            <Button variant="outline" size="sm"
+                                                className="w-full border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl text-xs mt-2"
+                                                onClick={async () => {
+                                                    const data = await listClients()
+                                                    setAllClients(Array.isArray(data) ? data : [])
+                                                    setShowClientDialog(true)
+                                                }}>
+                                                Change Client
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-3">
+                                            <p className="text-xs text-gray-400 italic mb-3">No client assigned</p>
+                                            <Button size="sm"
+                                                className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs"
+                                                onClick={async () => {
+                                                    const data = await listClients()
+                                                    setAllClients(Array.isArray(data) ? data : [])
+                                                    setShowClientDialog(true)
+                                                }}>
+                                                Assign Client
+                                            </Button>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </div>
                     </div>
                 </div>
             )}
