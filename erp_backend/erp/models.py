@@ -296,6 +296,9 @@ class Role(TenantModel):
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
     permissions = models.ManyToManyField(Permission, related_name='roles')
+    is_public_requestable = models.BooleanField(default=False, help_text="Can users self-request this role during registration")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'Role'
