@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True)),
             ],
             options={
-                'db_table': 'SystemUpdate',
+                'db_table': 'systemupdate',
                 'ordering': ['-created_at'],
             },
         ),

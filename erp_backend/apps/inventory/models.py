@@ -18,7 +18,7 @@ class Unit(TenantModel):
     conversion_factor = models.DecimalField(max_digits=15, decimal_places=6, default=1.0)
 
     class Meta:
-        db_table = 'Unit'
+        db_table = 'unit'
         unique_together = ('code', 'organization')
 
     def __str__(self):
@@ -31,7 +31,7 @@ class Category(TenantModel):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'Category'
+        db_table = 'category'
         unique_together = ('name', 'organization')
 
     def __str__(self):
@@ -45,7 +45,7 @@ class Brand(TenantModel):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'Brand'
+        db_table = 'brand'
         unique_together = ('name', 'organization')
 
     def __str__(self):
@@ -57,7 +57,7 @@ class Parfum(TenantModel):
     categories = models.ManyToManyField(Category, blank=True, related_name='parfums')
 
     class Meta:
-        db_table = 'Parfum'
+        db_table = 'parfum'
         unique_together = ('name', 'organization')
 
     def __str__(self):
@@ -72,7 +72,7 @@ class ProductGroup(TenantModel):
     description = models.TextField(null=True, blank=True)
 
     class Meta:
-        db_table = 'ProductGroup'
+        db_table = 'productgroup'
 
     def __str__(self):
         return self.name
@@ -110,7 +110,7 @@ class Product(TenantModel):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'Product'
+        db_table = 'product'
         unique_together = (('sku', 'organization'), ('barcode', 'organization'))
 
     def __str__(self):
@@ -130,7 +130,7 @@ class Warehouse(TenantModel):
     is_active = models.BooleanField(default=True)
 
     class Meta:
-        db_table = 'Warehouse'
+        db_table = 'warehouse'
 
     def __str__(self):
         return self.name
@@ -144,7 +144,7 @@ class Inventory(TenantModel):
     batch_number = models.CharField(max_length=100, null=True, blank=True)
 
     class Meta:
-        db_table = 'Inventory'
+        db_table = 'inventory'
         unique_together = ('warehouse', 'product', 'organization')
 
 
@@ -164,4 +164,4 @@ class InventoryMovement(TenantModel):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'InventoryMovement'
+        db_table = 'inventorymovement'

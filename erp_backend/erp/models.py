@@ -29,7 +29,7 @@ class BusinessType(models.Model):
     description = models.TextField(null=True, blank=True)
 
     class Meta:
-        db_table = 'BusinessType'
+        db_table = 'businesstype'
     
     def __str__(self):
         return self.name
@@ -59,7 +59,7 @@ class SystemModule(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'SystemModule'
+        db_table = 'systemmodule'
 
     def __str__(self):
         return f"{self.name} ({self.version})"
@@ -76,6 +76,9 @@ class SystemModuleLog(models.Model):
     performed_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        db_table = 'systemmodulelog'
+
 
 class SystemUpdate(models.Model):
     version = models.CharField(max_length=50, unique=True)
@@ -88,7 +91,7 @@ class SystemUpdate(models.Model):
     metadata = models.JSONField(default=dict, blank=True)
 
     class Meta:
-        db_table = 'SystemUpdate'
+        db_table = 'systemupdate'
         ordering = ['-created_at']
 
 
@@ -135,7 +138,7 @@ class SaaSClient(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'SaaSClient'
+        db_table = 'saasclient'
         ordering = ['-created_at']
 
     def __str__(self):
@@ -227,7 +230,7 @@ class Organization(models.Model):
     current_plan = models.ForeignKey('SubscriptionPlan', on_delete=models.SET_NULL, null=True, blank=True, related_name='organizations')
 
     class Meta:
-        db_table = 'Organization'
+        db_table = 'organization'
 
     def __str__(self):
         return self.name
@@ -259,7 +262,7 @@ class OrganizationModule(models.Model):
     granted_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'OrganizationModule'
+        db_table = 'organizationmodule'
         unique_together = ('organization', 'module_name')
 
 
@@ -275,7 +278,7 @@ class Site(TenantModel):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'Site'
+        db_table = 'site'
         unique_together = ('code', 'organization')
 
 
@@ -289,7 +292,7 @@ class Permission(models.Model):
     description = models.TextField(null=True, blank=True)
 
     class Meta:
-        db_table = 'Permission'
+        db_table = 'permission'
 
 
 class Role(TenantModel):
@@ -298,7 +301,7 @@ class Role(TenantModel):
     permissions = models.ManyToManyField(Permission, related_name='roles')
 
     class Meta:
-        db_table = 'Role'
+        db_table = 'role'
         unique_together = ('name', 'organization')
 
 
@@ -314,7 +317,7 @@ class User(AbstractUser):
     )
 
     class Meta:
-        db_table = 'User'
+        db_table = 'user'
         constraints = [
             models.UniqueConstraint(fields=['username', 'organization'], name='unique_username_per_org')
         ]
@@ -342,7 +345,7 @@ class PlanCategory(models.Model):
     country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True, blank=True)
 
     class Meta:
-        db_table = 'PlanCategory'
+        db_table = 'plancategory'
 
 
 class SubscriptionPlan(models.Model):
@@ -362,7 +365,7 @@ class SubscriptionPlan(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'SubscriptionPlan'
+        db_table = 'subscriptionplan'
         ordering = ['sort_order', 'monthly_price']
 
     def __str__(self):
@@ -386,7 +389,7 @@ class SubscriptionPayment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'SubscriptionPayment'
+        db_table = 'subscriptionpayment'
 
     def __str__(self):
         return f"{self.organization.name} — {self.type} — ${self.amount}"
@@ -412,7 +415,7 @@ class PlanAddon(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'PlanAddon'
+        db_table = 'planaddon'
         ordering = ['addon_type', 'monthly_price']
 
     def __str__(self):

@@ -27,7 +27,7 @@ class Employee(TenantModel):
     nationality = models.CharField(max_length=100, null=True, blank=True)
 
     class Meta:
-        db_table = 'Employee'
+        db_table = 'employee'
 
     def __str__(self):
         return f"{self.first_name or ''} {self.last_name or ''}".strip() or self.employee_id

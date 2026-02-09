@@ -31,7 +31,7 @@ class ChartOfAccount(TenantModel):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'ChartOfAccount'
+        db_table = 'chartofaccount'
         unique_together = ('code', 'organization')
 
     def __str__(self):
@@ -47,7 +47,7 @@ class FinancialAccount(TenantModel):
     linked_coa = models.ForeignKey(ChartOfAccount, on_delete=models.SET_NULL, null=True, blank=True, db_column='ledger_account_id')
 
     class Meta:
-        db_table = 'FinancialAccount'
+        db_table = 'financialaccount'
 
     def __str__(self):
         return self.name
@@ -65,7 +65,7 @@ class FiscalYear(TenantModel):
     is_hard_locked = models.BooleanField(default=False)
 
     class Meta:
-        db_table = 'FiscalYear'
+        db_table = 'fiscalyear'
         unique_together = ('name', 'organization')
 
     def __str__(self):
@@ -80,7 +80,7 @@ class FiscalPeriod(TenantModel):
     is_closed = models.BooleanField(default=False)
 
     class Meta:
-        db_table = 'FiscalPeriod'
+        db_table = 'fiscalperiod'
         unique_together = ('name', 'fiscal_year')
 
 
@@ -99,7 +99,7 @@ class JournalEntry(TenantModel):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'JournalEntry'
+        db_table = 'journalentry'
 
     def __str__(self):
         return f"JE-{self.id}: {self.description[:50]}"
@@ -113,7 +113,7 @@ class JournalEntryLine(TenantModel):
     description = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
-        db_table = 'JournalEntryLine'
+        db_table = 'journalentryline'
 
 
 # =============================================================================
@@ -129,7 +129,7 @@ class Transaction(TenantModel):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'Transaction'
+        db_table = 'transaction'
 
 
 class TransactionSequence(TenantModel):
@@ -138,7 +138,7 @@ class TransactionSequence(TenantModel):
     next_number = models.IntegerField(default=1)
 
     class Meta:
-        db_table = 'TransactionSequence'
+        db_table = 'transactionsequence'
         unique_together = ('type', 'organization')
 
 
@@ -152,7 +152,7 @@ class BarcodeSettings(TenantModel):
     format = models.CharField(max_length=20, default='EAN13')
 
     class Meta:
-        db_table = 'BarcodeSettings'
+        db_table = 'barcodesettings'
 
 
 # =============================================================================
@@ -173,7 +173,7 @@ class Loan(TenantModel):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'Loan'
+        db_table = 'loan'
 
 
 class LoanInstallment(TenantModel):
@@ -185,7 +185,7 @@ class LoanInstallment(TenantModel):
     is_paid = models.BooleanField(default=False)
 
     class Meta:
-        db_table = 'LoanInstallment'
+        db_table = 'loaninstallment'
 
 
 # =============================================================================
@@ -212,4 +212,4 @@ class FinancialEvent(TenantModel):
     journal_entry = models.ForeignKey(JournalEntry, on_delete=models.SET_NULL, null=True, blank=True)
 
     class Meta:
-        db_table = 'FinancialEvent'
+        db_table = 'financialevent'

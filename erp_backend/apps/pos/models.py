@@ -42,7 +42,7 @@ class Order(TenantModel):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'Order'
+        db_table = 'pos_order'
 
     def __str__(self):
         return f"ORD-{self.id} ({self.type})"
@@ -62,4 +62,4 @@ class OrderLine(TenantModel):
     total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
 
     class Meta:
-        db_table = 'OrderLine'
+        db_table = 'orderline'

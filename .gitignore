@@ -44,6 +44,7 @@ next-env.d.ts
 
 # database
 /pg_data/
+/pgdata/
 *.sqlite
 *.sqlite-journal
 
@@ -68,3 +69,14 @@ tmp/
 temp/
 /media/
 /static/root/
+
+# Temp scripts
+erp_backend/rename_tables.py
+erp_backend/rename_kernel_tables.py
+erp_backend/rename_remaining_tables.py
+erp_backend/test_coa_visibility.py
+erp_backend/test_registration.py
+erp_backend/check_tables.py
+erp_backend/clear_migrations.py
+erp_backend/list_applied_migrations.py
+erp_backend/list_all_migrations.py

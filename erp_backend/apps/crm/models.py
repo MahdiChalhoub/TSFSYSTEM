@@ -32,7 +32,7 @@ class Contact(TenantModel):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'Contact'
+        db_table = 'contact'
 
     def __str__(self):
         return f"{self.name} ({self.type})"

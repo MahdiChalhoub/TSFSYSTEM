@@ -67,7 +67,7 @@ class PackageUpload(models.Model):
     backup_path = models.CharField(max_length=500, null=True, blank=True)
     
     class Meta:
-        db_table = 'packages_packageupload'
+        db_table = 'packageupload'
         ordering = ['-uploaded_at']
     
     def __str__(self):

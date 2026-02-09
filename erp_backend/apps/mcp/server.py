@@ -36,7 +36,7 @@ from mcp.types import (
 # CONFIGURATION
 # =============================================================================
 
-API_BASE_URL = os.getenv("DAJINGO_API_URL", "http://localhost:8000/api/v1/")
+API_BASE_URL = os.getenv("DAJINGO_API_URL", "http://localhost:8000/api/")
 API_KEY = os.getenv("DAJINGO_API_KEY", "")
 
 # =============================================================================
