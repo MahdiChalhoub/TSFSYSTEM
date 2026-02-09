@@ -101,7 +101,7 @@ class GlobalCurrency(models.Model):
     symbol = models.CharField(max_length=10)
     
     class Meta:
-        db_table = 'GlobalCurrency'
+        db_table = 'globalcurrency'
 
     def __str__(self):
         return f"{self.name} ({self.code})"
@@ -112,7 +112,7 @@ class Country(models.Model):
     name = models.CharField(max_length=255)
     
     class Meta:
-        db_table = 'Country'
+        db_table = 'country'
 
     def __str__(self):
         return self.name
@@ -434,48 +434,11 @@ class PlanAddon(models.Model):
 # PACKAGE STORAGE & DEPLOYMENT CENTER
 # =============================================================================
 
-class PackageUpload(models.Model):
-    PACKAGE_TYPES = (
-        ('kernel', 'Backend Kernel'),
-        ('frontend', 'Frontend Kernel'),
-        ('module', 'Module'),
-    )
-    STATUS_CHOICES = (
-        ('uploading', 'Uploading'),
-        ('ready', 'Ready'),
-        ('scheduled', 'Scheduled'),
-        ('applying', 'Applying'),
-        ('applied', 'Applied'),
-        ('failed', 'Failed'),
-        ('rolled_back', 'Rolled Back'),
-    )
-    
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    package_type = models.CharField(max_length=20, choices=PACKAGE_TYPES)
-    name = models.CharField(max_length=100)
-    version = models.CharField(max_length=50)
-    
-    file = models.FileField(upload_to='packages/', null=True, blank=True)
-    file_size = models.BigIntegerField(default=0)
-    upload_progress = models.IntegerField(default=0)
-    checksum = models.CharField(max_length=64, null=True, blank=True)
-    
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='uploading')
-    changelog = models.TextField(blank=True)
-    error_message = models.TextField(null=True, blank=True)
-    
-    uploaded_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, related_name='uploaded_packages')
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-    scheduled_for = models.DateTimeField(null=True, blank=True)
-    applied_at = models.DateTimeField(null=True, blank=True)
-    applied_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True, related_name='applied_packages')
-    
-    manifest = models.JSONField(default=dict, blank=True)
-    backup_path = models.CharField(max_length=500, null=True, blank=True)
-    
-    class Meta:
-        db_table = 'PackageUpload'
-        ordering = ['-uploaded_at']
+# PackageUpload is now managed in apps.packages.models
+try:
+    from apps.packages.models import PackageUpload
+except ImportError:
+    pass
     
     def __str__(self):
         return f"{self.name} v{self.version} ({self.get_package_type_display()})"
