@@ -5,57 +5,49 @@ Prevent conflicts when two or more AI agents work on the same codebase simultane
 
 ## Components
 
-### 1. `/agent-sync` Workflow (`.agent/workflows/agent-sync.md`)
-- Step-by-step protocol every agent must follow
-- Git pull/push at session start, during work, and at session end
-- File locking before editing
+### 1. Task Assignments (`.agent/TASK_ASSIGNMENTS.md`)
+- Module ownership map — defines which agent works on which module
+- Template prompt for starting multi-agent sessions
+- Shared files danger zone list
 
-### 2. Active Locks File (`.agent/ACTIVE_LOCKS.md`)
+### 2. Active Locks (`.agent/ACTIVE_LOCKS.md`)
 - Real-time file ownership registry
 - Agents claim files before editing, release when done
 - Push lock changes immediately so other agents see them
 
-### 3. Agent Sync Rule (`.agent/rules/agent-sync.md`)
-- Enforces the protocol — agents read this rule automatically
-- Short summary of the 4-step process
+### 3. Agent Sync Workflow (`.agent/workflows/agent-sync.md`)
+- 5-step protocol: pull → read coordination files → claim locks → work → release
+- turbo annotations for auto-running git commands
+- Stop conditions when conflicts detected
 
-### 4. Work-In-Progress Log (`.agent/WORK_IN_PROGRESS.md`)
-- Session handoff log — what each agent did, what they discovered
-- Warnings for the next agent
+### 4. Agent Sync Rule (`.agent/rules/agent-sync.md`)
+- 7 mandatory rules every agent follows automatically
+- Includes "never override" policy — check commit messages before reverting
 
-## How It Works
+### 5. Work-In-Progress Log (`.agent/WORK_IN_PROGRESS.md`)
+- Session handoff log — discoveries, warnings, files modified
 
+## How to Start Two Agents Safely
+
+Tell each agent at session start:
 ```
-Agent A starts                    Agent B starts
-    │                                  │
-    ▼                                  ▼
-git pull                           git pull
-    │                                  │
-    ▼                                  ▼
-Read ACTIVE_LOCKS.md              Read ACTIVE_LOCKS.md
-    │                                  │
-    ▼                                  ▼
-Lock: models.py, views.py        Lock: page.tsx, actions.ts
-    │                                  │
-    ▼                                  ▼
-Push lock → GitHub                Push lock → GitHub
-    │                                  │
-    ▼                                  ▼
-Edit models.py                    Edit page.tsx
-    │                                  │
-    ▼                                  ▼
-Commit + push                     Commit + push
-    │                                  │
-    ▼                                  ▼
-Release locks                     Release locks
+Agent 1: "You are Agent 1. Run /agent-sync first. Your assigned modules are: [Finance, Inventory]. Do NOT edit files outside your modules."
+
+Agent 2: "You are Agent 2. Run /agent-sync first. Your assigned modules are: [Frontend SaaS, CRM]. Do NOT edit files outside your modules."
 ```
 
-## Data Flow
-- **READ**: Agents read `ACTIVE_LOCKS.md` before any edit
-- **WRITE**: Agents write to `ACTIVE_LOCKS.md` to claim/release files
-- **SYNC**: Git serves as the single source of truth
+## Shared Files (Danger Zone)
+- `erp_backend/erp/models.py`
+- `erp_backend/erp/views.py`
+- `erp_backend/erp/services.py`
+- `erp_backend/erp/urls.py`
+- `erp_backend/erp_system/settings.py`
 
-## Files Created
-- `.agent/workflows/agent-sync.md` — Full workflow
-- `.agent/ACTIVE_LOCKS.md` — Lock registry
-- `.agent/rules/agent-sync.md` — Enforcement rule
+Only ONE agent may edit these at a time. Lock first, push lock, then edit.
+
+## Files
+- `.agent/TASK_ASSIGNMENTS.md`
+- `.agent/ACTIVE_LOCKS.md`
+- `.agent/workflows/agent-sync.md`
+- `.agent/rules/agent-sync.md`
+- `.agent/WORK_IN_PROGRESS.md`
