@@ -101,7 +101,7 @@ class GlobalCurrency(models.Model):
     symbol = models.CharField(max_length=10)
     
     class Meta:
-        db_table = 'GlobalCurrency'
+        db_table = 'globalcurrency'
 
     def __str__(self):
         return f"{self.name} ({self.code})"
@@ -112,7 +112,7 @@ class Country(models.Model):
     name = models.CharField(max_length=255)
     
     class Meta:
-        db_table = 'Country'
+        db_table = 'country'
 
     def __str__(self):
         return self.name
@@ -474,7 +474,7 @@ class PackageUpload(models.Model):
     backup_path = models.CharField(max_length=500, null=True, blank=True)
     
     class Meta:
-        db_table = 'PackageUpload'
+        db_table = 'packageupload'
         ordering = ['-uploaded_at']
     
     def __str__(self):

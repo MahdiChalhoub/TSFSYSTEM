@@ -72,7 +72,7 @@ class ModuleContract(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        db_table = 'ModuleContract'
+        db_table = 'modulecontract'
         verbose_name = 'Module Contract'
         verbose_name_plural = 'Module Contracts'
     
@@ -190,7 +190,7 @@ class ConnectorPolicy(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        db_table = 'ConnectorPolicy'
+        db_table = 'connectorpolicy'
         verbose_name = 'Connector Policy'
         verbose_name_plural = 'Connector Policies'
         ordering = ['-priority', 'target_module']
@@ -252,7 +252,7 @@ class BufferedRequest(models.Model):
     last_error = models.TextField(null=True, blank=True)
     
     class Meta:
-        db_table = 'BufferedRequest'
+        db_table = 'bufferedrequest'
         verbose_name = 'Buffered Request'
         verbose_name_plural = 'Buffered Requests'
         ordering = ['-created_at']
@@ -304,7 +304,7 @@ class ConnectorCache(models.Model):
     expires_at = models.DateTimeField()
     
     class Meta:
-        db_table = 'ConnectorCache'
+        db_table = 'connectorcache'
         verbose_name = 'Connector Cache'
         verbose_name_plural = 'Connector Cache Entries'
         indexes = [
@@ -371,7 +371,7 @@ class ConnectorLog(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
-        db_table = 'ConnectorLog'
+        db_table = 'connectorlog'
         verbose_name = 'Connector Log'
         verbose_name_plural = 'Connector Logs'
         ordering = ['-created_at']
