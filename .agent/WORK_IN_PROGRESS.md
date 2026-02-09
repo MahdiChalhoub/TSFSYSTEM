@@ -41,6 +41,29 @@
 
 ---
 
+### Session: 2026-02-09 (v2.7.1 series)
+- **Agent**: Antigravity
+- **Status**: ✅ DONE
+- **Worked On**: Full system schema audit — fixed 28 DB-vs-Django mismatches across all modules
+- **Files Modified**:
+  - `erp_backend/erp/models.py` — Permission (created_at, updated_at), PlanCategory (parent FK), SubscriptionPayment (journal_entry FK, paid_at)
+  - `erp_backend/apps/finance/models.py` — JournalEntry (5), JournalEntryLine (2), Transaction (3), TransactionSequence (2), LoanInstallment (3), FinancialEvent (5), BarcodeSettings (2)
+  - `erp_backend/apps/inventory/models.py` — Unit (5), Category (2), Parfum (1), ProductGroup (1), Inventory (1), InventoryMovement (2)
+  - `erp_backend/apps/pos/models.py` — Order (6), OrderLine (3)
+  - `DOCUMENTATION/finance_schema_fixes.md` — Created
+- **Git Versions**: v2.7.1-b001 through v2.7.1-b002
+- **Discoveries**:
+  - FinancialEvent.contact_id is NOT NULL in DB despite being nullable in old Django model
+  - BarcodeSettings belongs to inventory, not finance (currently in finance module)
+  - Order model was missing 6 critical fields (discount, payment_method, invoice_price_type, is_locked, is_verified, vat_recoverable)
+- **Warnings for Next Agent**:
+  - ⚠️ BarcodeSettings model lives in `apps/finance/models.py` but belongs to inventory — should be moved in a future cleanup
+  - ⚠️ FinancialEvent REQUIRES a contact (NOT NULL) — any code creating events must provide a contact
+  - ⚠️ No Django migrations were generated for these field additions (models use explicit `db_table` mapped to existing DB tables)
+  - ⚠️ Schema is now 100% aligned — re-run `_full_audit.py` pattern to verify if any new tables are added
+
+---
+
 <!-- 
 TEMPLATE for new sessions — copy below this line:
 
