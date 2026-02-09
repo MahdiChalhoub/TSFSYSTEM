@@ -140,7 +140,7 @@ export default function OrganizationDetailPage() {
 
     const [org, setOrg] = useState<any>(null)
     const [usage, setUsage] = useState<any>(null)
-    const [billing, setBilling] = useState<any[]>([])
+    const [billing, setBilling] = useState<any>({ history: [], balance: { total_paid: '0.00', total_credits: '0.00', net_balance: '0.00' }, client: null })
     const [modules, setModules] = useState<any[]>([])
     const [users, setUsers] = useState<any[]>([])
     const [sites, setSites] = useState<any[]>([])
@@ -189,7 +189,7 @@ export default function OrganizationDetailPage() {
                 ])
                 setOrg(orgData)
                 setUsage(usageData)
-                setBilling(Array.isArray(billingData) ? billingData : [])
+                setBilling(billingData?.history ? billingData : { history: Array.isArray(billingData) ? billingData : [], balance: { total_paid: '0.00', total_credits: '0.00', net_balance: '0.00' }, client: null })
                 setModules(Array.isArray(modulesData) ? modulesData : [])
                 setUsers(Array.isArray(usersData) ? usersData : [])
                 setSites(Array.isArray(sitesData) ? sitesData : [])
@@ -676,33 +676,92 @@ export default function OrganizationDetailPage() {
             {/* ─── Billing Tab ──────────────────────────────────────────── */}
             {activeTab === 'billing' && (
                 <div className="space-y-6">
-                    <Card className="border-emerald-100 bg-emerald-50/30 shadow-sm">
-                        <CardHeader>
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <CardTitle className="text-xl font-bold text-emerald-900">Subscription</CardTitle>
-                                    <CardDescription className="text-emerald-700">Current active plan</CardDescription>
+                    {/* Top Row: Subscription + Client Account */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Subscription Card */}
+                        <Card className="border-emerald-100 bg-emerald-50/30 shadow-sm">
+                            <CardHeader>
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <CardTitle className="text-xl font-bold text-emerald-900">Subscription</CardTitle>
+                                        <CardDescription className="text-emerald-700">Current active plan</CardDescription>
+                                    </div>
+                                    <Badge className="bg-emerald-600 text-white text-lg px-4 py-1">{usage?.plan?.name || 'Free Tier'}</Badge>
                                 </div>
-                                <Badge className="bg-emerald-600 text-white text-lg px-4 py-1">{usage?.plan?.name || 'Free Tier'}</Badge>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="p-5 bg-white rounded-2xl border border-emerald-100/50 flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Status</p>
-                                    {org.is_active ? (
-                                        <div className="flex items-center gap-2 text-emerald-600 font-black text-lg"><ShieldCheck size={20} /> ACTIVE</div>
-                                    ) : (
-                                        <div className="flex items-center gap-2 text-red-600 font-black text-lg"><AlertTriangle size={20} /> SUSPENDED</div>
-                                    )}
+                            </CardHeader>
+                            <CardContent>
+                                <div className="p-5 bg-white rounded-2xl border border-emerald-100/50 flex items-center justify-between">
+                                    <div>
+                                        <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Status</p>
+                                        {org.is_active ? (
+                                            <div className="flex items-center gap-2 text-emerald-600 font-black text-lg"><ShieldCheck size={20} /> ACTIVE</div>
+                                        ) : (
+                                            <div className="flex items-center gap-2 text-red-600 font-black text-lg"><AlertTriangle size={20} /> SUSPENDED</div>
+                                        )}
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Monthly</p>
+                                        <p className="text-2xl font-black text-gray-900">${usage?.plan?.monthly_price || '0.00'}</p>
+                                    </div>
                                 </div>
-                                <div className="text-right">
-                                    <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Monthly</p>
-                                    <p className="text-2xl font-black text-gray-900">${usage?.plan?.monthly_price || '0.00'}</p>
+                            </CardContent>
+                        </Card>
+
+                        {/* Client Account / Balance Card */}
+                        <Card className="border-gray-100 shadow-sm">
+                            <CardHeader>
+                                <CardTitle className="text-xl font-bold flex items-center gap-2">
+                                    <UserCircle size={18} className="text-gray-400" /> Account Owner
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                {billing.client ? (
+                                    <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-2">
+                                        <p className="font-black text-gray-900 text-lg">{billing.client.full_name}</p>
+                                        {billing.client.company_name && (
+                                            <p className="text-sm text-gray-500">{billing.client.company_name}</p>
+                                        )}
+                                        <div className="flex items-center gap-4 text-xs text-gray-400">
+                                            {billing.client.email && <span className="flex items-center gap-1"><Mail size={10} /> {billing.client.email}</span>}
+                                            {billing.client.phone && <span>{billing.client.phone}</span>}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 text-center">
+                                        <p className="text-sm text-amber-700 font-bold">No client assigned</p>
+                                        <p className="text-xs text-amber-500 mt-1">Assign from the Overview tab</p>
+                                    </div>
+                                )}
+
+                                {/* Balance Summary */}
+                                <div className="grid grid-cols-3 gap-2">
+                                    <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100 text-center">
+                                        <p className="text-[9px] text-emerald-500 font-bold uppercase tracking-wider">Total Paid</p>
+                                        <p className="text-lg font-black text-emerald-700">${billing.balance.total_paid}</p>
+                                    </div>
+                                    <div className="p-3 bg-amber-50 rounded-xl border border-amber-100 text-center">
+                                        <p className="text-[9px] text-amber-500 font-bold uppercase tracking-wider">Credits</p>
+                                        <p className="text-lg font-black text-amber-600">${billing.balance.total_credits}</p>
+                                    </div>
+                                    <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 text-center">
+                                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Net Balance</p>
+                                        <p className="text-lg font-black text-gray-900">${billing.balance.net_balance}</p>
+                                    </div>
                                 </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+
+                                {/* CRM Profile Link */}
+                                {billing.client && (
+                                    <Button
+                                        variant="outline"
+                                        className="w-full border-indigo-200 text-indigo-600 hover:bg-indigo-50 rounded-xl font-bold"
+                                        onClick={() => router.push(`/crm/contacts?search=${encodeURIComponent(billing.client.email)}`)}
+                                    >
+                                        <Users size={14} className="mr-2" /> View CRM Profile
+                                    </Button>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </div>
 
                     {/* Available Plans */}
                     {usage?.available_plans?.length > 0 && (
@@ -799,13 +858,18 @@ export default function OrganizationDetailPage() {
                     )}
 
                     <Card className="border-gray-100 shadow-sm">
-                        <CardHeader><CardTitle className="font-bold">Payment History</CardTitle></CardHeader>
+                        <CardHeader>
+                            <div className="flex justify-between items-center">
+                                <CardTitle className="font-bold">Payment History</CardTitle>
+                                <Badge className="bg-gray-100 text-gray-400 text-[9px]">Subscription Payments</Badge>
+                            </div>
+                        </CardHeader>
                         <CardContent>
-                            {billing.length === 0 ? (
+                            {billing.history.length === 0 ? (
                                 <div className="text-center py-12 text-gray-400 text-sm italic">No billing records found for this organization.</div>
                             ) : (
                                 <div className="space-y-2">
-                                    {billing.map((p: any) => (
+                                    {billing.history.map((p: any) => (
                                         <div key={p.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-gray-200 transition-all">
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2 mb-1">
