@@ -1,53 +1,61 @@
 # Billing Tab Enhancements
 
 ## Goal
-Display client account, balance summary, and CRM profile link on the organization billing tab.
+Display client billing information, balance summary, and CRM profile links in the organization detail page Billing tab.
 
-## Data Flow
+## Data Sources
 
 ### READ
-- **Backend**: `GET /api/saas/org-modules/{id}/billing/` returns:
-  - `history[]` — subscription payment records (from `SubscriptionPayment` table)
-  - `balance` — `{ total_paid, total_credits, net_balance }` calculated from completed payments
-  - `client` — `{ id, full_name, email, phone, company_name }` from linked `SaaSClient`
+- **SubscriptionPayment** table: payment history for the organization
+- **SaaSClient** table (via `org.client`): account owner details
+- **SubscriptionPlan** table (via SubscriptionPayment joins): plan names
 
 ### SAVE
-- No writes from billing tab (read-only view)
-- Balance is computed on-the-fly from `SubscriptionPayment` records
+- **SubscriptionPayment** table: new records on plan switch (via `change-plan` endpoint)
 
-## Frontend Variables
-| Variable | Type | Source |
-|---|---|---|
-| `billing.history` | `array` | Payment history records |
-| `billing.balance.total_paid` | `string` | Sum of completed non-credit payments |
-| `billing.balance.total_credits` | `string` | Sum of completed credit notes |
-| `billing.balance.net_balance` | `string` | `total_paid - total_credits` |
-| `billing.client` | `object|null` | Linked SaaSClient info |
+## Variables User Interacts With
+- Balance summary: Total Paid, Credits, Net Balance (read-only)
+- Account Owner card: name, company, email, phone (read-only)
+- "View CRM Profile" button: links to CRM contacts filtered by client email
+- Plan switch dialog: selects new plan, confirms upgrade/downgrade
 
-## UI Components
+## Workflow
 
-### Account Owner Card
-- Shows client name, company, email, phone
-- If no client: amber warning "No client assigned — assign from Overview tab"
-- **"View CRM Profile"** button → navigates to `/crm/contacts?search={email}`
+1. User navigates to Organization Detail → Billing tab
+2. Frontend calls `GET /api/erp/proxy/saas/org-modules/{orgId}/billing/`
+3. Backend returns structured response: `{ history, balance, client }`
+4. UI renders:
+   - **Subscription card** (left column): current plan info
+   - **Account Owner card** (right column): client name, email, phone, company
+   - **Balance Summary**: computed from COMPLETED/PAID SubscriptionPayments
+   - **Payment History**: list of SubscriptionPayment records
 
-### Balance Summary (3-column grid)
-- **Total Paid** (emerald) — sum of completed payments
-- **Credits** (amber) — sum of credit notes
-- **Net Balance** (gray) — net amount
+## How It Achieves Its Goal
+- The billing endpoint aggregates data from SubscriptionPayment (history + balance) and SaaSClient (client info)
+- Balance is computed as: total_paid (excluding CREDIT_NOTEs) minus total credits
+- The "View CRM Profile" button navigates to `/crm/contacts?search={email}` to locate the synced CRM Contact
 
-### Payment History
-- Tagged with "Subscription Payments" badge
-- **Future**: Will be replaced with ledger entries from the finance module
-
-## Files Changed
-| File | Change |
+## Related Changes (v2.7.0)
+| Build | Change |
 |---|---|
-| `erp/views_saas_modules.py` | Enhanced `billing` endpoint: structured response with balance + client |
-| `organizations/[id]/page.tsx` | Added Account Owner card, balance grid, CRM link, updated history ref |
+| b003 | Billing endpoint returns `{ history, balance, client }` |
+| b004 | SaaSClient → CRM Contact sync (`sync_to_crm_contact`) |
+| b005 | Plan badge on org list cards |
+| b006 | Fixed plan switch 500 (missing `billing_cycle` field) |
+| b008 | Fixed hydration mismatch on organizations filter bar |
 
-## Future Integration
-Payment history should eventually pull from the **finance module's ledger** (journal entries), not just `SubscriptionPayment`. This requires:
-1. Cross-org data access via ConnectorEngine
-2. Mapping SaaSClient to a CRM Contact record
-3. Querying ledger entries for the client's account
+## Database Tables
+
+### SubscriptionPayment
+| Column | Type | Notes |
+|---|---|---|
+| id | bigint | PK |
+| organization_id | uuid | FK → Organization |
+| plan_id | uuid | FK → SubscriptionPlan |
+| previous_plan_id | uuid | FK → SubscriptionPlan (nullable) |
+| amount | decimal | Payment amount |
+| billing_cycle | varchar(20) | MONTHLY, ANNUAL, ONE_TIME |
+| type | varchar(20) | PURCHASE, CREDIT_NOTE, RENEWAL |
+| status | varchar(20) | PENDING, COMPLETED, PAID |
+| notes | text | Audit notes |
+| created_at | timestamp | Auto-set on create |
