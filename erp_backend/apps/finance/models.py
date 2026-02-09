@@ -162,6 +162,8 @@ class BarcodeSettings(TenantModel):
     prefix = models.CharField(max_length=10, default="200")
     next_sequence = models.IntegerField(default=1000)
     format = models.CharField(max_length=20, default='EAN13')
+    is_enabled = models.BooleanField(default=True)
+    length = models.IntegerField(default=13)
 
     class Meta:
         db_table = 'BarcodeSettings'

@@ -287,6 +287,8 @@ class Permission(models.Model):
     code = models.CharField(max_length=100, unique=True)
     name = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'Permission'
@@ -343,6 +345,7 @@ class PlanCategory(models.Model):
     name = models.CharField(max_length=255)
     type = models.CharField(max_length=20)
     country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True, blank=True)
+    parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='children')
 
     class Meta:
         db_table = 'PlanCategory'
@@ -386,6 +389,8 @@ class SubscriptionPayment(models.Model):
     type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='PURCHASE')
     status = models.CharField(max_length=20, default='PENDING')
     notes = models.TextField(blank=True, default='')
+    journal_entry = models.ForeignKey('finance.JournalEntry', on_delete=models.SET_NULL, null=True, blank=True, help_text="Linked accounting journal entry")
+    paid_at = models.DateTimeField(null=True, blank=True, help_text="When payment was confirmed")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
