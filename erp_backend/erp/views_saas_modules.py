@@ -1012,10 +1012,11 @@ class OrgModuleViewSet(viewsets.ViewSet):
 
     @action(detail=True, methods=['get'])
     def billing(self, request, pk=None):
-        """Returns billing/payment history for an organization"""
+        """Returns billing/payment history + balance for an organization"""
         from erp.models import SubscriptionPayment
+        from django.db.models import Sum, Q
         try:
-            org = Organization.objects.get(id=pk)
+            org = Organization.objects.select_related('client').get(id=pk)
         except Organization.DoesNotExist:
             return Response({'error': 'Organization not found'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -1023,7 +1024,7 @@ class OrgModuleViewSet(viewsets.ViewSet):
             organization=org
         ).select_related('plan').order_by('-created_at')[:50]
 
-        data = [{
+        history = [{
             'id': str(p.id),
             'plan_name': p.plan.name if p.plan else 'Unknown',
             'amount': str(p.amount),
@@ -1034,7 +1035,36 @@ class OrgModuleViewSet(viewsets.ViewSet):
             'created_at': p.created_at.isoformat(),
         } for p in payments]
 
-        return Response(data)
+        # Calculate balance from completed payments
+        completed = SubscriptionPayment.objects.filter(
+            organization=org, status__in=['COMPLETED', 'PAID']
+        )
+        total_paid = completed.exclude(type='CREDIT_NOTE').aggregate(
+            total=Sum('amount'))['total'] or 0
+        total_credits = completed.filter(type='CREDIT_NOTE').aggregate(
+            total=Sum('amount'))['total'] or 0
+        net_balance = float(total_paid) - float(total_credits)
+
+        # Client info for billing card
+        client_data = None
+        if org.client:
+            client_data = {
+                'id': str(org.client.id),
+                'full_name': org.client.full_name,
+                'email': org.client.email,
+                'phone': org.client.phone,
+                'company_name': org.client.company_name,
+            }
+
+        return Response({
+            'history': history,
+            'balance': {
+                'total_paid': f'{float(total_paid):.2f}',
+                'total_credits': f'{float(total_credits):.2f}',
+                'net_balance': f'{net_balance:.2f}',
+            },
+            'client': client_data,
+        })
 
     # ─── User Management Endpoints ────────────────────────────────────
 
