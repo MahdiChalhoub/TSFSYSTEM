@@ -23,7 +23,8 @@ class ModuleContract(models.Model):
     module = models.OneToOneField(
         'SystemModule',
         on_delete=models.CASCADE,
-        related_name='contract'
+        related_name='contract',
+        null=True, blank=True
     )
     
     # What this module provides to others
@@ -68,8 +69,8 @@ class ModuleContract(models.Model):
     )
     
     version = models.CharField(max_length=50, default='1.0.0')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
     
     class Meta:
         db_table = 'modulecontract'
@@ -109,11 +110,13 @@ class ConnectorPolicy(models.Model):
     # Target module and endpoint
     target_module = models.CharField(
         max_length=100,
+        null=True, blank=True,
         help_text="Module code (e.g., 'inventory') or '*' for global"
     )
     target_endpoint = models.CharField(
         max_length=255,
         default='*',
+        null=True, blank=True,
         help_text="Specific endpoint or '*' for all endpoints"
     )
     
@@ -186,8 +189,8 @@ class ConnectorPolicy(models.Model):
         help_text="Higher priority policies take precedence"
     )
     is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
     
     class Meta:
         db_table = 'connectorpolicy'
@@ -217,20 +220,21 @@ class BufferedRequest(models.Model):
     ]
     
     # Target information
-    target_module = models.CharField(max_length=100)
-    target_endpoint = models.CharField(max_length=255)
+    target_module = models.CharField(max_length=100, null=True, blank=True)
+    target_endpoint = models.CharField(max_length=255, null=True, blank=True)
     
     # Source information
     source_module = models.CharField(max_length=100, null=True, blank=True)
     organization = models.ForeignKey(
         'Organization',
         on_delete=models.CASCADE,
-        related_name='buffered_requests'
+        related_name='buffered_requests',
+        null=True, blank=True
     )
     
     # Request data
-    method = models.CharField(max_length=10, default='POST')
-    payload = models.JSONField(default=dict)
+    method = models.CharField(max_length=10, default='POST', null=True, blank=True)
+    payload = models.JSONField(default=dict, null=True, blank=True)
     headers = models.JSONField(default=dict, blank=True)
     
     # Tracking
@@ -243,8 +247,8 @@ class BufferedRequest(models.Model):
     max_retries = models.IntegerField(default=3)
     
     # Timestamps
-    created_at = models.DateTimeField(auto_now_add=True)
-    expires_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
     replayed_at = models.DateTimeField(null=True, blank=True)
     last_attempt_at = models.DateTimeField(null=True, blank=True)
     
@@ -288,20 +292,21 @@ class ConnectorCache(models.Model):
     """
     
     cache_key = models.CharField(max_length=500, unique=True)
-    target_module = models.CharField(max_length=100)
-    target_endpoint = models.CharField(max_length=255)
+    target_module = models.CharField(max_length=100, null=True, blank=True)
+    target_endpoint = models.CharField(max_length=255, null=True, blank=True)
     organization = models.ForeignKey(
         'Organization',
         on_delete=models.CASCADE,
-        related_name='connector_cache'
+        related_name='connector_cache',
+        null=True, blank=True
     )
     
     # Cached data
-    response_data = models.JSONField()
+    response_data = models.JSONField(null=True, blank=True)
     
     # Timestamps
-    cached_at = models.DateTimeField(auto_now=True)
-    expires_at = models.DateTimeField()
+    cached_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
     
     class Meta:
         db_table = 'connectorcache'
@@ -336,13 +341,13 @@ class ConnectorLog(models.Model):
     
     # Request info
     source_module = models.CharField(max_length=100, null=True, blank=True)
-    target_module = models.CharField(max_length=100)
-    target_endpoint = models.CharField(max_length=255)
-    operation = models.CharField(max_length=10)  # READ, WRITE, EVENT
+    target_module = models.CharField(max_length=100, null=True, blank=True)
+    target_endpoint = models.CharField(max_length=255, null=True, blank=True)
+    operation = models.CharField(max_length=10, null=True, blank=True)  # READ, WRITE, EVENT
     
     # State and decision
-    module_state = models.CharField(max_length=20)  # available, missing, disabled, unauthorized
-    decision = models.CharField(max_length=20, choices=DECISION_CHOICES)
+    module_state = models.CharField(max_length=20, null=True, blank=True)  # available, missing, disabled, unauthorized
+    decision = models.CharField(max_length=20, choices=DECISION_CHOICES, null=True, blank=True)
     policy_applied = models.ForeignKey(
         ConnectorPolicy,
         on_delete=models.SET_NULL,
@@ -354,7 +359,8 @@ class ConnectorLog(models.Model):
     organization = models.ForeignKey(
         'Organization',
         on_delete=models.CASCADE,
-        related_name='connector_logs'
+        related_name='connector_logs',
+        null=True, blank=True
     )
     user = models.ForeignKey(
         'User',
@@ -368,7 +374,7 @@ class ConnectorLog(models.Model):
     response_time_ms = models.IntegerField(null=True, blank=True)
     error_message = models.TextField(null=True, blank=True)
     
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     
     class Meta:
         db_table = 'connectorlog'

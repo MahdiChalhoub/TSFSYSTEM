@@ -1,5 +1,6 @@
 import logging
 from django.db import transaction
+from django.conf import settings
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -148,8 +149,10 @@ def register_business_view(request):
         }, status=status.HTTP_201_CREATED)
 
     except Exception as e:
-        logger.error(f"Business registration failed for '{slug}': {e}")
+        import traceback
+        error_traceback = traceback.format_exc()
+        logger.error(f"Business registration failed for '{slug}': {e}\n{error_traceback}")
         return Response(
-            {"error": str(e)},
+            {"error": str(e), "traceback": error_traceback if settings.DEBUG else None},
             status=status.HTTP_400_BAD_REQUEST
         )

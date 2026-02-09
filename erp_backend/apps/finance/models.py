@@ -27,8 +27,8 @@ class ChartOfAccount(TenantModel):
     requires_zero_balance = models.BooleanField(default=False)
     syscohada_code = models.CharField(max_length=20, null=True, blank=True)
     syscohada_class = models.CharField(max_length=10, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
     class Meta:
         db_table = 'chartofaccount'
@@ -59,8 +59,8 @@ class FinancialAccount(TenantModel):
 
 class FiscalYear(TenantModel):
     name = models.CharField(max_length=100)
-    start_date = models.DateField()
-    end_date = models.DateField()
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
     is_closed = models.BooleanField(default=False)
     is_hard_locked = models.BooleanField(default=False)
 
@@ -75,8 +75,8 @@ class FiscalYear(TenantModel):
 class FiscalPeriod(TenantModel):
     fiscal_year = models.ForeignKey(FiscalYear, on_delete=models.CASCADE, related_name='periods')
     name = models.CharField(max_length=100)
-    start_date = models.DateField()
-    end_date = models.DateField()
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
     is_closed = models.BooleanField(default=False)
 
     class Meta:
@@ -89,7 +89,7 @@ class FiscalPeriod(TenantModel):
 # =============================================================================
 
 class JournalEntry(TenantModel):
-    transaction_date = models.DateTimeField()
+    transaction_date = models.DateTimeField(null=True, blank=True)
     description = models.TextField()
     fiscal_year = models.ForeignKey(FiscalYear, on_delete=models.PROTECT, null=True, blank=True)
     fiscal_period = models.ForeignKey(FiscalPeriod, on_delete=models.PROTECT, null=True, blank=True, related_name='journal_entries')
@@ -100,8 +100,8 @@ class JournalEntry(TenantModel):
     is_locked = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
     posted_at = models.DateTimeField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
     class Meta:
         db_table = 'journalentry'
@@ -112,7 +112,7 @@ class JournalEntry(TenantModel):
 
 class JournalEntryLine(TenantModel):
     journal_entry = models.ForeignKey(JournalEntry, on_delete=models.CASCADE, related_name='lines')
-    account = models.ForeignKey(ChartOfAccount, on_delete=models.PROTECT)
+    account = models.ForeignKey(ChartOfAccount, on_delete=models.SET_NULL, null=True, blank=True)
     debit = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     credit = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     description = models.CharField(max_length=255, null=True, blank=True)
@@ -136,7 +136,7 @@ class Transaction(TenantModel):
     reference = models.CharField(max_length=100, null=True, blank=True)
     reference_id = models.CharField(max_length=100, null=True, blank=True)
     site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         db_table = 'transaction'
@@ -183,8 +183,8 @@ class Loan(TenantModel):
     start_date = models.DateField(null=True, blank=True)
     payment_frequency = models.CharField(max_length=50, default='MONTHLY')
     status = models.CharField(max_length=20, default='DRAFT')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
     class Meta:
         db_table = 'loan'
@@ -192,7 +192,7 @@ class Loan(TenantModel):
 
 class LoanInstallment(TenantModel):
     loan = models.ForeignKey(Loan, on_delete=models.CASCADE, related_name='installments')
-    due_date = models.DateField()
+    due_date = models.DateField(null=True, blank=True)
     total_amount = models.DecimalField(max_digits=15, decimal_places=2)
     principal_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     interest_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
@@ -221,16 +221,16 @@ class FinancialEvent(TenantModel):
     event_type = models.CharField(max_length=50, choices=EVENT_TYPES)
     amount = models.DecimalField(max_digits=15, decimal_places=2)
     currency = models.CharField(max_length=10, default='USD')
-    contact = models.ForeignKey('crm.Contact', on_delete=models.PROTECT)
+    contact = models.ForeignKey('crm.Contact', on_delete=models.SET_NULL, null=True, blank=True)
     loan = models.ForeignKey(Loan, on_delete=models.SET_NULL, null=True, blank=True)
     transaction = models.ForeignKey(Transaction, on_delete=models.SET_NULL, null=True, blank=True, related_name='financial_events')
-    date = models.DateTimeField()
+    date = models.DateTimeField(null=True, blank=True)
     reference = models.CharField(max_length=100, null=True, blank=True)
     notes = models.TextField(null=True, blank=True)
     status = models.CharField(max_length=20, default='PENDING')
     journal_entry = models.ForeignKey(JournalEntry, on_delete=models.SET_NULL, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
     class Meta:
         db_table = 'financialevent'

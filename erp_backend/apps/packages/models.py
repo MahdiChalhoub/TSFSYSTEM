@@ -49,7 +49,7 @@ class PackageUpload(models.Model):
         null=True, 
         related_name='pkg_uploaded_packages'
     )
-    uploaded_at = models.DateTimeField(auto_now_add=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     scheduled_for = models.DateTimeField(null=True, blank=True)
     applied_at = models.DateTimeField(null=True, blank=True)
     applied_by = models.ForeignKey(

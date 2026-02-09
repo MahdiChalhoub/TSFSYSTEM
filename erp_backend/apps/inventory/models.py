@@ -35,7 +35,7 @@ class Category(TenantModel):
     code = models.CharField(max_length=50, null=True, blank=True)
     short_name = models.CharField(max_length=50, null=True, blank=True)
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         db_table = 'category'
@@ -49,7 +49,7 @@ class Brand(TenantModel):
     name = models.CharField(max_length=255)
     short_name = models.CharField(max_length=50, null=True, blank=True)
     categories = models.ManyToManyField(Category, blank=True, related_name='brands')
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         db_table = 'brand'
@@ -115,8 +115,8 @@ class Product(TenantModel):
 
     status = models.CharField(max_length=20, default='ACTIVE')
     is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
     class Meta:
         db_table = 'product'
@@ -173,7 +173,7 @@ class InventoryMovement(TenantModel):
     reason = models.TextField(null=True, blank=True)
     cost_price = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     cost_price_ht = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         db_table = 'inventorymovement'

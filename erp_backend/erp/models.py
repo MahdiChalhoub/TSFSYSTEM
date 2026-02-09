@@ -55,8 +55,8 @@ class SystemModule(models.Model):
     icon = models.CharField(max_length=50, blank=True, default='', help_text="Lucide icon name (e.g. 'shopping-cart', 'bar-chart')")
     manifest = models.JSONField(default=dict)
     checksum = models.CharField(max_length=64)
-    installed_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    installed_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
     class Meta:
         db_table = 'systemmodule'
@@ -74,7 +74,7 @@ class SystemModuleLog(models.Model):
     status = models.CharField(max_length=20)
     logs = models.TextField(blank=True, default='')
     performed_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True)
-    timestamp = models.DateTimeField(auto_now_add=True)
+    timestamp = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         db_table = 'systemmodulelog'
@@ -86,7 +86,7 @@ class SystemUpdate(models.Model):
     release_date = models.DateTimeField(null=True, blank=True)
     is_applied = models.BooleanField(default=False)
     applied_at = models.DateTimeField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     package_hash = models.CharField(max_length=64, null=True, blank=True)
     metadata = models.JSONField(default=dict, blank=True)
 
@@ -134,8 +134,8 @@ class SaaSClient(models.Model):
     country = models.CharField(max_length=100, blank=True, default='')
     is_active = models.BooleanField(default=True)
     notes = models.TextField(blank=True, default='')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
     class Meta:
         db_table = 'saasclient'
@@ -201,8 +201,8 @@ class Organization(models.Model):
     slug = models.SlugField(unique=True)
     is_active = models.BooleanField(default=True)
     is_read_only = models.BooleanField(default=False)  # Middleware blocks writes when True (expired subscription)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
     
     logo = models.ImageField(upload_to='logos/', null=True, blank=True)
     business_email = models.EmailField(null=True, blank=True)
@@ -259,7 +259,7 @@ class OrganizationModule(models.Model):
     module_name = models.CharField(max_length=100, default='legacy')
     is_enabled = models.BooleanField(default=True)
     active_features = models.JSONField(default=list, blank=True)
-    granted_at = models.DateTimeField(auto_now_add=True)
+    granted_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         db_table = 'organizationmodule'
@@ -274,8 +274,8 @@ class Site(TenantModel):
     phone = models.CharField(max_length=50, null=True, blank=True)
     vat_number = models.CharField(max_length=100, null=True, blank=True)
     is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
     class Meta:
         db_table = 'site'
@@ -290,8 +290,8 @@ class Permission(models.Model):
     code = models.CharField(max_length=100, unique=True)
     name = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
     class Meta:
         db_table = 'permission'
@@ -302,8 +302,8 @@ class Role(TenantModel):
     description = models.TextField(null=True, blank=True)
     permissions = models.ManyToManyField(Permission, related_name='roles')
     is_public_requestable = models.BooleanField(default=False, help_text="Can users self-request this role during registration")
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
     class Meta:
         db_table = 'role'
@@ -367,8 +367,8 @@ class SubscriptionPlan(models.Model):
     is_public = models.BooleanField(default=True, help_text="Public plans show on landing/pricing page. Private plans are org-specific.")
     sort_order = models.IntegerField(default=0, help_text="Display order on pricing pages (lower = first)")
     trial_days = models.IntegerField(default=0, help_text="Free trial duration in days. 0 = no trial.")
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
     class Meta:
         db_table = 'subscriptionplan'
@@ -394,7 +394,7 @@ class SubscriptionPayment(models.Model):
     notes = models.TextField(blank=True, default='')
     journal_entry = models.ForeignKey('finance.JournalEntry', on_delete=models.SET_NULL, null=True, blank=True, help_text="Linked accounting journal entry")
     paid_at = models.DateTimeField(null=True, blank=True, help_text="When payment was confirmed")
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         db_table = 'subscriptionpayment'
@@ -419,8 +419,8 @@ class PlanAddon(models.Model):
     annual_price = models.DecimalField(max_digits=15, decimal_places=2)
     is_active = models.BooleanField(default=True)
     plans = models.ManyToManyField(SubscriptionPlan, related_name='addons', blank=True, help_text="Plans that can use this add-on. Empty = available to all.")
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
     class Meta:
         db_table = 'planaddon'
@@ -485,5 +485,13 @@ except ImportError:
 # HR Module
 try:
     from apps.hr.models import Employee  # noqa: E402, F401
+except ImportError:
+    pass
+# Connector Infrastructure
+try:
+    from .connector_models import (
+        ModuleContract, ConnectorPolicy, BufferedRequest,
+        ConnectorCache, ConnectorLog
+    )
 except ImportError:
     pass
