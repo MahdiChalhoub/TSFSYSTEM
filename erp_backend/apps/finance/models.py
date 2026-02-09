@@ -92,11 +92,16 @@ class JournalEntry(TenantModel):
     transaction_date = models.DateTimeField()
     description = models.TextField()
     fiscal_year = models.ForeignKey(FiscalYear, on_delete=models.PROTECT, null=True, blank=True)
+    fiscal_period = models.ForeignKey(FiscalPeriod, on_delete=models.PROTECT, null=True, blank=True, related_name='journal_entries')
     status = models.CharField(max_length=20, default='DRAFT')
     reference = models.CharField(max_length=100, null=True, blank=True)
     scope = models.CharField(max_length=20, default='OFFICIAL')
     site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True)
+    is_locked = models.BooleanField(default=False)
+    is_verified = models.BooleanField(default=False)
+    posted_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'JournalEntry'
@@ -111,6 +116,8 @@ class JournalEntryLine(TenantModel):
     debit = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     credit = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     description = models.CharField(max_length=255, null=True, blank=True)
+    contact = models.ForeignKey('crm.Contact', on_delete=models.SET_NULL, null=True, blank=True, related_name='journal_lines')
+    employee = models.ForeignKey('erp.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='journal_lines')
 
     class Meta:
         db_table = 'JournalEntryLine'
@@ -124,8 +131,11 @@ class Transaction(TenantModel):
     account = models.ForeignKey(FinancialAccount, on_delete=models.CASCADE, related_name='transactions')
     amount = models.DecimalField(max_digits=15, decimal_places=2)
     type = models.CharField(max_length=10)
+    scope = models.CharField(max_length=20, default='OFFICIAL')
     description = models.CharField(max_length=255, null=True, blank=True)
     reference = models.CharField(max_length=100, null=True, blank=True)
+    reference_id = models.CharField(max_length=100, null=True, blank=True)
+    site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -135,7 +145,9 @@ class Transaction(TenantModel):
 class TransactionSequence(TenantModel):
     type = models.CharField(max_length=50)
     prefix = models.CharField(max_length=20, null=True, blank=True)
+    suffix = models.CharField(max_length=20, null=True, blank=True)
     next_number = models.IntegerField(default=1)
+    padding = models.IntegerField(default=6)
 
     class Meta:
         db_table = 'TransactionSequence'
@@ -182,7 +194,10 @@ class LoanInstallment(TenantModel):
     total_amount = models.DecimalField(max_digits=15, decimal_places=2)
     principal_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     interest_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    paid_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     is_paid = models.BooleanField(default=False)
+    status = models.CharField(max_length=20, default='PENDING')
+    paid_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = 'LoanInstallment'
@@ -203,13 +218,17 @@ class FinancialEvent(TenantModel):
     )
     event_type = models.CharField(max_length=50, choices=EVENT_TYPES)
     amount = models.DecimalField(max_digits=15, decimal_places=2)
-    contact = models.ForeignKey('crm.Contact', on_delete=models.PROTECT, null=True, blank=True)
+    currency = models.CharField(max_length=10, default='USD')
+    contact = models.ForeignKey('crm.Contact', on_delete=models.PROTECT)
     loan = models.ForeignKey(Loan, on_delete=models.SET_NULL, null=True, blank=True)
+    transaction = models.ForeignKey(Transaction, on_delete=models.SET_NULL, null=True, blank=True, related_name='financial_events')
     date = models.DateTimeField()
     reference = models.CharField(max_length=100, null=True, blank=True)
     notes = models.TextField(null=True, blank=True)
     status = models.CharField(max_length=20, default='PENDING')
     journal_entry = models.ForeignKey(JournalEntry, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'FinancialEvent'
