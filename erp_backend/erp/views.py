@@ -286,6 +286,9 @@ class OrganizationViewSet(viewsets.ModelViewSet):
             )
             org.client = client
             org.save(update_fields=['client'])
+
+            # Sync client to CRM Contact in SaaS org
+            client.sync_to_crm_contact()
             
             return Response(self.get_serializer(org).data, status=status.HTTP_201_CREATED)
         except Exception as e:

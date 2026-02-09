@@ -1360,6 +1360,9 @@ class SaaSClientViewSet(viewsets.ViewSet):
             notes=data.get('notes', ''),
         )
 
+        # Sync to CRM Contact in SaaS org
+        client.sync_to_crm_contact()
+
         return Response({
             'id': str(client.id),
             'full_name': client.full_name,

@@ -145,7 +145,7 @@ export default function ContactManager({
                                 Number(contact.balance) > 0 ? "text-emerald-600" : Number(contact.balance) < 0 ? "text-rose-600" : "text-gray-400"
                             )}>
                                 {Number(contact.balance) > 0 ? <TrendingUp size={16} /> : Number(contact.balance) < 0 ? <TrendingDown size={16} /> : null}
-                                ${Math.abs(Number(contact.balance)).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                ${Math.abs(Number(contact.balance)).toFixed(2)}
                             </div>
                             <button className="mt-4 w-full py-2.5 rounded-xl bg-white border border-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all shadow-sm">
                                 Full Statement

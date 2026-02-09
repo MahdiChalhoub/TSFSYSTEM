@@ -152,6 +152,41 @@ class SaaSClient(models.Model):
     def organization_count(self):
         return self.organizations.count()
 
+    def sync_to_crm_contact(self):
+        """
+        Create or update a CRM Contact record in the SaaS org for this client.
+        This ensures the client appears in /crm/contacts for the SaaS admin.
+        """
+        try:
+            from apps.crm.models import Contact
+            from decimal import Decimal
+            saas_org = Organization.objects.filter(slug='saas').first()
+            if not saas_org:
+                return None
+
+            display_name = self.full_name
+            if self.company_name:
+                display_name = f"{self.full_name} ({self.company_name})"
+
+            contact, created = Contact.objects.update_or_create(
+                email=self.email,
+                organization=saas_org,
+                defaults={
+                    'name': display_name,
+                    'type': 'CUSTOMER',
+                    'phone': self.phone or '',
+                    'address': self.address or '',
+                    'customer_type': 'SAAS',
+                    'balance': Decimal('0.00'),
+                    'credit_limit': Decimal('0.00'),
+                    'airsi_tax_rate': Decimal('0.00'),
+                    'is_airsi_subject': False,
+                }
+            )
+            return contact
+        except Exception:
+            return None
+
 
 # =============================================================================
 # ORGANIZATION & MULTI-TENANCY INFRASTRUCTURE
