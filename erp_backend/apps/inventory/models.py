@@ -15,7 +15,12 @@ class Unit(TenantModel):
     code = models.CharField(max_length=50)
     name = models.CharField(max_length=255)
     short_name = models.CharField(max_length=20, null=True, blank=True)
+    type = models.CharField(max_length=50, default='UNIT')
     conversion_factor = models.DecimalField(max_digits=15, decimal_places=6, default=1.0)
+    base_unit = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='derived_units')
+    allow_fraction = models.BooleanField(default=True)
+    needs_balance = models.BooleanField(default=False)
+    balance_code_structure = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         db_table = 'Unit'
@@ -27,6 +32,8 @@ class Unit(TenantModel):
 
 class Category(TenantModel):
     name = models.CharField(max_length=255)
+    code = models.CharField(max_length=50, null=True, blank=True)
+    short_name = models.CharField(max_length=50, null=True, blank=True)
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -54,6 +61,7 @@ class Brand(TenantModel):
 
 class Parfum(TenantModel):
     name = models.CharField(max_length=255)
+    short_name = models.CharField(max_length=50, null=True, blank=True)
     categories = models.ManyToManyField(Category, blank=True, related_name='parfums')
 
     class Meta:
@@ -70,6 +78,7 @@ class ProductGroup(TenantModel):
     parfum = models.ForeignKey(Parfum, on_delete=models.SET_NULL, null=True, blank=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
+    image = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         db_table = 'ProductGroup'
@@ -142,6 +151,7 @@ class Inventory(TenantModel):
     quantity = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
     expiry_date = models.DateField(null=True, blank=True)
     batch_number = models.CharField(max_length=100, null=True, blank=True)
+    batch = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='sub_batches')
 
     class Meta:
         db_table = 'Inventory'
@@ -160,6 +170,8 @@ class InventoryMovement(TenantModel):
     type = models.CharField(max_length=20, choices=MOVEMENT_TYPES)
     quantity = models.DecimalField(max_digits=15, decimal_places=2)
     reference = models.CharField(max_length=100, null=True, blank=True)
+    reason = models.TextField(null=True, blank=True)
+    cost_price = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     cost_price_ht = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     created_at = models.DateTimeField(auto_now_add=True)
 
