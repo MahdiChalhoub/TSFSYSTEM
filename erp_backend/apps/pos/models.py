@@ -42,8 +42,8 @@ class Order(TenantModel):
     scope = models.CharField(max_length=20, default='OFFICIAL')
     invoice_number = models.CharField(max_length=100, null=True, blank=True)
     
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
     class Meta:
         db_table = 'pos_order'
@@ -69,4 +69,4 @@ class OrderLine(TenantModel):
     total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
 
     class Meta:
-        db_table = 'orderline'
+        db_table = 'pos_orderline'

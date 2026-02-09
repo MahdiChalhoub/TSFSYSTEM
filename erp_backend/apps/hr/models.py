@@ -15,8 +15,8 @@ class Employee(TenantModel):
     email = models.EmailField(null=True, blank=True)
     job_title = models.CharField(max_length=255, null=True, blank=True)
     salary = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
     linked_account = models.ForeignKey(
         'finance.ChartOfAccount', on_delete=models.SET_NULL, null=True, blank=True
     )

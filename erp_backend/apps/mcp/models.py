@@ -53,8 +53,8 @@ class MCPProvider(models.Model):
     last_tested_at = models.DateTimeField(null=True, blank=True)
     last_test_success = models.BooleanField(default=False)
     
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
     
     class Meta:
         db_table = 'mcpprovider'
@@ -113,8 +113,8 @@ class MCPTool(models.Model):
         help_text="Require user confirmation before execution"
     )
     
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
     
     class Meta:
         db_table = 'mcptool'
@@ -172,8 +172,8 @@ class MCPConnection(models.Model):
     last_error = models.TextField(blank=True)
     error_count = models.IntegerField(default=0)
     
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
     
     class Meta:
         db_table = 'mcpconnection'
@@ -219,8 +219,8 @@ class MCPConversation(models.Model):
     # State
     is_active = models.BooleanField(default=True)
     
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
     
     class Meta:
         db_table = 'mcpconversation'
@@ -266,7 +266,7 @@ class MCPMessage(models.Model):
     input_tokens = models.IntegerField(default=0)
     output_tokens = models.IntegerField(default=0)
     
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     
     class Meta:
         db_table = 'mcpmessage'
@@ -321,7 +321,7 @@ class MCPUsageLog(models.Model):
     success = models.BooleanField(default=True)
     error_message = models.TextField(blank=True)
     
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     
     class Meta:
         db_table = 'mcpusagelog'
@@ -364,12 +364,12 @@ class MCPRateLimit(models.Model):
     limit_type = models.CharField(max_length=30, choices=LIMIT_TYPES)
     limit_value = models.IntegerField()
     current_usage = models.IntegerField(default=0)
-    reset_at = models.DateTimeField()
+    reset_at = models.DateTimeField(null=True, blank=True)
     
     is_active = models.BooleanField(default=True)
     
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
     
     class Meta:
         db_table = 'mcpratelimit'
