@@ -147,3 +147,40 @@ export async function toggleOrgSite(orgId: string, siteId: string) {
         body: JSON.stringify({ site_id: siteId })
     })
 }
+
+// ─── Client Management ──────────────────────────────────────────
+
+export async function listClients(search?: string) {
+    try {
+        const q = search ? `?search=${encodeURIComponent(search)}` : ''
+        return await erpFetch(`saas/clients/${q}`)
+    } catch (error) {
+        console.error("[SaaS] Error fetching clients:", error)
+        return []
+    }
+}
+
+export async function createClient(data: {
+    first_name: string
+    last_name: string
+    email: string
+    phone?: string
+    company_name?: string
+    address?: string
+    city?: string
+    country?: string
+}) {
+    return await erpFetch(`saas/clients/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+}
+
+export async function setOrgClient(orgId: string, clientId: string | null) {
+    return await erpFetch(`saas/org-modules/${orgId}/set-client/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ client_id: clientId })
+    })
+}

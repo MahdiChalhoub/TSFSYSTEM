@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { getOrganization, getOrgUsage, getOrgBilling, getOrgModules, toggleOrgModule, updateModuleFeatures, changeOrgPlan, getOrgUsers, createOrgUser, resetOrgUserPassword, getOrgSites, createOrgSite, toggleOrgSite } from "./actions"
+import { getOrganization, getOrgUsage, getOrgBilling, getOrgModules, toggleOrgModule, updateModuleFeatures, changeOrgPlan, getOrgUsers, createOrgUser, resetOrgUserPassword, getOrgSites, createOrgSite, toggleOrgSite, listClients, createClient, setOrgClient } from "./actions"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -14,7 +14,7 @@ import {
     Package, ShieldCheck, AlertTriangle, Loader2,
     ToggleLeft, ToggleRight, Crown, Layers, Activity,
     CreditCard, TrendingUp, ChevronRight, Plus, KeyRound,
-    UserCog, Eye, EyeOff, Check, Building2, Power
+    UserCog, Eye, EyeOff, Check, Building2, Power, UserCircle, Mail
 } from "lucide-react"
 
 // ─── Usage Meter ─────────────────────────────────────────────────────────────
@@ -167,6 +167,14 @@ export default function OrganizationDetailPage() {
     // Plan switch confirmation dialog
     const [planSwitchTarget, setPlanSwitchTarget] = useState<any>(null)
     const [switching, setSwitching] = useState(false)
+
+    // Client assignment
+    const [showClientDialog, setShowClientDialog] = useState(false)
+    const [allClients, setAllClients] = useState<any[]>([])
+    const [clientSearch, setClientSearch] = useState('')
+    const [showNewClient, setShowNewClient] = useState(false)
+    const [newClient, setNewClient] = useState({ first_name: '', last_name: '', email: '', phone: '', company_name: '' })
+    const [savingClient, setSavingClient] = useState(false)
 
     useEffect(() => {
         async function load() {
@@ -395,6 +403,51 @@ export default function OrganizationDetailPage() {
                                     onClick={() => setActiveTab('modules')}>
                                     Manage Modules <ChevronRight size={14} />
                                 </Button>
+                            </CardContent>
+                        </Card>
+
+                        {/* Client / Account Owner Card */}
+                        <Card className="border-gray-100 shadow-sm">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-lg font-bold flex items-center gap-2">
+                                    <UserCircle size={16} className="text-gray-400" /> Account Owner
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                {usage?.client ? (
+                                    <div className="space-y-2">
+                                        <p className="font-black text-gray-900">{usage.client.full_name}</p>
+                                        {usage.client.company_name && (
+                                            <p className="text-xs text-gray-500">{usage.client.company_name}</p>
+                                        )}
+                                        <p className="text-xs text-gray-400">{usage.client.email}</p>
+                                        {usage.client.phone && (
+                                            <p className="text-xs text-gray-400">{usage.client.phone}</p>
+                                        )}
+                                        <Button variant="outline" size="sm"
+                                            className="w-full border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl text-xs mt-2"
+                                            onClick={async () => {
+                                                const data = await listClients()
+                                                setAllClients(Array.isArray(data) ? data : [])
+                                                setShowClientDialog(true)
+                                            }}>
+                                            Change Client
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-3">
+                                        <p className="text-xs text-gray-400 italic mb-3">No client assigned</p>
+                                        <Button size="sm"
+                                            className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs"
+                                            onClick={async () => {
+                                                const data = await listClients()
+                                                setAllClients(Array.isArray(data) ? data : [])
+                                                setShowClientDialog(true)
+                                            }}>
+                                            Assign Client
+                                        </Button>
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     </div>
@@ -982,6 +1035,134 @@ export default function OrganizationDetailPage() {
                             Confirm Switch
                         </Button>
                     </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* ─── Client Assignment Dialog ────────────────────────────── */}
+            <Dialog open={showClientDialog} onOpenChange={(open) => { if (!open) { setShowClientDialog(false); setShowNewClient(false) } }}>
+                <DialogContent className="rounded-2xl max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="font-black text-lg">Assign Account Owner</DialogTitle>
+                    </DialogHeader>
+
+                    {!showNewClient ? (
+                        <div className="space-y-4">
+                            <Input
+                                placeholder="Search clients by name or email..."
+                                value={clientSearch}
+                                onChange={async (e) => {
+                                    setClientSearch(e.target.value)
+                                    const data = await listClients(e.target.value)
+                                    setAllClients(Array.isArray(data) ? data : [])
+                                }}
+                                className="rounded-xl"
+                            />
+                            <div className="max-h-[300px] overflow-y-auto space-y-1">
+                                {allClients.map((c: any) => (
+                                    <button key={c.id}
+                                        className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all text-left hover:border-emerald-200 hover:bg-emerald-50/30 ${usage?.client?.id === c.id ? 'border-emerald-300 bg-emerald-50' : 'border-gray-100'}`}
+                                        onClick={async () => {
+                                            setSavingClient(true)
+                                            try {
+                                                await setOrgClient(orgId, c.id)
+                                                toast.success(`Client "${c.full_name}" assigned`)
+                                                const newUsage = await getOrgUsage(orgId)
+                                                setUsage(newUsage)
+                                                setShowClientDialog(false)
+                                            } catch { toast.error('Failed to assign client') }
+                                            finally { setSavingClient(false) }
+                                        }}>
+                                        <div>
+                                            <p className="font-bold text-sm text-gray-900">{c.full_name}</p>
+                                            <p className="text-[10px] text-gray-400">{c.email}{c.company_name ? ` · ${c.company_name}` : ''}</p>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Badge className="bg-gray-50 text-gray-400 border-gray-100 text-[9px]">{c.org_count} orgs</Badge>
+                                            {usage?.client?.id === c.id && <Check size={14} className="text-emerald-600" />}
+                                        </div>
+                                    </button>
+                                ))}
+                                {allClients.length === 0 && (
+                                    <p className="text-center text-xs text-gray-400 italic py-6">No clients found</p>
+                                )}
+                            </div>
+                            <div className="border-t border-gray-100 pt-3 flex gap-2">
+                                <Button variant="outline" className="flex-1 rounded-xl text-xs" onClick={() => setShowNewClient(true)}>
+                                    <Plus size={12} className="mr-1" /> Create New Client
+                                </Button>
+                                {usage?.client && (
+                                    <Button variant="ghost" className="rounded-xl text-xs text-red-500 hover:text-red-600 hover:bg-red-50"
+                                        onClick={async () => {
+                                            setSavingClient(true)
+                                            try {
+                                                await setOrgClient(orgId, null)
+                                                toast.success('Client unassigned')
+                                                const newUsage = await getOrgUsage(orgId)
+                                                setUsage(newUsage)
+                                                setShowClientDialog(false)
+                                            } catch { toast.error('Failed to unassign') }
+                                            finally { setSavingClient(false) }
+                                        }}>
+                                        Unassign
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="text-[10px] font-bold text-gray-400 uppercase">First Name *</label>
+                                    <Input value={newClient.first_name} onChange={e => setNewClient({ ...newClient, first_name: e.target.value })} className="rounded-xl" />
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-bold text-gray-400 uppercase">Last Name *</label>
+                                    <Input value={newClient.last_name} onChange={e => setNewClient({ ...newClient, last_name: e.target.value })} className="rounded-xl" />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="text-[10px] font-bold text-gray-400 uppercase">Email *</label>
+                                <Input type="email" value={newClient.email} onChange={e => setNewClient({ ...newClient, email: e.target.value })} className="rounded-xl" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="text-[10px] font-bold text-gray-400 uppercase">Phone</label>
+                                    <Input value={newClient.phone} onChange={e => setNewClient({ ...newClient, phone: e.target.value })} className="rounded-xl" />
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-bold text-gray-400 uppercase">Company Name</label>
+                                    <Input value={newClient.company_name} onChange={e => setNewClient({ ...newClient, company_name: e.target.value })} className="rounded-xl" />
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button variant="ghost" onClick={() => setShowNewClient(false)} className="rounded-xl">Back</Button>
+                                <Button
+                                    disabled={savingClient || !newClient.first_name || !newClient.last_name || !newClient.email}
+                                    className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold"
+                                    onClick={async () => {
+                                        setSavingClient(true)
+                                        try {
+                                            const result = await createClient(newClient)
+                                            if (result.id) {
+                                                await setOrgClient(orgId, result.id)
+                                                toast.success(`Client "${result.full_name}" created and assigned`)
+                                                const newUsage = await getOrgUsage(orgId)
+                                                setUsage(newUsage)
+                                                setShowClientDialog(false)
+                                                setShowNewClient(false)
+                                                setNewClient({ first_name: '', last_name: '', email: '', phone: '', company_name: '' })
+                                            } else {
+                                                toast.error(result.error || 'Failed to create client')
+                                            }
+                                        } catch (err: any) { toast.error(err.message || 'Failed to create client') }
+                                        finally { setSavingClient(false) }
+                                    }}>
+                                    {savingClient ? <Loader2 size={14} className="animate-spin mr-1" /> : null}
+                                    Create & Assign
+                                </Button>
+                            </DialogFooter>
+                        </div>
+                    )}
                 </DialogContent>
             </Dialog>
         </div>
