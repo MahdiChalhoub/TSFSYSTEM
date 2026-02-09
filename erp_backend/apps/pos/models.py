@@ -27,13 +27,17 @@ class Order(TenantModel):
     ref_code = models.CharField(max_length=100, null=True, blank=True)
     contact = models.ForeignKey('crm.Contact', on_delete=models.SET_NULL, null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    # Note: warehouse context comes via site or is set at checkout time
-    # The `warehouse` column was never added to the DB, so we don't model it here.
     site = models.ForeignKey('erp.Site', on_delete=models.SET_NULL, null=True, blank=True)
     
     total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     tax_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     airsi_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    discount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    vat_recoverable = models.BooleanField(default=False)
+    payment_method = models.CharField(max_length=50, default='CASH')
+    invoice_price_type = models.CharField(max_length=20, default='TTC')
+    is_locked = models.BooleanField(default=False)
+    is_verified = models.BooleanField(default=False)
     notes = models.TextField(null=True, blank=True)
     scope = models.CharField(max_length=20, default='OFFICIAL')
     invoice_number = models.CharField(max_length=100, null=True, blank=True)
@@ -56,9 +60,12 @@ class OrderLine(TenantModel):
     unit_cost_ht = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     unit_cost_ttc = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     vat_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    airsi_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     effective_cost = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    total = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'))
     expiry_date = models.DateField(null=True, blank=True)
+    batch = models.ForeignKey('inventory.Inventory', on_delete=models.SET_NULL, null=True, blank=True, related_name='order_lines')
     total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
 
     class Meta:

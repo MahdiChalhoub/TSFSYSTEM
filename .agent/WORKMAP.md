@@ -16,11 +16,7 @@
 
 ## 🔴 CRITICAL
 
-### [OPEN] Missing `auth/register/business/` Endpoint
-- **Discovered**: 2026-02-09
-- **Impact**: Business registration flow fails — new users can't register
-- **Files**: `erp_backend/erp/urls.py`, `erp_backend/erp/views.py`
-- **Notes**: The frontend calls this endpoint during business registration but it returns 404
+*No critical items*
 
 ---
 
@@ -81,6 +77,11 @@
 ---
 
 ## ✅ COMPLETED
+
+### [DONE 2026-02-09] Business Registration Endpoint (v2.7.0-b010)
+- Created `auth/register/business/` public endpoint
+- Provisions org + admin user + SaaSClient + CRM contact
+- Fixed Role model missing fields: `is_public_requestable`, `created_at`, `updated_at`
 
 ### [DONE 2026-02-09] SaaSClient → CRM Contact Sync (v2.7.0-b004)
 - Added `sync_to_crm_contact()` to SaaSClient model

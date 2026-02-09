@@ -1,14 +1,17 @@
+import logging
+from django.db import transaction
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
-from .models import BusinessType, GlobalCurrency, Organization, SaaSClient, User, Role
+from .models import BusinessType, GlobalCurrency, Organization, User, SaaSClient, Role
 from .serializers.auth import LoginSerializer, UserSerializer, BusinessRegistrationSerializer
 from .serializers.core import BusinessTypeSerializer, GlobalCurrencySerializer, OrganizationSerializer
 from .services import ProvisioningService
-from django.db import transaction
+
+logger = logging.getLogger('erp')
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -63,55 +66,90 @@ class PublicConfigView(APIView):
             "tenant": tenant_data
         })
 
+# ── Business Registration (Public) ──────────────────────────────────────────
 @api_view(['POST'])
 @permission_classes([AllowAny])
-def business_registration_view(request):
+def register_business_view(request):
+    """
+    Public endpoint for self-service business registration.
+    Creates: Organization, Admin User, SaaSClient, CRM Contact.
+    """
     serializer = BusinessRegistrationSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    data = serializer.validated_data
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    with transaction.atomic():
-        # 1. Provision Organization
-        org = ProvisioningService.provision_organization(
-            name=data['business_name'],
-            slug=data['business_slug']
+    data = serializer.validated_data
+    slug = data['business_slug']
+
+    try:
+        with transaction.atomic():
+            # ── 1. Provision Organization ──
+            org = ProvisioningService.provision_organization(
+                name=data['business_name'],
+                slug=slug
+            )
+
+            # Update optional/extra org fields
+            org.country = data.get('country', '')
+            org.city = data.get('city', '')
+            org.address = data.get('address', '')
+            org.save(update_fields=['country', 'city', 'address'])
+
+            # ── 2. Create SaaSClient (account owner) ──
+            client, _ = SaaSClient.objects.get_or_create(
+                email=data['admin_email'],
+                defaults={
+                    'first_name': data['admin_first_name'],
+                    'last_name': data['admin_last_name'],
+                    'company_name': data['business_name'],
+                    'phone': data.get('phone', ''),
+                    'city': data.get('city', ''),
+                    'country': data.get('country', ''),
+                }
+            )
+            org.client = client
+            org.save(update_fields=['client'])
+
+            # ── 3. Create Admin User ──
+            # Get or create "Admin" role for the new org
+            admin_role, _ = Role.objects.get_or_create(
+                name='Admin',
+                organization=org,
+                defaults={'description': 'Full access administrator'}
+            )
+
+            admin_user = User(
+                username=data['admin_username'],
+                email=data['admin_email'],
+                first_name=data['admin_first_name'],
+                last_name=data['admin_last_name'],
+                organization=org,
+                role=admin_role,
+                is_active=True,
+                registration_status='APPROVED',
+            )
+            admin_user.set_password(data['admin_password'])
+            admin_user.save()
+
+        # ── 4. Post-transaction: CRM Sync (best-effort) ──
+        try:
+            client.sync_to_crm_contact()
+        except Exception as e:
+            logger.warning(f"CRM sync failed for new business '{slug}': {e}")
+
+        logger.info(f"✅ Business registered: '{data['business_name']}' [{slug}] by {data['admin_username']}")
+
+        token, _ = Token.objects.get_or_create(user=admin_user)
+        return Response({
+            "message": f"Workspace '{slug}' created successfully!",
+            "token": token.key,
+            "user": UserSerializer(admin_user).data,
+            "organization": OrganizationSerializer(org).data
+        }, status=status.HTTP_201_CREATED)
+
+    except Exception as e:
+        logger.error(f"Business registration failed for '{slug}': {e}")
+        return Response(
+            {"error": str(e)},
+            status=status.HTTP_400_BAD_REQUEST
         )
-        
-        # 2. Create SaaSClient (Billing Contact)
-        client, created = SaaSClient.objects.get_or_create(
-            email=data['admin_email'],
-            defaults={
-                'first_name': data['admin_first_name'],
-                'last_name': data['admin_last_name'],
-                'company_name': data['business_name'],
-                'phone': data.get('phone', ''),
-                'city': data.get('city', ''),
-                'country': data.get('country', ''),
-                'address': data.get('address', ''),
-            }
-        )
-        org.client = client
-        org.save(update_fields=['client'])
-        
-        # 3. Create Admin User
-        user = User(
-            username=data['admin_username'],
-            email=data['admin_email'],
-            first_name=data['admin_first_name'],
-            last_name=data['admin_last_name'],
-            organization=org,
-            is_active=True,
-            registration_status='APPROVED'
-        )
-        user.set_password(data['admin_password'])
-        user.save()
-        
-        # 4. Sync client to CRM
-        client.sync_to_crm_contact()
-        
-    token, _ = Token.objects.get_or_create(user=user)
-    return Response({
-        'token': token.key,
-        'user': UserSerializer(user).data,
-        'organization': OrganizationSerializer(org).data
-    }, status=status.HTTP_201_CREATED)
