@@ -57,7 +57,7 @@ class MCPProvider(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        db_table = 'MCPProvider'
+        db_table = 'mcpprovider'
         unique_together = ['organization', 'name']
         ordering = ['-is_default', 'name']
     
@@ -117,7 +117,7 @@ class MCPTool(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        db_table = 'MCPTool'
+        db_table = 'mcptool'
         ordering = ['category', 'name']
     
     def __str__(self):
@@ -176,7 +176,7 @@ class MCPConnection(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        db_table = 'MCPConnection'
+        db_table = 'mcpconnection'
     
     def __str__(self):
         return f"MCP Connection: {self.organization.name} [{self.status}]"
@@ -223,7 +223,7 @@ class MCPConversation(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        db_table = 'MCPConversation'
+        db_table = 'mcpconversation'
         ordering = ['-updated_at']
     
     def __str__(self):
@@ -269,7 +269,7 @@ class MCPMessage(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
-        db_table = 'MCPMessage'
+        db_table = 'mcpmessage'
         ordering = ['created_at']
     
     def __str__(self):
@@ -324,7 +324,7 @@ class MCPUsageLog(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
-        db_table = 'MCPUsageLog'
+        db_table = 'mcpusagelog'
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['organization', 'created_at']),
@@ -372,7 +372,7 @@ class MCPRateLimit(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        db_table = 'MCPRateLimit'
+        db_table = 'mcpratelimit'
         unique_together = ['organization', 'user', 'limit_type']
     
     def __str__(self):

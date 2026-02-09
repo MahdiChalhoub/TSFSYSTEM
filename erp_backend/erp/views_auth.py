@@ -4,9 +4,11 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
-from .models import BusinessType, GlobalCurrency, Organization
-from .serializers.auth import LoginSerializer, UserSerializer
+from .models import BusinessType, GlobalCurrency, Organization, SaaSClient, User, Role
+from .serializers.auth import LoginSerializer, UserSerializer, BusinessRegistrationSerializer
 from .serializers.core import BusinessTypeSerializer, GlobalCurrencySerializer, OrganizationSerializer
+from .services import ProvisioningService
+from django.db import transaction
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -60,3 +62,56 @@ class PublicConfigView(APIView):
             "currencies": GlobalCurrencySerializer(currencies, many=True).data,
             "tenant": tenant_data
         })
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def business_registration_view(request):
+    serializer = BusinessRegistrationSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    data = serializer.validated_data
+    
+    with transaction.atomic():
+        # 1. Provision Organization
+        org = ProvisioningService.provision_organization(
+            name=data['business_name'],
+            slug=data['business_slug']
+        )
+        
+        # 2. Create SaaSClient (Billing Contact)
+        client, created = SaaSClient.objects.get_or_create(
+            email=data['admin_email'],
+            defaults={
+                'first_name': data['admin_first_name'],
+                'last_name': data['admin_last_name'],
+                'company_name': data['business_name'],
+                'phone': data.get('phone', ''),
+                'city': data.get('city', ''),
+                'country': data.get('country', ''),
+                'address': data.get('address', ''),
+            }
+        )
+        org.client = client
+        org.save(update_fields=['client'])
+        
+        # 3. Create Admin User
+        user = User(
+            username=data['admin_username'],
+            email=data['admin_email'],
+            first_name=data['admin_first_name'],
+            last_name=data['admin_last_name'],
+            organization=org,
+            is_active=True,
+            registration_status='APPROVED'
+        )
+        user.set_password(data['admin_password'])
+        user.save()
+        
+        # 4. Sync client to CRM
+        client.sync_to_crm_contact()
+        
+    token, _ = Token.objects.get_or_create(user=user)
+    return Response({
+        'token': token.key,
+        'user': UserSerializer(user).data,
+        'organization': OrganizationSerializer(org).data
+    }, status=status.HTTP_201_CREATED)

@@ -32,7 +32,7 @@ class Migration(migrations.Migration):
                 ('updated_at', models.DateTimeField(auto_now=True)),
             ],
             options={
-                'db_table': 'SystemModule',
+                'db_table': 'systemmodule',
             },
         ),
         migrations.RenameField(
@@ -74,7 +74,7 @@ class Migration(migrations.Migration):
                 ('performed_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
             ],
             options={
-                'db_table': 'SystemModuleLog',
+                'db_table': 'systemmodulelog',
             },
         ),
         migrations.RemoveField(

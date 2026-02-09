@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(max_length=100)),
             ],
             options={
-                'db_table': 'Country',
+                'db_table': 'country',
             },
         ),
         migrations.CreateModel(
@@ -38,7 +38,7 @@ class Migration(migrations.Migration):
                 ('is_closed', models.BooleanField(default=False)),
             ],
             options={
-                'db_table': 'FiscalYear',
+                'db_table': 'fiscalyear',
             },
         ),
         migrations.CreateModel(
@@ -52,7 +52,7 @@ class Migration(migrations.Migration):
                 ('updated_at', models.DateTimeField(auto_now=True)),
             ],
             options={
-                'db_table': 'Organization',
+                'db_table': 'organization',
             },
         ),
         migrations.CreateModel(
@@ -66,7 +66,7 @@ class Migration(migrations.Migration):
                 ('updated_at', models.DateTimeField(auto_now=True)),
             ],
             options={
-                'db_table': 'Permission',
+                'db_table': 'permission',
             },
         ),
         migrations.CreateModel(
@@ -86,7 +86,7 @@ class Migration(migrations.Migration):
                 ('organization', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='erp.organization')),
             ],
             options={
-                'db_table': 'ChartOfAccount',
+                'db_table': 'chartofaccount',
                 'unique_together': {('code', 'organization')},
             },
         ),
@@ -102,7 +102,7 @@ class Migration(migrations.Migration):
                 ('organization', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='erp.organization')),
             ],
             options={
-                'db_table': 'FiscalPeriod',
+                'db_table': 'fiscalperiod',
                 'unique_together': {('name', 'fiscal_year')},
             },
         ),
@@ -125,7 +125,7 @@ class Migration(migrations.Migration):
                 ('organization', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='erp.organization')),
             ],
             options={
-                'db_table': 'JournalEntry',
+                'db_table': 'journalentry',
             },
         ),
         migrations.CreateModel(
@@ -142,7 +142,7 @@ class Migration(migrations.Migration):
                 ('organization', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='erp.organization')),
             ],
             options={
-                'db_table': 'JournalEntryLine',
+                'db_table': 'journalentryline',
             },
         ),
         migrations.AddField(
@@ -159,7 +159,7 @@ class Migration(migrations.Migration):
                 ('organization', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='erp.organization')),
             ],
             options={
-                'db_table': 'Category',
+                'db_table': 'category',
                 'unique_together': {('name', 'organization')},
             },
         ),
@@ -172,7 +172,7 @@ class Migration(migrations.Migration):
                 ('organization', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='erp.organization')),
             ],
             options={
-                'db_table': 'Brand',
+                'db_table': 'brand',
                 'unique_together': {('name', 'organization')},
             },
         ),
@@ -185,7 +185,7 @@ class Migration(migrations.Migration):
                 ('organization', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='erp.organization')),
             ],
             options={
-                'db_table': 'Parfum',
+                'db_table': 'parfum',
                 'unique_together': {('name', 'organization')},
             },
         ),
@@ -199,7 +199,7 @@ class Migration(migrations.Migration):
                 ('organization', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='erp.organization')),
             ],
             options={
-                'db_table': 'ProductGroup',
+                'db_table': 'productgroup',
             },
         ),
         migrations.CreateModel(
@@ -214,7 +214,7 @@ class Migration(migrations.Migration):
                 ('permissions', models.ManyToManyField(related_name='roles', to='erp.permission')),
             ],
             options={
-                'db_table': 'Role',
+                'db_table': 'role',
                 'unique_together': {('name', 'organization')},
             },
         ),
@@ -234,7 +234,7 @@ class Migration(migrations.Migration):
                 ('organization', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='erp.organization')),
             ],
             options={
-                'db_table': 'Site',
+                'db_table': 'site',
                 'unique_together': {('code', 'organization')},
             },
         ),
@@ -256,7 +256,7 @@ class Migration(migrations.Migration):
                 ('site', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='erp.site')),
             ],
             options={
-                'db_table': 'FinancialAccount',
+                'db_table': 'financialaccount',
                 'unique_together': {('name', 'organization', 'site')},
             },
         ),
@@ -282,7 +282,7 @@ class Migration(migrations.Migration):
                 ('home_site', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='home_users', to='erp.site')),
             ],
             options={
-                'db_table': 'User',
+                'db_table': 'user',
             },
             managers=[
                 ('objects', django.contrib.auth.models.UserManager()),
@@ -303,7 +303,7 @@ class Migration(migrations.Migration):
                 ('site', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='erp.site')),
             ],
             options={
-                'db_table': 'Transaction',
+                'db_table': 'transaction',
             },
         ),
         migrations.CreateModel(
@@ -316,7 +316,7 @@ class Migration(migrations.Migration):
                 ('organization', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='erp.organization')),
             ],
             options={
-                'db_table': 'Unit',
+                'db_table': 'unit',
                 'unique_together': {('code', 'organization')},
             },
         ),
@@ -365,7 +365,7 @@ class Migration(migrations.Migration):
                 ('site', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='warehouses', to='erp.site')),
             ],
             options={
-                'db_table': 'Warehouse',
+                'db_table': 'warehouse',
                 'unique_together': {('name', 'site')},
             },
         ),

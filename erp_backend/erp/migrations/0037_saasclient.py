@@ -32,7 +32,7 @@ class Migration(migrations.Migration):
                 ('updated_at', models.DateTimeField(auto_now=True)),
             ],
             options={
-                'db_table': 'SaaSClient',
+                'db_table': 'saasclient',
                 'ordering': ['-created_at'],
             },
         ),
