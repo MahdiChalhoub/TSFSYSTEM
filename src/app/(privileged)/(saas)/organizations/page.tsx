@@ -373,6 +373,9 @@ export default function OrganizationsPage() {
                                         <Badge className={org.is_active ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-red-50 text-red-600 border-red-100"}>
                                             {org.is_active ? 'Active' : 'Suspended'}
                                         </Badge>
+                                        <Badge className="bg-purple-50 text-purple-600 border-purple-100 text-[9px] font-black">
+                                            {org.current_plan_name || 'Free Tier'}
+                                        </Badge>
                                     </div>
                                 </div>
                                 <CardTitle className="text-2xl font-bold text-gray-900 mt-4">{org.name}</CardTitle>
