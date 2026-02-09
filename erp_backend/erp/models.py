@@ -379,6 +379,7 @@ class SubscriptionPayment(models.Model):
     plan = models.ForeignKey(SubscriptionPlan, on_delete=models.PROTECT, related_name='payments')
     previous_plan = models.ForeignKey(SubscriptionPlan, on_delete=models.SET_NULL, null=True, blank=True, related_name='upgrade_payments', help_text="Plan before the switch (for audit)")
     amount = models.DecimalField(max_digits=15, decimal_places=2)
+    billing_cycle = models.CharField(max_length=20, default='MONTHLY', blank=True, help_text="MONTHLY, ANNUAL, ONE_TIME")
     type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='PURCHASE')
     status = models.CharField(max_length=20, default='PENDING')
     notes = models.TextField(blank=True, default='')

@@ -1116,7 +1116,7 @@ export default function OrganizationDetailPage() {
                                         getOrgBilling(orgId),
                                     ])
                                     setUsage(newUsage)
-                                    setBilling(Array.isArray(newBilling) ? newBilling : [])
+                                    setBilling(newBilling?.history ? newBilling : { history: Array.isArray(newBilling) ? newBilling : [], balance: { total_paid: '0.00', total_credits: '0.00', net_balance: '0.00' }, client: null })
                                     setPlanSwitchTarget(null)
                                 } catch (err: any) {
                                     toast.error(err.message || 'Failed to change plan')
