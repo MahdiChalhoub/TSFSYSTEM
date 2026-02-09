@@ -302,47 +302,41 @@ export default function OrganizationsPage() {
             </div>
 
             {/* ─── Filter Bar ────────────────────────────────────────── */}
-            {mounted ? (
-                <div className="flex flex-wrap items-center gap-3 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
-                    <div className="relative flex-1 min-w-[200px]">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                        <input type="text" placeholder="Search by name or slug..." value={search} onChange={e => setSearch(e.target.value)}
-                            className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-100 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-300" />
-                    </div>
-                    <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-                        className="text-xs font-bold border border-gray-100 rounded-xl px-3 py-2.5 bg-gray-50 text-gray-700 focus:ring-2 focus:ring-emerald-500/30">
-                        <option value="all">All Status</option>
-                        <option value="active">Active</option>
-                        <option value="suspended">Suspended</option>
-                    </select>
-                    <select value={filterPlan} onChange={e => setFilterPlan(e.target.value)}
-                        className="text-xs font-bold border border-gray-100 rounded-xl px-3 py-2.5 bg-gray-50 text-gray-700 focus:ring-2 focus:ring-emerald-500/30">
-                        <option value="all">All Plans</option>
-                        {uniquePlans.map(p => <option key={p} value={p}>{p}</option>)}
-                    </select>
-                    {businessTypes.length > 0 && (
-                        <select value={filterType} onChange={e => setFilterType(e.target.value)}
-                            className="text-xs font-bold border border-gray-100 rounded-xl px-3 py-2.5 bg-gray-50 text-gray-700 focus:ring-2 focus:ring-emerald-500/30">
-                            <option value="all">All Types</option>
-                            {businessTypes.map(bt => <option key={bt.id} value={bt.name}>{bt.name}</option>)}
-                        </select>
-                    )}
-                    <input type="text" placeholder="Filter by country..." value={filterCountry === 'all' ? '' : filterCountry}
-                        onChange={e => setFilterCountry(e.target.value || 'all')}
-                        className="text-xs font-bold border border-gray-100 rounded-xl px-3 py-2.5 bg-gray-50 text-gray-700 focus:ring-2 focus:ring-emerald-500/30 w-[140px]" />
-                    {hasFilters && (
-                        <button onClick={() => { setSearch(''); setFilterPlan('all'); setFilterType('all'); setFilterCountry('all'); setFilterStatus('all') }}
-                            className="text-xs font-bold text-red-500 hover:text-red-700 flex items-center gap-1 px-3 py-2.5 rounded-xl border border-red-100 hover:bg-red-50 transition-all">
-                            <X size={12} /> Clear
-                        </button>
-                    )}
-                    <span className="text-[10px] text-gray-400 font-bold">{filteredOrgs.length} of {orgs.length}</span>
+            <div className="flex flex-wrap items-center gap-3 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                <div className="relative flex-1 min-w-[200px]">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input type="text" placeholder="Search by name or slug..." value={search} onChange={e => setSearch(e.target.value)}
+                        className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-100 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-300" />
                 </div>
-            ) : (
-                <div className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
-                    <div className="h-10 flex-1 bg-gray-50 rounded-xl animate-pulse" />
-                </div>
-            )}
+                <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
+                    className="text-xs font-bold border border-gray-100 rounded-xl px-3 py-2.5 bg-gray-50 text-gray-700 focus:ring-2 focus:ring-emerald-500/30">
+                    <option value="all">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="suspended">Suspended</option>
+                </select>
+                <select value={filterPlan} onChange={e => setFilterPlan(e.target.value)}
+                    className="text-xs font-bold border border-gray-100 rounded-xl px-3 py-2.5 bg-gray-50 text-gray-700 focus:ring-2 focus:ring-emerald-500/30">
+                    <option value="all">All Plans</option>
+                    {uniquePlans.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+                {businessTypes.length > 0 && (
+                    <select value={filterType} onChange={e => setFilterType(e.target.value)}
+                        className="text-xs font-bold border border-gray-100 rounded-xl px-3 py-2.5 bg-gray-50 text-gray-700 focus:ring-2 focus:ring-emerald-500/30">
+                        <option value="all">All Types</option>
+                        {businessTypes.map(bt => <option key={bt.id} value={bt.name}>{bt.name}</option>)}
+                    </select>
+                )}
+                <input type="text" placeholder="Filter by country..." value={filterCountry === 'all' ? '' : filterCountry}
+                    onChange={e => setFilterCountry(e.target.value || 'all')}
+                    className="text-xs font-bold border border-gray-100 rounded-xl px-3 py-2.5 bg-gray-50 text-gray-700 focus:ring-2 focus:ring-emerald-500/30 w-[140px]" />
+                {hasFilters && (
+                    <button onClick={() => { setSearch(''); setFilterPlan('all'); setFilterType('all'); setFilterCountry('all'); setFilterStatus('all') }}
+                        className="text-xs font-bold text-red-500 hover:text-red-700 flex items-center gap-1 px-3 py-2.5 rounded-xl border border-red-100 hover:bg-red-50 transition-all">
+                        <X size={12} /> Clear
+                    </button>
+                )}
+                <span className="text-[10px] text-gray-400 font-bold">{filteredOrgs.length} of {orgs.length}</span>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {loading ? (
