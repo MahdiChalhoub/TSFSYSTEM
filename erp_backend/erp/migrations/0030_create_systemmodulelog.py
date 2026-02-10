@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
                     "action" varchar(20) NOT NULL,
                     "status" varchar(20) NOT NULL,
                     "logs" text NOT NULL DEFAULT '',
-                    "performed_by_id" integer REFERENCES "User"("id") ON DELETE SET NULL,
+                    "performed_by_id" integer REFERENCES "user"("id") ON DELETE SET NULL,
                     "timestamp" timestamp with time zone NOT NULL DEFAULT NOW()
                 );
             """,
