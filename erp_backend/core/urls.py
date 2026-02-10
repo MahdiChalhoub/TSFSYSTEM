@@ -21,7 +21,7 @@ from django.conf.urls.static import static
 from erp.views import health_check
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('tsf-system-kernel-7788/', admin.site.urls),
     path('api/', include('erp.urls')),
     path('health/', health_check),
 ]
