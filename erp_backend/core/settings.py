@@ -163,6 +163,13 @@ USE_I18N = True
 USE_TZ = True
 
 
+# Session Security
+# Default to 1 hour (3600 seconds) for better security
+SESSION_COOKIE_AGE = 3600 
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_SAVE_EVERY_REQUEST = True
+
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
