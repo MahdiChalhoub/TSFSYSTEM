@@ -10,9 +10,14 @@ Implement a subdomain-based multi-tenant architecture where:
 
 ### 1. Middleware (`src/middleware.ts`)
 The middleware intercepts all requests and redirects/rewrites based on the `host` header.
-- **Master Root**: Rewrites to internal route `/landing`, unless the path starts with `/admin`, `/api`, or `/tenant`.
-- **SaaS Subdomain**: Rewrites to `/admin/saas`.
+- **Master Root**: Rewrites to internal route `/landing`, unless the path starts with `/login`, `/admin` (legacy), `/api`, `/tsf-system-kernel-7788/` (Secret Admin), or `/tenant`.
+- **SaaS Subdomain**: Rewrites to `/dashboard`.
 - **Tenant Subdomain**: Rewrites to `/tenant/[slug]`.
+
+### 2. Secret Admin Access
+For production security, the Django admin has been moved from `/admin/` to a secret randomized path.
+- **Path**: `/tsf-system-kernel-7788/`
+- **Security**: Access is restricted via Nginx layer (IP Filter) and Next.js middleware bypass.
 
 ### 2. Tenant Context & Branding
 Each tenant now has a dedicated, high-fidelity landing page at `/tenant/[slug]`.
