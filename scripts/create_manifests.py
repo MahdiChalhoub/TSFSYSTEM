@@ -14,7 +14,7 @@ modules = {
     'finance': {
         "code": "finance",
         "name": "Financial Management",
-        "version": "1.0.4",
+        "version": "1.0.5",
         "description": "General ledger, accounts payable/receivable, and financial reporting.",
         "dependencies": [],
         "required": False
