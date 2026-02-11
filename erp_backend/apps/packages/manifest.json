@@ -1,13 +1,31 @@
 {
     "code": "packages",
-    "name": "Package Storage Center",
-    "version": "1.0.0",
-    "description": "Upload, manage, and deploy kernel and module packages",
-    "is_core": false,
-    "author": "TSF Platform",
+    "name": "Artifact Distribution Engine",
+    "version": "1.2.0-LTS",
+    "description": "High-performance distribution orchestrator for the platform. Handles binary lifecycle management, atomic kernel patching, and secure module distribution with built-in integrity checks.",
+    "is_core": true,
+    "author": "TSF Engineering",
     "dependencies": [],
     "minimum_kernel_version": "1.2.9",
+    "icon": "BoxSelect",
     "category": "infrastructure",
+    "features": [
+        {
+            "code": "binary_lifecycle",
+            "name": "Binary Lifecycle Management",
+            "default": true
+        },
+        {
+            "code": "atomic_patch",
+            "name": "Atomic Kernel Patching",
+            "default": true
+        },
+        {
+            "code": "distribution",
+            "name": "Secure Distribution Hub",
+            "default": true
+        }
+    ],
     "permissions": [
         {
             "code": "packages.view",

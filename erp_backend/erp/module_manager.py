@@ -15,6 +15,7 @@ from .security_keys import is_package_trusted
 class ModuleManager:
     MODULES_DIR = os.path.join(settings.BASE_DIR, 'apps') # New standard
     LEGACY_MODULES_DIR = os.path.join(settings.BASE_DIR, 'erp', 'modules')
+    # Use BASE_DIR/tmp to ensure consistency on production VPS
     LOCK_FILE = os.path.join(settings.BASE_DIR, 'tmp', 'module_operation.lock')
 
     @staticmethod
