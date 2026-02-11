@@ -1,0 +1,8 @@
+{
+    "code": "crm",
+    "name": "Customer Relationship",
+    "version": "1.0.0",
+    "description": "Lead tracking, contact management and customer engagement.",
+    "dependencies": [],
+    "required": false
+}
