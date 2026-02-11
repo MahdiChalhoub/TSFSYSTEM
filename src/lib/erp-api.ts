@@ -137,11 +137,29 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
             let errorData: any = {}
             try {
                 errorData = JSON.parse(errorText)
-                // Throw the whole data object so catch blocks can access field-specific errors
-                throw new Error(JSON.stringify(errorData));
+
+                // Extract best possible error message
+                let message = `ERP Error: ${response.statusText}`;
+
+                if (typeof errorData === 'string') {
+                    message = errorData;
+                } else if (errorData.error) {
+                    message = Array.isArray(errorData.error) ? errorData.error[0] : errorData.error;
+                } else if (errorData.detail) {
+                    message = errorData.detail;
+                } else if (typeof errorData === 'object') {
+                    // Handle field-specific errors or simple lists
+                    const firstKey = Object.keys(errorData)[0];
+                    if (firstKey) {
+                        const val = errorData[firstKey];
+                        message = Array.isArray(val) ? val[0] : val.toString();
+                    }
+                }
+
+                throw new Error(message);
             } catch (e) {
-                if (e instanceof Error && e.message.startsWith('{')) throw e;
-                throw new Error(errorData.error || errorData.detail || `ERP Backend error: ${response.statusText}`);
+                if (e instanceof Error && !e.message.includes('ERP Error:')) throw e;
+                throw new Error(errorText || `ERP Backend error: ${response.statusText}`);
             }
         }
 
