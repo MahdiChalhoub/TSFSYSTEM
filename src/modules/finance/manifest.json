@@ -1,7 +1,7 @@
 {
     "code": "finance",
     "name": "Finance & Accounting",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "description": "General ledger, chart of accounts, journal entries, financial events, loans, trial balance, P&L, and balance sheet reporting.",
     "category": "first-party",
     "isolation": "shared",
