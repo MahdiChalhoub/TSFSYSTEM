@@ -209,7 +209,7 @@ export default function SaaSModulesPage() {
                 ) : modules.length === 0 ? (
                     <div className="col-span-full py-20 text-center text-gray-500 font-medium font-mono">No modules detected in filesystem.</div>
                 ) : modules.map((m) => {
-                    const isCore = m.code === 'core' || m.code === 'coreplatform';
+                    const isCore = m.code === 'core' || m.code === 'coreplatform' || m.code === 'packages';
                     const coreDetails = m.code === 'core' ? {
                         description: 'The "Spine" of the system. Handles platform integrity, security protocols, and essential multi-tenant infrastructure.',
                         workflows: [
@@ -223,6 +223,13 @@ export default function SaaSModulesPage() {
                             'Modular Request Orchestration',
                             'Connector Engine (Brokerage)',
                             'Fallback & Graceful Degradation'
+                        ]
+                    } : m.code === 'packages' ? {
+                        description: 'The binary distribution hub. Manages atomic delivery of kernel updates and modular artifacts across the infrastructure.',
+                        workflows: [
+                            'Atomic Distribution Staging',
+                            'Cryptographic Integrity Verification',
+                            'Automated Lifecycle Orchestration'
                         ]
                     } : null;
 
