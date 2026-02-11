@@ -1,0 +1,10 @@
+{
+    "code": "pos",
+    "name": "Point of Sale",
+    "version": "1.0.0",
+    "description": "Fast checkout, thermal printing, and retail operations.",
+    "dependencies": [
+        "inventory"
+    ],
+    "required": false
+}
