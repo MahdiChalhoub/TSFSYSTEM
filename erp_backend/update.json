@@ -1,5 +1,5 @@
 ﻿{
-    "version": "1.0.2",
+    "version": "1.0.3",
     "name": "TSF OS Engine - Kernel",
     "changelog": "Initial distributable release of the TSF OS Engine. Includes all core services and hardening features (Atomic Swaps, Circuit Breakers, Module Isolation).",
     "release_date": "2026-02-05",
