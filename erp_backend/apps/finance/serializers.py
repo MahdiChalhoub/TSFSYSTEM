@@ -22,6 +22,8 @@ class FinancialAccountSerializer(serializers.ModelSerializer):
 
 
 class FiscalYearSerializer(serializers.ModelSerializer):
+    periods = FiscalPeriodSerializer(many=True, read_only=True)
+
     class Meta:
         model = FiscalYear
         fields = '__all__'

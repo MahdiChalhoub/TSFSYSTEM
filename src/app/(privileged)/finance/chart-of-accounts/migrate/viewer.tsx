@@ -51,7 +51,10 @@ export default function CoaMigrationTool({
         const newMappings = { ...mappings }
         accountsWithBalance.forEach(src => {
             // Find in current target accounts
-            const match = targetAccounts.find(t => t.code === src.code || t.name.toLowerCase() === src.name.toLowerCase())
+            const match = targetAccounts.find(t =>
+                t.code === src.code ||
+                (t.name?.toLowerCase() === src.name?.toLowerCase() && t.name)
+            )
             if (match) newMappings[src.id] = match.id
         })
         setMappings(newMappings)
@@ -174,7 +177,9 @@ export default function CoaMigrationTool({
                                         <div className="font-bold text-stone-900">{acc.name}</div>
                                         <div className="mt-1 flex items-center gap-2">
                                             <span className="text-[10px] font-black bg-stone-100 text-stone-500 px-1.5 py-0.5 rounded">{acc.type}</span>
-                                            <span className="text-sm font-mono text-emerald-600 font-bold">{acc.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                            <span className="text-sm font-mono text-emerald-600 font-bold">
+                                                {typeof acc.balance === 'number' ? acc.balance.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '0.00'}
+                                            </span>
                                         </div>
                                     </div>
                                 </td>
