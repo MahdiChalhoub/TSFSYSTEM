@@ -48,7 +48,7 @@ export default function FinancialSettingsForm({ settings, lock }: Props) {
         startRecalc(async () => {
             try {
                 const res = await recalculateAccountBalances()
-                alert(`Success! Recalculated balances from ${res.count} ledger entries.`)
+                alert(res.success ? 'Success! All account balances have been recalculated.' : 'Recalculation failed.')
             } catch (e: any) {
                 alert('Error: ' + e.message)
             }
@@ -100,7 +100,7 @@ export default function FinancialSettingsForm({ settings, lock }: Props) {
                             {/* Dynamic Description Hint */}
                             {companyType && COMPANY_DESCRIPTIONS[companyType] && (
                                 <div className="mt-3 p-3 bg-stone-50 border border-stone-200 rounded text-sm text-stone-600 flex gap-2 items-start">
-                                    <span className="text-lg">≡ƒÆí</span>
+                                    <span className="text-lg">💡</span>
                                     <span>{COMPANY_DESCRIPTIONS[companyType]}</span>
                                 </div>
                             )}

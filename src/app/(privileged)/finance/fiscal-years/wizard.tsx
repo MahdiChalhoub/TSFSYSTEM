@@ -142,7 +142,7 @@ export default function FiscalYearWizard({ lastCreatedYear }: { lastCreatedYear?
 
                     <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
                         <h3 className="text-sm font-bold text-blue-900 mb-3 flex items-center gap-2">
-                            <span>≡ƒôà Period Strategy</span>
+                            <span>📅 Period Strategy</span>
                         </h3>
 
                         <div className="space-y-4">

@@ -123,7 +123,7 @@ export default function PostingRulesForm({
                 <option value="">(Not Mapped - Manual Selection Required)</option>
                 {accounts.map(acc => (
                     <option key={acc.id} value={acc.id}>
-                        {acc.code} ΓÇö {acc.name}
+                        {acc.code} — {acc.name}
                     </option>
                 ))}
             </select>

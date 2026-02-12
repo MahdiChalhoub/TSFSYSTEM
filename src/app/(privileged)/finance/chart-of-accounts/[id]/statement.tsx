@@ -36,7 +36,7 @@ export default function AccountStatementView({ data, dateRange }: StatementProps
                 <div className="text-right">
                     <h2 className="text-xs font-bold uppercase text-stone-400 mb-1">Statement Period</h2>
                     <div className="font-medium text-stone-900">
-                        {new Date(currentRange.start).toLocaleDateString()} ΓÇö {new Date(currentRange.end).toLocaleDateString()}
+                        {new Date(currentRange.start).toLocaleDateString()} — {new Date(currentRange.end).toLocaleDateString()}
                     </div>
                 </div>
             </div>

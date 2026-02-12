@@ -18,7 +18,7 @@ export type JournalLineInput = {
  */
 export async function verifyTrialBalance() {
     try {
-        const accounts = await erpFetch('chart-of-accounts/trial_balance/')
+        const accounts = await erpFetch('coa/trial_balance/')
         const total = accounts.reduce((acc: number, cur: any) => acc + (cur.temp_balance || 0), 0)
 
         if (Math.abs(total) > 0.01) {

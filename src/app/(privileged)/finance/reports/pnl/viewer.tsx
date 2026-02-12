@@ -150,7 +150,7 @@ export default function PnlViewer({ initialData, fiscalYears }: { initialData: a
             </div>
 
             <div className="text-center py-10 opacity-30 text-[10px] font-bold uppercase tracking-[0.3em] font-mono">
-                TSF Financial Control System ΓÇó Integrity Confirmed ΓÇó {mounted ? new Date().toLocaleDateString() : ''}
+                TSF Financial Control System • Integrity Confirmed • {mounted ? new Date().toLocaleDateString() : ''}
             </div>
         </div>
     )

@@ -214,7 +214,7 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
             </div>
 
             <div className="text-center py-10 opacity-30 text-[10px] font-bold uppercase tracking-[0.3em] font-mono">
-                {mounted && `Institutional Financial Integrity Header ΓÇó ${new Date().toLocaleDateString()}`}
+                {mounted && `Institutional Financial Integrity Header • ${new Date().toLocaleDateString()}`}
             </div>
 
             {/* Diagnostics Modal */}

@@ -139,16 +139,51 @@ export async function getTrialBalanceReport(asOfDate?: Date, legalReport: boolea
 }
 
 export async function getProfitAndLossReport(startDate: Date, endDate: Date, scope: 'OFFICIAL' | 'INTERNAL' = 'INTERNAL') {
-    // This needs a separate endpoint in Django too.
-    // For now, I'll return empty if not implemented yet, or use erpFetch if I added it.
-    // I didn't add P&L to services.py yet. 
-    // Wait, let's just use TB for now or implement P&L in Django.
-    return []
+    try {
+        // Use trial balance data filtered to INCOME and EXPENSE accounts
+        const query = new URLSearchParams({ scope }).toString()
+        const result = await erpFetch(`coa/trial_balance/?${query}`)
+        return serialize(
+            result
+                .filter((acc: any) => acc.type === 'INCOME' || acc.type === 'EXPENSE')
+                .map((acc: any) => ({
+                    ...acc,
+                    balance: Number(acc.rollup_balance),
+                    directBalance: Number(acc.temp_balance)
+                }))
+        )
+    } catch (error) {
+        console.error("Failed to fetch P&L report:", error)
+        return []
+    }
 }
 
 export async function getBalanceSheetReport(asOfDate: Date, scope: 'OFFICIAL' | 'INTERNAL' = 'INTERNAL') {
-    // Also needs Django implementation.
-    return { accounts: [], netProfit: 0 }
+    try {
+        const query = new URLSearchParams({ scope }).toString()
+        const result = await erpFetch(`coa/trial_balance/?${query}`)
+        const mapped = result.map((acc: any) => ({
+            ...acc,
+            balance: Number(acc.rollup_balance),
+            directBalance: Number(acc.temp_balance)
+        }))
+
+        // Compute net profit from income - expense for the equity section
+        const totalIncome = mapped
+            .filter((a: any) => a.type === 'INCOME' && !a.parent)
+            .reduce((sum: number, a: any) => sum + a.balance, 0)
+        const totalExpense = mapped
+            .filter((a: any) => a.type === 'EXPENSE' && !a.parent)
+            .reduce((sum: number, a: any) => sum + a.balance, 0)
+
+        return serialize({
+            accounts: mapped.filter((a: any) => ['ASSET', 'LIABILITY', 'EQUITY'].includes(a.type)),
+            netProfit: totalIncome - totalExpense
+        })
+    } catch (error) {
+        console.error("Failed to fetch balance sheet:", error)
+        return { accounts: [], netProfit: 0 }
+    }
 }
 
 export async function reactivateChartOfAccount(id: number) {

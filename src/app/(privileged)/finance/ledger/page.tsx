@@ -24,7 +24,7 @@ export default async function GeneralLedgerPage() {
                 </div>
                 <div className="flex gap-3">
                     <Link href="/finance/ledger/opening/list" className="bg-white text-stone-600 border border-stone-200 px-5 py-2.5 rounded-lg hover:bg-stone-50 font-bold text-sm shadow-sm transition-all flex items-center gap-2">
-                        ≡ƒôï Opening Balances
+                        📋 Opening Balances
                     </Link>
                     <Link href="/finance/ledger/new" className="bg-black text-white px-5 py-2.5 rounded-lg hover:bg-stone-800 font-bold text-sm shadow-sm transition-all flex items-center gap-2">
                         + New Journal Entry
@@ -44,7 +44,7 @@ export default async function GeneralLedgerPage() {
                                     <div className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${getStatusStyle(entry.status)}`}>
                                         {entry.status}
                                     </div>
-                                    <h3 className="font-bold text-stone-900 text-sm">JV #{entry.id} ΓÇö {entry.description}</h3>
+                                    <h3 className="font-bold text-stone-900 text-sm">JV #{entry.id} — {entry.description}</h3>
                                 </div>
                                 <LedgerEntryActions
                                     entryId={entry.id}
@@ -56,7 +56,7 @@ export default async function GeneralLedgerPage() {
                             {/* Info Bar */}
                             <div className="px-4 py-2 bg-white flex items-center gap-6 text-[11px] text-stone-500 border-b border-stone-50 font-medium">
                                 <div className="flex items-center gap-1.5">
-                                    <span className="text-stone-300">Date:</span> {entry.transactionDate.toLocaleDateString('en-GB')}
+                                    <span className="text-stone-300">Date:</span> {new Date(entry.transactionDate).toLocaleDateString('en-GB')}
                                 </div>
                                 {entry.reference && (
                                     <div className="flex items-center gap-1.5">
@@ -65,12 +65,12 @@ export default async function GeneralLedgerPage() {
                                 )}
                                 {entry.reversalOf && (
                                     <div className="flex items-center gap-1.5 text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100">
-                                        <span>Γå║ Reversal of JV #{entry.reversalOf.id}</span>
+                                        <span>↩ Reversal of JV #{entry.reversalOf.id}</span>
                                     </div>
                                 )}
                                 {entry.reversedBy && (
                                     <div className="flex items-center gap-1.5 text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
-                                        <span>ΓÜá Reversed by JV #{entry.reversedBy.id}</span>
+                                        <span>⚠ Reversed by JV #{entry.reversedBy.id}</span>
                                     </div>
                                 )}
                             </div>

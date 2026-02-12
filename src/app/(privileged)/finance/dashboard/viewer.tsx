@@ -177,7 +177,7 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
                                     </td>
                                     <td className="p-6">
                                         <div className="font-bold text-stone-900">{entry.description}</div>
-                                        <div className="text-[10px] text-stone-400 uppercase font-black">J-#{entry.id} {entry.reference ? `ΓÇó ${entry.reference}` : ''}</div>
+                                        <div className="text-[10px] text-stone-400 uppercase font-black">J-#{entry.id} {entry.reference ? `• ${entry.reference}` : ''}</div>
                                     </td>
                                     <td className="p-6">
                                         <div className="flex gap-1 flex-wrap">

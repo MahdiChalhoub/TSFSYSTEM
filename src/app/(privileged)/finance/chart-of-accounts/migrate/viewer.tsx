@@ -195,7 +195,7 @@ export default function CoaMigrationTool({
                                         <option value="">(Select Target Account)</option>
                                         {targetAccounts.map(t => (
                                             <option key={t.id} value={t.id}>
-                                                {t.code} ΓÇö {t.name} [{t.type}]
+                                                {t.code} — {t.name} [{t.type}]
                                             </option>
                                         ))}
                                     </select>
