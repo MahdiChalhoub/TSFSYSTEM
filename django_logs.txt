@@ -1,0 +1,165 @@
+[TAILING] Tailing last 80 lines for [django] process (change the value with --lines option)
+/root/.pm2/logs/django-out.log last 80 lines:
+5|django   | 💥 Migration FAILED: Migration erp.0039_remove_taskqueue_source_approval_and_more dependencies reference nonexistent parent node ('finance', '0001_initial'). Rolling back files...
+5|django   | ❌ Upgrade CRITICALLY failed: ["Migration failed, system rolled back to 1.0.0. Error: Migration erp.0039_remove_taskqueue_source_approval_and_more dependencies reference nonexistent parent node ('finance', '0001_initial')"]
+5|django   | 🚀 Starting OS-Grade upgrade for finance...
+5|django   | 🔐 Signature verification disabled (development mode)
+5|django   | 📦 Backing up finance v1.0.0...
+5|django   | 🚚 Swapping files for finance v1.0.1...
+5|django   | ⚙️ Applying migrations for finance...
+5|django   | 💥 Migration FAILED: Migration erp.0039_remove_taskqueue_source_approval_and_more dependencies reference nonexistent parent node ('finance', '0001_initial'). Rolling back files...
+5|django   | ❌ Upgrade CRITICALLY failed: ["Migration failed, system rolled back to 1.0.0. Error: Migration erp.0039_remove_taskqueue_source_approval_and_more dependencies reference nonexistent parent node ('finance', '0001_initial')"]
+5|django   | 🚀 Starting OS-Grade upgrade for finance...
+5|django   | 🔐 Signature verification disabled (development mode)
+5|django   | ❌ Upgrade CRITICALLY failed: ['Invalid package structure.']
+5|django   | 🚀 Starting OS-Grade upgrade for finance...
+5|django   | 🔐 Signature verification disabled (development mode)
+5|django   | 📦 Backing up finance v1.0.0...
+5|django   | 🚚 Swapping files for finance v1.0.7...
+5|django   | ⚙️ Applying migrations for finance...
+5|django   | 💥 Migration FAILED: Migration erp.0039_remove_taskqueue_source_approval_and_more dependencies reference nonexistent parent node ('finance', '0001_initial'). Rolling back files...
+5|django   | ❌ Upgrade CRITICALLY failed: ["Migration failed, system rolled back to 1.0.0. Error: Migration erp.0039_remove_taskqueue_source_approval_and_more dependencies reference nonexistent parent node ('finance', '0001_initial')"]
+5|django   | Platform Integrity Verified: PostgreSQL Engine Active.
+5|django   | 🚀 Starting OS-Grade upgrade for finance...
+5|django   | 🔐 Signature verification disabled (development mode)
+5|django   | 📦 Backing up finance v1.0.0...
+5|django   | 🚚 Swapping files for finance v1.0.1...
+5|django   | ⚙️ Applying migrations for finance...
+5|django   | 💥 Migration FAILED: Migration erp.0039_remove_taskqueue_source_approval_and_more dependencies reference nonexistent parent node ('finance', '0001_initial'). Rolling back files...
+5|django   | ❌ Upgrade CRITICALLY failed: ["Migration failed, system rolled back to 1.0.0. Error: Migration erp.0039_remove_taskqueue_source_approval_and_more dependencies reference nonexistent parent node ('finance', '0001_initial')"]
+5|django   | 🚀 Starting OS-Grade upgrade for finance...
+5|django   | 🔐 Signature verification disabled (development mode)
+5|django   | 📦 Backing up finance v1.0.0...
+5|django   | 🚚 Swapping files for finance v1.0.3...
+5|django   | ⚙️ Applying migrations for finance...
+5|django   | 💥 Migration FAILED: Migration erp.0039_remove_taskqueue_source_approval_and_more dependencies reference nonexistent parent node ('finance', '0001_initial'). Rolling back files...
+5|django   | ❌ Upgrade CRITICALLY failed: ["Migration failed, system rolled back to 1.0.0. Error: Migration erp.0039_remove_taskqueue_source_approval_and_more dependencies reference nonexistent parent node ('finance', '0001_initial')"]
+5|django   | 🚀 Starting OS-Grade upgrade for finance...
+5|django   | 🔐 Signature verification disabled (development mode)
+5|django   | 📦 Backing up finance v1.0.0...
+5|django   | 🚚 Swapping files for finance v1.0.3...
+5|django   | ⚙️ Applying migrations for finance...
+5|django   | 💥 Migration FAILED: Migration erp.0039_remove_taskqueue_source_approval_and_more dependencies reference nonexistent parent node ('finance', '0001_initial'). Rolling back files...
+5|django   | ❌ Upgrade CRITICALLY failed: ["Migration failed, system rolled back to 1.0.0. Error: Migration erp.0039_remove_taskqueue_source_approval_and_more dependencies reference nonexistent parent node ('finance', '0001_initial')"]
+5|django   | 🚀 Starting OS-Grade upgrade for finance...
+5|django   | 🔐 Signature verification disabled (development mode)
+5|django   | 📦 Backing up finance v1.0.0...
+5|django   | 🚚 Swapping files for finance v1.0.4...
+5|django   | ⚙️ Applying migrations for finance...
+5|django   | 💥 Migration FAILED: Migration erp.0039_remove_taskqueue_source_approval_and_more dependencies reference nonexistent parent node ('finance', '0001_initial'). Rolling back files...
+5|django   | ❌ Upgrade CRITICALLY failed: ["Migration failed, system rolled back to 1.0.0. Error: Migration erp.0039_remove_taskqueue_source_approval_and_more dependencies reference nonexistent parent node ('finance', '0001_initial')"]
+5|django   | 🚀 Starting OS-Grade upgrade for finance...
+5|django   | 🔐 Signature verification disabled (development mode)
+5|django   | ❌ Upgrade CRITICALLY failed: ['Invalid package structure.']
+5|django   | 🚀 Starting OS-Grade upgrade for finance...
+5|django   | 🔐 Signature verification disabled (development mode)
+5|django   | 📦 Backing up finance v1.0.0...
+5|django   | 🚚 Swapping files for finance v1.0.6...
+5|django   | ⚙️ Applying migrations for finance...
+5|django   | 💥 Migration FAILED: Migration erp.0039_remove_taskqueue_source_approval_and_more dependencies reference nonexistent parent node ('finance', '0001_initial'). Rolling back files...
+5|django   | ❌ Upgrade CRITICALLY failed: ["Migration failed, system rolled back to 1.0.0. Error: Migration erp.0039_remove_taskqueue_source_approval_and_more dependencies reference nonexistent parent node ('finance', '0001_initial')"]
+5|django   | 🚀 Starting OS-Grade upgrade for finance...
+5|django   | 🔐 Signature verification disabled (development mode)
+5|django   | 📦 Backing up finance v1.0.0...
+5|django   | 🚚 Swapping files for finance v1.0.7...
+5|django   | ⚙️ Applying migrations for finance...
+5|django   | 💥 Migration FAILED: Migration erp.0039_remove_taskqueue_source_approval_and_more dependencies reference nonexistent parent node ('finance', '0001_initial'). Rolling back files...
+5|django   | ❌ Upgrade CRITICALLY failed: ["Migration failed, system rolled back to 1.0.0. Error: Migration erp.0039_remove_taskqueue_source_approval_and_more dependencies reference nonexistent parent node ('finance', '0001_initial')"]
+5|django   | 🚀 Starting OS-Grade upgrade for finance...
+5|django   | 🔐 Signature verification disabled (development mode)
+5|django   | 🚚 Swapping files for finance v1.0.7...
+5|django   | ⚙️ Applying migrations for finance...
+5|django   | 💥 Migration FAILED: Migration erp.0039_remove_taskqueue_source_approval_and_more dependencies reference nonexistent parent node ('finance', '0001_initial'). Rolling back files...
+5|django   | ❌ Upgrade CRITICALLY failed: ["Migration failed, system rolled back to 0.0.0. Error: Migration erp.0039_remove_taskqueue_source_approval_and_more dependencies reference nonexistent parent node ('finance', '0001_initial')"]
+5|django   | Platform Integrity Verified: PostgreSQL Engine Active.
+5|django   | Platform Integrity Verified: PostgreSQL Engine Active.
+5|django   | Platform Integrity Verified: PostgreSQL Engine Active.
+5|django   | Platform Integrity Verified: PostgreSQL Engine Active.
+5|django   | Platform Integrity Verified: PostgreSQL Engine Active.
+5|django   | Platform Integrity Verified: PostgreSQL Engine Active.
+5|django   | Platform Integrity Verified: PostgreSQL Engine Active.
+5|django   | Platform Integrity Verified: PostgreSQL Engine Active.
+5|django   | Platform Integrity Verified: PostgreSQL Engine Active.
+
+/root/.pm2/logs/django-error.log last 80 lines:
+5|django   |     return command.execute(*args, **defaults)
+5|django   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+5|django   |   File "/root/TSFSYSTEM/erp_backend/venv/lib/python3.12/site-packages/django/core/management/base.py", line 464, in execute
+5|django   |     output = self.handle(*args, **options)
+5|django   |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+5|django   |   File "/root/TSFSYSTEM/erp_backend/venv/lib/python3.12/site-packages/django/core/management/base.py", line 111, in wrapper
+5|django   |     res = handle_func(*args, **kwargs)
+5|django   |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+5|django   |   File "/root/TSFSYSTEM/erp_backend/venv/lib/python3.12/site-packages/django/core/management/commands/migrate.py", line 114, in handle
+5|django   |     executor = MigrationExecutor(connection, self.migration_progress_callback)
+5|django   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+5|django   |   File "/root/TSFSYSTEM/erp_backend/venv/lib/python3.12/site-packages/django/db/migrations/executor.py", line 18, in __init__
+5|django   |     self.loader = MigrationLoader(self.connection)
+5|django   |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+5|django   |   File "/root/TSFSYSTEM/erp_backend/venv/lib/python3.12/site-packages/django/db/migrations/loader.py", line 59, in __init__
+5|django   |     self.build_graph()
+5|django   |   File "/root/TSFSYSTEM/erp_backend/venv/lib/python3.12/site-packages/django/db/migrations/loader.py", line 305, in build_graph
+5|django   |     self.add_external_dependencies(key, migration)
+5|django   |   File "/root/TSFSYSTEM/erp_backend/venv/lib/python3.12/site-packages/django/db/migrations/loader.py", line 216, in add_external_dependencies
+5|django   |     parent = self.check_key(parent, key[0])
+5|django   |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+5|django   |   File "/root/TSFSYSTEM/erp_backend/venv/lib/python3.12/site-packages/django/db/migrations/loader.py", line 199, in check_key
+5|django   |     raise ValueError("Dependency on unknown app: %s" % key[0])
+5|django   | ValueError: Dependency on unknown app: finance
+5|django   | 
+5|django   | During handling of the above exception, another exception occurred:
+5|django   | 
+5|django   | Traceback (most recent call last):
+5|django   |   File "/root/TSFSYSTEM/erp_backend/erp/views_saas_modules.py", line 223, in upload_module
+5|django   |     ModuleManager.upgrade(module_code, full_path, user=request.user)
+5|django   |   File "/usr/lib/python3.12/contextlib.py", line 81, in inner
+5|django   |     return func(*args, **kwds)
+5|django   |            ^^^^^^^^^^^^^^^^^^^
+5|django   |   File "/root/TSFSYSTEM/erp_backend/erp/module_manager.py", line 268, in upgrade
+5|django   |     raise e
+5|django   |   File "/root/TSFSYSTEM/erp_backend/erp/module_manager.py", line 233, in upgrade
+5|django   |     raise ValidationError(f"Migration failed, system rolled back to {old_version}. Error: {str(e)}")
+5|django   | django.core.exceptions.ValidationError: ['Migration failed, system rolled back to 0.0.0. Error: Dependency on unknown app: finance']
+5|django   | Traceback (most recent call last):
+5|django   |   File "/root/TSFSYSTEM/erp_backend/erp/module_manager.py", line 227, in upgrade
+5|django   |     call_command('migrate', no_input=True)
+5|django   |   File "/root/TSFSYSTEM/erp_backend/venv/lib/python3.12/site-packages/django/core/management/__init__.py", line 195, in call_command
+5|django   |     return command.execute(*args, **defaults)
+5|django   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+5|django   |   File "/root/TSFSYSTEM/erp_backend/venv/lib/python3.12/site-packages/django/core/management/base.py", line 464, in execute
+5|django   |     output = self.handle(*args, **options)
+5|django   |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+5|django   |   File "/root/TSFSYSTEM/erp_backend/venv/lib/python3.12/site-packages/django/core/management/base.py", line 111, in wrapper
+5|django   |     res = handle_func(*args, **kwargs)
+5|django   |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+5|django   |   File "/root/TSFSYSTEM/erp_backend/venv/lib/python3.12/site-packages/django/core/management/commands/migrate.py", line 114, in handle
+5|django   |     executor = MigrationExecutor(connection, self.migration_progress_callback)
+5|django   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+5|django   |   File "/root/TSFSYSTEM/erp_backend/venv/lib/python3.12/site-packages/django/db/migrations/executor.py", line 18, in __init__
+5|django   |     self.loader = MigrationLoader(self.connection)
+5|django   |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+5|django   |   File "/root/TSFSYSTEM/erp_backend/venv/lib/python3.12/site-packages/django/db/migrations/loader.py", line 59, in __init__
+5|django   |     self.build_graph()
+5|django   |   File "/root/TSFSYSTEM/erp_backend/venv/lib/python3.12/site-packages/django/db/migrations/loader.py", line 305, in build_graph
+5|django   |     self.add_external_dependencies(key, migration)
+5|django   |   File "/root/TSFSYSTEM/erp_backend/venv/lib/python3.12/site-packages/django/db/migrations/loader.py", line 216, in add_external_dependencies
+5|django   |     parent = self.check_key(parent, key[0])
+5|django   |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+5|django   |   File "/root/TSFSYSTEM/erp_backend/venv/lib/python3.12/site-packages/django/db/migrations/loader.py", line 199, in check_key
+5|django   |     raise ValueError("Dependency on unknown app: %s" % key[0])
+5|django   | ValueError: Dependency on unknown app: finance
+5|django   | 
+5|django   | During handling of the above exception, another exception occurred:
+5|django   | 
+5|django   | Traceback (most recent call last):
+5|django   |   File "/root/TSFSYSTEM/erp_backend/erp/views_saas_modules.py", line 223, in upload_module
+5|django   |     ModuleManager.upgrade(module_code, full_path, user=request.user)
+5|django   |   File "/usr/lib/python3.12/contextlib.py", line 81, in inner
+5|django   |     return func(*args, **kwds)
+5|django   |            ^^^^^^^^^^^^^^^^^^^
+5|django   |   File "/root/TSFSYSTEM/erp_backend/erp/module_manager.py", line 268, in upgrade
+5|django   |     raise e
+5|django   |   File "/root/TSFSYSTEM/erp_backend/erp/module_manager.py", line 233, in upgrade
+5|django   |     raise ValidationError(f"Migration failed, system rolled back to {old_version}. Error: {str(e)}")
+5|django   | django.core.exceptions.ValidationError: ['Migration failed, system rolled back to 0.0.0. Error: Dependency on unknown app: finance']
+
