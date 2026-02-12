@@ -455,9 +455,14 @@ except ImportError:
 try:
     from apps.finance.models import (  # noqa: E402, F401
         ChartOfAccount, FinancialAccount, FiscalYear, FiscalPeriod,
-        JournalEntry, JournalEntryLine, Transaction, TransactionSequence,
+        JournalEntry, JournalEntryLine, Transaction,
         BarcodeSettings, Loan, LoanInstallment, FinancialEvent
     )
+    # TransactionSequence may not exist in all finance versions
+    try:
+        from apps.finance.models import TransactionSequence  # noqa: F401
+    except ImportError:
+        pass
 except ImportError:
     pass
 
