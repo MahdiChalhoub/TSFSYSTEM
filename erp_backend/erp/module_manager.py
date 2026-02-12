@@ -54,8 +54,8 @@ class ModuleManager:
         """
         found_modules = []
         
-        # Scan both paths
-        for modules_dir in [ModuleManager.MODULES_DIR, ModuleManager.LEGACY_MODULES_DIR]:
+        # Scan legacy FIRST so that modern paths (listed second) OVERWRITE them in the registry
+        for modules_dir in [ModuleManager.LEGACY_MODULES_DIR, ModuleManager.MODULES_DIR]:
             if not os.path.exists(modules_dir):
                 continue
                 
@@ -206,6 +206,12 @@ class ModuleManager:
             print(f"🚚 Swapping files for {module_name} v{new_version}...")
             os.makedirs(os.path.dirname(target_path), exist_ok=True)
             shutil.copytree(source_inner_dir, target_path)
+
+            # d. Legacy Cleanup: Remove from old modules dir if it exists there to prevent sync collisions
+            legacy_path = os.path.join(ModuleManager.LEGACY_MODULES_DIR, module_name)
+            if os.path.exists(legacy_path):
+                print(f"🧹 Removing legacy artifacts from {legacy_path}...")
+                shutil.rmtree(legacy_path)
 
             # c. Frontend Isolation Update
             frontend_extract = os.path.join(temp_extract, 'frontend')
@@ -403,6 +409,11 @@ class ModuleManager:
         target_path = os.path.join(ModuleManager.MODULES_DIR, module_name)
         if os.path.exists(target_path):
             shutil.rmtree(target_path)
+            
+        # Also clean up legacy path if it exists
+        legacy_path = os.path.join(ModuleManager.LEGACY_MODULES_DIR, module_name)
+        if os.path.exists(legacy_path):
+            shutil.rmtree(legacy_path)
             
         # Clean up frontend isolation zone
         frontend_path = os.path.join(settings.BASE_DIR, '..', 'src', 'modules', module_name)
