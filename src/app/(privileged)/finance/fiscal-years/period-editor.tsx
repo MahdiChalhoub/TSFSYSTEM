@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { X } from 'lucide-react'
 import { updatePeriod } from '@/app/actions/finance/fiscal-year'
 
 interface Props {
@@ -12,8 +13,8 @@ export default function PeriodEditor({ period, onClose }: Props) {
     const [isPending, setIsPending] = useState(false)
     const [formData, setFormData] = useState({
         name: period.name,
-        startDate: typeof period.startDate === 'string' ? period.startDate.split('T')[0] : period.startDate?.toISOString?.()?.split('T')[0] || '',
-        endDate: typeof period.endDate === 'string' ? period.endDate.split('T')[0] : period.endDate?.toISOString?.()?.split('T')[0] || ''
+        startDate: (period.start_date || period.startDate || '').split('T')[0],
+        endDate: (period.end_date || period.endDate || '').split('T')[0]
     })
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -38,7 +39,7 @@ export default function PeriodEditor({ period, onClose }: Props) {
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                 <div className="p-4 border-b border-stone-100 flex justify-between items-center bg-stone-50">
                     <h3 className="font-bold text-stone-900">Edit Period</h3>
-                    <button onClick={onClose} className="text-stone-400 hover:text-stone-600">├ù</button>
+                    <button onClick={onClose} className="text-stone-400 hover:text-stone-600"><X size={18} /></button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-4 space-y-4">
