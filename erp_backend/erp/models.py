@@ -327,7 +327,7 @@ class User(AbstractUser):
             models.UniqueConstraint(fields=['username', 'organization'], name='unique_username_per_org')
         ]
     
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='users')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True, blank=True, related_name='users')
     role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True, related_name='users')
     home_site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True, related_name='home_users')
     cash_register = models.ForeignKey('finance.FinancialAccount', on_delete=models.SET_NULL, null=True, blank=True)
