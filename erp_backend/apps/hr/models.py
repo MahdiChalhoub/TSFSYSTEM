@@ -17,9 +17,8 @@ class Employee(TenantModel):
     salary = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
-    linked_account = models.ForeignKey(
-        'finance.ChartOfAccount', on_delete=models.SET_NULL, null=True, blank=True
-    )
+    # Decoupled from finance module — uses IntegerField to avoid hard dependency
+    linked_account_id = models.IntegerField(null=True, blank=True, db_column='linked_account_id')
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, db_column='user_id')
     home_site = models.ForeignKey('erp.Site', on_delete=models.SET_NULL, null=True, blank=True)
     address_line = models.TextField(null=True, blank=True)

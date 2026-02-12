@@ -393,7 +393,8 @@ class SubscriptionPayment(models.Model):
     type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='PURCHASE')
     status = models.CharField(max_length=20, default='PENDING')
     notes = models.TextField(blank=True, default='')
-    journal_entry = models.ForeignKey('finance.JournalEntry', on_delete=models.SET_NULL, null=True, blank=True, help_text="Linked accounting journal entry")
+    # Decoupled from finance module — uses IntegerField to avoid hard dependency
+    journal_entry_id = models.IntegerField(null=True, blank=True, db_column='journal_entry_id', help_text="Linked accounting journal entry")
     paid_at = models.DateTimeField(null=True, blank=True, help_text="When payment was confirmed")
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 

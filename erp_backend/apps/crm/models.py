@@ -21,9 +21,8 @@ class Contact(TenantModel):
     vat_id = models.CharField(max_length=100, null=True, blank=True)
     balance = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     credit_limit = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
-    linked_account = models.ForeignKey(
-        'finance.ChartOfAccount', on_delete=models.SET_NULL, null=True, blank=True
-    )
+    # Decoupled from finance module — uses IntegerField to avoid hard dependency
+    linked_account_id = models.IntegerField(null=True, blank=True, db_column='linked_account_id')
     home_site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True)
     customer_type = models.CharField(max_length=50, null=True, blank=True)
     airsi_tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'))
