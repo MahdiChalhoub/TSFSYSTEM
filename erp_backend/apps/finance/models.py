@@ -82,6 +82,7 @@ class FiscalPeriod(TenantModel):
     class Meta:
         db_table = 'fiscalperiod'
         unique_together = ('name', 'fiscal_year')
+        ordering = ['start_date']
 
 
 # =============================================================================
