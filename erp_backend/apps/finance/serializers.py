@@ -10,24 +10,31 @@ from .models import (
 
 
 class ChartOfAccountSerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+
     class Meta:
         model = ChartOfAccount
         fields = '__all__'
 
 
 class FinancialAccountSerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+
     class Meta:
         model = FinancialAccount
         fields = '__all__'
 
 
 class FiscalPeriodSerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+
     class Meta:
         model = FiscalPeriod
         fields = '__all__'
 
 
 class FiscalYearSerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
     periods = FiscalPeriodSerializer(many=True, read_only=True)
 
     class Meta:
@@ -36,12 +43,15 @@ class FiscalYearSerializer(serializers.ModelSerializer):
 
 
 class JournalEntryLineSerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+
     class Meta:
         model = JournalEntryLine
         fields = '__all__'
 
 
 class JournalEntrySerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
     lines = JournalEntryLineSerializer(many=True, read_only=True)
 
     class Meta:
@@ -50,24 +60,32 @@ class JournalEntrySerializer(serializers.ModelSerializer):
 
 
 class TransactionSerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+
     class Meta:
         model = Transaction
         fields = '__all__'
 
 
 class TransactionSequenceSerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+
     class Meta:
         model = TransactionSequence
         fields = '__all__'
 
 
 class BarcodeSettingsSerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+
     class Meta:
         model = BarcodeSettings
         fields = '__all__'
 
 
 class LoanSerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+
     class Meta:
         model = Loan
         fields = '__all__'
@@ -80,6 +98,9 @@ class LoanInstallmentSerializer(serializers.ModelSerializer):
 
 
 class FinancialEventSerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+
     class Meta:
         model = FinancialEvent
         fields = '__all__'
+
