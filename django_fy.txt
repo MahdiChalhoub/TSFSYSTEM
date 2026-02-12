@@ -1,0 +1,60 @@
+[2026-02-12 00:46:30 +0000] [605259] [INFO] Worker exiting (pid: 605259)
+[2026-02-12 00:46:30 +0000] [605256] [INFO] Shutting down: Master
+[2026-02-12 00:46:31 +0000] [606434] [INFO] Starting gunicorn 25.0.3
+[2026-02-12 00:46:31 +0000] [606434] [INFO] Listening at: http://127.0.0.1:8000 (606434)
+[2026-02-12 00:46:31 +0000] [606434] [INFO] Using worker: sync
+[2026-02-12 00:46:31 +0000] [606436] [INFO] Booting worker with pid: 606436
+[2026-02-12 00:46:31 +0000] [606437] [INFO] Booting worker with pid: 606437
+[2026-02-12 00:46:31 +0000] [606438] [INFO] Booting worker with pid: 606438
+[2026-02-12 00:54:46 +0000] [606434] [INFO] Handling signal: int
+[2026-02-12 00:54:46 +0000] [606437] [INFO] Worker exiting (pid: 606437)
+[2026-02-12 00:54:46 +0000] [606436] [INFO] Worker exiting (pid: 606436)
+[2026-02-12 00:54:46 +0000] [606438] [INFO] Worker exiting (pid: 606438)
+[2026-02-12 00:54:46 +0000] [606434] [INFO] Shutting down: Master
+[2026-02-12 00:54:46 +0000] [607183] [INFO] Starting gunicorn 25.0.3
+[2026-02-12 00:54:46 +0000] [607183] [INFO] Listening at: http://127.0.0.1:8000 (607183)
+[2026-02-12 00:54:46 +0000] [607183] [INFO] Using worker: sync
+[2026-02-12 00:54:46 +0000] [607185] [INFO] Booting worker with pid: 607185
+[2026-02-12 00:54:46 +0000] [607186] [INFO] Booting worker with pid: 607186
+[2026-02-12 00:54:46 +0000] [607187] [INFO] Booting worker with pid: 607187
+[2026-02-12 00:56:58 +0000] [607183] [INFO] Handling signal: int
+[2026-02-12 00:56:58 +0000] [607185] [INFO] Worker exiting (pid: 607185)
+[2026-02-12 00:56:58 +0000] [607187] [INFO] Worker exiting (pid: 607187)
+[2026-02-12 00:56:58 +0000] [607186] [INFO] Worker exiting (pid: 607186)
+[2026-02-12 00:56:58 +0000] [607183] [INFO] Shutting down: Master
+[2026-02-12 00:56:59 +0000] [607646] [INFO] Starting gunicorn 25.0.3
+[2026-02-12 00:56:59 +0000] [607646] [INFO] Listening at: http://127.0.0.1:8000 (607646)
+[2026-02-12 00:56:59 +0000] [607646] [INFO] Using worker: sync
+[2026-02-12 00:56:59 +0000] [607647] [INFO] Booting worker with pid: 607647
+[2026-02-12 00:56:59 +0000] [607648] [INFO] Booting worker with pid: 607648
+[2026-02-12 00:56:59 +0000] [607649] [INFO] Booting worker with pid: 607649
+    at async g (.next/server/chunks/ssr/_27a93f33._.js:1:5597)
+    at async m (.next/server/chunks/ssr/_9f2d4416._.js:1:7646)
+    at async p (.next/server/chunks/ssr/_9f2d4416._.js:2:2712)
+⨯ Error: This field is required.
+    at e (.next/server/chunks/ssr/_4cbc635e._.js:1:7285)
+    at async g (.next/server/chunks/ssr/_27a93f33._.js:1:5597)
+    at async m (.next/server/chunks/ssr/_9f2d4416._.js:1:7646)
+    at async p (.next/server/chunks/ssr/_9f2d4416._.js:2:2712) {
+  digest: '3029983807'
+}
+[ERP_API] Error response from fiscal-years/: {"organization":["This field is required."]}
+[ERP_API] Request to fiscal-years/ failed: Error: This field is required.
+    at e (.next/server/chunks/ssr/_4cbc635e._.js:1:7285)
+    at async g (.next/server/chunks/ssr/_27a93f33._.js:1:5597)
+    at async m (.next/server/chunks/ssr/_9f2d4416._.js:1:7646)
+    at async p (.next/server/chunks/ssr/_9f2d4416._.js:2:2712)
+Failed to create fiscal year: Error: This field is required.
+    at e (.next/server/chunks/ssr/_4cbc635e._.js:1:7285)
+    at async g (.next/server/chunks/ssr/_27a93f33._.js:1:5597)
+    at async m (.next/server/chunks/ssr/_9f2d4416._.js:1:7646)
+    at async p (.next/server/chunks/ssr/_9f2d4416._.js:2:2712)
+⨯ Error: This field is required.
+    at e (.next/server/chunks/ssr/_4cbc635e._.js:1:7285)
+    at async g (.next/server/chunks/ssr/_27a93f33._.js:1:5597)
+    at async m (.next/server/chunks/ssr/_9f2d4416._.js:1:7646)
+    at async p (.next/server/chunks/ssr/_9f2d4416._.js:2:2712) {
+  digest: '3029983807'
+}
+[SECURITY] Unauthorized access attempt to SaaS Panel by Guest
+[SECURITY] Unauthorized access attempt to SaaS Panel by Guest
