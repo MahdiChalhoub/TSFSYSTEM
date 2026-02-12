@@ -22,8 +22,8 @@ export default function PeriodEditor({ period, onClose }: Props) {
         try {
             await updatePeriod(period.id, {
                 name: formData.name,
-                startDate: new Date(formData.startDate),
-                endDate: new Date(formData.endDate)
+                start_date: formData.startDate,
+                end_date: formData.endDate
             })
             onClose()
         } catch (err: any) {

@@ -132,7 +132,7 @@ export default function FiscalYearCard({ year, nextYear }: { year: any, nextYear
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7 gap-3">
-                {year.periods?.map((p: any, idx: number) => {
+                {[...(year.periods || [])].sort((a: any, b: any) => (a.start_date || '').localeCompare(b.start_date || '')).map((p: any, idx: number) => {
                     const periodStatus = p.is_closed ? 'CLOSED' : 'OPEN'
                     const periodLabel = p.name || `P${String(idx + 1).padStart(2, '0')}`
                     return (
