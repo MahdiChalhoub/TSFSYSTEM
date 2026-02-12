@@ -26,22 +26,39 @@ from .middleware import get_current_tenant_id
 from .models import (
     Organization, Site, User, Country, Role,
     SystemModule, OrganizationModule,
-    # Cross-cutting: Dashboard needs these
-    FinancialAccount, ChartOfAccount, JournalEntryLine,
-    Product, Contact, Transaction, Inventory, OrderLine,
-    Brand,
 )
+
+# --- Business Module Models (optional — modules may be uninstalled) ---
+try:
+    from .models import FinancialAccount, ChartOfAccount, JournalEntryLine, Transaction
+except ImportError:
+    FinancialAccount = ChartOfAccount = JournalEntryLine = Transaction = None
+
+try:
+    from .models import Product, Inventory, OrderLine, Brand
+except ImportError:
+    Product = Inventory = OrderLine = Brand = None
+
+try:
+    from .models import Contact
+except ImportError:
+    Contact = None
 # --- Kernel Serializers ---
 from .serializers import (
     OrganizationSerializer, SiteSerializer, UserSerializer,
     CountrySerializer, RoleSerializer,
-    ProductSerializer, BrandSerializer,
 )
+try:
+    from .serializers import ProductSerializer, BrandSerializer
+except ImportError:
+    ProductSerializer = BrandSerializer = None
+
 # --- Kernel Services ---
-from .services import (
-    ProvisioningService, ConfigurationService,
-    LedgerService, InventoryService,
-)
+from .services import ProvisioningService, ConfigurationService
+try:
+    from .services import LedgerService, InventoryService
+except ImportError:
+    LedgerService = InventoryService = None
 
 # ============================================================================
 #  KERNEL BASE CLASS
