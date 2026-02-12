@@ -2,9 +2,15 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import (
     User, Organization, Site, Role, Permission,
-    TransactionSequence, 
     PlanCategory, SubscriptionPlan, SubscriptionPayment
 )
+
+# TransactionSequence lives in the finance module which may not be installed
+try:
+    from .models import TransactionSequence
+    _has_transaction_sequence = True
+except ImportError:
+    _has_transaction_sequence = False
 
 # User
 admin.site.register(User, UserAdmin)
@@ -30,10 +36,11 @@ class PermissionAdmin(admin.ModelAdmin):
     list_display = ('code', 'name')
     search_fields = ('code', 'name')
 
-@admin.register(TransactionSequence)
-class TransactionSequenceAdmin(admin.ModelAdmin):
-    list_display = ('type', 'prefix', 'next_number', 'organization')
-    list_filter = ('organization', 'type')
+if _has_transaction_sequence:
+    @admin.register(TransactionSequence)
+    class TransactionSequenceAdmin(admin.ModelAdmin):
+        list_display = ('type', 'prefix', 'next_number', 'organization')
+        list_filter = ('organization', 'type')
 
 # Subscription
 @admin.register(PlanCategory)
