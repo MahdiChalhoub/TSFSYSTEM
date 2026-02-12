@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { deleteFiscalYear, updatePeriodStatus, closeFiscalYear, hardLockFiscalYear, transferBalancesToNextYear } from '@/app/actions/finance/fiscal-year'
-import { Trash2, Lock, Unlock, Edit2, PlayCircle, Clock, ShieldCheck, Forward } from 'lucide-react'
+import { Trash2, Lock, Edit2, PlayCircle, ShieldCheck, Forward } from 'lucide-react'
 import PeriodEditor from './period-editor'
 
 export default function FiscalYearCard({ year, nextYear }: { year: any, nextYear?: any }) {
@@ -78,7 +78,7 @@ export default function FiscalYearCard({ year, nextYear }: { year: any, nextYear
                             </span>
                         </h3>
                         <p className="text-sm text-stone-500 mt-1 font-medium">
-                            {new Date(year.startDate).toLocaleDateString()} ΓÇö {new Date(year.endDate).toLocaleDateString()}
+                            {new Date(year.startDate).toLocaleDateString()} — {new Date(year.endDate).toLocaleDateString()}
                         </p>
                     </div>
                 </div>
@@ -132,69 +132,63 @@ export default function FiscalYearCard({ year, nextYear }: { year: any, nextYear
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7 gap-3">
-                {year.periods?.map((p: any) => (
-                    <div
-                        key={p.id}
-                        className={`
-                            relative group p-3 rounded-lg border text-center transition-all
-                            ${p.status === 'OPEN' ? 'bg-white border-green-200 shadow-sm' : ''}
-                            ${p.status === 'CLOSED' || p.status === 'LOCKED' ? 'bg-stone-50 border-stone-200 opacity-75' : ''}
-                            ${p.status === 'FUTURE' ? 'bg-blue-50 border-blue-100 text-blue-700' : ''}
-                            ${p.type === 'ADJUSTMENT' ? 'border-dashed border-stone-400' : ''}
-                        `}
-                    >
-                        <div className="text-[10px] font-bold uppercase tracking-wider mb-1 opacity-50">
-                            {p.type === 'ADJUSTMENT' ? 'Audit' : `P${p.number}`}
-                        </div>
-                        <div className="font-semibold text-xs truncate">{p.name.split(' ')[0]}</div>
+                {year.periods?.map((p: any, idx: number) => {
+                    const periodStatus = p.is_closed ? 'CLOSED' : 'OPEN'
+                    const periodLabel = p.name || `P${String(idx + 1).padStart(2, '0')}`
+                    return (
+                        <div
+                            key={p.id}
+                            className={`
+                                relative group p-3 rounded-lg border text-center transition-all
+                                ${!p.is_closed ? 'bg-white border-green-200 shadow-sm' : 'bg-stone-50 border-stone-200 opacity-75'}
+                            `}
+                        >
+                            <div className="text-[10px] font-bold uppercase tracking-wider mb-1 opacity-50">
+                                {periodLabel}
+                            </div>
+                            <div className="font-semibold text-xs truncate">
+                                {p.start_date ? new Date(p.start_date).toLocaleDateString('en', { month: 'short' }) : ''}
+                            </div>
 
-                        <div className="flex justify-center items-center gap-1 mt-2">
-                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${p.status === 'OPEN' ? 'bg-green-100 text-green-700' :
-                                (p.status === 'CLOSED' || p.status === 'LOCKED') ? 'bg-stone-200 text-stone-600' :
-                                    'bg-blue-100 text-blue-700'
-                                }`}>
-                                {p.status === 'LOCKED' ? 'CLOSED' : p.status}
-                            </span>
-                        </div>
+                            <div className="flex justify-center items-center gap-1 mt-2">
+                                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${!p.is_closed ? 'bg-green-100 text-green-700' : 'bg-stone-200 text-stone-600'
+                                    }`}>
+                                    {periodStatus}
+                                </span>
+                            </div>
 
-                        {/* Hover Actions */}
-                        {!year.isHardLocked && (
-                            <div className="absolute inset-0 bg-white/95 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 rounded-lg z-10 p-2 text-stone-600">
+                            {/* Hover Actions */}
+                            {!year.isHardLocked && (
+                                <div className="absolute inset-0 bg-white/95 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 rounded-lg z-10 p-2 text-stone-600">
 
-                                <div className="flex gap-2">
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => handleChangeStatus(p.id, 'OPEN')}
+                                            className={`p-1.5 rounded hover:bg-green-100 hover:text-green-700 ${!p.is_closed ? 'bg-green-50 text-green-700' : ''}`}
+                                            title="Open"
+                                        >
+                                            <PlayCircle size={14} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleChangeStatus(p.id, 'CLOSED')}
+                                            className={`p-1.5 rounded hover:bg-stone-200 hover:text-stone-800 ${p.is_closed ? 'bg-stone-200 text-stone-800' : ''}`}
+                                            title="Close"
+                                        >
+                                            <Lock size={14} />
+                                        </button>
+                                    </div>
+
                                     <button
-                                        onClick={() => handleChangeStatus(p.id, 'OPEN')}
-                                        className={`p-1.5 rounded hover:bg-green-100 hover:text-green-700 ${p.status === 'OPEN' ? 'bg-green-50 text-green-700' : ''}`}
-                                        title="Open"
+                                        onClick={() => setEditingPeriod(p)}
+                                        className="text-[9px] font-bold uppercase hover:underline mt-1"
                                     >
-                                        <PlayCircle size={14} />
-                                    </button>
-                                    <button
-                                        onClick={() => handleChangeStatus(p.id, 'CLOSED')}
-                                        className={`p-1.5 rounded hover:bg-stone-200 hover:text-stone-800 ${p.status === 'CLOSED' || p.status === 'LOCKED' ? 'bg-stone-200 text-stone-800' : ''}`}
-                                        title="Close"
-                                    >
-                                        <Lock size={14} />
-                                    </button>
-                                    <button
-                                        onClick={() => handleChangeStatus(p.id, 'FUTURE')}
-                                        className={`p-1.5 rounded hover:bg-blue-100 hover:text-blue-700 ${p.status === 'FUTURE' ? 'bg-blue-50 text-blue-700' : ''}`}
-                                        title="Future"
-                                    >
-                                        <Clock size={14} />
+                                        Edit
                                     </button>
                                 </div>
-
-                                <button
-                                    onClick={() => setEditingPeriod(p)}
-                                    className="text-[9px] font-bold uppercase hover:underline mt-1"
-                                >
-                                    Edit
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                ))}
+                            )}
+                        </div>
+                    )
+                })}
             </div>
 
             {editingPeriod && (
