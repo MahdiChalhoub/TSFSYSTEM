@@ -105,7 +105,7 @@ export default async function ViewJournalEntryPage({ params }: { params: Promise
                                     <div className="font-bold text-stone-800 text-sm">{line.account.name}</div>
                                 </td>
                                 <td className="px-6 py-4 text-xs text-stone-500 italic max-w-xs truncate">
-                                    {line.description || 'ΓÇö'}
+                                    {line.description || '—'}
                                 </td>
                                 <td className="px-6 py-4 text-right">
                                     <span className="font-mono font-bold text-stone-900 h-6 inline-block">
