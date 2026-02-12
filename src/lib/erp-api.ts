@@ -96,6 +96,13 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
         cleanHeaders[k] = k.toLowerCase() === 'authorization' ? 'Token [REDACTED]' : v;
     });
 
+    // [CONTENT-TYPE FIX]
+    // For JSON POST/PUT/PATCH requests, set Content-Type to application/json
+    // fetch() defaults to text/plain which Django REST Framework rejects (415)
+    if (options.body && typeof options.body === 'string' && !headersRaw.has('Content-Type')) {
+        headersRaw.set('Content-Type', 'application/json');
+    }
+
     // [UPLOAD FIX]
     // If body is FormData, we must NOT send Content-Type header.
     // Fetch will automatically set it with the correct boundary.
