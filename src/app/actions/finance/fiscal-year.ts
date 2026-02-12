@@ -130,7 +130,7 @@ export async function updatePeriodStatus(periodId: number, newStatus: string) {
         await erpFetch(`fiscal-periods/${periodId}/`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ is_closed: newStatus === 'CLOSED' })
+            body: JSON.stringify({ status: newStatus })
         })
         revalidatePath('/finance/fiscal-years')
         return { success: true }
