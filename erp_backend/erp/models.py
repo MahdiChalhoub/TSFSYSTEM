@@ -59,7 +59,7 @@ class SystemModule(models.Model):
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
     class Meta:
-        db_table = 'SystemModule'
+        db_table = 'systemmodule'
 
     def __str__(self):
         return f"{self.name} ({self.version})"
@@ -77,7 +77,7 @@ class SystemModuleLog(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
-        db_table = 'SystemModuleLog'
+        db_table = 'systemmodulelog'
 
 
 class SystemUpdate(models.Model):
