@@ -1,0 +1,30 @@
+Traceback (most recent call last):
+  File "/root/TSFSYSTEM/erp_backend/venv/lib/python3.12/site-packages/gunicorn/arbiter.py", line 225, in run
+    handler()
+  File "/root/TSFSYSTEM/erp_backend/venv/lib/python3.12/site-packages/gunicorn/arbiter.py", line 250, in handle_chld
+    self.reap_workers()
+  File "/root/TSFSYSTEM/erp_backend/venv/lib/python3.12/site-packages/gunicorn/arbiter.py", line 614, in reap_workers
+    raise HaltServer(reason, self.WORKER_BOOT_ERROR)
+gunicorn.errors.HaltServer: <HaltServer 'Worker failed to boot.' 3>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/root/TSFSYSTEM/erp_backend/venv/bin/gunicorn", line 6, in <module>
+    sys.exit(run())
+             ^^^^^
+  File "/root/TSFSYSTEM/erp_backend/venv/lib/python3.12/site-packages/gunicorn/app/wsgiapp.py", line 66, in run
+    WSGIApplication("%(prog)s [OPTIONS] [APP_MODULE]", prog=prog).run()
+  File "/root/TSFSYSTEM/erp_backend/venv/lib/python3.12/site-packages/gunicorn/app/base.py", line 235, in run
+    super().run()
+  File "/root/TSFSYSTEM/erp_backend/venv/lib/python3.12/site-packages/gunicorn/app/base.py", line 71, in run
+    Arbiter(self).run()
+  File "/root/TSFSYSTEM/erp_backend/venv/lib/python3.12/site-packages/gunicorn/arbiter.py", line 233, in run
+    self.halt(reason=inst.reason, exit_status=inst.exit_status)
+  File "/root/TSFSYSTEM/erp_backend/venv/lib/python3.12/site-packages/gunicorn/arbiter.py", line 354, in halt
+    self.stop()
+  File "/root/TSFSYSTEM/erp_backend/venv/lib/python3.12/site-packages/gunicorn/arbiter.py", line 434, in stop
+    self.reap_workers()
+  File "/root/TSFSYSTEM/erp_backend/venv/lib/python3.12/site-packages/gunicorn/arbiter.py", line 614, in reap_workers
+    raise HaltServer(reason, self.WORKER_BOOT_ERROR)
+gunicorn.errors.HaltServer: <HaltServer 'Worker failed to boot.' 3>

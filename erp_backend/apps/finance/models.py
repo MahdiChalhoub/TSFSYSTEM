@@ -73,11 +73,17 @@ class FiscalYear(TenantModel):
 
 
 class FiscalPeriod(TenantModel):
+    PERIOD_STATUS_CHOICES = [
+        ('OPEN', 'Open'),
+        ('CLOSED', 'Closed'),
+        ('FUTURE', 'Future'),
+    ]
     fiscal_year = models.ForeignKey(FiscalYear, on_delete=models.CASCADE, related_name='periods')
     name = models.CharField(max_length=100)
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
     is_closed = models.BooleanField(default=False)
+    status = models.CharField(max_length=10, choices=PERIOD_STATUS_CHOICES, default='OPEN')
 
     class Meta:
         db_table = 'fiscalperiod'
