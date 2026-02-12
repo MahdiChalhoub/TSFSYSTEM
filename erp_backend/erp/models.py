@@ -330,7 +330,8 @@ class User(AbstractUser):
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True, blank=True, related_name='users')
     role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True, related_name='users')
     home_site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True, related_name='home_users')
-    cash_register = models.ForeignKey('finance.FinancialAccount', on_delete=models.SET_NULL, null=True, blank=True)
+    # cash_register FK — uses IntegerField to avoid hard dependency on finance module
+    cash_register_id = models.IntegerField(null=True, blank=True, db_column='cash_register_id')
     is_active_account = models.BooleanField(default=True)
     
     registration_status = models.CharField(max_length=50, default='APPROVED')
