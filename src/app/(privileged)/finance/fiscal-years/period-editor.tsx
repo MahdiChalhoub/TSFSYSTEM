@@ -12,8 +12,8 @@ export default function PeriodEditor({ period, onClose }: Props) {
     const [isPending, setIsPending] = useState(false)
     const [formData, setFormData] = useState({
         name: period.name,
-        startDate: period.startDate.toISOString().split('T')[0],
-        endDate: period.endDate.toISOString().split('T')[0]
+        startDate: typeof period.startDate === 'string' ? period.startDate.split('T')[0] : period.startDate?.toISOString?.()?.split('T')[0] || '',
+        endDate: typeof period.endDate === 'string' ? period.endDate.split('T')[0] : period.endDate?.toISOString?.()?.split('T')[0] || ''
     })
 
     const handleSubmit = async (e: React.FormEvent) => {
