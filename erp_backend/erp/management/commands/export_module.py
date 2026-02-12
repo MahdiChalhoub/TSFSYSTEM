@@ -68,7 +68,7 @@ class Command(BaseCommand):
                             continue
                         
                         file_path = os.path.join(root, file)
-                        arcname = os.path.relpath(file_path, module_path)
+                        arcname = os.path.relpath(file_path, module_path).replace('\\', '/')
                         zipf.write(file_path, arcname)
 
                 # 2. Export Frontend Files (from src/modules/)
@@ -81,7 +81,7 @@ class Command(BaseCommand):
                         for file in files:
                             file_path = os.path.join(root, file)
                             # Put under 'frontend/' prefix in zip
-                            arcname = os.path.join('frontend', os.path.relpath(file_path, frontend_source))
+                            arcname = os.path.join('frontend', os.path.relpath(file_path, frontend_source)).replace('\\', '/')
                             zipf.write(file_path, arcname)
 
             self.stdout.write(self.style.SUCCESS(f"✅ Exported: {zip_filename}"))

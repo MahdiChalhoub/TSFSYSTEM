@@ -1,0 +1,33 @@
+[TAILING] Tailing last 30 lines for [nextjs] process (change the value with --lines option)
+/root/.pm2/logs/nextjs-error.log last 30 lines:
+0|nextjs   | <html lang="en">
+0|nextjs   | <head>
+0|nextjs   |   <title>Not Found</title>
+0|nextjs   | </head>
+0|nextjs   | <body>
+0|nextjs   |   <h1>Not Found</h1><p>The requested resource was not found on this server.</p>
+0|nextjs   | </body>
+0|nextjs   | </html>
+0|nextjs   | 
+0|nextjs   | [ERP_API] Request to coa/apply_template/ failed: SyntaxError: Unexpected token '<', "
+0|nextjs   | <!doctype "... is not valid JSON
+0|nextjs   |     at JSON.parse (<anonymous>)
+0|nextjs   |     at e (.next/server/chunks/ssr/_4cbc635e._.js:1:6916)
+0|nextjs   |     at async f (.next/server/chunks/ssr/_a3d17a70._.js:1:21787)
+0|nextjs   |     at async m (.next/server/chunks/ssr/_65c0da84._.js:1:7750)
+0|nextjs   | [COA_TEMPLATE] Import failed: SyntaxError: Unexpected token '<', "
+0|nextjs   | <!doctype "... is not valid JSON
+0|nextjs   |     at JSON.parse (<anonymous>)
+0|nextjs   |     at e (.next/server/chunks/ssr/_4cbc635e._.js:1:6916)
+0|nextjs   |     at async f (.next/server/chunks/ssr/_a3d17a70._.js:1:21787)
+0|nextjs   |     at async m (.next/server/chunks/ssr/_65c0da84._.js:1:7750)
+0|nextjs   | ⨯ SyntaxError: Unexpected token '<', "
+0|nextjs   | <!doctype "... is not valid JSON
+0|nextjs   |     at JSON.parse (<anonymous>)
+0|nextjs   |     at e (.next/server/chunks/ssr/_4cbc635e._.js:1:6916)
+0|nextjs   |     at async f (.next/server/chunks/ssr/_a3d17a70._.js:1:21787)
+0|nextjs   |     at async m (.next/server/chunks/ssr/_65c0da84._.js:1:7750) {
+0|nextjs   |   digest: '124839601'
+0|nextjs   | }
+0|nextjs   | [SECURITY] Unauthorized access attempt to SaaS Panel by Guest
+
