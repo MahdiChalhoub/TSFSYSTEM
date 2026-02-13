@@ -39,6 +39,7 @@ export async function createEmployee(prevState: any, formData: FormData) {
             employee_id: formData.get('employeeId'),
             home_site_id: formData.get('homeSiteId') || null,
             job_title: formData.get('jobTitle') || '',
+            employee_type: formData.get('employeeType') || 'EMPLOYEE',
             create_login: formData.get('createLogin') === 'on',
             role_id: formData.get('roleId') || null,
         };
