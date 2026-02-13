@@ -5,6 +5,7 @@ import { Search, Plus, User, Briefcase, Building2, CreditCard, ChevronRight, Pho
 import EmployeeModal from './form';
 import ScopePasswordModal from '@/components/admin/ScopePasswordModal';
 import { linkGLAccount } from '@/app/actions/people';
+import { useAdmin } from '@/context/AdminContext';
 import clsx from 'clsx';
 
 export default function EmployeeManager({
@@ -21,6 +22,7 @@ export default function EmployeeManager({
     const [scopeEmployee, setScopeEmployee] = useState<any | null>(null);
     const [linkingGL, setLinkingGL] = useState<string | null>(null);
     const [glMessage, setGLMessage] = useState<{ id: string; type: 'success' | 'error'; text: string } | null>(null);
+    const { scopeAccess } = useAdmin();
 
     async function handleLinkGL(emp: any, empType: 'EMPLOYEE' | 'PARTNER' | 'BOTH') {
         setLinkingGL(emp.id);
@@ -190,13 +192,15 @@ export default function EmployeeManager({
                                     </button>
                                 </>
                             )}
-                            <button
-                                onClick={() => setScopeEmployee(emp)}
-                                className="py-3.5 rounded-2xl bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 hover:text-white transition-all shadow-sm flex items-center justify-center gap-1"
-                            >
-                                <Lock size={10} />
-                                Scope
-                            </button>
+                            {scopeAccess !== 'official' && (
+                                <button
+                                    onClick={() => setScopeEmployee(emp)}
+                                    className="py-3.5 rounded-2xl bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 hover:text-white transition-all shadow-sm flex items-center justify-center gap-1"
+                                >
+                                    <Lock size={10} />
+                                    Scope
+                                </button>
+                            )}
                         </div>
                     </div>
                 ))}
