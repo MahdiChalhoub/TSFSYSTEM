@@ -160,7 +160,9 @@ class ProductViewSet(TenantModelViewSet):
                 tva_rate=data.get('taxRate', 0),
                 
                 min_stock_level=data.get('minStockLevel', 10),
-                is_expiry_tracked=data.get('isExpiryTracked', False)
+                is_expiry_tracked=data.get('isExpiryTracked', False),
+                size=data.get('size'),
+                size_unit_id=data.get('sizeUnitId'),
             )
             
             if not product.barcode and category_id:
@@ -398,11 +400,18 @@ class BrandViewSet(TenantModelViewSet):
             id__in=Product.objects.filter(organization=organization, brand=brand).values_list('parfum_id', flat=True).distinct()
         )
         
+        # Use BrandDetailSerializer to include nested countries
+        brand_data = BrandDetailSerializer(brand).data
+        
         hierarchy = {
-            "brand": BrandSerializer(brand).data,
+            "brand": brand_data,
+            "countries": list(brand.countries.values('id', 'code', 'name')),
+            "productGroups": [],
+            "products": [],
             "parfums": []
         }
         
+        # Group products by parfum
         for parfum in parfums:
             products = Product.objects.filter(organization=organization, brand=brand, parfum=parfum)
             hierarchy["parfums"].append({
@@ -410,12 +419,27 @@ class BrandViewSet(TenantModelViewSet):
                 "products": ProductSerializer(products, many=True).data
             })
         
+        # Ungrouped products (no parfum)
         ungrouped = Product.objects.filter(organization=organization, brand=brand, parfum__isnull=True)
         if ungrouped.exists():
             hierarchy["parfums"].append({
                 "parfum": {"id": None, "name": "Ungrouped"},
                 "products": ProductSerializer(ungrouped, many=True).data
             })
+        
+        # Product groups belonging to this brand
+        groups = ProductGroup.objects.filter(organization=organization, brand=brand)
+        for group in groups:
+            group_products = Product.objects.filter(organization=organization, product_group=group)
+            hierarchy["productGroups"].append({
+                "id": group.id,
+                "name": group.name,
+                "products": ProductSerializer(group_products, many=True).data
+            })
+        
+        # Standalone products (no group)
+        standalone = Product.objects.filter(organization=organization, brand=brand, product_group__isnull=True)
+        hierarchy["products"] = ProductSerializer(standalone, many=True).data
         
         return Response(hierarchy)
 

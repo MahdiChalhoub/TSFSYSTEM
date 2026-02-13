@@ -48,6 +48,8 @@ class Category(TenantModel):
 class Brand(TenantModel):
     name = models.CharField(max_length=255)
     short_name = models.CharField(max_length=50, null=True, blank=True)
+    logo = models.CharField(max_length=255, null=True, blank=True)
+    countries = models.ManyToManyField(Country, blank=True, related_name='brands')
     categories = models.ManyToManyField(Category, blank=True, related_name='brands')
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
@@ -103,6 +105,10 @@ class Product(TenantModel):
     country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True, blank=True)
     parfum = models.ForeignKey(Parfum, on_delete=models.SET_NULL, null=True, blank=True)
     product_group = models.ForeignKey(ProductGroup, on_delete=models.SET_NULL, null=True, blank=True)
+
+    # Emballage / Size (e.g., 300ml, 500g)
+    size = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    size_unit = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True, blank=True, related_name='sized_products')
 
     cost_price = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     cost_price_ht = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
