@@ -8,9 +8,6 @@ export const dynamic = 'force-dynamic';
 async function getEmployees() {
     try {
         const data = await erpFetch('employees/');
-        // Mapping snake_case (Django) to camelCase (Frontend)
-        // EmployeeSerializer: home_site, linked_account, user_email, user_id
-        // Frontend likely expects: homeSite, linkedAccount, user: { email, id }
         return data.map((e: any) => ({
             ...e,
             firstName: e.first_name,
@@ -18,10 +15,45 @@ async function getEmployees() {
             jobTitle: e.job_title,
             homeSite: e.home_site,
             linkedAccount: e.linked_account,
-            user: e.user_id ? { id: e.user_id, email: e.user_email } : null
+            employeeId: e.employee_id || e.employeeId || 'N/A',
+            user: e.user_id ? {
+                id: e.user_id,
+                email: e.user_email,
+                has_official_pin: e.has_official_pin,
+                has_internal_pin: e.has_internal_pin
+            } : null
         }));
     } catch (e) {
         console.error("Failed to fetch employees", e);
+        return [];
+    }
+}
+
+async function getStandaloneUsers(employeeUserIds: string[]) {
+    try {
+        const users = await erpFetch('users/');
+        // Filter users that don't have an Employee record
+        return users
+            .filter((u: any) => !employeeUserIds.includes(u.id))
+            .map((u: any) => ({
+                id: `user-${u.id}`,
+                firstName: u.first_name || u.username,
+                lastName: u.last_name || '',
+                jobTitle: u.is_superuser ? 'Superadmin' : 'System User',
+                employeeId: u.username,
+                status: u.is_active ? 'Active' : 'Inactive',
+                homeSite: null,
+                linkedAccount: null,
+                user: {
+                    id: u.id,
+                    email: u.email,
+                    has_official_pin: u.has_official_pin,
+                    has_internal_pin: u.has_internal_pin
+                },
+                isStandaloneUser: true
+            }));
+    } catch (e) {
+        console.error("Failed to fetch users", e);
         return [];
     }
 }
@@ -55,6 +87,11 @@ export default async function EmployeesPage() {
         getRoles()
     ]);
 
+    // Fetch users that don't have Employee records (e.g. superusers)
+    const employeeUserIds = employees.filter((e: any) => e.user).map((e: any) => e.user.id);
+    const standaloneUsers = await getStandaloneUsers(employeeUserIds);
+    const allPeople = [...employees, ...standaloneUsers];
+
     return (
         <div className="min-h-screen bg-[#FDFDFF] p-8 lg:p-12">
             <div className="max-w-[1700px] mx-auto space-y-12">
@@ -77,11 +114,11 @@ export default async function EmployeesPage() {
 
                     <div className="flex gap-8 bg-white p-10 rounded-[50px] shadow-2xl shadow-indigo-900/5 border border-gray-50">
                         <div className="text-center px-8 border-r border-gray-100">
-                            <div className="text-5xl font-black text-gray-900 tracking-tighter mb-1">{employees.length}</div>
+                            <div className="text-5xl font-black text-gray-900 tracking-tighter mb-1">{allPeople.length}</div>
                             <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Staff</div>
                         </div>
                         <div className="text-center px-8 border-r border-gray-100">
-                            <div className="text-5xl font-black text-indigo-600 tracking-tighter mb-1">{employees.filter((e: any) => e.user).length}</div>
+                            <div className="text-5xl font-black text-indigo-600 tracking-tighter mb-1">{allPeople.filter((e: any) => e.user).length}</div>
                             <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">System Access</div>
                         </div>
                         <div className="text-center px-8">
@@ -92,7 +129,7 @@ export default async function EmployeesPage() {
                 </div>
 
                 <EmployeeManager
-                    employees={employees}
+                    employees={allPeople}
                     sites={sites}
                     roles={roles}
                 />
