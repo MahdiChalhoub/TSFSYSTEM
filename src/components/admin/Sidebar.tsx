@@ -23,8 +23,7 @@ import {
     Sparkles,
     Cloud,
     MessageSquare,
-    Wrench,
-    Lock
+    Wrench
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
