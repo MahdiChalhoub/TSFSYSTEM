@@ -530,10 +530,11 @@ export default function FinancialSettingsForm({ settings, lock }: Props) {
                 </div>
             </div>{/* close left column */}
 
-            {/* ─── RIGHT COLUMN: Row-by-Row Comparison Table ─── */}
+            {/* ─── RIGHT COLUMN: Type Comparison ─── */}
             {showCompare && (
                 <div className="w-1/2 shrink-0 sticky top-6">
                     <div className="bg-white rounded-lg shadow-sm border border-indigo-200 overflow-hidden">
+                        {/* Panel Header */}
                         <div className="bg-indigo-50 px-4 py-3 flex items-center justify-between border-b border-indigo-200">
                             <div className="flex items-center gap-2">
                                 <GitCompareArrows size={14} className="text-indigo-600" />
@@ -544,26 +545,25 @@ export default function FinancialSettingsForm({ settings, lock }: Props) {
                             </button>
                         </div>
 
-                        {/* Type Selector Row */}
-                        <div className="grid border-b border-indigo-100" style={{ gridTemplateColumns: '120px 1fr 1fr' }}>
-                            <div className="px-3 py-2 bg-stone-50 border-r border-stone-200">
-                                <span className="text-[10px] font-bold text-stone-400 uppercase">Feature</span>
-                            </div>
-                            <div className="px-3 py-2 bg-indigo-50/50 border-r border-indigo-100">
-                                <p className="text-[10px] font-bold text-stone-400 uppercase mb-1">Current</p>
+                        {/* Two Type Column Headers */}
+                        <div className="grid grid-cols-2 border-b border-indigo-100">
+                            {/* Current Type Header */}
+                            <div className="px-4 py-3 bg-indigo-50/40 border-r border-indigo-100">
+                                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-1">Current</p>
                                 {selectedType && (
                                     <div className="flex items-center gap-1.5">
-                                        <div className={`w-2 h-2 rounded-full ${COLOR_MAP[selectedType.color].dot}`} />
-                                        <span className={`text-xs font-bold ${COLOR_MAP[selectedType.color].text}`}>{selectedType.name}</span>
+                                        <div className={`w-2.5 h-2.5 rounded-full ${COLOR_MAP[selectedType.color].dot}`} />
+                                        <span className={`text-sm font-bold ${COLOR_MAP[selectedType.color].text}`}>{selectedType.name}</span>
                                     </div>
                                 )}
                             </div>
-                            <div className="px-3 py-2">
-                                <p className="text-[10px] font-bold text-stone-400 uppercase mb-1">Compare With</p>
+                            {/* Compare Type Header */}
+                            <div className="px-4 py-3">
+                                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wider mb-1">Compare With</p>
                                 <select
                                     value={compareType}
                                     onChange={e => setCompareType(e.target.value)}
-                                    className="w-full px-1.5 py-0.5 border border-stone-200 rounded text-xs bg-white focus:ring-indigo-500 focus:border-indigo-500"
+                                    className="w-full px-2 py-1 border border-stone-200 rounded text-sm font-semibold bg-white focus:ring-indigo-500 focus:border-indigo-500"
                                 >
                                     {COMPANY_TYPES.filter(t => t.key !== companyType).map(t => (
                                         <option key={t.key} value={t.key}>{t.name}</option>
@@ -572,20 +572,26 @@ export default function FinancialSettingsForm({ settings, lock }: Props) {
                             </div>
                         </div>
 
-                        {/* Comparison Rows */}
-                        {COMPARE_ROWS.map((row, i) => (
-                            <div key={row.key} className={`grid ${i < COMPARE_ROWS.length - 1 ? 'border-b border-stone-100' : ''}`} style={{ gridTemplateColumns: '120px 1fr 1fr' }}>
-                                <div className="px-3 py-2.5 bg-stone-50 border-r border-stone-200">
-                                    <span className="text-[11px] font-semibold text-stone-600">{row.label}</span>
+                        {/* Feature Rows */}
+                        <div>
+                            {COMPARE_ROWS.map((row, i) => (
+                                <div key={row.key}>
+                                    {/* Feature Label — full width */}
+                                    <div className={`px-4 py-1.5 bg-stone-50 ${i > 0 ? 'border-t border-stone-200' : ''}`}>
+                                        <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider">{row.label}</span>
+                                    </div>
+                                    {/* Two value columns */}
+                                    <div className="grid grid-cols-2">
+                                        <div className="px-4 py-2 bg-indigo-50/20 border-r border-stone-100">
+                                            <span className="text-[12px] text-stone-700">{selectedType?.compare[row.key] || '—'}</span>
+                                        </div>
+                                        <div className="px-4 py-2">
+                                            <span className="text-[12px] text-stone-700">{compareTypeObj?.compare[row.key] || '—'}</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="px-3 py-2.5 border-r border-stone-100 bg-indigo-50/20">
-                                    <span className="text-[11px] text-stone-700">{selectedType?.compare[row.key] || '—'}</span>
-                                </div>
-                                <div className="px-3 py-2.5">
-                                    <span className="text-[11px] text-stone-700">{compareTypeObj?.compare[row.key] || '—'}</span>
-                                </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
                 </div>
             )}
