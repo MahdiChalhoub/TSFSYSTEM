@@ -97,7 +97,7 @@ export default async function AdminLayout({
                     <Sidebar
                         isSaas={isSaas}
                         isSuperuser={user?.is_superuser || false}
-                        dualViewEnabled={financialSettings?.dualView || false}
+                        dualViewEnabled={(user?.is_superuser) || (financialSettings?.dualView || false)}
                     />
 
                     {/* Right Panel: Content */}
