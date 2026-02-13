@@ -132,13 +132,43 @@ export default function EmployeeModal({
                         )}
                     </div>
 
-                    {/* FINANCIAL AUTOMATION MSG */}
-                    <div className="p-6 bg-emerald-50 rounded-[32px] flex gap-4 items-start">
-                        <CreditCard className="text-emerald-600 shrink-0 mt-1" size={20} />
-                        <div>
-                            <span className="text-sm font-black text-emerald-900 uppercase tracking-widest">Payroll Sub-Ledger Integration</span>
-                            <p className="text-xs text-emerald-600/70 font-medium mt-1">
-                                An automated liability account will be generated in the Chart of Accounts (2200-XXXX) to track accrued salaries, bonuses, and expenses for this employee.
+                    {/* PERSON TYPE & LEDGER */}
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-3">
+                            <CreditCard size={18} className="text-indigo-600" />
+                            <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest">Person Category & Ledger</h3>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-4">
+                            <label className="relative cursor-pointer">
+                                <input type="radio" name="employeeType" value="EMPLOYEE" defaultChecked className="peer sr-only" />
+                                <div className="p-4 rounded-2xl bg-gray-50 border-2 border-transparent peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all text-center">
+                                    <span className="text-xs font-black text-gray-700 uppercase tracking-widest">Employee</span>
+                                    <p className="text-[9px] text-gray-400 mt-1">Payroll & Salaries</p>
+                                </div>
+                            </label>
+                            <label className="relative cursor-pointer">
+                                <input type="radio" name="employeeType" value="PARTNER" className="peer sr-only" />
+                                <div className="p-4 rounded-2xl bg-gray-50 border-2 border-transparent peer-checked:border-purple-500 peer-checked:bg-purple-50 transition-all text-center">
+                                    <span className="text-xs font-black text-gray-700 uppercase tracking-widest">Partner</span>
+                                    <p className="text-[9px] text-gray-400 mt-1">Capital & Dividends</p>
+                                </div>
+                            </label>
+                            <label className="relative cursor-pointer">
+                                <input type="radio" name="employeeType" value="BOTH" className="peer sr-only" />
+                                <div className="p-4 rounded-2xl bg-gray-50 border-2 border-transparent peer-checked:border-amber-500 peer-checked:bg-amber-50 transition-all text-center">
+                                    <span className="text-xs font-black text-gray-700 uppercase tracking-widest">Both</span>
+                                    <p className="text-[9px] text-gray-400 mt-1">All Accounts</p>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div className="p-4 bg-emerald-50 rounded-2xl">
+                            <p className="text-[10px] text-emerald-700 font-bold">
+                                GL sub-accounts will be auto-created based on the selected category:
+                                <br />• <strong>Employee</strong> → Salaries Payable (2121-XXXX)
+                                <br />• <strong>Partner</strong> → Capital (3001-XXXX) + Dividends (3200-XXXX)
+                                <br />• <strong>Both</strong> → All of the above
                             </p>
                         </div>
                     </div>

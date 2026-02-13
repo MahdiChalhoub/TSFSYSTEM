@@ -41,33 +41,67 @@ class EmployeeViewSet(TenantModelViewSet):
         data = request.data.copy()
         data['organization'] = organization.id
 
+        emp_type = data.get('employee_type', 'EMPLOYEE')
+
         with transaction.atomic():
             # Finance integration (gated — HR works without Finance)
             if ChartOfAccount and LedgerService:
-                rules = ConfigurationService.get_posting_rules(organization)
-                parent_account_id = rules.get('payroll', {}).get('root')
-                
-                if not parent_account_id:
-                    parent = ChartOfAccount.objects.filter(organization=organization, code='2200').first()
+                fullName = f"{data.get('first_name', '')} {data.get('last_name', '')}".strip()
+
+                # ── Payroll liability (EMPLOYEE or BOTH) ──
+                if emp_type in ('EMPLOYEE', 'BOTH'):
+                    parent = ChartOfAccount.objects.filter(organization=organization, code='2121').first()
+                    if not parent:
+                        parent = ChartOfAccount.objects.filter(organization=organization, code='2100').first()
                     if not parent:
                         parent = ChartOfAccount.objects.create(
-                            organization=organization,
-                            code='2200',
-                            name='Accrued Payroll & Salaries',
-                            type='LIABILITY',
-                            sub_type='PAYABLE'
+                            organization=organization, code='2121',
+                            name='Salaries Payable', type='LIABILITY', sub_type='PAYABLE'
                         )
-                    parent_account_id = parent.id
+                    linked_acc = LedgerService.create_linked_account(
+                        organization=organization,
+                        name=f"Payable — {fullName}",
+                        type='LIABILITY', sub_type='PAYABLE',
+                        parent_id=parent.id
+                    )
+                    data['linked_account_id'] = linked_acc.id
 
-                fullName = f"{data.get('first_name', '')} {data.get('last_name', '')}".strip()
-                linked_acc = LedgerService.create_linked_account(
-                    organization=organization,
-                    name=f"Payable to {fullName}",
-                    type='LIABILITY',
-                    sub_type='PAYABLE',
-                    parent_id=parent_account_id
-                )
-                data['linked_account'] = linked_acc.id
+                # ── Capital equity (PARTNER or BOTH) ──
+                if emp_type in ('PARTNER', 'BOTH'):
+                    cap_parent = ChartOfAccount.objects.filter(organization=organization, code='3001').first()
+                    if not cap_parent:
+                        cap_parent = ChartOfAccount.objects.filter(organization=organization, code='3000').first()
+                    if not cap_parent:
+                        cap_parent = ChartOfAccount.objects.create(
+                            organization=organization, code='3001',
+                            name='Capital', type='EQUITY', sub_type=None
+                        )
+                    capital_acc = LedgerService.create_linked_account(
+                        organization=organization,
+                        name=f"Capital — {fullName}",
+                        type='EQUITY', sub_type=None,
+                        parent_id=cap_parent.id
+                    )
+                    # For partner-only, capital is the main linked account
+                    if emp_type == 'PARTNER':
+                        data['linked_account_id'] = capital_acc.id
+
+                    # Dividends account
+                    div_parent = ChartOfAccount.objects.filter(organization=organization, code='3200').first()
+                    if not div_parent:
+                        div_parent = ChartOfAccount.objects.filter(organization=organization, code='3000').first()
+                    if not div_parent:
+                        div_parent = ChartOfAccount.objects.create(
+                            organization=organization, code='3200',
+                            name='Dividends', type='EQUITY', sub_type=None
+                        )
+                    dividends_acc = LedgerService.create_linked_account(
+                        organization=organization,
+                        name=f"Dividends — {fullName}",
+                        type='EQUITY', sub_type=None,
+                        parent_id=div_parent.id
+                    )
+                    data['dividends_account_id'] = dividends_acc.id
             else:
                 logger.warning("Finance module unavailable — employee created without linked ledger account")
 

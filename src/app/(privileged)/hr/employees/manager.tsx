@@ -124,9 +124,11 @@ export default function EmployeeManager({
                                 <span className="text-[11px] font-bold text-gray-700">{emp.homeSite?.name || 'Global'}</span>
                             </div>
                             <div className="flex flex-col items-center text-center border-l border-gray-50">
-                                <CreditCard size={16} className={clsx("mb-1", emp.linkedAccount ? "text-emerald-400" : "text-red-400")} />
+                                <CreditCard size={16} className={clsx("mb-1", emp.linkedAccount ? "text-emerald-400" : emp.isStandaloneUser ? "text-gray-300" : "text-red-400")} />
                                 <span className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">Ledger Account</span>
-                                {emp.linkedAccount ? (
+                                {emp.isStandaloneUser ? (
+                                    <span className="text-[10px] text-gray-400">N/A</span>
+                                ) : emp.linkedAccount ? (
                                     <div className="flex flex-col items-center gap-0.5">
                                         <span className="text-[11px] font-mono font-bold text-emerald-600">{emp.linkedAccount.code}</span>
                                         {emp.dividendsAccount && (
