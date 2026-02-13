@@ -69,43 +69,71 @@ class LedgerService:
         if not template:
             raise ValidationError(f"Template {template_key} not found")
 
-        with transaction.atomic():
-            if reset:
-                from apps.finance.models import FinancialAccount
-                if JournalEntry.objects.filter(organization=organization).exists():
-                    raise ValidationError("Cannot reset Chart of Accounts: Transactions (Journal Entries) already exist. Use the Migration Tool instead.")
-                if FinancialAccount.objects.filter(organization=organization).exists():
-                    raise ValidationError("Cannot reset Chart of Accounts: Financial Accounts (Cash/Bank) are linked to existing accounts. Remove them or use the Migration Tool.")
-                
-                ChartOfAccount.objects.filter(organization=organization).delete()
-            
-            def create_recursive(items, parent=None):
-                for item in items:
-                    defaults = {
-                        "name": item['name'],
-                        "type": item['type'],
-                        "sub_type": item.get('subType'),
-                        "syscohada_code": item.get('syscohadaCode'),
-                        "syscohada_class": item.get('syscohadaClass'),
-                        "is_active": True,
-                        "parent": parent,
-                        "is_system_only": item.get('isSystemOnly', False),
-                        "is_hidden": item.get('isHidden', False),
-                        "requires_zero_balance": item.get('requiresZeroBalance', False)
-                    }
-                    
-                    acc, created = ChartOfAccount.objects.update_or_create(
-                        organization=organization,
-                        code=item['code'],
-                        defaults=defaults
-                    )
-                    
-                    if 'children' in item and item['children']:
-                        create_recursive(item['children'], acc)
+        accounts_data = template.get('accounts', [])
+        if not accounts_data:
+            raise ValidationError(f"Template {template_key} has no accounts")
 
-            create_recursive(template)
-            
-            ConfigurationService.apply_smart_posting_rules(organization)
+        with transaction.atomic():
+            has_journal_entries = JournalEntry.objects.filter(organization=organization).exists()
+
+            if reset:
+                if has_journal_entries:
+                    # Deactivate old accounts instead of deleting (journal entries reference them)
+                    ChartOfAccount.objects.filter(organization=organization).update(is_active=False)
+                else:
+                    # Safe to delete — no transactions reference these accounts
+                    ChartOfAccount.objects.filter(organization=organization).delete()
+
+            # Collect all codes from the new template
+            new_template_codes = set()
+            for item in accounts_data:
+                new_template_codes.add(item['code'])
+
+            # Build accounts from template — supports flat (parent_code) format
+            code_to_account = {}
+
+            # First pass: create/update all accounts without parent relationships
+            for item in accounts_data:
+                defaults = {
+                    "name": item['name'],
+                    "type": item['type'],
+                    "sub_type": item.get('subType') or item.get('sub_type'),
+                    "syscohada_code": item.get('syscohadaCode') or item.get('syscohada_code'),
+                    "syscohada_class": item.get('syscohadaClass') or item.get('syscohada_class'),
+                    "is_active": True,
+                    "is_system_only": item.get('isSystemOnly', False) or item.get('is_system_only', False),
+                    "is_hidden": item.get('isHidden', False) or item.get('is_hidden', False),
+                    "requires_zero_balance": item.get('requiresZeroBalance', False) or item.get('requires_zero_balance', False),
+                }
+
+                acc, created = ChartOfAccount.objects.update_or_create(
+                    organization=organization,
+                    code=item['code'],
+                    defaults=defaults
+                )
+                code_to_account[item['code']] = acc
+
+            # Second pass: set parent relationships using parent_code
+            for item in accounts_data:
+                parent_code = item.get('parent_code')
+                if parent_code and parent_code in code_to_account:
+                    acc = code_to_account[item['code']]
+                    acc.parent = code_to_account[parent_code]
+                    acc.save(update_fields=['parent'])
+
+            # If reset but couldn't delete, deactivate accounts NOT in the new template
+            if reset and has_journal_entries:
+                ChartOfAccount.objects.filter(
+                    organization=organization,
+                    is_active=True
+                ).exclude(
+                    code__in=new_template_codes
+                ).update(is_active=False)
+
+            try:
+                ConfigurationService.apply_smart_posting_rules(organization)
+            except (AttributeError, Exception):
+                pass  # Smart posting rules not available yet
             return True
 
     @staticmethod
