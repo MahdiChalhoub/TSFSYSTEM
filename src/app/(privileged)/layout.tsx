@@ -84,7 +84,7 @@ export default async function AdminLayout({
     const [sites, organizations, financialSettings] = await Promise.all([
         getSites(),
         getOrganizations(),
-        !isSaas ? getGlobalFinancialSettings() : Promise.resolve({ dualView: false })
+        getGlobalFinancialSettings()
     ]);
 
 
