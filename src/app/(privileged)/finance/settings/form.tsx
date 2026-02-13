@@ -15,6 +15,18 @@ interface Props {
 // ────────────────────────────────────────────────────────
 // Company Type Definitions
 // ────────────────────────────────────────────────────────
+// Comparison rows for the table
+const COMPARE_ROWS = [
+    { label: 'Pricing Basis', key: 'pricing' },
+    { label: 'VAT Handling', key: 'vat' },
+    { label: 'VAT Declaration', key: 'vatDeclaration' },
+    { label: 'Dual View', key: 'dualView' },
+    { label: 'Bookkeeping', key: 'bookkeeping' },
+    { label: 'Invoicing', key: 'invoicing' },
+    { label: 'Access Control', key: 'accessControl' },
+    { label: 'Best For', key: 'bestFor' },
+] as const
+
 const COMPANY_TYPES = [
     {
         key: 'REGULAR',
@@ -24,7 +36,17 @@ const COMPANY_TYPES = [
         features: ['TTC-based pricing', 'Auto VAT calculation', 'Simple cost entry', 'Standard invoicing'],
         recommended: 'Retail shops, restaurants, small businesses',
         color: 'emerald',
-        autoConfig: { worksInTTC: true, declareTVA: false, dualView: false }
+        autoConfig: { worksInTTC: true, declareTVA: false, dualView: false },
+        compare: {
+            pricing: 'TTC (Tax Included)',
+            vat: 'Auto-calculated from TTC',
+            vatDeclaration: 'No',
+            dualView: 'No',
+            bookkeeping: 'Simple',
+            invoicing: 'Standard',
+            accessControl: 'Single scope',
+            bestFor: 'Retail, restaurants',
+        }
     },
     {
         key: 'MICRO',
@@ -34,7 +56,17 @@ const COMPANY_TYPES = [
         features: ['Flat tax rate on sales', 'Flat tax rate on purchases', 'No VAT declaration', 'Minimal bookkeeping'],
         recommended: 'Freelancers, sole proprietors, very small businesses',
         color: 'blue',
-        autoConfig: { worksInTTC: true, declareTVA: false, dualView: false }
+        autoConfig: { worksInTTC: true, declareTVA: false, dualView: false },
+        compare: {
+            pricing: 'TTC (Tax Included)',
+            vat: 'Flat % on sales/purchases',
+            vatDeclaration: 'No',
+            dualView: 'No',
+            bookkeeping: 'Minimal',
+            invoicing: 'Simplified',
+            accessControl: 'Single scope',
+            bestFor: 'Freelancers, sole proprietors',
+        }
     },
     {
         key: 'REAL',
@@ -44,7 +76,17 @@ const COMPANY_TYPES = [
         features: ['HT-based entry', 'VAT Collected vs Paid', 'Formal invoicing', 'Official VAT declaration'],
         recommended: 'Medium-large businesses, formal accounting requirements',
         color: 'violet',
-        autoConfig: { worksInTTC: false, declareTVA: true, dualView: false }
+        autoConfig: { worksInTTC: false, declareTVA: true, dualView: false },
+        compare: {
+            pricing: 'HT (Hors Taxe)',
+            vat: 'Collected vs Paid tracking',
+            vatDeclaration: 'Yes — full declaration',
+            dualView: 'No',
+            bookkeeping: 'Professional',
+            invoicing: 'Formal with VAT lines',
+            accessControl: 'Single scope',
+            bestFor: 'Medium-large businesses',
+        }
     },
     {
         key: 'MIXED',
@@ -54,7 +96,17 @@ const COMPANY_TYPES = [
         features: ['Official scope (declared)', 'Internal scope (full picture)', 'Dual ledger entries', 'PIN-protected official access', 'Scope-aware reports'],
         recommended: 'Businesses needing dual-scope reporting and access control',
         color: 'amber',
-        autoConfig: { worksInTTC: true, declareTVA: true, dualView: true }
+        autoConfig: { worksInTTC: true, declareTVA: true, dualView: true },
+        compare: {
+            pricing: 'TTC (Tax Included)',
+            vat: 'Full tracking per scope',
+            vatDeclaration: 'Yes — official scope only',
+            dualView: 'Yes — Official + Internal',
+            bookkeeping: 'Dual ledger',
+            invoicing: 'Scope-aware',
+            accessControl: 'Per-user passwords',
+            bestFor: 'Dual-scope reporting',
+        }
     },
     {
         key: 'CUSTOM',
@@ -64,7 +116,17 @@ const COMPANY_TYPES = [
         features: ['Manual TTC/HT toggle', 'Manual VAT toggle', 'Optional dual view', 'Custom tax rules'],
         recommended: 'Consultants, advanced accountants, specific setups',
         color: 'stone',
-        autoConfig: null
+        autoConfig: null,
+        compare: {
+            pricing: 'Manual (TTC or HT)',
+            vat: 'Manual configuration',
+            vatDeclaration: 'Optional',
+            dualView: 'Optional',
+            bookkeeping: 'Fully configurable',
+            invoicing: 'Configurable',
+            accessControl: 'Configurable',
+            bestFor: 'Advanced users',
+        }
     }
 ]
 
@@ -150,343 +212,383 @@ export default function FinancialSettingsForm({ settings, lock }: Props) {
     }
 
     return (
-        <div className="space-y-8 max-w-3xl">
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border border-stone-200">
-                {/* Lock Status Warning */}
-                {lock.isLocked && (
-                    <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex gap-3 items-start">
-                        <div className="p-2 bg-amber-100 rounded-lg text-amber-600">
-                            <ShieldAlert size={20} />
+        <div className="flex gap-6 items-start">
+            {/* ─── LEFT COLUMN: Main Form ─── */}
+            <div className={`space-y-8 transition-all duration-300 ${showCompare ? 'flex-1 min-w-0' : 'max-w-3xl w-full'}`}>
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border border-stone-200">
+                    {/* Lock Status Warning */}
+                    {lock.isLocked && (
+                        <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex gap-3 items-start">
+                            <div className="p-2 bg-amber-100 rounded-lg text-amber-600">
+                                <ShieldAlert size={20} />
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-bold text-amber-900">Accounting Integrity Lock Active</h3>
+                                <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
+                                    {lock.reason}
+                                    <br />
+                                    <span className="font-bold">Structural core configuration fields have been set to read-only.</span>
+                                </p>
+                            </div>
                         </div>
+                    )}
+
+                    {/* ─── COMPANY TYPE ─── */}
+                    <div>
+                        <h2 className="text-lg font-medium text-stone-900 mb-4">Core Configuration</h2>
+
                         <div>
-                            <h3 className="text-sm font-bold text-amber-900">Accounting Integrity Lock Active</h3>
-                            <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
-                                {lock.reason}
-                                <br />
-                                <span className="font-bold">Structural core configuration fields have been set to read-only.</span>
+                            <div className="flex items-center justify-between mb-1">
+                                <label className="block text-sm font-medium text-stone-700">Company Type</label>
+                                <button
+                                    type="button"
+                                    onClick={() => { setShowCompare(!showCompare); if (!compareType) setCompareType(COMPANY_TYPES.find(t => t.key !== companyType)?.key || '') }}
+                                    className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+                                >
+                                    <GitCompareArrows size={14} />
+                                    {showCompare ? 'Hide Comparison' : 'Compare Types'}
+                                </button>
+                            </div>
+
+                            <select
+                                {...register('companyType')}
+                                disabled={lock.isLocked}
+                                className="w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:ring-black focus:border-black disabled:bg-stone-100 disabled:text-stone-500"
+                            >
+                                {COMPANY_TYPES.map(t => (
+                                    <option key={t.key} value={t.key}>{t.label}</option>
+                                ))}
+                            </select>
+                            <p className="mt-1 text-xs text-stone-500">
+                                Determines how costs, prices, and taxes are calculated.
                             </p>
+
+                            {/* Selected Type Detail */}
+                            {selectedType && (
+                                <div className="mt-3">
+                                    <TypeDetailCard type={selectedType} />
+                                </div>
+                            )}
+
+
+                        </div>
+
+                        {/* Currency & Tax */}
+                        <div className="grid grid-cols-2 gap-4 mt-4">
+                            <div>
+                                <label className="block text-sm font-medium text-stone-700 mb-1">Default Currency</label>
+                                <input
+                                    {...register('currency')}
+                                    disabled={lock.isLocked}
+                                    type="text"
+                                    className="w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm disabled:bg-stone-50"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-stone-700 mb-1">Standard TVA Rate</label>
+                                <input
+                                    {...register('defaultTaxRate', { valueAsNumber: true })}
+                                    type="number" step="0.01"
+                                    className="w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm"
+                                />
+                            </div>
                         </div>
                     </div>
-                )}
 
-                {/* ─── COMPANY TYPE ─── */}
-                <div>
-                    <h2 className="text-lg font-medium text-stone-900 mb-4">Core Configuration</h2>
+                    {/* ─── DUAL VIEW / OFFICIAL ACCESS ─── */}
+                    {(dualView || companyType === 'MIXED') && (
+                        <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
+                            <div className="flex items-center gap-2 mb-3">
+                                <div className="p-1.5 bg-amber-100 rounded-lg text-amber-600">
+                                    <ShieldAlert size={16} />
+                                </div>
+                                <h3 className="text-sm font-bold text-amber-900">Dual View Active</h3>
+                            </div>
 
-                    <div>
-                        <div className="flex items-center justify-between mb-1">
-                            <label className="block text-sm font-medium text-stone-700">Company Type</label>
+                            <p className="text-xs text-amber-700 mb-4 leading-relaxed">
+                                Two scopes are active: <strong>Official</strong> (declared/posted data) and <strong>Internal</strong> (full picture).
+                                The scope toggle appears in the sidebar. Each user has separate credentials for each scope.
+                            </p>
+
+                            {/* Scope Preview */}
+                            <div className="grid grid-cols-2 gap-3 mb-4">
+                                <div className="p-3 bg-white rounded-lg border border-amber-200">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                                        <span className="text-xs font-bold text-stone-900">Official</span>
+                                    </div>
+                                    <p className="text-[10px] text-stone-500 leading-relaxed">
+                                        Declared transactions only. Government-reported data.
+                                        Access via <strong>Viewer Password</strong>.
+                                    </p>
+                                </div>
+                                <div className="p-3 bg-white rounded-lg border border-amber-200">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <div className="w-2.5 h-2.5 rounded-full bg-stone-500" />
+                                        <span className="text-xs font-bold text-stone-900">Internal</span>
+                                    </div>
+                                    <p className="text-[10px] text-stone-500 leading-relaxed">
+                                        Full picture — all operations including undeclared.
+                                        Access via <strong>Full Access Password</strong>.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Per-User Access Info */}
+                            <div className="bg-white rounded-lg border border-amber-200 p-4">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Lock size={14} className="text-amber-600" />
+                                    <span className="text-sm font-bold text-stone-900">Scope Access Control</span>
+                                </div>
+                                <p className="text-xs text-stone-600 leading-relaxed">
+                                    Each user has <strong>two passwords</strong> when Dual View is enabled:
+                                </p>
+                                <ul className="mt-2 space-y-1.5 text-xs text-stone-600">
+                                    <li className="flex items-start gap-2">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
+                                        <span><strong>Viewer Password</strong> — grants read-only access to Official (posted/declared) data</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-stone-500 mt-1.5 shrink-0" />
+                                        <span><strong>Full Access Password</strong> — grants full access to Internal scope (complete picture)</span>
+                                    </li>
+                                </ul>
+                                <p className="text-[10px] text-stone-400 mt-3 italic">
+                                    Manage user scope passwords in HR &amp; Teams → Access Control.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ─── CUSTOM FLAGS ─── */}
+                    {companyType === 'CUSTOM' && (
+                        <div className="p-4 bg-stone-50 rounded-md border border-stone-100">
+                            <h3 className="text-sm font-medium text-stone-900 mb-3">Manual Configuration</h3>
+                            <div className="space-y-2">
+                                <div className="flex items-center">
+                                    <input {...register('worksInTTC')} disabled={lock.isLocked} type="checkbox" className="h-4 w-4 text-black border-stone-300 rounded disabled:opacity-50" />
+                                    <label className="ml-2 text-sm text-stone-700">Works in TTC (Cost Effective Basis is TTC)</label>
+                                </div>
+                                <div className="flex items-center">
+                                    <input {...register('allowHTEntryForTTC')} type="checkbox" className="h-4 w-4 text-black border-stone-300 rounded" />
+                                    <label className="ml-2 text-sm text-stone-700">Allow HT Entry (Auto-convert to TTC)</label>
+                                </div>
+                                <div className="flex items-center">
+                                    <input {...register('declareTVA')} type="checkbox" className="h-4 w-4 text-black border-stone-300 rounded" />
+                                    <label className="ml-2 text-sm text-stone-700">Declare TVA (Official)</label>
+                                </div>
+                                <div className="flex items-center">
+                                    <input {...register('dualView')} type="checkbox" className="h-4 w-4 text-black border-stone-300 rounded" />
+                                    <label className="ml-2 text-sm text-stone-700">Enable Dual View (Official / Internal)</label>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ─── MICRO TAX RULES ─── */}
+                    {companyType === 'MICRO' && (
+                        <div className="p-4 bg-blue-50 rounded-md border border-blue-100">
+                            <h3 className="text-sm font-medium text-blue-900 mb-3">Micro Tax Rules</h3>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-blue-700 mb-1">Sales Tax %</label>
+                                    <input
+                                        {...register('salesTaxPercentage', { valueAsNumber: true })}
+                                        type="number" step="0.01"
+                                        className="w-full px-3 py-2 border border-blue-200 rounded-md shadow-sm"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-blue-700 mb-1">Purchase Tax %</label>
+                                    <input
+                                        {...register('purchaseTaxPercentage', { valueAsNumber: true })}
+                                        type="number" step="0.01"
+                                        className="w-full px-3 py-2 border border-blue-200 rounded-md shadow-sm"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ─── POSTING RULES ─── */}
+                    <div className="p-4 bg-emerald-50 rounded-md border border-emerald-100 flex items-center justify-between">
+                        <div className="flex gap-3 items-center">
+                            <div className="p-2 bg-emerald-100 rounded-lg text-emerald-600">
+                                <Target size={20} />
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-bold text-emerald-900">Transaction Posting Rules</h3>
+                                <p className="text-xs text-emerald-700">Link operations (Sales, Purchases) to specific accounts.</p>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => router.push('/finance/settings/posting-rules')}
+                            className="bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-100 px-4 py-2 rounded text-xs font-bold shadow-sm"
+                        >
+                            Configure Auto-Mapping
+                        </button>
+                    </div>
+
+                    {/* ─── SUBMIT ─── */}
+                    <div className="pt-4 border-t border-stone-200">
+                        <button
+                            type="submit"
+                            disabled={isPending}
+                            className="w-full bg-black text-white px-4 py-2 rounded-md hover:bg-stone-800 disabled:opacity-50"
+                        >
+                            {isPending ? 'Saving...' : 'Save Configuration'}
+                        </button>
+                    </div>
+                </form>
+
+                {/* ─── MAINTENANCE ZONE ─── */}
+                <div className="bg-white p-6 rounded-lg shadow-sm border border-stone-200">
+                    <h2 className="text-lg font-medium text-rose-600 mb-4 flex items-center gap-2">
+                        <ShieldAlert size={20} />
+                        Maintenance Zone
+                    </h2>
+                    <div className="space-y-4">
+                        <div className="bg-amber-50 border border-amber-100 rounded-md p-4 flex items-center justify-between">
+                            <div>
+                                <h3 className="text-sm font-bold text-amber-900">Recalculate Ledger Balances</h3>
+                                <p className="text-xs text-amber-700 mt-1">
+                                    Rebuilds account balances from scratch based on the posted journal entries.
+                                </p>
+                            </div>
                             <button
                                 type="button"
-                                onClick={() => { setShowCompare(!showCompare); if (!compareType) setCompareType(COMPANY_TYPES.find(t => t.key !== companyType)?.key || '') }}
-                                className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+                                onClick={handleRecalculate}
+                                disabled={isRecalcPending}
+                                className="bg-white border border-amber-200 text-amber-700 hover:bg-amber-100 px-4 py-2 rounded text-xs font-bold shadow-sm"
                             >
-                                <GitCompareArrows size={14} />
-                                {showCompare ? 'Hide Comparison' : 'Compare Types'}
+                                {isRecalcPending ? 'Processing...' : 'Recalculate Now'}
                             </button>
                         </div>
 
-                        <select
-                            {...register('companyType')}
-                            disabled={lock.isLocked}
-                            className="w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:ring-black focus:border-black disabled:bg-stone-100 disabled:text-stone-500"
-                        >
-                            {COMPANY_TYPES.map(t => (
-                                <option key={t.key} value={t.key}>{t.label}</option>
-                            ))}
-                        </select>
-                        <p className="mt-1 text-xs text-stone-500">
-                            Determines how costs, prices, and taxes are calculated.
-                        </p>
-
-                        {/* Selected Type Detail */}
-                        {selectedType && (
-                            <div className="mt-3">
-                                <TypeDetailCard type={selectedType} />
+                        <div className="bg-rose-50 border border-rose-100 rounded-md p-4 flex items-center justify-between">
+                            <div>
+                                <h3 className="text-sm font-bold text-rose-900 uppercase tracking-wider">CRITICAL: Fresh Version (Wipe All Data)</h3>
+                                <p className="text-xs text-rose-700 mt-1 font-medium">
+                                    DELETES all Products, Orders, Ledger entries, CRM, and Inventory.
+                                    <br /> Use this to completely reset the system to a clean state.
+                                </p>
                             </div>
-                        )}
+                            <button
+                                type="button"
+                                onClick={async () => {
+                                    if (!confirm("ULTIMATE DANGER: This will delete EVERYTHING (Products, Orders, Ledger, Contacts). This cannot be undone. Proceed?")) return
+                                    if (!confirm("TOTAL WIPE CONFIRMATION: Start with a Fresh Version?")) return
+                                    startTransition(async () => {
+                                        try {
+                                            const { wipeAllOperationalData } = await import('@/app/actions/finance/system')
+                                            await wipeAllOperationalData()
+                                            alert("System has been completely wiped to a Fresh Version.")
+                                            router.refresh()
+                                        } catch (e: any) {
+                                            alert("Error: " + e.message)
+                                        }
+                                    })
+                                }}
+                                disabled={isPending}
+                                className="bg-rose-600 border border-rose-700 text-white hover:bg-rose-700 px-4 py-2 rounded text-xs font-black shadow-lg"
+                            >
+                                {isPending ? 'Wiping...' : 'FRESH VERSION'}
+                            </button>
+                        </div>
 
-                        {/* ─── SIDE-BY-SIDE COMPARISON ─── */}
-                        {showCompare && (
-                            <div className="mt-4 p-4 bg-indigo-50/50 border border-indigo-200 rounded-xl">
-                                <div className="flex items-center justify-between mb-3">
-                                    <h4 className="text-xs font-bold text-indigo-900 uppercase tracking-wider">Compare with another type</h4>
-                                    <button type="button" onClick={() => setShowCompare(false)} className="text-indigo-400 hover:text-indigo-600 p-0.5">
-                                        <X size={14} />
-                                    </button>
-                                </div>
+                        <div className="bg-emerald-50 border border-emerald-100 rounded-md p-4 flex items-center justify-between">
+                            <div>
+                                <h3 className="text-sm font-bold text-emerald-900 uppercase tracking-wider">Fill Real Data (Seed System)</h3>
+                                <p className="text-xs text-emerald-700 mt-1 font-medium">
+                                    Fills the database with test products, suppliers, and initial stock.
+                                    <br /> Use this to quickly test system functionality.
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={async () => {
+                                    if (!confirm("Populate database with test records?")) return
+                                    startTransition(async () => {
+                                        try {
+                                            const { seedTestData } = await import('@/app/actions/finance/system')
+                                            await seedTestData()
+                                            alert("Test data has been successfully seeded!")
+                                            router.refresh()
+                                        } catch (e: any) {
+                                            alert("Error: " + e.message)
+                                        }
+                                    })
+                                }}
+                                disabled={isPending}
+                                className="bg-emerald-600 border border-emerald-700 text-white hover:bg-emerald-700 px-4 py-2 rounded text-xs font-black shadow-lg"
+                            >
+                                {isPending ? 'Seeding...' : 'FILL REAL DATA'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>{/* close left column */}
+
+            {/* ─── RIGHT COLUMN: Row-by-Row Comparison Table ─── */}
+            {showCompare && (
+                <div className="w-[480px] shrink-0 sticky top-6">
+                    <div className="bg-white rounded-lg shadow-sm border border-indigo-200 overflow-hidden">
+                        <div className="bg-indigo-50 px-4 py-3 flex items-center justify-between border-b border-indigo-200">
+                            <div className="flex items-center gap-2">
+                                <GitCompareArrows size={14} className="text-indigo-600" />
+                                <h3 className="text-xs font-bold text-indigo-900 uppercase tracking-wider">Type Comparison</h3>
+                            </div>
+                            <button type="button" onClick={() => setShowCompare(false)} className="text-indigo-400 hover:text-indigo-600 p-0.5">
+                                <X size={14} />
+                            </button>
+                        </div>
+
+                        {/* Type Selector Row */}
+                        <div className="grid grid-cols-[140px_1fr_1fr] border-b border-indigo-100">
+                            <div className="px-3 py-2 bg-stone-50 border-r border-stone-200">
+                                <span className="text-[10px] font-bold text-stone-400 uppercase">Feature</span>
+                            </div>
+                            <div className="px-3 py-2 bg-indigo-50/50 border-r border-indigo-100">
+                                <p className="text-[10px] font-bold text-stone-400 uppercase mb-1">Current</p>
+                                {selectedType && (
+                                    <div className="flex items-center gap-1.5">
+                                        <div className={`w-2 h-2 rounded-full ${COLOR_MAP[selectedType.color].dot}`} />
+                                        <span className={`text-xs font-bold ${COLOR_MAP[selectedType.color].text}`}>{selectedType.name}</span>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="px-3 py-2">
+                                <p className="text-[10px] font-bold text-stone-400 uppercase mb-1">Compare With</p>
                                 <select
                                     value={compareType}
                                     onChange={e => setCompareType(e.target.value)}
-                                    className="w-full px-3 py-2 border border-indigo-200 rounded-md shadow-sm text-sm mb-3 bg-white focus:ring-indigo-500 focus:border-indigo-500"
+                                    className="w-full px-1.5 py-0.5 border border-stone-200 rounded text-xs bg-white focus:ring-indigo-500 focus:border-indigo-500"
                                 >
                                     {COMPANY_TYPES.filter(t => t.key !== companyType).map(t => (
-                                        <option key={t.key} value={t.key}>{t.label}</option>
+                                        <option key={t.key} value={t.key}>{t.name}</option>
                                     ))}
                                 </select>
-                                <div className="grid grid-cols-2 gap-3">
-                                    {selectedType && <TypeDetailCard type={selectedType} compact />}
-                                    {compareTypeObj && <TypeDetailCard type={compareTypeObj} compact />}
+                            </div>
+                        </div>
+
+                        {/* Comparison Rows */}
+                        {COMPARE_ROWS.map((row, i) => (
+                            <div key={row.key} className={`grid grid-cols-[140px_1fr_1fr] ${i < COMPARE_ROWS.length - 1 ? 'border-b border-stone-100' : ''}`}>
+                                <div className="px-3 py-2.5 bg-stone-50 border-r border-stone-200">
+                                    <span className="text-[11px] font-semibold text-stone-600">{row.label}</span>
+                                </div>
+                                <div className="px-3 py-2.5 border-r border-stone-100 bg-indigo-50/20">
+                                    <span className="text-[11px] text-stone-700">{selectedType?.compare[row.key] || '—'}</span>
+                                </div>
+                                <div className="px-3 py-2.5">
+                                    <span className="text-[11px] text-stone-700">{compareTypeObj?.compare[row.key] || '—'}</span>
                                 </div>
                             </div>
-                        )}
-                    </div>
-
-                    {/* Currency & Tax */}
-                    <div className="grid grid-cols-2 gap-4 mt-4">
-                        <div>
-                            <label className="block text-sm font-medium text-stone-700 mb-1">Default Currency</label>
-                            <input
-                                {...register('currency')}
-                                disabled={lock.isLocked}
-                                type="text"
-                                className="w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm disabled:bg-stone-50"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-stone-700 mb-1">Standard TVA Rate</label>
-                            <input
-                                {...register('defaultTaxRate', { valueAsNumber: true })}
-                                type="number" step="0.01"
-                                className="w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm"
-                            />
-                        </div>
+                        ))}
                     </div>
                 </div>
-
-                {/* ─── DUAL VIEW / OFFICIAL ACCESS ─── */}
-                {(dualView || companyType === 'MIXED') && (
-                    <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
-                        <div className="flex items-center gap-2 mb-3">
-                            <div className="p-1.5 bg-amber-100 rounded-lg text-amber-600">
-                                <ShieldAlert size={16} />
-                            </div>
-                            <h3 className="text-sm font-bold text-amber-900">Dual View Active</h3>
-                        </div>
-
-                        <p className="text-xs text-amber-700 mb-4 leading-relaxed">
-                            Two scopes are active: <strong>Official</strong> (declared/posted data) and <strong>Internal</strong> (full picture).
-                            The scope toggle appears in the sidebar. Each user has separate credentials for each scope.
-                        </p>
-
-                        {/* Scope Preview */}
-                        <div className="grid grid-cols-2 gap-3 mb-4">
-                            <div className="p-3 bg-white rounded-lg border border-amber-200">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                                    <span className="text-xs font-bold text-stone-900">Official</span>
-                                </div>
-                                <p className="text-[10px] text-stone-500 leading-relaxed">
-                                    Declared transactions only. Government-reported data.
-                                    Access via <strong>Viewer Password</strong>.
-                                </p>
-                            </div>
-                            <div className="p-3 bg-white rounded-lg border border-amber-200">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <div className="w-2.5 h-2.5 rounded-full bg-stone-500" />
-                                    <span className="text-xs font-bold text-stone-900">Internal</span>
-                                </div>
-                                <p className="text-[10px] text-stone-500 leading-relaxed">
-                                    Full picture — all operations including undeclared.
-                                    Access via <strong>Full Access Password</strong>.
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Per-User Access Info */}
-                        <div className="bg-white rounded-lg border border-amber-200 p-4">
-                            <div className="flex items-center gap-2 mb-2">
-                                <Lock size={14} className="text-amber-600" />
-                                <span className="text-sm font-bold text-stone-900">Scope Access Control</span>
-                            </div>
-                            <p className="text-xs text-stone-600 leading-relaxed">
-                                Each user has <strong>two passwords</strong> when Dual View is enabled:
-                            </p>
-                            <ul className="mt-2 space-y-1.5 text-xs text-stone-600">
-                                <li className="flex items-start gap-2">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-                                    <span><strong>Viewer Password</strong> — grants read-only access to Official (posted/declared) data</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-stone-500 mt-1.5 shrink-0" />
-                                    <span><strong>Full Access Password</strong> — grants full access to Internal scope (complete picture)</span>
-                                </li>
-                            </ul>
-                            <p className="text-[10px] text-stone-400 mt-3 italic">
-                                Manage user scope passwords in HR &amp; Teams → Access Control.
-                            </p>
-                        </div>
-                    </div>
-                )}
-
-                {/* ─── CUSTOM FLAGS ─── */}
-                {companyType === 'CUSTOM' && (
-                    <div className="p-4 bg-stone-50 rounded-md border border-stone-100">
-                        <h3 className="text-sm font-medium text-stone-900 mb-3">Manual Configuration</h3>
-                        <div className="space-y-2">
-                            <div className="flex items-center">
-                                <input {...register('worksInTTC')} disabled={lock.isLocked} type="checkbox" className="h-4 w-4 text-black border-stone-300 rounded disabled:opacity-50" />
-                                <label className="ml-2 text-sm text-stone-700">Works in TTC (Cost Effective Basis is TTC)</label>
-                            </div>
-                            <div className="flex items-center">
-                                <input {...register('allowHTEntryForTTC')} type="checkbox" className="h-4 w-4 text-black border-stone-300 rounded" />
-                                <label className="ml-2 text-sm text-stone-700">Allow HT Entry (Auto-convert to TTC)</label>
-                            </div>
-                            <div className="flex items-center">
-                                <input {...register('declareTVA')} type="checkbox" className="h-4 w-4 text-black border-stone-300 rounded" />
-                                <label className="ml-2 text-sm text-stone-700">Declare TVA (Official)</label>
-                            </div>
-                            <div className="flex items-center">
-                                <input {...register('dualView')} type="checkbox" className="h-4 w-4 text-black border-stone-300 rounded" />
-                                <label className="ml-2 text-sm text-stone-700">Enable Dual View (Official / Internal)</label>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* ─── MICRO TAX RULES ─── */}
-                {companyType === 'MICRO' && (
-                    <div className="p-4 bg-blue-50 rounded-md border border-blue-100">
-                        <h3 className="text-sm font-medium text-blue-900 mb-3">Micro Tax Rules</h3>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-blue-700 mb-1">Sales Tax %</label>
-                                <input
-                                    {...register('salesTaxPercentage', { valueAsNumber: true })}
-                                    type="number" step="0.01"
-                                    className="w-full px-3 py-2 border border-blue-200 rounded-md shadow-sm"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-blue-700 mb-1">Purchase Tax %</label>
-                                <input
-                                    {...register('purchaseTaxPercentage', { valueAsNumber: true })}
-                                    type="number" step="0.01"
-                                    className="w-full px-3 py-2 border border-blue-200 rounded-md shadow-sm"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* ─── POSTING RULES ─── */}
-                <div className="p-4 bg-emerald-50 rounded-md border border-emerald-100 flex items-center justify-between">
-                    <div className="flex gap-3 items-center">
-                        <div className="p-2 bg-emerald-100 rounded-lg text-emerald-600">
-                            <Target size={20} />
-                        </div>
-                        <div>
-                            <h3 className="text-sm font-bold text-emerald-900">Transaction Posting Rules</h3>
-                            <p className="text-xs text-emerald-700">Link operations (Sales, Purchases) to specific accounts.</p>
-                        </div>
-                    </div>
-                    <button
-                        type="button"
-                        onClick={() => router.push('/finance/settings/posting-rules')}
-                        className="bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-100 px-4 py-2 rounded text-xs font-bold shadow-sm"
-                    >
-                        Configure Auto-Mapping
-                    </button>
-                </div>
-
-                {/* ─── SUBMIT ─── */}
-                <div className="pt-4 border-t border-stone-200">
-                    <button
-                        type="submit"
-                        disabled={isPending}
-                        className="w-full bg-black text-white px-4 py-2 rounded-md hover:bg-stone-800 disabled:opacity-50"
-                    >
-                        {isPending ? 'Saving...' : 'Save Configuration'}
-                    </button>
-                </div>
-            </form>
-
-            {/* ─── MAINTENANCE ZONE ─── */}
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-stone-200">
-                <h2 className="text-lg font-medium text-rose-600 mb-4 flex items-center gap-2">
-                    <ShieldAlert size={20} />
-                    Maintenance Zone
-                </h2>
-                <div className="space-y-4">
-                    <div className="bg-amber-50 border border-amber-100 rounded-md p-4 flex items-center justify-between">
-                        <div>
-                            <h3 className="text-sm font-bold text-amber-900">Recalculate Ledger Balances</h3>
-                            <p className="text-xs text-amber-700 mt-1">
-                                Rebuilds account balances from scratch based on the posted journal entries.
-                            </p>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={handleRecalculate}
-                            disabled={isRecalcPending}
-                            className="bg-white border border-amber-200 text-amber-700 hover:bg-amber-100 px-4 py-2 rounded text-xs font-bold shadow-sm"
-                        >
-                            {isRecalcPending ? 'Processing...' : 'Recalculate Now'}
-                        </button>
-                    </div>
-
-                    <div className="bg-rose-50 border border-rose-100 rounded-md p-4 flex items-center justify-between">
-                        <div>
-                            <h3 className="text-sm font-bold text-rose-900 uppercase tracking-wider">CRITICAL: Fresh Version (Wipe All Data)</h3>
-                            <p className="text-xs text-rose-700 mt-1 font-medium">
-                                DELETES all Products, Orders, Ledger entries, CRM, and Inventory.
-                                <br /> Use this to completely reset the system to a clean state.
-                            </p>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={async () => {
-                                if (!confirm("ULTIMATE DANGER: This will delete EVERYTHING (Products, Orders, Ledger, Contacts). This cannot be undone. Proceed?")) return
-                                if (!confirm("TOTAL WIPE CONFIRMATION: Start with a Fresh Version?")) return
-                                startTransition(async () => {
-                                    try {
-                                        const { wipeAllOperationalData } = await import('@/app/actions/finance/system')
-                                        await wipeAllOperationalData()
-                                        alert("System has been completely wiped to a Fresh Version.")
-                                        router.refresh()
-                                    } catch (e: any) {
-                                        alert("Error: " + e.message)
-                                    }
-                                })
-                            }}
-                            disabled={isPending}
-                            className="bg-rose-600 border border-rose-700 text-white hover:bg-rose-700 px-4 py-2 rounded text-xs font-black shadow-lg"
-                        >
-                            {isPending ? 'Wiping...' : 'FRESH VERSION'}
-                        </button>
-                    </div>
-
-                    <div className="bg-emerald-50 border border-emerald-100 rounded-md p-4 flex items-center justify-between">
-                        <div>
-                            <h3 className="text-sm font-bold text-emerald-900 uppercase tracking-wider">Fill Real Data (Seed System)</h3>
-                            <p className="text-xs text-emerald-700 mt-1 font-medium">
-                                Fills the database with test products, suppliers, and initial stock.
-                                <br /> Use this to quickly test system functionality.
-                            </p>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={async () => {
-                                if (!confirm("Populate database with test records?")) return
-                                startTransition(async () => {
-                                    try {
-                                        const { seedTestData } = await import('@/app/actions/finance/system')
-                                        await seedTestData()
-                                        alert("Test data has been successfully seeded!")
-                                        router.refresh()
-                                    } catch (e: any) {
-                                        alert("Error: " + e.message)
-                                    }
-                                })
-                            }}
-                            disabled={isPending}
-                            className="bg-emerald-600 border border-emerald-700 text-white hover:bg-emerald-700 px-4 py-2 rounded text-xs font-black shadow-lg"
-                        >
-                            {isPending ? 'Seeding...' : 'FILL REAL DATA'}
-                        </button>
-                    </div>
-                </div>
-            </div>
+            )}
         </div>
     )
 }
