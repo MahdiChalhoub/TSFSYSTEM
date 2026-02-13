@@ -20,11 +20,13 @@ def login_view(request):
     serializer = LoginSerializer(data=request.data, context={'request': request})
     serializer.is_valid(raise_exception=True)
     user = serializer.validated_data['user']
+    scope_access = serializer.validated_data.get('scope_access', 'internal')
     token, created = Token.objects.get_or_create(user=user)
     
     return Response({
         'token': token.key,
-        'user': UserSerializer(user).data
+        'user': UserSerializer(user).data,
+        'scope_access': scope_access,  # 'official' or 'internal'
     })
 
 @api_view(['POST'])

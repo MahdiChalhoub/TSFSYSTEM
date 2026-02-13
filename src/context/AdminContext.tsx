@@ -10,10 +10,10 @@ type Tab = {
 };
 
 /**
- * Scope access levels:
- *  - null: not authenticated for any scope yet
- *  - 'official': user entered Official password → sees ONLY Official data, no toggle
- *  - 'internal': user entered Internal password → sees BOTH scopes with toggle
+ * Scope access levels (determined at LOGIN by which password was used):
+ *  - null: not yet loaded / no dual view
+ *  - 'official': user logged in with Official password → sees ONLY Official data, no toggle
+ *  - 'internal': user logged in with main or Internal password → sees BOTH scopes with toggle
  */
 type ScopeAccess = 'official' | 'internal' | null;
 
@@ -27,15 +27,10 @@ type AdminContextType = {
     clearTabs: () => void;
     viewScope: 'OFFICIAL' | 'INTERNAL';
     setViewScope: (scope: 'OFFICIAL' | 'INTERNAL') => void;
-    /** Which access level the user has authenticated for this session */
+    /** Which access level the user was granted at login */
     scopeAccess: ScopeAccess;
-    /** Set after successful PIN verification */
-    setScopeAccess: (access: ScopeAccess) => void;
     /** Whether the scope toggle should be visible (only in 'internal' access mode) */
     canToggleScope: boolean;
-    /** Pending scope the user wants to authenticate for */
-    pendingScopeAuth: 'official' | 'internal' | null;
-    setPendingScopeAuth: (scope: 'official' | 'internal' | null) => void;
 };
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
@@ -46,16 +41,15 @@ export function AdminProvider({ children, contextKey = 'default' }: { children: 
     const [viewScope, setViewScope] = useState<'OFFICIAL' | 'INTERNAL'>('INTERNAL');
     const [isLoaded, setIsLoaded] = useState(false);
     const [scopeAccess, setScopeAccess] = useState<ScopeAccess>(null);
-    const [pendingScopeAuth, setPendingScopeAuth] = useState<'official' | 'internal' | null>(null);
     const pathname = usePathname();
     const router = useRouter();
 
     const TABS_KEY = `tsf_tabs_${contextKey}`;
     const SCOPE_KEY = `tsf_view_scope_${contextKey}`;
 
-    // Load tabs and viewScope from localStorage on contextKey change or mount
+    // Load tabs, viewScope, and scopeAccess from localStorage/cookies on mount
     useEffect(() => {
-        setIsLoaded(false); // Reset load state while switching
+        setIsLoaded(false);
         const savedTabs = localStorage.getItem(TABS_KEY);
         if (savedTabs) {
             try {
@@ -72,7 +66,6 @@ export function AdminProvider({ children, contextKey = 'default' }: { children: 
                 setOpenTabs([{ id: 'dashboard', title: 'Dashboard', path: '/admin' }]);
             }
         } else {
-            // Default tabs per context
             const defaultPath = contextKey === 'saas' ? '/dashboard' : '/admin';
             setOpenTabs([{ id: 'dashboard', title: 'Dashboard', path: defaultPath }]);
         }
@@ -81,6 +74,17 @@ export function AdminProvider({ children, contextKey = 'default' }: { children: 
         if (savedScope === 'OFFICIAL' || savedScope === 'INTERNAL') {
             setViewScope(savedScope);
         }
+
+        // Read scope_access from cookie (set at login)
+        const scopeCookie = document.cookie.match(/scope_access=([^;]+)/)?.[1];
+        if (scopeCookie === 'official' || scopeCookie === 'internal') {
+            setScopeAccess(scopeCookie);
+            // If official-only, force viewScope to OFFICIAL
+            if (scopeCookie === 'official') {
+                setViewScope('OFFICIAL');
+            }
+        }
+
         setIsLoaded(true);
     }, [contextKey, TABS_KEY, SCOPE_KEY]);
 
@@ -88,24 +92,14 @@ export function AdminProvider({ children, contextKey = 'default' }: { children: 
     useEffect(() => {
         if (!isLoaded) return;
         localStorage.setItem(SCOPE_KEY, viewScope);
-        // Set cookie for server-side awareness (valid for 1 year)
         document.cookie = `tsf_view_scope=${viewScope}; path=/; max-age=31536000; SameSite=Lax`;
     }, [viewScope, isLoaded, SCOPE_KEY]);
 
     const handleSetViewScope = (scope: 'OFFICIAL' | 'INTERNAL') => {
+        // If official-only access, cannot switch to internal
+        if (scopeAccess === 'official' && scope === 'INTERNAL') return;
         setViewScope(scope);
-        // Trigger server components refresh
         router.refresh();
-    };
-
-    // When scopeAccess changes, lock to the correct view
-    const handleSetScopeAccess = (access: ScopeAccess) => {
-        setScopeAccess(access);
-        if (access === 'official') {
-            // Official-only mode: lock to OFFICIAL, no toggle
-            handleSetViewScope('OFFICIAL');
-        }
-        // 'internal' access: user can freely toggle between both
     };
 
     // Toggle is visible only if user has internal (full) access
@@ -123,25 +117,21 @@ export function AdminProvider({ children, contextKey = 'default' }: { children: 
 
     const openTab = (title: string, path: string) => {
         const id = path;
-
         setOpenTabs(prev => {
             if (prev.find(t => t.id === id)) return prev;
             return [...prev, { id, title, path }];
         });
-
         router.push(path);
     };
 
     const closeTab = (id: string) => {
         const newTabs = openTabs.filter(t => t.id !== id);
         setOpenTabs(newTabs);
-
-        // If we closed the active tab, navigate to the last one
         if (pathname === id && newTabs.length > 0) {
             router.push(newTabs[newTabs.length - 1].path);
         } else if (newTabs.length === 0) {
             const defaultPath = contextKey === 'saas' ? '/dashboard' : '/admin';
-            router.push(defaultPath); // Fallback
+            router.push(defaultPath);
         }
     };
 
@@ -163,10 +153,7 @@ export function AdminProvider({ children, contextKey = 'default' }: { children: 
             viewScope,
             setViewScope: handleSetViewScope,
             scopeAccess,
-            setScopeAccess: handleSetScopeAccess,
             canToggleScope,
-            pendingScopeAuth,
-            setPendingScopeAuth,
         }}>
             {children}
         </AdminContext.Provider>
