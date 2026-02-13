@@ -77,12 +77,12 @@ export function AdminProvider({ children, contextKey = 'default' }: { children: 
 
         // Read scope_access from cookie (set at login)
         const scopeCookie = document.cookie.match(/scope_access=([^;]+)/)?.[1];
-        if (scopeCookie === 'official' || scopeCookie === 'internal') {
-            setScopeAccess(scopeCookie);
-            // If official-only, force viewScope to OFFICIAL
-            if (scopeCookie === 'official') {
-                setViewScope('OFFICIAL');
-            }
+        if (scopeCookie === 'official') {
+            setScopeAccess('official');
+            setViewScope('OFFICIAL');
+        } else {
+            // Default to full access if no cookie or 'internal' cookie
+            setScopeAccess('internal');
         }
 
         setIsLoaded(true);

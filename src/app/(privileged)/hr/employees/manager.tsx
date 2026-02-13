@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Plus, User, Briefcase, Building2, CreditCard, ChevronRight, Phone, Mail, Filter, ShieldCheck, Fingerprint } from "lucide-react";
+import { Search, Plus, User, Briefcase, Building2, CreditCard, ChevronRight, Phone, Mail, Filter, ShieldCheck, Fingerprint, Lock } from "lucide-react";
 import EmployeeModal from './form';
+import ScopePasswordModal from '@/components/admin/ScopePasswordModal';
 import clsx from 'clsx';
 
 export default function EmployeeManager({
@@ -16,6 +17,7 @@ export default function EmployeeManager({
 }) {
     const [search, setSearch] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [scopeEmployee, setScopeEmployee] = useState<any | null>(null);
 
     const filtered = employees.filter(e =>
         `${e.firstName} ${e.lastName}`.toLowerCase().includes(search.toLowerCase()) ||
@@ -97,12 +99,19 @@ export default function EmployeeManager({
                         </div>
 
                         {/* Actions */}
-                        <div className="w-full grid grid-cols-2 gap-3">
+                        <div className="w-full grid grid-cols-3 gap-3">
                             <button className="py-3.5 rounded-2xl bg-gray-50 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all border border-transparent hover:border-gray-200">
                                 View Profile
                             </button>
                             <button className="py-3.5 rounded-2xl bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
                                 Payroll Detail
+                            </button>
+                            <button
+                                onClick={() => setScopeEmployee(emp)}
+                                className="py-3.5 rounded-2xl bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 hover:text-white transition-all shadow-sm flex items-center justify-center gap-1"
+                            >
+                                <Lock size={10} />
+                                Scope
                             </button>
                         </div>
                     </div>
@@ -114,6 +123,13 @@ export default function EmployeeManager({
                     sites={sites}
                     roles={roles}
                     onClose={() => setIsModalOpen(false)}
+                />
+            )}
+
+            {scopeEmployee && (
+                <ScopePasswordModal
+                    employee={scopeEmployee}
+                    onClose={() => setScopeEmployee(null)}
                 />
             )}
         </div>
