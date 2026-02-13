@@ -54,16 +54,31 @@ export default function EmployeeManager({
             {/* Employee Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
                 {filtered.map((emp) => (
-                    <div key={emp.id} className="group bg-white p-8 rounded-[48px] border border-gray-100 hover:shadow-2xl hover:shadow-indigo-900/5 transition-all relative overflow-hidden flex flex-col items-center">
+                    <div key={emp.id} className={clsx(
+                        "group bg-white p-8 rounded-[48px] border hover:shadow-2xl hover:shadow-indigo-900/5 transition-all relative overflow-hidden flex flex-col items-center",
+                        emp.isStandaloneUser ? "border-amber-200 bg-amber-50/30" : "border-gray-100"
+                    )}>
                         {/* Status Badge */}
-                        <div className="absolute top-8 right-8 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-sm border border-emerald-100/50 flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                            {emp.status}
-                        </div>
+                        {emp.isStandaloneUser ? (
+                            <div className="absolute top-8 right-8 px-3 py-1 bg-amber-50 text-amber-600 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-sm border border-amber-200/50 flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                Incomplete
+                            </div>
+                        ) : (
+                            <div className="absolute top-8 right-8 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-sm border border-emerald-100/50 flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                {emp.status}
+                            </div>
+                        )}
 
                         {/* Avatar Cell */}
                         <div className="relative mb-6">
-                            <div className="w-32 h-32 rounded-[44px] bg-gray-50 flex items-center justify-center text-gray-200 group-hover:bg-indigo-50 group-hover:text-indigo-200 transition-colors duration-500 shadow-inner">
+                            <div className={clsx(
+                                "w-32 h-32 rounded-[44px] flex items-center justify-center transition-colors duration-500 shadow-inner",
+                                emp.isStandaloneUser
+                                    ? "bg-amber-50 text-amber-200 group-hover:bg-amber-100 group-hover:text-amber-300"
+                                    : "bg-gray-50 text-gray-200 group-hover:bg-indigo-50 group-hover:text-indigo-200"
+                            )}>
                                 <User size={56} strokeWidth={1.5} />
                             </div>
                             {emp.user && (
@@ -100,12 +115,20 @@ export default function EmployeeManager({
 
                         {/* Actions */}
                         <div className="w-full grid grid-cols-3 gap-3">
-                            <button className="py-3.5 rounded-2xl bg-gray-50 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all border border-transparent hover:border-gray-200">
-                                View Profile
-                            </button>
-                            <button className="py-3.5 rounded-2xl bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
-                                Payroll Detail
-                            </button>
+                            {emp.isStandaloneUser ? (
+                                <button className="col-span-2 py-3.5 rounded-2xl bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-widest hover:bg-amber-600 hover:text-white transition-all shadow-sm border border-amber-200/50">
+                                    Complete Profile
+                                </button>
+                            ) : (
+                                <>
+                                    <button className="py-3.5 rounded-2xl bg-gray-50 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all border border-transparent hover:border-gray-200">
+                                        View Profile
+                                    </button>
+                                    <button className="py-3.5 rounded-2xl bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
+                                        Payroll Detail
+                                    </button>
+                                </>
+                            )}
                             <button
                                 onClick={() => setScopeEmployee(emp)}
                                 className="py-3.5 rounded-2xl bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 hover:text-white transition-all shadow-sm flex items-center justify-center gap-1"
