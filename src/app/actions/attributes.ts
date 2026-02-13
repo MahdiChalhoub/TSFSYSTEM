@@ -117,13 +117,19 @@ export async function getAttributesByCategory(categoryId: number | null) {
 export async function getAttributeHierarchy(parfumId: number) {
     try {
         const data = await erpFetch(`parfums/${parfumId}/hierarchy/`);
-        // Map hierarchy data to match frontend expectations (nested objects for unit/country)
-        return data.map((brand: any) => ({
-            ...brand,
-            products: brand.products.map((p: any) => ({
+        // The backend returns { parfum: ..., brands: [...] }
+        // The frontend expects the array of brands
+        const brands = data.brands || [];
+
+        return brands.map((item: any) => ({
+            ...item,
+            // Ensure brand info is at the root to match AttributeManager's brand.name access
+            id: item.brand?.id,
+            name: item.brand?.name,
+            products: (item.products || []).map((p: any) => ({
                 ...p,
-                unit: p.unitName ? { name: p.unitName } : null,
-                country: p.countryName ? { name: p.countryName } : null
+                unit: p.unit_name ? { name: p.unit_name } : null,
+                country: p.country_name ? { name: p.country_name } : null
             }))
         }));
     } catch (e) {
