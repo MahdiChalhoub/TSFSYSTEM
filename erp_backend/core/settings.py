@@ -129,7 +129,7 @@ DATABASES = {
         'USER': os.environ.get('DB_USER', 'tsfci'),
         'PASSWORD': os.environ.get('DB_PASSWORD', 'tsfci_secure_2026'),
         'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
-        'PORT': os.environ.get('DB_PORT', '5433'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
     }
 }
 
