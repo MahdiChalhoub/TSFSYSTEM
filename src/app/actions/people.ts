@@ -67,12 +67,16 @@ export async function setScopePassword(userId: string, scope: 'official' | 'inte
 
 /**
  * Auto-create and link a GL ledger account for an employee.
- * Creates a payroll liability sub-account under 2200.
+ * Creates a payroll liability sub-account (EMPLOYEE) or capital sub-account (PARTNER).
  */
-export async function linkGLAccount(employeeId: string) {
+export async function linkGLAccount(employeeId: string, employeeType?: 'EMPLOYEE' | 'PARTNER' | 'BOTH') {
     try {
+        const body: Record<string, string> = {};
+        if (employeeType) body.employee_type = employeeType;
+
         const result = await erpFetch(`employees/${employeeId}/link-gl-account/`, {
             method: 'POST',
+            body: JSON.stringify(body),
         });
         return {
             success: true,

@@ -22,12 +22,13 @@ export default function EmployeeManager({
     const [linkingGL, setLinkingGL] = useState<string | null>(null);
     const [glMessage, setGLMessage] = useState<{ id: string; type: 'success' | 'error'; text: string } | null>(null);
 
-    async function handleLinkGL(emp: any) {
+    async function handleLinkGL(emp: any, empType: 'EMPLOYEE' | 'PARTNER' | 'BOTH') {
         setLinkingGL(emp.id);
         setGLMessage(null);
-        const result = await linkGLAccount(emp.id);
+        const result = await linkGLAccount(emp.id, empType);
         if (result.success) {
             emp.linkedAccount = result.linkedAccount;
+            emp.employeeType = empType;
             setGLMessage({ id: emp.id, type: 'success', text: result.message || 'GL linked!' });
         } else {
             setGLMessage({ id: emp.id, type: 'error', text: result.message });
@@ -126,19 +127,42 @@ export default function EmployeeManager({
                                 <CreditCard size={16} className={clsx("mb-1", emp.linkedAccount ? "text-emerald-400" : "text-red-400")} />
                                 <span className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">Ledger Account</span>
                                 {emp.linkedAccount ? (
-                                    <span className="text-[11px] font-mono font-bold text-emerald-600">{emp.linkedAccount.code}</span>
-                                ) : (
-                                    <button
-                                        onClick={() => handleLinkGL(emp)}
-                                        disabled={linkingGL === emp.id}
-                                        className="mt-1 px-3 py-1 bg-red-50 text-red-600 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center gap-1 border border-red-200/50"
-                                    >
-                                        {linkingGL === emp.id ? (
-                                            '...'
-                                        ) : (
-                                            <><AlertTriangle size={10} /> Link GL</>
+                                    <div className="flex flex-col items-center gap-0.5">
+                                        <span className="text-[11px] font-mono font-bold text-emerald-600">{emp.linkedAccount.code}</span>
+                                        {emp.dividendsAccount && (
+                                            <span className="text-[9px] font-mono text-purple-500">DIV: {emp.dividendsAccount.code}</span>
                                         )}
-                                    </button>
+                                        {emp.employeeType && emp.employeeType !== 'EMPLOYEE' && (
+                                            <span className="text-[8px] font-bold text-indigo-400 bg-indigo-50 px-1.5 py-0.5 rounded-full">{emp.employeeType}</span>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center gap-1 mt-1">
+                                        <div className="flex gap-1">
+                                            <button
+                                                onClick={() => handleLinkGL(emp, 'EMPLOYEE')}
+                                                disabled={linkingGL === emp.id}
+                                                className="px-2 py-1 bg-blue-50 text-blue-600 rounded text-[8px] font-black uppercase hover:bg-blue-600 hover:text-white transition-all border border-blue-200/50"
+                                            >
+                                                Employee
+                                            </button>
+                                            <button
+                                                onClick={() => handleLinkGL(emp, 'PARTNER')}
+                                                disabled={linkingGL === emp.id}
+                                                className="px-2 py-1 bg-purple-50 text-purple-600 rounded text-[8px] font-black uppercase hover:bg-purple-600 hover:text-white transition-all border border-purple-200/50"
+                                            >
+                                                Partner
+                                            </button>
+                                            <button
+                                                onClick={() => handleLinkGL(emp, 'BOTH')}
+                                                disabled={linkingGL === emp.id}
+                                                className="px-2 py-1 bg-amber-50 text-amber-600 rounded text-[8px] font-black uppercase hover:bg-amber-600 hover:text-white transition-all border border-amber-200/50"
+                                            >
+                                                Both
+                                            </button>
+                                        </div>
+                                        {linkingGL === emp.id && <span className="text-[9px] text-gray-400 animate-pulse">Creating GL...</span>}
+                                    </div>
                                 )}
                                 {glMessage && glMessage.id === emp.id && (
                                     <span className={clsx("text-[9px] font-bold mt-1", glMessage.type === 'success' ? 'text-emerald-600' : 'text-red-500')}>
