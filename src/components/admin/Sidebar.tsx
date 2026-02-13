@@ -23,8 +23,10 @@ import {
     Sparkles,
     Cloud,
     MessageSquare,
-    Wrench
+    Wrench,
+    Lock
 } from 'lucide-react';
+import ScopePinModal from '@/components/admin/ScopePinModal';
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
 import { usePathname } from 'next/navigation';
@@ -184,7 +186,7 @@ export function Sidebar({
     isSuperuser?: boolean;
     dualViewEnabled?: boolean;
 }) {
-    const { sidebarOpen, toggleSidebar, openTab, activeTab, viewScope, setViewScope } = useAdmin();
+    const { sidebarOpen, toggleSidebar, openTab, activeTab, viewScope, setViewScope, canToggleScope, scopeAccess, setScopeAccess, pendingScopeAuth, setPendingScopeAuth } = useAdmin();
     const [installedModules, setInstalledModules] = useState<Set<string>>(new Set(['core']));
     const [dynamicItems, setDynamicItems] = useState<any[]>([]);
 
@@ -275,34 +277,75 @@ export function Sidebar({
                 </div>
 
                 {/* View Scope Switcher */}
-                {(isSuperuser && dualViewEnabled) && (
-                    <div className="mx-6 mt-6 p-1.5 bg-[#0B1120] rounded-2xl border border-gray-800 flex gap-1 shrink-0">
-                        <button
-                            onClick={() => setViewScope('OFFICIAL')}
-                            suppressHydrationWarning={true}
-                            className={clsx(
-                                "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
-                                viewScope === 'OFFICIAL'
-                                    ? "bg-emerald-600 text-white shadow-lg shadow-emerald-900/40"
-                                    : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
-                            )}
-                        >
-                            <Layers size={14} />
-                            Official
-                        </button>
-                        <button
-                            onClick={() => setViewScope('INTERNAL')}
-                            suppressHydrationWarning={true}
-                            className={clsx(
-                                "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
-                                viewScope === 'INTERNAL'
-                                    ? "bg-gray-700 text-white shadow-lg"
-                                    : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
-                            )}
-                        >
-                            <BarChart3 size={14} />
-                            Internal
-                        </button>
+                {dualViewEnabled && (
+                    <div className="mx-6 mt-6 shrink-0">
+                        <div className="p-1.5 bg-[#0B1120] rounded-2xl border border-gray-800 flex gap-1">
+                            <button
+                                onClick={() => {
+                                    if (scopeAccess === 'internal' || scopeAccess === 'official') {
+                                        setViewScope('OFFICIAL');
+                                    } else {
+                                        setPendingScopeAuth('official');
+                                    }
+                                }}
+                                suppressHydrationWarning={true}
+                                className={clsx(
+                                    "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
+                                    viewScope === 'OFFICIAL'
+                                        ? "bg-emerald-600 text-white shadow-lg shadow-emerald-900/40"
+                                        : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
+                                )}
+                            >
+                                {!scopeAccess && <Lock size={10} />}
+                                <Layers size={14} />
+                                Official
+                            </button>
+                            <button
+                                onClick={() => {
+                                    if (canToggleScope) {
+                                        setViewScope('INTERNAL');
+                                    } else {
+                                        setPendingScopeAuth('internal');
+                                    }
+                                }}
+                                suppressHydrationWarning={true}
+                                className={clsx(
+                                    "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
+                                    viewScope === 'INTERNAL' && canToggleScope
+                                        ? "bg-gray-700 text-white shadow-lg"
+                                        : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50",
+                                    scopeAccess === 'official' && "opacity-40 cursor-not-allowed"
+                                )}
+                                disabled={scopeAccess === 'official'}
+                                title={scopeAccess === 'official' ? 'Official view only — Internal is hidden' : ''}
+                            >
+                                {!canToggleScope && scopeAccess !== 'official' && <Lock size={10} />}
+                                <BarChart3 size={14} />
+                                Internal
+                            </button>
+                        </div>
+                        {/* Lock/Unlock button */}
+                        {scopeAccess && (
+                            <button
+                                onClick={() => setScopeAccess(null)}
+                                className="w-full flex items-center justify-center gap-1.5 text-[9px] text-gray-600 hover:text-gray-400 py-1.5 mt-1"
+                            >
+                                <Lock size={9} />
+                                Lock Scope
+                            </button>
+                        )}
+
+                        {/* PIN Modal */}
+                        {pendingScopeAuth && (
+                            <ScopePinModal
+                                targetAccess={pendingScopeAuth}
+                                onVerified={(access) => {
+                                    setScopeAccess(access);
+                                    setPendingScopeAuth(null);
+                                }}
+                                onCancel={() => setPendingScopeAuth(null)}
+                            />
+                        )}
                     </div>
                 )}
 

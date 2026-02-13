@@ -337,6 +337,30 @@ class User(AbstractUser):
     registration_status = models.CharField(max_length=50, default='APPROVED')
     correction_notes = models.TextField(null=True, blank=True)
 
+    # Scope Access Control — hashed PINs for dual-view scope switching
+    scope_pin_official = models.CharField(max_length=128, null=True, blank=True,
+        help_text='Hashed PIN required to access Official scope. Null = free access.')
+    scope_pin_internal = models.CharField(max_length=128, null=True, blank=True,
+        help_text='Hashed PIN required to access Internal scope. Null = free access.')
+
+    def set_scope_pin(self, scope: str, raw_pin: str | None):
+        """Set or clear a scope PIN. scope must be 'official' or 'internal'."""
+        from django.contrib.auth.hashers import make_password
+        field = f'scope_pin_{scope}'
+        if raw_pin:
+            setattr(self, field, make_password(raw_pin))
+        else:
+            setattr(self, field, None)
+
+    def check_scope_pin(self, scope: str, raw_pin: str) -> bool:
+        """Verify a scope PIN. Returns True if correct or no PIN is set."""
+        from django.contrib.auth.hashers import check_password
+        field = f'scope_pin_{scope}'
+        stored = getattr(self, field, None)
+        if not stored:
+            return True  # No PIN set = free access
+        return check_password(raw_pin, stored)
+
     def __str__(self):
         return self.email if self.email else self.username
 
