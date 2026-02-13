@@ -48,3 +48,19 @@ export async function createEmployee(prevState: any, formData: FormData) {
         return { success: false, message: e.message || 'Failed to create employee' };
     }
 }
+
+/**
+ * Set or clear a user's scope password (Official or Internal).
+ * Admin-only. Pass pin=null to clear.
+ */
+export async function setScopePassword(userId: string, scope: 'official' | 'internal', pin: string | null) {
+    try {
+        const result = await erpFetch(`users/${userId}/set-scope-pin/`, {
+            method: 'POST',
+            body: JSON.stringify({ scope, pin }),
+        });
+        return { success: true, message: result.message || `${scope} password ${pin ? 'set' : 'cleared'}` };
+    } catch (e: any) {
+        return { success: false, message: e.message || 'Failed to update scope password' };
+    }
+}

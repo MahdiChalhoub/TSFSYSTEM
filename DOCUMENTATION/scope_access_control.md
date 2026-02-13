@@ -13,8 +13,9 @@ When dual view is enabled for an organization, the user's **login password** det
 ### Key Rules
 - Scope is determined **at login**, not in-app
 - No superuser bypass — everyone authenticates with a password
-- Admin sets scope passwords per user via API
+- Admin sets scope passwords per user via HR → Employees → Scope button
 - The same login page is used — no changes to the login form
+- Users who logged in before scope passwords exist get full access by default
 
 ## Data Flow
 
@@ -28,14 +29,19 @@ When dual view is enabled for an organization, the user's **login password** det
 - `scope_access` cookie — set by frontend login action (7 day expiry)
 - `POST /api/users/{id}/set-scope-pin/` — admin sets/clears scope passwords
 
-## Step-by-Step Workflow
+## How to View or Modify User Scope Passwords
 
-### Admin Setting Scope Passwords
-1. Admin calls `POST /api/users/{id}/set-scope-pin/` with `{ scope: "official", pin: "viewonly123" }`
-2. Backend hashes password and stores on User record
-3. User now has an Official scope password
+1. Go to **HR → Employees**
+2. Find the employee card
+3. Click **Scope** button (green, on the card)
+4. The **Scope Passwords** modal opens:
+   - Shows status (Set / Not set) for Official and Internal passwords
+   - Type a new password and click **Set** to update
+   - Click the unlock (🔓) icon to **clear** an existing password
+5. Changes take effect on the user's next login
 
-### User Logging In
+## Step-by-Step Login Workflow
+
 1. User goes to login page, enters username + password
 2. Backend tries main password (Django `authenticate()`)
 3. If main password matches → `scope_access = 'internal'` (full access)
@@ -57,8 +63,11 @@ When dual view is enabled for an organization, the user's **login password** det
 | `erp/serializers/core.py` | `has_official_pin`, `has_internal_pin` on `UserSerializer` |
 | `erp/views.py` | `set_scope_pin` and `verify_scope_pin` admin actions |
 | `src/app/actions/auth.ts` | Stores/clears `scope_access` cookie |
-| `src/context/AdminContext.tsx` | Reads `scope_access` from cookie, computes `canToggleScope` |
+| `src/app/actions/people.ts` | `setScopePassword` server action |
+| `src/context/AdminContext.tsx` | Reads `scope_access` from cookie, defaults to `'internal'` |
 | `src/components/admin/Sidebar.tsx` | Toggle for full access, locked indicator for official-only |
+| `src/components/admin/ScopePasswordModal.tsx` | Admin UI to set/clear scope passwords |
+| `src/app/(privileged)/hr/employees/manager.tsx` | "Scope" button on employee cards |
 
 ## API Endpoints
 
@@ -67,4 +76,4 @@ When dual view is enabled for an organization, the user's **login password** det
 
 ### `POST /api/users/{id}/set-scope-pin/`
 - **Access**: Admin only
-- **Body**: `{ "scope": "official"|"internal", "pin": "1234" | null }`
+- **Body**: `{ "scope": "official"|"internal", "pin": "password123" | null }`
