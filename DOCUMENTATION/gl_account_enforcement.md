@@ -22,39 +22,55 @@ The system auto-creates the correct COA sub-accounts based on the person's type.
 - `EmployeeSerializer.dividends_account` → `{id, code, name}` or `null`
 
 ### Where Data is SAVED
-- `POST /api/employees/{id}/link-gl-account/` with optional `{ "employee_type": "..." }`
-- `ChartOfAccount` — new sub-accounts under 2121, 3001, or 3200
+- `POST /api/employees/` → creates employee with auto-GL based on type
+- `POST /api/employees/{id}/link-gl-account/` → links GL for existing employees
+- `ChartOfAccount` → new sub-accounts under 2121, 3001, or 3200
 - `Employee.linked_account_id` + `Employee.dividends_account_id` updated
+
+## Variables User Interacts With
+- **Employee Type** radio selector (Employee / Partner / Both) on creation form
+- **Link GL** buttons on employee cards (only shown for real employees, not standalone users)
+- Green account code display when linked
+- Purple dividends code for partners
 
 ## Step-by-Step Workflow
 
-1. Admin opens **HR → Employees**
-2. Employee cards show GL account status:
+### Creating a New Employee
+1. Admin opens **HR → Employees** → clicks **+ Add Employee**
+2. Fills in personal info, branch, role
+3. Selects **Person Category**: Employee, Partner, or Both
+4. Submits form
+5. Backend auto-creates correct GL sub-accounts based on type
+6. Employee card shows green account code(s) immediately
+
+### Linking GL for Existing Employees
+1. Employee cards show GL account status:
    - **Green code** (e.g., `2121-0001`) = linked ✓
    - **Purple DIV code** = dividends account linked (partners) ✓
    - **Three buttons** (Employee / Partner / Both) = not yet linked
-3. Admin clicks the appropriate type button on a card
-4. Server action calls `POST /api/employees/{id}/link-gl-account/`
-5. Backend creates the correct sub-accounts based on type
-6. Employee record updated with account IDs
-7. Card refreshes to show green account code + type badge
+   - **N/A** = standalone user (must Complete Profile first)
+2. Admin clicks the appropriate type button on a card
+3. Backend creates the correct sub-accounts
+4. Card refreshes to show account codes
 
 ## Files Modified
 
 | File | Change |
 |---|---|
 | `apps/hr/models.py` | Added `employee_type` (EMPLOYEE/PARTNER/BOTH) + `dividends_account_id` |
-| `apps/hr/views.py` | `link-gl-account` routes to correct COA section by type |
+| `apps/hr/views.py` | `create` + `link-gl-account` both route COA by type |
 | `apps/hr/serializers.py` | Returns `linked_account` + `dividends_account` details |
 | `apps/hr/migrations/0002_*` | `employee_type` field |
 | `apps/hr/migrations/0003_*` | `dividends_account_id` field |
-| `src/app/actions/people.ts` | `linkGLAccount(id, type)` server action |
+| `src/app/actions/people.ts` | `linkGLAccount(id, type)` + `createEmployee` passes type |
 | `src/app/(privileged)/hr/employees/page.tsx` | Maps `employeeType`, `dividendsAccount` |
-| `src/app/(privileged)/hr/employees/manager.tsx` | 3 type-selector buttons + dividends display |
+| `src/app/(privileged)/hr/employees/manager.tsx` | Type buttons + standalone guard |
+| `src/app/(privileged)/hr/employees/form.tsx` | Person Category radio selector |
 
-## API Endpoint
+## API Endpoints
+
+### `POST /api/employees/`
+Creates employee with auto-GL. Body includes `employee_type`.
 
 ### `POST /api/employees/{id}/link-gl-account/`
-- **Body** (optional): `{ "employee_type": "EMPLOYEE" | "PARTNER" | "BOTH" }`
-- **Response**: `{ "message": "...", "linked_account_id": 42, "linked_account_code": "2121-0001", "dividends_account_id": 43, "dividends_account_code": "3200-0001", ... }`
-- **Error**: `400` if already linked, `503` if Finance module unavailable
+Links GL for existing employee. Optional body: `{ "employee_type": "EMPLOYEE" | "PARTNER" | "BOTH" }`.
