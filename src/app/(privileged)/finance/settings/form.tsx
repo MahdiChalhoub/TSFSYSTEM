@@ -1,10 +1,10 @@
 'use client'
 
-import { useTransition, useState } from 'react'
+import { useTransition, useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { recalculateAccountBalances } from '@/app/actions/finance/ledger'
 import { FinancialSettingsState, updateFinancialSettings } from '@/app/actions/finance/settings'
-import { ShieldAlert, AlertTriangle, Lightbulb, Target } from 'lucide-react'
+import { ShieldAlert, Target, Lock, GitCompareArrows, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 interface Props {
@@ -12,24 +12,119 @@ interface Props {
     lock: { isLocked: boolean; reason: string | null }
 }
 
-const COMPANY_DESCRIPTIONS: Record<string, string> = {
-    'REGULAR': "Standard Business. Costs and Prices are typically managed in TTC (Tax Included). Simplifies daily operations.",
-    'MICRO': "Simplified Tax Regime. You pay a fixed percentage on Sales and Purchases. No detailed VAT declaration required.",
-    'REAL': "Professional Accounting (Reel). You verify VAT (Collected vs Paid). Requires formal invoices and explicit tax handling.",
-    'MIXED': "Hybrid System. Supports both 'Official' (Declared) and 'Internal' (Undeclared) transaction scopes simultaneously.",
-    'CUSTOM': "Fully Configurable. Manually toggle settings for TTC/HT working modes, VAT declarations, and Dual Views."
+// ────────────────────────────────────────────────────────
+// Company Type Definitions
+// ────────────────────────────────────────────────────────
+const COMPANY_TYPES = [
+    {
+        key: 'REGULAR',
+        name: 'Regular (TTC)',
+        label: 'REGULAR (TTC Based)',
+        description: 'Standard business model. Costs and prices are managed in TTC (Tax Included), simplifying daily pricing and cost entry. VAT is calculated automatically from the TTC amounts.',
+        features: ['TTC-based pricing', 'Auto VAT calculation', 'Simple cost entry', 'Standard invoicing'],
+        recommended: 'Retail shops, restaurants, small businesses',
+        color: 'emerald',
+        autoConfig: { worksInTTC: true, declareTVA: false, dualView: false }
+    },
+    {
+        key: 'MICRO',
+        name: 'Micro Enterprise',
+        label: 'MICRO (Percentage Tax)',
+        description: 'Simplified taxation for very small businesses. You pay a fixed percentage on total sales and purchases — no detailed VAT declarations needed. Minimal bookkeeping overhead.',
+        features: ['Flat tax rate on sales', 'Flat tax rate on purchases', 'No VAT declaration', 'Minimal bookkeeping'],
+        recommended: 'Freelancers, sole proprietors, very small businesses',
+        color: 'blue',
+        autoConfig: { worksInTTC: true, declareTVA: false, dualView: false }
+    },
+    {
+        key: 'REAL',
+        name: 'Real (Standard VAT)',
+        label: 'REAL (Standard VAT)',
+        description: 'Professional accounting regime ("Régime Réel"). All amounts are entered in HT (Hors Taxe). VAT is tracked in detail — Collected vs. Paid — requiring formal invoices and explicit tax handling.',
+        features: ['HT-based entry', 'VAT Collected vs Paid', 'Formal invoicing', 'Official VAT declaration'],
+        recommended: 'Medium-large businesses, formal accounting requirements',
+        color: 'violet',
+        autoConfig: { worksInTTC: false, declareTVA: true, dualView: false }
+    },
+    {
+        key: 'MIXED',
+        name: 'Dual View (Mixed)',
+        label: 'MIXED (Dual View)',
+        description: 'Maintains two parallel accounting scopes: Official (declared to government) and Internal (full picture including undeclared operations). Each scope has independent ledger entries. Access to Official data can be PIN-protected.',
+        features: ['Official scope (declared)', 'Internal scope (full picture)', 'Dual ledger entries', 'PIN-protected official access', 'Scope-aware reports'],
+        recommended: 'Businesses needing dual-scope reporting and access control',
+        color: 'amber',
+        autoConfig: { worksInTTC: true, declareTVA: true, dualView: true }
+    },
+    {
+        key: 'CUSTOM',
+        name: 'Custom Configuration',
+        label: 'CUSTOM (Manual Config)',
+        description: 'Full manual control over every setting. Toggle TTC/HT modes, VAT declarations, and Dual View independently. For advanced users who need a configuration that doesn\'t fit standard profiles.',
+        features: ['Manual TTC/HT toggle', 'Manual VAT toggle', 'Optional dual view', 'Custom tax rules'],
+        recommended: 'Consultants, advanced accountants, specific setups',
+        color: 'stone',
+        autoConfig: null
+    }
+]
+
+const COLOR_MAP: Record<string, { bg: string, border: string, badge: string, text: string, dot: string }> = {
+    emerald: { bg: 'bg-emerald-50', border: 'border-emerald-200', badge: 'bg-emerald-100 text-emerald-700', text: 'text-emerald-700', dot: 'bg-emerald-500' },
+    blue: { bg: 'bg-blue-50', border: 'border-blue-200', badge: 'bg-blue-100 text-blue-700', text: 'text-blue-700', dot: 'bg-blue-500' },
+    violet: { bg: 'bg-violet-50', border: 'border-violet-200', badge: 'bg-violet-100 text-violet-700', text: 'text-violet-700', dot: 'bg-violet-500' },
+    amber: { bg: 'bg-amber-50', border: 'border-amber-200', badge: 'bg-amber-100 text-amber-700', text: 'text-amber-700', dot: 'bg-amber-500' },
+    stone: { bg: 'bg-stone-50', border: 'border-stone-200', badge: 'bg-stone-200 text-stone-700', text: 'text-stone-700', dot: 'bg-stone-500' },
+}
+
+// ─── Type Detail Card ───
+function TypeDetailCard({ type, compact = false }: { type: typeof COMPANY_TYPES[0], compact?: boolean }) {
+    const colors = COLOR_MAP[type.color]
+    return (
+        <div className={`${colors.bg} ${colors.border} border rounded-xl p-4`}>
+            <div className="flex items-center gap-2 mb-2">
+                <div className={`w-2.5 h-2.5 rounded-full ${colors.dot}`} />
+                <h4 className={`text-sm font-bold ${colors.text}`}>{type.name}</h4>
+            </div>
+            <p className={`text-xs text-stone-600 leading-relaxed ${compact ? 'line-clamp-3' : ''} mb-3`}>
+                {type.description}
+            </p>
+            <div className="flex flex-wrap gap-1.5 mb-2">
+                {type.features.map(f => (
+                    <span key={f} className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${colors.badge}`}>{f}</span>
+                ))}
+            </div>
+            <p className="text-[10px] text-stone-400 italic mt-2">
+                Best for: {type.recommended}
+            </p>
+        </div>
+    )
 }
 
 export default function FinancialSettingsForm({ settings, lock }: Props) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
-    const { register, handleSubmit, watch } = useForm<FinancialSettingsState>({
+    const { register, handleSubmit, watch, setValue } = useForm<FinancialSettingsState>({
         defaultValues: settings
     })
     const [isRecalcPending, startRecalc] = useTransition()
+    const [showCompare, setShowCompare] = useState(false)
+    const [compareType, setCompareType] = useState<string>('')
 
-    // Watch for conditional fields
     const companyType = watch('companyType')
+    const dualView = watch('dualView')
+
+    const selectedType = COMPANY_TYPES.find(t => t.key === companyType)
+    const compareTypeObj = COMPANY_TYPES.find(t => t.key === compareType)
+
+    // Auto-configure settings when company type changes
+    useEffect(() => {
+        const type = COMPANY_TYPES.find(t => t.key === companyType)
+        if (type?.autoConfig) {
+            Object.entries(type.autoConfig).forEach(([key, value]) => {
+                setValue(key as keyof FinancialSettingsState, value)
+            })
+        }
+    }, [companyType, setValue])
 
     const onSubmit = (data: FinancialSettingsState) => {
         startTransition(async () => {
@@ -44,7 +139,6 @@ export default function FinancialSettingsForm({ settings, lock }: Props) {
 
     const handleRecalculate = () => {
         if (!confirm('Are you sure? This will reset and recalculate all account balances based on the ledger history.')) return
-
         startRecalc(async () => {
             try {
                 const res = await recalculateAccountBalances()
@@ -56,7 +150,7 @@ export default function FinancialSettingsForm({ settings, lock }: Props) {
     }
 
     return (
-        <div className="space-y-8 max-w-2xl">
+        <div className="space-y-8 max-w-3xl">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border border-stone-200">
                 {/* Lock Status Warning */}
                 {lock.isLocked && (
@@ -75,63 +169,160 @@ export default function FinancialSettingsForm({ settings, lock }: Props) {
                     </div>
                 )}
 
+                {/* ─── COMPANY TYPE ─── */}
                 <div>
                     <h2 className="text-lg font-medium text-stone-900 mb-4">Core Configuration</h2>
 
-                    <div className="grid grid-cols-1 gap-4">
-                        {/* Company Type */}
-                        <div>
-                            <label className="block text-sm font-medium text-stone-700 mb-1">Company Type</label>
-                            <select
-                                {...register('companyType')}
-                                disabled={lock.isLocked}
-                                className="w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:ring-black focus:border-black disabled:bg-stone-100 disabled:text-stone-500"
+                    <div>
+                        <div className="flex items-center justify-between mb-1">
+                            <label className="block text-sm font-medium text-stone-700">Company Type</label>
+                            <button
+                                type="button"
+                                onClick={() => { setShowCompare(!showCompare); if (!compareType) setCompareType(COMPANY_TYPES.find(t => t.key !== companyType)?.key || '') }}
+                                className="flex items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
                             >
-                                <option value="REGULAR">REGULAR (TTC Based)</option>
-                                <option value="MICRO">MICRO (Percentage Tax)</option>
-                                <option value="REAL">REAL (Standard VAT)</option>
-                                <option value="MIXED">MIXED (Dual View)</option>
-                                <option value="CUSTOM">CUSTOM (Manual Config)</option>
-                            </select>
-                            <p className="mt-1 text-sm text-stone-500">
-                                Determines how costs and prices are calculated.
-                            </p>
-
-                            {/* Dynamic Description Hint */}
-                            {companyType && COMPANY_DESCRIPTIONS[companyType] && (
-                                <div className="mt-3 p-3 bg-stone-50 border border-stone-200 rounded text-sm text-stone-600 flex gap-2 items-start">
-                                    <span className="text-lg">💡</span>
-                                    <span>{COMPANY_DESCRIPTIONS[companyType]}</span>
-                                </div>
-                            )}
+                                <GitCompareArrows size={14} />
+                                {showCompare ? 'Hide Comparison' : 'Compare Types'}
+                            </button>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-stone-700 mb-1">Default Currency</label>
-                                <input
-                                    {...register('currency')}
-                                    disabled={lock.isLocked}
-                                    type="text"
-                                    className="w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm disabled:bg-stone-50"
-                                />
+                        <select
+                            {...register('companyType')}
+                            disabled={lock.isLocked}
+                            className="w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:ring-black focus:border-black disabled:bg-stone-100 disabled:text-stone-500"
+                        >
+                            {COMPANY_TYPES.map(t => (
+                                <option key={t.key} value={t.key}>{t.label}</option>
+                            ))}
+                        </select>
+                        <p className="mt-1 text-xs text-stone-500">
+                            Determines how costs, prices, and taxes are calculated.
+                        </p>
+
+                        {/* Selected Type Detail */}
+                        {selectedType && (
+                            <div className="mt-3">
+                                <TypeDetailCard type={selectedType} />
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-stone-700 mb-1">Standard TVA Rate</label>
-                                <input
-                                    {...register('defaultTaxRate', { valueAsNumber: true })}
-                                    type="number" step="0.01"
-                                    className="w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm"
-                                />
+                        )}
+
+                        {/* ─── SIDE-BY-SIDE COMPARISON ─── */}
+                        {showCompare && (
+                            <div className="mt-4 p-4 bg-indigo-50/50 border border-indigo-200 rounded-xl">
+                                <div className="flex items-center justify-between mb-3">
+                                    <h4 className="text-xs font-bold text-indigo-900 uppercase tracking-wider">Compare with another type</h4>
+                                    <button type="button" onClick={() => setShowCompare(false)} className="text-indigo-400 hover:text-indigo-600 p-0.5">
+                                        <X size={14} />
+                                    </button>
+                                </div>
+                                <select
+                                    value={compareType}
+                                    onChange={e => setCompareType(e.target.value)}
+                                    className="w-full px-3 py-2 border border-indigo-200 rounded-md shadow-sm text-sm mb-3 bg-white focus:ring-indigo-500 focus:border-indigo-500"
+                                >
+                                    {COMPANY_TYPES.filter(t => t.key !== companyType).map(t => (
+                                        <option key={t.key} value={t.key}>{t.label}</option>
+                                    ))}
+                                </select>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {selectedType && <TypeDetailCard type={selectedType} compact />}
+                                    {compareTypeObj && <TypeDetailCard type={compareTypeObj} compact />}
+                                </div>
                             </div>
+                        )}
+                    </div>
+
+                    {/* Currency & Tax */}
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <label className="block text-sm font-medium text-stone-700 mb-1">Default Currency</label>
+                            <input
+                                {...register('currency')}
+                                disabled={lock.isLocked}
+                                type="text"
+                                className="w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm disabled:bg-stone-50"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-stone-700 mb-1">Standard TVA Rate</label>
+                            <input
+                                {...register('defaultTaxRate', { valueAsNumber: true })}
+                                type="number" step="0.01"
+                                className="w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm"
+                            />
                         </div>
                     </div>
                 </div>
 
-                {/* Custom Flags */}
-                {(companyType === 'CUSTOM' || companyType === 'REGULAR') && (
+                {/* ─── DUAL VIEW / OFFICIAL ACCESS ─── */}
+                {(dualView || companyType === 'MIXED') && (
+                    <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
+                        <div className="flex items-center gap-2 mb-3">
+                            <div className="p-1.5 bg-amber-100 rounded-lg text-amber-600">
+                                <ShieldAlert size={16} />
+                            </div>
+                            <h3 className="text-sm font-bold text-amber-900">Dual View Active</h3>
+                        </div>
+
+                        <p className="text-xs text-amber-700 mb-4 leading-relaxed">
+                            Two scopes are active: <strong>Official</strong> (declared/posted data) and <strong>Internal</strong> (full picture).
+                            The scope toggle appears in the sidebar. Each user has separate credentials for each scope.
+                        </p>
+
+                        {/* Scope Preview */}
+                        <div className="grid grid-cols-2 gap-3 mb-4">
+                            <div className="p-3 bg-white rounded-lg border border-amber-200">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                                    <span className="text-xs font-bold text-stone-900">Official</span>
+                                </div>
+                                <p className="text-[10px] text-stone-500 leading-relaxed">
+                                    Declared transactions only. Government-reported data.
+                                    Access via <strong>Viewer Password</strong>.
+                                </p>
+                            </div>
+                            <div className="p-3 bg-white rounded-lg border border-amber-200">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-stone-500" />
+                                    <span className="text-xs font-bold text-stone-900">Internal</span>
+                                </div>
+                                <p className="text-[10px] text-stone-500 leading-relaxed">
+                                    Full picture — all operations including undeclared.
+                                    Access via <strong>Full Access Password</strong>.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Per-User Access Info */}
+                        <div className="bg-white rounded-lg border border-amber-200 p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                                <Lock size={14} className="text-amber-600" />
+                                <span className="text-sm font-bold text-stone-900">Scope Access Control</span>
+                            </div>
+                            <p className="text-xs text-stone-600 leading-relaxed">
+                                Each user has <strong>two passwords</strong> when Dual View is enabled:
+                            </p>
+                            <ul className="mt-2 space-y-1.5 text-xs text-stone-600">
+                                <li className="flex items-start gap-2">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
+                                    <span><strong>Viewer Password</strong> — grants read-only access to Official (posted/declared) data</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-stone-500 mt-1.5 shrink-0" />
+                                    <span><strong>Full Access Password</strong> — grants full access to Internal scope (complete picture)</span>
+                                </li>
+                            </ul>
+                            <p className="text-[10px] text-stone-400 mt-3 italic">
+                                Manage user scope passwords in HR &amp; Teams → Access Control.
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                {/* ─── CUSTOM FLAGS ─── */}
+                {companyType === 'CUSTOM' && (
                     <div className="p-4 bg-stone-50 rounded-md border border-stone-100">
-                        <h3 className="text-sm font-medium text-stone-900 mb-3">Advanced Rules</h3>
+                        <h3 className="text-sm font-medium text-stone-900 mb-3">Manual Configuration</h3>
                         <div className="space-y-2">
                             <div className="flex items-center">
                                 <input {...register('worksInTTC')} disabled={lock.isLocked} type="checkbox" className="h-4 w-4 text-black border-stone-300 rounded disabled:opacity-50" />
@@ -141,23 +332,20 @@ export default function FinancialSettingsForm({ settings, lock }: Props) {
                                 <input {...register('allowHTEntryForTTC')} type="checkbox" className="h-4 w-4 text-black border-stone-300 rounded" />
                                 <label className="ml-2 text-sm text-stone-700">Allow HT Entry (Auto-convert to TTC)</label>
                             </div>
-                            {companyType === 'CUSTOM' && (
-                                <>
-                                    <div className="flex items-center">
-                                        <input {...register('declareTVA')} type="checkbox" className="h-4 w-4 text-black border-stone-300 rounded" />
-                                        <label className="ml-2 text-sm text-stone-700">Declare TVA (Official)</label>
-                                    </div>
-                                    <div className="flex items-center">
-                                        <input {...register('dualView')} type="checkbox" className="h-4 w-4 text-black border-stone-300 rounded" />
-                                        <label className="ml-2 text-sm text-stone-700">Enable Dual View (Official / Internal)</label>
-                                    </div>
-                                </>
-                            )}
+                            <div className="flex items-center">
+                                <input {...register('declareTVA')} type="checkbox" className="h-4 w-4 text-black border-stone-300 rounded" />
+                                <label className="ml-2 text-sm text-stone-700">Declare TVA (Official)</label>
+                            </div>
+                            <div className="flex items-center">
+                                <input {...register('dualView')} type="checkbox" className="h-4 w-4 text-black border-stone-300 rounded" />
+                                <label className="ml-2 text-sm text-stone-700">Enable Dual View (Official / Internal)</label>
+                            </div>
                         </div>
                     </div>
                 )}
 
-                {(companyType === 'MICRO') && (
+                {/* ─── MICRO TAX RULES ─── */}
+                {companyType === 'MICRO' && (
                     <div className="p-4 bg-blue-50 rounded-md border border-blue-100">
                         <h3 className="text-sm font-medium text-blue-900 mb-3">Micro Tax Rules</h3>
                         <div className="grid grid-cols-2 gap-4">
@@ -181,6 +369,7 @@ export default function FinancialSettingsForm({ settings, lock }: Props) {
                     </div>
                 )}
 
+                {/* ─── POSTING RULES ─── */}
                 <div className="p-4 bg-emerald-50 rounded-md border border-emerald-100 flex items-center justify-between">
                     <div className="flex gap-3 items-center">
                         <div className="p-2 bg-emerald-100 rounded-lg text-emerald-600">
@@ -200,6 +389,7 @@ export default function FinancialSettingsForm({ settings, lock }: Props) {
                     </button>
                 </div>
 
+                {/* ─── SUBMIT ─── */}
                 <div className="pt-4 border-t border-stone-200">
                     <button
                         type="submit"
@@ -211,6 +401,7 @@ export default function FinancialSettingsForm({ settings, lock }: Props) {
                 </div>
             </form>
 
+            {/* ─── MAINTENANCE ZONE ─── */}
             <div className="bg-white p-6 rounded-lg shadow-sm border border-stone-200">
                 <h2 className="text-lg font-medium text-rose-600 mb-4 flex items-center gap-2">
                     <ShieldAlert size={20} />
@@ -247,7 +438,6 @@ export default function FinancialSettingsForm({ settings, lock }: Props) {
                             onClick={async () => {
                                 if (!confirm("ULTIMATE DANGER: This will delete EVERYTHING (Products, Orders, Ledger, Contacts). This cannot be undone. Proceed?")) return
                                 if (!confirm("TOTAL WIPE CONFIRMATION: Start with a Fresh Version?")) return
-
                                 startTransition(async () => {
                                     try {
                                         const { wipeAllOperationalData } = await import('@/app/actions/finance/system')
@@ -278,7 +468,6 @@ export default function FinancialSettingsForm({ settings, lock }: Props) {
                             type="button"
                             onClick={async () => {
                                 if (!confirm("Populate database with test records?")) return
-
                                 startTransition(async () => {
                                     try {
                                         const { seedTestData } = await import('@/app/actions/finance/system')

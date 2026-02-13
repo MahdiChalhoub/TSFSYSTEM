@@ -288,7 +288,7 @@ export function Sidebar({
                             )}
                         >
                             <Layers size={14} />
-                            Declared
+                            Official
                         </button>
                         <button
                             onClick={() => setViewScope('INTERNAL')}
@@ -301,7 +301,7 @@ export function Sidebar({
                             )}
                         >
                             <BarChart3 size={14} />
-                            Both
+                            Internal
                         </button>
                     </div>
                 )}
