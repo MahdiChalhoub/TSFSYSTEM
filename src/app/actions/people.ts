@@ -64,3 +64,26 @@ export async function setScopePassword(userId: string, scope: 'official' | 'inte
         return { success: false, message: e.message || 'Failed to update scope password' };
     }
 }
+
+/**
+ * Auto-create and link a GL ledger account for an employee.
+ * Creates a payroll liability sub-account under 2200.
+ */
+export async function linkGLAccount(employeeId: string) {
+    try {
+        const result = await erpFetch(`employees/${employeeId}/link-gl-account/`, {
+            method: 'POST',
+        });
+        return {
+            success: true,
+            message: result.message,
+            linkedAccount: {
+                id: result.linked_account_id,
+                code: result.linked_account_code,
+                name: result.linked_account_name
+            }
+        };
+    } catch (e: any) {
+        return { success: false, message: e.message || 'Failed to link GL account' };
+    }
+}
