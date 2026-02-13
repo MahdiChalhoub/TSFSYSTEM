@@ -66,8 +66,9 @@ export async function loginAction(prevState: any, formData: FormData) {
             const baseDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || PLATFORM_CONFIG.domain;
             let protocol = "http";
 
-            // Prefer HTTPS if header exists OR if we are on the production domain
-            if (headersList.get('x-forwarded-proto') === 'https' || host.includes(baseDomain) || host.includes('vercel.app')) {
+            // Prefer HTTPS if header says so, or on production domain (never on localhost)
+            const isLocalhost = host.includes('localhost');
+            if (headersList.get('x-forwarded-proto') === 'https' || (!isLocalhost && (host.includes(baseDomain) || host.includes('vercel.app')))) {
                 protocol = "https";
             }
 
