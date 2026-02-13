@@ -15,6 +15,7 @@ export type FinancialSettingsState = {
     dualView?: boolean
     customTaxRules?: string
     pricingCostBasis?: string
+    officialAccessPin?: string
 }
 
 export async function getSettingsLockStatus() {
