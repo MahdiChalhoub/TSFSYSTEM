@@ -115,6 +115,7 @@ export async function loginAction(prevState: any, formData: FormData) {
         })
 
         const token = responseData.token
+        const scopeAccess = responseData.scope_access || 'internal'
         const hStore = await import('next/headers');
         const hList = await hStore.headers();
         const isSecure = hList.get('x-forwarded-proto') === 'https';
@@ -127,7 +128,15 @@ export async function loginAction(prevState: any, formData: FormData) {
             path: '/',
             maxAge: 60 * 60 * 24 * 7, // 7 days session for better DX
         })
-        console.log(`[AUTH_ACTION] Cookie set successfully (Secure: ${isSecure}) for token: ${token.substring(0, 5)}...`);
+        // Store scope access level (official-only or full internal access)
+        cookieStore.set('scope_access', scopeAccess, {
+            httpOnly: false,  // Frontend needs to read this
+            secure: isSecure,
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 60 * 60 * 24 * 7,
+        })
+        console.log(`[AUTH_ACTION] Cookie set successfully (Secure: ${isSecure}, Scope: ${scopeAccess}) for token: ${token.substring(0, 5)}...`);
 
     } catch (error: any) {
         console.error('Login Tactical Error:', error)
@@ -177,6 +186,7 @@ export async function logoutAction() {
     }
 
     cookieStore.delete('auth_token')
+    cookieStore.delete('scope_access')
     redirect('/login')
 }
 

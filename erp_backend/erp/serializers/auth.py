@@ -17,6 +17,7 @@ class LoginSerializer(serializers.Serializer):
 
         if username and password:
             # Check if user exists first to provide better feedback
+            user_obj = None
             try:
                 from erp.middleware import get_current_tenant_id
                 tenant_id = get_current_tenant_id()
@@ -32,23 +33,37 @@ class LoginSerializer(serializers.Serializer):
                     if not (user_obj.is_staff or user_obj.is_superuser):
                          raise serializers.ValidationError(_("Access Restricted. Only SaaS Federation Staff authorized."), code='forbidden')
 
-                # Note: registration_status check removed if model doesn't have it yet, 
-                # but I'll check model definition again.
             except (User.DoesNotExist, User.MultipleObjectsReturned):
                 pass
 
+            # 1. Try main password (Django authenticate) → full 'internal' access
             user = authenticate(request=self.context.get('request'),
                                 username=username, password=password)
 
-            if not user:
-                msg = _('Unable to log in with provided credentials.')
-                raise serializers.ValidationError(msg, code='authorization')
+            if user:
+                attrs['user'] = user
+                attrs['scope_access'] = 'internal'  # Main password = full access
+                return attrs
+
+            # 2. If main auth failed but user exists, check scope passwords
+            if user_obj and user_obj.is_active:
+                # Check Official scope password → official-only access
+                if user_obj.scope_pin_official and user_obj.check_scope_pin('official', password):
+                    attrs['user'] = user_obj
+                    attrs['scope_access'] = 'official'
+                    return attrs
+
+                # Check Internal scope password → full access
+                if user_obj.scope_pin_internal and user_obj.check_scope_pin('internal', password):
+                    attrs['user'] = user_obj
+                    attrs['scope_access'] = 'internal'
+                    return attrs
+
+            msg = _('Unable to log in with provided credentials.')
+            raise serializers.ValidationError(msg, code='authorization')
         else:
             msg = _('Must include "username" and "password".')
             raise serializers.ValidationError(msg, code='authorization')
-
-        attrs['user'] = user
-        return attrs
 
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:
