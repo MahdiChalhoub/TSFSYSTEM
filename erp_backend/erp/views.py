@@ -120,6 +120,52 @@ class UserViewSet(TenantModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+    @action(detail=True, methods=['post'], url_path='set-scope-pin')
+    def set_scope_pin(self, request, pk=None):
+        """Admin-only: Set or clear a scope PIN for a user.
+        Body: { "scope": "official"|"internal", "pin": "1234" | null }
+        """
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({"error": "Admin access required"}, status=status.HTTP_403_FORBIDDEN)
+
+        user = self.get_object()
+        scope = request.data.get('scope', '').lower()
+        pin = request.data.get('pin')
+
+        if scope not in ('official', 'internal'):
+            return Response({"error": "Scope must be 'official' or 'internal'"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_scope_pin(scope, pin)
+        user.save(update_fields=[f'scope_pin_{scope}'])
+
+        action_label = 'set' if pin else 'cleared'
+        return Response({"message": f"{scope.title()} PIN {action_label} for {user.username}"})
+
+    @action(detail=False, methods=['post'], url_path='verify-scope-pin')
+    def verify_scope_pin(self, request):
+        """Verify the current user's scope PIN.
+        Body: { "scope": "official"|"internal", "pin": "1234" }
+        Returns: { "verified": true/false, "has_pin": true/false }
+        
+        Scope semantics:
+          - official PIN → user sees ONLY Official data (no toggle, Internal is invisible)
+          - internal PIN → user sees BOTH scopes with toggle
+        """
+        user = request.user
+        scope = request.data.get('scope', '').lower()
+        pin = request.data.get('pin', '')
+
+        if scope not in ('official', 'internal'):
+            return Response({"error": "Scope must be 'official' or 'internal'"}, status=status.HTTP_400_BAD_REQUEST)
+
+        has_pin = bool(getattr(user, f'scope_pin_{scope}', None))
+
+        if not has_pin:
+            return Response({"verified": True, "has_pin": False})
+
+        verified = user.check_scope_pin(scope, pin)
+        return Response({"verified": verified, "has_pin": True})
+
 class TenantResolutionView(viewsets.ViewSet):
     """
     Public endpoint to resolve tenant slug to ID.

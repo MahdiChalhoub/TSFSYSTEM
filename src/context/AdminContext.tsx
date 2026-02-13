@@ -9,6 +9,14 @@ type Tab = {
     path: string;
 };
 
+/**
+ * Scope access levels:
+ *  - null: not authenticated for any scope yet
+ *  - 'official': user entered Official password → sees ONLY Official data, no toggle
+ *  - 'internal': user entered Internal password → sees BOTH scopes with toggle
+ */
+type ScopeAccess = 'official' | 'internal' | null;
+
 type AdminContextType = {
     sidebarOpen: boolean;
     toggleSidebar: () => void;
@@ -19,6 +27,15 @@ type AdminContextType = {
     clearTabs: () => void;
     viewScope: 'OFFICIAL' | 'INTERNAL';
     setViewScope: (scope: 'OFFICIAL' | 'INTERNAL') => void;
+    /** Which access level the user has authenticated for this session */
+    scopeAccess: ScopeAccess;
+    /** Set after successful PIN verification */
+    setScopeAccess: (access: ScopeAccess) => void;
+    /** Whether the scope toggle should be visible (only in 'internal' access mode) */
+    canToggleScope: boolean;
+    /** Pending scope the user wants to authenticate for */
+    pendingScopeAuth: 'official' | 'internal' | null;
+    setPendingScopeAuth: (scope: 'official' | 'internal' | null) => void;
 };
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
@@ -28,6 +45,8 @@ export function AdminProvider({ children, contextKey = 'default' }: { children: 
     const [openTabs, setOpenTabs] = useState<Tab[]>([]);
     const [viewScope, setViewScope] = useState<'OFFICIAL' | 'INTERNAL'>('INTERNAL');
     const [isLoaded, setIsLoaded] = useState(false);
+    const [scopeAccess, setScopeAccess] = useState<ScopeAccess>(null);
+    const [pendingScopeAuth, setPendingScopeAuth] = useState<'official' | 'internal' | null>(null);
     const pathname = usePathname();
     const router = useRouter();
 
@@ -79,6 +98,19 @@ export function AdminProvider({ children, contextKey = 'default' }: { children: 
         router.refresh();
     };
 
+    // When scopeAccess changes, lock to the correct view
+    const handleSetScopeAccess = (access: ScopeAccess) => {
+        setScopeAccess(access);
+        if (access === 'official') {
+            // Official-only mode: lock to OFFICIAL, no toggle
+            handleSetViewScope('OFFICIAL');
+        }
+        // 'internal' access: user can freely toggle between both
+    };
+
+    // Toggle is visible only if user has internal (full) access
+    const canToggleScope = scopeAccess === 'internal';
+
     // Save tabs to localStorage
     useEffect(() => {
         if (!isLoaded) return;
@@ -129,7 +161,12 @@ export function AdminProvider({ children, contextKey = 'default' }: { children: 
             closeTab,
             clearTabs,
             viewScope,
-            setViewScope: handleSetViewScope
+            setViewScope: handleSetViewScope,
+            scopeAccess,
+            setScopeAccess: handleSetScopeAccess,
+            canToggleScope,
+            pendingScopeAuth,
+            setPendingScopeAuth,
         }}>
             {children}
         </AdminContext.Provider>
