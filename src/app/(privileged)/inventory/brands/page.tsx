@@ -4,15 +4,18 @@ import { BrandManager } from "@/components/admin/BrandManager";
 export const dynamic = 'force-dynamic';
 
 async function getBrands() {
-    return await erpFetch('brands/');
+    try { return await erpFetch('brands/'); }
+    catch { return []; }
 }
 
 async function getCountries() {
-    return await erpFetch('countries/');
+    try { return await erpFetch('countries/'); }
+    catch { return []; }
 }
 
 async function getCategories() {
-    return await erpFetch('categories/');
+    try { return await erpFetch('categories/'); }
+    catch { return []; }
 }
 
 export default async function BrandsPage() {
