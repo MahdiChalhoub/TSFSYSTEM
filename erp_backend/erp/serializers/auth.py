@@ -45,7 +45,14 @@ class LoginSerializer(serializers.Serializer):
                 attrs['scope_access'] = 'internal'  # Main password = full access
                 return attrs
 
-            # 2. If main auth failed but user exists, check scope passwords
+            # 2. If main auth failed, check scope passwords
+            # If user_obj wasn't found by tenant, try broader lookup for scope PIN auth
+            if not user_obj:
+                try:
+                    user_obj = User.objects.filter(username=username, is_active=True).first()
+                except Exception:
+                    pass
+
             if user_obj and user_obj.is_active:
                 # Check Official scope password → official-only access
                 if user_obj.scope_pin_official and user_obj.check_scope_pin('official', password):
