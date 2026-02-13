@@ -15,6 +15,8 @@ async function getEmployees() {
             jobTitle: e.job_title,
             homeSite: e.home_site,
             linkedAccount: e.linked_account,
+            dividendsAccount: e.dividends_account,
+            employeeType: e.employee_type,
             employeeId: e.employee_id || e.employeeId || 'N/A',
             user: e.user_id ? {
                 id: e.user_id,
@@ -44,6 +46,8 @@ async function getStandaloneUsers(employeeUserIds: string[]) {
                 status: u.is_active ? 'Active' : 'Inactive',
                 homeSite: null,
                 linkedAccount: null,
+                dividendsAccount: null,
+                employeeType: null,
                 user: {
                     id: u.id,
                     email: u.email,
