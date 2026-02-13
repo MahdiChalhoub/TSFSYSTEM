@@ -63,7 +63,7 @@ export default function ScopePasswordModal({
                 {/* Header */}
                 <div className="px-8 py-6 border-b border-gray-50 flex justify-between items-center">
                     <div>
-                        <h2 className="text-xl font-black text-gray-900">Scope Passwords</h2>
+                        <h2 className="text-xl font-black text-gray-900">Access Passwords</h2>
                         <p className="text-xs text-gray-400 font-bold mt-1">{employee.firstName} {employee.lastName}</p>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-gray-50 rounded-xl transition-all text-gray-400 hover:text-gray-900">
@@ -72,12 +72,6 @@ export default function ScopePasswordModal({
                 </div>
 
                 <div className="p-8 space-y-6">
-                    {/* Info */}
-                    <div className="p-4 bg-blue-50 rounded-2xl text-xs text-blue-700 font-medium">
-                        <strong>How it works:</strong> The password the user enters at login determines their access level.
-                        <br />• <strong>Main password</strong> or <strong>Internal password</strong> → Full access (toggle Official ↔ Internal)
-                        <br />• <strong>Official password</strong> → Official data only (no toggle)
-                    </div>
 
                     {/* Official Password */}
                     <div className="p-5 bg-emerald-50/50 rounded-2xl border border-emerald-100/50 space-y-3">
@@ -90,7 +84,7 @@ export default function ScopePasswordModal({
                                 {hasOfficialPin ? '● Set' : '○ Not set'}
                             </span>
                         </div>
-                        <p className="text-[11px] text-gray-500">When logged in with this password, user sees <strong>only Official data</strong>. No scope toggle.</p>
+                        <p className="text-[11px] text-gray-500">Alternative login password that grants <strong>standard access</strong>.</p>
                         <div className="flex gap-2">
                             <input
                                 type="password"
@@ -130,7 +124,7 @@ export default function ScopePasswordModal({
                                 {hasInternalPin ? '● Set' : '○ Not set'}
                             </span>
                         </div>
-                        <p className="text-[11px] text-gray-500">When logged in with this password, user gets <strong>full access</strong> to both Official and Internal scopes with toggle.</p>
+                        <p className="text-[11px] text-gray-500">Alternative login password that grants <strong>elevated access</strong> with full data visibility.</p>
                         <div className="flex gap-2">
                             <input
                                 type="password"
