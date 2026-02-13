@@ -4,6 +4,7 @@ ViewSets for employee management.
 """
 from django.db import transaction
 from rest_framework import status
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from erp.views import TenantModelViewSet
 from erp.middleware import get_current_tenant_id
@@ -75,4 +76,57 @@ class EmployeeViewSet(TenantModelViewSet):
             self.perform_create(serializer)
             
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+    @action(detail=True, methods=['post'], url_path='link-gl-account')
+    def link_gl_account(self, request, pk=None):
+        """Auto-create and link a GL sub-account for an employee who doesn't have one."""
+        employee = self.get_object()
+
+        if employee.linked_account_id:
+            return Response({"error": "Employee already has a linked GL account", "linked_account_id": employee.linked_account_id},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        if not ChartOfAccount or not LedgerService:
+            return Response({"error": "Finance module not available"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({"error": "No organization context"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+
+        with transaction.atomic():
+            rules = ConfigurationService.get_posting_rules(organization)
+            parent_account_id = rules.get('payroll', {}).get('root')
+
+            if not parent_account_id:
+                parent = ChartOfAccount.objects.filter(organization=organization, code='2200').first()
+                if not parent:
+                    parent = ChartOfAccount.objects.create(
+                        organization=organization,
+                        code='2200',
+                        name='Accrued Payroll & Salaries',
+                        type='LIABILITY',
+                        sub_type='PAYABLE'
+                    )
+                parent_account_id = parent.id
+
+            full_name = str(employee)
+            linked_acc = LedgerService.create_linked_account(
+                organization=organization,
+                name=f"Payable to {full_name}",
+                type='LIABILITY',
+                sub_type='PAYABLE',
+                parent_id=parent_account_id
+            )
+
+            employee.linked_account_id = linked_acc.id
+            employee.save(update_fields=['linked_account_id'])
+
+        return Response({
+            "message": f"GL account '{linked_acc.code} — {linked_acc.name}' linked to {full_name}",
+            "linked_account_id": linked_acc.id,
+            "linked_account_code": linked_acc.code,
+            "linked_account_name": linked_acc.name
+        })
 

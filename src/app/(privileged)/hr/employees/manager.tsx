@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Plus, User, Briefcase, Building2, CreditCard, ChevronRight, Phone, Mail, Filter, ShieldCheck, Fingerprint, Lock } from "lucide-react";
+import { Search, Plus, User, Briefcase, Building2, CreditCard, ChevronRight, Phone, Mail, Filter, ShieldCheck, Fingerprint, Lock, AlertTriangle, Link2 } from "lucide-react";
 import EmployeeModal from './form';
 import ScopePasswordModal from '@/components/admin/ScopePasswordModal';
+import { linkGLAccount } from '@/app/actions/people';
 import clsx from 'clsx';
 
 export default function EmployeeManager({
@@ -18,6 +19,21 @@ export default function EmployeeManager({
     const [search, setSearch] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [scopeEmployee, setScopeEmployee] = useState<any | null>(null);
+    const [linkingGL, setLinkingGL] = useState<string | null>(null);
+    const [glMessage, setGLMessage] = useState<{ id: string; type: 'success' | 'error'; text: string } | null>(null);
+
+    async function handleLinkGL(emp: any) {
+        setLinkingGL(emp.id);
+        setGLMessage(null);
+        const result = await linkGLAccount(emp.id);
+        if (result.success) {
+            emp.linkedAccount = result.linkedAccount;
+            setGLMessage({ id: emp.id, type: 'success', text: result.message || 'GL linked!' });
+        } else {
+            setGLMessage({ id: emp.id, type: 'error', text: result.message });
+        }
+        setLinkingGL(null);
+    }
 
     const filtered = employees.filter(e =>
         `${e.firstName} ${e.lastName}`.toLowerCase().includes(search.toLowerCase()) ||
@@ -107,9 +123,28 @@ export default function EmployeeManager({
                                 <span className="text-[11px] font-bold text-gray-700">{emp.homeSite?.name || 'Global'}</span>
                             </div>
                             <div className="flex flex-col items-center text-center border-l border-gray-50">
-                                <CreditCard size={16} className="text-gray-300 mb-1" />
+                                <CreditCard size={16} className={clsx("mb-1", emp.linkedAccount ? "text-emerald-400" : "text-red-400")} />
                                 <span className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">Ledger Account</span>
-                                <span className="text-[11px] font-mono font-bold text-gray-700">{emp.linkedAccount?.code || 'NO-GL'}</span>
+                                {emp.linkedAccount ? (
+                                    <span className="text-[11px] font-mono font-bold text-emerald-600">{emp.linkedAccount.code}</span>
+                                ) : (
+                                    <button
+                                        onClick={() => handleLinkGL(emp)}
+                                        disabled={linkingGL === emp.id}
+                                        className="mt-1 px-3 py-1 bg-red-50 text-red-600 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center gap-1 border border-red-200/50"
+                                    >
+                                        {linkingGL === emp.id ? (
+                                            '...'
+                                        ) : (
+                                            <><AlertTriangle size={10} /> Link GL</>
+                                        )}
+                                    </button>
+                                )}
+                                {glMessage && glMessage.id === emp.id && (
+                                    <span className={clsx("text-[9px] font-bold mt-1", glMessage.type === 'success' ? 'text-emerald-600' : 'text-red-500')}>
+                                        {glMessage.text}
+                                    </span>
+                                )}
                             </div>
                         </div>
 
