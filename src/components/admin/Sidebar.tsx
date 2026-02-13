@@ -275,46 +275,37 @@ export function Sidebar({
                     </div>
                 </div>
 
-                {/* View Scope Switcher */}
-                {dualViewEnabled && scopeAccess && (
+                {/* View Scope Switcher — only visible for full-access users */}
+                {dualViewEnabled && canToggleScope && (
                     <div className="mx-6 mt-6 shrink-0">
-                        {/* Full access: toggle between Official and Internal */}
-                        {canToggleScope ? (
-                            <div className="p-1.5 bg-[#0B1120] rounded-2xl border border-gray-800 flex gap-1">
-                                <button
-                                    onClick={() => setViewScope('OFFICIAL')}
-                                    suppressHydrationWarning={true}
-                                    className={clsx(
-                                        "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
-                                        viewScope === 'OFFICIAL'
-                                            ? "bg-emerald-600 text-white shadow-lg shadow-emerald-900/40"
-                                            : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
-                                    )}
-                                >
-                                    <Layers size={14} />
-                                    Official
-                                </button>
-                                <button
-                                    onClick={() => setViewScope('INTERNAL')}
-                                    suppressHydrationWarning={true}
-                                    className={clsx(
-                                        "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
-                                        viewScope === 'INTERNAL'
-                                            ? "bg-gray-700 text-white shadow-lg"
-                                            : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
-                                    )}
-                                >
-                                    <BarChart3 size={14} />
-                                    Internal
-                                </button>
-                            </div>
-                        ) : (
-                            /* Official-only: locked indicator */
-                            <div className="p-2.5 bg-emerald-900/20 rounded-2xl border border-emerald-800/40 flex items-center justify-center gap-2">
-                                <Lock size={12} className="text-emerald-500" />
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Official View</span>
-                            </div>
-                        )}
+                        <div className="p-1.5 bg-[#0B1120] rounded-2xl border border-gray-800 flex gap-1">
+                            <button
+                                onClick={() => setViewScope('OFFICIAL')}
+                                suppressHydrationWarning={true}
+                                className={clsx(
+                                    "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
+                                    viewScope === 'OFFICIAL'
+                                        ? "bg-emerald-600 text-white shadow-lg shadow-emerald-900/40"
+                                        : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
+                                )}
+                            >
+                                <Layers size={14} />
+                                Official
+                            </button>
+                            <button
+                                onClick={() => setViewScope('INTERNAL')}
+                                suppressHydrationWarning={true}
+                                className={clsx(
+                                    "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
+                                    viewScope === 'INTERNAL'
+                                        ? "bg-gray-700 text-white shadow-lg"
+                                        : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
+                                )}
+                            >
+                                <BarChart3 size={14} />
+                                Internal
+                            </button>
+                        </div>
                     </div>
                 )}
 
