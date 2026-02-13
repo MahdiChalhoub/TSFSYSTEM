@@ -545,7 +545,7 @@ export default function FinancialSettingsForm({ settings, lock }: Props) {
                         </div>
 
                         {/* Type Selector Row */}
-                        <div className="grid grid-cols-[120px_1fr_1fr] border-b border-indigo-100">
+                        <div className="grid border-b border-indigo-100" style={{ gridTemplateColumns: '120px 1fr 1fr' }}>
                             <div className="px-3 py-2 bg-stone-50 border-r border-stone-200">
                                 <span className="text-[10px] font-bold text-stone-400 uppercase">Feature</span>
                             </div>
@@ -574,7 +574,7 @@ export default function FinancialSettingsForm({ settings, lock }: Props) {
 
                         {/* Comparison Rows */}
                         {COMPARE_ROWS.map((row, i) => (
-                            <div key={row.key} className={`grid grid-cols-[140px_1fr_1fr] ${i < COMPARE_ROWS.length - 1 ? 'border-b border-stone-100' : ''}`}>
+                            <div key={row.key} className={`grid ${i < COMPARE_ROWS.length - 1 ? 'border-b border-stone-100' : ''}`} style={{ gridTemplateColumns: '120px 1fr 1fr' }}>
                                 <div className="px-3 py-2.5 bg-stone-50 border-r border-stone-200">
                                     <span className="text-[11px] font-semibold text-stone-600">{row.label}</span>
                                 </div>
