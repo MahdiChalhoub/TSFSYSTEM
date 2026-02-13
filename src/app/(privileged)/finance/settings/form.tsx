@@ -214,7 +214,7 @@ export default function FinancialSettingsForm({ settings, lock }: Props) {
     return (
         <div className="flex gap-6 items-start">
             {/* ─── LEFT COLUMN: Main Form ─── */}
-            <div className={`space-y-8 transition-all duration-300 ${showCompare ? 'flex-1 min-w-0' : 'max-w-3xl w-full'}`}>
+            <div className={`space-y-8 transition-all duration-300 ${showCompare ? 'w-1/2 shrink-0' : 'max-w-3xl w-full'}`}>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border border-stone-200">
                     {/* Lock Status Warning */}
                     {lock.isLocked && (
@@ -532,7 +532,7 @@ export default function FinancialSettingsForm({ settings, lock }: Props) {
 
             {/* ─── RIGHT COLUMN: Row-by-Row Comparison Table ─── */}
             {showCompare && (
-                <div className="w-[480px] shrink-0 sticky top-6">
+                <div className="w-1/2 shrink-0 sticky top-6">
                     <div className="bg-white rounded-lg shadow-sm border border-indigo-200 overflow-hidden">
                         <div className="bg-indigo-50 px-4 py-3 flex items-center justify-between border-b border-indigo-200">
                             <div className="flex items-center gap-2">
@@ -545,7 +545,7 @@ export default function FinancialSettingsForm({ settings, lock }: Props) {
                         </div>
 
                         {/* Type Selector Row */}
-                        <div className="grid grid-cols-[140px_1fr_1fr] border-b border-indigo-100">
+                        <div className="grid grid-cols-[120px_1fr_1fr] border-b border-indigo-100">
                             <div className="px-3 py-2 bg-stone-50 border-r border-stone-200">
                                 <span className="text-[10px] font-bold text-stone-400 uppercase">Feature</span>
                             </div>
