@@ -59,16 +59,40 @@ async function getCategoriesData() {
     };
 }
 
+async function getOrgContext() {
+    try {
+        // Fetch all organizations (saas and user own)
+        const orgs = await erpFetch('organizations/');
+        // Find the one that matches our context, or just the first one if only one returned
+        if (Array.isArray(orgs)) {
+            return orgs[0];
+        }
+        return null;
+    } catch {
+        return null;
+    }
+}
+
 export default async function CategoriesPage() {
-    const { hierarchicalCategories, flatCategories } = await getCategoriesData();
+    const [{ hierarchicalCategories, flatCategories }, orgContext] = await Promise.all([
+        getCategoriesData(),
+        getOrgContext()
+    ]);
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
-            {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-2">Product Categories</h1>
-                    <p className="text-gray-500">Organize your inventory with a flexible category hierarchy.</p>
+                    <div className="flex items-center gap-3 mb-2">
+                        <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Product Categories</h1>
+                        {orgContext?.business_type_name && (
+                            <div className="flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-100 animate-in zoom-in duration-300">
+                                <span className="text-[10px] font-black uppercase tracking-widest opacity-50">Industry Vector</span>
+                                <span className="text-sm font-bold">{orgContext.business_type_name}</span>
+                            </div>
+                        )}
+                    </div>
+                    <p className="text-gray-500 font-medium">Organize your inventory with a flexible category hierarchy.</p>
                 </div>
 
                 <div className="flex items-center gap-3">

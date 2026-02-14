@@ -96,3 +96,13 @@ export async function getBusinessTypes() {
         return []
     }
 }
+
+export async function getCurrencies() {
+    try {
+        // We use the common currencies endpoint
+        return await erpFetch('currencies/')
+    } catch (error) {
+        console.error("[SaaS] Error fetching currencies:", error)
+        return []
+    }
+}

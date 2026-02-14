@@ -18,6 +18,8 @@ class OrganizationSerializer(serializers.ModelSerializer):
     current_plan_name = serializers.SerializerMethodField()
     business_type_name = serializers.SerializerMethodField()
     client_name = serializers.SerializerMethodField()
+    currency_code = serializers.SerializerMethodField()
+    currency_symbol = serializers.SerializerMethodField()
 
     class Meta:
         model = Organization
@@ -28,9 +30,11 @@ class OrganizationSerializer(serializers.ModelSerializer):
             'business_type', 'base_currency', 'settings',
             'site_count', 'user_count', 'module_count',
             'current_plan_name', 'business_type_name', 'client_name',
+            'currency_code', 'currency_symbol',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'site_count', 'user_count', 'module_count',
-                            'current_plan_name', 'business_type_name', 'client_name']
+                            'current_plan_name', 'business_type_name', 'client_name',
+                            'currency_code', 'currency_symbol']
 
     def get_site_count(self, obj):
         return Site.original_objects.filter(organization=obj).count()
@@ -54,6 +58,12 @@ class OrganizationSerializer(serializers.ModelSerializer):
 
     def get_client_name(self, obj):
         return str(obj.client) if obj.client else None
+
+    def get_currency_code(self, obj):
+        return obj.base_currency.code if obj.base_currency else 'USD'
+
+    def get_currency_symbol(self, obj):
+        return obj.base_currency.symbol if obj.base_currency else '$'
 
 
 class SiteSerializer(serializers.ModelSerializer):

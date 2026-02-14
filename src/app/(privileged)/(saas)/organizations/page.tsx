@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { getOrganizations, toggleOrganizationStatus, createOrganization, deleteOrganization, getBusinessTypes } from "./actions"
+import { getOrganizations, toggleOrganizationStatus, createOrganization, deleteOrganization, getBusinessTypes, getCurrencies } from "./actions"
 import { getOrgModules, toggleOrgModule, updateOrgModuleFeatures } from "@/app/actions/saas/modules"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -17,6 +17,7 @@ import { PLATFORM_CONFIG, useDynamicBranding } from "@/lib/saas_config"
 export default function OrganizationsPage() {
     const [orgs, setOrgs] = useState<any[]>([])
     const [businessTypes, setBusinessTypes] = useState<any[]>([])
+    const [currencies, setCurrencies] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [mounted, setMounted] = useState(false)
     const branding = useDynamicBranding();
@@ -53,9 +54,10 @@ export default function OrganizationsPage() {
 
     async function loadData() {
         try {
-            const [data, btData] = await Promise.all([
+            const [data, btData, cData] = await Promise.all([
                 getOrganizations(),
                 getBusinessTypes(),
+                getCurrencies(),
             ])
             if (Array.isArray(data)) {
                 setOrgs(data)
@@ -64,6 +66,7 @@ export default function OrganizationsPage() {
                 toast.error("Invalid data format received")
             }
             if (Array.isArray(btData)) setBusinessTypes(btData)
+            if (Array.isArray(cData)) setCurrencies(cData)
         } catch {
             toast.error("Failed to load organizations")
         } finally {
@@ -119,7 +122,7 @@ export default function OrganizationsPage() {
         return e?.message || "Unknown error"
     }
 
-    const [newOrg, setNewOrg] = useState({ name: '', slug: '', business_email: '', phone: '', country: '', business_type: '' })
+    const [newOrg, setNewOrg] = useState({ name: '', slug: '', business_email: '', phone: '', country: '', business_type: '', base_currency: '' })
     const [isCreating, setIsCreating] = useState(false)
     const [open, setOpen] = useState(false)
 
@@ -134,7 +137,7 @@ export default function OrganizationsPage() {
             } else {
                 toast.success("Organization provisioned successfully")
                 setOpen(false)
-                setNewOrg({ name: '', slug: '', business_email: '', phone: '', country: '', business_type: '' })
+                setNewOrg({ name: '', slug: '', business_email: '', phone: '', country: '', business_type: '', base_currency: '' })
                 loadData()
             }
         } catch (e: any) {
@@ -257,14 +260,25 @@ export default function OrganizationsPage() {
                                 </div>
                                 <div className="grid grid-cols-2 gap-3 mt-3">
                                     <div className="space-y-1.5">
-                                        <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1"><Building size={10} /> Business Type</Label>
+                                        <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1"><Building size={10} /> Industry Vector</Label>
                                         <select
                                             className="w-full bg-gray-50 border border-gray-100 rounded-xl py-2.5 px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
                                             value={newOrg.business_type}
                                             onChange={(e) => setNewOrg({ ...newOrg, business_type: e.target.value })}
                                         >
-                                            <option value="">Select type...</option>
+                                            <option value="">Select industry...</option>
                                             {businessTypes.map(bt => <option key={bt.id} value={bt.id}>{bt.name}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">Base Currency</Label>
+                                        <select
+                                            className="w-full bg-gray-50 border border-gray-100 rounded-xl py-2.5 px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                                            value={newOrg.base_currency}
+                                            onChange={(e) => setNewOrg({ ...newOrg, base_currency: e.target.value })}
+                                        >
+                                            <option value="">Select currency...</option>
+                                            {currencies.map(c => <option key={c.id} value={c.id}>{c.code} ({c.symbol})</option>)}
                                         </select>
                                     </div>
                                     <div className="space-y-1.5">
