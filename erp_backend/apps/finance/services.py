@@ -17,6 +17,24 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+class ForensicAuditService:
+    @staticmethod
+    def log_mutation(organization, user, model_name, object_id, change_type, payload=None):
+        from apps.finance.models import ForensicAuditLog
+        try:
+            ForensicAuditLog.objects.create(
+                organization=organization,
+                actor=user,
+                model_name=model_name,
+                object_id=str(object_id),
+                change_type=change_type,
+                payload=payload
+            )
+        except Exception as e:
+            # Audit logging should not crash the main transaction, but we log it
+            logger.error(f"Audit Logging Failed: {str(e)}")
+
+
 class LedgerService:
     @staticmethod
     def create_journal_entry(organization, transaction_date, description, lines, reference=None, status='DRAFT', scope='OFFICIAL', site_id=None, user=None, **kwargs):
@@ -72,6 +90,15 @@ class LedgerService:
             
             if status == 'POSTED': 
                 LedgerService.post_journal_entry(entry, user=user)
+
+            ForensicAuditService.log_mutation(
+                organization=organization,
+                user=user,
+                model_name="JournalEntry",
+                object_id=entry.id,
+                change_type="CREATE",
+                payload={"reference": reference, "total_amount": str(total_debit)}
+            )
             return entry
 
     @staticmethod
@@ -383,6 +410,8 @@ class LedgerService:
         if entry.status == 'POSTED' and entry.posted_at: return 
         
         from django.db.models import Sum
+        from apps.finance.models import ChartOfAccount
+        
         with transaction.atomic():
             # Final integrity check: Double-Entry Proof
             totals = entry.lines.aggregate(
@@ -399,22 +428,36 @@ class LedgerService:
             if entry.fiscal_period.is_closed:
                 raise ValidationError(f"Cannot post to closed period {entry.fiscal_period.name}.")
 
-            lines = entry.lines.select_related('account').all()
+            # Professional Audit: Serializability via select_for_update
+            # We lock all affected accounts in a consistent order (by ID) to prevent deadlocks
+            account_ids = entry.lines.values_list('account_id', flat=True).distinct().order_by('id')
+            accounts_map = {acc.id: acc for acc in ChartOfAccount.objects.select_for_update().filter(id__in=account_ids)}
+
+            lines = entry.lines.all()
             for line in lines:
+                acc = accounts_map.get(line.account_id)
+                if not acc: continue
+                
                 net = line.debit - line.credit
-                if entry.scope in ['OFFICIAL', 'INTERNAL']:
-                    line.account.__class__.objects.filter(id=line.account_id).update(
-                        balance=F('balance') + net,
-                        balance_official=F('balance_official') + net if entry.scope == 'OFFICIAL' else F('balance_official')
-                    )
-                else:
-                    line.account.__class__.objects.filter(id=line.account_id).update(
-                        balance=F('balance') + net
-                    )
+                
+                # Update account instance (in-memory lock and subsequent save)
+                acc.balance += net
+                if entry.scope == 'OFFICIAL':
+                    acc.balance_official += net
+                acc.save()
+
             entry.status = 'POSTED'
             entry.posted_at = timezone.now()
             entry.posted_by = user
             entry.save()
+
+            ForensicAuditService.log_mutation(
+                organization=entry.organization,
+                user=user,
+                model_name="JournalEntry",
+                object_id=entry.id,
+                change_type="POST"
+            )
 
     @staticmethod
     def update_journal_entry(organization, entry_id, transaction_date=None, description=None, status=None, lines=None, user=None):
@@ -459,6 +502,20 @@ class LedgerService:
             entry.save()
             if entry.status == 'POSTED' and not entry.posted_at:
                 LedgerService.post_journal_entry(entry, user=user)
+            
+            ForensicAuditService.log_mutation(
+                organization=organization,
+                user=user,
+                model_name="JournalEntry",
+                object_id=entry.id,
+                change_type="UPDATE",
+                payload={"updated_fields": list(filter(None, [
+                    "date" if transaction_date else None,
+                    "desc" if description else None,
+                    "status" if status else None,
+                    "lines" if lines else None
+                ]))}
+            )
             return entry
 
     @staticmethod
@@ -509,6 +566,15 @@ class LedgerService:
             LedgerService.post_journal_entry(reversal, user=user)
             original.is_locked = True
             original.save()
+
+            ForensicAuditService.log_mutation(
+                organization=organization,
+                user=user,
+                model_name="JournalEntry",
+                object_id=original.id,
+                change_type="REVERSE",
+                payload={"reversal_id": reversal.id}
+            )
             return reversal
 
     @staticmethod
@@ -584,10 +650,21 @@ class FinancialAccountService:
             suffix = (int(last.code.split('.')[-1]) + 1) if last else 1
             code = f"{parent.code}.{str(suffix).zfill(3)}"
             acc = ChartOfAccount.objects.create(organization=organization, code=code, name=name, type='ASSET', parent=parent, is_system_only=True, is_active=True, balance=Decimal('0.00'))
-            return FinancialAccount.objects.create(
+            account = FinancialAccount.objects.create(
                 organization=organization, name=name, type=type, currency=currency,
                 site_id=site_id, linked_coa=acc
             )
+            
+            # Implementation Plan Phase 3: Add Audit Logging for Account Creation
+            ForensicAuditService.log_mutation(
+                organization=organization,
+                user=None, # user context not yet passed to this service, but logged
+                model_name="FinancialAccount",
+                object_id=account.id,
+                change_type="CREATE",
+                payload={"name": name, "type": type, "coa_code": code}
+            )
+            return account
 
 
 class SequenceService:
@@ -800,10 +877,11 @@ class LoanService:
             return loan
 
     @staticmethod
-    def process_repayment(organization, loan_id, amount, account_id, reference=None):
+    def process_repayment(organization, loan_id, amount, account_id, reference=None, user=None):
         from apps.finance.models import Loan, LoanInstallment, FinancialEvent
         with transaction.atomic():
-            loan = Loan.objects.get(id=loan_id, organization=organization)
+            # Professional Audit: Lock the loan record to prevent concurrent repayment race conditions
+            loan = Loan.objects.select_for_update().get(id=loan_id, organization=organization)
             if loan.status != 'ACTIVE':
                 raise ValidationError("Loan must be ACTIVE to receive repayment")
             
@@ -818,6 +896,7 @@ class LoanService:
             if not installments.exists():
                 raise ValidationError("No pending installments found")
 
+            repayment_details = []
             for inst in installments:
                 if remaining <= 0:
                     break
@@ -842,6 +921,7 @@ class LoanService:
                 
                 inst.save()
                 remaining -= payment_on_this
+                repayment_details.append({"installment_id": inst.id, "amount": str(payment_on_this)})
                 
             event = FinancialEventService.create_event(
                 organization=organization,
@@ -851,7 +931,17 @@ class LoanService:
                 contact_id=loan.contact.id,
                 reference=reference or f"REPAY-{loan.contract_number}-{uuid.uuid4().hex[:4]}",
                 loan_id=loan.id,
-                account_id=account_id
+                account_id=account_id,
+                user=user
+            )
+            
+            ForensicAuditService.log_mutation(
+                organization=organization,
+                user=user,
+                model_name="LoanRepayment",
+                object_id=loan.id,
+                change_type="UPDATE",
+                payload={"amount": str(amount), "event_id": event.id, "details": repayment_details}
             )
             
             return event

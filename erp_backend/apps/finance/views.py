@@ -12,13 +12,14 @@ from erp.models import Organization, User
 
 from apps.finance.models import (
     FinancialAccount, ChartOfAccount, FiscalYear, FiscalPeriod,
-    JournalEntry, TransactionSequence, BarcodeSettings, Loan, FinancialEvent
+    JournalEntry, TransactionSequence, BarcodeSettings, Loan, FinancialEvent,
+    ForensicAuditLog
 )
 from apps.finance.serializers import (
     FinancialAccountSerializer, ChartOfAccountSerializer,
     FiscalYearSerializer, FiscalPeriodSerializer, JournalEntrySerializer,
     TransactionSequenceSerializer, BarcodeSettingsSerializer,
-    LoanSerializer, FinancialEventSerializer
+    LoanSerializer, FinancialEventSerializer, ForensicAuditLogSerializer
 )
 from apps.finance.services import (
     FinancialAccountService, LedgerService, SequenceService,
@@ -499,6 +500,25 @@ class LoanViewSet(TenantModelViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=400)
 
+    @action(detail=True, methods=['post'])
+    def repay(self, request, pk=None):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+        
+        try:
+            amount = request.data.get('amount')
+            account_id = request.data.get('account_id')
+            reference = request.data.get('reference')
+            
+            if not amount or not account_id:
+                return Response({"error": "Amount and Account ID are required"}, status=400)
+                
+            event = LoanService.process_repayment(organization, pk, amount, account_id, reference, user=request.user)
+            return Response(FinancialEventSerializer(event).data)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
 
 class FinancialEventViewSet(TenantModelViewSet):
     queryset = FinancialEvent.objects.all()
@@ -551,3 +571,12 @@ class FinancialEventViewSet(TenantModelViewSet):
 class TransactionSequenceViewSet(TenantModelViewSet):
     queryset = TransactionSequence.objects.all()
     serializer_class = TransactionSequenceSerializer
+
+
+class ForensicAuditLogViewSet(TenantModelViewSet):
+    queryset = ForensicAuditLog.objects.all()
+    serializer_class = ForensicAuditLogSerializer
+    http_method_names = ['get'] # Strictly read-only
+
+    def get_queryset(self):
+        return super().get_queryset().order_by('-timestamp')
