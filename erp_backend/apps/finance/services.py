@@ -19,14 +19,24 @@ logger = logging.getLogger(__name__)
 
 class LedgerService:
     @staticmethod
-    def create_journal_entry(organization, transaction_date, description, lines, reference=None, status='DRAFT', scope='OFFICIAL', site_id=None, **kwargs):
+    def create_journal_entry(organization, transaction_date, description, lines, reference=None, status='DRAFT', scope='OFFICIAL', site_id=None, user=None, **kwargs):
         from apps.finance.models import FiscalPeriod, JournalEntry, JournalEntryLine
+        from apps.finance.services import SequenceService
+        
         total_debit = sum((Decimal(str(l['debit'])) for l in lines), Decimal('0'))
         total_credit = sum((Decimal(str(l['credit'])) for l in lines), Decimal('0'))
-        if abs(total_debit - total_credit) > Decimal('0.001'): raise ValidationError("Out of Balance")
+        if abs(total_debit - total_credit) > Decimal('0.001'): 
+            raise ValidationError("Journal entry is out of balance.")
+
         with transaction.atomic():
             fp = FiscalPeriod.objects.filter(organization=organization, start_date__lte=transaction_date, end_date__gte=transaction_date).first()
-            if not fp: raise ValidationError("No Fiscal Period found for the given date")
+            if not fp: raise ValidationError(f"No fiscal period found for date {transaction_date}")
+            if fp.is_closed: raise ValidationError(f"Fiscal period {fp.name} is closed. Cannot post transactions.")
+            if fp.fiscal_year.is_hard_locked: raise ValidationError(f"Fiscal year {fp.fiscal_year.name} is hard-locked.")
+            
+            # Use gapless sequence for references if none provided
+            if not reference:
+                reference = SequenceService.get_next_number(organization, f"JOURNAL_{scope}")
             
             # Enforcement: System-only accounts check
             internal_bypass = kwargs.get('internal_bypass', False)
@@ -38,9 +48,30 @@ class LedgerService:
                     codes = ", ".join([acc.code for acc in system_accounts])
                     raise ValidationError(f"Manual posting to system-only accounts is forbidden: {codes}")
             
-            entry = JournalEntry.objects.create(organization=organization, transaction_date=transaction_date, description=description, reference=reference or f"JRN-{uuid.uuid4().hex[:8].upper()}", fiscal_year=fp.fiscal_year, fiscal_period=fp, status=status, scope=scope, site_id=site_id)
-            for l in lines: JournalEntryLine.objects.create(organization=organization, journal_entry=entry, account_id=l['account_id'], debit=Decimal(str(l['debit'])), credit=Decimal(str(l['credit'])), description=l.get('description', description))
-            if status == 'POSTED': LedgerService.post_journal_entry(entry)
+            entry = JournalEntry.objects.create(
+                organization=organization, 
+                transaction_date=transaction_date, 
+                description=description, 
+                reference=reference, 
+                fiscal_year=fp.fiscal_year, 
+                fiscal_period=fp, 
+                status=status, 
+                scope=scope, 
+                site_id=site_id,
+                created_by=user
+            )
+            for l in lines: 
+                JournalEntryLine.objects.create(
+                    organization=organization, 
+                    journal_entry=entry, 
+                    account_id=l['account_id'], 
+                    debit=Decimal(str(l['debit'])), 
+                    credit=Decimal(str(l['credit'])), 
+                    description=l.get('description', description)
+                )
+            
+            if status == 'POSTED': 
+                LedgerService.post_journal_entry(entry, user=user)
             return entry
 
     @staticmethod
@@ -348,13 +379,60 @@ class LedgerService:
         return True
 
     @staticmethod
-    def update_journal_entry(organization, entry_id, transaction_date=None, description=None, status=None, lines=None):
-        from apps.finance.models import JournalEntry, JournalEntryLine
+    def post_journal_entry(entry, user=None):
+        if entry.status == 'POSTED' and entry.posted_at: return 
+        
+        from django.db.models import Sum
+        with transaction.atomic():
+            # Final integrity check: Double-Entry Proof
+            totals = entry.lines.aggregate(
+                total_debit=Sum('debit'),
+                total_credit=Sum('credit')
+            )
+            debit = totals.get('total_debit') or Decimal('0')
+            credit = totals.get('total_credit') or Decimal('0')
+            
+            if abs(debit - credit) > Decimal('0.001'):
+                raise ValidationError(f"Cannot post unbalanced journal entry (Dr: {debit}, Cr: {credit})")
+
+            # Final check: Period lockdown on post bit
+            if entry.fiscal_period.is_closed:
+                raise ValidationError(f"Cannot post to closed period {entry.fiscal_period.name}.")
+
+            lines = entry.lines.select_related('account').all()
+            for line in lines:
+                net = line.debit - line.credit
+                if entry.scope in ['OFFICIAL', 'INTERNAL']:
+                    line.account.__class__.objects.filter(id=line.account_id).update(
+                        balance=F('balance') + net,
+                        balance_official=F('balance_official') + net if entry.scope == 'OFFICIAL' else F('balance_official')
+                    )
+                else:
+                    line.account.__class__.objects.filter(id=line.account_id).update(
+                        balance=F('balance') + net
+                    )
+            entry.status = 'POSTED'
+            entry.posted_at = timezone.now()
+            entry.posted_by = user
+            entry.save()
+
+    @staticmethod
+    def update_journal_entry(organization, entry_id, transaction_date=None, description=None, status=None, lines=None, user=None):
+        from apps.finance.models import JournalEntry, JournalEntryLine, FiscalPeriod
         with transaction.atomic():
             entry = JournalEntry.objects.get(id=entry_id, organization=organization)
             if entry.is_locked: raise ValidationError("Cannot update a locked journal entry")
             
-            if transaction_date: entry.transaction_date = transaction_date
+            # Period enforcement
+            if transaction_date:
+                fp = FiscalPeriod.objects.filter(organization=organization, start_date__lte=transaction_date, end_date__gte=transaction_date).first()
+                if not fp: raise ValidationError("No fiscal period found for new date")
+                if fp.is_closed: raise ValidationError(f"Target fiscal period {fp.name} is closed.")
+                if fp.fiscal_year.is_hard_locked: raise ValidationError("Target fiscal year is hard-locked.")
+                entry.transaction_date = transaction_date
+                entry.fiscal_period = fp
+                entry.fiscal_year = fp.fiscal_year
+
             if description: entry.description = description
             if status:
                 if entry.status == 'POSTED' and status != 'POSTED':
@@ -365,7 +443,7 @@ class LedgerService:
                 # Basic balance check for new lines
                 total_debit = sum((Decimal(str(l['debit'])) for l in lines), Decimal('0'))
                 total_credit = sum((Decimal(str(l['credit'])) for l in lines), Decimal('0'))
-                if abs(total_debit - total_credit) > Decimal('0.001'): raise ValidationError("Out of Balance")
+                if abs(total_debit - total_credit) > Decimal('0.001'): raise ValidationError("Journal entry is out of balance.")
                 
                 entry.lines.all().delete()
                 for l in lines:
@@ -380,24 +458,42 @@ class LedgerService:
             
             entry.save()
             if entry.status == 'POSTED' and not entry.posted_at:
-                LedgerService.post_journal_entry(entry)
+                LedgerService.post_journal_entry(entry, user=user)
             return entry
 
     @staticmethod
-    def reverse_journal_entry(organization, entry_id):
-        from apps.finance.models import JournalEntry, JournalEntryLine
+    def reverse_journal_entry(organization, entry_id, user=None):
+        from apps.finance.models import JournalEntry, JournalEntryLine, FiscalPeriod
+        from apps.finance.services import SequenceService
+        
         with transaction.atomic():
             original = JournalEntry.objects.get(id=entry_id, organization=organization)
-            if original.status != 'POSTED': raise ValidationError("Only POSTED entries can be reversed")
+            if original.status != 'POSTED': 
+                raise ValidationError("Only POSTED entries can be reversed")
+            
+            # Period enforcement for reversal
+            now = timezone.now()
+            fp = FiscalPeriod.objects.filter(organization=organization, start_date__lte=now, end_date__gte=now).first()
+            if not fp or fp.is_closed:
+                # If current date is closed, try the original entry's period if it's still open
+                if not original.fiscal_period.is_closed:
+                    fp = original.fiscal_period
+                else:
+                    raise ValidationError("Current fiscal period is closed and original period is closed. Cannot reverse.")
+
+            reversal_ref = SequenceService.get_next_number(organization, "JOURNAL_REVERSAL")
             
             reversal = JournalEntry.objects.create(
                 organization=organization,
-                transaction_date=timezone.now(),
+                transaction_date=now,
                 description=f"Reversal of {original.description}",
-                reference=f"REV-{original.id}",
+                reference=reversal_ref,
+                fiscal_year=fp.fiscal_year,
+                fiscal_period=fp,
                 status='POSTED',
                 scope=original.scope,
-                site=original.site
+                site=original.site,
+                created_by=user
             )
             
             for line in original.lines.all():
@@ -410,7 +506,7 @@ class LedgerService:
                     description=f"Reversal Line: {line.description}"
                 )
             
-            LedgerService.post_journal_entry(reversal)
+            LedgerService.post_journal_entry(reversal, user=user)
             original.is_locked = True
             original.save()
             return reversal
@@ -680,7 +776,7 @@ class LoanService:
             return loan
 
     @staticmethod
-    def disburse_loan(organization, loan_id, transaction_ref=None, account_id=None):
+    def disburse_loan(organization, loan_id, transaction_ref=None, account_id=None, user=None):
         from apps.finance.models import Loan
         with transaction.atomic():
             loan = Loan.objects.get(id=loan_id, organization=organization)
@@ -695,7 +791,8 @@ class LoanService:
                 contact_id=loan.contact.id,
                 reference=transaction_ref or f"DISB-{loan.contract_number}",
                 loan_id=loan.id,
-                account_id=account_id
+                account_id=account_id,
+                user=user
             )
             
             loan.status = 'ACTIVE'
@@ -762,14 +859,24 @@ class LoanService:
 
 class FinancialEventService:
     @staticmethod
-    def create_event(organization, event_type, amount, date, contact_id, reference=None, notes=None, loan_id=None, account_id=None):
-        from apps.finance.models import FinancialEvent
+    def create_event(organization, event_type, amount, date, contact_id, reference=None, notes=None, loan_id=None, account_id=None, user=None):
+        from apps.finance.models import FinancialEvent, FiscalPeriod
         # Gated cross-module import
         try:
             from apps.crm.models import Contact
         except ImportError:
             raise ValidationError("CRM module is required for financial events.")
+        
+        amount = Decimal(str(amount))
+        if amount <= 0:
+            raise ValidationError("Event amount must be positive.")
+
         with transaction.atomic():
+            # Period enforcement
+            fp = FiscalPeriod.objects.filter(organization=organization, start_date__lte=date, end_date__gte=date).first()
+            if not fp or fp.is_closed:
+                raise ValidationError("Target fiscal period is closed or not found.")
+
             contact = Contact.objects.get(id=contact_id, organization=organization)
             
             event = FinancialEvent.objects.create(
@@ -785,13 +892,13 @@ class FinancialEventService:
             )
             
             if account_id:
-                FinancialEventService.post_event(organization, event.id, account_id)
+                FinancialEventService.post_event(organization, event.id, account_id, user=user)
                 event.refresh_from_db()
                 
             return event
 
     @staticmethod
-    def post_event(organization, event_id, account_id):
+    def post_event(organization, event_id, account_id, user=None):
         from apps.finance.models import FinancialEvent, FinancialAccount, Transaction
         from erp.services import ConfigurationService
         with transaction.atomic():
@@ -853,6 +960,7 @@ class FinancialEventService:
                 reference=event.reference,
                 status='POSTED',
                 site_id=fin_acc.site_id,
+                user=user,
                 lines=[
                     {"account_id": debit_acc, "debit": event.amount, "credit": Decimal('0')},
                     {"account_id": credit_acc, "debit": Decimal('0'), "credit": event.amount}

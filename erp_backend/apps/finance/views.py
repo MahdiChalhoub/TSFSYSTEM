@@ -343,7 +343,8 @@ class JournalEntryViewSet(TenantModelViewSet):
                 reference=request.data.get('reference'),
                 status=request.data.get('status', 'DRAFT'),
                 scope=request.data.get('scope', 'OFFICIAL'),
-                site_id=request.data.get('site_id')
+                site_id=request.data.get('site_id'),
+                user=request.user
             )
             serializer = self.get_serializer(entry)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -359,7 +360,7 @@ class JournalEntryViewSet(TenantModelViewSet):
         organization = Organization.objects.get(id=organization_id)
         
         try:
-            LedgerService.reverse_journal_entry(organization, pk)
+            LedgerService.reverse_journal_entry(organization, pk, user=request.user)
             return Response({"message": "Journal entry reversed successfully"})
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -417,7 +418,8 @@ class JournalEntryViewSet(TenantModelViewSet):
                 transaction_date=request.data.get('transactionDate') or request.data.get('transaction_date'),
                 description=request.data.get('description'),
                 status=request.data.get('status'),
-                lines=lines
+                lines=lines,
+                user=request.user
             )
             serializer = self.get_serializer(entry)
             return Response(serializer.data)
@@ -476,7 +478,9 @@ class LoanViewSet(TenantModelViewSet):
         organization = Organization.objects.get(id=organization_id)
         
         try:
-            loan = LoanService.create_contract(organization, request.data)
+            data = request.data.copy()
+            data['user'] = request.user
+            loan = LoanService.create_contract(organization, data)
             return Response(LoanSerializer(loan).data, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({"error": str(e)}, status=400)
@@ -490,7 +494,7 @@ class LoanViewSet(TenantModelViewSet):
         try:
             transaction_ref = request.data.get('transaction_ref')
             account_id = request.data.get('account_id')
-            loan = LoanService.disburse_loan(organization, pk, transaction_ref, account_id)
+            loan = LoanService.disburse_loan(organization, pk, transaction_ref, account_id, user=request.user)
             return Response(LoanSerializer(loan).data)
         except Exception as e:
             return Response({"error": str(e)}, status=400)
@@ -519,7 +523,8 @@ class FinancialEventViewSet(TenantModelViewSet):
                 reference=request.data.get('reference'),
                 notes=request.data.get('notes'),
                 loan_id=request.data.get('loan_id'),
-                account_id=request.data.get('account_id')
+                account_id=request.data.get('account_id'),
+                user=request.user
             )
             return Response(FinancialEventSerializer(event).data, status=status.HTTP_201_CREATED)
         except Exception as e:
@@ -535,7 +540,7 @@ class FinancialEventViewSet(TenantModelViewSet):
             account_id = request.data.get('account_id')
             if not account_id: return Response({"error": "Account ID required"}, status=400)
             
-            event = FinancialEventService.post_event(organization, pk, account_id)
+            event = FinancialEventService.post_event(organization, pk, account_id, user=request.user)
             return Response(FinancialEventSerializer(event).data)
         except Exception as e:
             import traceback

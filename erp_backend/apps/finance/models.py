@@ -107,11 +107,14 @@ class JournalEntry(TenantModel):
     is_locked = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
     posted_at = models.DateTimeField(null=True, blank=True)
+    created_by = models.ForeignKey('erp.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='created_journal_entries')
+    posted_by = models.ForeignKey('erp.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='posted_journal_entries')
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
     class Meta:
         db_table = 'journalentry'
+        unique_together = ('reference', 'organization')
         indexes = [
             models.Index(fields=['organization', 'transaction_date']),
             models.Index(fields=['organization', 'scope']),
@@ -201,6 +204,7 @@ class Loan(TenantModel):
     start_date = models.DateField(null=True, blank=True)
     payment_frequency = models.CharField(max_length=50, default='MONTHLY')
     status = models.CharField(max_length=20, default='DRAFT')
+    created_by = models.ForeignKey('erp.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='created_loans')
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
