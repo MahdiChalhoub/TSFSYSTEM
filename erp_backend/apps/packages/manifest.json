@@ -49,22 +49,17 @@
     ],
     "routes": [
         {
-            "path": "/packages",
+            "path": "/saas/packages",
             "label": "Package Storage"
         }
     ],
     "sidebar_items": [
         {
-            "id": "packages",
-            "label": "Packages",
-            "icon": "Package",
-            "path": "/packages",
-            "roles": [
-                "admin",
-                "saas_admin"
-            ]
+            "title": "Storage Cloud",
+            "icon": "Cloud",
+            "path": "/saas/packages",
+            "visibility": "saas"
         }
     ],
-    "settings_schema": {},
-    "saas_only": true
+    "settings_schema": {}
 }

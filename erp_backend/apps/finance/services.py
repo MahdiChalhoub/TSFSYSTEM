@@ -19,14 +19,25 @@ logger = logging.getLogger(__name__)
 
 class LedgerService:
     @staticmethod
-    def create_journal_entry(organization, transaction_date, description, lines, reference=None, status='DRAFT', scope='OFFICIAL', site_id=None):
+    def create_journal_entry(organization, transaction_date, description, lines, reference=None, status='DRAFT', scope='OFFICIAL', site_id=None, **kwargs):
         from apps.finance.models import FiscalPeriod, JournalEntry, JournalEntryLine
         total_debit = sum((Decimal(str(l['debit'])) for l in lines), Decimal('0'))
         total_credit = sum((Decimal(str(l['credit'])) for l in lines), Decimal('0'))
         if abs(total_debit - total_credit) > Decimal('0.001'): raise ValidationError("Out of Balance")
         with transaction.atomic():
             fp = FiscalPeriod.objects.filter(organization=organization, start_date__lte=transaction_date, end_date__gte=transaction_date).first()
-            if not fp: raise ValidationError("No Fiscal Period")
+            if not fp: raise ValidationError("No Fiscal Period found for the given date")
+            
+            # Enforcement: System-only accounts check
+            internal_bypass = kwargs.get('internal_bypass', False)
+            if not internal_bypass:
+                from apps.finance.models import ChartOfAccount
+                account_ids = [l['account_id'] for l in lines]
+                system_accounts = ChartOfAccount.objects.filter(id__in=account_ids, is_system_only=True)
+                if system_accounts.exists():
+                    codes = ", ".join([acc.code for acc in system_accounts])
+                    raise ValidationError(f"Manual posting to system-only accounts is forbidden: {codes}")
+            
             entry = JournalEntry.objects.create(organization=organization, transaction_date=transaction_date, description=description, reference=reference or f"JRN-{uuid.uuid4().hex[:8].upper()}", fiscal_year=fp.fiscal_year, fiscal_period=fp, status=status, scope=scope, site_id=site_id)
             for l in lines: JournalEntryLine.objects.create(organization=organization, journal_entry=entry, account_id=l['account_id'], debit=Decimal(str(l['debit'])), credit=Decimal(str(l['credit'])), description=l.get('description', description))
             if status == 'POSTED': LedgerService.post_journal_entry(entry)
@@ -51,13 +62,21 @@ class LedgerService:
     def post_journal_entry(entry):
         if entry.status == 'POSTED' and entry.posted_at: return
         with transaction.atomic():
-            for line in entry.lines.all():
+            lines = entry.lines.select_related('account').all()
+            for line in lines:
                 net = line.debit - line.credit
-                account = line.account
-                account.balance = Decimal(str(account.balance)) + net
-                if entry.scope == 'OFFICIAL': account.balance_official = Decimal(str(account.balance_official)) + net
-                account.save()
-            entry.status = 'POSTED'; entry.posted_at = timezone.now(); entry.save()
+                if entry.scope == 'OFFICIAL' or entry.scope == 'INTERNAL':
+                    line.account.__class__.objects.filter(id=line.account_id).update(
+                        balance=F('balance') + net,
+                        balance_official=F('balance_official') + net if entry.scope == 'OFFICIAL' else F('balance_official')
+                    )
+                else:
+                    line.account.__class__.objects.filter(id=line.account_id).update(
+                        balance=F('balance') + net
+                    )
+            entry.status = 'POSTED'
+            entry.posted_at = timezone.now()
+            entry.save()
 
     @staticmethod
     def apply_coa_template(organization, template_key, reset=False):
@@ -220,16 +239,23 @@ class LedgerService:
         if not include_inactive:
             qs = qs.filter(is_active=True)
         
-        lines_qs = JournalEntryLine.objects.filter(organization=organization, journal_entry__status='POSTED')
-        if scope == 'OFFICIAL': lines_qs = lines_qs.filter(journal_entry__scope='OFFICIAL')
+        # SQL Aggregation (Massive speed gain over manual mapping)
+        balance_qs = JournalEntryLine.objects.filter(
+            organization=organization, 
+            journal_entry__status='POSTED'
+        )
+        if scope == 'OFFICIAL':
+            balance_qs = balance_qs.filter(journal_entry__scope='OFFICIAL')
         
-        balance_map = {b['account_id']: Decimal(str(b['net'] or '0')) for b in lines_qs.values('account_id').annotate(net=Sum('debit') - Sum('credit'))}
+        balance_map = {
+            b['account_id']: Decimal(str(b['net'] or '0')) 
+            for b in balance_qs.values('account_id').annotate(net=Sum('debit') - Sum('credit'))
+        }
         
         accounts = list(qs)
         account_map = {acc.id: acc for acc in accounts}
         for acc in accounts: 
             acc.temp_balance = balance_map.get(acc.id, Decimal('0'))
-            acc.rollup_balance = acc.temp_balance
             acc.temp_children = []
             
         roots = []
@@ -250,22 +276,36 @@ class LedgerService:
     @staticmethod
     def get_trial_balance(organization, as_of_date=None, scope='INTERNAL'):
         from apps.finance.models import ChartOfAccount, JournalEntryLine
-        accounts = ChartOfAccount.objects.filter(organization=organization, is_active=True).order_by('code')
+        accounts_qs = ChartOfAccount.objects.filter(organization=organization, is_active=True).order_by('code')
+        
         lines_qs = JournalEntryLine.objects.filter(organization=organization, journal_entry__status='POSTED')
-        if as_of_date: lines_qs = lines_qs.filter(journal_entry__transaction_date__lte=as_of_date)
-        if scope == 'OFFICIAL': lines_qs = lines_qs.filter(journal_entry__scope='OFFICIAL')
-        balance_map = {b['account_id']: Decimal(str(b['net'] or '0')) for b in lines_qs.values('account_id').annotate(net=Sum('debit') - Sum('credit'))}
+        if as_of_date:
+            lines_qs = lines_qs.filter(journal_entry__transaction_date__lte=as_of_date)
+        if scope == 'OFFICIAL':
+            lines_qs = lines_qs.filter(journal_entry__scope='OFFICIAL')
+            
+        balance_map = {
+            b['account_id']: Decimal(str(b['net'] or '0')) 
+            for b in lines_qs.values('account_id').annotate(net=Sum('debit') - Sum('credit'))
+        }
+        
+        accounts = list(accounts_qs)
         account_map = {acc.id: acc for acc in accounts}
         for acc in accounts: 
             acc.temp_balance = balance_map.get(acc.id, Decimal('0'))
             acc.temp_children = []
+        
         roots = []
         for acc in accounts:
-            if acc.parent_id and acc.parent_id in account_map: account_map[acc.parent_id].temp_children.append(acc)
-            else: roots.append(acc)
+            if acc.parent_id and acc.parent_id in account_map:
+                account_map[acc.parent_id].temp_children.append(acc)
+            else:
+                roots.append(acc)
+                
         def rollup(node):
             node.rollup_balance = node.temp_balance + sum(rollup(child) for child in node.temp_children)
             return node.rollup_balance
+            
         for root in roots: rollup(root)
         return accounts
 
@@ -290,6 +330,23 @@ class LedgerService:
         cur_earnings = LedgerService.get_profit_loss(organization, end_date=as_of_date, scope=scope)['net_income']
         return {"scope": scope, "assets": total_assets, "liabilities": total_liabilities, "equity": total_equity, "current_earnings": cur_earnings, "total_liabilities_and_equity": total_liabilities + total_equity + cur_earnings, "is_balanced": abs(total_assets - (total_liabilities + total_equity + cur_earnings)) < Decimal('0.01')}
 
+    @staticmethod
+    def validate_closure(organization, fiscal_period=None, fiscal_year=None):
+        """
+        Validates that all control accounts (requires_zero_balance=True) 
+        have a zero balance before closure.
+        """
+        from apps.finance.models import ChartOfAccount
+        control_accounts = ChartOfAccount.objects.filter(
+            organization=organization, 
+            requires_zero_balance=True,
+            is_active=True
+        )
+        for acc in control_accounts:
+            if abs(acc.balance) > Decimal('0.001'):
+                raise ValidationError(f"Control account {acc.code} ({acc.name}) must have zero balance before closure. Current balance: {acc.balance}")
+        return True
+
 
 class FinancialAccountService:
     @staticmethod
@@ -304,7 +361,7 @@ class FinancialAccountService:
             acc = ChartOfAccount.objects.create(organization=organization, code=code, name=name, type='ASSET', parent=parent, is_system_only=True, is_active=True, balance=Decimal('0.00'))
             return FinancialAccount.objects.create(
                 organization=organization, name=name, type=type, currency=currency,
-                site_id=site_id, ledger_account=acc
+                site_id=site_id, linked_coa=acc
             )
 
 
@@ -526,14 +583,39 @@ class LoanService:
             
             remaining = Decimal(str(amount))
             
-            installments = LoanInstallment.objects.filter(organization=organization, loan=loan, status='PENDING').order_by('due_date')
+            installments = LoanInstallment.objects.filter(
+                organization=organization, 
+                loan=loan, 
+                status__in=['PENDING', 'PARTIAL']
+            ).order_by('due_date', 'id')
             
             if not installments.exists():
                 raise ValidationError("No pending installments found")
 
             for inst in installments:
-                if remaining <= 0: break
-                pass
+                if remaining <= 0:
+                    break
+                
+                # Calculate how much we can pay on this installment
+                inst_total = inst.total_amount
+                inst_paid = inst.paid_amount
+                inst_remaining = inst_total - inst_paid
+                
+                if remaining >= inst_remaining:
+                    # Fully pay this installment
+                    payment_on_this = inst_remaining
+                    inst.paid_amount = inst_total
+                    inst.status = 'PAID'
+                    inst.is_paid = True
+                    inst.paid_at = timezone.now()
+                else:
+                    # Partially pay this installment
+                    payment_on_this = remaining
+                    inst.paid_amount += remaining
+                    inst.status = 'PARTIAL'
+                
+                inst.save()
+                remaining -= payment_on_this
                 
             event = FinancialEventService.create_event(
                 organization=organization,
@@ -588,7 +670,7 @@ class FinancialEventService:
             if event.status == 'SETTLED': return event
             
             fin_acc = FinancialAccount.objects.get(id=account_id, organization=organization)
-            actual_payment_acc_id = fin_acc.ledger_account_id
+            actual_payment_acc_id = fin_acc.linked_coa_id
             
             rules = ConfigurationService.get_posting_rules(organization)
             
@@ -596,9 +678,9 @@ class FinancialEventService:
             credit_acc = None
             description = ""
             
-            if event.event_type == 'PARTNER_CAPITAL_INJECTION':
+            if event.event_type in ['PARTNER_CAPITAL_INJECTION', 'PARTNER_INJECTION']:
                 debit_acc = actual_payment_acc_id
-                credit_acc = rules.get('equity', {}).get('capital')
+                credit_acc = rules.get('partners', {}).get('capital') or rules.get('equity', {}).get('capital')
                 description = f"Capital Injection from {event.contact.name}"
                 
             elif event.event_type == 'PARTNER_LOAN':
@@ -617,7 +699,7 @@ class FinancialEventService:
                 description = f"Loan Repayment from {event.contact.name}"
                 
             elif event.event_type == 'PARTNER_WITHDRAWAL':
-                debit_acc = rules.get('equity', {}).get('draws') or rules.get('equity', {}).get('capital')
+                debit_acc = rules.get('partners', {}).get('withdrawal') or rules.get('equity', {}).get('capital')
                 credit_acc = actual_payment_acc_id
                 description = f"Partner Withdrawal: {event.contact.name}"
 
@@ -645,16 +727,15 @@ class FinancialEventService:
                 lines=[
                     {"account_id": debit_acc, "debit": event.amount, "credit": Decimal('0')},
                     {"account_id": credit_acc, "debit": Decimal('0'), "credit": event.amount}
-                ]
+                ],
+                internal_bypass=True
             )
             
             event.transaction = trx
             event.journal_entry = entry
             event.status = 'SETTLED'
             event.save()
-            
             return event
-
 
 class TaxService:
     @staticmethod

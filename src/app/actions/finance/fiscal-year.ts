@@ -140,6 +140,19 @@ export async function updatePeriodStatus(periodId: number, newStatus: string) {
     }
 }
 
+export async function lockFiscalYear(id: number) {
+    try {
+        await erpFetch(`fiscal-years/${id}/lock/`, {
+            method: 'POST'
+        })
+        revalidatePath('/finance/fiscal-years')
+        return { success: true }
+    } catch (error: any) {
+        console.error("Failed to lock fiscal year:", error)
+        throw error
+    }
+}
+
 export async function hardLockFiscalYear(id: number) {
     try {
         await erpFetch(`fiscal-years/${id}/`, {
