@@ -197,11 +197,23 @@ export async function getUser() {
         const user = await erpFetch('auth/me/')
         return user
     } catch (error: any) {
-        // Only return null if backend explicitly said "Go away"
-        const isAuthError = error.message?.includes('401') || error.message?.includes('403') || error.message?.includes('credentials');
-        if (isAuthError) return null;
+        // Robust check for session expiry / invalid credentials
+        const msg = error.message?.toLowerCase() || '';
+        const isAuthError =
+            msg.includes('401') ||
+            msg.includes('403') ||
+            msg.includes('invalid token') ||
+            msg.includes('credentials') ||
+            msg.includes('unauthorized') ||
+            msg.includes('not provided');
+
+        if (isAuthError) {
+            console.log(`[AUTH_ACTION] Session expired or invalid for getUser: ${error.message}`);
+            return null;
+        }
 
         // Otherwise throw so layout can show "Reconnecting" or error boundary
+        // This handles cases where the backend is down (ECONNREFUSED) or returning 500
         throw error;
     }
 }

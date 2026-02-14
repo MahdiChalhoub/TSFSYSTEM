@@ -192,17 +192,3 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
         throw error;
     }
 }
-
-export async function getUser() {
-    try {
-        return await erpFetch('auth/me/');
-    } catch (e: any) {
-        // If it's an auth error, we return null so callers know to redirect
-        const isAuthError = e.message?.includes('401') || e.message?.includes('403') || e.message?.includes('credentials');
-        if (isAuthError) return null;
-
-        // If it's a network error (ECONNREFUSED, etc), WE THROW
-        // This prevents the UI from thinking the session is gone during a restart
-        throw e;
-    }
-}
