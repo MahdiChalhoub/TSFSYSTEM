@@ -22,8 +22,8 @@ export default async function AdjustmentPage() {
         id: w.id,
         name: w.name,
         type: w.type,
-        siteId: w.site?.id,
-        site: w.site ? { name: w.site.name } : undefined
+        siteId: w.site,
+        site: w.site_name ? { name: w.site_name } : undefined
     }));
 
     return (

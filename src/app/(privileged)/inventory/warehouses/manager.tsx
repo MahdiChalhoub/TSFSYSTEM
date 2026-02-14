@@ -58,7 +58,7 @@ export default function WarehouseManager({ warehouses }: { warehouses: any[] }) 
                     </div>
                     <div>
                         <div className="text-sm font-bold text-gray-400 uppercase tracking-wider">Retail Stores</div>
-                        <div className="text-2xl font-black text-gray-900">{warehouses.filter(w => w.canSell).length}</div>
+                        <div className="text-2xl font-black text-gray-900">{warehouses.filter(w => w.can_sell).length}</div>
                     </div>
                 </div>
                 <div className="relative">
@@ -84,16 +84,16 @@ export default function WarehouseManager({ warehouses }: { warehouses: any[] }) 
                 ) : (
                     filtered.map((wh) => (
                         <div key={wh.id} className="group bg-white border border-gray-100 rounded-3xl p-6 hover:shadow-2xl hover:shadow-emerald-900/5 transition-all relative overflow-hidden">
-                            {!wh.isActive && (
+                            {!wh.is_active && (
                                 <div className="absolute top-0 right-0 bg-gray-100 text-gray-400 px-3 py-1 text-[10px] font-black uppercase rounded-bl-xl">
                                     Disabled
                                 </div>
                             )}
 
                             <div className="flex justify-between items-start mb-6">
-                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${wh.canSell ? 'bg-emerald-50 text-emerald-600' : 'bg-orange-50 text-orange-600'
+                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${wh.can_sell ? 'bg-emerald-50 text-emerald-600' : 'bg-orange-50 text-orange-600'
                                     }`}>
-                                    {wh.canSell ? <Store size={28} /> : <Warehouse size={28} />}
+                                    {wh.can_sell ? <Store size={28} /> : <Warehouse size={28} />}
                                 </div>
                                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button
@@ -121,16 +121,16 @@ export default function WarehouseManager({ warehouses }: { warehouses: any[] }) 
                                 <h3 className="text-xl font-black text-gray-900 mb-2 truncate">{wh.name}</h3>
                                 <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium capitalize">
                                     <MapPin size={14} className="text-emerald-500" />
-                                    {wh.site?.name ? `${wh.site.name} ΓÇó ${wh.type.toLowerCase()}` : `${wh.type.toLowerCase()} site`}
+                                    {wh.site_name ? `${wh.site_name} · ${wh.type.toLowerCase()}` : `${wh.type.toLowerCase()} site`}
                                 </div>
                             </div>
 
                             <div className="pt-6 border-t border-gray-50 flex justify-between items-end">
                                 <div>
                                     <div className="text-[10px] text-gray-400 font-black uppercase tracking-tighter mb-1 font-mono">Stock Level</div>
-                                    <div className="text-xl font-black text-gray-900">{wh._count?.inventory || 0} <span className="text-xs text-gray-300 font-bold ml-1">SKUs</span></div>
+                                    <div className="text-xl font-black text-gray-900">{wh.inventory_count || 0} <span className="text-xs text-gray-300 font-bold ml-1">SKUs</span></div>
                                 </div>
-                                {wh.canSell && (
+                                {wh.can_sell && (
                                     <div className="px-3 py-1 bg-emerald-500 text-white text-[9px] font-black uppercase rounded-lg shadow-lg shadow-emerald-500/30">
                                         Active Store
                                     </div>

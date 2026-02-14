@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 interface BrandDetail {
     id: number;
     name: string;
-    shortName?: string;
+    short_name?: string;
     countries: Array<{ id: number; name: string; code: string }>;
     productGroups: Array<{
         id: number;
@@ -51,7 +51,7 @@ export default async function BrandDetailPage({ params }: { params: Promise<{ id
                 </Link>
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900">{brand.name}</h1>
-                    {brand.shortName && <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded text-gray-600">{brand.shortName}</span>}
+                    {brand.short_name && <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded text-gray-600">{brand.short_name}</span>}
                 </div>
             </div>
 
