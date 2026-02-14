@@ -134,11 +134,21 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
                 if (isContextError && isSaaS) {
                     console.log(`[ERP_API] Root/SaaS context - Ignoring expected missing context for ${path}`);
                 } else {
-                    console.error(`[ERP_API] Error response from ${path}:`, errorText);
+                    console.error(`[ERP_API] Error response from ${path}:`, errorText.substring(0, 500));
                 }
             } else {
                 // Debug log only for auth failures
                 console.log(`[ERP_API] Auth required for ${path}: ${response.status}`);
+            }
+
+            // [HTML DETECTION] Django returns HTML error pages when DEBUG=False and a 500 occurs.
+            // Detect HTML responses early and throw a clean, JSON-parseable error instead of crashing on JSON.parse().
+            const trimmed = errorText.trimStart();
+            if (trimmed.startsWith('<') || trimmed.startsWith('<!')) {
+                console.error(`[ERP_API] HTML error page received from ${path} (HTTP ${response.status})`);
+                throw new Error(JSON.stringify({
+                    error: `Server error (${response.status}). Please try again later.`
+                }));
             }
 
             let errorData: any = {}
