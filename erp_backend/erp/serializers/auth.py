@@ -93,7 +93,12 @@ class UserSerializer(serializers.ModelSerializer):
 class BusinessRegistrationSerializer(serializers.Serializer):
     # Business Details
     business_name = serializers.CharField(max_length=255)
-    business_slug = serializers.SlugField()
+    business_slug = serializers.SlugField(required=False, allow_blank=True)
+    slug = serializers.SlugField(required=False, allow_blank=True)
+    
+    # Industry & Currency
+    business_type_id = serializers.IntegerField(required=False, allow_null=True)
+    currency_id = serializers.IntegerField(required=False, allow_null=True)
     
     # Admin User Details
     admin_first_name = serializers.CharField(max_length=150)
@@ -104,15 +109,30 @@ class BusinessRegistrationSerializer(serializers.Serializer):
     
     # Optional Profile Details
     phone = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    email = serializers.EmailField(required=False, allow_blank=True)
+    website = serializers.URLField(required=False, allow_blank=True)
     address = serializers.CharField(required=False, allow_blank=True)
     city = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    state = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    zip_code = serializers.CharField(max_length=20, required=False, allow_blank=True)
     country = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    timezone = serializers.CharField(max_length=50, required=False, default='UTC')
 
-    def validate_business_slug(self, value):
+    def validate(self, attrs):
+        # Accept 'slug' as alias for 'business_slug'
+        slug = attrs.pop('slug', None) or attrs.get('business_slug', None)
+        if slug:
+            attrs['business_slug'] = slug
+        if not attrs.get('business_slug'):
+            raise serializers.ValidationError({'business_slug': _('A workspace slug is required.')})
+        
+        # Validate slug uniqueness
         from erp.models import Organization
-        if Organization.objects.filter(slug=value.lower()).exists():
-            raise serializers.ValidationError(_("This business slug is already taken."))
-        return value.lower()
+        slug_val = attrs['business_slug'].lower()
+        if Organization.objects.filter(slug=slug_val).exists():
+            raise serializers.ValidationError({'business_slug': _('This business slug is already taken.')})
+        attrs['business_slug'] = slug_val
+        return attrs
 
     def validate_admin_username(self, value):
         return value
