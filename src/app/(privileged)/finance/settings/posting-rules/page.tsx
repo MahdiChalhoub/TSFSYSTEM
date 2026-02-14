@@ -7,7 +7,7 @@ export default async function PostingRulesPage() {
     const accounts = await getChartOfAccounts()
 
     return (
-        <div className="p-8">
+        <div className="space-y-6 animate-in fade-in duration-500">
             <PostingRulesForm initialConfig={config} accounts={accounts} />
         </div>
     )

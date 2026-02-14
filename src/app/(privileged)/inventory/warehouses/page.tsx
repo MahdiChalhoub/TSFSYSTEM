@@ -17,7 +17,7 @@ export default async function WarehousesPage() {
     const warehouses = await getWarehouses();
 
     return (
-        <div className="p-8 max-w-7xl mx-auto">
+        <div className="space-y-6 animate-in fade-in duration-500">
             <WarehouseManager warehouses={warehouses} />
         </div>
     );

@@ -138,7 +138,7 @@ export default function SubscriptionPlansPage() {
     }
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex justify-between items-end">
                 <div>
                     <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">Subscription Plans</h2>

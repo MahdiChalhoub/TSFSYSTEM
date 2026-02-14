@@ -68,7 +68,7 @@ export default function SubscriptionPage() {
     const daysLeft = expiryDate ? Math.ceil((expiryDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500 max-w-5xl mx-auto py-8">
+        <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex justify-between items-start">
                 <div>
                     <h2 className="text-3xl font-black text-gray-900 tracking-tight">Subscription & Billing</h2>

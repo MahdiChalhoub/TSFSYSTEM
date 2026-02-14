@@ -12,7 +12,7 @@ export default async function StatementReportPage() {
     const fiscalYears = await getFiscalYears()
 
     return (
-        <div className="p-8">
+        <div className="space-y-6 animate-in fade-in duration-500">
             <h1 className="text-3xl font-bold text-stone-900 font-serif mb-8 text-center">Financial Reports</h1>
             <StatementGenerator
                 accounts={serialize(accounts)}

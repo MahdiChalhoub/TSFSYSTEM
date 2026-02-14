@@ -10,7 +10,7 @@ export default async function CoaMigrationPage() {
     const templates = await getAllTemplates()
 
     return (
-        <div className="p-8 max-w-5xl mx-auto">
+        <div className="space-y-6 animate-in fade-in duration-500">
             <div className="mb-10 text-center">
                 <h1 className="text-4xl font-bold text-stone-900 font-serif mb-2">Account Migration Tool</h1>
                 <p className="text-stone-500 font-medium uppercase tracking-widest text-xs">Transform your layout without losing your history</p>

@@ -22,7 +22,7 @@ export default async function CountryDetailPage({ params }: { params: Promise<{ 
     if (!country) notFound();
 
     return (
-        <div className="space-y-8 animate-in fade-in max-w-5xl mx-auto py-8 px-4">
+        <div className="space-y-6 animate-in fade-in duration-500">
             {/* Header */}
             <div className="flex items-center gap-4 border-b border-gray-100 pb-6">
                 <Link href="/inventory/countries" className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-gray-900">

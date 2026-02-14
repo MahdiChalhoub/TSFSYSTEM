@@ -27,7 +27,7 @@ export default function SitesPage() {
     }, [])
 
     return (
-        <div className="p-8 space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex justify-between items-end">
                 <div>
                     <h2 className="text-3xl font-black text-gray-900 tracking-tight">Sites & Branches</h2>

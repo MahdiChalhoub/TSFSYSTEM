@@ -27,30 +27,28 @@ export default async function AdjustmentPage() {
     }));
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC] p-8 lg:p-12">
-            <div className="max-w-6xl mx-auto space-y-10">
+        <div className="space-y-6 animate-in fade-in duration-500">
 
-                {/* Header */}
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                    <div>
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-rose-500 rounded-lg text-white">
-                                <Sliders size={16} />
-                            </div>
-                            <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.3em]">Stock Operations</span>
+            {/* Header */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div>
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-rose-500 rounded-lg text-white">
+                            <Sliders size={16} />
                         </div>
-                        <h1 className="text-4xl lg:text-5xl font-black text-gray-900 tracking-tighter">
-                            Stock <span className="text-rose-500">Adjustment</span>
-                        </h1>
-                        <p className="mt-4 text-gray-500 font-medium max-w-xl">
-                            Correct inventory discrepancies, report damages, or log found items manually.
-                            Use this for non-commercial movements only.
-                        </p>
+                        <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.3em]">Stock Operations</span>
                     </div>
+                    <h1 className="text-4xl lg:text-5xl font-black text-gray-900 tracking-tighter">
+                        Stock <span className="text-rose-500">Adjustment</span>
+                    </h1>
+                    <p className="mt-4 text-gray-500 font-medium max-w-xl">
+                        Correct inventory discrepancies, report damages, or log found items manually.
+                        Use this for non-commercial movements only.
+                    </p>
                 </div>
-
-                <StockAdjustmentManager warehouses={warehouses} />
             </div>
+
+            <StockAdjustmentManager warehouses={warehouses} />
         </div>
     );
 }
