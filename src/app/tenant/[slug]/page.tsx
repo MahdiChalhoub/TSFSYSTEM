@@ -5,7 +5,7 @@ import { ShieldCheck, Lock, ArrowRight, Building2, Globe, Command, Sparkles, Act
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { StorefrontCatalog } from "@/components/tenant/StorefrontCatalog"
-import { PLATFORM_CONFIG, getDynamicBranding } from "@/lib/saas_config"
+import { PLATFORM_CONFIG, getDynamicBranding } from "@/lib/branding"
 
 export default async function TenantWelcomePage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params

@@ -4,7 +4,7 @@ import { Outfit } from 'next/font/google';
 
 const outfit = Outfit({ subsets: ['latin'] });
 
-import { PLATFORM_CONFIG } from "@/lib/saas_config";
+import { PLATFORM_CONFIG } from "@/lib/branding";
 
 export const metadata: Metadata = {
     title: `${PLATFORM_CONFIG.name} | Global System`,
