@@ -236,22 +236,45 @@ class SaaSModuleViewSet(viewsets.ViewSet):
         # 1. Start with Core items (Always visible)
         items = []
         
-        # 2. Add items from ACTIVE modules
         # If no organization context, we treat as MASTER PANEL (is_saas)
-        # BUGFIX: Also treat 'saas' slug organization as SaaS context for panel visibility
         is_saas = not hasattr(request, 'tenant') or request.tenant is None or getattr(request.tenant, 'slug', '') == 'saas'
         
+        # Add Platform Management items if in SaaS context
+        if is_saas:
+            items.extend([
+                {
+                    "title": "Tenants Control",
+                    "icon": "Users",
+                    "children": [
+                        {"title": "Business Register", "path": "/saas/tenants"},
+                        {"title": "Onboarding", "path": "/saas/onboarding"}
+                    ]
+                },
+                {
+                    "title": "Module Engine",
+                    "icon": "Package",
+                    "children": [
+                        {"title": "Global Registry", "path": "/saas/modules"},
+                        {"title": "System Updates", "path": "/saas/updates"}
+                    ]
+                },
+                {
+                    "title": "Monetization",
+                    "icon": "CreditCard",
+                    "children": [
+                        {"title": "Pricing Plans", "path": "/saas/plans"},
+                        {"title": "SaaS Payments", "path": "/saas/payments"}
+                    ]
+                }
+            ])
+
+        # 2. Add items from ACTIVE modules
         active_modules = SystemModule.objects.all()
         for m in active_modules:
-            # Verify module exists in filesystem before trusting manifest
-            mod_path = ModuleManager.get_module_path(m.name)
-            if not mod_path:
-                continue
-                
             # Extract sidebar items from manifest
             mod_items = m.manifest.get('sidebar_items', [])
             for item in mod_items:
-                # Visibility check: Some items only show in SaaS, some only in Tenant
+                # Visibility check
                 if item.get('visibility') == 'saas' and not is_saas:
                     continue
                 if item.get('visibility') == 'tenant' and is_saas:
