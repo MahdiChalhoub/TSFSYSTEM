@@ -43,7 +43,7 @@ export default async function BrandDetailPage({ params }: { params: Promise<{ id
     if (!brand) notFound();
 
     return (
-        <div className="space-y-8 animate-in fade-in">
+        <div className="space-y-6 animate-in fade-in duration-500">
             {/* Header */}
             <div className="flex items-center gap-4">
                 <Link href="/inventory/brands" className="p-2 hover:bg-gray-100 rounded-full transition-colors">

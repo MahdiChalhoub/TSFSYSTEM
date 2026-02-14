@@ -9,7 +9,7 @@ export default async function FinanceDashboardPage() {
     const stats = await getFinancialDashboardStats(scope)
 
     return (
-        <div className="p-8 max-w-7xl mx-auto">
+        <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex justify-between items-center mb-10">
                 <div>
                     <h1 className="text-4xl font-bold text-stone-900 font-serif">Finance Overview</h1>

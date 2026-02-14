@@ -189,7 +189,7 @@ export default function OrganizationsPage() {
     }
 
     return (
-        <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 md:gap-4">
                 <div>
                     <div className="flex items-center gap-2 text-emerald-500 font-bold text-xs uppercase tracking-[0.2em] mb-2">

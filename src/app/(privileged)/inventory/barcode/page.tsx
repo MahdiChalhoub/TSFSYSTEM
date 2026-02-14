@@ -62,7 +62,7 @@ export default function BarcodeSettingsPage() {
     if (loading) return <div className="p-8 text-center text-gray-500">Loading settings...</div>;
 
     return (
-        <div className="max-w-2xl mx-auto p-6">
+        <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex items-center gap-3 mb-8">
                 <div className="bg-emerald-100 p-2 rounded-xl text-emerald-600">
                     <Barcode size={32} />

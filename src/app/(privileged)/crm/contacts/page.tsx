@@ -43,7 +43,7 @@ export default async function ContactsPage() {
     ]);
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC] p-8 lg:p-12">
+        <div className="space-y-6 animate-in fade-in duration-500">
             <div className="max-w-[1600px] mx-auto space-y-12">
                 {/* Enterprise Header */}
                 <div className="flex flex-col md:flex-row justify-between items-end gap-6">

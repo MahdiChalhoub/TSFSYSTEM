@@ -80,7 +80,7 @@ export default async function CategoriesPage() {
     ]);
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex justify-between items-center">
                 <div>
                     <div className="flex items-center gap-3 mb-2">

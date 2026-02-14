@@ -25,7 +25,7 @@ export default async function SaasMasterDashboard() {
     ];
 
     return (
-        <div className="space-y-6 md:space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="space-y-6 animate-in fade-in duration-500">
             {/* Header Section */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 md:gap-4">
                 <div className="space-y-2">

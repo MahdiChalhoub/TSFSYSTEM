@@ -6,7 +6,7 @@ export default async function OpeningBalancesListPage() {
     const entries = await getOpeningEntries()
 
     return (
-        <div className="p-8 max-w-5xl mx-auto">
+        <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex justify-between items-center mb-8">
                 <div>
                     <Link href="/finance/ledger" className="flex items-center gap-2 text-stone-500 hover:text-stone-900 transition-colors text-xs font-bold uppercase tracking-wider mb-2">

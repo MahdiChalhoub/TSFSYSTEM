@@ -41,7 +41,7 @@ export default async function CountriesPage() {
     ]);
 
     return (
-        <div className="animate-in fade-in duration-500 container mx-auto px-4 py-8">
+        <div className="space-y-6 animate-in fade-in duration-500">
             <CountryManager countries={countries} categories={categories} />
         </div>
     );

@@ -12,7 +12,7 @@ export default function DynamicModulePage() {
     // For now, we show a professional fallback that works for ALL modules instantly.
 
     return (
-        <div className="space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <div className="w-12 h-12 md:w-16 md:h-16 rounded-[1.5rem] md:rounded-[2rem] bg-gradient-to-br from-indigo-500 to-purple-700 flex items-center justify-center shadow-xl text-white shrink-0">
                     <Box size={24} className="md:w-8 md:h-8" />

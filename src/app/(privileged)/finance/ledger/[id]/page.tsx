@@ -15,7 +15,7 @@ export default async function ViewJournalEntryPage({ params }: { params: Promise
     const totalCredit = entry.lines.reduce((sum: number, l: any) => sum + Number(l.credit), 0)
 
     return (
-        <div className="p-8 max-w-4xl mx-auto">
+        <div className="space-y-6 animate-in fade-in duration-500">
             {/* Breadcrumbs & Actions */}
             <div className="flex justify-between items-center mb-8">
                 <Link href="/finance/ledger" className="flex items-center gap-2 text-stone-500 hover:text-stone-900 transition-colors text-sm font-medium">

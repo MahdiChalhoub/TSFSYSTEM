@@ -109,7 +109,7 @@ export default async function AdminLayout({
                         <TabNavigator />
 
                         {/* 3. The Page Content */}
-                        <main className="flex-1 overflow-auto relative">
+                        <main className="flex-1 overflow-auto relative p-6 md:p-8">
                             {children}
                         </main>
                     </div>

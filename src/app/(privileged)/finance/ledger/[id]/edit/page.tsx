@@ -26,7 +26,7 @@ export default async function EditJournalEntryPage({ params }: { params: Promise
     const fiscalYears = await getFiscalYears()
 
     return (
-        <div className="p-8 max-w-5xl mx-auto">
+        <div className="space-y-6 animate-in fade-in duration-500">
             <h1 className="text-3xl font-bold text-stone-900 font-serif mb-8">Edit Journal Voucher #{entry.id}</h1>
             <JournalEntryForm
                 accounts={JSON.parse(JSON.stringify(accounts))}

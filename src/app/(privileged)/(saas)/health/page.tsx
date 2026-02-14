@@ -14,7 +14,7 @@ export default function HealthPage() {
     }
 
     return (
-        <div className="p-8 space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-6 animate-in fade-in duration-500">
             <div>
                 <h2 className="text-3xl font-black text-gray-900 tracking-tight">Platform Health</h2>
                 <p className="text-gray-500 mt-2 font-medium">Monitor system status and performance metrics</p>

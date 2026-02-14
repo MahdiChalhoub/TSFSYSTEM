@@ -105,7 +105,7 @@ export default function ApprovalsPage() {
     }
 
     return (
-        <div className="p-6 space-y-8 max-w-7xl mx-auto">
+        <div className="space-y-6 animate-in fade-in duration-500">
             {/* Header Section */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-background to-muted/30 p-6 rounded-2xl border">
                 <div>

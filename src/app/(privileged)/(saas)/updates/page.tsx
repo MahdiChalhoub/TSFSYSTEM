@@ -90,7 +90,7 @@ export default function SystemUpdatesPage() {
     }
 
     return (
-        <div className="space-y-6 md:space-y-8 animate-in fade-in duration-700">
+        <div className="space-y-6 animate-in fade-in duration-500">
             <input
                 type="file"
                 ref={fileInputRef}

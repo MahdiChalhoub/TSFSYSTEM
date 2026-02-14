@@ -24,7 +24,7 @@ export default async function AttributesPage() {
     const cleanCategories = JSON.parse(JSON.stringify(categories));
 
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div className="space-y-6 animate-in fade-in duration-500">
             <AttributeManager attributes={cleanAttributes} categories={cleanCategories} />
         </div>
     );
