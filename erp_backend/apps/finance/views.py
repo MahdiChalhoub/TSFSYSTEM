@@ -267,10 +267,60 @@ class FiscalYearViewSet(TenantModelViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=True, methods=['post'])
+    def close(self, request, pk=None):
+        fiscal_year = self.get_object()
+        organization_id = get_current_tenant_id()
+        organization = Organization.objects.get(id=organization_id)
+        
+        try:
+            # 1. Validate all control accounts
+            LedgerService.validate_closure(organization, fiscal_year=fiscal_year)
+            
+            # 2. Ensure all periods are closed
+            unclosed_periods = fiscal_year.periods.filter(is_closed=False)
+            if unclosed_periods.exists():
+                return Response(
+                    {"error": f"Cannot close year. {unclosed_periods.count()} periods are still open."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            fiscal_year.is_closed = True
+            fiscal_year.save()
+            return Response({"status": "Fiscal Year Closed"})
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def lock(self, request, pk=None):
+        fiscal_year = self.get_object()
+        if not fiscal_year.is_closed:
+            return Response({"error": "Year must be closed before locking"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        fiscal_year.is_hard_locked = True
+        fiscal_year.save()
+        return Response({"status": "Fiscal Year Locked"})
+
 
 class FiscalPeriodViewSet(TenantModelViewSet):
     queryset = FiscalPeriod.objects.all()
     serializer_class = FiscalPeriodSerializer
+
+    @action(detail=True, methods=['post'])
+    def close(self, request, pk=None):
+        period = self.get_object()
+        organization_id = get_current_tenant_id()
+        organization = Organization.objects.get(id=organization_id)
+        
+        try:
+            # Validate control accounts
+            LedgerService.validate_closure(organization, fiscal_period=period)
+            
+            period.is_closed = True
+            period.save()
+            return Response({"status": "Period Closed"})
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class JournalEntryViewSet(TenantModelViewSet):

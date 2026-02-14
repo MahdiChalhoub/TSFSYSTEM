@@ -3,7 +3,7 @@ Finance Module URL Configuration
 Routes for all accounting, ledger, tax, and financial management endpoints.
 """
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
+from rest_framework.routers import SimpleRouter
 
 # ViewSets live in module-level views (canonical location)
 from apps.finance.views import (
@@ -13,7 +13,7 @@ from apps.finance.views import (
     TransactionSequenceViewSet
 )
 
-router = DefaultRouter()
+router = SimpleRouter()
 router.register(r'accounts', FinancialAccountViewSet)
 router.register(r'coa', ChartOfAccountViewSet)
 router.register(r'fiscal-years', FiscalYearViewSet)

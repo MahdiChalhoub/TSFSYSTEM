@@ -4,5 +4,27 @@
     "version": "1.0.0",
     "description": "Essential infrastructure, security, and tenant management services.",
     "dependencies": [],
-    "required": true
+    "required": true,
+    "sidebar_items": [
+        {
+            "title": "Dashboard",
+            "icon": "LayoutDashboard",
+            "path": "/dashboard"
+        },
+        {
+            "title": "System Settings",
+            "icon": "Settings",
+            "children": [
+                {
+                    "title": "Sites & Branches",
+                    "path": "/settings/sites"
+                },
+                {
+                    "title": "Billing & Subscription",
+                    "path": "/subscription",
+                    "icon": "CreditCard"
+                }
+            ]
+        }
+    ]
 }

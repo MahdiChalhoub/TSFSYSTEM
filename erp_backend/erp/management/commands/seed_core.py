@@ -1,9 +1,9 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from erp.models import (
-    Organization, Site, Role, Country, Unit, Warehouse,
-    FinancialAccount, ChartOfAccount, SystemSettings, Product, FiscalYear
+    Organization, Site, Role, Country
 )
+from erp.module_manager import ModuleManager
 import json
 from datetime import date
 from decimal import Decimal
@@ -39,6 +39,11 @@ class Command(BaseCommand):
             }
         )
         self.stdout.write(f"🏢 SaaS Root Organization Created: {saas_org.name} (Slug: saas)")
+
+        # 3. Synchronize Module Registry
+        self.stdout.write("📦 Synchronizing Global Module Registry...")
+        modules = ModuleManager.sync()
+        self.stdout.write(f"✅ Registered {len(modules)} modules from filesystem")
 
         # 3. Auto-Link Existing Superusers (The Fix)
         # If the user created a superuser manually, we find them and bind them to SaaS

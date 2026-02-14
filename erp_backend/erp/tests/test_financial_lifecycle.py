@@ -173,7 +173,7 @@ class FinancialModuleTests(APITestCase):
             organization=self.org,
             name="John Doe",
             type="CUSTOMER",
-            linked_account=receivable
+            linked_account_id=receivable.id
         )
         
         # 2. Create Loan
@@ -215,7 +215,7 @@ class FinancialModuleTests(APITestCase):
             organization=self.org,
             name="Vendor Inc",
             type="SUPPLIER",
-            linked_account=receivable
+            linked_account_id=receivable.id
         )
         
         # 2. Create Event (Partner Withdrawal)

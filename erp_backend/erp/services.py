@@ -136,7 +136,8 @@ class ConfigurationService:
             "automation": {"customerRoot": None, "supplierRoot": None, "payrollRoot": None},
             "fixedAssets": {"depreciationExpense": None, "accumulatedDepreciation": None},
             "suspense": {"reception": None},
-            "partners": {"capital": None, "loan": None, "withdrawal": None}
+            "partners": {"capital": None, "loan": None, "withdrawal": None},
+            "equity": {"capital": None, "draws": None}
         }
         stored = organization.settings.get('finance_posting_rules')
         if not stored:
