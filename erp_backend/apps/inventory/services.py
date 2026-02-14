@@ -369,3 +369,49 @@ class InventoryService:
                 "source_remaining": float(source_inv.quantity),
                 "destination_total": float(dest_inv.quantity),
             }
+
+    @staticmethod
+    def reconcile_with_finance(organization):
+        """
+        Quantum Audit: Verifies physical inventory valuation matches the GL balance.
+        """
+        from apps.inventory.models import Inventory
+        from erp.services import ConfigurationService
+        try:
+            from apps.finance.models import ChartOfAccount
+        except ImportError:
+            return {"status": "ERROR", "message": "Finance module required for reconciliation."}
+
+        # 1. Calculate Physical Valuation (Qty x AMC)
+        physical_valuation = Inventory.objects.filter(organization=organization).aggregate(
+            total=Sum(F('quantity') * F('product__cost_price'))
+        )['total'] or Decimal('0.00')
+
+        # 2. Fetch GL Inventory Account Balance
+        rules = ConfigurationService.get_posting_rules(organization)
+        inv_acc_id = rules.get('sales', {}).get('inventory')
+        
+        if not inv_acc_id:
+            return {"status": "CONFIG_MISSING", "message": "Inventory posting rule not configured."}
+            
+        inv_acc = ChartOfAccount.objects.get(id=inv_acc_id)
+        gl_balance = inv_acc.balance
+        
+        discrepancy = physical_valuation - gl_balance
+        
+        if abs(discrepancy) > Decimal('0.01'):
+            return {
+                "status": "DISCREPANCY",
+                "message": f"Inventory discrepancy found: {discrepancy}",
+                "physical_valuation": physical_valuation,
+                "gl_balance": gl_balance,
+                "discrepancy": discrepancy,
+                "timestamp": timezone.now()
+            }
+            
+        return {
+            "status": "MATCHED",
+            "message": "Physical inventory aligns with General Ledger.",
+            "valuation": physical_valuation,
+            "timestamp": timezone.now()
+        }

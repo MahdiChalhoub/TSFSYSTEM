@@ -4,6 +4,7 @@ Extracted from Kernel (erp/models.py) → Module Layer (apps/finance/models.py)
 All models retain their original db_table, so no database migration is needed.
 """
 from django.db import models
+from django.core.exceptions import ValidationError
 from decimal import Decimal
 from erp.models import TenantModel, Organization, Site, Country
 
@@ -111,6 +112,49 @@ class JournalEntry(TenantModel):
     posted_by = models.ForeignKey('erp.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='posted_journal_entries')
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+    
+    # Quantum Audit: Cryptographic Chaining
+    entry_hash = models.CharField(max_length=64, null=True, blank=True, db_index=True)
+    previous_hash = models.CharField(max_length=64, null=True, blank=True)
+
+    def calculate_hash(self):
+        """Calculates SHA-256 hash for this entry using metadata and lines."""
+        from apps.finance.cryptography import LedgerCryptography
+        lines_data = []
+        for line in self.lines.all():
+            lines_data.append({
+                "account_id": str(line.account_id),
+                "debit": str(line.debit),
+                "credit": str(line.credit)
+            })
+        
+        entry_meta = {
+            "id": self.id,
+            "organization_id": str(self.organization_id),
+            "transaction_date": self.transaction_date.isoformat() if self.transaction_date else None,
+            "reference": self.reference,
+            "lines": lines_data
+        }
+        return LedgerCryptography.calculate_entry_hash(entry_meta, self.previous_hash)
+
+    def save(self, *args, **kwargs):
+        # Quantum Audit: Immutability Guard
+        if self.pk:
+            original = JournalEntry.objects.get(pk=self.pk)
+            if original.status == 'POSTED' and self.status == 'POSTED':
+                # Allow only 'is_locked' or 'is_verified' updates by system if needed
+                # For now, block everything to be safe.
+                # If we need to update 'posted_at' or 'posted_by' during POSTING,
+                # the service layer should use .update() or we can add a bypass flag.
+                if not kwargs.get('force_audit_bypass', False):
+                    raise ValidationError("Immutable Ledger: 'POSTED' entries cannot be modified. Use reversals instead.")
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        # Quantum Audit: Deletion Guard
+        if self.status == 'POSTED':
+            raise ValidationError("Immutable Ledger: 'POSTED' entries cannot be deleted.")
+        super().delete(*args, **kwargs)
 
     class Meta:
         db_table = 'journalentry'

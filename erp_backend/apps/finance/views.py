@@ -23,8 +23,9 @@ from apps.finance.serializers import (
 )
 from apps.finance.services import (
     FinancialAccountService, LedgerService, SequenceService,
-    BarcodeService, LoanService, FinancialEventService
+    BarcodeService, LoanService, FinancialEventService, AuditVerificationService
 )
+from apps.inventory.services import InventoryService
 
 
 class FinancialAccountViewSet(TenantModelViewSet):
@@ -580,3 +581,38 @@ class ForensicAuditLogViewSet(TenantModelViewSet):
 
     def get_queryset(self):
         return super().get_queryset().order_by('-timestamp')
+
+
+class AuditVerificationViewSet(viewsets.ViewSet):
+    """
+    Quantum Audit: Dedicated ViewSet for ledger and inventory integrity verification.
+    """
+    def list(self, request):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+        
+        return Response({
+            "services": [
+                {"name": "Ledger Chain Verification", "endpoint": "/api/finance/audit/verify-ledger/"},
+                {"name": "Inventory-Finance Reconciliation", "endpoint": "/api/finance/audit/reconcile-inventory/"}
+            ]
+        })
+
+    @action(detail=False, methods=['get'], url_path='verify-ledger')
+    def verify_ledger(self, request):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+        
+        result = AuditVerificationService.verify_ledger_integrity(organization)
+        return Response(result)
+
+    @action(detail=False, methods=['get'], url_path='reconcile-inventory')
+    def reconcile_inventory(self, request):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+        
+        result = InventoryService.reconcile_with_finance(organization)
+        return Response(result)

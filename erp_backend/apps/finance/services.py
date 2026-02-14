@@ -118,6 +118,7 @@ class LedgerService:
 
     @staticmethod
     def post_journal_entry(entry):
+        from apps.finance.models import JournalEntry
         if entry.status == 'POSTED' and entry.posted_at: return
         with transaction.atomic():
             lines = entry.lines.select_related('account').all()
@@ -132,9 +133,34 @@ class LedgerService:
                     line.account.__class__.objects.filter(id=line.account_id).update(
                         balance=F('balance') + net
                     )
+
+            # Quantum Audit: Secure the cryptographic chain
+            # 1. Fetch the hash of the last POSTED entry in this organization
+            last_entry = JournalEntry.objects.filter(
+                organization=entry.organization,
+                status='POSTED'
+            ).exclude(id=entry.id).order_by('-posted_at', '-id').first()
+            
+            entry.previous_hash = last_entry.entry_hash if last_entry else "GENESIS"
+            
+            # 2. Transition status (required for hash calculation context)
             entry.status = 'POSTED'
             entry.posted_at = timezone.now()
-            entry.save()
+            
+            # 3. Calculate and seal the entry's unique SHA-256 signature
+            entry.entry_hash = entry.calculate_hash()
+            
+            # 4. Save with immutability bypass (since we are THE posting service)
+            entry.save(force_audit_bypass=True)
+
+            ForensicAuditService.log_mutation(
+                organization=entry.organization,
+                user=entry.posted_by,
+                model_name="JournalEntry",
+                object_id=entry.id,
+                change_type="POST",
+                payload={"reference": entry.reference, "hash": entry.entry_hash}
+            )
 
     @staticmethod
     def apply_coa_template(organization, template_key, reset=False):
@@ -1131,3 +1157,65 @@ class TaxService:
                 "purchases_ttc_internal": total_ttc,
                 "note": "Virtual Reclassification: Ledger=TTC, Report=HT+VAT"
             }
+
+
+class AuditVerificationService:
+    @staticmethod
+    def verify_ledger_integrity(organization):
+        """
+        Quantum Audit: Mathematically verifies the entire ledger chain for an organization.
+        """
+        from apps.finance.models import JournalEntry
+        from apps.finance.cryptography import LedgerCryptography
+        
+        entries = JournalEntry.objects.filter(
+            organization=organization,
+            status='POSTED'
+        ).order_by('posted_at', 'id')
+        
+        if not entries.exists():
+            return {"status": "EMPTY", "message": "Ledger is empty, integrity is trivial."}
+            
+        expected_prev_hash = "GENESIS"
+        issues = []
+        
+        for entry in entries:
+            # 1. Chain Link Verification
+            if entry.previous_hash != expected_prev_hash:
+                issues.append({
+                    "entry_id": entry.id,
+                    "ref": entry.reference,
+                    "issue": "Chain break: Previous hash mismatch",
+                    "expected": expected_prev_hash,
+                    "found": entry.previous_hash
+                })
+            
+            # 2. Content Integrity Verification
+            current_hash = entry.calculate_hash()
+            if entry.entry_hash != current_hash:
+                issues.append({
+                    "entry_id": entry.id,
+                    "ref": entry.reference,
+                    "issue": "Content tampering: Stored hash does not match re-calculated hash",
+                    "expected": entry.entry_hash,
+                    "found": current_hash
+                })
+            
+            # Update expected for next link
+            expected_prev_hash = entry.entry_hash
+            
+        if issues:
+            return {
+                "status": "COMPROMISED",
+                "message": f"Ledger integrity failed. {len(issues)} discrepancy(s) found.",
+                "issues": issues,
+                "timestamp": timezone.now()
+            }
+            
+        return {
+            "status": "VERIFIED",
+            "message": "Quantum Audit complete: All transaction hashes and chain links are valid.",
+            "entry_count": entries.count(),
+            "last_hash": expected_prev_hash,
+            "timestamp": timezone.now()
+        }
