@@ -21,7 +21,7 @@ export async function createCategory(prevState: CategoryState, formData: FormDat
     }
 
     try {
-        await erpFetch('categories/', {
+        const result = await erpFetch('categories/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -32,14 +32,19 @@ export async function createCategory(prevState: CategoryState, formData: FormDat
             })
         });
 
+        // erpFetch may return error object instead of throwing
+        if (result?.error || result?.detail) {
+            const errMsg = result.error || result.detail || 'Unknown backend error';
+            console.error('[createCategory] Backend error:', errMsg);
+            return { message: typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg) };
+        }
+
         revalidatePath('/inventory/categories');
         return { message: 'success' };
     } catch (e: any) {
-        // Map Django error to frontend friendly
-        if (e.message?.includes("code")) { // Simple heuristic
-            return { message: 'Category code must be unique' };
-        }
-        return { message: 'Failed to create category' };
+        console.error('[createCategory] Exception:', e);
+        const detail = e?.message || 'Failed to create category';
+        return { message: detail };
     }
 }
 
