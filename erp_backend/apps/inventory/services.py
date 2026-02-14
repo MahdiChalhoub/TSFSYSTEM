@@ -210,3 +210,78 @@ class InventoryService:
             )
 
             return current_amc
+
+    @staticmethod
+    def transfer_stock(organization, product, source_warehouse, destination_warehouse, quantity, reference=None):
+        """
+        Transfers stock between warehouses within the same organization.
+        Creates paired TRANSFER movements for full audit trail.
+        """
+        from apps.inventory.models import Inventory, InventoryMovement
+
+        qty = Decimal(str(quantity))
+        if qty <= Decimal('0'):
+            raise ValidationError("Transfer quantity must be positive.")
+
+        if source_warehouse.id == destination_warehouse.id:
+            raise ValidationError("Source and destination warehouse must be different.")
+
+        if not reference:
+            reference = f"TRF-{uuid.uuid4().hex[:8].upper()}"
+
+        current_cost = Decimal(str(product.cost_price))
+
+        with transaction.atomic():
+            # Deduct from source
+            source_inv = Inventory.objects.filter(
+                organization=organization,
+                warehouse=source_warehouse,
+                product=product,
+            ).first()
+
+            if not source_inv or source_inv.quantity < qty:
+                raise ValidationError(
+                    f"Insufficient stock for {product.name} in {source_warehouse.name} "
+                    f"(available: {source_inv.quantity if source_inv else 0})"
+                )
+
+            source_inv.quantity = Decimal(str(source_inv.quantity)) - qty
+            source_inv.save()
+
+            # Add to destination
+            dest_inv, _ = Inventory.objects.get_or_create(
+                organization=organization,
+                warehouse=destination_warehouse,
+                product=product,
+            )
+            dest_inv.quantity = Decimal(str(dest_inv.quantity)) + qty
+            dest_inv.save()
+
+            # Create paired movements
+            InventoryMovement.objects.create(
+                organization=organization,
+                product=product,
+                warehouse=source_warehouse,
+                type='TRANSFER',
+                quantity=-qty,
+                cost_price=current_cost,
+                cost_price_ht=Decimal(str(product.cost_price_ht)),
+                reference=reference,
+                reason=f"Transfer OUT to {destination_warehouse.name}",
+            )
+            InventoryMovement.objects.create(
+                organization=organization,
+                product=product,
+                warehouse=destination_warehouse,
+                type='TRANSFER',
+                quantity=qty,
+                cost_price=current_cost,
+                cost_price_ht=Decimal(str(product.cost_price_ht)),
+                reference=reference,
+                reason=f"Transfer IN from {source_warehouse.name}",
+            )
+
+            return {
+                "source_remaining": float(source_inv.quantity),
+                "destination_total": float(dest_inv.quantity),
+            }

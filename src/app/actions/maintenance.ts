@@ -48,7 +48,11 @@ export async function moveProductsGeneric(
     try {
         await erpFetch('products/bulk_move/', {
             method: 'POST',
-            body: JSON.stringify({ productIds, targetId, type }),
+            body: JSON.stringify({
+                productIds,  // backend reads request.data.get('productIds')
+                targetId,    // backend reads request.data.get('targetId')
+                type
+            }),
             headers: { 'Content-Type': 'application/json' }
         });
 
