@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Building2, UserPlus, LogIn, ArrowRight, ShieldCheck, Zap, Globe, Sparkles, AlertCircle, CheckCircle2, RotateCcw } from "lucide-react"
 import { toast } from "sonner"
-import { PLATFORM_CONFIG } from "@/lib/saas_config"
+import { PLATFORM_CONFIG } from "@/lib/branding"
 import { checkWorkspace } from "@/app/actions/onboarding"
 import PricingSection from "@/components/landing/PricingSection"
 

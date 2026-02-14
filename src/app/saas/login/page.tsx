@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Loader2, Command } from "lucide-react";
-import { PLATFORM_CONFIG } from "@/lib/saas_config";
+import { PLATFORM_CONFIG } from "@/lib/branding";
 
 const initialState: { error: any; success?: boolean } = {
     error: {},

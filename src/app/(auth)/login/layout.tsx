@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { PLATFORM_CONFIG } from "@/lib/saas_config";
+import { PLATFORM_CONFIG } from "@/lib/branding";
 
 export const metadata: Metadata = {
     title: `${PLATFORM_CONFIG.name} | Access Gateway`,
