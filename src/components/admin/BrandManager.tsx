@@ -60,7 +60,7 @@ export function BrandManager({ brands, countries, categories }: BrandManagerProp
                 </div>
                 <div className="flex gap-3">
                     <Link
-                        href="/admin/inventory/maintenance?tab=brand"
+                        href="/inventory/maintenance?tab=brand"
                         className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-emerald-600 px-4 py-3 rounded-xl font-semibold shadow-sm transition-all flex items-center gap-2"
                     >
                         <Edit2 size={20} />
@@ -197,14 +197,14 @@ function BrandCard({ brand, onEdit }: any) {
                     </div>
                     <div className="flex items-center gap-1 text-xs font-semibold bg-blue-50 text-blue-600 px-2 py-1 rounded-lg">
                         <Award size={12} />
-                        {brand._count?.products || 0} products
+                        {brand.product_count || 0} products
                     </div>
                 </div>
 
                 <h3 className="text-lg font-bold text-gray-900 mb-1 hover:text-emerald-600 transition-colors">
-                    <Link href={`/admin/inventory/brands/${brand.id}`} className="block">
+                    <Link href={`/inventory/brands/${brand.id}`} className="block">
                         {brand.name}
-                        {brand.shortName && <span className="ml-2 text-sm text-gray-400 font-normal">({brand.shortName})</span>}
+                        {brand.short_name && <span className="ml-2 text-sm text-gray-400 font-normal">({brand.short_name})</span>}
                     </Link>
                 </h3>
 
@@ -275,7 +275,7 @@ function BrandRow({ brand, onEdit }: any) {
                     <div>
                         <div className="flex items-center gap-2">
                             <h3 className="font-bold text-gray-900 text-lg">{brand.name}</h3>
-                            <span className="text-xs font-mono text-gray-400">({brand._count?.products || 0})</span>
+                            <span className="text-xs font-mono text-gray-400">({brand.product_count || 0})</span>
                         </div>
                         <div className="flex gap-2">
                             {brand.countries?.map((c: any) => <span key={c.id} className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">{c.code}</span>)}

@@ -30,8 +30,8 @@ function buildCategoryTree(flatCategories: any[]): CategoryNode[] {
 
     flatCategories.forEach(cat => {
         const node = categoryMap.get(cat.id)!;
-        if (cat.parentId && categoryMap.has(cat.parentId)) {
-            categoryMap.get(cat.parentId)!.children!.push(node);
+        if (cat.parent && categoryMap.has(cat.parent)) {
+            categoryMap.get(cat.parent)!.children!.push(node);
         } else {
             roots.push(node);
         }
