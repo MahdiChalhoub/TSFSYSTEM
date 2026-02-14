@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
       bodySizeLimit: '2mb',
-      allowedOrigins: ['tsf.ci', 'www.tsf.ci', 'localhost:3000'],
+      allowedOrigins: ['tsf.ci', '*.tsf.ci', 'localhost:3000'],
     },
   },
 
