@@ -178,9 +178,17 @@ class ProductSerializer(serializers.ModelSerializer):
 
 
 class ProductCreateSerializer(serializers.ModelSerializer):
+    """Used for validation in create_complex — explicit field list."""
     class Meta:
         model = Product
-        fields = '__all__'
+        fields = [
+            'sku', 'barcode', 'name', 'description',
+            'category', 'brand', 'unit', 'country', 'parfum',
+            'product_group', 'size', 'size_unit',
+            'cost_price', 'cost_price_ht', 'cost_price_ttc',
+            'selling_price_ht', 'selling_price_ttc', 'tva_rate',
+            'min_stock_level', 'is_expiry_tracked',
+        ]
         read_only_fields = ['organization']
 
 

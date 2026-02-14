@@ -18,8 +18,6 @@ export async function createWarehouse(prevState: WarehouseState, formData: FormD
         code: (formData.get('code') as string)?.toUpperCase(),
         type: formData.get('type') as string,
         can_sell: formData.get('canSell') === 'on',
-        address: formData.get('address') as string,
-        city: formData.get('city') as string,
         is_active: formData.get('isActive') === 'on'
     }
 
@@ -46,8 +44,6 @@ export async function updateWarehouse(id: number, prevState: WarehouseState, for
         code: (formData.get('code') as string)?.toUpperCase(),
         type: formData.get('type') as string,
         can_sell: formData.get('canSell') === 'on',
-        address: formData.get('address') as string,
-        city: formData.get('city') as string,
         is_active: formData.get('isActive') === 'on'
     }
 

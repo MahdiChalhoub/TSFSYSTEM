@@ -3,6 +3,7 @@ Inventory Module Models
 Extracted from Kernel (erp/models.py) → Module Layer (apps/inventory/models.py)
 """
 from django.db import models
+from django.db.models import Q, UniqueConstraint
 from decimal import Decimal
 from erp.models import TenantModel, Organization, Site, Country
 
@@ -126,7 +127,14 @@ class Product(TenantModel):
 
     class Meta:
         db_table = 'product'
-        unique_together = (('sku', 'organization'), ('barcode', 'organization'))
+        constraints = [
+            UniqueConstraint(fields=['sku', 'organization'], name='unique_product_sku_per_org'),
+            UniqueConstraint(
+                fields=['barcode', 'organization'],
+                name='unique_product_barcode_per_org',
+                condition=Q(barcode__isnull=False),
+            ),
+        ]
 
     def __str__(self):
         return f"{self.sku} - {self.name}"
@@ -146,6 +154,7 @@ class Warehouse(TenantModel):
 
     class Meta:
         db_table = 'warehouse'
+        unique_together = ('code', 'site', 'organization')
 
     def __str__(self):
         return self.name
