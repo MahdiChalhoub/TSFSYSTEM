@@ -6,7 +6,7 @@ import { ChevronRight } from 'lucide-react';
 type Category = {
     id: number;
     name: string;
-    parentId: number | null;
+    parent: number | null;
 };
 
 type CategoryCascaderProps = {
@@ -27,7 +27,7 @@ export function CategoryCascader({ allCategories, selectedId, onSelect, excludeI
 
         allCategories.forEach(cat => {
             catMap.set(cat.id, cat);
-            const pId = cat.parentId ? cat.parentId : 'root';
+            const pId = cat.parent ? cat.parent : 'root';
             if (!childMap.has(pId)) {
                 childMap.set(pId, []);
             }
@@ -46,7 +46,7 @@ export function CategoryCascader({ allCategories, selectedId, onSelect, excludeI
         while (currentId) {
             path.unshift(currentId);
             const cat = categoryMap.get(currentId);
-            currentId = cat?.parentId;
+            currentId = cat?.parent;
         }
         return path;
     };

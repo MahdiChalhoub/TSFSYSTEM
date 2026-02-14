@@ -31,7 +31,7 @@ function buildCategoryTree(flatCategories: any[]): CategoryNode[] {
         categoryMap.set(cat.id, {
             id: cat.id,
             name: cat.name,
-            parentId: cat.parentId,
+            parentId: cat.parent,
             code: cat.code,
             children: []
         });
@@ -40,10 +40,10 @@ function buildCategoryTree(flatCategories: any[]): CategoryNode[] {
     // Second pass: Build tree structure
     flatCategories.forEach(cat => {
         const node = categoryMap.get(cat.id)!;
-        if (cat.parentId === null) {
+        if (cat.parent === null || cat.parent === undefined) {
             roots.push(node);
         } else {
-            const parent = categoryMap.get(cat.parentId);
+            const parent = categoryMap.get(cat.parent);
             if (parent) {
                 parent.children!.push(node);
             }
@@ -119,7 +119,7 @@ export function AttributeFormModal({ isOpen, onClose, attribute, categories }: A
                             <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Short Code</label>
                             <input
                                 name="shortName"
-                                defaultValue={attribute?.shortName || ''}
+                                defaultValue={attribute?.short_name || ''}
                                 placeholder="e.g. VAN"
                                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 outline-none transition-all"
                             />
