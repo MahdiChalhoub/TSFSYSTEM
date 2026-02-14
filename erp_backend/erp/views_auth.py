@@ -92,11 +92,36 @@ def register_business_view(request):
                 slug=slug
             )
 
-            # Update optional/extra org fields
+            # Update org fields from registration form
             org.country = data.get('country', '')
             org.city = data.get('city', '')
             org.address = data.get('address', '')
-            org.save(update_fields=['country', 'city', 'address'])
+            org.state = data.get('state', '')
+            org.zip_code = data.get('zip_code', '')
+            org.phone = data.get('phone', '')
+            org.business_email = data.get('email', '')
+            org.website = data.get('website', '')
+            org.timezone = data.get('timezone', 'UTC')
+
+            # Set Industry Vector (BusinessType)
+            bt_id = data.get('business_type_id')
+            if bt_id:
+                from erp.models import BusinessType
+                try:
+                    org.business_type = BusinessType.objects.get(pk=bt_id)
+                except BusinessType.DoesNotExist:
+                    pass
+
+            # Set Monetary Standard (Currency)
+            cur_id = data.get('currency_id')
+            if cur_id:
+                from erp.models import GlobalCurrency
+                try:
+                    org.base_currency = GlobalCurrency.objects.get(pk=cur_id)
+                except GlobalCurrency.DoesNotExist:
+                    pass
+
+            org.save()
 
             # ── 2. Create SaaSClient (account owner) ──
             client, _ = SaaSClient.objects.get_or_create(
@@ -143,8 +168,10 @@ def register_business_view(request):
         logger.info(f"✅ Business registered: '{data['business_name']}' [{slug}] by {data['admin_username']}")
 
         token, _ = Token.objects.get_or_create(user=admin_user)
+        login_url = f"/{slug}/login"
         return Response({
             "message": f"Workspace '{slug}' created successfully!",
+            "login_url": login_url,
             "token": token.key,
             "user": UserSerializer(admin_user).data,
             "organization": OrganizationSerializer(org).data
