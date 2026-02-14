@@ -252,12 +252,32 @@ class SettingsViewSet(viewsets.ViewSet):
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def health_check(request):
+    from erp.latency_middleware import LatencyStore
+    store = LatencyStore()
+    latency = store.get_stats()
+
     return Response({
         "status": "online",
         "service": "TSF ERP Core (Django)",
         "database": "PostgreSQL",
         "tenant_context": request.headers.get('X-Tenant-Slug', 'None'),
-        "organization_id": get_current_tenant_id()
+        "organization_id": get_current_tenant_id(),
+        "latency": {
+            "avg_ms": latency['avg_ms'],
+            "p50_ms": latency['p50_ms'],
+            "p95_ms": latency['p95_ms'],
+            "p99_ms": latency['p99_ms'],
+            "max_ms": latency['max_ms'],
+            "min_ms": latency.get('min_ms', 0),
+        },
+        "traffic": {
+            "total_requests": latency['total_requests'],
+            "tracked_window": latency['tracked_window'],
+            "requests_last_5min": latency.get('requests_last_5min', 0),
+            "status_breakdown": latency.get('status_breakdown', {}),
+        },
+        "slow_endpoints": latency.get('slow_endpoints', []),
+        "uptime_seconds": latency.get('uptime_seconds', 0),
     })
 
 

@@ -437,6 +437,7 @@ class PlanAddon(models.Model):
         ('products', 'Extra Products'),
         ('invoices', 'Extra Invoices/Month'),
         ('customers', 'Extra Customers'),
+        ('encryption', 'AES-256 Encryption'),
     ]
     name = models.CharField(max_length=255)
     addon_type = models.CharField(max_length=20, choices=ADDON_TYPES)
