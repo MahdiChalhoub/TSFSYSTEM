@@ -1,12 +1,24 @@
-import { headers } from 'next/headers';
-// import { prisma } from './db'; // Prisma usage removed
+// Don't import at top level - causes build failure in client components
+// import { headers } from 'next/headers';
 
 // Use 127.0.0.1 to avoid IPv6 resolution issues with localhost on Windows/Node 18+
 const DJANGO_URL = process.env.DJANGO_URL || 'http://127.0.0.1:8000';
 
 export async function getTenantContext() {
-    const headerList = await headers();
-    const host = headerList.get('host') || 'localhost:3000';
+    let host = '';
+
+    if (typeof window !== 'undefined') {
+        host = window.location.host;
+    } else {
+        try {
+            const { headers } = await import('next/headers');
+            const headerList = await headers();
+            host = headerList.get('host') || 'localhost:3000';
+        } catch (e) {
+            host = 'localhost:3000';
+        }
+    }
+
     console.log(`[DEBUG] getTenantContext Host: ${host}`);
 
     // Precise Hostname extraction (removes port)
