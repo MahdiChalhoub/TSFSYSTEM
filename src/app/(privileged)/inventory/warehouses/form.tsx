@@ -77,33 +77,16 @@ export default function WarehouseModal({
                                 <p className="text-[10px] text-emerald-700">Can items be sold directly from this location?</p>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" name="canSell" defaultChecked={warehouse?.canSell} className="sr-only peer" />
+                                <input type="checkbox" name="canSell" defaultChecked={warehouse?.can_sell} className="sr-only peer" />
                                 <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
                             </label>
                         </div>
                     </div>
 
-                    <div className="space-y-3">
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-1">Address</label>
-                            <input
-                                name="address"
-                                defaultValue={warehouse?.address}
-                                className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-1">City</label>
-                            <input
-                                name="city"
-                                defaultValue={warehouse?.city}
-                                className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
-                            />
-                        </div>
-                    </div>
+
 
                     <div className="flex items-center gap-2">
-                        <input type="checkbox" name="isActive" defaultChecked={warehouse?.isActive !== false} id="isActive" className="rounded-md border-gray-300 text-emerald-600 focus:ring-emerald-500" />
+                        <input type="checkbox" name="isActive" defaultChecked={warehouse?.is_active !== false} id="isActive" className="rounded-md border-gray-300 text-emerald-600 focus:ring-emerald-500" />
                         <label htmlFor="isActive" className="text-sm font-medium text-gray-700">Active and available for stock movements</label>
                     </div>
 
