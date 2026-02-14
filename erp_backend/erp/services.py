@@ -39,7 +39,7 @@ class ProvisioningService:
     """
     
     @staticmethod
-    def provision_organization(name, slug):
+    def provision_organization(name, slug, business_type_id=None, base_currency_id=None):
         """
         Creates a new organization with kernel infrastructure,
         then dispatches events for module-level setup.
@@ -52,7 +52,12 @@ class ProvisioningService:
             # ── KERNEL OBJECTS (always created, no module dependency) ──
             
             # 1. Organization
-            org = Organization.objects.create(name=name, slug=slug)
+            org = Organization.objects.create(
+                name=name, 
+                slug=slug,
+                business_type_id=business_type_id,
+                base_currency_id=base_currency_id
+            )
             
             # 2. Main Site
             site = Site.objects.create(
@@ -87,6 +92,8 @@ class ProvisioningService:
             'org_id': str(org.id),
             'org_name': name,
             'org_slug': slug,
+            'business_type_id': business_type_id,
+            'base_currency_id': base_currency_id,
             'site_id': str(site.id),
         }
         

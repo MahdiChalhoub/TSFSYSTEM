@@ -301,6 +301,8 @@ class OrganizationViewSet(viewsets.ModelViewSet):
         
         name = request.data.get('name', '').strip()
         slug = request.data.get('slug', '').strip().lower()
+        business_type_id = request.data.get('business_type')
+        base_currency_id = request.data.get('base_currency')
         
         if not name or not slug:
             return Response({"error": "Business name and slug are required."}, status=status.HTTP_400_BAD_REQUEST)
@@ -309,11 +311,16 @@ class OrganizationViewSet(viewsets.ModelViewSet):
             return Response({"error": f"Slug '{slug}' is already taken."}, status=status.HTTP_400_BAD_REQUEST)
         
         try:
-            org = ProvisioningService.provision_organization(name=name, slug=slug)
+            org = ProvisioningService.provision_organization(
+                name=name, 
+                slug=slug, 
+                business_type_id=business_type_id,
+                base_currency_id=base_currency_id
+            )
             
             # Update optional fields after provisioning
             extra_fields = {}
-            for field in ['business_email', 'phone', 'country', 'timezone', 'address', 'city']:
+            for field in ['business_email', 'phone', 'country', 'timezone', 'address', 'city', 'website']:
                 val = request.data.get(field, '').strip()
                 if val:
                     extra_fields[field] = val

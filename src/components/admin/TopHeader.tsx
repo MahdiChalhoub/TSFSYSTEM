@@ -22,6 +22,32 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: { si
                 {/* Switchers - Handle visibility based on screen size */}
                 <div className="flex items-center gap-2 flex-1 md:flex-none">
                     <TenantSwitcher organizations={organizations} forcedSlug={currentSlug} user={user} />
+
+                    {/* Currency & Industry Display */}
+                    {currentSlug !== 'saas' && (
+                        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gray-100/50 rounded-xl border border-gray-200/50">
+                            {(() => {
+                                const activeOrg = organizations.find((o: any) => o.slug === currentSlug);
+                                return (
+                                    <>
+                                        {activeOrg?.currency_code && (
+                                            <div className="flex items-center gap-1.5 pr-2 border-r border-gray-200">
+                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">Currency</span>
+                                                <span className="text-xs font-bold text-emerald-600">{activeOrg.currency_code} ({activeOrg.currency_symbol})</span>
+                                            </div>
+                                        )}
+                                        {activeOrg?.business_type_name && (
+                                            <div className="flex items-center gap-1.5 pl-1">
+                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">Vector</span>
+                                                <span className="text-xs font-bold text-gray-600 truncate max-w-[100px]">{activeOrg.business_type_name}</span>
+                                            </div>
+                                        )}
+                                    </>
+                                );
+                            })()}
+                        </div>
+                    )}
+
                     <div className="h-8 w-px bg-gray-200/60 hidden xl:block mx-1"></div>
                     <div className="hidden md:block">
                         <SiteSwitcher sites={sites} />
