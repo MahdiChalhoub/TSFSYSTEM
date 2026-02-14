@@ -123,11 +123,11 @@ import os
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'tsf_db',
-        'USER': 'postgres',
-        'PASSWORD': 'password',
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
+        'NAME': os.getenv('DB_NAME', 'tsf_db'),
+        'USER': os.getenv('DB_USER', 'postgres'),
+        'PASSWORD': os.getenv('DB_PASSWORD', 'postgres'),
+        'HOST': os.getenv('DB_HOST', '127.0.0.1'),
+        'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
 
@@ -190,6 +190,8 @@ AUTHENTICATION_BACKENDS = [
     'erp.backends.TenantAuthBackend',
     'django.contrib.auth.backends.ModelBackend', # Keep default for admin panel / fallback
 ]
+
+AUTH_USER_MODEL = 'erp.User'
 
 import sys
 # Local dev hacks to bypass model clashes and migration history issues
