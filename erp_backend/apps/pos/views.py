@@ -30,6 +30,7 @@ class POSViewSet(viewsets.ViewSet):
             warehouse_id = request.data.get('warehouse_id')
             payment_account_id = request.data.get('payment_account_id')
             items = request.data.get('items')
+            scope = request.data.get('scope', 'OFFICIAL')
             user = request.user
             if user.is_anonymous:
                 from erp.models import User
@@ -37,7 +38,7 @@ class POSViewSet(viewsets.ViewSet):
             warehouse = Warehouse.objects.get(id=warehouse_id, organization=organization)
             order = POSService.checkout(
                 organization=organization, user=user, warehouse=warehouse,
-                payment_account_id=payment_account_id, items=items
+                payment_account_id=payment_account_id, items=items, scope=scope
             )
             return Response({
                 "message": "Checkout successful",
