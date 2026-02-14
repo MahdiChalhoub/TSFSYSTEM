@@ -5,8 +5,17 @@ from rest_framework import serializers
 from .models import (
     ChartOfAccount, FinancialAccount, FiscalYear, FiscalPeriod,
     JournalEntry, JournalEntryLine, Transaction, TransactionSequence,
-    BarcodeSettings, Loan, LoanInstallment, FinancialEvent
+    BarcodeSettings, Loan, LoanInstallment, FinancialEvent, ForensicAuditLog
 )
+
+
+class ForensicAuditLogSerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+    actor_name = serializers.ReadOnlyField(source='actor.username')
+
+    class Meta:
+        model = ForensicAuditLog
+        fields = '__all__'
 
 
 class ChartOfAccountSerializer(serializers.ModelSerializer):

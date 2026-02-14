@@ -10,7 +10,7 @@ from apps.finance.views import (
     FinancialAccountViewSet, ChartOfAccountViewSet,
     FiscalYearViewSet, FiscalPeriodViewSet, JournalEntryViewSet,
     BarcodeSettingsViewSet, LoanViewSet, FinancialEventViewSet,
-    TransactionSequenceViewSet
+    TransactionSequenceViewSet, ForensicAuditLogViewSet
 )
 
 router = SimpleRouter()
@@ -23,6 +23,7 @@ router.register(r'settings/barcode', BarcodeSettingsViewSet, basename='barcode-s
 router.register(r'loans', LoanViewSet)
 router.register(r'financial-events', FinancialEventViewSet)
 router.register(r'sequences', TransactionSequenceViewSet)
+router.register(r'audit-logs', ForensicAuditLogViewSet, basename='audit-log')
 
 urlpatterns = [
     path('', include(router.urls)),

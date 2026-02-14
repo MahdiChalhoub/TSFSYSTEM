@@ -19,45 +19,64 @@ class InventoryService:
         return ht * (Decimal('1') + rate)
 
     @staticmethod
-    def receive_stock(organization, product, warehouse, quantity, cost_price_ht, is_tax_recoverable=True, reference=None):
+    def receive_stock(organization, product, warehouse, quantity, cost_price_ht, is_tax_recoverable=True, reference=None, user=None):
         from apps.inventory.models import Inventory, InventoryMovement
+        from apps.finance.services import ForensicAuditService
+        
         if not reference: reference = f"REC-{uuid.uuid4().hex[:8].upper()}"
         inbound_qty = Decimal(str(quantity))
         effective_cost = InventoryService.calculate_effective_cost(cost_price_ht, product.tva_rate, is_tax_recoverable)
         inbound_value = inbound_qty * effective_cost
+        
         with transaction.atomic():
+            # Professional Audit: Lock product for AMC calculation integrity
+            from apps.inventory.models import Product
+            product = Product.objects.select_for_update().get(id=product.id)
+            
             agg = Inventory.objects.filter(organization=organization, product=product).aggregate(total=Sum('quantity'))['total']
             current_total_qty = Decimal(str(agg or '0'))
             current_avg_cost = Decimal(str(product.cost_price))
             current_total_value = current_total_qty * current_avg_cost
             new_total_qty = current_total_qty + inbound_qty
+            
             if new_total_qty > Decimal('0'): new_amc = (current_total_value + inbound_value) / new_total_qty
             else: new_amc = effective_cost
+            
             product.cost_price = new_amc
             product.cost_price_ht = Decimal(str(cost_price_ht))
             product.cost_price_ttc = Decimal(str(cost_price_ht)) * (Decimal('1') + Decimal(str(product.tva_rate)))
             product.save()
+            
             inventory, _ = Inventory.objects.get_or_create(organization=organization, warehouse=warehouse, product=product)
             inventory.quantity = Decimal(str(inventory.quantity)) + inbound_qty
             inventory.save()
+            
             InventoryMovement.objects.create(organization=organization, product=product, warehouse=warehouse, type='IN', quantity=inbound_qty, cost_price=effective_cost, reference=reference)
             
             # Cross-module: create journal entry for stock reception
-            # Gated — inventory works even without finance module
             from erp.services import ConfigurationService
             rules = ConfigurationService.get_posting_rules(organization)
             inv_acc = rules.get('sales', {}).get('inventory')
             susp_acc = rules.get('suspense', {}).get('reception')
+            
             if inv_acc and susp_acc:
                 try:
                     from apps.finance.services import LedgerService
-                    LedgerService.create_journal_entry(organization=organization, transaction_date=timezone.now(), description=f"Stock Reception: {product.name}", reference=reference, status='POSTED', site_id=warehouse.site_id, lines=[
+                    LedgerService.create_journal_entry(organization=organization, transaction_date=timezone.now(), description=f"Stock Reception: {product.name}", reference=reference, status='POSTED', site_id=warehouse.site_id, user=user, lines=[
                         {"account_id": inv_acc, "debit": inbound_value, "credit": Decimal('0')},
                         {"account_id": susp_acc, "debit": Decimal('0'), "credit": inbound_value}
                     ])
                 except ImportError:
-                    import logging
-                    logging.getLogger(__name__).warning(f"Finance module unavailable — journal entry skipped for {reference}")
+                    logger.warning(f"Finance module unavailable — journal entry skipped for {reference}")
+
+            ForensicAuditService.log_mutation(
+                organization=organization,
+                user=user,
+                model_name="StockReception",
+                object_id=product.id,
+                change_type="CREATE",
+                payload={"qty": str(inbound_qty), "cost": str(effective_cost), "ref": reference}
+            )
             return inventory
 
     @staticmethod
@@ -132,13 +151,9 @@ class InventoryService:
         }
 
     @staticmethod
-    def adjust_stock(organization, product, warehouse, quantity, reason=None, reference=None):
-        """
-        Performs a manual stock adjustment (gain or loss).
-        Positive quantity = gain, negative = loss.
-        Creates an ADJUSTMENT movement record for audit trail.
-        """
+    def adjust_stock(organization, product, warehouse, quantity, reason=None, reference=None, user=None):
         from apps.inventory.models import Inventory, InventoryMovement
+        from apps.finance.services import ForensicAuditService
 
         adj_qty = Decimal(str(quantity))
         if adj_qty == Decimal('0'):
@@ -148,6 +163,10 @@ class InventoryService:
             reference = f"ADJ-{uuid.uuid4().hex[:8].upper()}"
 
         with transaction.atomic():
+            # Professional Audit: Lock product for cost basis integrity
+            from apps.inventory.models import Product
+            product = Product.objects.select_for_update().get(id=product.id)
+            
             inventory, _ = Inventory.objects.get_or_create(
                 organization=organization,
                 warehouse=warehouse,
@@ -164,29 +183,74 @@ class InventoryService:
             inventory.quantity = new_quantity
             inventory.save()
 
+            cost_basis = Decimal(str(product.cost_price))
+            adj_value = abs(adj_qty * cost_basis)
+
             InventoryMovement.objects.create(
                 organization=organization,
                 product=product,
                 warehouse=warehouse,
                 type='ADJUSTMENT',
                 quantity=adj_qty,
-                cost_price=Decimal(str(product.cost_price)),
+                cost_price=cost_basis,
                 cost_price_ht=Decimal(str(product.cost_price_ht)),
                 reference=reference,
                 reason=reason or '',
+            )
+            
+            # Cross-module: Financial Sync
+            from erp.services import ConfigurationService
+            rules = ConfigurationService.get_posting_rules(organization)
+            inv_acc = rules.get('sales', {}).get('inventory')
+            adj_acc = rules.get('inventory', {}).get('adjustment')
+            
+            if inv_acc and adj_acc:
+                try:
+                    from apps.finance.services import LedgerService
+                    desc = f"Stock Adjustment ({'Gain' if adj_qty > 0 else 'Loss'}): {product.name}"
+                    if adj_qty > 0:
+                        lines = [
+                            {"account_id": inv_acc, "debit": adj_value, "credit": Decimal('0')},
+                            {"account_id": adj_acc, "debit": Decimal('0'), "credit": adj_value}
+                        ]
+                    else:
+                        lines = [
+                            {"account_id": adj_acc, "debit": adj_value, "credit": Decimal('0')},
+                            {"account_id": inv_acc, "debit": Decimal('0'), "credit": adj_value}
+                        ]
+                    
+                    LedgerService.create_journal_entry(
+                        organization=organization, transaction_date=timezone.now(),
+                        description=desc, reference=reference, status='POSTED',
+                        site_id=warehouse.site_id, user=user, lines=lines
+                    )
+                except ImportError:
+                    pass
+
+            ForensicAuditService.log_mutation(
+                organization=organization,
+                user=user,
+                model_name="StockAdjustment",
+                object_id=product.id,
+                change_type="UPDATE",
+                payload={"qty": str(adj_qty), "reason": reason, "ref": reference}
             )
 
             return inventory
 
     @staticmethod
-    def reduce_stock(organization, product, warehouse, quantity, reference=None):
+    def reduce_stock(organization, product, warehouse, quantity, reference=None, user=None):
         """Reduces stock and captures AMC for COGS booking."""
         from apps.inventory.models import Inventory, InventoryMovement
+        from apps.finance.services import ForensicAuditService
 
         qty_to_reduce = Decimal(str(quantity))
-        current_amc = Decimal(str(product.cost_price))
-
+        
         with transaction.atomic():
+            # Lock product for consistent AMC capture
+            from apps.inventory.models import Product
+            product = Product.objects.select_for_update().get(id=product.id)
+            current_amc = Decimal(str(product.cost_price))
             inventory = Inventory.objects.filter(
                 organization=organization,
                 warehouse=warehouse,
@@ -209,15 +273,25 @@ class InventoryService:
                 reference=reference or f"SALE-{uuid.uuid4().hex[:6].upper()}"
             )
 
+            ForensicAuditService.log_mutation(
+                organization=organization,
+                user=user,
+                model_name="StockReduction",
+                object_id=product.id,
+                change_type="UPDATE",
+                payload={"qty": str(qty_to_reduce), "ref": reference}
+            )
+
             return current_amc
 
     @staticmethod
-    def transfer_stock(organization, product, source_warehouse, destination_warehouse, quantity, reference=None):
+    def transfer_stock(organization, product, source_warehouse, destination_warehouse, quantity, reference=None, user=None):
         """
         Transfers stock between warehouses within the same organization.
         Creates paired TRANSFER movements for full audit trail.
         """
         from apps.inventory.models import Inventory, InventoryMovement
+        from apps.finance.services import ForensicAuditService
 
         qty = Decimal(str(quantity))
         if qty <= Decimal('0'):
@@ -229,9 +303,10 @@ class InventoryService:
         if not reference:
             reference = f"TRF-{uuid.uuid4().hex[:8].upper()}"
 
-        current_cost = Decimal(str(product.cost_price))
-
         with transaction.atomic():
+            from apps.inventory.models import Product
+            product = Product.objects.select_for_update().get(id=product.id)
+            current_cost = Decimal(str(product.cost_price))
             # Deduct from source
             source_inv = Inventory.objects.filter(
                 organization=organization,
@@ -279,6 +354,15 @@ class InventoryService:
                 cost_price_ht=Decimal(str(product.cost_price_ht)),
                 reference=reference,
                 reason=f"Transfer IN from {source_warehouse.name}",
+            )
+
+            ForensicAuditService.log_mutation(
+                organization=organization,
+                user=user,
+                model_name="StockTransfer",
+                object_id=product.id,
+                change_type="UPDATE",
+                payload={"qty": str(qty), "from": source_warehouse.name, "to": destination_warehouse.name, "ref": reference}
             )
 
             return {
