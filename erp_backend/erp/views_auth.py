@@ -17,17 +17,31 @@ logger = logging.getLogger('erp')
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_view(request):
-    serializer = LoginSerializer(data=request.data, context={'request': request})
-    serializer.is_valid(raise_exception=True)
-    user = serializer.validated_data['user']
-    scope_access = serializer.validated_data.get('scope_access', 'internal')
-    token, created = Token.objects.get_or_create(user=user)
-    
-    return Response({
-        'token': token.key,
-        'user': UserSerializer(user).data,
-        'scope_access': scope_access,  # 'official' or 'internal'
-    })
+    try:
+        serializer = LoginSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        scope_access = serializer.validated_data.get('scope_access', 'internal')
+        token, created = Token.objects.get_or_create(user=user)
+        
+        return Response({
+            'token': token.key,
+            'user': UserSerializer(user).data,
+            'scope_access': scope_access,  # 'official' or 'internal'
+        })
+    except Exception as e:
+        # DRF's raise_exception=True handles ValidationError → 400 JSON automatically.
+        # This outer catch is for truly unexpected errors (DB issues, serializer crashes, etc.)
+        # that would otherwise produce an HTML 500 page when DEBUG=False.
+        from rest_framework.exceptions import APIException, ValidationError as DRFValidationError
+        if isinstance(e, (APIException, DRFValidationError)):
+            raise  # Let DRF handle its own exceptions (returns JSON)
+        import traceback
+        logger.error(f"[LOGIN] Unhandled error: {e}\n{traceback.format_exc()}")
+        return Response(
+            {"error": "Login failed due to a server error. Please try again."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
