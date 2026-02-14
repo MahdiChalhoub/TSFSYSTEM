@@ -120,12 +120,14 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 import os
 
-# Database
-# Using SQLite for local development, PostgreSQL for production
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'tsf_db',
+        'USER': 'postgres',
+        'PASSWORD': 'password',
+        'HOST': '127.0.0.1',
+        'PORT': '5432',
     }
 }
 
@@ -183,15 +185,6 @@ STATICFILES_DIRS = [BASE_DIR / 'static'] if (BASE_DIR / 'static').exists() else 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-import sys
-if 'test' in sys.argv:
-    # Disable migrations during tests for speed and to bypass broken migration history
-    class DisableMigrations:
-        def __contains__(self, item): return True
-        def __getitem__(self, item): return None
-
-    MIGRATION_MODULES = DisableMigrations()
-    SILENCED_SYSTEM_CHECKS = ["fields.E304"]
 
 AUTHENTICATION_BACKENDS = [
     'erp.backends.TenantAuthBackend',
