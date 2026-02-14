@@ -14,7 +14,7 @@ type Props = {
 type CategoryNode = {
     id: number;
     name: string;
-    parentId: number | null;
+    parent: number | null;
     children?: CategoryNode[];
     code?: string;
 };
@@ -66,14 +66,7 @@ export function ProductReassignmentTable({ products, categories, currentCategory
 
     const handleMove = async () => {
         if (targetCategoryId.length === 0) return;
-        const targetId = targetCategoryId[0]; // Take the last selected or first? Selector returns array. Usually single select for move.
-        // My CategoryTreeSelector is multi-select by default UI but we want single selection logic here?
-        // Actually it returns array. I'll just take the LAST one selected (most specific) or enforce single.
-        // For now, I'll take the 0 index if I clear others on change, or just take the length-1.
-        // The selector UI allows multiple checks.
-        // I should probably instruct user "Select ONE target category".
-
-        // Actually, let's use the LAST selected item as the target.
+        // Take the last selected category as the target (single-select enforced in onChange)
         const effectiveTargetId = targetCategoryId[targetCategoryId.length - 1];
 
         setPending(true);
@@ -147,14 +140,14 @@ export function ProductReassignmentTable({ products, categories, currentCategory
                             </div>
 
                             <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-xs font-bold text-gray-400">
-                                {product.productGroup?.image ? <img src={product.productGroup.image} className="w-full h-full object-cover rounded-lg" /> : 'IMG'}
+                                IMG
                             </div>
 
                             <div className="flex-1 min-w-0">
                                 <h4 className="font-medium text-gray-900 truncate">{product.name}</h4>
                                 <div className="text-xs text-gray-500 flex gap-2">
-                                    {product.brand && <span className="bg-gray-100 px-1.5 rounded">{product.brand.name}</span>}
-                                    {product.unit && <span className="text-gray-400">{product.unit.name}</span>}
+                                    {product.brand_name && <span className="bg-gray-100 px-1.5 rounded">{product.brand_name}</span>}
+                                    {product.unit_name && <span className="text-gray-400">{product.unit_name}</span>}
                                 </div>
                             </div>
                         </div>
@@ -176,12 +169,7 @@ export function ProductReassignmentTable({ products, categories, currentCategory
                                 categories={buildCategoryTree(categories)}
                                 selectedIds={targetCategoryId}
                                 onChange={(ids) => {
-                                    // Enforce single select behavior UI-wise if needed, but tree supports multi.
-                                    // We'll just reset to the latest clicked.
-                                    // Actually, onChange logic in TreeSelector toggles.
-                                    // Let's just create a custom wrapper or just accept the multi-select UI
-                                    // and assume user checks ONE.
-                                    // Better: On change, if new length > old length, take the new one only.
+                                    // Enforce single-select: keep only the latest selected
                                     if (ids.length > 0) {
                                         setTargetCategoryId([ids[ids.length - 1]]);
                                     } else {

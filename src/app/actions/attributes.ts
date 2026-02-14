@@ -13,13 +13,7 @@ export type AttributeState = {
 export async function getAttributes() {
     try {
         const data = await erpFetch('parfums/');
-        // detailed mapping to match legacy Prisma shape
-        return data.map((item: any) => ({
-            ...item,
-            _count: {
-                products: item.product_count || 0
-            }
-        }));
+        return data;
     } catch (error) {
         console.error("Failed to fetch attributes:", error);
         return [];
@@ -94,12 +88,7 @@ export async function getAttributesByCategory(categoryId: number | null) {
         return await getAttributes();
     }
     try {
-        const data = await erpFetch(`parfums/by_category/?categoryId=${categoryId}`);
-        return data.map((item: any) => ({
-            ...item,
-            shortName: item.short_name, // Map snake_case to camelCase
-            _count: { products: item.product_count || 0 }
-        }));
+        return await erpFetch(`parfums/by_category/?categoryId=${categoryId}`);
     } catch (e) {
         console.error("Failed to fetch attributes by category", e);
         return [];
@@ -115,14 +104,8 @@ export async function getAttributeHierarchy(parfumId: number) {
 
         return brands.map((item: any) => ({
             ...item,
-            // Ensure brand info is at the root to match AttributeManager's brand.name access
             id: item.brand?.id,
             name: item.brand?.name,
-            products: (item.products || []).map((p: any) => ({
-                ...p,
-                unit: p.unit_name ? { name: p.unit_name } : null,
-                country: p.country_name ? { name: p.country_name } : null
-            }))
         }));
     } catch (e) {
         console.error("Failed to fetch hierarchy", e);
