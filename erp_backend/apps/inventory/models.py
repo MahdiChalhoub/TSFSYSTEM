@@ -185,6 +185,7 @@ class InventoryMovement(TenantModel):
     type = models.CharField(max_length=20, choices=MOVEMENT_TYPES)
     quantity = models.DecimalField(max_digits=15, decimal_places=2)
     reference = models.CharField(max_length=100, null=True, blank=True)
+    scope = models.CharField(max_length=20, default='OFFICIAL')
     reason = models.TextField(null=True, blank=True)
     cost_price = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     cost_price_ht = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))

@@ -73,7 +73,7 @@ class LedgerService:
                 reference=reference, 
                 fiscal_year=fp.fiscal_year, 
                 fiscal_period=fp, 
-                status=status, 
+                status='DRAFT', # Always create as DRAFT initially
                 scope=scope, 
                 site_id=site_id,
                 created_by=user
@@ -699,10 +699,17 @@ class SequenceService:
         from apps.finance.models import TransactionSequence
         from django.db.models import F
         with transaction.atomic():
+            # Determine intelligent prefix based on key
+            prefix = type[:3].upper() + '-'
+            if 'OFFICIAL' in type:
+                prefix = 'OFF' + type[:2].upper() + '-'
+            elif 'INTERNAL' in type:
+                prefix = 'INT' + type[:2].upper() + '-'
+
             seq, created = TransactionSequence.objects.get_or_create(
                 organization=organization, 
                 type=type,
-                defaults={'prefix': type[:3].upper() + '-', 'padding': 5}
+                defaults={'prefix': prefix, 'padding': 5}
             )
             seq = TransactionSequence.objects.select_for_update().get(id=seq.id)
             
@@ -828,18 +835,15 @@ class LoanService:
         return installments
 
     @staticmethod
-    def create_contract(organization, data):
+    def create_contract(organization, data, scope='OFFICIAL'):
         from apps.finance.models import Loan, LoanInstallment
-        # Gated cross-module import
-        try:
-            from apps.crm.models import Contact
-        except ImportError:
-            raise ValidationError("CRM module is required for loan contracts.")
+        from apps.crm.models import Contact
+        from apps.finance.services import SequenceService
         """
         Creates a Loan and its Installments in DRAFT status.
         """
         with transaction.atomic():
-            contract_number = SequenceService.get_next_number(organization, 'LOAN')
+            contract_number = SequenceService.get_next_number(organization, f'LOAN_{scope.upper()}')
             
             contact = Contact.objects.get(id=data['contact_id'], organization=organization)
             
@@ -853,7 +857,8 @@ class LoanService:
                 term_months=data['term_months'],
                 start_date=data['start_date'],
                 payment_frequency=data.get('payment_frequency', 'MONTHLY'),
-                status='DRAFT'
+                status='DRAFT',
+                scope=scope
             )
             
             schedule = LoanService.calculate_schedule(
@@ -895,7 +900,8 @@ class LoanService:
                 reference=transaction_ref or f"DISB-{loan.contract_number}",
                 loan_id=loan.id,
                 account_id=account_id,
-                user=user
+                user=user,
+                scope=loan.scope
             )
             
             loan.status = 'ACTIVE'
@@ -903,7 +909,7 @@ class LoanService:
             return loan
 
     @staticmethod
-    def process_repayment(organization, loan_id, amount, account_id, reference=None, user=None):
+    def process_repayment(organization, loan_id, amount, account_id, reference=None, user=None, scope='OFFICIAL'):
         from apps.finance.models import Loan, LoanInstallment, FinancialEvent
         with transaction.atomic():
             # Professional Audit: Lock the loan record to prevent concurrent repayment race conditions
@@ -958,7 +964,8 @@ class LoanService:
                 reference=reference or f"REPAY-{loan.contract_number}-{uuid.uuid4().hex[:4]}",
                 loan_id=loan.id,
                 account_id=account_id,
-                user=user
+                user=user,
+                scope=scope
             )
             
             ForensicAuditService.log_mutation(
@@ -975,8 +982,9 @@ class LoanService:
 
 class FinancialEventService:
     @staticmethod
-    def create_event(organization, event_type, amount, date, contact_id, reference=None, notes=None, loan_id=None, account_id=None, user=None):
+    def create_event(organization, event_type, amount, date, contact_id, reference=None, notes=None, loan_id=None, account_id=None, user=None, scope='OFFICIAL'):
         from apps.finance.models import FinancialEvent, FiscalPeriod
+        from apps.finance.services import SequenceService
         # Gated cross-module import
         try:
             from apps.crm.models import Contact
@@ -995,6 +1003,11 @@ class FinancialEventService:
 
             contact = Contact.objects.get(id=contact_id, organization=organization)
             
+            # 1. Dual-Mode Gapless Sequencing
+            if not reference:
+                sequence_key = f"{event_type.upper()}_{scope.upper()}"
+                reference = SequenceService.get_next_number(organization, sequence_key)
+
             event = FinancialEvent.objects.create(
                 organization=organization,
                 event_type=event_type,
@@ -1002,6 +1015,7 @@ class FinancialEventService:
                 date=date,
                 contact=contact,
                 reference=reference,
+                scope=scope,
                 notes=notes,
                 loan_id=loan_id,
                 status='DRAFT'
@@ -1075,6 +1089,7 @@ class FinancialEventService:
                 description=description,
                 reference=event.reference,
                 status='POSTED',
+                scope=event.scope,
                 site_id=fin_acc.site_id,
                 user=user,
                 lines=[

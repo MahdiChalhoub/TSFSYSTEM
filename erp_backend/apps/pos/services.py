@@ -31,18 +31,20 @@ def _safe_import(module_path, names):
 
 class POSService:
     @staticmethod
-    def checkout(organization, user, warehouse, payment_account_id, items):
+    def checkout(organization, user, warehouse, payment_account_id, items, scope='OFFICIAL'):
         from apps.pos.models import Order, OrderLine
         from erp.services import ConfigurationService
         
         # Gated cross-module imports
         (Product,) = _safe_import('apps.inventory.models', ['Product'])
         (InventoryService,) = _safe_import('apps.inventory.services', ['InventoryService'])
-        (LedgerService,) = _safe_import('apps.finance.services', ['LedgerService'])
+        (LedgerService, SequenceService, ForensicAuditService) = _safe_import(
+            'apps.finance.services', ['LedgerService', 'SequenceService', 'ForensicAuditService']
+        )
         
         if not Product or not InventoryService:
             raise ValidationError("Inventory module is required for POS checkout.")
-        if not LedgerService:
+        if not LedgerService or not SequenceService:
             raise ValidationError("Finance module is required for POS checkout.")
         """
         items: list of {'product_id': id, 'quantity': q, 'unit_price': p}
@@ -52,18 +54,40 @@ class POSService:
             total_tax = Decimal('0')
             total_cogs = Decimal('0')
             
+            # 1. Dual-Mode Gapless Sequencing
+            # Separate sequence for each scope (e.g. SALE_OFFICIAL, SALE_INTERNAL)
+            sequence_type = f"SALE_{scope.upper()}"
+            invoice_num = SequenceService.get_next_number(organization, sequence_type)
+            
+            # 2. Cryptographic Chaining Context (Scope-Isolated)
+            last_order = Order.objects.filter(
+                organization=organization, 
+                scope=scope
+            ).order_by('-created_at', '-id').first()
+            prev_hash = last_order.receipt_hash if last_order else "GENESIS"
+
             order = Order.objects.create(
                 organization=organization,
                 user=user,
                 site=warehouse.site,
                 type='SALE',
-                status='COMPLETED'
+                status='COMPLETED',
+                scope=scope,
+                invoice_number=invoice_num,
+                previous_hash=prev_hash
             )
             
             for item in items:
-                product = Product.objects.get(id=item['product_id'], organization=organization)
+                # 3. Atomic Serializability: Lock Product
+                product = Product.objects.select_for_update().get(id=item['product_id'], organization=organization)
                 qty = Decimal(str(item['quantity']))
                 price = Decimal(str(item['unit_price']))
+                
+                # 4. Forensic Price Audit: Check for Overrides
+                is_override = False
+                base_price = product.selling_price_ttc or Decimal('0.00')
+                if price < base_price * Decimal('0.95'): # 5% threshold for "anomaly"
+                    is_override = True
                 
                 amc = InventoryService.reduce_stock(
                     organization=organization,
@@ -91,13 +115,33 @@ class POSService:
                     tax_rate=tax_rate,
                     total=(item_total + item_tax),
                     unit_cost_ht=amc,
-                    effective_cost=amc
+                    effective_cost=amc,
+                    price_override_detected=is_override
                 )
+                
+                if is_override and ForensicAuditService:
+                    ForensicAuditService.log_mutation(
+                        organization=organization,
+                        user=user,
+                        model_name="POS_OrderLine",
+                        object_id=order.id,
+                        change_type="PRICE_OVERRIDE",
+                        payload={
+                            "product": product.name,
+                            "base_price": str(base_price),
+                            "sold_price": str(price),
+                            "qty": str(qty)
+                        }
+                    )
             
             order.total_amount = total_amount
             order.tax_amount = total_tax
-            order.save()
             
+            # 5. Cryptographic Seal
+            order.receipt_hash = order.calculate_hash()
+            order.save(force_audit_bypass=True)
+            
+            # 6. Finance Chain Link
             rules = ConfigurationService.get_posting_rules(organization)
             rev_acc = rules.get('sales', {}).get('revenue')
             inv_acc = rules.get('sales', {}).get('inventory')
@@ -116,11 +160,12 @@ class POSService:
             LedgerService.create_journal_entry(
                 organization=organization,
                 transaction_date=timezone.now(),
-                description=f"POS Sale #{order.id}",
+                description=f"POS Sale {invoice_num} | ReceiptHash: {order.receipt_hash[:12]}...",
                 reference=f"POS-{order.id}",
                 status='POSTED',
                 scope='INTERNAL',
                 site_id=warehouse.site_id,
+                user=user,
                 lines=[
                     {"account_id": actual_payment_acc_id, "debit": total_amount, "credit": Decimal('0')},
                     {"account_id": rev_acc, "debit": Decimal('0'), "credit": (total_amount - total_tax)},
@@ -158,6 +203,7 @@ class PurchaseService:
         """
         Processes physical reception of all items in the PO.
         """
+        scope = kwargs.get('scope', 'OFFICIAL')
         with transaction.atomic():
             order = Order.objects.get(id=order_id, organization=organization, type='PURCHASE')
             warehouse = Warehouse.objects.get(id=warehouse_id, organization=organization)
@@ -173,7 +219,8 @@ class PurchaseService:
                     quantity=line.quantity,
                     cost_price_ht=line.unit_price,
                     is_tax_recoverable=is_tax_recoverable,
-                    reference=f"PO-REC-{order.id}"
+                    reference=f"PO-REC-{order.id}",
+                    scope=scope
                 )
             
             order.status = 'RECEIVED'
@@ -312,6 +359,19 @@ class PurchaseService:
                 inv.quantity += qty
                 inv.save()
                 
+                # 2. Scope-Aware Inventory Movement (Missing in original quick_purchase)
+                InventoryMovement.objects.create(
+                    organization=organization,
+                    product=product,
+                    warehouse_id=warehouse_id,
+                    type='IN',
+                    quantity=qty,
+                    cost_price=final_effective_cost,
+                    cost_price_ht=unit_cost_ht,
+                    reference=f"PUR-{order.id}",
+                    scope=scope
+                )
+                
                 product.cost_price = final_effective_cost
                 product.cost_price_ht = unit_cost_ht
                 product.cost_price_ttc = unit_cost_ttc
@@ -412,7 +472,7 @@ class PurchaseService:
                 description=f"Purchase Invoice: {invoice_number} (PO #{order.id})",
                 reference=invoice_number,
                 status='POSTED',
-                scope='OFFICIAL',
+                scope=order.scope,
                 site_id=order.site_id,
                 lines=[
                     {

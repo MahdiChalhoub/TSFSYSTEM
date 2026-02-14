@@ -19,7 +19,7 @@ class InventoryService:
         return ht * (Decimal('1') + rate)
 
     @staticmethod
-    def receive_stock(organization, product, warehouse, quantity, cost_price_ht, is_tax_recoverable=True, reference=None, user=None):
+    def receive_stock(organization, product, warehouse, quantity, cost_price_ht, is_tax_recoverable=True, reference=None, user=None, scope='OFFICIAL'):
         from apps.inventory.models import Inventory, InventoryMovement
         from apps.finance.services import ForensicAuditService
         
@@ -51,7 +51,7 @@ class InventoryService:
             inventory.quantity = Decimal(str(inventory.quantity)) + inbound_qty
             inventory.save()
             
-            InventoryMovement.objects.create(organization=organization, product=product, warehouse=warehouse, type='IN', quantity=inbound_qty, cost_price=effective_cost, reference=reference)
+            InventoryMovement.objects.create(organization=organization, product=product, warehouse=warehouse, type='IN', quantity=inbound_qty, cost_price=effective_cost, reference=reference, scope=scope)
             
             # Cross-module: create journal entry for stock reception
             from erp.services import ConfigurationService
@@ -62,7 +62,7 @@ class InventoryService:
             if inv_acc and susp_acc:
                 try:
                     from apps.finance.services import LedgerService
-                    LedgerService.create_journal_entry(organization=organization, transaction_date=timezone.now(), description=f"Stock Reception: {product.name}", reference=reference, status='POSTED', site_id=warehouse.site_id, user=user, lines=[
+                    LedgerService.create_journal_entry(organization=organization, transaction_date=timezone.now(), description=f"Stock Reception: {product.name}", reference=reference, status='POSTED', scope=scope, site_id=warehouse.site_id, user=user, lines=[
                         {"account_id": inv_acc, "debit": inbound_value, "credit": Decimal('0')},
                         {"account_id": susp_acc, "debit": Decimal('0'), "credit": inbound_value}
                     ])
@@ -151,7 +151,7 @@ class InventoryService:
         }
 
     @staticmethod
-    def adjust_stock(organization, product, warehouse, quantity, reason=None, reference=None, user=None):
+    def adjust_stock(organization, product, warehouse, quantity, reason=None, reference=None, user=None, scope='OFFICIAL'):
         from apps.inventory.models import Inventory, InventoryMovement
         from apps.finance.services import ForensicAuditService
 
@@ -195,6 +195,7 @@ class InventoryService:
                 cost_price=cost_basis,
                 cost_price_ht=Decimal(str(product.cost_price_ht)),
                 reference=reference,
+                scope=scope,
                 reason=reason or '',
             )
             
@@ -222,7 +223,7 @@ class InventoryService:
                     LedgerService.create_journal_entry(
                         organization=organization, transaction_date=timezone.now(),
                         description=desc, reference=reference, status='POSTED',
-                        site_id=warehouse.site_id, user=user, lines=lines
+                        scope=scope, site_id=warehouse.site_id, user=user, lines=lines
                     )
                 except ImportError:
                     pass
@@ -239,7 +240,7 @@ class InventoryService:
             return inventory
 
     @staticmethod
-    def reduce_stock(organization, product, warehouse, quantity, reference=None, user=None):
+    def reduce_stock(organization, product, warehouse, quantity, reference=None, user=None, scope='OFFICIAL'):
         """Reduces stock and captures AMC for COGS booking."""
         from apps.inventory.models import Inventory, InventoryMovement
         from apps.finance.services import ForensicAuditService
@@ -270,7 +271,8 @@ class InventoryService:
                 type='OUT',
                 quantity=qty_to_reduce,
                 cost_price=current_amc,
-                reference=reference or f"SALE-{uuid.uuid4().hex[:6].upper()}"
+                reference=reference or f"SALE-{uuid.uuid4().hex[:6].upper()}",
+                scope=scope
             )
 
             ForensicAuditService.log_mutation(
@@ -285,7 +287,7 @@ class InventoryService:
             return current_amc
 
     @staticmethod
-    def transfer_stock(organization, product, source_warehouse, destination_warehouse, quantity, reference=None, user=None):
+    def transfer_stock(organization, product, source_warehouse, destination_warehouse, quantity, reference=None, user=None, scope='OFFICIAL'):
         """
         Transfers stock between warehouses within the same organization.
         Creates paired TRANSFER movements for full audit trail.
@@ -342,6 +344,7 @@ class InventoryService:
                 cost_price=current_cost,
                 cost_price_ht=Decimal(str(product.cost_price_ht)),
                 reference=reference,
+                scope=scope,
                 reason=f"Transfer OUT to {destination_warehouse.name}",
             )
             InventoryMovement.objects.create(
@@ -353,6 +356,7 @@ class InventoryService:
                 cost_price=current_cost,
                 cost_price_ht=Decimal(str(product.cost_price_ht)),
                 reference=reference,
+                scope=scope,
                 reason=f"Transfer IN from {source_warehouse.name}",
             )
 
