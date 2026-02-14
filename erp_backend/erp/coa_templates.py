@@ -79,10 +79,10 @@ TEMPLATES = {
             {"code": "6301", "name": "Bank Charges", "type": "EXPENSE", "parent_code": "6300"},
             {"code": "6302", "name": "Interest Expense", "type": "EXPENSE", "parent_code": "6300"},
             {"code": "6303", "name": "Depreciation & Amortization", "type": "EXPENSE", "parent_code": "6300"},
-            {"code": "9000", "name": "SYSTEM & CLEARING ACCOUNTS", "type": "EXPENSE"},
-            {"code": "9001", "name": "Stock Adjustment Control", "type": "EXPENSE", "parent_code": "9000"},
-            {"code": "9002", "name": "POS Rounding Difference", "type": "INCOME", "parent_code": "9000"},
-            {"code": "9003", "name": "Exchange Difference", "type": "INCOME", "parent_code": "9000"},
+            {"code": "9000", "name": "SYSTEM & CLEARING ACCOUNTS", "type": "EXPENSE", "is_hidden": True},
+            {"code": "9001", "name": "Stock Adjustment Control", "type": "EXPENSE", "parent_code": "9000", "is_system_only": True, "requires_zero_balance": True},
+            {"code": "9002", "name": "POS Rounding Difference", "type": "INCOME", "parent_code": "9000", "is_system_only": True},
+            {"code": "9003", "name": "Exchange Difference", "type": "INCOME", "parent_code": "9000", "is_system_only": True},
         ]
     },
     "LEBANESE_PCN": {

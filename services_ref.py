@@ -1,4 +1,4 @@
-"""
+﻿"""
 Finance Module Services
 Canonical home for all finance/accounting business logic.
 
@@ -100,7 +100,7 @@ class LedgerService:
                     # Deactivate old accounts instead of deleting (journal entries reference them)
                     ChartOfAccount.objects.filter(organization=organization).update(is_active=False)
                 else:
-                    # Safe to delete — no transactions reference these accounts
+                    # Safe to delete ÔÇö no transactions reference these accounts
                     ChartOfAccount.objects.filter(organization=organization).delete()
 
             # Collect all codes from the new template
@@ -108,7 +108,7 @@ class LedgerService:
             for item in accounts_data:
                 new_template_codes.add(item['code'])
 
-            # Build accounts from template — supports flat (parent_code) format
+            # Build accounts from template ÔÇö supports flat (parent_code) format
             code_to_account = {}
 
             # First pass: create/update all accounts without parent relationships
@@ -345,135 +345,6 @@ class LedgerService:
         for acc in control_accounts:
             if abs(acc.balance) > Decimal('0.001'):
                 raise ValidationError(f"Control account {acc.code} ({acc.name}) must have zero balance before closure. Current balance: {acc.balance}")
-        return True
-
-    @staticmethod
-    def update_journal_entry(organization, entry_id, transaction_date=None, description=None, status=None, lines=None):
-        from apps.finance.models import JournalEntry, JournalEntryLine
-        with transaction.atomic():
-            entry = JournalEntry.objects.get(id=entry_id, organization=organization)
-            if entry.is_locked: raise ValidationError("Cannot update a locked journal entry")
-            
-            if transaction_date: entry.transaction_date = transaction_date
-            if description: entry.description = description
-            if status:
-                if entry.status == 'POSTED' and status != 'POSTED':
-                    raise ValidationError("Cannot un-post a journal entry. Use reverse instead.")
-                entry.status = status
-            
-            if lines is not None:
-                # Basic balance check for new lines
-                total_debit = sum((Decimal(str(l['debit'])) for l in lines), Decimal('0'))
-                total_credit = sum((Decimal(str(l['credit'])) for l in lines), Decimal('0'))
-                if abs(total_debit - total_credit) > Decimal('0.001'): raise ValidationError("Out of Balance")
-                
-                entry.lines.all().delete()
-                for l in lines:
-                    JournalEntryLine.objects.create(
-                        organization=organization,
-                        journal_entry=entry,
-                        account_id=l['account_id'],
-                        debit=Decimal(str(l['debit'])),
-                        credit=Decimal(str(l['credit'])),
-                        description=l.get('description', entry.description)
-                    )
-            
-            entry.save()
-            if entry.status == 'POSTED' and not entry.posted_at:
-                LedgerService.post_journal_entry(entry)
-            return entry
-
-    @staticmethod
-    def reverse_journal_entry(organization, entry_id):
-        from apps.finance.models import JournalEntry, JournalEntryLine
-        with transaction.atomic():
-            original = JournalEntry.objects.get(id=entry_id, organization=organization)
-            if original.status != 'POSTED': raise ValidationError("Only POSTED entries can be reversed")
-            
-            reversal = JournalEntry.objects.create(
-                organization=organization,
-                transaction_date=timezone.now(),
-                description=f"Reversal of {original.description}",
-                reference=f"REV-{original.id}",
-                status='POSTED',
-                scope=original.scope,
-                site=original.site
-            )
-            
-            for line in original.lines.all():
-                JournalEntryLine.objects.create(
-                    organization=organization,
-                    journal_entry=reversal,
-                    account_id=line.account_id,
-                    debit=line.credit,
-                    credit=line.debit,
-                    description=f"Reversal Line: {line.description}"
-                )
-            
-            LedgerService.post_journal_entry(reversal)
-            original.is_locked = True
-            original.save()
-            return reversal
-
-    @staticmethod
-    def get_account_statement(organization, account_id, start_date=None, end_date=None, scope='INTERNAL'):
-        from apps.finance.models import ChartOfAccount, JournalEntryLine
-        account = ChartOfAccount.objects.get(id=account_id, organization=organization)
-        
-        opening_qs = JournalEntryLine.objects.filter(
-            organization=organization,
-            account=account,
-            journal_entry__status='POSTED'
-        )
-        if start_date:
-            opening_qs = opening_qs.filter(journal_entry__transaction_date__lt=start_date)
-        if scope == 'OFFICIAL':
-            opening_qs = opening_qs.filter(journal_entry__scope='OFFICIAL')
-            
-        opening_balance = opening_qs.aggregate(net=Sum('debit') - Sum('credit'))['net'] or Decimal('0')
-        
-        lines_qs = JournalEntryLine.objects.filter(
-            organization=organization,
-            account=account,
-            journal_entry__status='POSTED'
-        ).select_related('journal_entry').order_by('journal_entry__transaction_date')
-        
-        if start_date:
-            lines_qs = lines_qs.filter(journal_entry__transaction_date__gte=start_date)
-        if end_date:
-            lines_qs = lines_qs.filter(journal_entry__transaction_date__lte=end_date)
-        if scope == 'OFFICIAL':
-            lines_qs = lines_qs.filter(journal_entry__scope='OFFICIAL')
-            
-        return {
-            "account": account,
-            "opening_balance": opening_balance,
-            "lines": lines_qs
-        }
-
-    @staticmethod
-    def recalculate_balances(organization):
-        from apps.finance.models import ChartOfAccount, JournalEntry
-        with transaction.atomic():
-            ChartOfAccount.objects.filter(organization=organization).update(balance=Decimal('0'), balance_official=Decimal('0'))
-            entries = JournalEntry.objects.filter(organization=organization, status='POSTED').order_by('posted_at')
-            for entry in entries:
-                old_posted_at = entry.posted_at
-                entry.posted_at = None
-                LedgerService.post_journal_entry(entry)
-                entry.posted_at = old_posted_at
-                entry.save()
-        return True
-
-    @staticmethod
-    def clear_all_data(organization):
-        from apps.finance.models import JournalEntry, Transaction, FinancialEvent, Loan, ChartOfAccount
-        with transaction.atomic():
-            JournalEntry.objects.filter(organization=organization).delete()
-            Transaction.objects.filter(organization=organization).delete()
-            FinancialEvent.objects.filter(organization=organization).delete()
-            Loan.objects.filter(organization=organization).delete()
-            ChartOfAccount.objects.filter(organization=organization).update(balance=Decimal('0'), balance_official=Decimal('0'))
         return True
 
 
