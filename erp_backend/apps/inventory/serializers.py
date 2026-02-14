@@ -18,6 +18,7 @@ class UnitSerializer(serializers.ModelSerializer):
     class Meta:
         model = Unit
         fields = '__all__'
+        read_only_fields = ['organization']
 
 
 class CountrySimpleSerializer(serializers.ModelSerializer):
@@ -35,6 +36,7 @@ class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = '__all__'
+        read_only_fields = ['organization']
 
     def get_product_count(self, obj):
         return obj.product_set.count() if hasattr(obj, 'product_set') else 0
@@ -64,6 +66,7 @@ class BrandSerializer(serializers.ModelSerializer):
             'product_count', 'country_names', 'category_names',
             'created_at', 'organization',
         ]
+        read_only_fields = ['organization']
 
     def get_product_count(self, obj):
         return obj.products.count()
@@ -87,6 +90,7 @@ class BrandDetailSerializer(serializers.ModelSerializer):
             'countries', 'categories',
             'product_count', 'created_at', 'organization',
         ]
+        read_only_fields = ['organization']
 
     def get_product_count(self, obj):
         return obj.products.count()
@@ -108,6 +112,7 @@ class ParfumSerializer(serializers.ModelSerializer):
             'product_count', 'category_names',
             'organization',
         ]
+        read_only_fields = ['organization']
 
     def get_product_count(self, obj):
         return obj.product_set.count() if hasattr(obj, 'product_set') else 0
@@ -134,6 +139,7 @@ class ProductGroupSerializer(serializers.ModelSerializer):
             'brand_name', 'parfum_name', 'category_name',
             'product_count', 'organization',
         ]
+        read_only_fields = ['organization']
 
     def get_product_count(self, obj):
         return obj.product_set.count()
@@ -168,12 +174,14 @@ class ProductSerializer(serializers.ModelSerializer):
             'status', 'is_active', 'created_at', 'updated_at',
             'organization',
         ]
+        read_only_fields = ['organization']
 
 
 class ProductCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = '__all__'
+        read_only_fields = ['organization']
 
 
 # =============================================================================
@@ -192,6 +200,7 @@ class WarehouseSerializer(serializers.ModelSerializer):
             'site_name', 'inventory_count',
             'organization',
         ]
+        read_only_fields = ['organization']
 
     def get_inventory_count(self, obj):
         return obj.inventory_set.count()
@@ -209,6 +218,7 @@ class InventorySerializer(serializers.ModelSerializer):
             'product_name', 'warehouse_name',
             'organization',
         ]
+        read_only_fields = ['organization']
 
 
 class InventoryMovementSerializer(serializers.ModelSerializer):
@@ -224,3 +234,4 @@ class InventoryMovementSerializer(serializers.ModelSerializer):
             'product_name', 'warehouse_name',
             'organization',
         ]
+        read_only_fields = ['organization']
