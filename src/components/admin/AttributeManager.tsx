@@ -118,11 +118,11 @@ function AttributeCard({ attribute, onEdit }: any) {
                     <Sparkles size={24} />
                 </div>
                 <div className="text-xs font-semibold bg-gray-100 text-gray-600 px-2 py-1 rounded-lg">
-                    {attribute._count?.products || 0} products
+                    {attribute.product_count || 0} products
                 </div>
             </div>
             <h3 className="text-lg font-bold text-gray-900 mb-1">{attribute.name}</h3>
-            {attribute.shortName && <p className="text-sm text-gray-500">{attribute.shortName}</p>}
+            {attribute.short_name && <p className="text-sm text-gray-500">{attribute.short_name}</p>}
 
             <div className="mt-4 pt-3 border-t border-gray-50 flex flex-wrap gap-1">
                 {attribute.categories && attribute.categories.map((c: any) => (
@@ -161,8 +161,8 @@ function AttributeRow({ attribute, onEdit }: any) {
                     <div>
                         <h3 className="font-bold text-gray-900 text-lg">{attribute.name}</h3>
                         <div className="flex gap-2 text-xs text-gray-500">
-                            {attribute.shortName && <span className="font-mono bg-gray-100 px-1 rounded">{attribute.shortName}</span>}
-                            <span>{attribute._count?.products || 0} products</span>
+                            {attribute.short_name && <span className="font-mono bg-gray-100 px-1 rounded">{attribute.short_name}</span>}
+                            <span>{attribute.product_count || 0} products</span>
                         </div>
                     </div>
                 </div>

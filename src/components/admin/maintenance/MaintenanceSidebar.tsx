@@ -93,7 +93,7 @@ export function MaintenanceSidebar({ entities, type, activeId }: Props) {
                         filteredEntities.map((item) => (
                             <Link
                                 key={item.id}
-                                href={`/admin/inventory/maintenance?tab=${type}&id=${item.id}`}
+                                href={`/inventory/maintenance?tab=${type}&id=${item.id}`}
                                 className={clsx(
                                     "flex items-center gap-3 px-3 py-2 rounded-lg transition-colors group",
                                     activeId === item.id ? "bg-emerald-50 text-emerald-700" : "hover:bg-gray-50 text-gray-700"
@@ -151,7 +151,7 @@ function SidebarNode({ node, activeId, type, level }: { node: MaintenanceEntity,
                 )}
 
                 <Link
-                    href={`/admin/inventory/maintenance?tab=${type}&id=${node.id}`}
+                    href={`/inventory/maintenance?tab=${type}&id=${node.id}`}
                     className="flex-1 flex items-center gap-2 truncate"
                 >
                     <Folder size={16} className={clsx(isActive ? "text-emerald-500 fill-emerald-100" : "text-amber-400")} />
