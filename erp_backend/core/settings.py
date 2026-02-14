@@ -60,6 +60,7 @@ if APPS_DIR.exists():
             INSTALLED_APPS.append(f"apps.{item.name}")
 
 MIDDLEWARE = [
+    'erp.latency_middleware.LatencyTrackingMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
