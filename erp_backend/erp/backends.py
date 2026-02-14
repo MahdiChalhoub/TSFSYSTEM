@@ -44,8 +44,10 @@ class TenantAuthBackend(ModelBackend):
                 # However, for the specific case of a USER logging in to a specific business,
                 # the frontend MUST send the tenant context (slug/id).
                 
-                # If the user is trying to login to "root" (no tenant), look for org=None
-                query &= Q(organization__isnull=True)
+                # If the user is trying to login to "root" (no tenant), look for:
+                # - org=None (legacy root users)
+                # - org.slug='saas' (SaaS Federation panel users)
+                query &= (Q(organization__isnull=True) | Q(organization__slug='saas'))
             
             user = User.objects.get(query)
             
