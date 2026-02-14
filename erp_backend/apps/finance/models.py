@@ -112,6 +112,12 @@ class JournalEntry(TenantModel):
 
     class Meta:
         db_table = 'journalentry'
+        indexes = [
+            models.Index(fields=['organization', 'transaction_date']),
+            models.Index(fields=['organization', 'scope']),
+            models.Index(fields=['organization', 'status']),
+            models.Index(fields=['reference']),
+        ]
 
     def __str__(self):
         return f"JE-{self.id}: {self.description[:50]}"
@@ -128,6 +134,11 @@ class JournalEntryLine(TenantModel):
 
     class Meta:
         db_table = 'journalentryline'
+        indexes = [
+            models.Index(fields=['organization', 'account']),
+            models.Index(fields=['journal_entry']),
+            models.Index(fields=['organization', 'debit', 'credit']),
+        ]
 
 
 # =============================================================================

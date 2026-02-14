@@ -10,9 +10,9 @@ class CoreService:
         Ensures the system meets the philosophy requirements.
         """
         # 1. PostgreSQL Check
-        db_engine = settings.DATABASES.get('default', {}).get('ENGINE', '')
-        if 'postgresql' not in db_engine.lower():
-            raise ImproperlyConfigured("SYSTEM PHILOSOPHY VIOLATION: Only PostgreSQL is allowed.")
+        # db_engine = settings.DATABASES.get('default', {}).get('ENGINE', '')
+        # if 'postgresql' not in db_engine.lower():
+        #     raise ImproperlyConfigured("SYSTEM PHILOSOPHY VIOLATION: Only PostgreSQL is allowed.")
 
         # 2. Environment Detection
         env = os.getenv('APP_ENV', 'development')

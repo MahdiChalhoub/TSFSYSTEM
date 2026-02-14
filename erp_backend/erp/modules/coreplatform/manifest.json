@@ -1,11 +1,49 @@
 {
-    "name": "Core Platform",
     "code": "coreplatform",
-    "version": "2.7.0",
-    "description": "The central orchestration engine. Manages multi-tenancy, modular injection, and security protocols.",
+    "name": "Core Platform",
+    "version": "1.2.0",
+    "description": "Enterprise Platform Kernel and Management Suite",
+    "category": "core",
     "is_core": true,
-    "dependencies": [],
-    "author": "Platform Team",
-    "website": "http://localhost:3000",
-    "sidebar_items": []
+    "sidebar_items": [
+        {
+            "title": "SaaS Control",
+            "icon": "ShieldCheck",
+            "visibility": "saas",
+            "children": [
+                {
+                    "title": "SaaS Dashboard",
+                    "path": "/dashboard"
+                },
+                {
+                    "title": "Organizations",
+                    "path": "/organizations"
+                },
+                {
+                    "title": "Global Registry",
+                    "path": "/modules"
+                },
+                {
+                    "title": "Connector Control",
+                    "path": "/connector"
+                },
+                {
+                    "title": "Instance Switcher",
+                    "path": "/switcher"
+                },
+                {
+                    "title": "Platform Health",
+                    "path": "/health"
+                },
+                {
+                    "title": "Kernel Updates",
+                    "path": "/updates"
+                },
+                {
+                    "title": "Subscription Plans",
+                    "path": "/subscription-plans"
+                }
+            ]
+        }
+    ]
 }

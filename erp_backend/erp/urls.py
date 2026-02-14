@@ -97,5 +97,15 @@ if _APPS_DIR.exists():
             
             _logger.info(f"[URLs] Registered module: {_module_code} (flat + namespaced)")
         except Exception as _e:
+            if "drf_format_suffix" in str(_e):
+                # This is a known DRF clash when multiple routers are included in the same context
+                # We can safely continue as the first one already registered the converter
+                try:
+                    urlpatterns.insert(0, path('', include(_module_path)))
+                    urlpatterns.insert(1, path(f'{_module_code}/', include(_module_path)))
+                    _logger.debug(f"[URLs] Registered module {_module_code} (ignoring converter conflict)")
+                    continue
+                except Exception as _inner_e:
+                    _e = _inner_e
             _logger.warning(f"[URLs] Skipping module {_module_code}: {_e}")
 
