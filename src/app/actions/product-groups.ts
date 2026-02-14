@@ -68,7 +68,7 @@ export async function updateProductGroup(
 
     try {
         await erpFetch(`product-groups/${groupId}/update_with_variants/`, {
-            method: 'POST',
+            method: 'PUT',
             body: JSON.stringify(data),
             headers: { 'Content-Type': 'application/json' }
         });

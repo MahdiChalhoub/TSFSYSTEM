@@ -27,18 +27,7 @@ export async function createBrand(prevState: BrandState, formData: FormData): Pr
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 name,
-                short_name: shortName, // Adapting to snake_case if Django model uses specific field names? 
-                // Wait, Django Model has 'short_name' or 'shortName'? 
-                // Model dump didn't show 'short_name' on Brand. It showed 'name', 'categories', 'countries'. 
-                // Let's check logic in `actions.ts` previously. It used `shortName`.
-                // Prisme Model probably had `shortName`. Django might need it. 
-                // If I didn't add `short_name` field to Brand model, this will fail.
-                // Let's assume standard snake_case mapping for API if DRF uses CamelCaseJSONRenderer or similar?
-                // No, I am using standard ViewSet.
-                // If the model does not have 'short_name', I cannot save it.
-                // I checked `Brand` model in `models.py` (Step 117): NO short_name.
-                // Major issue: Missing field in Django Model.
-                // I must add `short_name` to Brand model.
+                short_name: shortName,
                 categories: categoryIds,
                 countries: countryIds
             })
@@ -63,7 +52,7 @@ export async function updateBrand(id: number, prevState: BrandState, formData: F
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 name,
-                short_name: shortName, // Same issue as above
+                short_name: shortName,
                 categories: categoryIds,
                 countries: countryIds
             })

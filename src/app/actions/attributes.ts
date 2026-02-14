@@ -41,17 +41,9 @@ export async function createAttribute(prevState: AttributeState, formData: FormD
             body: JSON.stringify({
                 name,
                 short_name: shortName || null,
-                categories: categoryIds // Serializer expects a list of IDs for M2M? No, ModelSerializer expects IDs usually. 
-                // Actually DRF default WritableNested defaults are tricky. 
-                // But since I used CategorySerializer(read_only=True), it WON'T write.
-                // I need to fix the Serializer to handle writes or use a separate logical set of fields.
-                // Let's assume for now I will fix the serializer too.
+                categories: categoryIds
             })
         });
-
-        // Wait, I need to fix the serialization of categories for writing.
-        // My previous serializer Edit was READ ONLY for categories.
-        // I will need to handle that. 
 
         revalidatePath('/inventory/attributes');
         return { message: 'success' };

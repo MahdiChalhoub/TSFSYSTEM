@@ -394,6 +394,40 @@ class InventoryViewSet(TenantModelViewSet):
         status_data = InventoryService.get_inventory_financial_status(organization)
         return Response(status_data)
 
+    @action(detail=False, methods=['post'])
+    def transfer_stock(self, request):
+        """Transfer stock between warehouses within the same organization."""
+        organization, err = _get_org_or_400()
+        if err: return err
+
+        try:
+            product = Product.objects.get(
+                id=request.data.get('product_id'), organization=organization
+            )
+            source_warehouse = Warehouse.objects.get(
+                id=request.data.get('source_warehouse_id'), organization=organization
+            )
+            destination_warehouse = Warehouse.objects.get(
+                id=request.data.get('destination_warehouse_id'), organization=organization
+            )
+
+            result = InventoryService.transfer_stock(
+                organization=organization,
+                product=product,
+                source_warehouse=source_warehouse,
+                destination_warehouse=destination_warehouse,
+                quantity=request.data.get('quantity'),
+                reference=request.data.get('reference'),
+            )
+            return Response({
+                "message": "Stock transferred successfully",
+                **result
+            }, status=status.HTTP_201_CREATED)
+        except (Product.DoesNotExist, Warehouse.DoesNotExist) as e:
+            return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
     # --- H1 + M3 + L5: viewer with annotations, pagination, filters ---
     @action(detail=False, methods=['get'])
     def viewer(self, request):

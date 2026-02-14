@@ -99,8 +99,8 @@ export async function moveProducts(productIds: number[], targetCategoryId: numbe
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                productIds,
-                targetCategoryId
+                product_ids: productIds,
+                target_category_id: targetCategoryId
             })
         });
 

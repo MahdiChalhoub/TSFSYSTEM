@@ -1,15 +1,12 @@
-'use server';
+'use server'
 
 import { revalidatePath } from "next/cache";
+import { erpFetch } from "@/lib/erp-api"
 
 export type StockMovementState = {
     message?: string;
     success?: boolean;
 };
-
-
-
-import { erpFetch } from "@/lib/erp-api"
 
 /**
  * Validates and Post a Stock Reception.
@@ -76,6 +73,42 @@ export async function adjustStock(
         return { success: true, message: result.message || `Successfully adjusted stock by ${quantity}.` }
     } catch (e: any) {
         console.error("Adjustment Error:", e)
+        return { success: false, message: "Error: " + (e.message || e) }
+    }
+}
+
+/**
+ * Transfers stock between warehouses within the same organization.
+ */
+export async function transferStock(
+    productId: number,
+    sourceWarehouseId: number,
+    destinationWarehouseId: number,
+    quantity: number,
+    reference?: string
+): Promise<StockMovementState> {
+    try {
+        if (quantity <= 0) return { success: false, message: "Quantity must be positive." }
+        if (sourceWarehouseId === destinationWarehouseId) {
+            return { success: false, message: "Source and destination warehouse must be different." }
+        }
+
+        const result = await erpFetch('inventory/transfer_stock/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                product_id: productId,
+                source_warehouse_id: sourceWarehouseId,
+                destination_warehouse_id: destinationWarehouseId,
+                quantity,
+                reference
+            })
+        })
+
+        revalidatePath('/inventory')
+        return { success: true, message: result.message || `Successfully transferred ${quantity} items.` }
+    } catch (e: any) {
+        console.error("Transfer Error:", e)
         return { success: false, message: "Error: " + (e.message || e) }
     }
 }
