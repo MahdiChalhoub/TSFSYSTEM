@@ -189,8 +189,8 @@ function AttributeRow({ attribute, onEdit }: any) {
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-1.5 h-1.5 rounded-full bg-gray-200"></div>
                                                     <div className="flex flex-col">
-                                                        <span className="text-gray-700 font-medium">{p.name} {p.size && `- ${p.size}${p.unit ? p.unit.name : ''}`}</span>
-                                                        {p.country && <div className="flex items-center gap-1 text-[10px] text-gray-400 uppercase tracking-wider"><Globe size={10} /> {p.country.name}</div>}
+                                                        <span className="text-gray-700 font-medium">{p.name} {p.size && `- ${p.size}${p.unit_name || ''}`}</span>
+                                                        {p.country_name && <div className="flex items-center gap-1 text-[10px] text-gray-400 uppercase tracking-wider"><Globe size={10} /> {p.country_name}</div>}
                                                     </div>
                                                 </div>
                                                 <span className={`font-mono font-bold ${p.stock > 0 ? 'text-gray-700' : 'text-red-400'}`}>{p.stock}</span>

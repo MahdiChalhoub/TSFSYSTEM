@@ -6,7 +6,7 @@ import { ChevronRight, ChevronDown, Folder } from 'lucide-react';
 type CategoryNode = {
     id: number;
     name: string;
-    parentId: number | null;
+    parent: number | null;
     children?: CategoryNode[];
     code?: string;
 };
