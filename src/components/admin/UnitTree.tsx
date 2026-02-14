@@ -9,12 +9,12 @@ type UnitNode = {
     id: number;
     name: string;
     code: string;
-    conversionFactor: number;
-    baseUnitId: number | null;
+    conversion_factor: number;
+    base_unit: number | null;
     children?: UnitNode[];
-    _count?: { products: number };
+    product_count?: number;
     type?: string;
-    needsBalance?: boolean;
+    needs_balance?: boolean;
 };
 
 export function UnitTree({ units, potentialParents = [] }: { units: UnitNode[], potentialParents?: any[] }) {
@@ -73,7 +73,7 @@ function UnitTreeNode({ unit, level, potentialParents }: { unit: UnitNode; level
                             <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-gray-100 text-gray-500 tracking-wide border border-gray-200">
                                 {unit.code}
                             </span>
-                            {unit.needsBalance && (
+                            {unit.needs_balance && (
                                 <span className="text-[10px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded border border-orange-200" title="Connected to Scale">
                                     ΓÜû∩╕Å Scale
                                 </span>
@@ -83,12 +83,12 @@ function UnitTreeNode({ unit, level, potentialParents }: { unit: UnitNode; level
                             <span>
                                 {level === 0
                                     ? `Base Unit (${unit.type || 'COUNT'})`
-                                    : `1 ${unit.name} = ${unit.conversionFactor} parent units`
+                                    : `1 ${unit.name} = ${unit.conversion_factor} parent units`
                                 }
                             </span>
-                            {unit._count && unit._count.products > 0 && (
+                            {unit.product_count != null && unit.product_count > 0 && (
                                 <span className="flex items-center gap-1 text-emerald-600 font-medium">
-                                    ΓÇó {unit._count.products} Products
+                                    · {unit.product_count} Products
                                 </span>
                             )}
                         </div>

@@ -23,7 +23,7 @@ export function CountryManager({ countries, categories = [] }: CountryManagerPro
             c.code.toLowerCase().includes(searchTerm.toLowerCase());
 
         const matchesCategory = selectedCategory === 'all' ||
-            (c.products && c.products.some((p: any) => p.categoryId === Number(selectedCategory)));
+            (c.products && c.products.some((p: any) => p.category === Number(selectedCategory)));
 
         return matchesSearch && matchesCategory;
     });
@@ -123,7 +123,7 @@ function CountryCard({ country, onEdit }: any) {
                 </div>
                 <div className="flex items-center gap-1 text-xs font-semibold bg-gray-100 text-gray-600 px-2 py-1 rounded-lg">
                     <Package size={12} />
-                    {country._count?.products || 0} products
+                    {country.product_count || 0} products
                 </div>
             </div>
             <h3 className="text-lg font-bold text-gray-900 mb-1">{country.name}</h3>
@@ -158,7 +158,7 @@ function CountryRow({ country, onEdit }: any) {
                     <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-sm font-bold text-indigo-600 border border-indigo-100">{country.code}</div>
                     <div>
                         <h3 className="font-bold text-gray-900 text-lg">{country.name}</h3>
-                        <span className="text-xs font-mono text-gray-400">{country._count?.products || 0} products</span>
+                        <span className="text-xs font-mono text-gray-400">{country.product_count || 0} products</span>
                     </div>
                 </div>
                 <button onClick={(e) => { e.stopPropagation(); onEdit(country) }} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"><Edit2 size={16} /></button>

@@ -38,9 +38,30 @@ export async function createProductGroupWithVariants(
     }
 ) {
     try {
+        // Transform camelCase frontend keys to snake_case backend keys
+        const payload = {
+            name: data.name,
+            brand_id: data.brandId,
+            category_id: data.categoryId,
+            description: data.description,
+            variants: data.variants.map(v => ({
+                name: data.name, // Product inherits group name
+                sku: v.sku,
+                barcode: v.barcode,
+                country_id: v.countryId,
+                unit_id: data.baseUnitId,
+                size: v.size,
+                size_unit_id: v.sizeUnitId,
+                costPrice: v.costPrice,
+                sellingPriceHT: v.costPrice,
+                sellingPriceTTC: v.basePrice,
+                taxRate: v.taxRate || 0,
+            }))
+        };
+
         await erpFetch('product-groups/create_with_variants/', {
             method: 'POST',
-            body: JSON.stringify(data),
+            body: JSON.stringify(payload),
             headers: { 'Content-Type': 'application/json' }
         });
 
@@ -67,9 +88,31 @@ export async function updateProductGroup(
     const { groupId, brandId } = data;
 
     try {
+        // Transform camelCase frontend keys to snake_case backend keys
+        const payload = {
+            name: data.name,
+            brand_id: data.brandId,
+            category_id: data.categoryId,
+            description: data.description,
+            variants: data.variants.map(v => ({
+                id: v.id,
+                name: data.name,
+                sku: v.sku,
+                barcode: v.barcode,
+                country_id: v.countryId,
+                unit_id: data.baseUnitId,
+                size: v.size,
+                size_unit_id: v.sizeUnitId,
+                costPrice: v.costPrice,
+                sellingPriceHT: v.costPrice,
+                sellingPriceTTC: v.basePrice,
+                taxRate: v.taxRate || 0,
+            }))
+        };
+
         await erpFetch(`product-groups/${groupId}/update_with_variants/`, {
             method: 'PUT',
-            body: JSON.stringify(data),
+            body: JSON.stringify(payload),
             headers: { 'Content-Type': 'application/json' }
         });
 

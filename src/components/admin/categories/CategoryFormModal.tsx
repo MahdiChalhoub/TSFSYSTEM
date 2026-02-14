@@ -28,7 +28,7 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
         const stack = [id];
         while (stack.length > 0) {
             const current = stack.pop()!;
-            const children = allCats.filter(c => c.parentId === current);
+            const children = allCats.filter(c => c.parent === current);
             children.forEach(c => {
                 descendants.add(c.id);
                 stack.push(c.id);
@@ -50,8 +50,8 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
         );
     }, [potentialParents, category, descendants]);
 
-    const [isSubCategory, setIsSubCategory] = useState(!!parentId || (category && !!category.parentId));
-    const [selectedParent, setSelectedParent] = useState<number | string>(parentId || category?.parentId || '');
+    const [isSubCategory, setIsSubCategory] = useState(!!parentId || (category && !!category.parent));
+    const [selectedParent, setSelectedParent] = useState<number | string>(parentId || category?.parent || '');
 
     useEffect(() => {
         if (state.message === 'success') {
@@ -61,8 +61,8 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
 
     useEffect(() => {
         if (isOpen) {
-            setIsSubCategory(!!parentId || (category && !!category.parentId));
-            setSelectedParent(parentId || category?.parentId || '');
+            setIsSubCategory(!!parentId || (category && !!category.parent));
+            setSelectedParent(parentId || category?.parent || '');
         }
     }, [isOpen, parentId, category]);
 
@@ -142,7 +142,7 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
                             <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Short Name</label>
                             <input
                                 name="shortName"
-                                defaultValue={category?.shortName || ''}
+                                defaultValue={category?.short_name || ''}
                                 placeholder="e.g. BEV"
                                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all"
                             />

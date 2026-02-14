@@ -33,9 +33,9 @@ export function GroupedProductForm({ brands, categories, units, countries, initi
     // Init Master State
     const [master, setMaster] = useState({
         name: initialGroup?.name || '',
-        brandId: initialGroup?.brandId || '',
-        categoryId: initialGroup?.categoryId || '',
-        baseUnitId: initialGroup?.products?.[0]?.unitId || '', // heuristic for stock unit
+        brandId: initialGroup?.brand || '',
+        categoryId: initialGroup?.category || '',
+        baseUnitId: initialGroup?.products?.[0]?.unit || '',
         description: initialGroup?.description || ''
     });
 
@@ -76,15 +76,15 @@ export function GroupedProductForm({ brands, categories, units, countries, initi
     // Init Variants
     const [variants, setVariants] = useState<VariantRow[]>(
         initialGroup?.products?.map((p: any) => ({
-            id: p.id, // Use real ID for key
+            id: p.id,
             realId: p.id,
-            countryId: p.countryId,
+            countryId: p.country,
             sku: p.sku,
             barcode: p.barcode || '',
             size: Number(p.size) || '',
-            sizeUnitId: p.sizeUnitId || '',
-            costPrice: Number(p.costPrice) || '',
-            basePrice: Number(p.basePrice) || ''
+            sizeUnitId: p.size_unit || '',
+            costPrice: Number(p.cost_price) || '',
+            basePrice: Number(p.base_price) || ''
         })) || [
             { id: Date.now(), countryId: '', sku: '', barcode: '', size: '', sizeUnitId: '', costPrice: '', basePrice: '' }
         ]
@@ -158,7 +158,7 @@ export function GroupedProductForm({ brands, categories, units, countries, initi
         }
 
         if (result.message === 'success') {
-            router.push(initialGroup ? `/admin/inventory/brands/${master.brandId}` : '/admin/products');
+            router.push(initialGroup ? `/inventory/brands/${master.brandId}` : '/inventory');
         } else {
             alert(result.message);
         }
@@ -216,7 +216,7 @@ export function GroupedProductForm({ brands, categories, units, countries, initi
                             ) : (
                                 filteredBrands.map(b => (
                                     <option key={b.id} value={b.id}>
-                                        {b.name} {b.shortName ? `(${b.shortName})` : ''}
+                                        {b.name} {b.short_name ? `(${b.short_name})` : ''}
                                     </option>
                                 ))
                             )}
@@ -242,7 +242,7 @@ export function GroupedProductForm({ brands, categories, units, countries, initi
                             onChange={e => setMaster({ ...master, baseUnitId: e.target.value })}
                         >
                             <option value="">Select Unit...</option>
-                            {units.map(u => <option key={u.id} value={u.id}>{u.name} ({u.shortName})</option>)}
+                            {units.map(u => <option key={u.id} value={u.id}>{u.name} ({u.short_name})</option>)}
                         </select>
                     </div>
                 </div>
@@ -328,7 +328,7 @@ export function GroupedProductForm({ brands, categories, units, countries, initi
                                         >
                                             <option value=""></option>
                                             {units.filter(u => ['VOLUME', 'WEIGHT'].includes(u.type)).map(u =>
-                                                <option key={u.id} value={u.id}>{u.shortName}</option>
+                                                <option key={u.id} value={u.id}>{u.short_name}</option>
                                             )}
                                         </select>
                                     </div>

@@ -22,9 +22,9 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
 
     // Logic: If edit mode, rely on existing unit data. If adding child locally, force "derived". 
     // If generic create, allow choice.
-    const [unitType, setUnitType] = useState<'base' | 'derived'>((baseUnitId || unit?.baseUnitId) ? 'derived' : 'base');
-    const [selectedParentId, setSelectedParentId] = useState<number | string>(baseUnitId || unit?.baseUnitId || '');
-    const [needsBalance, setNeedsBalance] = useState(unit?.needsBalance || false);
+    const [unitType, setUnitType] = useState<'base' | 'derived'>((baseUnitId || unit?.base_unit) ? 'derived' : 'base');
+    const [selectedParentId, setSelectedParentId] = useState<number | string>(baseUnitId || unit?.base_unit || '');
+    const [needsBalance, setNeedsBalance] = useState(unit?.needs_balance || false);
 
     useEffect(() => {
         if (state.message === 'success') {
@@ -45,9 +45,9 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
 
     useEffect(() => {
         if (isOpen) {
-            setUnitType((baseUnitId || unit?.baseUnitId) ? 'derived' : 'base');
-            setSelectedParentId(baseUnitId || unit?.baseUnitId || '');
-            setNeedsBalance(unit?.needsBalance || false);
+            setUnitType((baseUnitId || unit?.base_unit) ? 'derived' : 'base');
+            setSelectedParentId(baseUnitId || unit?.base_unit || '');
+            setNeedsBalance(unit?.needs_balance || false);
         }
     }, [isOpen, baseUnitId, unit]);
 
@@ -157,7 +157,7 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
                         <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Short Name</label>
                         <input
                             name="shortName"
-                            defaultValue={unit?.shortName || ''}
+                            defaultValue={unit?.short_name || ''}
                             placeholder="e.g. pcs, kg"
                             className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 outline-none transition-all"
                         />
@@ -175,14 +175,14 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
 
                         <div className="flex flex-col justify-center gap-2">
                             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
-                                <input type="checkbox" name="allowFraction" defaultChecked={unit?.allowFraction} className="w-4 h-4 text-emerald-600 rounded" />
+                                <input type="checkbox" name="allowFraction" defaultChecked={unit?.allow_fraction} className="w-4 h-4 text-emerald-600 rounded" />
                                 Allow Fractions
                             </label>
                             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
                                 <input
                                     type="checkbox"
                                     name="needsBalance"
-                                    defaultChecked={unit?.needsBalance}
+                                    defaultChecked={unit?.needs_balance}
                                     disabled={isInheritedBalance}
                                     onChange={(e) => setNeedsBalance(e.target.checked)}
                                     className="w-4 h-4 text-emerald-600 rounded disabled:opacity-50"
@@ -207,7 +207,7 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
                                     <input
                                         name="balanceItemDigits"
                                         type="number"
-                                        defaultValue={unit?.balanceCodeStructure?.split(',')[0] || 6}
+                                        defaultValue={unit?.balance_code_structure?.split(',')[0] || 6}
                                         className="w-full px-2 py-1.5 rounded border border-orange-200 text-sm"
                                     />
                                 </div>
@@ -216,7 +216,7 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
                                     <input
                                         name="balanceIntDigits"
                                         type="number"
-                                        defaultValue={unit?.balanceCodeStructure?.split(',')[1] || 3}
+                                        defaultValue={unit?.balance_code_structure?.split(',')[1] || 3}
                                         className="w-full px-2 py-1.5 rounded border border-orange-200 text-sm"
                                     />
                                 </div>
@@ -225,7 +225,7 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
                                     <input
                                         name="balanceDecDigits"
                                         type="number"
-                                        defaultValue={unit?.balanceCodeStructure?.split(',')[2] || 3}
+                                        defaultValue={unit?.balance_code_structure?.split(',')[2] || 3}
                                         className="w-full px-2 py-1.5 rounded border border-orange-200 text-sm"
                                     />
                                 </div>
@@ -242,7 +242,7 @@ export function UnitFormModal({ isOpen, onClose, unit, baseUnitId, baseUnitName,
                                     name="conversionFactor"
                                     type="number"
                                     step="0.001"
-                                    defaultValue={unit?.conversionFactor || (baseUnitId ? 1 : '')}
+                                    defaultValue={unit?.conversion_factor || (baseUnitId ? 1 : '')}
                                     className="w-full pl-24 pr-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all"
                                     placeholder="Qty"
                                     required

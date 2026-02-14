@@ -8,11 +8,11 @@ import { deleteCategory } from '@/app/actions/categories';
 type CategoryNode = {
     id: number;
     name: string;
-    parentId: number | null;
+    parent: number | null;
     children?: CategoryNode[];
-    _count?: { products: number };
+    product_count?: number;
     code?: string;
-    shortName?: string;
+    short_name?: string;
 };
 
 export function CategoryTree({ categories, allCategories = [] }: { categories: CategoryNode[], allCategories?: any[] }) {
@@ -127,9 +127,9 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
                         </div>
                         <p className="text-sm text-gray-500 mt-0.5 flex items-center gap-3">
                             <span>{hasChildren ? `${category.children!.length} sub-categories` : 'No sub-categories'}</span>
-                            {category._count && category._count.products > 0 && (
+                            {category.product_count != null && category.product_count > 0 && (
                                 <span className="flex items-center gap-1 text-emerald-600 font-medium">
-                                    ΓÇó {category._count.products} Products
+                                    · {category.product_count} Products
                                 </span>
                             )}
                         </p>
