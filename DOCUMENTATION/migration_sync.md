@@ -1,30 +1,46 @@
-# Migration Sync Documentation
+# Migration Sync & Ghost Migration Fix
 
 ## Goal
-Keep Django migration files synchronized between local development and production server.
+Fix ghost-applied Django migrations (0031-0040) that left the database missing critical tables and columns.
 
-## Problem (v1.3.2-b013)
-Production had stale/orphaned migration files not present in the Git codebase, causing:
-- `finance/0003_alter_fiscalperiod_options_fiscalperiod_status.py` existed on server but not in Git
-- Several module apps (`mcp`, `pos`, `packages`, `inventory`) had model changes without corresponding migration files
+## Problem
+Multiple Django migrations were recorded in `django_migrations` as "applied" but the actual SQL (table creation, column addition) never executed. This likely happened during a database restore or a careless `--fake` migration. Result: Django models referenced columns/tables that didn't exist, causing 500 errors.
 
-## Resolution
-1. **Pulled `finance/0003`** from production via `scp` to sync it into the codebase
-2. **Generated missing migrations** for `mcp/0002`, `pos/0002`, `packages/0002`, `inventory/0002`
-3. **Fake-applied all** on both local and production (tables already existed)
-4. **Pushed to GitHub** as `v1.3.2-b013`
+## Missing Schema (Before Fix)
+| Element | Type | Migration |
+|---------|------|-----------|
+| `systemmodule.visibility` | Column | 0035 |
+| `planaddon` | Table | 0033 |
+| `planaddon_plans` | Junction Table | 0033 |
+| `saasclient` | Table | 0037 |
+| `subscriptionplan.is_public` | Column | 0033 |
+| `subscriptionplan.sort_order` | Column | 0033 |
+| `subscriptionplan.trial_days` | Column | 0034 |
+| `subscriptionpayment.invoice_type` | Column | 0036 |
+| `organization.client_id` | Column | 0037 |
+| `user.scope_pin_official` | Column | 0040 |
+| `user.scope_pin_internal` | Column | 0040 |
+
+## Fix Applied
+1. Fake-unapplied ghost migrations via `manage.py migrate erp 0030 --fake`
+2. Re-applied migration 0031 (already had the columns)
+3. Fake-applied migration 0032 (NOT NULL constraint on user.org conflicts with existing data)
+4. Created missing tables/columns directly via SQL (`fix_db.py`)
+5. Fake-applied migrations 0033-0040
+
+## Prevention
+- The `LOGGING` config added to `settings.py` will now capture full tracebacks for any future 500 errors
+- Never use `--fake` unless absolutely sure the SQL has been applied manually
+- Always verify after restore: `manage.py showmigrations` then test critical endpoints
 
 ## Data Flow
-- **Read**: `django_migrations` table tracks which migrations are applied
-- **Write**: `migrate --fake` records migrations as applied without executing SQL
+- **`saas/modules/sidebar/`** — reads `SystemModule.objects.all()` → requires `visibility` column
+- **`auth/login/`** — reads `User` model → requires `scope_pin_official`/`scope_pin_internal` columns
 
-## Variables
-- `--fake` flag: records migration without running SQL (for already-existing tables)
-- `--check` flag: returns exit code 1 if unapplied migrations exist
-- `--plan` flag: shows what would be applied
+## Related Pages
+- Login page (`saas.tsf.ci/login`) — reads from `user` table via `auth/login/` API
+- Dashboard sidebar — reads from `systemmodule` table via `saas/modules/sidebar/` API
+- Subscription management — reads/writes `subscriptionplan`, `planaddon`, `saasclient` tables
 
-## Prevention Workflow
-1. Never run `makemigrations` directly on the production server
-2. Always generate migrations locally, commit to Git, then deploy
-3. Run `python manage.py showmigrations` after every deploy to verify sync
-4. If a migration exists on server but not locally, `scp` it before pushing
+## Version
+`v2.8.1-b002` — Database fix applied directly on server (no code change needed)
