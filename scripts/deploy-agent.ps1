@@ -320,7 +320,7 @@ function Invoke-Deploy {
     # Step 2: Frontend deploy
     if ($Target -in @("frontend", "full")) {
         Write-Step "Installing npm dependencies..."
-        $npmResult = Invoke-ServerCommand "cd $APP_PATH && npm install --production=false 2>&1 | tail -3"
+        Invoke-ServerCommand "cd $APP_PATH && npm install --production=false 2>&1 | tail -3" | Out-Null
         
         Write-Step "Building Next.js on server..."
         $buildResult = Invoke-ServerCommand "cd $APP_PATH && npm run build 2>&1 | tail -5"
@@ -347,11 +347,11 @@ function Invoke-Deploy {
         }
 
         Write-Step "Installing Python dependencies..."
-        $pipResult = Invoke-ServerCommand "cd $APP_PATH/erp_backend && source venv/bin/activate && pip install -r requirements.txt 2>&1 | tail -3"
+        Invoke-ServerCommand "cd $APP_PATH/erp_backend && source venv/bin/activate && pip install -r requirements.txt 2>&1 | tail -3" | Out-Null
         Write-OK "Dependencies installed"
 
         Write-Step "Running migrations..."
-        $migrateResult = Invoke-ServerCommand "cd $APP_PATH/erp_backend && source venv/bin/activate && python manage.py migrate --no-input 2>&1 | tail -5"
+        Invoke-ServerCommand "cd $APP_PATH/erp_backend && source venv/bin/activate && python manage.py migrate --no-input 2>&1 | tail -5" | Out-Null
         Write-OK "Migrations applied"
 
         Write-Step "Collecting static files..."
