@@ -268,6 +268,79 @@ class SaaSModuleViewSet(viewsets.ViewSet):
                 
         return Response(items)
 
+    # ── AES-256 Encryption Management ────────────────────────────────
+
+    @action(detail=False, methods=['get'], url_path='encryption/status')
+    def encryption_status(self, request):
+        """Get encryption status for the current organization."""
+        from erp.encryption_service import EncryptionService
+        org = getattr(request, 'tenant', None)
+        if not org:
+            return Response({'error': 'No organization context'}, status=400)
+        return Response(EncryptionService.get_status(org))
+
+    @action(detail=False, methods=['post'], url_path='encryption/activate')
+    def encryption_activate(self, request):
+        """Activate AES-256 encryption for an organization."""
+        from erp.encryption_service import EncryptionService
+        org = getattr(request, 'tenant', None)
+        if not org:
+            # Allow superadmin to specify org_id
+            org_id = request.data.get('organization_id')
+            if org_id and request.user.is_superuser:
+                from erp.models import Organization
+                try:
+                    org = Organization.objects.get(pk=org_id)
+                except Organization.DoesNotExist:
+                    return Response({'error': 'Organization not found'}, status=404)
+            else:
+                return Response({'error': 'No organization context'}, status=400)
+
+        force = request.user.is_superuser and request.data.get('force', False)
+        result = EncryptionService.activate(org, force=force)
+        return Response(result, status=200 if result['success'] else 403)
+
+    @action(detail=False, methods=['post'], url_path='encryption/deactivate')
+    def encryption_deactivate(self, request):
+        """Deactivate encryption for an organization."""
+        from erp.encryption_service import EncryptionService
+        org = getattr(request, 'tenant', None)
+        if not org:
+            org_id = request.data.get('organization_id')
+            if org_id and request.user.is_superuser:
+                from erp.models import Organization
+                try:
+                    org = Organization.objects.get(pk=org_id)
+                except Organization.DoesNotExist:
+                    return Response({'error': 'Organization not found'}, status=404)
+            else:
+                return Response({'error': 'No organization context'}, status=400)
+        
+        result = EncryptionService.deactivate(org)
+        return Response(result)
+
+    @action(detail=False, methods=['post'], url_path='encryption/rotate-key')
+    def encryption_rotate_key(self, request):
+        """Rotate the encryption key for an organization. Superadmin only."""
+        if not request.user.is_superuser:
+            return Response({'error': 'Superadmin access required'}, status=403)
+        
+        from erp.encryption_service import EncryptionService
+        org = getattr(request, 'tenant', None)
+        if not org:
+            org_id = request.data.get('organization_id')
+            if org_id:
+                from erp.models import Organization
+                try:
+                    org = Organization.objects.get(pk=org_id)
+                except Organization.DoesNotExist:
+                    return Response({'error': 'Organization not found'}, status=404)
+            else:
+                return Response({'error': 'No organization context'}, status=400)
+        
+        result = EncryptionService.rotate_key(org)
+        return Response(result, status=200 if result['success'] else 400)
+
 
 class PublicPricingView(views.APIView):
     """Public pricing endpoint — no auth required. Returns only active, public plans."""
