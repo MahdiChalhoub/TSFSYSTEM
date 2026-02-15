@@ -24,6 +24,23 @@ export default async function middleware(req: NextRequest) {
         return NextResponse.next();
     }
 
+    // ─── HTTPS ENFORCEMENT (Security) ───
+    // Force HTTPS on sensitive routes to protect credentials in transit.
+    // Cloudflare sets x-forwarded-proto; if it's "http", redirect to https.
+    // Skip for localhost/dev environments.
+    const proto = req.headers.get('x-forwarded-proto') || 'https';
+    const host = req.headers.get('host') || '';
+    const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
+    const isSensitiveRoute = url.pathname.startsWith('/login') ||
+        url.pathname.startsWith('/register') ||
+        url.pathname.startsWith('/saas/login');
+
+    if (proto === 'http' && !isLocal && isSensitiveRoute) {
+        const httpsUrl = new URL(req.url);
+        httpsUrl.protocol = 'https:';
+        return NextResponse.redirect(httpsUrl, 301);
+    }
+
     // IP Address or Localhost handling for Root
     const isLocalhost = hostname.endsWith("localhost") || hostname.includes("127.0.0.1") || hostname.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/);
     const isVercel = hostname.includes("vercel.app"); // Fallback for previews
