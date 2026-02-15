@@ -2,7 +2,7 @@
 Kernel Views — Infrastructure & Cross-Cutting Concerns Only
 ============================================================
 This file contains ONLY the kernel-level ViewSets:
- - TenantModelViewSet (base class for all tenant-scoped views)
+ - TenantModelViewSet (base class for all tenant-scoped views, with AuditLogMixin)
  - UserViewSet, OrganizationViewSet, SiteViewSet, CountryViewSet, RoleViewSet
  - TenantResolutionView, SettingsViewSet, DashboardViewSet, health_check
 
@@ -21,6 +21,8 @@ from rest_framework import viewsets, status, serializers, permissions
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, action, permission_classes
 from .middleware import get_current_tenant_id
+from .mixins import AuditLogMixin
+from .throttles import TenantResolveRateThrottle
 
 # --- Kernel Models ---
 from .models import (
@@ -64,7 +66,7 @@ except ImportError:
 #  KERNEL BASE CLASS
 # ============================================================================
 
-class TenantModelViewSet(viewsets.ModelViewSet):
+class TenantModelViewSet(AuditLogMixin, viewsets.ModelViewSet):
     """
     Base ViewSet that automatically enforces organizational isolation (multi-tenancy).
     Ensures users can ONLY interact with data belonging to their own organization.
@@ -110,7 +112,10 @@ class TenantModelViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         if 'organization' in self.request.data or 'organization_id' in self.request.data:
              pass 
-        serializer.save()
+        super().perform_update(serializer)  # Triggers AuditLogMixin
+
+    def perform_destroy(self, instance):
+        super().perform_destroy(instance)  # Triggers AuditLogMixin
 
 # ============================================================================
 #  KERNEL VIEWSETS
@@ -173,6 +178,7 @@ class TenantResolutionView(viewsets.ViewSet):
     """
     permission_classes = [] 
     authentication_classes = []
+    throttle_classes = [TenantResolveRateThrottle]
 
     @action(detail=False, methods=['get'])
     def resolve(self, request):
@@ -523,6 +529,101 @@ class CountryViewSet(TenantModelViewSet):
 class RoleViewSet(TenantModelViewSet):
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
+
+# ============================================================================
+#  RECORD HISTORY & ENTITY GRAPH (Audit APIs)
+# ============================================================================
+
+class RecordHistoryViewSet(viewsets.ViewSet):
+    """
+    Record History API — Retrieves the full audit trail for any entity.
+    GET /api/record-history/?table=Product&id=<uuid>
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    @action(detail=False, methods=['get'])
+    def trail(self, request):
+        from .models_audit import AuditLog
+        table = request.query_params.get('table', '')
+        record_id = request.query_params.get('id', '')
+        limit = min(int(request.query_params.get('limit', 50)), 200)
+
+        if not table or not record_id:
+            return Response({"error": "Both 'table' and 'id' params required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        tenant_id = get_current_tenant_id()
+        qs = AuditLog.objects.filter(table_name=table, record_id=record_id)
+        if tenant_id:
+            qs = qs.filter(organization_id=tenant_id)
+        
+        entries = qs[:limit]
+        data = [{
+            "id": str(e.id),
+            "timestamp": e.timestamp.isoformat() if e.timestamp else None,
+            "action": e.action,
+            "actor": e.actor.username if e.actor else "system",
+            "old_value": e.old_value,
+            "new_value": e.new_value,
+            "ip_address": str(e.ip_address) if e.ip_address else None,
+            "description": e.description,
+        } for e in entries]
+
+        return Response({"table": table, "record_id": record_id, "history": data})
+
+
+class EntityGraphViewSet(viewsets.ViewSet):
+    """
+    Entity Graph API — Shows relationships between entities.
+    GET /api/entity-graph/?table=Product&id=<uuid>
+    Returns the entity and all related audit/approval/task references.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    @action(detail=False, methods=['get'])
+    def relations(self, request):
+        from .models_audit import AuditLog, ApprovalRequest, TaskQueue
+        table = request.query_params.get('table', '')
+        record_id = request.query_params.get('id', '')
+
+        if not table or not record_id:
+            return Response({"error": "Both 'table' and 'id' params required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        tenant_id = get_current_tenant_id()
+
+        # Audit entries for this entity
+        audit_qs = AuditLog.objects.filter(table_name=table, record_id=record_id)
+        if tenant_id:
+            audit_qs = audit_qs.filter(organization_id=tenant_id)
+        audit_ids = list(audit_qs.values_list('id', flat=True)[:50])
+
+        # Approval requests linked to this entity
+        approval_qs = ApprovalRequest.objects.filter(target_table=table, target_id=record_id)
+        if tenant_id:
+            approval_qs = approval_qs.filter(organization_id=tenant_id)
+        approvals = [{
+            "id": str(a.id),
+            "status": a.status,
+            "requested_by": a.requested_by.username if a.requested_by else None,
+            "reviewed_by": a.reviewed_by.username if a.reviewed_by else None,
+            "created_at": a.created_at.isoformat() if a.created_at else None,
+        } for a in approval_qs[:20]]
+
+        # Tasks linked via audit logs
+        tasks_qs = TaskQueue.objects.filter(source_audit_log_id__in=audit_ids)
+        tasks = [{
+            "id": str(t.id),
+            "title": t.title,
+            "status": t.status,
+            "priority": t.priority,
+            "created_at": t.created_at.isoformat() if t.created_at else None,
+        } for t in tasks_qs[:20]]
+
+        return Response({
+            "entity": {"table": table, "id": record_id},
+            "audit_count": len(audit_ids),
+            "approvals": approvals,
+            "tasks": tasks,
+        })
 
 
 # ============================================================================

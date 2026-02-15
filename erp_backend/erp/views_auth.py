@@ -2,7 +2,8 @@ import logging
 from django.db import transaction
 from django.conf import settings
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
+from .throttles import LoginRateThrottle, RegisterRateThrottle
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
@@ -16,6 +17,7 @@ logger = logging.getLogger('erp')
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([LoginRateThrottle])
 def login_view(request):
     try:
         serializer = LoginSerializer(data=request.data, context={'request': request})
@@ -86,6 +88,7 @@ class PublicConfigView(APIView):
 # ── Business Registration (Public) ──────────────────────────────────────────
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([RegisterRateThrottle])
 def register_business_view(request):
     """
     Public endpoint for self-service business registration.

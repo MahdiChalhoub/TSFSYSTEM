@@ -1,12 +1,12 @@
-import threading
+from contextvars import ContextVar
 
-_thread_locals = threading.local()
+_tenant_id: ContextVar[str | None] = ContextVar('_tenant_id', default=None)
 
 def set_current_tenant_id(tenant_id):
-    _thread_locals.tenant_id = tenant_id
+    _tenant_id.set(tenant_id)
 
 def get_current_tenant_id():
-    return getattr(_thread_locals, 'tenant_id', None)
+    return _tenant_id.get(None)
 
 class TenantMiddleware:
     def __init__(self, get_response):

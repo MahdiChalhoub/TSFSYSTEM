@@ -45,8 +45,9 @@ class AuditLogMixin:
         return data
     
     def _get_org_id(self):
-        """Get organization ID from request."""
-        return getattr(self.request, 'org_id', None)
+        """Get organization ID from middleware context."""
+        from .middleware import get_current_tenant_id
+        return get_current_tenant_id()
     
     def _log_action(self, action, instance, old_data=None):
         """Create audit log entry."""
@@ -60,18 +61,19 @@ class AuditLogMixin:
         try:
             AuditLog.objects.create(
                 organization_id=org_id,
-                user=user,
+                actor=user,
                 action=action,
-                entity_type=self.audit_model_name or instance.__class__.__name__,
-                entity_id=str(instance.pk) if instance else None,
-                new_data=new_data,
-                old_data=old_data,
+                table_name=self.audit_model_name or instance.__class__.__name__,
+                record_id=str(instance.pk) if instance else '',
+                new_value=new_data,
+                old_value=old_data,
                 ip_address=self.request.META.get('REMOTE_ADDR'),
                 user_agent=self.request.META.get('HTTP_USER_AGENT', '')[:500],
             )
         except Exception as e:
             # Don't fail the request if audit logging fails
-            print(f"[AUDIT] Failed to log action: {e}")
+            import logging
+            logging.getLogger('erp').warning(f"[AUDIT] Failed to log action: {e}")
     
     def perform_create(self, serializer):
         """Override to log CREATE actions."""
