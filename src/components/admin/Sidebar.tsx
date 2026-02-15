@@ -77,7 +77,6 @@ const MENU_ITEMS = [
                 title: 'Purchase Registry',
                 children: [
                     { title: 'Active Invoices', path: '/purchases' },
-                    { title: 'Archived POs', path: '/purchases/archived' },
                 ]
             },
             { title: 'New PO Invoice', path: '/purchases/new' },
@@ -134,8 +133,6 @@ const MENU_ITEMS = [
         module: 'crm',
         children: [
             { title: 'Contact Center', path: '/crm/contacts' },
-            { title: 'Customer Loyalty', path: '/crm/loyalty' },
-            { title: 'Supplier Portals', path: '/crm/suppliers' },
         ]
     },
     {
@@ -144,9 +141,7 @@ const MENU_ITEMS = [
         module: 'hr',
         children: [
             { title: 'Employee Manager', path: '/hr/employees' },
-            { title: 'Payroll & Accruals', path: '/hr/payroll' },
             { title: 'Enlistment Approvals', path: '/users/approvals' },
-            { title: 'Access Control (Roles)', path: '/hr/roles' },
         ]
     },
     {
