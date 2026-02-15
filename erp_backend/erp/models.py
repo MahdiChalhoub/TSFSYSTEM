@@ -229,6 +229,10 @@ class Organization(models.Model):
     reminder_config = models.JSONField(default=dict, blank=True, help_text="e.g. {'days_before': 5}")
     current_plan = models.ForeignKey('SubscriptionPlan', on_delete=models.SET_NULL, null=True, blank=True, related_name='organizations')
 
+    # AES-256 Encryption Add-on
+    encryption_key = models.CharField(max_length=64, null=True, blank=True, help_text='Base64-encoded AES-256 key (per-org)')
+    encryption_enabled = models.BooleanField(default=False, help_text='Whether field-level encryption is active')
+
     class Meta:
         db_table = 'organization'
 
