@@ -243,13 +243,20 @@ class SaaSModuleViewSet(viewsets.ViewSet):
         
         active_modules = SystemModule.objects.all()
         for m in active_modules:
+            # ARCHITECTURE: Skip core/platform modules — their sidebar items
+            # are already hardcoded in the frontend Sidebar.tsx (MENU_ITEMS).
+            # Only business modules should inject dynamic sidebar items.
+            manifest = m.manifest or {}
+            if manifest.get('is_core', False) or manifest.get('category') == 'core':
+                continue
+
             # Verify module exists in filesystem before trusting manifest
             mod_path = ModuleManager.get_module_path(m.name)
             if not mod_path:
                 continue
                 
             # Extract sidebar items from manifest
-            mod_items = m.manifest.get('sidebar_items', [])
+            mod_items = manifest.get('sidebar_items', [])
             for item in mod_items:
                 # Visibility check: Some items only show in SaaS, some only in Tenant
                 if item.get('visibility') == 'saas' and not is_saas:
