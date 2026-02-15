@@ -57,11 +57,24 @@ export async function erpFetch(
             (headers as Record<string, string>)['Content-Type'] || 'application/json'
     }
 
-    return fetch(url, {
+    // Smart cache: GET requests revalidate every 30s, mutations use no-store
+    const method = (rest.method || 'GET').toUpperCase();
+    const isReadRequest = method === 'GET' || method === 'HEAD';
+
+    const fetchOpts: any = {
         ...rest,
         headers,
-        cache: options.cache || 'no-store',
-    })
+    };
+
+    if (options.cache) {
+        fetchOpts.cache = options.cache;
+    } else if (isReadRequest) {
+        fetchOpts.next = { revalidate: 30 };
+    } else {
+        fetchOpts.cache = 'no-store';
+    }
+
+    return fetch(url, fetchOpts)
 }
 
 /**

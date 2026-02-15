@@ -1,0 +1,54 @@
+export default function DashboardLoading() {
+    return (
+        <div className="space-y-6 animate-in fade-in duration-300">
+            {/* Header */}
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
+                <div className="space-y-3">
+                    <div className="h-3 w-36 bg-gray-100 rounded animate-pulse" />
+                    <div className="h-12 w-72 bg-gray-200 rounded-xl animate-pulse" />
+                    <div className="h-4 w-56 bg-gray-100 rounded animate-pulse" />
+                </div>
+                <div className="flex gap-3">
+                    <div className="h-12 w-28 bg-gray-100 rounded-2xl animate-pulse" />
+                    <div className="h-12 w-24 bg-gray-100 rounded-2xl animate-pulse" />
+                    <div className="h-12 w-32 bg-emerald-100 rounded-2xl animate-pulse" />
+                </div>
+            </div>
+
+            {/* Stats grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[...Array(4)].map((_, i) => (
+                    <div key={i} className="bg-white border border-gray-100 rounded-[2rem] shadow-sm p-8 space-y-4 animate-pulse" style={{ animationDelay: `${i * 0.08}s` }}>
+                        <div className="h-12 w-12 bg-gray-100 rounded-2xl" />
+                        <div className="space-y-2">
+                            <div className="h-3 w-28 bg-gray-100 rounded" />
+                            <div className="h-8 w-16 bg-gray-200 rounded" />
+                        </div>
+                        <div className="h-3 w-16 bg-gray-50 rounded" />
+                    </div>
+                ))}
+            </div>
+
+            {/* Content area */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 bg-white border border-gray-100 rounded-[2.5rem] shadow-sm p-8 space-y-4 animate-pulse">
+                    <div className="h-6 w-48 bg-gray-200 rounded" />
+                    <div className="h-3 w-36 bg-gray-100 rounded" />
+                    <div className="space-y-3 mt-6">
+                        {[...Array(3)].map((_, i) => (
+                            <div key={i} className="h-16 bg-gray-50 rounded-2xl" />
+                        ))}
+                    </div>
+                </div>
+                <div className="bg-white border border-gray-100 rounded-[2.5rem] shadow-sm p-8 space-y-4 animate-pulse">
+                    <div className="h-6 w-32 bg-gray-200 rounded" />
+                    <div className="space-y-3 mt-4">
+                        {[...Array(4)].map((_, i) => (
+                            <div key={i} className="h-14 bg-gray-50 rounded-2xl" />
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}

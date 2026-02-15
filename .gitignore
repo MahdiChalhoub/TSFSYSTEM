@@ -54,6 +54,11 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Python virtual environment (CRITICAL: protects server venv from git clean)
+venv/
+*/venv/
+.venv/
+
 # local development
 .agent/
 .gemini/

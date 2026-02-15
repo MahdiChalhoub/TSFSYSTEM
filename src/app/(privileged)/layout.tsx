@@ -8,7 +8,7 @@ import { TabNavigator } from '@/components/admin/TabNavigator';
 import { DevProvider } from '@/context/DevContext';
 import DebugOverlay from '@/components/dev/DebugOverlay';
 
-import { Outfit } from 'next/font/google';
+
 import { getSites } from '@/app/actions/sites';
 import { getOrganizations } from '@/app/(privileged)/(saas)/organizations/actions';
 import { getUser } from '@/app/actions/auth';
@@ -18,7 +18,7 @@ import { headers } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
-const outfit = Outfit({ subsets: ['latin'] });
+
 
 export default async function AdminLayout({
     children,
