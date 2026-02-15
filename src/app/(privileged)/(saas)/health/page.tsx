@@ -49,19 +49,19 @@ function formatUptime(seconds: number): string {
 }
 
 function LatencyBadge({ ms, label }: { ms: number; label: string }) {
-    const color = ms < 100 ? 'text-emerald-400' : ms < 500 ? 'text-yellow-400' : 'text-red-400'
-    const bg = ms < 100 ? 'bg-emerald-500/10 border-emerald-500/20' : ms < 500 ? 'bg-yellow-500/10 border-yellow-500/20' : 'bg-red-500/10 border-red-500/20'
+    const color = ms < 100 ? 'text-emerald-600' : ms < 500 ? 'text-yellow-600' : 'text-red-600'
+    const bg = ms < 100 ? 'bg-emerald-50 border-emerald-200/60' : ms < 500 ? 'bg-yellow-50 border-yellow-200/60' : 'bg-red-50 border-red-200/60'
     return (
         <div className={`rounded-xl border ${bg} p-4 text-center`}>
             <div className={`text-2xl font-black ${color} tabular-nums`}>{ms.toFixed(1)}<span className="text-xs font-medium opacity-60">ms</span></div>
-            <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mt-1">{label}</div>
+            <div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mt-1">{label}</div>
         </div>
     )
 }
 
 function StatusDot({ ok }: { ok: boolean }) {
     return (
-        <span className={`inline-block w-2 h-2 rounded-full ${ok ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]' : 'bg-red-400 shadow-[0_0_6px_rgba(248,113,113,0.6)]'}`} />
+        <span className={`inline-block w-2 h-2 rounded-full ${ok ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]' : 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.5)]'}`} />
     )
 }
 
@@ -107,16 +107,16 @@ export default function HealthPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-3xl font-black text-white tracking-tight">Platform Health</h2>
-                    <p className="text-slate-500 mt-1 font-medium">Real-time API performance monitoring</p>
+                    <h2 className="text-3xl font-black text-gray-900 tracking-tight">Platform Health</h2>
+                    <p className="text-gray-500 mt-1 font-medium">Real-time API performance monitoring</p>
                 </div>
                 <div className="flex items-center gap-4">
-                    <span className="text-xs text-slate-600 font-mono">
+                    <span className="text-xs text-gray-400 font-mono">
                         {lastRefresh.toLocaleTimeString()}
                     </span>
                     <button
                         onClick={fetchHealth}
-                        className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-all"
+                        className="p-2.5 rounded-xl bg-white hover:bg-gray-50 text-gray-400 hover:text-gray-700 transition-all border border-gray-200 shadow-sm"
                     >
                         <RefreshCw size={16} />
                     </button>
@@ -124,7 +124,7 @@ export default function HealthPage() {
             </div>
 
             {error && (
-                <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm font-medium flex items-center gap-3">
+                <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm font-medium flex items-center gap-3">
                     <AlertTriangle size={18} />
                     {error}
                 </div>
@@ -132,68 +132,68 @@ export default function HealthPage() {
 
             {/* Top Status Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="bg-slate-800/50 border-slate-700/50">
+                <Card className="bg-white border-gray-100 rounded-[2rem] shadow-xl overflow-hidden">
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between mb-3">
-                            <Server className="text-emerald-400" size={22} />
-                            <Badge className={isOnline ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30'}>
+                            <Server className="text-emerald-500" size={22} />
+                            <Badge className={isOnline ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-red-50 text-red-600 border-red-200'}>
                                 <StatusDot ok={!!isOnline} />
                                 <span className="ml-2">{isOnline ? 'Online' : 'Offline'}</span>
                             </Badge>
                         </div>
-                        <h3 className="font-bold text-white">API Services</h3>
-                        <p className="text-xs text-slate-500 mt-1">{health?.service || 'Unknown'}</p>
+                        <h3 className="font-bold text-gray-900">API Services</h3>
+                        <p className="text-xs text-gray-500 mt-1">{health?.service || 'Unknown'}</p>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-slate-800/50 border-slate-700/50">
+                <Card className="bg-white border-gray-100 rounded-[2rem] shadow-xl overflow-hidden">
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between mb-3">
-                            <Database className="text-blue-400" size={22} />
-                            <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+                            <Database className="text-blue-500" size={22} />
+                            <Badge className="bg-emerald-50 text-emerald-600 border-emerald-200">
                                 <StatusDot ok={true} />
                                 <span className="ml-2">Connected</span>
                             </Badge>
                         </div>
-                        <h3 className="font-bold text-white">Database</h3>
-                        <p className="text-xs text-slate-500 mt-1">{health?.database || 'PostgreSQL'}</p>
+                        <h3 className="font-bold text-gray-900">Database</h3>
+                        <p className="text-xs text-gray-500 mt-1">{health?.database || 'PostgreSQL'}</p>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-slate-800/50 border-slate-700/50">
+                <Card className="bg-white border-gray-100 rounded-[2rem] shadow-xl overflow-hidden">
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between mb-3">
-                            <Activity className="text-purple-400" size={22} />
-                            <span className="text-2xl font-black text-white tabular-nums">{traffic?.requests_last_5min || 0}</span>
+                            <Activity className="text-purple-500" size={22} />
+                            <span className="text-2xl font-black text-gray-900 tabular-nums">{traffic?.requests_last_5min || 0}</span>
                         </div>
-                        <h3 className="font-bold text-white">Requests (5m)</h3>
-                        <p className="text-xs text-slate-500 mt-1">Total: {traffic?.total_requests?.toLocaleString() || 0}</p>
+                        <h3 className="font-bold text-gray-900">Requests (5m)</h3>
+                        <p className="text-xs text-gray-500 mt-1">Total: {traffic?.total_requests?.toLocaleString() || 0}</p>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-slate-800/50 border-slate-700/50">
+                <Card className="bg-white border-gray-100 rounded-[2rem] shadow-xl overflow-hidden">
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between mb-3">
-                            <Clock className="text-amber-400" size={22} />
-                            <Badge className="bg-slate-700 text-slate-300 border-slate-600">
+                            <Clock className="text-amber-500" size={22} />
+                            <Badge className="bg-gray-50 text-gray-600 border-gray-200">
                                 {formatUptime(health?.uptime_seconds || 0)}
                             </Badge>
                         </div>
-                        <h3 className="font-bold text-white">Uptime</h3>
-                        <p className="text-xs text-slate-500 mt-1">Since last restart</p>
+                        <h3 className="font-bold text-gray-900">Uptime</h3>
+                        <p className="text-xs text-gray-500 mt-1">Since last restart</p>
                     </CardContent>
                 </Card>
             </div>
 
             {/* Latency Metrics */}
             {latency && (
-                <Card className="bg-slate-800/50 border-slate-700/50">
+                <Card className="bg-white border-gray-100 rounded-[2rem] shadow-xl overflow-hidden">
                     <CardHeader className="pb-4">
                         <div className="flex items-center gap-3">
-                            <Zap className="text-cyan-400" size={20} />
-                            <CardTitle className="text-white text-lg">Latency Percentiles</CardTitle>
+                            <Zap className="text-cyan-500" size={20} />
+                            <CardTitle className="text-gray-900 text-lg">Latency Percentiles</CardTitle>
                         </div>
-                        <CardDescription className="text-slate-500">Based on last {traffic?.tracked_window || 0} tracked requests</CardDescription>
+                        <CardDescription className="text-gray-500">Based on last {traffic?.tracked_window || 0} tracked requests</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -212,11 +212,11 @@ export default function HealthPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Status Code Breakdown */}
                 {traffic?.status_breakdown && Object.keys(traffic.status_breakdown).length > 0 && (
-                    <Card className="bg-slate-800/50 border-slate-700/50">
+                    <Card className="bg-white border-gray-100 rounded-[2rem] shadow-xl overflow-hidden">
                         <CardHeader className="pb-4">
                             <div className="flex items-center gap-3">
-                                <BarChart3 className="text-violet-400" size={20} />
-                                <CardTitle className="text-white text-lg">Response Codes</CardTitle>
+                                <BarChart3 className="text-violet-500" size={20} />
+                                <CardTitle className="text-gray-900 text-lg">Response Codes</CardTitle>
                             </div>
                         </CardHeader>
                         <CardContent>
@@ -229,11 +229,11 @@ export default function HealthPage() {
                                         const color = bucket === '2xx' ? 'bg-emerald-500' : bucket === '3xx' ? 'bg-blue-500' : bucket === '4xx' ? 'bg-yellow-500' : 'bg-red-500'
                                         return (
                                             <div key={bucket} className="flex items-center gap-3">
-                                                <span className="text-xs font-mono text-slate-400 w-8">{bucket}</span>
-                                                <div className="flex-1 bg-slate-700/50 rounded-full h-2 overflow-hidden">
+                                                <span className="text-xs font-mono text-gray-500 w-8">{bucket}</span>
+                                                <div className="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
                                                     <div className={`${color} h-full rounded-full transition-all duration-500`} style={{ width: `${pct}%` }} />
                                                 </div>
-                                                <span className="text-xs text-slate-500 tabular-nums w-20 text-right">{count.toLocaleString()} ({pct}%)</span>
+                                                <span className="text-xs text-gray-500 tabular-nums w-20 text-right">{count.toLocaleString()} ({pct}%)</span>
                                             </div>
                                         )
                                     })}
@@ -244,23 +244,23 @@ export default function HealthPage() {
 
                 {/* Slow Endpoints */}
                 {health?.slow_endpoints && health.slow_endpoints.length > 0 && (
-                    <Card className="bg-slate-800/50 border-slate-700/50">
+                    <Card className="bg-white border-gray-100 rounded-[2rem] shadow-xl overflow-hidden">
                         <CardHeader className="pb-4">
                             <div className="flex items-center gap-3">
-                                <TrendingUp className="text-orange-400" size={20} />
-                                <CardTitle className="text-white text-lg">Slowest Endpoints</CardTitle>
+                                <TrendingUp className="text-orange-500" size={20} />
+                                <CardTitle className="text-gray-900 text-lg">Slowest Endpoints</CardTitle>
                             </div>
-                            <CardDescription className="text-slate-500">Top 5 by P95 latency</CardDescription>
+                            <CardDescription className="text-gray-500">Top 5 by P95 latency</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-3">
                                 {health.slow_endpoints.map((ep, i) => (
-                                    <div key={i} className="flex items-center justify-between py-2 border-b border-slate-700/30 last:border-0">
+                                    <div key={i} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
                                         <div className="flex-1 min-w-0">
-                                            <div className="text-sm text-white font-mono truncate">{ep.endpoint}</div>
-                                            <div className="text-[10px] text-slate-500 mt-0.5">{ep.count} requests · avg {ep.avg_ms.toFixed(1)}ms</div>
+                                            <div className="text-sm text-gray-900 font-mono truncate">{ep.endpoint}</div>
+                                            <div className="text-[10px] text-gray-400 mt-0.5">{ep.count} requests · avg {ep.avg_ms.toFixed(1)}ms</div>
                                         </div>
-                                        <div className={`text-sm font-bold tabular-nums ${ep.p95_ms < 200 ? 'text-emerald-400' : ep.p95_ms < 1000 ? 'text-yellow-400' : 'text-red-400'}`}>
+                                        <div className={`text-sm font-bold tabular-nums ${ep.p95_ms < 200 ? 'text-emerald-600' : ep.p95_ms < 1000 ? 'text-yellow-600' : 'text-red-600'}`}>
                                             {ep.p95_ms.toFixed(0)}ms
                                         </div>
                                     </div>
@@ -272,17 +272,17 @@ export default function HealthPage() {
             </div>
 
             {/* AES Encryption Status */}
-            <Card className="bg-slate-800/50 border-slate-700/50 border-l-4 border-l-cyan-500">
+            <Card className="bg-white border-gray-100 rounded-[2rem] shadow-xl overflow-hidden border-l-4 border-l-cyan-500">
                 <CardContent className="pt-6">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center">
-                            <Shield className="text-cyan-400" size={24} />
+                        <div className="w-12 h-12 rounded-xl bg-cyan-50 flex items-center justify-center">
+                            <Shield className="text-cyan-500" size={24} />
                         </div>
                         <div className="flex-1">
-                            <h3 className="font-bold text-white">AES-256 Encryption</h3>
-                            <p className="text-xs text-slate-500 mt-0.5">Transport Layer Security active · TLS 1.3 in transit</p>
+                            <h3 className="font-bold text-gray-900">AES-256 Encryption</h3>
+                            <p className="text-xs text-gray-500 mt-0.5">Transport Layer Security active · TLS 1.3 in transit</p>
                         </div>
-                        <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30">
+                        <Badge className="bg-cyan-50 text-cyan-600 border-cyan-200">
                             <StatusDot ok={true} />
                             <span className="ml-2">Active</span>
                         </Badge>
