@@ -59,7 +59,121 @@ function getIcon(name: string) {
     return ICON_MAP[name] || Box;
 }
 
-
+// Data Structure for the Recursive Menu
+const MENU_ITEMS = [
+    {
+        title: 'Dashboard',
+        icon: LayoutDashboard,
+        path: '/dashboard',
+        module: 'core'
+    },
+    {
+        title: 'Commercial',
+        icon: ShoppingBag,
+        module: 'pos',
+        children: [
+            { title: 'POS Terminal', path: '/sales' },
+            {
+                title: 'Purchase Registry',
+                children: [
+                    { title: 'Active Invoices', path: '/purchases' },
+                    { title: 'Archived POs', path: '/purchases/archived' },
+                ]
+            },
+            { title: 'New PO Invoice', path: '/purchases/new' },
+        ]
+    },
+    {
+        title: 'Inventory',
+        icon: Box,
+        module: 'inventory',
+        children: [
+            { title: 'Product Master', path: '/products' },
+            { title: 'Product Groups', path: '/products?view=grouped' },
+            { title: 'New Product Group', path: '/products/create-group' },
+            { title: 'Barcode Configuration', path: '/inventory/barcode', module: 'inventory' },
+            { title: 'Warehouses & Zones', path: '/inventory/warehouses' },
+            { title: 'Stock Adjustments', path: '/inventory/adjustments' },
+            { title: 'Global Inventory', path: '/inventory/global' },
+            { title: 'Categories', path: '/inventory/categories' },
+            { title: 'Categories Audit', path: '/inventory/categories/maintenance' },
+            { title: 'Units & Packaging', path: '/inventory/units' },
+            { title: 'Brands', path: '/inventory/brands' },
+            { title: 'Countries', path: '/inventory/countries' },
+            { title: 'Attributes', path: '/inventory/attributes' },
+            { title: 'System Maintenance', path: '/inventory/maintenance' },
+        ]
+    },
+    {
+        title: 'Finance',
+        icon: FileText,
+        module: 'finance',
+        children: [
+            { title: 'Performance Dashboard', path: '/finance/dashboard' },
+            { title: 'Accounts & Drawers', path: '/finance/accounts' },
+            { title: 'Chart of Accounts', path: '/finance/chart-of-accounts' },
+            { title: 'COA Templates', path: '/finance/chart-of-accounts/templates' },
+            { title: 'Migration Tool', path: '/finance/chart-of-accounts/migrate' },
+            { title: 'General Ledger', path: '/finance/ledger' },
+            { title: 'Opening Balances', path: '/finance/ledger/opening' },
+            { title: 'Account Statement', path: '/finance/reports/statement' },
+            { title: 'Trial Balance', path: '/finance/reports/trial-balance' },
+            { title: 'Profit & Loss', path: '/finance/reports/pnl' },
+            { title: 'Balance Sheet', path: '/finance/reports/balance-sheet' },
+            { title: 'Fiscal Years', path: '/finance/fiscal-years' },
+            { title: 'Pricing Engine', path: '/finance/pricing' },
+            { title: 'Loan Contracts', path: '/finance/loans' },
+            { title: 'Financial Events', path: '/finance/events' },
+            { title: 'Posting Rules', path: '/finance/settings/posting-rules' },
+            { title: 'Financial Settings', path: '/finance/settings' },
+        ]
+    },
+    {
+        title: 'CRM',
+        icon: Users,
+        module: 'crm',
+        children: [
+            { title: 'Contact Center', path: '/crm/contacts' },
+            { title: 'Customer Loyalty', path: '/crm/loyalty' },
+            { title: 'Supplier Portals', path: '/crm/suppliers' },
+        ]
+    },
+    {
+        title: 'HR & Teams',
+        icon: ShieldCheck,
+        module: 'hr',
+        children: [
+            { title: 'Employee Manager', path: '/hr/employees' },
+            { title: 'Payroll & Accruals', path: '/hr/payroll' },
+            { title: 'Enlistment Approvals', path: '/users/approvals' },
+            { title: 'Access Control (Roles)', path: '/hr/roles' },
+        ]
+    },
+    {
+        title: 'SaaS Control',
+        icon: ShieldCheck,
+        visibility: 'saas',
+        children: [
+            { title: 'SaaS Dashboard', path: '/dashboard' },
+            { title: 'Organizations', path: '/organizations' },
+            { title: 'Global Registry', path: '/modules' },
+            { title: 'Connector Control', path: '/connector' },
+            { title: 'Instance Switcher', path: '/switcher' },
+            { title: 'Platform Health', path: '/health' },
+            { title: 'Kernel Updates', path: '/updates' },
+            { title: 'Subscription Plans', path: '/subscription-plans' },
+        ]
+    },
+    {
+        title: 'System Settings',
+        icon: Settings,
+        module: 'core',
+        children: [
+            { title: 'Sites & Branches', path: '/settings/sites' },
+            { title: 'Billing & Subscription', path: '/subscription', icon: CreditCard },
+        ]
+    },
+];
 
 export function Sidebar({
     isSaas = false,
@@ -83,7 +197,7 @@ export function Sidebar({
                 ]);
 
                 if (Array.isArray(modules)) {
-                    // setInstalledModules no longer needed
+                    setInstalledModules(new Set(modules.map((m: any) => m.code)));
                 }
 
                 if (Array.isArray(sidebarData)) {
@@ -112,13 +226,17 @@ export function Sidebar({
         fetchData();
     }, []);
 
-    // Merge hardcoded core with dynamic (DEPRECATED: Now fully dynamic)
-    const allItems = [...dynamicItems];
+    // Merge hardcoded core with dynamic
+    const allItems = [...MENU_ITEMS, ...dynamicItems];
 
     const processedItems = allItems.filter(item => {
         // 1. Filter by SaaS Panel visibility logic
         if (!isSaas && item.visibility === 'saas') return false;
 
+        // 2. Filter by Installed Module
+        if (item.module && item.module !== 'core' && !installedModules.has(item.module)) {
+            return false;
+        }
         return true;
     });
 
@@ -192,8 +310,8 @@ export function Sidebar({
 
                 <div className="p-6 space-y-2 flex-1 overflow-y-auto custom-scrollbar">
                     <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-6 px-3 mt-2">Main Menu</div>
-                    {processedItems.map((item, idx) => (
-                        <MenuItem key={idx} item={item} openTab={openTab} activeTab={activeTab} />
+                    {filteredItems.map((item, idx) => (
+                        <MenuItem key={idx} item={item} openTab={openTab} activeTab={activeTab} installedModules={installedModules} />
                     ))}
                 </div>
 
@@ -216,13 +334,19 @@ function MenuItem({
     item,
     openTab,
     activeTab,
+    installedModules,
     level = 0
 }: {
     item: any,
     openTab: any,
     activeTab: string,
+    installedModules: Set<string>,
     level?: number
 }) {
+    // 1. Module & Visibility Filter
+    if (item.module && item.module !== 'core' && !installedModules.has(item.module)) {
+        return null;
+    }
 
     const Icon = item.icon;
     const hasChildren = item.children && item.children.length > 0;
@@ -291,6 +415,7 @@ function MenuItem({
                             item={child}
                             openTab={openTab}
                             activeTab={activeTab}
+                            installedModules={installedModules}
                             level={level + 1}
                         />
                     ))}
