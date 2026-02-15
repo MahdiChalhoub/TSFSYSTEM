@@ -15,6 +15,7 @@ from .views_saas_modules import SaaSModuleViewSet, OrgModuleViewSet, SaaSUpdateV
 from .views_modules import ModuleListView, ModuleEnableView, ModuleDisableView
 from .views_kernel import KernelViewSet
 from .views_packages import PackageViewSet
+from .views_encryption import EncryptionViewSet
 
 # ── Kernel Router (infrastructure only) ──────────────────────────────────────
 router = DefaultRouter()
@@ -28,6 +29,7 @@ router.register(r'roles', RoleViewSet)
 router.register(r'users', UserViewSet)
 router.register(r'record-history', RecordHistoryViewSet, basename='record-history')
 router.register(r'entity-graph', EntityGraphViewSet, basename='entity-graph')
+router.register(r'encryption', EncryptionViewSet, basename='encryption')
 
 # SaaS Management
 router.register(r'saas/modules', SaaSModuleViewSet, basename='saas-modules')

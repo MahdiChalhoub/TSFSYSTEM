@@ -40,6 +40,8 @@ export async function hasPermission(permission: string): Promise<boolean> {
     if (!user) return false;
     // Superusers have all permissions
     if (user.is_superuser) return true;
-    // TODO: Check role-based permissions when RBAC is fully implemented
-    return true;
+    // Delegate to the RBAC permission system
+    const { hasPermission: checkPerm } = await import('./permissions');
+    return checkPerm(permission, user);
 }
+
