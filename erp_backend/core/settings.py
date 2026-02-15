@@ -61,6 +61,7 @@ if APPS_DIR.exists():
 
 MIDDLEWARE = [
     'erp.latency_middleware.LatencyTrackingMiddleware',
+    'erp.ip_whitelist.SaaSIPWhitelistMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -97,6 +98,12 @@ REST_FRAMEWORK = {
     }
 }
 
+
+# SaaS Admin IP Whitelisting
+# Empty list = allow all IPs (open mode)
+# Add IPs to restrict /api/saas/ endpoints:
+# SAAS_ADMIN_IP_WHITELIST = ['127.0.0.1', '91.99.186.183']
+SAAS_ADMIN_IP_WHITELIST = []
 
 ROOT_URLCONF = 'core.urls'
 
