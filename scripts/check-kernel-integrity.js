@@ -7,6 +7,7 @@ const APPROVED_DIRS = [
     '[code]',
     'connector',
     'dashboard',
+    'encryption',   // AES-256 encryption management (core security feature)
     'health',
     'kernel',       // Kernel version management (core infrastructure)
     'modules',
