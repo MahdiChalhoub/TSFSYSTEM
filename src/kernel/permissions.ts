@@ -1,7 +1,7 @@
 /**
  * Kernel: Permission Guard
  * 
- * Route-level permission checking using module manifests.
+ * Route-level permission checking using module manifests and RBAC.
  * Verifies that a user has the required permissions for a module action.
  * 
  * Usage:
@@ -20,9 +20,54 @@ import { loadManifest } from './manifest-loader';
 import type { KernelUser } from './types';
 
 /**
+ * Fetch the current user's permission codes from the backend.
+ * Calls GET /api/users/my-permissions/ with the auth token.
+ * Returns cached permissions for the lifetime of the request.
+ */
+let _cachedPermissions: string[] | null = null;
+
+async function fetchUserPermissions(): Promise<string[]> {
+    if (_cachedPermissions !== null) return _cachedPermissions;
+
+    try {
+        const { cookies } = await import('next/headers');
+        const cookieStore = await cookies();
+        const token = cookieStore.get('auth_token')?.value;
+        const tenantId = cookieStore.get('tenant_id')?.value;
+
+        if (!token) {
+            _cachedPermissions = [];
+            return [];
+        }
+
+        const backendUrl = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
+        const headers: Record<string, string> = {
+            'Authorization': `Token ${token}`,
+            'Content-Type': 'application/json',
+        };
+        if (tenantId) headers['X-Tenant-Id'] = tenantId;
+
+        const res = await fetch(`${backendUrl}/api/users/my-permissions/`, {
+            headers,
+            cache: 'no-store',
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            _cachedPermissions = data.permissions || [];
+        } else {
+            _cachedPermissions = [];
+        }
+    } catch {
+        _cachedPermissions = [];
+    }
+
+    return _cachedPermissions;
+}
+
+/**
  * Check if a user has a specific permission.
- * Currently grants all permissions to superusers and staff.
- * When RBAC is fully implemented, this will check role-based grants.
+ * Checks role-based permission grants from the backend.
  */
 export async function hasPermission(
     permission: string,
@@ -34,15 +79,9 @@ export async function hasPermission(
     // Superusers bypass all permission checks
     if (currentUser.is_superuser) return true;
 
-    // Staff users have full access (until RBAC is implemented)
-    if (currentUser.is_staff) return true;
-
-    // TODO: When RBAC is implemented, check:
-    // 1. User's role assignments
-    // 2. Role's granted permissions
-    // 3. Match against the requested permission
-
-    return false;
+    // Fetch role-based permissions from backend
+    const permissions = await fetchUserPermissions();
+    return permissions.includes(permission);
 }
 
 /**
@@ -65,9 +104,10 @@ export async function canAccessModule(moduleCode: string): Promise<boolean> {
     const manifest = loadManifest(moduleCode);
     if (!manifest) return true; // No manifest = no restrictions
 
-    // For now, any authenticated user with staff status can access
-    // TODO: Check specific manifest.permissions against user's role grants
-    return user.is_staff;
+    // Check if user has any permission for this module
+    const permissions = await fetchUserPermissions();
+    const modulePrefix = `${moduleCode}.`;
+    return permissions.some(p => p.startsWith(modulePrefix));
 }
 
 /**
@@ -92,7 +132,7 @@ export async function requireModuleAccess(moduleCode: string): Promise<void> {
 }
 
 /**
- * Get all permissions available to the current user based on enabled modules.
+ * Get all permissions available to the current user based on their role.
  */
 export async function getUserPermissions(): Promise<string[]> {
     const user = await getCurrentUser();
@@ -105,6 +145,6 @@ export async function getUserPermissions(): Promise<string[]> {
         return manifests.flatMap(m => m.permissions);
     }
 
-    // TODO: Return permissions based on user's role assignments
-    return [];
+    // Fetch actual role-based permissions from backend
+    return fetchUserPermissions();
 }

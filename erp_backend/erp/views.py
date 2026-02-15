@@ -171,6 +171,31 @@ class UserViewSet(TenantModelViewSet):
         verified = user.check_scope_pin(scope, pin)
         return Response({"verified": verified, "has_pin": True})
 
+    @action(detail=False, methods=['get'], url_path='my-permissions')
+    def my_permissions(self, request):
+        """Return the current user's permissions based on their role.
+        Used by the frontend RBAC system (kernel/permissions.ts).
+        GET /api/users/my-permissions/
+        Returns: { "permissions": ["inventory.view_products", ...], "role": "Admin" }
+        """
+        user = request.user
+        if not user.is_authenticated:
+            return Response({"permissions": [], "role": None})
+
+        # Superusers get all permissions
+        if user.is_superuser:
+            all_perms = list(Permission.objects.values_list('code', flat=True))
+            return Response({"permissions": all_perms, "role": "superuser", "is_superuser": True})
+
+        # Get permissions from user's role
+        role = user.role
+        if role:
+            perms = list(role.permissions.values_list('code', flat=True))
+            return Response({"permissions": perms, "role": role.name, "is_superuser": False})
+
+        return Response({"permissions": [], "role": None, "is_superuser": False})
+
+
 class TenantResolutionView(viewsets.ViewSet):
     """
     Public endpoint to resolve tenant slug to ID.
