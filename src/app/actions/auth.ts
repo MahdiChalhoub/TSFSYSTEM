@@ -1,5 +1,6 @@
 'use server'
 
+import { cache } from 'react'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
@@ -191,7 +192,11 @@ export async function logoutAction() {
     redirect('/login')
 }
 
-export async function getUser() {
+/**
+ * React.cache() deduplicates calls within a single server render.
+ * Multiple layouts calling getUser() in the same request → only 1 API call.
+ */
+export const getUser = cache(async function getUser() {
     const { erpFetch } = await import("@/lib/erp-api")
     try {
         const user = await erpFetch('auth/me/')
@@ -208,7 +213,6 @@ export async function getUser() {
             msg.includes('not provided');
 
         if (isAuthError) {
-            console.log(`[AUTH_ACTION] Session expired or invalid for getUser: ${error.message}`);
             return null;
         }
 
@@ -216,4 +220,4 @@ export async function getUser() {
         // This handles cases where the backend is down (ECONNREFUSED) or returning 500
         throw error;
     }
-}
+})

@@ -1,8 +1,9 @@
-// Don't import at top level - causes build failure in client components
-// import { headers } from 'next/headers';
-
 // Use 127.0.0.1 to avoid IPv6 resolution issues with localhost on Windows/Node 18+
 const DJANGO_URL = process.env.DJANGO_URL || 'http://127.0.0.1:8000';
+
+// Performance: Only log in development to avoid I/O overhead in production
+const isDev = process.env.NODE_ENV === 'development';
+const debug = (...args: any[]) => isDev && console.log(...args);
 
 export async function getTenantContext() {
     let host = '';
@@ -19,7 +20,7 @@ export async function getTenantContext() {
         }
     }
 
-    console.log(`[DEBUG] getTenantContext Host: ${host}`);
+    debug(`[DEBUG] getTenantContext Host: ${host}`);
 
     // Precise Hostname extraction (removes port)
     const hostname = host.split(':')[0].toLowerCase();
@@ -37,7 +38,7 @@ export async function getTenantContext() {
         if (parts.length > 2) subdomain = parts[0];
     }
 
-    console.log(`[DEBUG] Subdomain detected: ${subdomain}`);
+    debug(`[DEBUG] Subdomain detected: ${subdomain}`);
 
     if (!subdomain || subdomain === "www" || subdomain === "saas") {
         // Root Domain only - No Tenant Context (Fallback)
@@ -78,35 +79,22 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
             const token = cookieStore.get('auth_token')?.value;
             if (token) {
                 headersRaw.set('Authorization', `Token ${token}`);
-                console.log(`[ERP_API] Token found in cookies for ${path}: ${token.substring(0, 5)}...`);
-            } else {
-                console.log(`[ERP_API] No auth_token cookie found for ${path}`);
+                debug(`[ERP_API] Token injected for ${path}`);
             }
         } catch (e) {
-            console.log(`[ERP_API] Cookies not available in this context for ${path}`);
+            // Cookies not available (client context or static generation)
         }
-    } else if (isLoginEndpoint) {
-        console.log(`[ERP_API] Skipping token injection for login endpoint`);
-    } else {
-        console.log(`[ERP_API] Authorization header already present for ${path}`);
     }
 
     if (context) {
         headersRaw.set('X-Tenant-Id', context.id);
         headersRaw.set('X-Tenant-Slug', context.slug);
-        console.log(`[DEBUG] erpFetch Context: ${context.slug}`);
+        debug(`[DEBUG] erpFetch Context: ${context.slug}`);
     } else {
-        // [SAAS FIX]
-        // If no context (SaaS Panel), we DO NOT send X-Tenant-Id.
-        // This is valid for /api/saas/, /api/sites/, etc.
-        console.log(`[DEBUG] erpFetch Context: SaaS/Root (No Tenant ID sent)`);
+        debug(`[DEBUG] erpFetch Context: SaaS/Root (No Tenant ID sent)`);
     }
 
     const url = `${DJANGO_URL}/api/${path.startsWith('/') ? path.slice(1) : path}`;
-    const cleanHeaders: any = {};
-    headersRaw.forEach((v, k) => {
-        cleanHeaders[k] = k.toLowerCase() === 'authorization' ? 'Token [REDACTED]' : v;
-    });
 
     // [CONTENT-TYPE FIX]
     // For JSON POST/PUT/PATCH requests, set Content-Type to application/json
@@ -120,19 +108,32 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
     // Fetch will automatically set it with the correct boundary.
     if (options.body instanceof FormData) {
         headersRaw.delete('Content-Type');
-        console.log(`[ERP_API] Removed Content-Type header for FormData upload`);
     }
 
-    console.log(`[ERP_API] Request: ${options.method || 'GET'} ${url} | Headers: ${JSON.stringify(cleanHeaders)}`)
+    // Determine HTTP method
+    const method = (options.method || 'GET').toUpperCase();
+    const isReadRequest = method === 'GET' || method === 'HEAD';
+
+    debug(`[ERP_API] ${method} ${url}`);
 
     try {
-        const response = await fetch(url, {
+        // [SMART CACHE]
+        // GET requests: allow Next.js to revalidate (stale-while-revalidate pattern, 30s)
+        // Mutating requests (POST/PUT/PATCH/DELETE): always no-store
+        const fetchOptions: any = {
             ...options,
             headers: headersRaw,
-            cache: 'no-store'
-        });
+        };
 
-        console.log(`[ERP_API] Response: ${response.status} from ${path}`)
+        if (isReadRequest) {
+            fetchOptions.next = { revalidate: 30 };
+        } else {
+            fetchOptions.cache = 'no-store';
+        }
+
+        const response = await fetch(url, fetchOptions);
+
+        debug(`[ERP_API] Response: ${response.status} from ${path}`);
 
         if (!response.ok) {
             const errorText = await response.text().catch(() => "Unknown Error")
@@ -144,13 +145,10 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
 
             if (response.status !== 401 && response.status !== 403) {
                 if (isContextError && isSaaS) {
-                    console.log(`[ERP_API] Root/SaaS context - Ignoring expected missing context for ${path}`);
+                    debug(`[ERP_API] Root/SaaS context - Ignoring expected missing context for ${path}`);
                 } else {
                     console.error(`[ERP_API] Error response from ${path}:`, errorText.substring(0, 500));
                 }
-            } else {
-                // Debug log only for auth failures
-                console.log(`[ERP_API] Auth required for ${path}: ${response.status}`);
             }
 
             // [HTML DETECTION] Django returns HTML error pages when DEBUG=False and a 500 occurs.
@@ -207,9 +205,6 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
 
         if (!isAuthError) {
             console.error(`[ERP_API] Request to ${path} failed:`, error);
-        } else {
-            // Keep debug log for troubleshooting if needed, but clean up production/dev console
-            console.log(`[ERP_API] Auth check failed for ${path} (Handled)`);
         }
         throw error;
     }
