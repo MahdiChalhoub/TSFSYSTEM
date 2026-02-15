@@ -155,6 +155,7 @@ const MENU_ITEMS = [
             { title: 'Connector Control', path: '/connector' },
             { title: 'Instance Switcher', path: '/switcher' },
             { title: 'Platform Health', path: '/health' },
+            { title: 'AES-256 Encryption', path: '/encryption' },
             { title: 'Kernel Updates', path: '/updates' },
             { title: 'Subscription Plans', path: '/subscription-plans' },
         ]
