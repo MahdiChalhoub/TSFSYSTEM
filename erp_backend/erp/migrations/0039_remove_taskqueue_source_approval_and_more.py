@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('erp', '0038_remove_approvalrequest_approvalreq_organiz_610ec8_idx_and_more'),
-        ('finance', '0001_initial'),
+        # ('finance', '0001_initial'),  # Removed: already applied, dep causes InconsistentMigrationHistory
     ]
 
     operations = [
