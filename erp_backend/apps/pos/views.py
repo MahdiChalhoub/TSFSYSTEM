@@ -55,6 +55,112 @@ class POSViewSet(viewsets.ViewSet):
             import traceback; traceback.print_exc()
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=False, methods=['get'], url_path='daily-summary')
+    def daily_summary(self, request):
+        """Daily cash register summary with payment breakdown."""
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({"error": "No organization context"}, status=status.HTTP_400_BAD_REQUEST)
+        organization = Organization.objects.get(id=organization_id)
+
+        from django.db.models import Sum, Count, Q
+        from django.utils import timezone
+        from datetime import timedelta
+
+        # Date range: default today, support ?date=YYYY-MM-DD and ?days=7
+        date_str = request.query_params.get('date')
+        days = int(request.query_params.get('days', '1'))
+
+        if date_str:
+            from datetime import datetime
+            target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            start = timezone.make_aware(datetime.combine(target_date, datetime.min.time()))
+            end = timezone.make_aware(datetime.combine(target_date, datetime.max.time()))
+        else:
+            end = timezone.now()
+            start = end - timedelta(days=days)
+
+        orders = Order.objects.filter(
+            organization=organization,
+            created_at__gte=start,
+            created_at__lte=end,
+        )
+
+        # Overall stats
+        sales = orders.filter(type='SALE').aggregate(
+            count=Count('id'), total=Sum('total_amount'), tax=Sum('tax_amount'), discount=Sum('discount')
+        )
+        purchases = orders.filter(type='PURCHASE').aggregate(
+            count=Count('id'), total=Sum('total_amount')
+        )
+        returns = orders.filter(type='RETURN').aggregate(
+            count=Count('id'), total=Sum('total_amount')
+        )
+
+        # Payment method breakdown (for sales)
+        payment_methods = {}
+        for order in orders.filter(type='SALE'):
+            method = order.payment_method or 'CASH'
+            if method not in payment_methods:
+                payment_methods[method] = {'count': 0, 'total': 0}
+            payment_methods[method]['count'] += 1
+            payment_methods[method]['total'] += float(order.total_amount)
+
+        # Per-user breakdown
+        user_stats = {}
+        for order in orders.filter(type='SALE'):
+            user_name = f"{order.user.first_name} {order.user.last_name}".strip() if order.user else 'System'
+            if not user_name:
+                user_name = order.user.username if order.user else 'System'
+            if user_name not in user_stats:
+                user_stats[user_name] = {'count': 0, 'total': 0}
+            user_stats[user_name]['count'] += 1
+            user_stats[user_name]['total'] += float(order.total_amount)
+
+        # Hourly distribution (for sales)
+        hourly = [0] * 24
+        for order in orders.filter(type='SALE'):
+            if order.created_at:
+                h = order.created_at.hour
+                hourly[h] += float(order.total_amount)
+
+        # Recent transactions
+        recent = [{
+            'id': o.id,
+            'ref_code': o.ref_code,
+            'type': o.type,
+            'status': o.status,
+            'total': float(o.total_amount),
+            'payment_method': o.payment_method,
+            'user': f"{o.user.first_name} {o.user.last_name}".strip() if o.user else 'System',
+            'time': str(o.created_at) if o.created_at else None,
+        } for o in orders.order_by('-created_at')[:20]]
+
+        net_revenue = float(sales['total'] or 0) - float(returns['total'] or 0)
+
+        return Response({
+            'period': {'start': str(start), 'end': str(end)},
+            'sales': {
+                'count': sales['count'] or 0,
+                'total': float(sales['total'] or 0),
+                'tax': float(sales['tax'] or 0),
+                'discount': float(sales['discount'] or 0),
+            },
+            'purchases': {
+                'count': purchases['count'] or 0,
+                'total': float(purchases['total'] or 0),
+            },
+            'returns': {
+                'count': returns['count'] or 0,
+                'total': float(returns['total'] or 0),
+            },
+            'net_revenue': net_revenue,
+            'payment_methods': payment_methods,
+            'user_stats': user_stats,
+            'hourly': hourly,
+            'recent': recent,
+        })
+
 
 class PurchaseViewSet(viewsets.ViewSet):
     """Handles Purchase Order (PO) operations."""
