@@ -128,6 +128,7 @@ const MENU_ITEMS = [
                 icon: Tag,
                 children: [
                     { title: 'Product Master', path: '/products' },
+                    { title: 'Product Analytics', path: '/inventory/analytics' },
                     { title: 'Product Groups', path: '/products?view=grouped' },
                     { title: 'New Product Group', path: '/products/create-group' },
                 ]
