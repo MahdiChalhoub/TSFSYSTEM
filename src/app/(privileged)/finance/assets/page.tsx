@@ -3,18 +3,28 @@
 import { useState, useEffect, useTransition } from "react"
 import { getAssets, getAssetSchedule, createAsset, postDepreciation, AssetInput } from "@/app/actions/finance/assets"
 import { getFinancialAccounts } from "@/app/actions/finance/financial-accounts"
-import { useRouter } from "next/navigation"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog"
+import { Skeleton } from "@/components/ui/skeleton"
+import { toast } from "sonner"
+import {
+    Landmark, Plus, Search, TrendingDown, Package, CheckCircle2,
+    AlertTriangle, XCircle, Eye, Calendar, X
+} from "lucide-react"
 
 export default function AssetsPage() {
     const [assets, setAssets] = useState<any[]>([])
     const [accounts, setAccounts] = useState<any[]>([])
-    const [showForm, setShowForm] = useState(false)
+    const [loading, setLoading] = useState(true)
+    const [dialogOpen, setDialogOpen] = useState(false)
     const [selectedAsset, setSelectedAsset] = useState<any>(null)
     const [schedule, setSchedule] = useState<any[]>([])
+    const [searchQuery, setSearchQuery] = useState("")
     const [isPending, startTransition] = useTransition()
-    const [error, setError] = useState("")
-    const [successMsg, setSuccessMsg] = useState("")
-    const router = useRouter()
 
     useEffect(() => { loadData() }, [])
 
@@ -23,12 +33,16 @@ export default function AssetsPage() {
             const [a, accs] = await Promise.all([getAssets(), getFinancialAccounts()])
             setAssets(Array.isArray(a) ? a : [])
             setAccounts(Array.isArray(accs) ? accs : [])
-        } catch { setAssets([]); setAccounts([]) }
+        } catch {
+            setAssets([]); setAccounts([])
+            toast.error("Failed to load assets")
+        } finally {
+            setLoading(false)
+        }
     }
 
     async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
-        setError("")
         const fd = new FormData(e.currentTarget)
         const data: AssetInput = {
             name: fd.get("name") as string,
@@ -45,12 +59,11 @@ export default function AssetsPage() {
         startTransition(async () => {
             try {
                 await createAsset(data)
-                setShowForm(false)
-                setSuccessMsg("Asset acquired successfully!")
-                setTimeout(() => setSuccessMsg(""), 3000)
+                setDialogOpen(false)
+                toast.success("Asset acquired successfully")
                 loadData()
             } catch (err: any) {
-                setError(err.message || "Failed to create asset")
+                toast.error(err.message || "Failed to create asset")
             }
         })
     }
@@ -60,246 +73,346 @@ export default function AssetsPage() {
         try {
             const s = await getAssetSchedule(asset.id)
             setSchedule(Array.isArray(s) ? s : [])
-        } catch { setSchedule([]) }
+        } catch {
+            setSchedule([])
+            toast.error("Failed to load schedule")
+        }
     }
 
     async function handleDepreciate(assetId: number, scheduleId: number) {
         startTransition(async () => {
             try {
                 await postDepreciation(assetId, scheduleId)
-                setSuccessMsg("Depreciation posted!")
-                setTimeout(() => setSuccessMsg(""), 3000)
+                toast.success("Depreciation posted")
                 viewSchedule(selectedAsset)
                 loadData()
             } catch (err: any) {
-                setError(err.message || "Failed to post depreciation")
-                setTimeout(() => setError(""), 3000)
+                toast.error(err.message || "Failed to post depreciation")
             }
         })
     }
 
     const categories = ["VEHICLE", "EQUIPMENT", "IT", "FURNITURE", "BUILDING", "LAND", "OTHER"]
 
+    const filteredAssets = assets.filter(a =>
+        !searchQuery ||
+        (a.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (a.category || "").toLowerCase().includes(searchQuery.toLowerCase())
+    )
+
+    const totalPurchase = assets.reduce((s, a) => s + Number(a.purchase_value || 0), 0)
+    const totalBook = assets.reduce((s, a) => s + Number(a.book_value || 0), 0)
+    const fullyDepreciated = assets.filter(a => a.status === "FULLY_DEPRECIATED").length
+
+    const statusConfig: Record<string, { icon: any; color: string; bg: string }> = {
+        ACTIVE: { icon: CheckCircle2, color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
+        FULLY_DEPRECIATED: { icon: AlertTriangle, color: "text-stone-600", bg: "bg-stone-100 border-stone-200" },
+        DISPOSED: { icon: XCircle, color: "text-rose-700", bg: "bg-rose-50 border-rose-200" },
+    }
+
+    if (loading) {
+        return (
+            <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto">
+                <div className="flex justify-between items-center">
+                    <div><Skeleton className="h-10 w-48" /><Skeleton className="h-4 w-64 mt-2" /></div>
+                    <Skeleton className="h-10 w-36" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-28 rounded-2xl" />)}
+                </div>
+                <Skeleton className="h-96 rounded-2xl" />
+            </div>
+        )
+    }
+
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto">
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Fixed Assets</h1>
-                    <p className="text-muted-foreground mt-1">Track assets, depreciation schedules, and book values</p>
+                    <h1 className="text-4xl font-bold text-stone-900 font-serif tracking-tight">Fixed Assets</h1>
+                    <p className="text-stone-500 font-medium mt-1">Track assets, depreciation schedules, and book values</p>
                 </div>
-                <button
-                    onClick={() => { setShowForm(!showForm); setSelectedAsset(null) }}
-                    className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors font-medium"
-                >
-                    {showForm ? "Cancel" : "+ Acquire Asset"}
-                </button>
+                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button className="rounded-xl gap-2 shadow-md hover:shadow-lg transition-all">
+                            <Plus size={16} /> Acquire Asset
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-xl">
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2"><Landmark size={20} /> Acquire New Asset</DialogTitle>
+                            <DialogDescription>Register a fixed asset and configure its depreciation schedule.</DialogDescription>
+                        </DialogHeader>
+                        <form onSubmit={handleCreate} className="grid grid-cols-2 gap-4 pt-2">
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-stone-500 uppercase">Name *</label>
+                                <Input name="name" required placeholder="Delivery Truck" className="rounded-xl" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-stone-500 uppercase">Category *</label>
+                                <select name="category" required className="w-full px-3 py-2 border rounded-xl bg-background text-sm">
+                                    {categories.map(c => <option key={c} value={c}>{c.replace(/_/g, " ")}</option>)}
+                                </select>
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-stone-500 uppercase">Depreciation Method</label>
+                                <select name="depreciation_method" className="w-full px-3 py-2 border rounded-xl bg-background text-sm">
+                                    <option value="LINEAR">Linear (Straight-Line)</option>
+                                    <option value="DECLINING">Declining Balance</option>
+                                </select>
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-stone-500 uppercase">Purchase Value *</label>
+                                <Input name="purchase_value" type="number" step="0.01" min="0.01" required placeholder="50,000.00" className="rounded-xl" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-stone-500 uppercase">Purchase Date *</label>
+                                <Input name="purchase_date" type="date" required className="rounded-xl" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-stone-500 uppercase">Useful Life (Years) *</label>
+                                <Input name="useful_life_years" type="number" min="1" max="50" required placeholder="5" className="rounded-xl" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-stone-500 uppercase">Residual Value</label>
+                                <Input name="residual_value" type="number" step="0.01" min="0" defaultValue="0" placeholder="5,000.00" className="rounded-xl" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-stone-500 uppercase">Source Account</label>
+                                <select name="source_account_id" className="w-full px-3 py-2 border rounded-xl bg-background text-sm">
+                                    <option value="">Select account...</option>
+                                    {accounts.map((a: any) => <option key={a.id} value={a.id}>{a.name} ({a.type})</option>)}
+                                </select>
+                            </div>
+                            <div className="col-span-2 space-y-1.5">
+                                <label className="text-xs font-bold text-stone-500 uppercase">Description</label>
+                                <Input name="description" placeholder="Optional description..." className="rounded-xl" />
+                            </div>
+                            <div className="col-span-2 flex justify-end gap-2 pt-3 border-t">
+                                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} className="rounded-xl">Cancel</Button>
+                                <Button type="submit" disabled={isPending} className="rounded-xl gap-2">
+                                    {isPending ? "Acquiring..." : <><Landmark size={14} /> Acquire Asset</>}
+                                </Button>
+                            </div>
+                        </form>
+                    </DialogContent>
+                </Dialog>
             </div>
-
-            {successMsg && <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">✓ {successMsg}</div>}
-            {error && <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">✕ {error}</div>}
-
-            {/* Create Form */}
-            {showForm && (
-                <div className="bg-card border rounded-lg p-6 shadow-sm">
-                    <h2 className="text-lg font-semibold mb-4">Acquire New Asset</h2>
-                    <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-medium">Name *</label>
-                            <input name="name" required className="w-full px-3 py-2 border rounded-md bg-background" placeholder="Delivery Truck" />
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-medium">Category *</label>
-                            <select name="category" required className="w-full px-3 py-2 border rounded-md bg-background">
-                                {categories.map(c => <option key={c} value={c}>{c.replace(/_/g, " ")}</option>)}
-                            </select>
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-medium">Depreciation Method</label>
-                            <select name="depreciation_method" className="w-full px-3 py-2 border rounded-md bg-background">
-                                <option value="LINEAR">Linear (Straight-Line)</option>
-                                <option value="DECLINING">Declining Balance</option>
-                            </select>
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-medium">Purchase Value *</label>
-                            <input name="purchase_value" type="number" step="0.01" min="0.01" required className="w-full px-3 py-2 border rounded-md bg-background" placeholder="50000.00" />
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-medium">Purchase Date *</label>
-                            <input name="purchase_date" type="date" required className="w-full px-3 py-2 border rounded-md bg-background" />
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-medium">Useful Life (Years) *</label>
-                            <input name="useful_life_years" type="number" min="1" max="50" required className="w-full px-3 py-2 border rounded-md bg-background" placeholder="5" />
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-medium">Residual Value</label>
-                            <input name="residual_value" type="number" step="0.01" min="0" defaultValue="0" className="w-full px-3 py-2 border rounded-md bg-background" placeholder="5000.00" />
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-medium">Source Account</label>
-                            <select name="source_account_id" className="w-full px-3 py-2 border rounded-md bg-background">
-                                <option value="">Select account...</option>
-                                {accounts.map((a: any) => <option key={a.id} value={a.id}>{a.name} ({a.type})</option>)}
-                            </select>
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-medium">Description</label>
-                            <input name="description" className="w-full px-3 py-2 border rounded-md bg-background" placeholder="Optional..." />
-                        </div>
-                        <div className="lg:col-span-3 md:col-span-2 flex justify-end gap-2">
-                            <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 border rounded-md hover:bg-muted transition-colors">Cancel</button>
-                            <button type="submit" disabled={isPending} className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 transition-colors">
-                                {isPending ? "Acquiring..." : "Acquire Asset"}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            )}
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-card border rounded-lg p-5 shadow-sm">
-                    <p className="text-sm text-muted-foreground">Total Assets</p>
-                    <p className="text-2xl font-bold mt-1">{assets.length}</p>
-                </div>
-                <div className="bg-card border rounded-lg p-5 shadow-sm">
-                    <p className="text-sm text-muted-foreground">Total Purchase Value</p>
-                    <p className="text-2xl font-bold mt-1">{assets.reduce((s: number, a: any) => s + Number(a.purchase_value || 0), 0).toLocaleString()}</p>
-                </div>
-                <div className="bg-card border rounded-lg p-5 shadow-sm">
-                    <p className="text-sm text-muted-foreground">Total Book Value</p>
-                    <p className="text-2xl font-bold mt-1">{assets.reduce((s: number, a: any) => s + Number(a.book_value || 0), 0).toLocaleString()}</p>
-                </div>
-                <div className="bg-card border rounded-lg p-5 shadow-sm">
-                    <p className="text-sm text-muted-foreground">Fully Depreciated</p>
-                    <p className="text-2xl font-bold mt-1">{assets.filter((a: any) => a.status === "FULLY_DEPRECIATED").length}</p>
-                </div>
+                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-stone-50 to-stone-100">
+                    <CardContent className="pt-5 pb-4 px-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-bold text-stone-400 uppercase tracking-wider">Total Assets</p>
+                                <p className="text-3xl font-bold text-stone-900 mt-1">{assets.length}</p>
+                            </div>
+                            <div className="w-12 h-12 rounded-2xl bg-stone-200/60 flex items-center justify-center">
+                                <Package size={22} className="text-stone-500" />
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-indigo-50 to-indigo-100">
+                    <CardContent className="pt-5 pb-4 px-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-bold text-indigo-400 uppercase tracking-wider">Purchase Value</p>
+                                <p className="text-3xl font-bold text-indigo-900 mt-1">{totalPurchase.toLocaleString()}</p>
+                            </div>
+                            <div className="w-12 h-12 rounded-2xl bg-indigo-200/60 flex items-center justify-center">
+                                <Landmark size={22} className="text-indigo-500" />
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-emerald-50 to-emerald-100">
+                    <CardContent className="pt-5 pb-4 px-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Book Value</p>
+                                <p className="text-3xl font-bold text-emerald-900 mt-1">{totalBook.toLocaleString()}</p>
+                            </div>
+                            <div className="w-12 h-12 rounded-2xl bg-emerald-200/60 flex items-center justify-center">
+                                <TrendingDown size={22} className="text-emerald-500" />
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-amber-50 to-amber-100">
+                    <CardContent className="pt-5 pb-4 px-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-bold text-amber-400 uppercase tracking-wider">Fully Depreciated</p>
+                                <p className="text-3xl font-bold text-amber-900 mt-1">{fullyDepreciated}</p>
+                            </div>
+                            <div className="w-12 h-12 rounded-2xl bg-amber-200/60 flex items-center justify-center">
+                                <AlertTriangle size={22} className="text-amber-500" />
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
 
             {/* Assets Table */}
-            <div className="bg-card border rounded-lg shadow-sm overflow-hidden">
-                <div className="px-6 py-4 border-b">
-                    <h2 className="font-semibold">Asset Register</h2>
+            <Card className="rounded-2xl shadow-sm overflow-hidden">
+                <div className="px-5 py-3 border-b flex items-center justify-between bg-stone-50/50">
+                    <h2 className="font-semibold text-stone-800 flex items-center gap-2"><Package size={16} /> Asset Register</h2>
+                    <div className="relative w-64">
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                        <Input
+                            placeholder="Search name or category..."
+                            value={searchQuery}
+                            onChange={e => setSearchQuery(e.target.value)}
+                            className="pl-9 rounded-xl text-sm h-9 bg-white"
+                        />
+                    </div>
                 </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="bg-muted/50">
-                            <tr>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Name</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Category</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Method</th>
-                                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Purchase</th>
-                                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Book Value</th>
-                                <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase">Depreciation</th>
-                                <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase">Status</th>
-                                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y">
-                            {assets.map((asset: any) => {
-                                const depTotal = Number(asset.purchase_value) - Number(asset.residual_value || 0)
-                                const depPct = depTotal > 0 ? Math.round((Number(asset.accumulated_depreciation) / depTotal) * 100) : 100
-                                return (
-                                    <tr key={asset.id} className="hover:bg-muted/30 transition-colors">
-                                        <td className="px-4 py-3 font-medium">{asset.name}</td>
-                                        <td className="px-4 py-3 text-sm">{(asset.category || "").replace(/_/g, " ")}</td>
-                                        <td className="px-4 py-3 text-sm">{asset.depreciation_method}</td>
-                                        <td className="px-4 py-3 text-right">{Number(asset.purchase_value).toLocaleString()}</td>
-                                        <td className="px-4 py-3 text-right font-medium">{Number(asset.book_value).toLocaleString()}</td>
-                                        <td className="px-4 py-3">
-                                            <div className="flex items-center gap-2 justify-center">
-                                                <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
-                                                    <div className="h-full bg-orange-500 rounded-full transition-all" style={{ width: `${depPct}%` }} />
-                                                </div>
-                                                <span className="text-xs text-muted-foreground">{depPct}%</span>
+                <Table>
+                    <TableHeader>
+                        <TableRow className="bg-stone-50/30">
+                            <TableHead className="text-xs font-bold uppercase text-stone-400">Name</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-stone-400">Category</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-stone-400">Method</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Purchase</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Book Value</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-center">Depreciation</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-center">Status</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {filteredAssets.map((asset: any) => {
+                            const depTotal = Number(asset.purchase_value) - Number(asset.residual_value || 0)
+                            const depPct = depTotal > 0 ? Math.round((Number(asset.accumulated_depreciation) / depTotal) * 100) : 100
+                            const sc = statusConfig[asset.status] || statusConfig.ACTIVE
+                            const StatusIcon = sc.icon
+                            return (
+                                <TableRow key={asset.id} className="hover:bg-stone-50/50 transition-colors">
+                                    <TableCell className="font-semibold text-stone-800">{asset.name}</TableCell>
+                                    <TableCell>
+                                        <Badge variant="outline" className="rounded-lg text-[11px] border-stone-200 text-stone-600">
+                                            {(asset.category || "").replace(/_/g, " ")}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-sm text-stone-500">{asset.depreciation_method}</TableCell>
+                                    <TableCell className="text-right text-sm">{Number(asset.purchase_value).toLocaleString()}</TableCell>
+                                    <TableCell className="text-right font-semibold text-stone-800">{Number(asset.book_value).toLocaleString()}</TableCell>
+                                    <TableCell>
+                                        <div className="flex items-center gap-2 justify-center">
+                                            <div className="w-20 h-2.5 bg-stone-100 rounded-full overflow-hidden">
+                                                <div
+                                                    className={`h-full rounded-full transition-all ${depPct >= 100 ? "bg-stone-400" : depPct >= 70 ? "bg-amber-400" : "bg-emerald-400"}`}
+                                                    style={{ width: `${Math.min(depPct, 100)}%` }}
+                                                />
                                             </div>
-                                        </td>
-                                        <td className="px-4 py-3 text-center">
-                                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${asset.status === "ACTIVE" ? "bg-green-100 text-green-800" :
-                                                    asset.status === "FULLY_DEPRECIATED" ? "bg-gray-100 text-gray-800" :
-                                                        asset.status === "DISPOSED" ? "bg-red-100 text-red-800" :
-                                                            "bg-yellow-100 text-yellow-800"
-                                                }`}>
-                                                {(asset.status || "").replace(/_/g, " ")}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-3 text-right">
-                                            <button
-                                                onClick={() => viewSchedule(asset)}
-                                                className="px-3 py-1 text-xs bg-primary/10 text-primary rounded-md hover:bg-primary/20 transition-colors"
-                                            >
-                                                Schedule
-                                            </button>
-                                        </td>
-                                    </tr>
-                                )
-                            })}
-                            {assets.length === 0 && (
-                                <tr>
-                                    <td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">
-                                        No assets found. Click &quot;+ Acquire Asset&quot; to register one.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                                            <span className="text-xs font-semibold text-stone-400 w-9">{depPct}%</span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                        <Badge variant="outline" className={`gap-1 rounded-lg border ${sc.bg} ${sc.color} font-semibold text-[11px]`}>
+                                            <StatusIcon size={12} /> {(asset.status || "").replace(/_/g, " ")}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => viewSchedule(asset)}
+                                            className="rounded-xl gap-1 h-8 text-xs font-semibold"
+                                        >
+                                            <Eye size={12} /> Schedule
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            )
+                        })}
+                        {filteredAssets.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={8} className="py-16 text-center">
+                                    <div className="flex flex-col items-center gap-3">
+                                        <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center">
+                                            <Landmark size={28} className="text-stone-300" />
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-stone-600">No assets found</p>
+                                            <p className="text-sm text-stone-400 mt-1">Acquire your first fixed asset to get started</p>
+                                        </div>
+                                        <Button variant="outline" onClick={() => setDialogOpen(true)} className="rounded-xl gap-2 mt-2">
+                                            <Plus size={14} /> Acquire Asset
+                                        </Button>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </Card>
 
-            {/* Depreciation Schedule Modal */}
+            {/* Depreciation Schedule Panel */}
             {selectedAsset && (
-                <div className="bg-card border rounded-lg shadow-sm overflow-hidden">
-                    <div className="px-6 py-4 border-b flex justify-between items-center">
+                <Card className="rounded-2xl shadow-sm overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
+                    <div className="px-5 py-4 border-b flex justify-between items-center bg-gradient-to-r from-stone-50 to-amber-50/30">
                         <div>
-                            <h2 className="font-semibold">Depreciation Schedule: {selectedAsset.name}</h2>
-                            <p className="text-sm text-muted-foreground">Life: {selectedAsset.useful_life_years} years • Method: {selectedAsset.depreciation_method}</p>
+                            <h2 className="font-semibold text-stone-800 flex items-center gap-2">
+                                <Calendar size={16} /> Depreciation Schedule: {selectedAsset.name}
+                            </h2>
+                            <p className="text-sm text-stone-400 mt-0.5">
+                                Life: {selectedAsset.useful_life_years} years • Method: {selectedAsset.depreciation_method}
+                            </p>
                         </div>
-                        <button onClick={() => setSelectedAsset(null)} className="px-3 py-1 text-sm border rounded-md hover:bg-muted transition-colors">Close</button>
+                        <Button variant="ghost" size="sm" onClick={() => setSelectedAsset(null)} className="rounded-xl gap-1">
+                            <X size={14} /> Close
+                        </Button>
                     </div>
                     <div className="overflow-x-auto max-h-96">
-                        <table className="w-full">
-                            <thead className="bg-muted/50 sticky top-0">
-                                <tr>
-                                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase">Period</th>
-                                    <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground uppercase">Amount</th>
-                                    <th className="px-4 py-2.5 text-center text-xs font-medium text-muted-foreground uppercase">Status</th>
-                                    <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground uppercase">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y">
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="bg-stone-50/30 sticky top-0">
+                                    <TableHead className="text-xs font-bold uppercase text-stone-400">Period</TableHead>
+                                    <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Amount</TableHead>
+                                    <TableHead className="text-xs font-bold uppercase text-stone-400 text-center">Status</TableHead>
+                                    <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Action</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
                                 {schedule.map((line: any) => (
-                                    <tr key={line.id} className="hover:bg-muted/30 transition-colors">
-                                        <td className="px-4 py-2.5 text-sm">{line.period_date}</td>
-                                        <td className="px-4 py-2.5 text-right text-sm">{Number(line.amount).toLocaleString()}</td>
-                                        <td className="px-4 py-2.5 text-center">
-                                            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${line.is_posted ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}`}>
-                                                {line.is_posted ? "Posted" : "Pending"}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-2.5 text-right">
+                                    <TableRow key={line.id} className="hover:bg-stone-50/50 transition-colors">
+                                        <TableCell className="text-sm text-stone-600">{line.period_date}</TableCell>
+                                        <TableCell className="text-right text-sm font-semibold">{Number(line.amount).toLocaleString()}</TableCell>
+                                        <TableCell className="text-center">
+                                            <Badge variant="outline" className={`gap-1 rounded-lg border font-semibold text-[11px] ${line.is_posted ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-amber-50 border-amber-200 text-amber-700"}`}>
+                                                {line.is_posted ? <><CheckCircle2 size={12} /> Posted</> : <><TrendingDown size={12} /> Pending</>}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className="text-right">
                                             {!line.is_posted && (
-                                                <button
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
                                                     onClick={() => handleDepreciate(selectedAsset.id, line.id)}
                                                     disabled={isPending}
-                                                    className="px-3 py-1 text-xs bg-orange-100 text-orange-800 rounded-md hover:bg-orange-200 transition-colors disabled:opacity-50"
+                                                    className="rounded-xl gap-1 h-7 text-xs font-semibold text-amber-700 border-amber-200 hover:bg-amber-50"
                                                 >
-                                                    Post
-                                                </button>
+                                                    <TrendingDown size={12} /> Post
+                                                </Button>
                                             )}
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 ))}
                                 {schedule.length === 0 && (
-                                    <tr>
-                                        <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">No depreciation schedule available.</td>
-                                    </tr>
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="py-8 text-center text-stone-400">
+                                            No depreciation schedule available.
+                                        </TableCell>
+                                    </TableRow>
                                 )}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     </div>
-                </div>
+                </Card>
             )}
         </div>
     )

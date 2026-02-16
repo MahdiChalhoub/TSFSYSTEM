@@ -3,11 +3,24 @@
 import { useState, useEffect, useTransition } from "react"
 import { getProfitDistributions, calculateDistribution, createDistribution, postDistribution } from "@/app/actions/finance/profit-distribution"
 import { getFiscalYears } from "@/app/actions/finance/fiscal-year"
+import { Card, CardContent } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog"
+import { Skeleton } from "@/components/ui/skeleton"
+import { toast } from "sonner"
+import {
+    PieChart, Plus, Wallet, CheckCircle2, Clock, Send,
+    ChevronRight, Trash2, DollarSign, Calendar
+} from "lucide-react"
 
 export default function ProfitDistributionPage() {
     const [distributions, setDistributions] = useState<any[]>([])
     const [fiscalYears, setFiscalYears] = useState<any[]>([])
-    const [showWizard, setShowWizard] = useState(false)
+    const [loading, setLoading] = useState(true)
+    const [wizardOpen, setWizardOpen] = useState(false)
     const [wizardStep, setWizardStep] = useState(1)
     const [selectedFY, setSelectedFY] = useState<number | null>(null)
     const [allocations, setAllocations] = useState<Record<string, number>>({
@@ -17,8 +30,6 @@ export default function ProfitDistributionPage() {
     })
     const [preview, setPreview] = useState<any>(null)
     const [isPending, startTransition] = useTransition()
-    const [error, setError] = useState("")
-    const [successMsg, setSuccessMsg] = useState("")
 
     useEffect(() => { loadData() }, [])
 
@@ -27,7 +38,12 @@ export default function ProfitDistributionPage() {
             const [dist, fys] = await Promise.all([getProfitDistributions(), getFiscalYears()])
             setDistributions(Array.isArray(dist) ? dist : [])
             setFiscalYears(Array.isArray(fys) ? fys : [])
-        } catch { setDistributions([]); setFiscalYears([]) }
+        } catch {
+            setDistributions([]); setFiscalYears([])
+            toast.error("Failed to load distributions")
+        } finally {
+            setLoading(false)
+        }
     }
 
     const closedYears = fiscalYears.filter((fy: any) => fy.is_closed || fy.isClosed)
@@ -52,11 +68,11 @@ export default function ProfitDistributionPage() {
     }
 
     const totalPct = Object.values(allocations).reduce((a, b) => a + b, 0)
+    const isValidPct = Math.abs(totalPct - 100) <= 0.01
 
     async function handleCalculate() {
-        if (!selectedFY) { setError("Select a fiscal year"); return }
-        if (Math.abs(totalPct - 100) > 0.01) { setError("Percentages must sum to 100%"); return }
-        setError("")
+        if (!selectedFY) { toast.error("Select a fiscal year"); return }
+        if (!isValidPct) { toast.error("Percentages must sum to 100%"); return }
 
         startTransition(async () => {
             try {
@@ -64,14 +80,13 @@ export default function ProfitDistributionPage() {
                 setPreview(result.data)
                 setWizardStep(2)
             } catch (err: any) {
-                setError(err.message || "Failed to calculate")
+                toast.error(err.message || "Failed to calculate")
             }
         })
     }
 
     async function handleCreate() {
         if (!selectedFY) return
-        setError("")
 
         startTransition(async () => {
             try {
@@ -82,238 +97,303 @@ export default function ProfitDistributionPage() {
                     distribution_date: today,
                     notes: `Auto-generated on ${today}`
                 })
-                setShowWizard(false)
+                setWizardOpen(false)
                 setWizardStep(1)
                 setPreview(null)
-                setSuccessMsg("Distribution draft created!")
-                setTimeout(() => setSuccessMsg(""), 3000)
+                toast.success("Distribution draft created!")
                 loadData()
             } catch (err: any) {
-                setError(err.message || "Failed to create distribution")
+                toast.error(err.message || "Failed to create distribution")
             }
         })
     }
 
     async function handlePost(id: number) {
-        // For posting, we'd need COA mapping which would come from a more detailed form
-        // For now, show a message that COA mapping is needed
-        setError("To post, you need to configure retained earnings and allocation COA mappings in Finance Settings.")
-        setTimeout(() => setError(""), 5000)
+        toast.error("To post, configure retained earnings and allocation COA mappings in Finance Settings.")
+    }
+
+    const walletColors = ["from-blue-500 to-blue-600", "from-emerald-500 to-emerald-600", "from-violet-500 to-violet-600", "from-amber-500 to-amber-600", "from-rose-500 to-rose-600", "from-cyan-500 to-cyan-600"]
+
+    const statusConfig: Record<string, { icon: any; color: string; bg: string }> = {
+        POSTED: { icon: CheckCircle2, color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
+        APPROVED: { icon: CheckCircle2, color: "text-blue-700", bg: "bg-blue-50 border-blue-200" },
+        DRAFT: { icon: Clock, color: "text-amber-700", bg: "bg-amber-50 border-amber-200" },
+    }
+
+    if (loading) {
+        return (
+            <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto">
+                <div className="flex justify-between items-center">
+                    <div><Skeleton className="h-10 w-56" /><Skeleton className="h-4 w-72 mt-2" /></div>
+                    <Skeleton className="h-10 w-44" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {[1, 2, 3].map(i => <Skeleton key={i} className="h-28 rounded-2xl" />)}
+                </div>
+                <Skeleton className="h-96 rounded-2xl" />
+            </div>
+        )
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto">
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Profit Distribution</h1>
-                    <p className="text-muted-foreground mt-1">Year-end profit allocation across equity wallets</p>
+                    <h1 className="text-4xl font-bold text-stone-900 font-serif tracking-tight">Profit Distribution</h1>
+                    <p className="text-stone-500 font-medium mt-1">Year-end profit allocation across equity wallets</p>
                 </div>
-                <button
-                    onClick={() => { setShowWizard(!showWizard); setWizardStep(1); setPreview(null) }}
-                    className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors font-medium"
-                >
-                    {showWizard ? "Cancel" : "+ New Distribution"}
-                </button>
-            </div>
+                <Dialog open={wizardOpen} onOpenChange={(open) => { setWizardOpen(open); if (!open) { setWizardStep(1); setPreview(null) } }}>
+                    <DialogTrigger asChild>
+                        <Button className="rounded-xl gap-2 shadow-md hover:shadow-lg transition-all">
+                            <Plus size={16} /> New Distribution
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-lg">
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2"><PieChart size={20} /> Distribution Wizard</DialogTitle>
+                            <DialogDescription>Configure allocation percentages and preview the breakdown.</DialogDescription>
+                        </DialogHeader>
 
-            {successMsg && <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">✓ {successMsg}</div>}
-            {error && <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">✕ {error}</div>}
-
-            {/* Distribution Wizard */}
-            {showWizard && (
-                <div className="bg-card border rounded-lg p-6 shadow-sm">
-                    {/* Step Indicator */}
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className={`flex items-center gap-2 ${wizardStep >= 1 ? "text-primary" : "text-muted-foreground"}`}>
-                            <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${wizardStep >= 1 ? "bg-primary text-primary-foreground" : "bg-muted"}`}>1</span>
-                            <span className="text-sm font-medium">Configure</span>
-                        </div>
-                        <div className="h-px w-12 bg-border" />
-                        <div className={`flex items-center gap-2 ${wizardStep >= 2 ? "text-primary" : "text-muted-foreground"}`}>
-                            <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${wizardStep >= 2 ? "bg-primary text-primary-foreground" : "bg-muted"}`}>2</span>
-                            <span className="text-sm font-medium">Preview & Confirm</span>
-                        </div>
-                    </div>
-
-                    {/* Step 1: Configure */}
-                    {wizardStep === 1 && (
-                        <div className="space-y-5">
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-medium">Fiscal Year *</label>
-                                <select
-                                    value={selectedFY || ""}
-                                    onChange={e => setSelectedFY(Number(e.target.value))}
-                                    className="w-full px-3 py-2 border rounded-md bg-background"
-                                >
-                                    <option value="">Select closed fiscal year...</option>
-                                    {closedYears.map((fy: any) => (
-                                        <option key={fy.id} value={fy.id}>{fy.name} ({fy.start_date || fy.startDate} → {fy.end_date || fy.endDate})</option>
-                                    ))}
-                                </select>
-                                {closedYears.length === 0 && (
-                                    <p className="text-xs text-amber-600 mt-1">⚠ No closed fiscal years found. Close a fiscal year first.</p>
-                                )}
+                        {/* Step Indicator */}
+                        <div className="flex items-center gap-2 py-2">
+                            <div className={`flex items-center gap-2 ${wizardStep >= 1 ? "text-stone-900" : "text-stone-300"}`}>
+                                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${wizardStep >= 1 ? "bg-gradient-to-br from-stone-800 to-stone-900 text-white shadow-md" : "bg-stone-100 text-stone-400"}`}>1</span>
+                                <span className="text-sm font-semibold">Configure</span>
                             </div>
-
-                            <div>
-                                <div className="flex justify-between items-center mb-3">
-                                    <label className="text-sm font-medium">Allocation Wallets</label>
-                                    <button type="button" onClick={addWallet} className="text-xs text-primary hover:underline">+ Add Wallet</button>
-                                </div>
-                                <div className="space-y-3">
-                                    {Object.entries(allocations).map(([key, pct]) => (
-                                        <div key={key} className="flex items-center gap-3">
-                                            <span className="text-sm font-medium w-36">{key}</span>
-                                            <input
-                                                type="number"
-                                                min="0"
-                                                max="100"
-                                                step="0.1"
-                                                value={pct}
-                                                onChange={e => updateAllocation(key, Number(e.target.value))}
-                                                className="w-24 px-3 py-2 border rounded-md bg-background text-right"
-                                            />
-                                            <span className="text-sm text-muted-foreground">%</span>
-                                            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                                                <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${pct}%` }} />
-                                            </div>
-                                            {Object.keys(allocations).length > 1 && (
-                                                <button type="button" onClick={() => removeWallet(key)} className="text-red-400 hover:text-red-600 text-sm">✕</button>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                                <div className={`mt-3 text-sm font-medium ${Math.abs(totalPct - 100) <= 0.01 ? "text-green-600" : "text-red-600"}`}>
-                                    Total: {totalPct}% {Math.abs(totalPct - 100) <= 0.01 ? "✓" : "(must equal 100%)"}
-                                </div>
-                            </div>
-
-                            <div className="flex justify-end">
-                                <button
-                                    onClick={handleCalculate}
-                                    disabled={isPending || !selectedFY || Math.abs(totalPct - 100) > 0.01}
-                                    className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 transition-colors"
-                                >
-                                    {isPending ? "Calculating..." : "Calculate Preview →"}
-                                </button>
+                            <ChevronRight size={16} className="text-stone-300" />
+                            <div className={`flex items-center gap-2 ${wizardStep >= 2 ? "text-stone-900" : "text-stone-300"}`}>
+                                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${wizardStep >= 2 ? "bg-gradient-to-br from-stone-800 to-stone-900 text-white shadow-md" : "bg-stone-100 text-stone-400"}`}>2</span>
+                                <span className="text-sm font-semibold">Preview</span>
                             </div>
                         </div>
-                    )}
 
-                    {/* Step 2: Preview */}
-                    {wizardStep === 2 && preview && (
-                        <div className="space-y-5">
-                            <div className="bg-muted/50 rounded-lg p-5">
-                                <p className="text-sm text-muted-foreground">Fiscal Year</p>
-                                <p className="text-lg font-bold">{preview.fiscal_year}</p>
-                                <p className="text-sm text-muted-foreground mt-3">Net Profit</p>
-                                <p className="text-3xl font-bold text-green-600">{Number(preview.net_profit).toLocaleString()}</p>
-                            </div>
-
-                            <div>
-                                <label className="text-sm font-medium mb-3 block">Allocation Breakdown</label>
-                                <div className="space-y-2">
-                                    {Object.entries(preview.allocations).map(([wallet, amount]: any) => (
-                                        <div key={wallet} className="flex justify-between items-center p-3 bg-background border rounded-md">
-                                            <span className="font-medium">{wallet}</span>
-                                            <span className="font-bold">{Number(amount).toLocaleString()}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="flex justify-between">
-                                <button onClick={() => setWizardStep(1)} className="px-4 py-2 border rounded-md hover:bg-muted transition-colors">← Back</button>
-                                <button
-                                    onClick={handleCreate}
-                                    disabled={isPending}
-                                    className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 transition-colors"
-                                >
-                                    {isPending ? "Creating..." : "Create Distribution Draft"}
-                                </button>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {/* Summary */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-card border rounded-lg p-5 shadow-sm">
-                    <p className="text-sm text-muted-foreground">Total Distributions</p>
-                    <p className="text-2xl font-bold mt-1">{distributions.length}</p>
-                </div>
-                <div className="bg-card border rounded-lg p-5 shadow-sm">
-                    <p className="text-sm text-muted-foreground">Drafts</p>
-                    <p className="text-2xl font-bold mt-1 text-yellow-600">{distributions.filter((d: any) => d.status === "DRAFT").length}</p>
-                </div>
-                <div className="bg-card border rounded-lg p-5 shadow-sm">
-                    <p className="text-sm text-muted-foreground">Posted</p>
-                    <p className="text-2xl font-bold mt-1 text-green-600">{distributions.filter((d: any) => d.status === "POSTED").length}</p>
-                </div>
-            </div>
-
-            {/* Table */}
-            <div className="bg-card border rounded-lg shadow-sm overflow-hidden">
-                <div className="px-6 py-4 border-b">
-                    <h2 className="font-semibold">Distribution History</h2>
-                </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="bg-muted/50">
-                            <tr>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Fiscal Year</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Date</th>
-                                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Net Profit</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Allocations</th>
-                                <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase">Status</th>
-                                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y">
-                            {distributions.map((d: any) => (
-                                <tr key={d.id} className="hover:bg-muted/30 transition-colors">
-                                    <td className="px-4 py-3 font-medium">{d.fiscal_year_name || `FY #${d.fiscal_year}`}</td>
-                                    <td className="px-4 py-3 text-sm">{d.distribution_date}</td>
-                                    <td className="px-4 py-3 text-right font-medium">{Number(d.net_profit).toLocaleString()}</td>
-                                    <td className="px-4 py-3 text-sm">
-                                        {d.allocations && Object.entries(d.allocations).map(([k, v]: any) => (
-                                            <span key={k} className="inline-block mr-2 px-2 py-0.5 bg-muted rounded text-xs">{k}: {Number(v).toLocaleString()}</span>
+                        {/* Step 1: Configure */}
+                        {wizardStep === 1 && (
+                            <div className="space-y-5 pt-2">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-stone-500 uppercase">Fiscal Year *</label>
+                                    <select
+                                        value={selectedFY || ""}
+                                        onChange={e => setSelectedFY(Number(e.target.value))}
+                                        className="w-full px-3 py-2 border rounded-xl bg-background text-sm"
+                                    >
+                                        <option value="">Select closed fiscal year...</option>
+                                        {closedYears.map((fy: any) => (
+                                            <option key={fy.id} value={fy.id}>{fy.name} ({fy.start_date || fy.startDate} → {fy.end_date || fy.endDate})</option>
                                         ))}
-                                    </td>
-                                    <td className="px-4 py-3 text-center">
-                                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${d.status === "POSTED" ? "bg-green-100 text-green-800" :
-                                                d.status === "APPROVED" ? "bg-blue-100 text-blue-800" :
-                                                    "bg-yellow-100 text-yellow-800"
-                                            }`}>
-                                            {d.status}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-3 text-right">
+                                    </select>
+                                    {closedYears.length === 0 && (
+                                        <p className="text-xs text-amber-600 flex items-center gap-1 mt-1">⚠ No closed fiscal years found</p>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <div className="flex justify-between items-center mb-3">
+                                        <label className="text-xs font-bold text-stone-500 uppercase">Allocation Wallets</label>
+                                        <button type="button" onClick={addWallet} className="text-xs text-primary hover:underline font-semibold flex items-center gap-1">
+                                            <Plus size={12} /> Add Wallet
+                                        </button>
+                                    </div>
+                                    <div className="space-y-3">
+                                        {Object.entries(allocations).map(([key, pct], idx) => (
+                                            <div key={key} className="flex items-center gap-3">
+                                                <div className={`w-3 h-3 rounded-full bg-gradient-to-br ${walletColors[idx % walletColors.length]}`} />
+                                                <span className="text-sm font-bold text-stone-700 w-32">{key}</span>
+                                                <Input
+                                                    type="number"
+                                                    min="0"
+                                                    max="100"
+                                                    step="0.1"
+                                                    value={pct}
+                                                    onChange={e => updateAllocation(key, Number(e.target.value))}
+                                                    className="w-20 rounded-xl text-right text-sm h-9"
+                                                />
+                                                <span className="text-sm text-stone-400">%</span>
+                                                <div className="flex-1 h-2.5 bg-stone-100 rounded-full overflow-hidden">
+                                                    <div className={`h-full rounded-full bg-gradient-to-r ${walletColors[idx % walletColors.length]} transition-all`} style={{ width: `${pct}%` }} />
+                                                </div>
+                                                {Object.keys(allocations).length > 1 && (
+                                                    <button type="button" onClick={() => removeWallet(key)} className="text-stone-300 hover:text-rose-500 transition-colors">
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className={`mt-3 text-sm font-bold flex items-center gap-1.5 ${isValidPct ? "text-emerald-600" : "text-rose-600"}`}>
+                                        {isValidPct ? <CheckCircle2 size={14} /> : <Clock size={14} />}
+                                        Total: {totalPct}% {isValidPct ? "✓" : "(must equal 100%)"}
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-end pt-2 border-t">
+                                    <Button
+                                        onClick={handleCalculate}
+                                        disabled={isPending || !selectedFY || !isValidPct}
+                                        className="rounded-xl gap-2"
+                                    >
+                                        {isPending ? "Calculating..." : <><PieChart size={14} /> Calculate Preview</>}
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Step 2: Preview */}
+                        {wizardStep === 2 && preview && (
+                            <div className="space-y-5 pt-2">
+                                <div className="bg-gradient-to-br from-stone-50 to-emerald-50/30 rounded-2xl p-5 border">
+                                    <p className="text-xs font-bold text-stone-400 uppercase">Fiscal Year</p>
+                                    <p className="text-lg font-bold text-stone-800">{preview.fiscal_year}</p>
+                                    <p className="text-xs font-bold text-stone-400 uppercase mt-3">Net Profit</p>
+                                    <p className="text-4xl font-bold text-emerald-600">{Number(preview.net_profit).toLocaleString()}</p>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-stone-500 uppercase">Allocation Breakdown</label>
+                                    {Object.entries(preview.allocations).map(([wallet, amount]: any, idx: number) => (
+                                        <div key={wallet} className="flex justify-between items-center p-3 bg-white border rounded-xl">
+                                            <div className="flex items-center gap-2">
+                                                <div className={`w-3 h-3 rounded-full bg-gradient-to-br ${walletColors[idx % walletColors.length]}`} />
+                                                <span className="font-semibold text-stone-700">{wallet}</span>
+                                            </div>
+                                            <span className="font-bold text-stone-900">{Number(amount).toLocaleString()}</span>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="flex justify-between pt-2 border-t">
+                                    <Button variant="outline" onClick={() => setWizardStep(1)} className="rounded-xl gap-1">← Back</Button>
+                                    <Button onClick={handleCreate} disabled={isPending} className="rounded-xl gap-2">
+                                        {isPending ? "Creating..." : <><Send size={14} /> Create Draft</>}
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </DialogContent>
+                </Dialog>
+            </div>
+
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-stone-50 to-stone-100">
+                    <CardContent className="pt-5 pb-4 px-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-bold text-stone-400 uppercase tracking-wider">Total Distributions</p>
+                                <p className="text-3xl font-bold text-stone-900 mt-1">{distributions.length}</p>
+                            </div>
+                            <div className="w-12 h-12 rounded-2xl bg-stone-200/60 flex items-center justify-center">
+                                <PieChart size={22} className="text-stone-500" />
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-amber-50 to-amber-100">
+                    <CardContent className="pt-5 pb-4 px-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-bold text-amber-400 uppercase tracking-wider">Drafts</p>
+                                <p className="text-3xl font-bold text-amber-900 mt-1">{distributions.filter(d => d.status === "DRAFT").length}</p>
+                            </div>
+                            <div className="w-12 h-12 rounded-2xl bg-amber-200/60 flex items-center justify-center">
+                                <Clock size={22} className="text-amber-500" />
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-emerald-50 to-emerald-100">
+                    <CardContent className="pt-5 pb-4 px-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Posted</p>
+                                <p className="text-3xl font-bold text-emerald-900 mt-1">{distributions.filter(d => d.status === "POSTED").length}</p>
+                            </div>
+                            <div className="w-12 h-12 rounded-2xl bg-emerald-200/60 flex items-center justify-center">
+                                <CheckCircle2 size={22} className="text-emerald-500" />
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Distribution History Table */}
+            <Card className="rounded-2xl shadow-sm overflow-hidden">
+                <div className="px-5 py-3 border-b bg-stone-50/50">
+                    <h2 className="font-semibold text-stone-800 flex items-center gap-2"><Calendar size={16} /> Distribution History</h2>
+                </div>
+                <Table>
+                    <TableHeader>
+                        <TableRow className="bg-stone-50/30">
+                            <TableHead className="text-xs font-bold uppercase text-stone-400">Fiscal Year</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-stone-400">Date</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Net Profit</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-stone-400">Allocations</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-center">Status</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {distributions.map((d: any) => {
+                            const sc = statusConfig[d.status] || statusConfig.DRAFT
+                            const StatusIcon = sc.icon
+                            return (
+                                <TableRow key={d.id} className="hover:bg-stone-50/50 transition-colors">
+                                    <TableCell className="font-semibold text-stone-800">{d.fiscal_year_name || `FY #${d.fiscal_year}`}</TableCell>
+                                    <TableCell className="text-sm text-stone-500">{d.distribution_date}</TableCell>
+                                    <TableCell className="text-right font-semibold text-stone-800">{Number(d.net_profit).toLocaleString()}</TableCell>
+                                    <TableCell>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {d.allocations && Object.entries(d.allocations).map(([k, v]: any, idx: number) => (
+                                                <Badge key={k} variant="outline" className="rounded-lg text-[11px] border-stone-200 text-stone-600 gap-1">
+                                                    <div className={`w-2 h-2 rounded-full bg-gradient-to-br ${walletColors[idx % walletColors.length]}`} />
+                                                    {k}: {Number(v).toLocaleString()}
+                                                </Badge>
+                                            ))}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                        <Badge variant="outline" className={`gap-1 rounded-lg border ${sc.bg} ${sc.color} font-semibold text-[11px]`}>
+                                            <StatusIcon size={12} /> {d.status}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-right">
                                         {d.status === "DRAFT" && (
-                                            <button
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
                                                 onClick={() => handlePost(d.id)}
                                                 disabled={isPending}
-                                                className="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-colors disabled:opacity-50"
+                                                className="rounded-xl gap-1 h-8 text-xs font-semibold text-emerald-700 border-emerald-200 hover:bg-emerald-50"
                                             >
-                                                Post
-                                            </button>
+                                                <Send size={12} /> Post
+                                            </Button>
                                         )}
-                                    </td>
-                                </tr>
-                            ))}
-                            {distributions.length === 0 && (
-                                <tr>
-                                    <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
-                                        No profit distributions yet. Close a fiscal year and click &quot;+ New Distribution&quot; to start.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                                    </TableCell>
+                                </TableRow>
+                            )
+                        })}
+                        {distributions.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={6} className="py-16 text-center">
+                                    <div className="flex flex-col items-center gap-3">
+                                        <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center">
+                                            <PieChart size={28} className="text-stone-300" />
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-stone-600">No distributions yet</p>
+                                            <p className="text-sm text-stone-400 mt-1">Close a fiscal year and create your first distribution</p>
+                                        </div>
+                                        <Button variant="outline" onClick={() => setWizardOpen(true)} className="rounded-xl gap-2 mt-2">
+                                            <Plus size={14} /> New Distribution
+                                        </Button>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </Card>
         </div>
     )
 }

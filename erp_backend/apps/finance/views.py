@@ -706,9 +706,12 @@ class VoucherViewSet(TenantModelViewSet):
 
     def get_queryset(self):
         vtype = self.request.query_params.get('type')
+        status_filter = self.request.query_params.get('status')
         qs = super().get_queryset().order_by('-created_at')
         if vtype:
             qs = qs.filter(voucher_type=vtype)
+        if status_filter:
+            qs = qs.filter(status=status_filter)
         return qs
 
     def create(self, request, *args, **kwargs):
@@ -727,6 +730,26 @@ class VoucherViewSet(TenantModelViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=400)
 
+    def update(self, request, *args, **kwargs):
+        voucher = self.get_object()
+        if voucher.status != 'DRAFT':
+            return Response({"error": "Only DRAFT vouchers can be edited."}, status=400)
+        # Only allow updating certain fields
+        allowed = {'amount', 'date', 'description', 'source_account_id',
+                   'destination_account_id', 'financial_event_id', 'contact_id'}
+        update_data = {k: v for k, v in request.data.items() if k in allowed}
+        for key, value in update_data.items():
+            setattr(voucher, key, value)
+        voucher.save()
+        return Response(VoucherSerializer(voucher).data)
+
+    def destroy(self, request, *args, **kwargs):
+        voucher = self.get_object()
+        if voucher.status != 'DRAFT':
+            return Response({"error": "Only DRAFT vouchers can be deleted."}, status=400)
+        voucher.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     @action(detail=True, methods=['post'])
     def post_voucher(self, request, pk=None):
         organization_id = get_current_tenant_id()
@@ -738,6 +761,17 @@ class VoucherViewSet(TenantModelViewSet):
             return Response(VoucherSerializer(voucher).data)
         except Exception as e:
             return Response({"error": str(e)}, status=400)
+
+    @action(detail=True, methods=['post'])
+    def cancel_voucher(self, request, pk=None):
+        voucher = self.get_object()
+        if voucher.status == 'CANCELLED':
+            return Response({"error": "Voucher is already cancelled."}, status=400)
+        if voucher.status == 'POSTED':
+            return Response({"error": "Posted vouchers cannot be cancelled. Create a reversal instead."}, status=400)
+        voucher.status = 'CANCELLED'
+        voucher.save()
+        return Response(VoucherSerializer(voucher).data)
 
 
 class ProfitDistributionViewSet(TenantModelViewSet):

@@ -3,32 +3,45 @@
 import { useState, useEffect, useTransition } from "react"
 import { getDeferredExpenses, createDeferredExpense, recognizeDeferredExpense, DeferredExpenseInput } from "@/app/actions/finance/deferred-expenses"
 import { getFinancialAccounts } from "@/app/actions/finance/financial-accounts"
-import { useRouter } from "next/navigation"
+import { Card, CardContent } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog"
+import { Skeleton } from "@/components/ui/skeleton"
+import { toast } from "sonner"
+import {
+    Clock, Plus, Search, CheckCircle2, Receipt, Timer,
+    CalendarClock, DollarSign, PlayCircle
+} from "lucide-react"
 
 export default function DeferredExpensesPage() {
     const [expenses, setExpenses] = useState<any[]>([])
     const [accounts, setAccounts] = useState<any[]>([])
-    const [showForm, setShowForm] = useState(false)
+    const [loading, setLoading] = useState(true)
+    const [dialogOpen, setDialogOpen] = useState(false)
+    const [searchQuery, setSearchQuery] = useState("")
+    const [activeTab, setActiveTab] = useState<string>("ALL")
     const [isPending, startTransition] = useTransition()
-    const [error, setError] = useState("")
-    const [successMsg, setSuccessMsg] = useState("")
-    const router = useRouter()
 
-    useEffect(() => {
-        loadData()
-    }, [])
+    useEffect(() => { loadData() }, [])
 
     async function loadData() {
         try {
             const [exp, accs] = await Promise.all([getDeferredExpenses(), getFinancialAccounts()])
             setExpenses(Array.isArray(exp) ? exp : [])
             setAccounts(Array.isArray(accs) ? accs : [])
-        } catch { setExpenses([]); setAccounts([]) }
+        } catch {
+            setExpenses([]); setAccounts([])
+            toast.error("Failed to load deferred expenses")
+        } finally {
+            setLoading(false)
+        }
     }
 
     async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
-        setError("")
         const fd = new FormData(e.currentTarget)
         const data: DeferredExpenseInput = {
             name: fd.get("name") as string,
@@ -43,12 +56,11 @@ export default function DeferredExpensesPage() {
         startTransition(async () => {
             try {
                 await createDeferredExpense(data)
-                setShowForm(false)
-                setSuccessMsg("Deferred expense created successfully!")
-                setTimeout(() => setSuccessMsg(""), 3000)
+                setDialogOpen(false)
+                toast.success("Deferred expense created successfully")
                 loadData()
             } catch (err: any) {
-                setError(err.message || "Failed to create")
+                toast.error(err.message || "Failed to create")
             }
         })
     }
@@ -58,184 +70,270 @@ export default function DeferredExpensesPage() {
         startTransition(async () => {
             try {
                 await recognizeDeferredExpense(id, today)
-                setSuccessMsg("Month recognized successfully!")
-                setTimeout(() => setSuccessMsg(""), 3000)
+                toast.success("Month recognized successfully")
                 loadData()
             } catch (err: any) {
-                setError(err.message || "Failed to recognize")
-                setTimeout(() => setError(""), 3000)
+                toast.error(err.message || "Failed to recognize")
             }
         })
     }
 
     const categories = ["SUBSCRIPTION", "RENOVATION", "ADVERTISING", "INSURANCE", "RENT_ADVANCE", "OTHER"]
 
+    const tabs = [
+        { key: "ALL", label: "All" },
+        { key: "ACTIVE", label: "Active" },
+        { key: "COMPLETED", label: "Completed" },
+    ]
+
+    const filteredExpenses = expenses
+        .filter(e => activeTab === "ALL" || e.status === activeTab)
+        .filter(e =>
+            !searchQuery ||
+            (e.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (e.category || "").toLowerCase().includes(searchQuery.toLowerCase())
+        )
+
+    const totalActive = expenses.filter(e => e.status === "ACTIVE").length
+    const totalCommitted = expenses.reduce((s, e) => s + Number(e.total_amount || 0), 0)
+    const totalRemaining = expenses.reduce((s, e) => s + Number(e.remaining_amount || 0), 0)
+
+    const statusConfig: Record<string, { icon: any; color: string; bg: string }> = {
+        ACTIVE: { icon: PlayCircle, color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
+        COMPLETED: { icon: CheckCircle2, color: "text-blue-700", bg: "bg-blue-50 border-blue-200" },
+    }
+
+    if (loading) {
+        return (
+            <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto">
+                <div className="flex justify-between items-center">
+                    <div><Skeleton className="h-10 w-56" /><Skeleton className="h-4 w-72 mt-2" /></div>
+                    <Skeleton className="h-10 w-44" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {[1, 2, 3].map(i => <Skeleton key={i} className="h-28 rounded-2xl" />)}
+                </div>
+                <Skeleton className="h-96 rounded-2xl" />
+            </div>
+        )
+    }
+
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto">
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Deferred Expenses</h1>
-                    <p className="text-muted-foreground mt-1">Manage long-term expenses recognized over multiple months</p>
+                    <h1 className="text-4xl font-bold text-stone-900 font-serif tracking-tight">Deferred Expenses</h1>
+                    <p className="text-stone-500 font-medium mt-1">Manage long-term expenses recognized over multiple months</p>
                 </div>
-                <button
-                    onClick={() => setShowForm(!showForm)}
-                    className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors font-medium"
-                >
-                    {showForm ? "Cancel" : "+ New Deferred Expense"}
-                </button>
+                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button className="rounded-xl gap-2 shadow-md hover:shadow-lg transition-all">
+                            <Plus size={16} /> New Deferred Expense
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-lg">
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2"><CalendarClock size={20} /> Create Deferred Expense</DialogTitle>
+                            <DialogDescription>Set up a prepaid expense to be amortized over time.</DialogDescription>
+                        </DialogHeader>
+                        <form onSubmit={handleCreate} className="grid grid-cols-2 gap-4 pt-2">
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-stone-500 uppercase">Name *</label>
+                                <Input name="name" required placeholder="Annual Software License" className="rounded-xl" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-stone-500 uppercase">Category *</label>
+                                <select name="category" required className="w-full px-3 py-2 border rounded-xl bg-background text-sm">
+                                    {categories.map(c => <option key={c} value={c}>{c.replace(/_/g, " ")}</option>)}
+                                </select>
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-stone-500 uppercase">Total Amount *</label>
+                                <Input name="total_amount" type="number" step="0.01" min="0.01" required placeholder="12,000.00" className="rounded-xl" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-stone-500 uppercase">Duration (Months) *</label>
+                                <Input name="duration_months" type="number" min="1" max="120" required placeholder="12" className="rounded-xl" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-stone-500 uppercase">Start Date *</label>
+                                <Input name="start_date" type="date" required className="rounded-xl" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-stone-500 uppercase">Source Account *</label>
+                                <select name="source_account_id" required className="w-full px-3 py-2 border rounded-xl bg-background text-sm">
+                                    <option value="">Select account...</option>
+                                    {accounts.map((a: any) => <option key={a.id} value={a.id}>{a.name} ({a.type})</option>)}
+                                </select>
+                            </div>
+                            <div className="col-span-2 space-y-1.5">
+                                <label className="text-xs font-bold text-stone-500 uppercase">Description</label>
+                                <textarea name="description" rows={2} className="w-full px-3 py-2 border rounded-xl bg-background text-sm resize-none" placeholder="Optional description..." />
+                            </div>
+                            <div className="col-span-2 flex justify-end gap-2 pt-3 border-t">
+                                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} className="rounded-xl">Cancel</Button>
+                                <Button type="submit" disabled={isPending} className="rounded-xl gap-2">
+                                    {isPending ? "Creating..." : <><CalendarClock size={14} /> Create Expense</>}
+                                </Button>
+                            </div>
+                        </form>
+                    </DialogContent>
+                </Dialog>
             </div>
-
-            {/* Success / Error Messages */}
-            {successMsg && (
-                <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
-                    ✓ {successMsg}
-                </div>
-            )}
-            {error && (
-                <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
-                    ✕ {error}
-                </div>
-            )}
-
-            {/* Create Form */}
-            {showForm && (
-                <div className="bg-card border rounded-lg p-6 shadow-sm">
-                    <h2 className="text-lg font-semibold mb-4">Create Deferred Expense</h2>
-                    <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-medium">Name *</label>
-                            <input name="name" required className="w-full px-3 py-2 border rounded-md bg-background" placeholder="Annual Software License" />
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-medium">Category *</label>
-                            <select name="category" required className="w-full px-3 py-2 border rounded-md bg-background">
-                                {categories.map(c => <option key={c} value={c}>{c.replace(/_/g, " ")}</option>)}
-                            </select>
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-medium">Total Amount *</label>
-                            <input name="total_amount" type="number" step="0.01" min="0.01" required className="w-full px-3 py-2 border rounded-md bg-background" placeholder="12000.00" />
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-medium">Duration (Months) *</label>
-                            <input name="duration_months" type="number" min="1" max="120" required className="w-full px-3 py-2 border rounded-md bg-background" placeholder="12" />
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-medium">Start Date *</label>
-                            <input name="start_date" type="date" required className="w-full px-3 py-2 border rounded-md bg-background" />
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-medium">Source Account *</label>
-                            <select name="source_account_id" required className="w-full px-3 py-2 border rounded-md bg-background">
-                                <option value="">Select account...</option>
-                                {accounts.map((a: any) => <option key={a.id} value={a.id}>{a.name} ({a.type})</option>)}
-                            </select>
-                        </div>
-                        <div className="md:col-span-2 space-y-1.5">
-                            <label className="text-sm font-medium">Description</label>
-                            <textarea name="description" rows={2} className="w-full px-3 py-2 border rounded-md bg-background" placeholder="Optional description..." />
-                        </div>
-                        <div className="md:col-span-2 flex justify-end gap-2">
-                            <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 border rounded-md hover:bg-muted transition-colors">Cancel</button>
-                            <button type="submit" disabled={isPending} className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 transition-colors">
-                                {isPending ? "Creating..." : "Create Expense"}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            )}
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-card border rounded-lg p-5 shadow-sm">
-                    <p className="text-sm text-muted-foreground">Total Active</p>
-                    <p className="text-2xl font-bold mt-1">{expenses.filter((e: any) => e.status === "ACTIVE").length}</p>
-                </div>
-                <div className="bg-card border rounded-lg p-5 shadow-sm">
-                    <p className="text-sm text-muted-foreground">Total Committed</p>
-                    <p className="text-2xl font-bold mt-1">
-                        {expenses.reduce((s: number, e: any) => s + Number(e.total_amount || 0), 0).toLocaleString()}
-                    </p>
-                </div>
-                <div className="bg-card border rounded-lg p-5 shadow-sm">
-                    <p className="text-sm text-muted-foreground">Remaining to Recognize</p>
-                    <p className="text-2xl font-bold mt-1">
-                        {expenses.reduce((s: number, e: any) => s + Number(e.remaining_amount || 0), 0).toLocaleString()}
-                    </p>
-                </div>
+                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-emerald-50 to-emerald-100">
+                    <CardContent className="pt-5 pb-4 px-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Active</p>
+                                <p className="text-3xl font-bold text-emerald-900 mt-1">{totalActive}</p>
+                            </div>
+                            <div className="w-12 h-12 rounded-2xl bg-emerald-200/60 flex items-center justify-center">
+                                <PlayCircle size={22} className="text-emerald-500" />
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-indigo-50 to-indigo-100">
+                    <CardContent className="pt-5 pb-4 px-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-bold text-indigo-400 uppercase tracking-wider">Total Committed</p>
+                                <p className="text-3xl font-bold text-indigo-900 mt-1">{totalCommitted.toLocaleString()}</p>
+                            </div>
+                            <div className="w-12 h-12 rounded-2xl bg-indigo-200/60 flex items-center justify-center">
+                                <DollarSign size={22} className="text-indigo-500" />
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-amber-50 to-amber-100">
+                    <CardContent className="pt-5 pb-4 px-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-bold text-amber-400 uppercase tracking-wider">Remaining</p>
+                                <p className="text-3xl font-bold text-amber-900 mt-1">{totalRemaining.toLocaleString()}</p>
+                            </div>
+                            <div className="w-12 h-12 rounded-2xl bg-amber-200/60 flex items-center justify-center">
+                                <Timer size={22} className="text-amber-500" />
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
 
-            {/* Table */}
-            <div className="bg-card border rounded-lg shadow-sm overflow-hidden">
-                <div className="px-6 py-4 border-b">
-                    <h2 className="font-semibold">All Deferred Expenses</h2>
+            {/* Tabs + Search + Table */}
+            <Card className="rounded-2xl shadow-sm overflow-hidden">
+                <div className="px-5 py-3 border-b flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between bg-stone-50/50">
+                    <div className="flex gap-1">
+                        {tabs.map(tab => (
+                            <button
+                                key={tab.key}
+                                onClick={() => setActiveTab(tab.key)}
+                                className={`px-3.5 py-2 text-sm rounded-xl transition-all ${activeTab === tab.key
+                                    ? "bg-white shadow-sm font-semibold text-stone-900"
+                                    : "text-stone-400 hover:text-stone-600"
+                                    }`}
+                            >
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
+                    <div className="relative w-full sm:w-64">
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                        <Input
+                            placeholder="Search name or category..."
+                            value={searchQuery}
+                            onChange={e => setSearchQuery(e.target.value)}
+                            className="pl-9 rounded-xl text-sm h-9 bg-white"
+                        />
+                    </div>
                 </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="bg-muted/50">
-                            <tr>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Name</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Category</th>
-                                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Total</th>
-                                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Monthly</th>
-                                <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase">Progress</th>
-                                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Remaining</th>
-                                <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase">Status</th>
-                                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y">
-                            {expenses.map((exp: any) => {
-                                const progress = exp.duration_months > 0 ? Math.round((exp.months_recognized / exp.duration_months) * 100) : 100
-                                return (
-                                    <tr key={exp.id} className="hover:bg-muted/30 transition-colors">
-                                        <td className="px-4 py-3 font-medium">{exp.name}</td>
-                                        <td className="px-4 py-3 text-sm">{(exp.category || "").replace(/_/g, " ")}</td>
-                                        <td className="px-4 py-3 text-right">{Number(exp.total_amount).toLocaleString()}</td>
-                                        <td className="px-4 py-3 text-right">{Number(exp.monthly_amount).toLocaleString()}</td>
-                                        <td className="px-4 py-3">
-                                            <div className="flex items-center gap-2 justify-center">
-                                                <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
-                                                    <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
-                                                </div>
-                                                <span className="text-xs text-muted-foreground">{exp.months_recognized}/{exp.duration_months}</span>
+                <Table>
+                    <TableHeader>
+                        <TableRow className="bg-stone-50/30">
+                            <TableHead className="text-xs font-bold uppercase text-stone-400">Name</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-stone-400">Category</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Total</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Monthly</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-center">Progress</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Remaining</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-center">Status</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {filteredExpenses.map((exp: any) => {
+                            const progress = exp.duration_months > 0 ? Math.round((exp.months_recognized / exp.duration_months) * 100) : 100
+                            const sc = statusConfig[exp.status] || statusConfig.ACTIVE
+                            const StatusIcon = sc.icon
+                            return (
+                                <TableRow key={exp.id} className="hover:bg-stone-50/50 transition-colors">
+                                    <TableCell className="font-semibold text-stone-800">{exp.name}</TableCell>
+                                    <TableCell>
+                                        <Badge variant="outline" className="rounded-lg text-[11px] border-stone-200 text-stone-600">
+                                            {(exp.category || "").replace(/_/g, " ")}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-right text-sm">{Number(exp.total_amount).toLocaleString()}</TableCell>
+                                    <TableCell className="text-right text-sm text-stone-500">{Number(exp.monthly_amount).toLocaleString()}</TableCell>
+                                    <TableCell>
+                                        <div className="flex items-center gap-2 justify-center">
+                                            <div className="w-20 h-2.5 bg-stone-100 rounded-full overflow-hidden">
+                                                <div
+                                                    className={`h-full rounded-full transition-all ${progress >= 100 ? "bg-blue-400" : "bg-emerald-400"}`}
+                                                    style={{ width: `${Math.min(progress, 100)}%` }}
+                                                />
                                             </div>
-                                        </td>
-                                        <td className="px-4 py-3 text-right">{Number(exp.remaining_amount).toLocaleString()}</td>
-                                        <td className="px-4 py-3 text-center">
-                                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${exp.status === "ACTIVE" ? "bg-green-100 text-green-800" :
-                                                    exp.status === "COMPLETED" ? "bg-blue-100 text-blue-800" :
-                                                        "bg-gray-100 text-gray-800"
-                                                }`}>
-                                                {exp.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-3 text-right">
-                                            {exp.status === "ACTIVE" && (
-                                                <button
-                                                    onClick={() => handleRecognize(exp.id)}
-                                                    disabled={isPending}
-                                                    className="px-3 py-1 text-xs bg-primary/10 text-primary rounded-md hover:bg-primary/20 transition-colors disabled:opacity-50"
-                                                >
-                                                    Recognize Month
-                                                </button>
-                                            )}
-                                        </td>
-                                    </tr>
-                                )
-                            })}
-                            {expenses.length === 0 && (
-                                <tr>
-                                    <td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">
-                                        No deferred expenses found. Click &quot;+ New Deferred Expense&quot; to create one.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                                            <span className="text-xs font-semibold text-stone-400">{exp.months_recognized}/{exp.duration_months}</span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-right font-semibold text-stone-800">{Number(exp.remaining_amount).toLocaleString()}</TableCell>
+                                    <TableCell className="text-center">
+                                        <Badge variant="outline" className={`gap-1 rounded-lg border ${sc.bg} ${sc.color} font-semibold text-[11px]`}>
+                                            <StatusIcon size={12} /> {exp.status}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        {exp.status === "ACTIVE" && (
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => handleRecognize(exp.id)}
+                                                disabled={isPending}
+                                                className="rounded-xl gap-1 h-8 text-xs font-semibold text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+                                            >
+                                                <Clock size={12} /> Recognize
+                                            </Button>
+                                        )}
+                                    </TableCell>
+                                </TableRow>
+                            )
+                        })}
+                        {filteredExpenses.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={8} className="py-16 text-center">
+                                    <div className="flex flex-col items-center gap-3">
+                                        <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center">
+                                            <CalendarClock size={28} className="text-stone-300" />
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-stone-600">No deferred expenses found</p>
+                                            <p className="text-sm text-stone-400 mt-1">Create a deferred expense to start amortization</p>
+                                        </div>
+                                        <Button variant="outline" onClick={() => setDialogOpen(true)} className="rounded-xl gap-2 mt-2">
+                                            <Plus size={14} /> New Deferred Expense
+                                        </Button>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </Card>
         </div>
     )
 }
