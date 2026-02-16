@@ -178,6 +178,135 @@ class ProductViewSet(TenantModelViewSet):
             return Response({"success": True, "count": count})
 
     @action(detail=False, methods=['post'])
+    def bulk_update(self, request):
+        """
+        Bulk update product fields. Accepts a list of updates:
+        [{ "id": 123, "name": "New Name", "tva_rate": "19.00", ... }, ...]
+        Allowed fields: name, barcode, category, brand, unit, parfum, tva_rate,
+        cost_price_ht, cost_price_ttc, selling_price_ht, selling_price_ttc, size
+        """
+        organization, err = _get_org_or_400()
+        if err: return err
+
+        updates = request.data.get('updates', [])
+        if not updates:
+            return Response({"error": "No updates provided"}, status=400)
+
+        ALLOWED_FIELDS = {
+            'name', 'barcode', 'tva_rate', 'cost_price_ht', 'cost_price_ttc',
+            'selling_price_ht', 'selling_price_ttc', 'size', 'description',
+            'min_stock_level', 'is_expiry_tracked',
+        }
+        FK_FIELDS = {
+            'category': ('category_id', Category),
+            'brand': ('brand_id', Brand),
+            'unit': ('unit_id', Unit),
+            'parfum': ('parfum_id', Parfum),
+        }
+
+        updated = 0
+        errors = []
+        with transaction.atomic():
+            for item in updates:
+                product_id = item.get('id')
+                if not product_id:
+                    continue
+                try:
+                    product = Product.objects.get(id=product_id, organization=organization)
+                except Product.DoesNotExist:
+                    errors.append(f"Product {product_id} not found")
+                    continue
+
+                for field, value in item.items():
+                    if field == 'id':
+                        continue
+                    if field in ALLOWED_FIELDS:
+                        setattr(product, field, value)
+                    elif field in FK_FIELDS:
+                        db_field, model_class = FK_FIELDS[field]
+                        if value is None:
+                            setattr(product, db_field, None)
+                        else:
+                            setattr(product, db_field, value)
+
+                product.save()
+                updated += 1
+
+        return Response({"success": True, "updated": updated, "errors": errors})
+
+    @action(detail=False, methods=['post'])
+    def generate_barcodes(self, request):
+        """
+        Generate EAN-13 barcodes for products that don't have one.
+        Accepts: { "product_ids": [1, 2, 3] } or { "all_missing": true }
+        """
+        organization, err = _get_org_or_400()
+        if err: return err
+
+        product_ids = request.data.get('product_ids', [])
+        all_missing = request.data.get('all_missing', False)
+
+        if all_missing:
+            products = Product.objects.filter(
+                organization=organization,
+                is_active=True,
+            ).filter(
+                models.Q(barcode__isnull=True) | models.Q(barcode='')
+            )
+        elif product_ids:
+            products = Product.objects.filter(
+                id__in=product_ids, organization=organization
+            ).filter(
+                models.Q(barcode__isnull=True) | models.Q(barcode='')
+            )
+        else:
+            return Response({"error": "Provide product_ids or set all_missing=true"}, status=400)
+
+        try:
+            from apps.finance.services import BarcodeService
+        except ImportError:
+            return Response({"error": "Barcode service not available"}, status=500)
+
+        generated = 0
+        with transaction.atomic():
+            for product in products:
+                barcode = BarcodeService.generate_barcode(organization)
+                product.barcode = barcode
+                product.save(update_fields=['barcode'])
+                generated += 1
+
+        return Response({"success": True, "generated": generated})
+
+    @action(detail=False, methods=['get'], url_path='data-quality')
+    def data_quality(self, request):
+        """
+        Returns data quality summary for maintenance dashboard.
+        """
+        organization, err = _get_org_or_400()
+        if err: return err
+
+        total = Product.objects.filter(organization=organization, is_active=True)
+        missing_barcode = total.filter(models.Q(barcode__isnull=True) | models.Q(barcode='')).count()
+        missing_category = total.filter(category__isnull=True).count()
+        missing_brand = total.filter(brand__isnull=True).count()
+        zero_tva = total.filter(tva_rate=0).count()
+        zero_cost = total.filter(cost_price_ht=0, cost_price_ttc=0).count()
+        zero_selling = total.filter(selling_price_ht=0, selling_price_ttc=0).count()
+        missing_name = total.filter(models.Q(name='') | models.Q(name__isnull=True)).count()
+        total_count = total.count()
+
+        return Response({
+            'total_products': total_count,
+            'missing_barcode': missing_barcode,
+            'missing_category': missing_category,
+            'missing_brand': missing_brand,
+            'zero_tva': zero_tva,
+            'zero_cost_price': zero_cost,
+            'zero_selling_price': zero_selling,
+            'missing_name': missing_name,
+        })
+
+    @action(detail=False, methods=['post'])
     def create_complex(self, request):
         organization, err = _get_org_or_400()
         if err: return err
