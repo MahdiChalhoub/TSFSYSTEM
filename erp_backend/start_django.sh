@@ -22,9 +22,6 @@ python manage.py migrate --no-input 2>&1 || echo "⚠️  Migration warnings (no
 echo "🔧 [2/3] Ensuring platform integrity..."
 python manage.py ensure_platform
 
-echo "🚀 [3/3] Starting Gunicorn..."
+echo "🚀 [3/3] Starting Gunicorn (with graceful restart config)..."
 exec gunicorn core.wsgi:application \
-    --bind 0.0.0.0:8000 \
-    --workers 3 \
-    --access-logfile /var/log/tsf-backend-access.log \
-    --error-logfile /var/log/tsf-backend-error.log
+    --config gunicorn.conf.py

@@ -60,6 +60,7 @@ if APPS_DIR.exists():
             INSTALLED_APPS.append(f"apps.{item.name}")
 
 MIDDLEWARE = [
+    'erp.middleware_maintenance.MaintenanceModeMiddleware',
     'erp.latency_middleware.LatencyTrackingMiddleware',
     'erp.ip_whitelist.SaaSIPWhitelistMiddleware',
     'corsheaders.middleware.CorsMiddleware',
