@@ -1,6 +1,6 @@
 """
 Inventory Module URL Configuration
-Routes for product catalog, stock management, and warehouse operations.
+Routes for product catalog, stock management, warehouse operations, and stock counting.
 """
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
@@ -10,6 +10,9 @@ from apps.inventory.views import (
     InventoryMovementViewSet,
     StockAdjustmentOrderViewSet, StockTransferOrderViewSet,
     OperationalRequestViewSet,
+)
+from apps.inventory.counting_views import (
+    InventorySessionViewSet, InventorySessionLineViewSet,
 )
 
 router = DefaultRouter()
@@ -25,8 +28,9 @@ router.register(r'inventory-movements', InventoryMovementViewSet)
 router.register(r'adjustment-orders', StockAdjustmentOrderViewSet)
 router.register(r'transfer-orders', StockTransferOrderViewSet)
 router.register(r'requests', OperationalRequestViewSet)
+router.register(r'counting-sessions', InventorySessionViewSet)
+router.register(r'counting-lines', InventorySessionLineViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
 ]
-
