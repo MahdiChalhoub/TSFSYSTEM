@@ -111,6 +111,7 @@ const MENU_ITEMS = [
                     { title: 'Quotations', path: '/sales/quotations' },
                     { title: 'Deliveries', path: '/sales/deliveries' },
                     { title: 'Discount Rules', path: '/sales/discounts' },
+                    { title: 'Consignment', path: '/sales/consignment' },
                     { title: 'Delivery Zones', path: '/sales/delivery-zones' },
                 ]
             },

@@ -768,6 +768,98 @@ class DiscountRuleViewSet(TenantModelViewSet):
         return Response(DiscountRuleSerializer(valid, many=True).data)
 
 
+# =============================================================================
+# CONSIGNMENT MANAGEMENT
+# =============================================================================
+
+from .consignment_models import ConsignmentSettlement, ConsignmentSettlementLine
+from .serializers import ConsignmentSettlementSerializer, ConsignmentSettlementLineSerializer
+from .models import OrderLine
+
+
+class ConsignmentSettlementViewSet(TenantModelViewSet):
+    """ViewSet for managing payouts to consignment suppliers."""
+    queryset = ConsignmentSettlement.objects.select_related('supplier', 'performed_by').prefetch_related('lines').all()
+    serializer_class = ConsignmentSettlementSerializer
+
+    @action(detail=False, methods=['get'], url_path='pending-items')
+    def pending_items(self, request):
+        """
+        Returns sold consignment items that have not yet been settled.
+        Grouped by supplier.
+        """
+        organization_id = get_current_tenant_id()
+        # Find OrderLines that are marked as consignment but not settled
+        pending = OrderLine.objects.filter(
+            organization_id=organization_id,
+            is_consignment=True,
+            consignment_settled=False,
+            order__status__in=['COMPLETED', 'RECEIVED']
+        ).select_related('order', 'product', 'order__contact', 'batch__supplier')
+
+        data = []
+        for line in pending:
+            # We assume the batch links back to the original consignment inventory
+            supplier = line.batch.supplier if line.batch else None
+            data.append({
+                'id': line.id,
+                'order_id': line.order_id,
+                'order_ref': line.order.ref_code,
+                'product_name': line.product.name,
+                'sku': line.product.sku,
+                'quantity': line.quantity,
+                'payout_amount': line.consignment_payout,
+                'supplier_id': supplier.id if supplier else None,
+                'supplier_name': supplier.name if supplier else 'Unknown',
+                'sold_at': line.order.created_at,
+            })
+        
+        return Response(data)
+
+    @action(detail=False, methods=['post'], url_path='generate-settlement')
+    def generate_settlement(self, request):
+        """
+        Create a settlement record for a list of order lines and a supplier.
+        Body: { "supplier_id": 5, "line_ids": [10, 11, 12], "notes": "..." }
+        """
+        supplier_id = request.data.get('supplier_id')
+        line_ids = request.data.get('line_ids', [])
+        notes = request.data.get('notes', '')
+        
+        if not supplier_id or not line_ids:
+            return Response({'error': 'Supplier and lines required'}, status=400)
+            
+        with transaction.atomic():
+            lines = OrderLine.objects.filter(id__in=line_ids, is_consignment=True, consignment_settled=False)
+            if not lines.exists():
+                return Response({'error': 'No valid pending lines found'}, status=400)
+                
+            settlement = ConsignmentSettlement.objects.create(
+                organization_id=get_current_tenant_id(),
+                supplier_id=supplier_id,
+                notes=notes,
+                performed_by=request.user,
+                status='PENDING'
+            )
+            
+            for line in lines:
+                ConsignmentSettlementLine.objects.create(
+                    organization_id=settlement.organization_id,
+                    settlement=settlement,
+                    order_line=line,
+                    payout_amount=line.consignment_payout
+                )
+                line.consignment_settled = True
+                line.save(update_fields=['consignment_settled'])
+                
+            settlement.update_total()
+            # Generate reference
+            settlement.reference = f"CSL-{settlement.id}"
+            settlement.save(update_fields=['reference'])
+            
+        return Response(ConsignmentSettlementSerializer(settlement).data)
+
+
 class OrderViewSet(TenantModelViewSet):
     """CRUD for sales/purchase orders."""
     queryset = Order.objects.select_related('contact', 'user', 'site').all()

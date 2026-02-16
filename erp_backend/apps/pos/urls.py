@@ -9,6 +9,7 @@ from apps.pos.views import (
     SalesReturnViewSet, CreditNoteViewSet, PurchaseReturnViewSet,
     QuotationViewSet, DeliveryZoneViewSet, DeliveryOrderViewSet,
     DiscountRuleViewSet, OrderViewSet,
+    ConsignmentSettlementViewSet,
     ProductSupplierViewSet, SupplierPriceHistoryViewSet,
 )
 
@@ -22,6 +23,7 @@ router.register(r'quotations', QuotationViewSet)
 router.register(r'delivery-zones', DeliveryZoneViewSet)
 router.register(r'deliveries', DeliveryOrderViewSet)
 router.register(r'discount-rules', DiscountRuleViewSet)
+router.register(r'consignment-settlements', ConsignmentSettlementViewSet)
 router.register(r'orders', OrderViewSet)
 router.register(r'sourcing', ProductSupplierViewSet, basename='sourcing')
 router.register(r'supplier-pricing', SupplierPriceHistoryViewSet, basename='supplier-pricing')
