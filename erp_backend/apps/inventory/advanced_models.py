@@ -86,6 +86,22 @@ class ProductSerial(TenantModel):
         return f"S/N {self.serial_number} — {self.product.name} [{self.status}]"
 
 
+class SerialLog(TenantModel):
+    """
+    Audit trail for a specific serial number.
+    """
+    serial = models.ForeignKey(ProductSerial, on_delete=models.CASCADE, related_name='logs')
+    action = models.CharField(max_length=100) # PURCHASE, SALE, TRANSFER, ADJUSTMENT
+    reference = models.CharField(max_length=100, null=True, blank=True)
+    warehouse = models.ForeignKey('inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True)
+    user_name = models.CharField(max_length=100, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'product_serial_log'
+        ordering = ['-created_at']
+
+
 # =============================================================================
 # EXPIRY ALERTS
 # =============================================================================

@@ -89,12 +89,23 @@ class POSService:
                 if price < base_price * Decimal('0.95'): # 5% threshold for "anomaly"
                     is_override = True
                 
+                # 4.1 Margin Guard: Prevent loss-making sales
+                margin_threshold = ConfigurationService.get_setting(organization, 'margin_guard_threshold', 1.0)
+                cost_price = product.cost_price or Decimal('0.00')
+                if price < (cost_price * Decimal(str(margin_threshold))):
+                    raise ValidationError(
+                        f"MARGIN ALERT: Sale blocked for '{product.name}'. Price {price} is below "
+                        f"minimum margin threshold (Cost: {cost_price} x {margin_threshold})."
+                    )
+                
                 amc = InventoryService.reduce_stock(
                     organization=organization,
                     product=product,
                     warehouse=warehouse,
                     quantity=qty,
-                    reference=f"POS-{order.id}"
+                    reference=f"POS-{order.id}",
+                    serials=item.get('serials'),
+                    user=user
                 )
                 
                 tax_rate = Decimal(str(product.tva_rate))
@@ -487,6 +498,18 @@ class PurchaseService:
                     reference=f"PUR-{order.id}",
                     scope=scope
                 )
+
+                # Serial Integration for Quick Purchase
+                if product.tracks_serials:
+                    current_serials = line.get('serials', [])
+                    if len(current_serials) != int(qty):
+                        raise ValidationError(f"Product {product.name} requires {int(qty)} serials.")
+                    for sn in current_serials:
+                        InventoryService.register_serial_entry(
+                            organization, product, warehouse_id, sn, 
+                            f"PUR-{order.id}", cost_price=final_effective_cost, 
+                            user_name=user.username if user else None
+                        )
                 
                 product.cost_price = final_effective_cost
                 product.cost_price_ht = unit_cost_ht

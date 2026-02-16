@@ -25,7 +25,9 @@ class Unit(TenantModel):
 
     class Meta:
         db_table = 'unit'
-        unique_together = ('code', 'organization')
+        constraints = [
+            models.UniqueConstraint(fields=['code', 'organization'], name='unique_unit_code_org')
+        ]
 
     def __str__(self):
         return self.code
@@ -40,7 +42,9 @@ class Category(TenantModel):
 
     class Meta:
         db_table = 'category'
-        unique_together = ('name', 'organization')
+        constraints = [
+            models.UniqueConstraint(fields=['name', 'organization'], name='unique_category_name_org')
+        ]
 
     def __str__(self):
         return self.name
@@ -56,7 +60,9 @@ class Brand(TenantModel):
 
     class Meta:
         db_table = 'brand'
-        unique_together = ('name', 'organization')
+        constraints = [
+            models.UniqueConstraint(fields=['name', 'organization'], name='unique_brand_name_org')
+        ]
 
     def __str__(self):
         return self.name
@@ -69,7 +75,9 @@ class Parfum(TenantModel):
 
     class Meta:
         db_table = 'parfum'
-        unique_together = ('name', 'organization')
+        constraints = [
+            models.UniqueConstraint(fields=['name', 'organization'], name='unique_parfum_name_org')
+        ]
 
     def __str__(self):
         return self.name

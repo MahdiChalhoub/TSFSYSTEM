@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('erp', '0037_saasclient'),
-        # ('finance', '__first__'),  # Removed: already applied, dep causes InconsistentMigrationHistory
+        ('finance', '0001_initial'),
     ]
 
     operations = [

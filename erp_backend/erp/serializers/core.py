@@ -5,7 +5,7 @@ Business serializers have been migrated to their respective modules.
 """
 from rest_framework import serializers
 from erp.models import (
-    Organization, Site, User, Role, Country,
+    Organization, Site, User, Role, Country, Permission,
     SystemModule, OrganizationModule, SystemUpdate,
     BusinessType, GlobalCurrency, Notification
 )

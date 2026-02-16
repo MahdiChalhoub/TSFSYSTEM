@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from erp.views import TenantModelViewSet
 from erp.lifecycle_mixin import LifecycleViewSetMixin
+from erp.mixins import UDLEViewSetMixin
 from erp.middleware import get_current_tenant_id
 from erp.models import Organization, User
 
@@ -35,7 +36,7 @@ from apps.finance.services import (
 from apps.inventory.services import InventoryService
 
 
-class FinancialAccountViewSet(TenantModelViewSet):
+class FinancialAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):
     queryset = FinancialAccount.objects.all()
     serializer_class = FinancialAccountSerializer
 
@@ -98,7 +99,7 @@ class FinancialAccountViewSet(TenantModelViewSet):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ChartOfAccountViewSet(TenantModelViewSet):
+class ChartOfAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):
     queryset = ChartOfAccount.objects.all()
     serializer_class = ChartOfAccountSerializer
 
@@ -224,7 +225,7 @@ class ChartOfAccountViewSet(TenantModelViewSet):
         return Response(data)
 
 
-class FiscalYearViewSet(TenantModelViewSet):
+class FiscalYearViewSet(UDLEViewSetMixin, TenantModelViewSet):
     queryset = FiscalYear.objects.all()
     serializer_class = FiscalYearSerializer
 
@@ -332,7 +333,7 @@ class FiscalPeriodViewSet(TenantModelViewSet):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class JournalEntryViewSet(TenantModelViewSet):
+class JournalEntryViewSet(UDLEViewSetMixin, TenantModelViewSet):
     queryset = JournalEntry.objects.all()
     serializer_class = JournalEntrySerializer
 

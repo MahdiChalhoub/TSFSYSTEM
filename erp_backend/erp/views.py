@@ -27,7 +27,7 @@ from .throttles import TenantResolveRateThrottle
 
 # --- Kernel Models ---
 from .models import (
-    Organization, Site, User, Country, Role,
+    Organization, Site, User, Country, Role, Permission,
     SystemModule, OrganizationModule, GlobalCurrency,
     ManagerOverrideLog, Notification
 )

@@ -9,7 +9,7 @@ from .models import (
     StockAdjustmentOrder, StockAdjustmentLine,
     StockTransferOrder, StockTransferLine,
     OperationalRequest, OperationalRequestLine,
-    ComboComponent,
+    ComboComponent, ProductSerial, SerialLog
 )
 from erp.models import Country
 
@@ -175,7 +175,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'parfum_name', 'size_unit_name',
             'cost_price', 'cost_price_ht', 'cost_price_ttc',
             'selling_price_ht', 'selling_price_ttc', 'tva_rate',
-            'min_stock_level', 'is_expiry_tracked',
+            'min_stock_level', 'is_expiry_tracked', 'tracks_serials',
             'status', 'is_active', 'created_at', 'updated_at',
             'organization',
         ]
@@ -394,6 +394,23 @@ class OperationalRequestLineSerializer(serializers.ModelSerializer):
             'quantity', 'warehouse', 'warehouse_name', 'reason',
         ]
         read_only_fields = ['request']
+
+
+class ProductSerialSerializer(serializers.ModelSerializer):
+    product_name = serializers.ReadOnlyField(source='product.name')
+    warehouse_name = serializers.ReadOnlyField(source='warehouse.name')
+
+    class Meta:
+        model = ProductSerial
+        fields = '__all__'
+        read_only_fields = ['organization']
+
+
+class SerialLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SerialLog
+        fields = '__all__'
+        read_only_fields = ['organization']
 
 
 class OperationalRequestSerializer(serializers.ModelSerializer):
