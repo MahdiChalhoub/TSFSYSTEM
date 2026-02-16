@@ -11,8 +11,13 @@ import {
     Eye,
     EyeOff,
     RotateCcw,
-    Download
+    Download,
+    Bookmark,
+    Save,
+    Trash,
+    Star
 } from 'lucide-react';
+import { getSavedViews, createSavedView, updateSavedView, deleteSavedView, UDLESavedView } from "@/app/actions/udle";
 import {
     Table,
     TableBody,
@@ -81,20 +86,107 @@ export function UniversalDataTable({
     const [filters, setFilters] = useState<Record<string, any>>({});
     const [search, setSearch] = useState("");
     const [sorting, setSorting] = useState<{ field: string, dir: 'asc' | 'desc' } | null>(null);
+    const [savedViews, setSavedViews] = useState<UDLESavedView[]>([]);
+    const [currentViewId, setCurrentViewId] = useState<string | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
 
-    // Initial Load: Metadata
+    // Initial Load: Metadata & Saved Views
     useEffect(() => {
         async function loadMeta() {
             try {
-                const m = await metaFetcher();
+                const [m, views] = await Promise.all([
+                    metaFetcher(),
+                    getSavedViews(endpoint.split('/').filter(Boolean).pop() || "")
+                ]);
+
                 setMeta(m);
-                setVisibleColumns(m.default_columns);
+                setSavedViews(views);
+
+                // Apply default view if exists
+                const defaultView = views.find((v: any) => v.is_default);
+                if (defaultView) {
+                    applyView(defaultView);
+                } else {
+                    setVisibleColumns(m.default_columns);
+                }
             } catch (e) {
-                toast.error("Failed to load list metadata");
+                toast.error("Failed to load list metadata or views");
             }
         }
         loadMeta();
-    }, [metaFetcher]);
+    }, [metaFetcher, endpoint]);
+
+    const applyView = (view: UDLESavedView) => {
+        setCurrentViewId(view.id);
+        if (view.config.columns) setVisibleColumns(view.config.columns);
+        if (view.config.filters) setFilters(view.config.filters);
+        if (view.config.sorting) setSorting(view.config.sorting);
+    };
+
+    const handleSaveView = async (name: string, isDefault = false) => {
+        if (!meta) return;
+        setIsSaving(true);
+        try {
+            const config = {
+                columns: visibleColumns,
+                filters,
+                sorting
+            };
+            const res = await createSavedView({
+                model_name: meta.model,
+                name,
+                config,
+                is_default: isDefault
+            });
+            setSavedViews(prev => [...prev, res]);
+            setCurrentViewId(res.id);
+            toast.success("View saved successfully");
+        } catch (e) {
+            toast.error("Failed to save view");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleUpdateCurrentView = async () => {
+        if (!currentViewId) return;
+        setIsSaving(true);
+        try {
+            const config = {
+                columns: visibleColumns,
+                filters,
+                sorting
+            };
+            await updateSavedView(currentViewId, { config });
+            setSavedViews(prev => prev.map(v => v.id === currentViewId ? { ...v, config } : v));
+            toast.success("View configuration updated");
+        } catch (e) {
+            toast.error("Failed to update view");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleSetDefaultView = async (id: string) => {
+        try {
+            await updateSavedView(id, { is_default: true });
+            setSavedViews(prev => prev.map(v => ({ ...v, is_default: v.id === id })));
+            toast.success("Default view updated");
+        } catch (e) {
+            toast.error("Failed to set default view");
+        }
+    };
+
+    const handleDeleteView = async (id: string) => {
+        try {
+            await deleteSavedView(id);
+            setSavedViews(prev => prev.filter(v => v.id !== id));
+            if (currentViewId === id) setCurrentViewId(null);
+            toast.success("View deleted");
+        } catch (e) {
+            toast.error("Failed to delete view");
+        }
+    };
 
     // Data Fetching
     const loadData = async () => {
@@ -220,6 +312,87 @@ export function UniversalDataTable({
                 </div>
 
                 <div className="flex items-center gap-2">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="h-11 rounded-2xl gap-2 border-gray-100">
+                                <Bookmark className="h-4 w-4" />
+                                Views
+                                {currentViewId && <Badge variant="secondary" className="bg-slate-100 text-slate-600 scale-90">Active</Badge>}
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-64 p-2 rounded-2xl shadow-xl border-gray-100">
+                            <DropdownMenuLabel className="text-[10px] uppercase font-black tracking-widest text-gray-400 px-3 py-2">Saved Layouts</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            {savedViews.length === 0 && (
+                                <div className="px-3 py-4 text-center text-xs text-gray-400">No saved views yet</div>
+                            )}
+                            {savedViews.map(view => (
+                                <DropdownMenuItem key={view.id} className="flex items-center justify-between group rounded-xl">
+                                    <div className="flex-1 cursor-pointer" onClick={() => applyView(view)}>
+                                        <span className={currentViewId === view.id ? "font-bold text-emerald-600" : ""}>{view.name}</span>
+                                        {view.is_default && <Badge className="ml-2 scale-75 bg-amber-50 text-amber-600 border-amber-100">Default</Badge>}
+                                    </div>
+                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <Button
+                                            variant="ghost"
+                                            className={`h-6 w-6 p-0 ${view.is_default ? 'text-amber-500' : 'text-gray-300'}`}
+                                            onClick={(e) => { e.stopPropagation(); handleSetDefaultView(view.id); }}
+                                        >
+                                            <Star className={`h-3 w-3 ${view.is_default ? 'fill-current' : ''}`} />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            className="h-6 w-6 p-0 text-red-400 hover:text-red-500 hover:bg-red-50"
+                                            onClick={(e) => { e.stopPropagation(); handleDeleteView(view.id); }}
+                                        >
+                                            <Trash className="h-3 w-3" />
+                                        </Button>
+                                    </div>
+                                </DropdownMenuItem>
+                            ))}
+                            <DropdownMenuSeparator />
+                            <div className="p-2 space-y-2">
+                                {currentViewId && (
+                                    <Button
+                                        variant="outline"
+                                        className="w-full h-8 text-[9px] font-black uppercase tracking-widest gap-2 rounded-lg border-emerald-100 text-emerald-600 bg-emerald-50 hover:bg-emerald-100"
+                                        onClick={handleUpdateCurrentView}
+                                        disabled={isSaving}
+                                    >
+                                        <Save className="h-3 w-3" />
+                                        Update Current
+                                    </Button>
+                                )}
+                                <Input
+                                    id="new-view-name"
+                                    placeholder="New view name..."
+                                    className="h-9 text-xs rounded-xl border-gray-100"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            handleSaveView(e.currentTarget.value);
+                                            e.currentTarget.value = "";
+                                        }
+                                    }}
+                                />
+                                <Button
+                                    variant="outline"
+                                    className="w-full h-9 text-[10px] font-black uppercase tracking-widest gap-2 rounded-xl border-gray-100 bg-slate-50 hover:bg-slate-100"
+                                    disabled={isSaving}
+                                    onClick={() => {
+                                        const input = document.getElementById('new-view-name') as HTMLInputElement;
+                                        if (input.value) {
+                                            handleSaveView(input.value);
+                                            input.value = "";
+                                        }
+                                    }}
+                                >
+                                    <Save className="h-3.5 w-3.5" />
+                                    Save as New View
+                                </Button>
+                            </div>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" className="h-11 rounded-2xl gap-2 border-gray-100">
