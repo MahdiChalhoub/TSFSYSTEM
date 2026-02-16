@@ -1,0 +1,23 @@
+{
+    "code": "migration",
+    "name": "Data Migration",
+    "version": "1.0.0",
+    "description": "Migrate data from UltimatePOS and other systems into TSF.",
+    "category": "first-party",
+    "isolation": "shared",
+    "icon": "DatabaseZap",
+    "routes": [
+        "/migration/*"
+    ],
+    "permissions": [
+        "read:migration",
+        "write:migration"
+    ],
+    "dependencies": [
+        "inventory",
+        "pos",
+        "crm",
+        "finance"
+    ],
+    "backendApp": "apps.migration"
+}

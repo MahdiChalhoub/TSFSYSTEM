@@ -18,7 +18,11 @@ import {
     MessagesSquare, Calendar, Brain, TrendingUp
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { erpFetch } from '@/lib/erp-fetch'
+
+/** Client-safe API fetch (erpFetch uses server-only cookies) */
+async function apiFetch(path: string, opts?: RequestInit) {
+    return fetch(`/api${path}`, { credentials: 'include', ...opts })
+}
 
 interface Conversation {
     id: number
@@ -43,7 +47,7 @@ export default function MCPConversationsPage() {
     async function loadData() {
         setLoading(true)
         try {
-            const res = await erpFetch('/mcp/conversations/')
+            const res = await apiFetch('/mcp/conversations/')
             if (res.ok) {
                 const data = await res.json()
                 setConversations(Array.isArray(data) ? data : data.results || [])
@@ -58,7 +62,7 @@ export default function MCPConversationsPage() {
     async function handleDelete(id: number) {
         if (!confirm('Delete this conversation permanently?')) return
         try {
-            const res = await erpFetch(`/mcp/conversations/${id}/`, { method: 'DELETE' })
+            const res = await apiFetch(`/mcp/conversations/${id}/`, { method: 'DELETE' })
             if (res.ok) {
                 toast.success('Conversation deleted')
                 if (selectedConv?.id === id) setSelectedConv(null)

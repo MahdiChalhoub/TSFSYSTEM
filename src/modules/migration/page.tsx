@@ -1,0 +1,647 @@
+"use client"
+
+import { useState, useEffect, useCallback, useRef } from "react"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import {
+    Upload, DatabaseZap, Server, FileUp, Play, RotateCcw,
+    CheckCircle2, XCircle, Loader2, ArrowRight, ArrowLeft,
+    Eye, AlertTriangle, RefreshCw, Database, Layers,
+    Package, Users, ShoppingCart, Banknote, Tag, Ruler,
+    BarChart3, Trash2
+} from "lucide-react"
+import { erpFetch } from "@/lib/erp-api"
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TYPES
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface MigrationJob {
+    id: number
+    name: string
+    source_type: string
+    status: string
+    progress: number
+    current_step: string | null
+    total_units: number
+    total_categories: number
+    total_brands: number
+    total_products: number
+    total_contacts: number
+    total_transactions: number
+    total_accounts: number
+    total_errors: number
+    error_log: string | null
+    created_by_name: string
+    started_at: string | null
+    completed_at: string | null
+    created_at: string
+    mappings_summary?: Record<string, number>
+}
+
+interface PreviewData {
+    tables: Record<string, number>
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STATUS VISUALS
+// ─────────────────────────────────────────────────────────────────────────────
+
+const statusConfig: Record<string, { color: string; icon: any; label: string }> = {
+    PENDING: { color: "bg-slate-500/20 text-slate-400 border-slate-500/30", icon: FileUp, label: "Pending" },
+    PARSING: { color: "bg-blue-500/20 text-blue-400 border-blue-500/30", icon: Database, label: "Parsing" },
+    RUNNING: { color: "bg-amber-500/20 text-amber-400 border-amber-500/30", icon: Loader2, label: "Running" },
+    COMPLETED: { color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30", icon: CheckCircle2, label: "Completed" },
+    FAILED: { color: "bg-red-500/20 text-red-400 border-red-500/30", icon: XCircle, label: "Failed" },
+    ROLLED_BACK: { color: "bg-gray-500/20 text-gray-400 border-gray-500/30", icon: RotateCcw, label: "Rolled Back" },
+}
+
+const entityIcons: Record<string, any> = {
+    units: Ruler,
+    categories: Layers,
+    brands: Tag,
+    products: Package,
+    contacts: Users,
+    transactions: ShoppingCart,
+    accounts: Banknote,
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN PAGE
+// ─────────────────────────────────────────────────────────────────────────────
+
+export default function MigrationPage() {
+    const [step, setStep] = useState<"LIST" | "UPLOAD" | "PREVIEW" | "RUNNING" | "RESULTS">("LIST")
+    const [jobs, setJobs] = useState<MigrationJob[]>([])
+    const [activeJob, setActiveJob] = useState<MigrationJob | null>(null)
+    const [preview, setPreview] = useState<PreviewData | null>(null)
+    const [uploading, setUploading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+    const [dragActive, setDragActive] = useState(false)
+    const fileInputRef = useRef<HTMLInputElement>(null)
+    const pollRef = useRef<NodeJS.Timeout | null>(null)
+
+    // ── Fetch Jobs ──────────────────────────────────────────────────────────
+    const fetchJobs = useCallback(async () => {
+        try {
+            const data = await erpFetch("/api/migration/jobs/")
+            setJobs(data?.results ?? (Array.isArray(data) ? data : []))
+        } catch { }
+    }, [])
+
+    useEffect(() => {
+        fetchJobs()
+    }, [fetchJobs])
+
+    // ── Polling for Running Jobs ────────────────────────────────────────────
+    useEffect(() => {
+        if (activeJob && (activeJob.status === "PARSING" || activeJob.status === "RUNNING")) {
+            pollRef.current = setInterval(async () => {
+                try {
+                    const data = await erpFetch(`/api/migration/jobs/${activeJob.id}/`)
+                    setActiveJob(data)
+                    if (data.status === "COMPLETED" || data.status === "FAILED") {
+                        setStep("RESULTS")
+                        if (pollRef.current) clearInterval(pollRef.current)
+                    }
+                } catch { }
+            }, 2000)
+
+            return () => { if (pollRef.current) clearInterval(pollRef.current) }
+        }
+    }, [activeJob?.id, activeJob?.status])
+
+    // ── Upload Handler ──────────────────────────────────────────────────────
+    const handleUpload = async (file: File) => {
+        if (!file.name.endsWith(".sql")) {
+            setError("Only .sql files are accepted")
+            return
+        }
+
+        setUploading(true)
+        setError(null)
+        try {
+            const formData = new FormData()
+            formData.append("file", file)
+            formData.append("name", `UltimatePOS Migration - ${new Date().toLocaleDateString()}`)
+
+            const job = await erpFetch("/api/migration/jobs/upload/", {
+                method: "POST",
+                body: formData,
+            })
+            setActiveJob(job)
+            setStep("PREVIEW")
+            fetchJobs()
+        } catch (e: any) {
+            setError(e.message || "Upload failed")
+        } finally {
+            setUploading(false)
+        }
+    }
+
+    // ── Preview Handler ─────────────────────────────────────────────────────
+    const handlePreview = async (job: MigrationJob) => {
+        setActiveJob(job)
+        setError(null)
+        try {
+            const data = await erpFetch(`/api/migration/jobs/${job.id}/preview/`)
+            setPreview(data)
+            setStep("PREVIEW")
+        } catch (e: any) {
+            setError(e.message || "Preview failed")
+        }
+    }
+
+    // ── Start Migration ─────────────────────────────────────────────────────
+    const handleStart = async () => {
+        if (!activeJob) return
+        setError(null)
+        try {
+            const data = await erpFetch(`/api/migration/jobs/${activeJob.id}/start/`, { method: "POST" })
+            setActiveJob(data)
+            setStep("RUNNING")
+        } catch (e: any) {
+            setError(e.message || "Failed to start migration")
+        }
+    }
+
+    // ── Rollback ────────────────────────────────────────────────────────────
+    const handleRollback = async (job: MigrationJob) => {
+        if (!confirm("This will DELETE all data imported by this migration. Are you sure?")) return
+        try {
+            await erpFetch(`/api/migration/jobs/${job.id}/rollback/`, { method: "POST" })
+            fetchJobs()
+            setActiveJob(null)
+            setStep("LIST")
+        } catch (e: any) {
+            setError(e.message || "Rollback failed")
+        }
+    }
+
+    // ── View Results ────────────────────────────────────────────────────────
+    const viewResults = async (job: MigrationJob) => {
+        try {
+            const data = await erpFetch(`/api/migration/jobs/${job.id}/`)
+            setActiveJob(data)
+            setStep("RESULTS")
+        } catch { }
+    }
+
+    // ── Drag & Drop ─────────────────────────────────────────────────────────
+    const handleDrag = (e: React.DragEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+        if (e.type === "dragenter" || e.type === "dragover") setDragActive(true)
+        else if (e.type === "dragleave") setDragActive(false)
+    }
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+        setDragActive(false)
+        if (e.dataTransfer.files?.[0]) handleUpload(e.dataTransfer.files[0])
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // RENDER
+    // ═══════════════════════════════════════════════════════════════════════
+
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-[#0a0a1a] via-[#111128] to-[#0d0d2b] text-white p-6 lg:p-10">
+            {/* Header */}
+            <div className="mb-8 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                    {step !== "LIST" && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => { setStep("LIST"); setActiveJob(null); setError(null); setPreview(null); }}
+                            className="text-white/60 hover:text-white hover:bg-white/10"
+                        >
+                            <ArrowLeft className="w-4 h-4 mr-1" /> Back
+                        </Button>
+                    )}
+                    <div>
+                        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 flex items-center gap-3">
+                            <DatabaseZap className="w-8 h-8 text-purple-400" />
+                            Data Migration
+                        </h1>
+                        <p className="text-white/50 mt-1">Import data from UltimatePOS into your TSF system</p>
+                    </div>
+                </div>
+                {step === "LIST" && (
+                    <Button
+                        onClick={() => setStep("UPLOAD")}
+                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-6 py-2 rounded-xl shadow-lg shadow-purple-500/20"
+                    >
+                        <Upload className="w-4 h-4 mr-2" /> New Migration
+                    </Button>
+                )}
+            </div>
+
+            {/* Error Banner */}
+            {error && (
+                <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center gap-3">
+                    <AlertTriangle className="w-5 h-5 text-red-400 shrink-0" />
+                    <span className="text-red-300">{error}</span>
+                    <button onClick={() => setError(null)} className="ml-auto text-red-400 hover:text-red-300">✕</button>
+                </div>
+            )}
+
+            {/* ─── STEP: JOB LIST ─────────────────────────────────────────────── */}
+            {step === "LIST" && (
+                <div className="space-y-4">
+                    {jobs.length === 0 ? (
+                        <Card className="bg-white/5 border-white/10 backdrop-blur-xl">
+                            <CardContent className="flex flex-col items-center justify-center py-16">
+                                <DatabaseZap className="w-16 h-16 text-white/20 mb-4" />
+                                <p className="text-white/40 text-lg">No migrations yet</p>
+                                <p className="text-white/25 text-sm mt-1">Upload a .sql file from UltimatePOS to get started</p>
+                                <Button
+                                    onClick={() => setStep("UPLOAD")}
+                                    className="mt-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500"
+                                >
+                                    <Upload className="w-4 h-4 mr-2" /> Upload SQL Dump
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    ) : (
+                        jobs.map((job) => {
+                            const config = statusConfig[job.status] || statusConfig.PENDING
+                            const StatusIcon = config.icon
+                            return (
+                                <Card key={job.id} className="bg-white/5 border-white/10 backdrop-blur-xl hover:bg-white/[0.07] transition-all">
+                                    <CardContent className="flex items-center gap-6 py-5">
+                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${config.color} border`}>
+                                            <StatusIcon className={`w-5 h-5 ${job.status === "RUNNING" ? "animate-spin" : ""}`} />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="text-white font-semibold truncate">{job.name}</h3>
+                                            <div className="flex items-center gap-4 mt-1 text-sm text-white/40">
+                                                <span>{config.label}</span>
+                                                <span>•</span>
+                                                <span>{new Date(job.created_at).toLocaleDateString()}</span>
+                                                {job.current_step && (
+                                                    <>
+                                                        <span>•</span>
+                                                        <span className="text-blue-400">{job.current_step}</span>
+                                                    </>
+                                                )}
+                                            </div>
+                                            {(job.status === "RUNNING" || job.status === "PARSING") && (
+                                                <div className="mt-2 w-full bg-white/10 rounded-full h-2 overflow-hidden">
+                                                    <div
+                                                        className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
+                                                        style={{ width: `${job.progress}%` }}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex gap-2">
+                                            {job.status === "PENDING" && (
+                                                <Button size="sm" variant="ghost" onClick={() => handlePreview(job)}
+                                                    className="text-blue-400 hover:bg-blue-500/10" title="Preview">
+                                                    <Eye className="w-4 h-4" />
+                                                </Button>
+                                            )}
+                                            {(job.status === "RUNNING" || job.status === "PARSING") && (
+                                                <Button size="sm" variant="ghost" onClick={() => viewResults(job)}
+                                                    className="text-amber-400 hover:bg-amber-500/10" title="View Progress">
+                                                    <BarChart3 className="w-4 h-4" />
+                                                </Button>
+                                            )}
+                                            {(job.status === "COMPLETED" || job.status === "FAILED") && (
+                                                <>
+                                                    <Button size="sm" variant="ghost" onClick={() => viewResults(job)}
+                                                        className="text-emerald-400 hover:bg-emerald-500/10" title="View Results">
+                                                        <BarChart3 className="w-4 h-4" />
+                                                    </Button>
+                                                    {job.status === "COMPLETED" && (
+                                                        <Button size="sm" variant="ghost" onClick={() => handleRollback(job)}
+                                                            className="text-red-400 hover:bg-red-500/10" title="Rollback">
+                                                            <RotateCcw className="w-4 h-4" />
+                                                        </Button>
+                                                    )}
+                                                </>
+                                            )}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )
+                        })
+                    )}
+                </div>
+            )}
+
+            {/* ─── STEP: UPLOAD ───────────────────────────────────────────────── */}
+            {step === "UPLOAD" && (
+                <Card className="bg-white/5 border-white/10 backdrop-blur-xl max-w-2xl mx-auto">
+                    <CardHeader className="text-center pb-2">
+                        <CardTitle className="text-2xl text-white">Upload SQL Dump</CardTitle>
+                        <CardDescription className="text-white/40">
+                            Export your UltimatePOS database from phpMyAdmin as a .sql file
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div
+                            className={`border-2 border-dashed rounded-2xl p-12 text-center transition-all cursor-pointer
+                                ${dragActive
+                                    ? "border-purple-400 bg-purple-500/10"
+                                    : "border-white/20 hover:border-white/40 hover:bg-white/5"
+                                }`}
+                            onDragEnter={handleDrag}
+                            onDragOver={handleDrag}
+                            onDragLeave={handleDrag}
+                            onDrop={handleDrop}
+                            onClick={() => fileInputRef.current?.click()}
+                        >
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept=".sql"
+                                className="hidden"
+                                onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])}
+                            />
+                            {uploading ? (
+                                <div className="flex flex-col items-center">
+                                    <Loader2 className="w-12 h-12 text-purple-400 animate-spin mb-4" />
+                                    <p className="text-white/60">Uploading and parsing...</p>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center">
+                                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center mb-4">
+                                        <FileUp className="w-8 h-8 text-purple-400" />
+                                    </div>
+                                    <p className="text-white text-lg font-medium mb-1">
+                                        Drop your .sql file here
+                                    </p>
+                                    <p className="text-white/40 text-sm">
+                                        or click to browse • Supports files up to 500MB
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="mt-6 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                            <h4 className="text-blue-400 font-medium text-sm flex items-center gap-2">
+                                <Server className="w-4 h-4" /> How to export from UltimatePOS
+                            </h4>
+                            <ol className="text-white/40 text-sm mt-2 space-y-1 list-decimal list-inside">
+                                <li>Open <strong className="text-white/60">phpMyAdmin</strong></li>
+                                <li>Select your UltimatePOS database</li>
+                                <li>Click <strong className="text-white/60">Export</strong> → Quick → SQL format</li>
+                                <li>Download the .sql file</li>
+                                <li>Upload it here</li>
+                            </ol>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* ─── STEP: PREVIEW ──────────────────────────────────────────────── */}
+            {step === "PREVIEW" && activeJob && (
+                <div className="max-w-3xl mx-auto space-y-6">
+                    <Card className="bg-white/5 border-white/10 backdrop-blur-xl">
+                        <CardHeader>
+                            <CardTitle className="text-xl text-white flex items-center gap-2">
+                                <Eye className="w-5 h-5 text-purple-400" />
+                                Migration Preview
+                            </CardTitle>
+                            <CardDescription className="text-white/40">
+                                Review the data that will be imported into your TSF system
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {preview ? (
+                                <div className="space-y-4">
+                                    {/* Key tables to migrate */}
+                                    {["units", "categories", "brands", "products", "contacts", "transactions", "transaction_sell_lines", "purchase_lines", "accounts", "variation_location_details"].map((table) => {
+                                        const count = preview.tables[table] || 0
+                                        const Icon = entityIcons[table] || Database
+                                        const labels: Record<string, string> = {
+                                            units: "Units of Measure",
+                                            categories: "Product Categories",
+                                            brands: "Brands",
+                                            products: "Products",
+                                            contacts: "Contacts (Customers & Suppliers)",
+                                            transactions: "Transactions (Sales & Purchases)",
+                                            transaction_sell_lines: "Sale Line Items",
+                                            purchase_lines: "Purchase Line Items",
+                                            accounts: "Financial Accounts",
+                                            variation_location_details: "Stock Levels",
+                                        }
+                                        return (
+                                            <div key={table} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
+                                                <div className="flex items-center gap-3">
+                                                    <Icon className="w-5 h-5 text-purple-400" />
+                                                    <span className="text-white/80">{labels[table] || table}</span>
+                                                </div>
+                                                <span className={`text-sm font-mono ${count > 0 ? "text-emerald-400" : "text-white/30"}`}>
+                                                    {count.toLocaleString()} rows
+                                                </span>
+                                            </div>
+                                        )
+                                    })}
+
+                                    {/* Show other tables with data */}
+                                    {Object.entries(preview.tables)
+                                        .filter(([t]) => !["units", "categories", "brands", "products", "contacts", "transactions", "transaction_sell_lines", "purchase_lines", "accounts", "variation_location_details", "migrations", "password_resets", "sessions"].includes(t))
+                                        .filter(([, c]) => c > 0)
+                                        .length > 0 && (
+                                            <details className="mt-4">
+                                                <summary className="text-white/40 text-sm cursor-pointer hover:text-white/60">
+                                                    Other tables ({Object.entries(preview.tables).filter(([t]) => !["units", "categories", "brands", "products", "contacts", "transactions", "transaction_sell_lines", "purchase_lines", "accounts", "variation_location_details"].includes(t)).filter(([, c]) => c > 0).length} more)
+                                                </summary>
+                                                <div className="mt-2 space-y-2">
+                                                    {Object.entries(preview.tables)
+                                                        .filter(([t]) => !["units", "categories", "brands", "products", "contacts", "transactions", "transaction_sell_lines", "purchase_lines", "accounts", "variation_location_details"].includes(t))
+                                                        .filter(([, c]) => c > 0)
+                                                        .sort(([, a], [, b]) => b - a)
+                                                        .map(([table, count]) => (
+                                                            <div key={table} className="flex items-center justify-between p-2 rounded-lg bg-white/[0.03]">
+                                                                <span className="text-white/40 text-sm">{table}</span>
+                                                                <span className="text-white/30 text-sm font-mono">{count}</span>
+                                                            </div>
+                                                        ))}
+                                                </div>
+                                            </details>
+                                        )}
+                                </div>
+                            ) : (
+                                <div className="flex items-center justify-center py-8">
+                                    <Loader2 className="w-6 h-6 text-purple-400 animate-spin mr-2" />
+                                    <span className="text-white/40">Loading preview...</span>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    <div className="flex justify-end gap-3">
+                        <Button
+                            variant="ghost"
+                            onClick={() => { setStep("LIST"); setActiveJob(null); }}
+                            className="text-white/60 hover:text-white hover:bg-white/10"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleStart}
+                            disabled={!preview}
+                            className="bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white px-8 rounded-xl shadow-lg shadow-emerald-500/20"
+                        >
+                            <Play className="w-4 h-4 mr-2" /> Start Migration
+                        </Button>
+                    </div>
+                </div>
+            )}
+
+            {/* ─── STEP: RUNNING ──────────────────────────────────────────────── */}
+            {step === "RUNNING" && activeJob && (
+                <Card className="bg-white/5 border-white/10 backdrop-blur-xl max-w-2xl mx-auto">
+                    <CardContent className="py-12 text-center">
+                        <Loader2 className="w-16 h-16 text-purple-400 animate-spin mx-auto mb-6" />
+                        <h2 className="text-2xl font-bold text-white mb-2">Migration in Progress</h2>
+                        <p className="text-white/50 mb-6">
+                            {activeJob.current_step || "Starting..."}
+                        </p>
+
+                        {/* Progress bar */}
+                        <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden mx-auto max-w-md mb-4">
+                            <div
+                                className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-500 rounded-full transition-all duration-700 ease-out"
+                                style={{ width: `${activeJob.progress}%` }}
+                            />
+                        </div>
+                        <p className="text-white/40 text-sm">{activeJob.progress}% complete</p>
+
+                        {/* Live stats */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8">
+                            {[
+                                { label: "Products", value: activeJob.total_products, icon: Package },
+                                { label: "Contacts", value: activeJob.total_contacts, icon: Users },
+                                { label: "Orders", value: activeJob.total_transactions, icon: ShoppingCart },
+                                { label: "Errors", value: activeJob.total_errors, icon: XCircle },
+                            ].map(({ label, value, icon: Icon }) => (
+                                <div key={label} className="p-3 rounded-xl bg-white/5 border border-white/10">
+                                    <Icon className="w-5 h-5 text-purple-400 mx-auto mb-1" />
+                                    <p className="text-white font-bold text-xl">{value}</p>
+                                    <p className="text-white/40 text-xs">{label}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* ─── STEP: RESULTS ──────────────────────────────────────────────── */}
+            {step === "RESULTS" && activeJob && (
+                <div className="max-w-3xl mx-auto space-y-6">
+                    {/* Status banner */}
+                    <Card className={`border backdrop-blur-xl ${activeJob.status === "COMPLETED"
+                        ? "bg-emerald-500/10 border-emerald-500/30"
+                        : activeJob.status === "FAILED"
+                            ? "bg-red-500/10 border-red-500/30"
+                            : "bg-amber-500/10 border-amber-500/30"
+                        }`}>
+                        <CardContent className="flex items-center gap-4 py-5">
+                            {activeJob.status === "COMPLETED" ? (
+                                <CheckCircle2 className="w-10 h-10 text-emerald-400" />
+                            ) : activeJob.status === "FAILED" ? (
+                                <XCircle className="w-10 h-10 text-red-400" />
+                            ) : (
+                                <Loader2 className="w-10 h-10 text-amber-400 animate-spin" />
+                            )}
+                            <div>
+                                <h2 className="text-xl font-bold text-white">
+                                    {activeJob.status === "COMPLETED" ? "Migration Completed!" :
+                                        activeJob.status === "FAILED" ? "Migration Failed" : "Migration Running..."}
+                                </h2>
+                                <p className="text-white/50 text-sm">
+                                    {activeJob.completed_at
+                                        ? `Finished at ${new Date(activeJob.completed_at).toLocaleString()}`
+                                        : activeJob.current_step}
+                                </p>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Statistics Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        {[
+                            { label: "Units", value: activeJob.total_units, icon: Ruler, color: "text-cyan-400" },
+                            { label: "Categories", value: activeJob.total_categories, icon: Layers, color: "text-blue-400" },
+                            { label: "Brands", value: activeJob.total_brands, icon: Tag, color: "text-indigo-400" },
+                            { label: "Products", value: activeJob.total_products, icon: Package, color: "text-purple-400" },
+                            { label: "Contacts", value: activeJob.total_contacts, icon: Users, color: "text-pink-400" },
+                            { label: "Transactions", value: activeJob.total_transactions, icon: ShoppingCart, color: "text-amber-400" },
+                            { label: "Accounts", value: activeJob.total_accounts, icon: Banknote, color: "text-emerald-400" },
+                            { label: "Errors", value: activeJob.total_errors, icon: XCircle, color: activeJob.total_errors > 0 ? "text-red-400" : "text-white/20" },
+                        ].map(({ label, value, icon: Icon, color }) => (
+                            <Card key={label} className="bg-white/5 border-white/10">
+                                <CardContent className="py-4 text-center">
+                                    <Icon className={`w-5 h-5 ${color} mx-auto mb-2`} />
+                                    <p className="text-white text-2xl font-bold">{value}</p>
+                                    <p className="text-white/40 text-xs mt-1">{label}</p>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+
+                    {/* Error log */}
+                    {activeJob.error_log && (
+                        <Card className="bg-white/5 border-white/10 backdrop-blur-xl">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-sm text-red-400 flex items-center gap-2">
+                                    <AlertTriangle className="w-4 h-4" /> Error Log
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <pre className="text-xs text-white/40 bg-black/30 p-4 rounded-xl max-h-48 overflow-auto whitespace-pre-wrap font-mono">
+                                    {activeJob.error_log}
+                                </pre>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* Mappings summary */}
+                    {activeJob.mappings_summary && Object.keys(activeJob.mappings_summary).length > 0 && (
+                        <Card className="bg-white/5 border-white/10 backdrop-blur-xl">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-sm text-white/60">Mapping Summary</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                    {Object.entries(activeJob.mappings_summary).map(([type, count]) => (
+                                        <div key={type} className="p-3 rounded-xl bg-white/5 border border-white/10 text-center">
+                                            <p className="text-white text-lg font-bold">{count}</p>
+                                            <p className="text-white/40 text-xs">{type}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* Actions */}
+                    {activeJob.status === "COMPLETED" && (
+                        <div className="flex justify-end gap-3">
+                            <Button
+                                variant="ghost"
+                                onClick={() => handleRollback(activeJob)}
+                                className="text-red-400 hover:bg-red-500/10 border border-red-500/20"
+                            >
+                                <Trash2 className="w-4 h-4 mr-2" /> Rollback Migration
+                            </Button>
+                            <Button
+                                onClick={() => { setStep("LIST"); setActiveJob(null); }}
+                                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500"
+                            >
+                                Done
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    )
+}
