@@ -86,6 +86,10 @@ export default async function MaintenancePage(props: {
                     <TabLink currentTab={tab} targetTab="attribute" icon={Package} label="Attributes" />
                     <TabLink currentTab={tab} targetTab="unit" icon={Ruler} label="Units" />
                     <TabLink currentTab={tab} targetTab="country" icon={Globe} label="Countries" />
+                    <a href="/inventory/maintenance/data-quality" className="flex items-center gap-2 px-4 py-3 border-b-2 border-transparent text-orange-600 hover:bg-orange-50/50 font-medium text-sm whitespace-nowrap">
+                        <Ruler size={16} />
+                        <span>Data Quality</span>
+                    </a>
                 </div>
             </header>
 
