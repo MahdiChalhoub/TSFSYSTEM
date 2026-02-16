@@ -5,7 +5,8 @@ from rest_framework import serializers
 from .models import (
     ChartOfAccount, FinancialAccount, FiscalYear, FiscalPeriod,
     JournalEntry, JournalEntryLine, Transaction, TransactionSequence,
-    BarcodeSettings, Loan, LoanInstallment, FinancialEvent, ForensicAuditLog
+    BarcodeSettings, Loan, LoanInstallment, FinancialEvent, ForensicAuditLog,
+    DeferredExpense, Asset, AmortizationSchedule, Voucher, ProfitDistribution
 )
 
 
@@ -121,3 +122,58 @@ class FinancialEventSerializer(serializers.ModelSerializer):
         model = FinancialEvent
         fields = '__all__'
 
+
+class DeferredExpenseSerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+    progress = serializers.SerializerMethodField()
+
+    class Meta:
+        model = DeferredExpense
+        fields = '__all__'
+
+    def get_progress(self, obj):
+        if obj.duration_months == 0:
+            return 100
+        return round((obj.months_recognized / obj.duration_months) * 100, 1)
+
+
+class AssetSerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+    depreciation_progress = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Asset
+        fields = '__all__'
+
+    def get_depreciation_progress(self, obj):
+        depreciable = obj.purchase_value - obj.residual_value
+        if depreciable <= 0:
+            return 100
+        return round((float(obj.accumulated_depreciation) / float(depreciable)) * 100, 1)
+
+
+class AmortizationScheduleSerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    class Meta:
+        model = AmortizationSchedule
+        fields = '__all__'
+
+
+class VoucherSerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+    source_account_name = serializers.ReadOnlyField(source='source_account.name')
+    destination_account_name = serializers.ReadOnlyField(source='destination_account.name')
+
+    class Meta:
+        model = Voucher
+        fields = '__all__'
+
+
+class ProfitDistributionSerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+    fiscal_year_name = serializers.ReadOnlyField(source='fiscal_year.name')
+
+    class Meta:
+        model = ProfitDistribution
+        fields = '__all__'
