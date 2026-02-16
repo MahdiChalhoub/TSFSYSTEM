@@ -38,6 +38,7 @@ from apps.inventory.models import (
     StockAdjustmentOrder, StockAdjustmentLine,
     StockTransferOrder, StockTransferLine,
     OperationalRequest, OperationalRequestLine,
+    ComboComponent,
 )
 from apps.inventory.serializers import (
     ProductSerializer, ProductCreateSerializer, UnitSerializer,
@@ -47,7 +48,7 @@ from apps.inventory.serializers import (
     StockAdjustmentOrderSerializer, StockAdjustmentLineSerializer,
     StockTransferOrderSerializer, StockTransferLineSerializer,
     OperationalRequestSerializer, OperationalRequestLineSerializer,
-    ProductAnalyticsSerializer,
+    ProductAnalyticsSerializer, ComboComponentSerializer,
 )
 from apps.inventory.services import InventoryService
 from erp.lifecycle_mixin import LifecycleViewSetMixin
@@ -635,6 +636,67 @@ class ProductViewSet(TenantModelViewSet):
             })
 
         return Response({'products': results, 'total': total_count})
+
+    # ─── Combo/Bundle Component Management ───────────────────────────
+    @action(detail=True, methods=['get'], url_path='combo-components')
+    def combo_components(self, request, pk=None):
+        """List all components of a combo/bundle product."""
+        product = self.get_object()
+        components = ComboComponent.objects.filter(
+            combo_product=product
+        ).select_related('component_product').order_by('sort_order')
+        serializer = ComboComponentSerializer(components, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'], url_path='add-component')
+    def add_combo_component(self, request, pk=None):
+        """Add a component to a combo/bundle product."""
+        product = self.get_object()
+        if product.product_type != 'COMBO':
+            return Response({'error': 'Product is not a combo/bundle'}, status=400)
+
+        component_id = request.data.get('component_product_id')
+        quantity = request.data.get('quantity', 1)
+        price_override = request.data.get('price_override')
+        sort_order = request.data.get('sort_order', 0)
+
+        if not component_id:
+            return Response({'error': 'component_product_id is required'}, status=400)
+        if int(component_id) == product.id:
+            return Response({'error': 'Cannot add product as its own component'}, status=400)
+
+        try:
+            component_product = Product.objects.get(
+                id=component_id, organization=product.organization
+            )
+        except Product.DoesNotExist:
+            return Response({'error': 'Component product not found'}, status=404)
+
+        comp, created = ComboComponent.objects.update_or_create(
+            combo_product=product,
+            component_product=component_product,
+            organization=product.organization,
+            defaults={
+                'quantity': quantity,
+                'price_override': price_override,
+                'sort_order': sort_order,
+            }
+        )
+        return Response(
+            ComboComponentSerializer(comp).data,
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK
+        )
+
+    @action(detail=True, methods=['delete'], url_path='remove-component/(?P<component_id>[0-9]+)')
+    def remove_combo_component(self, request, pk=None, component_id=None):
+        """Remove a component from a combo/bundle product."""
+        product = self.get_object()
+        deleted, _ = ComboComponent.objects.filter(
+            combo_product=product, id=component_id
+        ).delete()
+        if deleted:
+            return Response({'success': True})
+        return Response({'error': 'Component not found'}, status=404)
 
 
 # =============================================================================

@@ -1,0 +1,316 @@
+'use client'
+
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { toast } from "sonner"
+import {
+    LayoutDashboard, DollarSign, ShoppingCart, Package,
+    Users, TrendingUp, AlertTriangle, ArrowUpCircle,
+    Clock, Banknote, Building2, BarChart3
+} from "lucide-react"
+
+function fmt(n: number) {
+    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
+}
+
+interface WidgetData {
+    salesSummary: any
+    lowStock: any[]
+    employees: any[]
+    contacts: any[]
+    accounts: any[]
+    movements: any[]
+}
+
+export default function CustomDashboard() {
+    const [data, setData] = useState<WidgetData | null>(null)
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => { loadAll() }, [])
+
+    async function loadAll() {
+        setLoading(true)
+        try {
+            const { erpFetch } = await import("@/lib/erp-api")
+            const [sales, stock, employees, contacts, accounts, movements] = await Promise.all([
+                erpFetch('pos/pos/daily-summary/?days=30').catch(() => null),
+                erpFetch('inventory/low-stock/').catch(() => []),
+                erpFetch('hr/employees/').catch(() => []),
+                erpFetch('crm/contacts/').catch(() => []),
+                erpFetch('finance/chart-of-accounts/').catch(() => []),
+                erpFetch('inventory/inventory-movements/').catch(() => []),
+            ])
+            setData({
+                salesSummary: sales,
+                lowStock: Array.isArray(stock) ? stock : stock?.results || [],
+                employees: Array.isArray(employees) ? employees : employees?.results || [],
+                contacts: Array.isArray(contacts) ? contacts : contacts?.results || [],
+                accounts: Array.isArray(accounts) ? accounts : accounts?.results || [],
+                movements: Array.isArray(movements) ? movements : movements?.results || [],
+            })
+        } catch {
+            toast.error("Failed to load dashboard data")
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    if (loading || !data) {
+        return (
+            <div className="p-6 space-y-6">
+                <Skeleton className="h-10 w-64" />
+                <div className="grid grid-cols-4 gap-4">{[1, 2, 3, 4, 5, 6, 7, 8].map(i => <Skeleton key={i} className="h-28" />)}</div>
+                <div className="grid grid-cols-3 gap-4">{[1, 2, 3].map(i => <Skeleton key={i} className="h-64" />)}</div>
+            </div>
+        )
+    }
+
+    const totalRevenue = parseFloat(data.salesSummary?.sales?.total || 0)
+    const totalOrders = data.salesSummary?.sales?.count || 0
+    const netRevenue = parseFloat(data.salesSummary?.net_revenue || 0)
+    const totalPayroll = data.employees.reduce((s, e) => s + parseFloat(e.salary || 0), 0)
+    const lowStockCount = data.lowStock.length
+    const customerCount = data.contacts.filter(c => c.type === 'CLIENT' || c.type === 'CUSTOMER').length
+    const supplierCount = data.contacts.filter(c => c.type === 'SUPPLIER').length
+
+    const incomeAccounts = data.accounts.filter(a => a.type === 'INCOME')
+    const expenseAccounts = data.accounts.filter(a => a.type === 'EXPENSE')
+    const totalIncome = incomeAccounts.reduce((s, a) => s + Math.abs(parseFloat(a.balance || 0)), 0)
+    const totalExpense = expenseAccounts.reduce((s, a) => s + Math.abs(parseFloat(a.balance || 0)), 0)
+
+    const recentMovements = data.movements
+        .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 5)
+
+    const paymentMethods = data.salesSummary?.payment_methods || {}
+    const topSellers = Object.entries(data.salesSummary?.user_stats || {})
+        .sort(([, a]: any, [, b]: any) => b.total - a.total)
+        .slice(0, 5)
+
+    return (
+        <div className="p-6 space-y-6">
+            <header>
+                <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center">
+                        <LayoutDashboard size={20} className="text-white" />
+                    </div>
+                    Command Center
+                </h1>
+                <p className="text-sm text-gray-500 mt-1">Real-time overview of all business modules</p>
+            </header>
+
+            {/* Primary KPI Row */}
+            <div className="grid grid-cols-4 gap-4">
+                <Card className="bg-gradient-to-br from-violet-500 to-indigo-600 text-white border-0">
+                    <CardContent className="py-5">
+                        <div className="flex items-center gap-3">
+                            <DollarSign size={28} className="opacity-80" />
+                            <div>
+                                <p className="text-xs uppercase opacity-80">30d Revenue</p>
+                                <p className="text-2xl font-bold">{fmt(totalRevenue)}</p>
+                                <p className="text-xs opacity-60">Net: {fmt(netRevenue)}</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="bg-gradient-to-br from-emerald-500 to-green-600 text-white border-0">
+                    <CardContent className="py-5">
+                        <div className="flex items-center gap-3">
+                            <ShoppingCart size={28} className="opacity-80" />
+                            <div>
+                                <p className="text-xs uppercase opacity-80">Orders</p>
+                                <p className="text-2xl font-bold">{totalOrders}</p>
+                                <p className="text-xs opacity-60">Avg: {totalOrders > 0 ? fmt(totalRevenue / totalOrders) : '—'}</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="bg-gradient-to-br from-blue-500 to-cyan-600 text-white border-0">
+                    <CardContent className="py-5">
+                        <div className="flex items-center gap-3">
+                            <Users size={28} className="opacity-80" />
+                            <div>
+                                <p className="text-xs uppercase opacity-80">Contacts</p>
+                                <p className="text-2xl font-bold">{data.contacts.length}</p>
+                                <p className="text-xs opacity-60">{customerCount} clients · {supplierCount} suppliers</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className={`bg-gradient-to-br ${lowStockCount > 0 ? 'from-orange-500 to-red-600' : 'from-gray-500 to-gray-600'} text-white border-0`}>
+                    <CardContent className="py-5">
+                        <div className="flex items-center gap-3">
+                            <AlertTriangle size={28} className="opacity-80" />
+                            <div>
+                                <p className="text-xs uppercase opacity-80">Low Stock Alerts</p>
+                                <p className="text-2xl font-bold">{lowStockCount}</p>
+                                <p className="text-xs opacity-60">items need restock</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Secondary KPI Row */}
+            <div className="grid grid-cols-4 gap-4">
+                <Card className="border-l-4 border-l-emerald-500">
+                    <CardContent className="py-3">
+                        <div className="flex items-center gap-3">
+                            <TrendingUp size={20} className="text-emerald-500" />
+                            <div>
+                                <p className="text-[10px] text-gray-500 uppercase">GL Income</p>
+                                <p className="text-lg font-bold text-emerald-700">{fmt(totalIncome)}</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="border-l-4 border-l-rose-500">
+                    <CardContent className="py-3">
+                        <div className="flex items-center gap-3">
+                            <ArrowUpCircle size={20} className="text-rose-500" />
+                            <div>
+                                <p className="text-[10px] text-gray-500 uppercase">GL Expenses</p>
+                                <p className="text-lg font-bold text-rose-700">{fmt(totalExpense)}</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="border-l-4 border-l-blue-500">
+                    <CardContent className="py-3">
+                        <div className="flex items-center gap-3">
+                            <Banknote size={20} className="text-blue-500" />
+                            <div>
+                                <p className="text-[10px] text-gray-500 uppercase">Monthly Payroll</p>
+                                <p className="text-lg font-bold text-blue-700">{fmt(totalPayroll)}</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="border-l-4 border-l-purple-500">
+                    <CardContent className="py-3">
+                        <div className="flex items-center gap-3">
+                            <Building2 size={20} className="text-purple-500" />
+                            <div>
+                                <p className="text-[10px] text-gray-500 uppercase">Headcount</p>
+                                <p className="text-lg font-bold text-purple-700">{data.employees.length}</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Widget Row */}
+            <div className="grid grid-cols-3 gap-6">
+                {/* Recent Stock Movements */}
+                <Card>
+                    <CardHeader className="py-3">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                            <Package size={16} className="text-gray-400" /> Recent Stock Movements
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                        {recentMovements.length === 0 ? (
+                            <p className="text-center py-4 text-gray-400 text-sm">No movements</p>
+                        ) : recentMovements.map((m: any, i: number) => (
+                            <div key={i} className="flex items-center gap-2 text-xs">
+                                <div className={`w-2 h-2 rounded-full ${m.type === 'IN' ? 'bg-green-400' : m.type === 'OUT' ? 'bg-red-400' : 'bg-amber-400'}`} />
+                                <span className="flex-1 truncate font-medium">{m.product_name || `Product #${m.product}`}</span>
+                                <span className={`font-bold ${m.type === 'IN' ? 'text-green-600' : 'text-red-600'}`}>
+                                    {m.type === 'IN' ? '+' : '−'}{parseFloat(m.quantity || 0).toFixed(0)}
+                                </span>
+                                <span className="text-gray-400 w-14 text-right">
+                                    {m.created_at ? new Date(m.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) : ''}
+                                </span>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+
+                {/* Payment Methods */}
+                <Card>
+                    <CardHeader className="py-3">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                            <BarChart3 size={16} className="text-gray-400" /> Payment Methods (30d)
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                        {Object.keys(paymentMethods).length === 0 ? (
+                            <p className="text-center py-4 text-gray-400 text-sm">No data</p>
+                        ) : Object.entries(paymentMethods).map(([method, stats]: [string, any]) => (
+                            <div key={method} className="space-y-1">
+                                <div className="flex justify-between text-xs">
+                                    <span className="font-medium">{method}</span>
+                                    <span className="text-gray-500">{stats.count} txns</span>
+                                </div>
+                                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-violet-400 rounded-full"
+                                        style={{ width: `${totalRevenue > 0 ? (stats.total / totalRevenue * 100) : 0}%` }}
+                                    />
+                                </div>
+                                <p className="text-xs text-right font-bold">{fmt(stats.total)}</p>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+
+                {/* Top Sellers */}
+                <Card>
+                    <CardHeader className="py-3">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                            <Users size={16} className="text-gray-400" /> Top Sellers (30d)
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                        {topSellers.length === 0 ? (
+                            <p className="text-center py-4 text-gray-400 text-sm">No data</p>
+                        ) : topSellers.map(([name, stats]: [string, any], i) => (
+                            <div key={i} className="flex items-center gap-2 text-xs">
+                                <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <span className="text-[10px] font-bold text-blue-600">{(name || '?').charAt(0)}</span>
+                                </div>
+                                <span className="flex-1 truncate font-medium">{name}</span>
+                                <span className="text-gray-400">{stats.count} orders</span>
+                                <span className="font-bold w-20 text-right">{fmt(stats.total)}</span>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Hourly Sales Distribution */}
+            {data.salesSummary?.hourly && (
+                <Card>
+                    <CardHeader className="py-3">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                            <Clock size={16} className="text-gray-400" /> Hourly Sales Distribution (30d)
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex items-end gap-0.5 h-20">
+                            {(data.salesSummary.hourly as number[]).map((val, h) => {
+                                const max = Math.max(...data.salesSummary.hourly)
+                                const pct = max ? (val / max * 100) : 0
+                                return (
+                                    <div key={h} className="flex-1 flex flex-col items-center group">
+                                        <div className="invisible group-hover:visible text-[8px] text-gray-500 whitespace-nowrap mb-0.5">
+                                            {fmt(val)}
+                                        </div>
+                                        <div
+                                            className={`w-full rounded-t transition-all ${pct > 60 ? 'bg-violet-500' : pct > 20 ? 'bg-violet-300' : 'bg-violet-100'}`}
+                                            style={{ height: `${Math.max(pct, 3)}%` }}
+                                        />
+                                        {h % 3 === 0 && (
+                                            <span className="text-[8px] text-gray-400 mt-1">{h}h</span>
+                                        )}
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+        </div>
+    )
+}

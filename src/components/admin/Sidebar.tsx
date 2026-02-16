@@ -131,6 +131,7 @@ const MENU_ITEMS = [
                 children: [
                     { title: 'Product Master', path: '/products' },
                     { title: 'Product Analytics', path: '/inventory/analytics' },
+                    { title: 'Combo & Bundles', path: '/inventory/combo' },
                     { title: 'Product Groups', path: '/products?view=grouped' },
                     { title: 'New Product Group', path: '/products/create-group' },
                 ]
@@ -145,6 +146,7 @@ const MENU_ITEMS = [
                     { title: 'Barcode Configuration', path: '/inventory/barcode' },
                     { title: 'Expiry Alerts', path: '/inventory/expiry-alerts' },
                     { title: 'Low Stock Alerts', path: '/inventory/low-stock' },
+                    { title: 'Stock Movements', path: '/inventory/movements' },
                 ]
             },
             {
@@ -215,6 +217,7 @@ const MENU_ITEMS = [
                     { title: 'Account Statements', path: '/finance/statements' },
                     { title: 'Tax Reports', path: '/finance/tax-reports' },
                     { title: 'Budget Overview', path: '/finance/budget' },
+                    { title: 'Profit Centers', path: '/finance/profit-centers' },
                 ]
             },
             {
@@ -261,6 +264,7 @@ const MENU_ITEMS = [
         module: 'hr',
         children: [
             { title: 'Employee Manager', path: '/hr/employees' },
+            { title: 'Payroll Summary', path: '/hr/payroll' },
             { title: 'Enlistment Approvals', path: '/users/approvals' },
         ]
     },
