@@ -763,3 +763,26 @@ class Notification(models.Model):
         from django.utils import timezone
         self.read_at = timezone.now()
         self.save(update_fields=['read_at'])
+
+
+class UDLESavedView(models.Model):
+    """
+    Persists user customizations for a specific model/view in UDLE.
+    Stores visible columns, filters, and sorting preferences.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='udle_views')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    model_name = models.CharField(max_length=100)  # e.g., 'Product', 'InventoryMovement'
+    name = models.CharField(max_length=100)
+    config = models.JSONField(default=dict)  # {columns: [], filters: {}, sorting: {}}
+    is_default = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'udle_saved_view'
+        unique_together = ('user', 'model_name', 'name')
+        verbose_name = "UDLE Saved View"
+        verbose_name_plural = "UDLE Saved Views"
+
+    def __str__(self):
+        return f"{self.name} ({self.model_name}) for {self.user}"

@@ -21,6 +21,7 @@ from .views_modules import ModuleListView, ModuleEnableView, ModuleDisableView
 from .views_kernel import KernelViewSet
 from .views_packages import PackageViewSet
 from .views_encryption import EncryptionViewSet
+from .views_udle import UDLESavedViewViewSet
 
 # ── Kernel Router (infrastructure only) ──────────────────────────────────────
 router = DefaultRouter()
@@ -38,6 +39,7 @@ router.register(r'encryption', EncryptionViewSet, basename='encryption')
 router.register(r'currencies', CurrencyViewSet, basename='currencies')
 router.register(r'notifications', NotificationViewSet, basename='notifications')
 router.register(r'permissions', PermissionViewSet, basename='permissions')
+router.register(r'udle-views', UDLESavedViewViewSet, basename='udle-views')
 
 # SaaS Management
 router.register(r'saas/modules', SaaSModuleViewSet, basename='saas-modules')

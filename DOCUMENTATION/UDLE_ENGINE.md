@@ -18,6 +18,15 @@ The UI uses a generic `UniversalDataTable` component.
   - **Dynamic Columns**: Toggle visibility via the "Columns" dropdown.
   - **Universal Filter Bar**: Auto-generated from the metadata.
   - **Sorting**: Multi-column sorting support.
+  - **Saved Views**: Users can save current column/filter/sorting state as a named "View".
+  - **Default Views**: One view can be set as the default for the user on that model.
+
+## 💾 Persistence Layer
+User customizations are persisted in the kernel.
+
+- **Model**: `UDLESavedView`
+- **API**: `/api/udle-views/`
+- **Scope**: User-specific and Organization-specific (users only see their own views).
 
 ## 🔄 Workflow
 1. **Metadata Fetch**: Frontend calls `schema-meta` to understand the model.
