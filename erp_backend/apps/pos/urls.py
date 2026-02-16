@@ -8,6 +8,7 @@ from apps.pos.views import (
     POSViewSet, PurchaseViewSet,
     SalesReturnViewSet, CreditNoteViewSet, PurchaseReturnViewSet,
     QuotationViewSet, DeliveryZoneViewSet, DeliveryOrderViewSet,
+    DiscountRuleViewSet,
 )
 
 router = DefaultRouter()
@@ -19,6 +20,7 @@ router.register(r'purchase-returns', PurchaseReturnViewSet)
 router.register(r'quotations', QuotationViewSet)
 router.register(r'delivery-zones', DeliveryZoneViewSet)
 router.register(r'deliveries', DeliveryOrderViewSet)
+router.register(r'discount-rules', DiscountRuleViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

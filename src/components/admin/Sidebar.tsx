@@ -109,6 +109,8 @@ const MENU_ITEMS = [
                     { title: 'Sales Analytics', path: '/sales/analytics' },
                     { title: 'Quotations', path: '/sales/quotations' },
                     { title: 'Deliveries', path: '/sales/deliveries' },
+                    { title: 'Discount Rules', path: '/sales/discounts' },
+                    { title: 'Delivery Zones', path: '/sales/delivery-zones' },
                 ]
             },
             {
