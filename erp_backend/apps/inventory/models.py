@@ -5,7 +5,7 @@ Extracted from Kernel (erp/models.py) → Module Layer (apps/inventory/models.py
 from django.db import models
 from django.db.models import Q, UniqueConstraint
 from decimal import Decimal
-from erp.models import TenantModel, Organization, Site, Country
+from erp.models import TenantModel, VerifiableModel, Organization, Site, Country
 
 
 # =============================================================================
@@ -193,3 +193,176 @@ class InventoryMovement(TenantModel):
 
     class Meta:
         db_table = 'inventorymovement'
+
+
+# =============================================================================
+# STOCK ADJUSTMENT ORDERS
+# =============================================================================
+
+class StockAdjustmentOrder(VerifiableModel):
+    """
+    Order header for stock adjustments. Contains line items.
+    Inherits VerifiableModel for lifecycle (OPEN→LOCKED→VERIFIED→CONFIRMED).
+    When CONFIRMED, executes all line adjustments via InventoryService.
+    """
+    reference = models.CharField(max_length=100, null=True, blank=True)
+    date = models.DateField()
+    supplier = models.ForeignKey('crm.Contact', on_delete=models.SET_NULL, null=True, blank=True)
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE, related_name='adjustment_orders')
+    reason = models.TextField(null=True, blank=True)
+    total_qty_adjustment = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    total_amount_adjustment = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    notes = models.TextField(null=True, blank=True)
+    is_posted = models.BooleanField(default=False, help_text='Whether adjustments have been executed')
+    created_by = models.ForeignKey('erp.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='adjustment_orders')
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+
+    class Meta:
+        db_table = 'stock_adjustment_order'
+        ordering = ['-date', '-created_at']
+
+    def __str__(self):
+        return f"ADJ-{self.reference or self.pk}"
+
+
+class StockAdjustmentLine(models.Model):
+    """Per-product adjustment line within an order."""
+    order = models.ForeignKey(StockAdjustmentOrder, on_delete=models.CASCADE, related_name='lines')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    qty_adjustment = models.DecimalField(max_digits=15, decimal_places=2,
+        help_text='Positive = gain, Negative = loss')
+    amount_adjustment = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE,
+        help_text='Specific location for this adjustment')
+    reason = models.TextField(null=True, blank=True)
+    recovered_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0,
+        help_text='Insurance/recovery amount')
+    reflect_transfer = models.ForeignKey('StockTransferOrder', on_delete=models.SET_NULL,
+        null=True, blank=True, help_text='Linked transfer order if applicable')
+    added_by = models.ForeignKey('erp.User', on_delete=models.SET_NULL, null=True, blank=True)
+
+    class Meta:
+        db_table = 'stock_adjustment_line'
+
+    def __str__(self):
+        return f"{self.product} → {self.qty_adjustment}"
+
+
+# =============================================================================
+# STOCK TRANSFER ORDERS
+# =============================================================================
+
+class StockTransferOrder(VerifiableModel):
+    """
+    Order header for stock transfers between warehouses.
+    When CONFIRMED, executes all line transfers via InventoryService.
+    """
+    reference = models.CharField(max_length=100, null=True, blank=True)
+    date = models.DateField()
+    from_warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE, related_name='transfers_out')
+    to_warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE, related_name='transfers_in')
+    driver = models.CharField(max_length=255, null=True, blank=True)
+    supplier = models.ForeignKey('crm.Contact', on_delete=models.SET_NULL, null=True, blank=True)
+    reason = models.TextField(null=True, blank=True)
+    total_qty_transferred = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    is_posted = models.BooleanField(default=False, help_text='Whether transfers have been executed')
+    notes = models.TextField(null=True, blank=True)
+    created_by = models.ForeignKey('erp.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='transfer_orders')
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+
+    class Meta:
+        db_table = 'stock_transfer_order'
+        ordering = ['-date', '-created_at']
+
+    def __str__(self):
+        return f"TRF-{self.reference or self.pk}"
+
+
+class StockTransferLine(models.Model):
+    """Per-product transfer line within an order."""
+    order = models.ForeignKey(StockTransferOrder, on_delete=models.CASCADE, related_name='lines')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    qty_transferred = models.DecimalField(max_digits=15, decimal_places=2)
+    from_warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE, related_name='transfer_lines_out')
+    to_warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE, related_name='transfer_lines_in')
+    reason = models.TextField(null=True, blank=True)
+    recovered_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0,
+        help_text='Damage recovery amount')
+    added_by = models.ForeignKey('erp.User', on_delete=models.SET_NULL, null=True, blank=True)
+
+    class Meta:
+        db_table = 'stock_transfer_line'
+
+    def __str__(self):
+        return f"{self.product} × {self.qty_transferred}"
+
+
+# =============================================================================
+# OPERATIONAL REQUESTS (Central Request Hub)
+# =============================================================================
+
+class OperationalRequest(TenantModel):
+    """
+    Unified queue where users submit requests for PO, adjustments, or transfers.
+    Managers approve and convert approved requests into actual orders.
+    """
+    REQUEST_TYPES = (
+        ('PURCHASE_ORDER', 'Purchase Order'),
+        ('STOCK_ADJUSTMENT', 'Stock Adjustment'),
+        ('STOCK_TRANSFER', 'Stock Transfer'),
+    )
+    PRIORITY_CHOICES = (
+        ('LOW', 'Low'),
+        ('NORMAL', 'Normal'),
+        ('HIGH', 'High'),
+        ('URGENT', 'Urgent'),
+    )
+    REQUEST_STATUS = (
+        ('PENDING', 'Pending'),
+        ('APPROVED', 'Approved'),
+        ('CONVERTED', 'Converted'),
+        ('REJECTED', 'Rejected'),
+        ('CANCELLED', 'Cancelled'),
+    )
+
+    reference = models.CharField(max_length=100, null=True, blank=True)
+    request_type = models.CharField(max_length=30, choices=REQUEST_TYPES)
+    requested_by = models.ForeignKey('erp.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='operational_requests')
+    date = models.DateField()
+    priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='NORMAL')
+    status = models.CharField(max_length=20, choices=REQUEST_STATUS, default='PENDING')
+    description = models.TextField(null=True, blank=True)
+    approved_by = models.ForeignKey('erp.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_requests')
+    approved_at = models.DateTimeField(null=True, blank=True)
+    converted_to_type = models.CharField(max_length=30, null=True, blank=True,
+        help_text='Type of order created: stock_adjustment, stock_transfer, purchase_order')
+    converted_to_id = models.IntegerField(null=True, blank=True,
+        help_text='ID of the created order')
+    rejection_reason = models.TextField(null=True, blank=True)
+    notes = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+
+    class Meta:
+        db_table = 'operational_request'
+        ordering = ['-date', '-created_at']
+
+    def __str__(self):
+        return f"REQ-{self.reference or self.pk} ({self.request_type})"
+
+
+class OperationalRequestLine(models.Model):
+    """Individual item line in a request."""
+    request = models.ForeignKey(OperationalRequest, on_delete=models.CASCADE, related_name='lines')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.DecimalField(max_digits=15, decimal_places=2)
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.SET_NULL, null=True, blank=True)
+    reason = models.TextField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'operational_request_line'
+
+    def __str__(self):
+        return f"{self.product} × {self.quantity}"

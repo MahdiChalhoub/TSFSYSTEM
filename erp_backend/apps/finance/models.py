@@ -218,6 +218,25 @@ class TransactionSequence(TenantModel):
         db_table = 'transactionsequence'
         unique_together = ('type', 'organization')
 
+    @classmethod
+    def next_value(cls, organization, seq_type):
+        """
+        Atomically retrieves and increments the sequence counter.
+        Returns a formatted reference like 'ADJ-000001'.
+        Creates the sequence if it doesn't exist.
+        """
+        from django.db.models import F
+        seq, created = cls.objects.get_or_create(
+            organization=organization,
+            type=seq_type,
+            defaults={'prefix': seq_type[:3].upper() + '-', 'next_number': 1, 'padding': 6}
+        )
+        current = seq.next_number
+        cls.objects.filter(id=seq.id).update(next_number=F('next_number') + 1)
+        prefix = seq.prefix or ''
+        suffix = seq.suffix or ''
+        return f"{prefix}{str(current).zfill(seq.padding)}{suffix}"
+
 
 # =============================================================================
 # BARCODE SETTINGS

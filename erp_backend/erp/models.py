@@ -258,6 +258,130 @@ class TenantModel(models.Model):
         abstract = True
 
 
+
+# =============================================================================
+# TRANSACTION LIFECYCLE INFRASTRUCTURE
+# Multi-level verification system: OPEN → LOCKED → VERIFIED → CONFIRMED
+# =============================================================================
+
+TRANSACTION_TYPES = (
+    ('JOURNAL_ENTRY', 'Journal Entry'),
+    ('VOUCHER', 'Voucher'),
+    ('SALES_INVOICE', 'Sales Invoice'),
+    ('PURCHASE_INVOICE', 'Purchase Invoice'),
+    ('PAYMENT_IN', 'Payment Incoming'),
+    ('PAYMENT_OUT', 'Payment Outgoing'),
+    ('REFUND', 'Refund'),
+    ('STOCK_ADJUSTMENT', 'Stock Adjustment'),
+    ('STOCK_TRANSFER', 'Stock Transfer'),
+    ('REGISTER_SESSION', 'Register Session'),
+)
+
+LIFECYCLE_STATUS_CHOICES = (
+    ('OPEN', 'Open'),
+    ('LOCKED', 'Locked'),
+    ('VERIFIED', 'Verified'),
+    ('CONFIRMED', 'Confirmed'),
+)
+
+LIFECYCLE_ACTION_CHOICES = (
+    ('LOCK', 'Lock'),
+    ('UNLOCK', 'Unlock'),
+    ('VERIFY', 'Verify'),
+    ('UNVERIFY', 'Unverify'),
+    ('CONFIRM', 'Confirm'),
+)
+
+
+class TransactionVerificationConfig(TenantModel):
+    """
+    Per-organization settings for how many verification levels each
+    transaction type requires. Supports optional amount-based thresholds.
+    """
+    transaction_type = models.CharField(max_length=30, choices=TRANSACTION_TYPES)
+    required_levels = models.IntegerField(default=1, help_text='Default verification levels required')
+    amount_threshold = models.DecimalField(
+        max_digits=15, decimal_places=2, null=True, blank=True,
+        help_text='If transaction amount exceeds this, use threshold_levels instead'
+    )
+    threshold_levels = models.IntegerField(
+        null=True, blank=True,
+        help_text='Verification levels for high-value transactions'
+    )
+
+    class Meta:
+        db_table = 'transaction_verification_config'
+        unique_together = ('organization', 'transaction_type')
+
+    def get_required_levels(self, amount=None):
+        """Returns the number of verification levels needed for the given amount."""
+        if amount and self.amount_threshold and amount > self.amount_threshold and self.threshold_levels:
+            return self.threshold_levels
+        return self.required_levels
+
+    def __str__(self):
+        return f"{self.transaction_type} → {self.required_levels} levels"
+
+
+class TransactionStatusLog(models.Model):
+    """
+    Immutable audit trail for every lifecycle action on any transaction.
+    Stores who did what, when, and why.
+    """
+    transaction_type = models.CharField(max_length=30, choices=TRANSACTION_TYPES, db_index=True)
+    transaction_id = models.IntegerField(db_index=True)
+    action = models.CharField(max_length=20, choices=LIFECYCLE_ACTION_CHOICES)
+    level = models.IntegerField(default=0, help_text='Verification level (1, 2, 3...)')
+    performed_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True)
+    performed_at = models.DateTimeField(auto_now_add=True)
+    comment = models.TextField(null=True, blank=True, help_text='Mandatory for UNLOCK and UNVERIFY')
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'transaction_status_log'
+        ordering = ['-performed_at']
+        indexes = [
+            models.Index(fields=['transaction_type', 'transaction_id']),
+        ]
+
+    def __str__(self):
+        return f"{self.action} L{self.level} on {self.transaction_type}#{self.transaction_id}"
+
+
+class VerifiableModel(TenantModel):
+    """
+    Abstract mixin for models that support the transaction lifecycle.
+    Inherit from this instead of TenantModel to gain:
+      - lifecycle_status (OPEN/LOCKED/VERIFIED/CONFIRMED)
+      - locked_by, locked_at
+      - current_verification_level
+    """
+    lifecycle_status = models.CharField(
+        max_length=20, choices=LIFECYCLE_STATUS_CHOICES, default='OPEN',
+        help_text='Current lifecycle stage'
+    )
+    locked_by = models.ForeignKey(
+        'erp.User', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='+'
+    )
+    locked_at = models.DateTimeField(null=True, blank=True)
+    current_verification_level = models.IntegerField(
+        default=0,
+        help_text='How many verification levels have been completed'
+    )
+
+    class Meta:
+        abstract = True
+
+    @property
+    def is_editable(self):
+        return self.lifecycle_status == 'OPEN'
+
+    @property
+    def is_locked(self):
+        return self.lifecycle_status in ('LOCKED', 'VERIFIED', 'CONFIRMED')
+
+
 class OrganizationModule(models.Model):
     organization = models.ForeignKey('Organization', on_delete=models.CASCADE, related_name='enabled_modules')
     module_name = models.CharField(max_length=100, default='legacy')

@@ -5,7 +5,10 @@ Enriched with nested relationships and computed fields.
 from rest_framework import serializers
 from .models import (
     Product, Unit, Category, Brand, Parfum, ProductGroup,
-    Warehouse, Inventory, InventoryMovement
+    Warehouse, Inventory, InventoryMovement,
+    StockAdjustmentOrder, StockAdjustmentLine,
+    StockTransferOrder, StockTransferLine,
+    OperationalRequest, OperationalRequestLine,
 )
 from erp.models import Country
 
@@ -243,3 +246,154 @@ class InventoryMovementSerializer(serializers.ModelSerializer):
             'organization',
         ]
         read_only_fields = ['organization']
+
+
+# =============================================================================
+# STOCK ADJUSTMENT ORDER SERIALIZERS
+# =============================================================================
+
+class StockAdjustmentLineSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='product.name', read_only=True, default=None)
+    warehouse_name = serializers.CharField(source='warehouse.name', read_only=True, default=None)
+    added_by_name = serializers.CharField(source='added_by.username', read_only=True, default=None)
+    reflect_transfer_ref = serializers.CharField(
+        source='reflect_transfer.reference', read_only=True, default=None
+    )
+
+    class Meta:
+        model = StockAdjustmentLine
+        fields = [
+            'id', 'order', 'product', 'product_name',
+            'qty_adjustment', 'amount_adjustment',
+            'warehouse', 'warehouse_name',
+            'reason', 'recovered_amount',
+            'reflect_transfer', 'reflect_transfer_ref',
+            'added_by', 'added_by_name',
+        ]
+        read_only_fields = ['order']
+
+
+class StockAdjustmentOrderSerializer(serializers.ModelSerializer):
+    lines = StockAdjustmentLineSerializer(many=True, read_only=True)
+    warehouse_name = serializers.CharField(source='warehouse.name', read_only=True, default=None)
+    supplier_name = serializers.CharField(source='supplier.name', read_only=True, default=None)
+    created_by_name = serializers.CharField(source='created_by.username', read_only=True, default=None)
+    locked_by_name = serializers.CharField(source='locked_by.username', read_only=True, default=None)
+    line_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = StockAdjustmentOrder
+        fields = [
+            'id', 'reference', 'date', 'supplier', 'supplier_name',
+            'warehouse', 'warehouse_name', 'reason',
+            'total_qty_adjustment', 'total_amount_adjustment',
+            'notes', 'is_posted',
+            'lifecycle_status', 'locked_by', 'locked_by_name',
+            'locked_at', 'current_verification_level',
+            'created_by', 'created_by_name',
+            'created_at', 'updated_at',
+            'lines', 'line_count', 'organization',
+        ]
+        read_only_fields = ['organization', 'reference', 'is_posted',
+                            'lifecycle_status', 'locked_by', 'locked_at',
+                            'current_verification_level', 'total_qty_adjustment',
+                            'total_amount_adjustment']
+
+    def get_line_count(self, obj):
+        return obj.lines.count()
+
+
+# =============================================================================
+# STOCK TRANSFER ORDER SERIALIZERS
+# =============================================================================
+
+class StockTransferLineSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='product.name', read_only=True, default=None)
+    from_warehouse_name = serializers.CharField(source='from_warehouse.name', read_only=True, default=None)
+    to_warehouse_name = serializers.CharField(source='to_warehouse.name', read_only=True, default=None)
+    added_by_name = serializers.CharField(source='added_by.username', read_only=True, default=None)
+
+    class Meta:
+        model = StockTransferLine
+        fields = [
+            'id', 'order', 'product', 'product_name',
+            'qty_transferred',
+            'from_warehouse', 'from_warehouse_name',
+            'to_warehouse', 'to_warehouse_name',
+            'reason', 'recovered_amount',
+            'added_by', 'added_by_name',
+        ]
+        read_only_fields = ['order']
+
+
+class StockTransferOrderSerializer(serializers.ModelSerializer):
+    lines = StockTransferLineSerializer(many=True, read_only=True)
+    from_warehouse_name = serializers.CharField(source='from_warehouse.name', read_only=True, default=None)
+    to_warehouse_name = serializers.CharField(source='to_warehouse.name', read_only=True, default=None)
+    supplier_name = serializers.CharField(source='supplier.name', read_only=True, default=None)
+    created_by_name = serializers.CharField(source='created_by.username', read_only=True, default=None)
+    locked_by_name = serializers.CharField(source='locked_by.username', read_only=True, default=None)
+    line_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = StockTransferOrder
+        fields = [
+            'id', 'reference', 'date',
+            'from_warehouse', 'from_warehouse_name',
+            'to_warehouse', 'to_warehouse_name',
+            'driver', 'supplier', 'supplier_name', 'reason',
+            'total_qty_transferred', 'is_posted', 'notes',
+            'lifecycle_status', 'locked_by', 'locked_by_name',
+            'locked_at', 'current_verification_level',
+            'created_by', 'created_by_name',
+            'created_at', 'updated_at',
+            'lines', 'line_count', 'organization',
+        ]
+        read_only_fields = ['organization', 'reference', 'is_posted',
+                            'lifecycle_status', 'locked_by', 'locked_at',
+                            'current_verification_level', 'total_qty_transferred']
+
+    def get_line_count(self, obj):
+        return obj.lines.count()
+
+
+# =============================================================================
+# OPERATIONAL REQUEST SERIALIZERS
+# =============================================================================
+
+class OperationalRequestLineSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='product.name', read_only=True, default=None)
+    warehouse_name = serializers.CharField(source='warehouse.name', read_only=True, default=None)
+
+    class Meta:
+        model = OperationalRequestLine
+        fields = [
+            'id', 'request', 'product', 'product_name',
+            'quantity', 'warehouse', 'warehouse_name', 'reason',
+        ]
+        read_only_fields = ['request']
+
+
+class OperationalRequestSerializer(serializers.ModelSerializer):
+    lines = OperationalRequestLineSerializer(many=True, read_only=True)
+    requested_by_name = serializers.CharField(source='requested_by.username', read_only=True, default=None)
+    approved_by_name = serializers.CharField(source='approved_by.username', read_only=True, default=None)
+    line_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = OperationalRequest
+        fields = [
+            'id', 'reference', 'request_type', 'date',
+            'requested_by', 'requested_by_name',
+            'priority', 'status', 'description',
+            'approved_by', 'approved_by_name', 'approved_at',
+            'converted_to_type', 'converted_to_id',
+            'rejection_reason', 'notes',
+            'created_at', 'updated_at',
+            'lines', 'line_count', 'organization',
+        ]
+        read_only_fields = ['organization', 'reference', 'approved_by',
+                            'approved_at', 'converted_to_type', 'converted_to_id']
+
+    def get_line_count(self, obj):
+        return obj.lines.count()

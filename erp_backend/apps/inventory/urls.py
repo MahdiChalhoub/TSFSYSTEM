@@ -7,7 +7,9 @@ from rest_framework.routers import DefaultRouter
 from apps.inventory.views import (
     ProductViewSet, UnitViewSet, WarehouseViewSet, InventoryViewSet,
     BrandViewSet, CategoryViewSet, ParfumViewSet, ProductGroupViewSet,
-    InventoryMovementViewSet
+    InventoryMovementViewSet,
+    StockAdjustmentOrderViewSet, StockTransferOrderViewSet,
+    OperationalRequestViewSet,
 )
 
 router = DefaultRouter()
@@ -20,6 +22,9 @@ router.register(r'categories', CategoryViewSet)
 router.register(r'parfums', ParfumViewSet)
 router.register(r'product-groups', ProductGroupViewSet)
 router.register(r'inventory-movements', InventoryMovementViewSet)
+router.register(r'adjustment-orders', StockAdjustmentOrderViewSet)
+router.register(r'transfer-orders', StockTransferOrderViewSet)
+router.register(r'requests', OperationalRequestViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
