@@ -118,9 +118,9 @@ const MENU_ITEMS = [
                 title: 'Purchasing',
                 icon: Wallet,
                 children: [
-                    { title: 'Active Invoices', path: '/purchases' },
-                    { title: 'Purchase Dashboard', path: '/purchases/dashboard' },
-                    { title: 'New PO Invoice', path: '/purchases/new' },
+                    { title: 'Procurement Center', path: '/purchases' },
+                    { title: 'New RFQ / Order', path: '/purchases/new-order' },
+                    { title: 'Quick Purchase', path: '/purchases/new' },
                 ]
             },
         ]

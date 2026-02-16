@@ -85,3 +85,81 @@ export async function createPurchaseInvoice(prevState: PurchaseFormState, formDa
     revalidatePath('/purchases');
     redirect('/purchases');
 }
+
+export async function authorizePurchaseOrder(id: string) {
+    try {
+        await erpFetch(`purchase/${id}/authorize/`, { method: 'POST' });
+        revalidatePath(`/purchases/${id}`);
+    } catch (e) {
+        console.error("Authorize PO Error:", e);
+    }
+}
+
+export async function receivePurchaseOrder(id: string, formData: FormData) {
+    const warehouseId = formData.get('warehouseId');
+    try {
+        await erpFetch(`purchase/${id}/receive/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ warehouseId })
+        });
+        revalidatePath(`/purchases/${id}`);
+    } catch (e) {
+        console.error("Receive PO Error:", e);
+    }
+}
+
+export async function invoicePurchaseOrder(id: string, formData: FormData) {
+    const invoiceNumber = formData.get('invoiceNumber');
+    try {
+        await erpFetch(`purchase/${id}/invoice/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ invoiceNumber })
+        });
+        revalidatePath(`/purchases/${id}`);
+    } catch (e) {
+        console.error("Invoice PO Error:", e);
+    }
+}
+
+export async function createFormalPurchaseOrder(prevState: PurchaseFormState, formData: FormData): Promise<PurchaseFormState> {
+    const rawLines: any[] = [];
+    for (const [key, value] of Array.from(formData.entries())) {
+        const match = key.match(/^lines\[(\d+)\]\[(\w+)\]$/);
+        if (match) {
+            const index = parseInt(match[1]);
+            const field = match[2];
+            if (!rawLines[index]) rawLines[index] = {};
+            rawLines[index][field] = value;
+        }
+    }
+
+    const rawData = {
+        supplierId: formData.get('supplierId'),
+        siteId: formData.get('siteId'),
+        warehouseId: formData.get('warehouseId'),
+        scope: formData.get('scope'),
+        notes: formData.get('notes'),
+        refCode: formData.get('refCode'),
+        lines: rawLines.filter(l => l && l.productId).map(l => ({
+            productId: Number(l.productId),
+            quantity: Number(l.quantity),
+            unitPrice: Number(l.unitPrice)
+        }))
+    };
+
+    try {
+        await erpFetch('purchase/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(rawData)
+        });
+    } catch (e: any) {
+        console.error("Formal PO Error:", e);
+        return { message: e.message || "Failed to create Request for Quotation." };
+    }
+
+    revalidatePath('/purchases');
+    redirect('/purchases');
+}

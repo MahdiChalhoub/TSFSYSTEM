@@ -309,20 +309,41 @@ class PurchaseViewSet(viewsets.ViewSet):
     def list(self, request):
         organization_id = get_current_tenant_id()
         if not organization_id: return Response({"error": "No organization context"}, status=status.HTTP_400_BAD_REQUEST)
+        qs = Order.objects.filter(organization_id=organization_id, type='PURCHASE').select_related('contact', 'user').order_by('-created_at')
+        return Response(OrderSerializer(qs, many=True).data)
+
+    def retrieve(self, request, pk=None):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "No organization context"}, status=400)
+        try:
+            order = Order.objects.select_related('contact', 'user', 'site').get(pk=pk, organization_id=organization_id, type='PURCHASE')
+            return Response(OrderSerializer(order).data)
+        except Order.DoesNotExist:
+            return Response({"error": "Order not found"}, status=404)
+
+    def create(self, request):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "No organization"}, status=400)
         organization = Organization.objects.get(id=organization_id)
-        qs = Order.objects.filter(organization=organization, type='PURCHASE').order_by('-created_at')
-        data = []
-        for o in qs:
-            data.append({
-                "id": o.id, "refCode": o.ref_code, "createdAt": o.created_at,
-                "status": o.status, "totalAmount": float(o.total_amount),
-                "contact": {"name": o.contact.name} if o.contact else None,
-                "user": {"name": f"{o.user.first_name} {o.user.last_name}".strip() or o.user.username} if o.user else None
-            })
-        return Response(data)
+        try:
+            order = PurchaseService.create_purchase_order(
+                organization=organization,
+                supplier_id=request.data.get('supplierId'),
+                site_id=request.data.get('siteId'),
+                warehouse_id=request.data.get('warehouseId'),
+                scope=request.data.get('scope', 'OFFICIAL'),
+                lines=request.data.get('lines', []),
+                notes=request.data.get('notes'),
+                ref_code=request.data.get('refCode'),
+                user=request.user if request.user.is_authenticated else None
+            )
+            return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
 
     @action(detail=True, methods=['post'])
     def authorize(self, request, pk=None):
+        # ... (same as before)
         organization_id = get_current_tenant_id()
         if not organization_id: return Response({"error": "No organization context"}, status=status.HTTP_400_BAD_REQUEST)
         organization = Organization.objects.get(id=organization_id)

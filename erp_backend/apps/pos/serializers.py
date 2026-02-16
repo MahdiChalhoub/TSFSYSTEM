@@ -6,15 +6,20 @@ from .models import Order, OrderLine
 from .returns_models import SalesReturn, SalesReturnLine, CreditNote, PurchaseReturn, PurchaseReturnLine
 
 
-class OrderSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Order
-        fields = '__all__'
-
-
 class OrderLineSerializer(serializers.ModelSerializer):
+    product_name = serializers.ReadOnlyField(source='product.name')
     class Meta:
         model = OrderLine
+        fields = '__all__'
+
+class OrderSerializer(serializers.ModelSerializer):
+    lines = OrderLineSerializer(many=True, read_only=True)
+    contact_name = serializers.ReadOnlyField(source='contact.name')
+    user_name = serializers.ReadOnlyField(source='user.username')
+    site_name = serializers.ReadOnlyField(source='site.name')
+    
+    class Meta:
+        model = Order
         fields = '__all__'
 
 
