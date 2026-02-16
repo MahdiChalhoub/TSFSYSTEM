@@ -196,6 +196,66 @@ class UserViewSet(TenantModelViewSet):
 
         return Response({"permissions": [], "role": None, "is_superuser": False})
 
+    @action(detail=True, methods=['post'], url_path='set-override-pin')
+    def set_override_pin(self, request, pk=None):
+        """Admin-only: Set or clear a manager override PIN.
+        Body: { "pin": "1234" | null }
+        """
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({"error": "Admin access required"}, status=status.HTTP_403_FORBIDDEN)
+
+        user = self.get_object()
+        pin = request.data.get('pin')
+        user.set_override_pin(pin)
+        user.save(update_fields=['override_pin'])
+
+        label = 'set' if pin else 'cleared'
+        return Response({"message": f"Override PIN {label} for {user.username}", "has_override_pin": bool(pin)})
+
+    @action(detail=False, methods=['post'], url_path='verify-override')
+    def verify_override(self, request):
+        """Verify a manager override PIN and log the action.
+        Body: { "pin": "1234", "action": "VOID_ORDER", "order_id": 5, "details": "..." }
+        Returns: { "verified": true/false }
+        """
+        pin = request.data.get('pin', '')
+        override_action = request.data.get('action', 'OTHER')
+        order_id = request.data.get('order_id')
+        details = request.data.get('details', '')
+
+        user = request.user
+        verified = user.check_override_pin(pin) if hasattr(user, 'check_override_pin') else False
+
+        if verified:
+            # Log the override
+            ManagerOverrideLog.objects.create(
+                organization=user.organization,
+                action=override_action,
+                manager=user,
+                order_id=order_id,
+                details=details,
+                ip_address=request.META.get('REMOTE_ADDR'),
+            )
+
+        return Response({"verified": verified})
+
+    @action(detail=False, methods=['get'], url_path='override-log')
+    def override_log(self, request):
+        """Get recent manager override log entries."""
+        logs = ManagerOverrideLog.objects.filter(
+            organization=request.user.organization
+        ).select_related('manager').order_by('-performed_at')[:50]
+        data = [{
+            'id': log.id,
+            'action': log.action,
+            'action_display': log.get_action_display(),
+            'manager_name': str(log.manager) if log.manager else None,
+            'order_id': log.order_id,
+            'details': log.details,
+            'performed_at': log.performed_at.isoformat() if log.performed_at else None,
+        } for log in logs]
+        return Response(data)
+
 
 class TenantResolutionView(viewsets.ViewSet):
     """

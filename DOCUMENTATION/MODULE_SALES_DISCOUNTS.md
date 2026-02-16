@@ -39,7 +39,21 @@ Create configurable promotional discount rules that can auto-apply at POS checko
 | Migration | `erp_backend/apps/pos/migrations/0007_add_discount_models.py` |
 | Server Actions | `src/app/actions/discounts.ts` |
 | Page | `src/app/(privileged)/sales/discounts/page.tsx` |
-| Manager | `src/app/(privileged)/sales/discounts/manager.tsx` |
+
+## Page Workflow: `/sales/discounts`
+
+1. **KPI Cards**: Active Rules, Total Redemptions (aggregate `times_used`), Auto-Apply count, Scheduled count.
+2. **Rule Builder (Form)**:
+   - Conditional inputs for Scope: if Scope=PRODUCT, category/brand selectors hide; etc.
+   - Dual-column layout for restrictions (min amount/quantity) and validity (dates/limits).
+   - Validation for required name and numeric inputs.
+3. **Discount Cards**:
+   - Visual badges for Rule Type (Percentage/Fixed/B1G1) and Scope.
+   - Real-time status toggle (Power button).
+   - "View Logs" action opens a slide-out panel.
+4. **Log Viewer (Slide-out)**:
+   - Fetches `/usage-log/` for the specific rule.
+   - List view of Order ID, Timestamp, Discount Amount, and Application User.
 
 ## Tables
 | Table | Purpose |
