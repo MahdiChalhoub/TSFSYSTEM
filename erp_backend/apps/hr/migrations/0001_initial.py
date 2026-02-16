@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('erp', '0001_initial'),
-        ('finance', '0001_initial'),
+        # ('finance', '0001_initial'),  # Removed: already applied, dep causes InconsistentMigrationHistory
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
