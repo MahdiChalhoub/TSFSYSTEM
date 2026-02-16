@@ -9,7 +9,7 @@ from .views import (
     OrganizationViewSet, SiteViewSet, SettingsViewSet, health_check,
     TenantResolutionView, DashboardViewSet, CountryViewSet, RoleViewSet,
     UserViewSet, RecordHistoryViewSet, EntityGraphViewSet, CurrencyViewSet,
-    NotificationViewSet
+    NotificationViewSet, PermissionViewSet
 )
 from .views_auth import (
     login_view, logout_view, me_view, PublicConfigView, register_business_view,
@@ -36,6 +36,7 @@ router.register(r'entity-graph', EntityGraphViewSet, basename='entity-graph')
 router.register(r'encryption', EncryptionViewSet, basename='encryption')
 router.register(r'currencies', CurrencyViewSet, basename='currencies')
 router.register(r'notifications', NotificationViewSet, basename='notifications')
+router.register(r'permissions', PermissionViewSet, basename='permissions')
 
 # SaaS Management
 router.register(r'saas/modules', SaaSModuleViewSet, basename='saas-modules')
