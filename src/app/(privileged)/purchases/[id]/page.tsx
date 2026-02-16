@@ -3,7 +3,7 @@ import Link from "next/link";
 import {
     ArrowLeft, Calendar, User, Tag, MapPin,
     FileText, CheckCircle2, Truck, Receipt,
-    AlertCircle, Clock, Database, Printer
+    AlertCircle, Clock, Database, Printer, RotateCcw
 } from "lucide-react";
 import { authorizePurchaseOrder, receivePurchaseOrder, invoicePurchaseOrder } from "@/app/actions/commercial/purchases";
 
@@ -104,6 +104,15 @@ export default async function PurchaseDetailPage({ params }: { params: { id: str
                                 <span>Create Bill</span>
                             </button>
                         </form>
+                    )}
+                    {(order.status === 'RECEIVED' || order.status === 'INVOICED' || order.status === 'PARTIAL_RECEIVED') && (
+                        <Link
+                            href={`/purchases/returns/new?order_id=${id}`}
+                            className="bg-rose-600 text-white px-8 py-3.5 rounded-2xl font-black shadow-lg shadow-rose-200 hover:bg-rose-700 transition-all flex items-center gap-2"
+                        >
+                            <RotateCcw size={20} />
+                            <span>Return Items</span>
+                        </Link>
                     )}
                 </div>
             </div>
