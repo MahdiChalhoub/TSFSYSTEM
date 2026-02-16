@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { getOrganization, getOrgUsage, getOrgBilling, getOrgModules, toggleOrgModule, updateModuleFeatures, changeOrgPlan, getOrgUsers, createOrgUser, resetOrgUserPassword, getOrgSites, createOrgSite, toggleOrgSite, listClients, createClient, setOrgClient } from "./actions"
+import { getOrganization, getOrgUsage, getOrgBilling, getOrgModules, toggleOrgModule, updateModuleFeatures, changeOrgPlan, getOrgUsers, createOrgUser, resetOrgUserPassword, getOrgSites, createOrgSite, toggleOrgSite, listClients, createClient, setOrgClient, getOrgAddons, purchaseAddon, cancelAddon } from "./actions"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -14,7 +14,8 @@ import {
     Package, ShieldCheck, AlertTriangle, Loader2,
     ToggleLeft, ToggleRight, Crown, Layers, Activity,
     CreditCard, TrendingUp, ChevronRight, Plus, KeyRound,
-    UserCog, Eye, EyeOff, Check, Building2, Power, UserCircle, Mail
+    UserCog, Eye, EyeOff, Check, Building2, Power, UserCircle, Mail,
+    Puzzle, ShoppingCart, XCircle
 } from "lucide-react"
 
 // ─── Usage Meter ─────────────────────────────────────────────────────────────
@@ -145,7 +146,10 @@ export default function OrganizationDetailPage() {
     const [users, setUsers] = useState<any[]>([])
     const [sites, setSites] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
-    const [activeTab, setActiveTab] = useState<'overview' | 'modules' | 'usage' | 'billing' | 'users' | 'sites'>('overview')
+    const [activeTab, setActiveTab] = useState<'overview' | 'modules' | 'usage' | 'billing' | 'users' | 'sites' | 'addons'>('overview')
+    const [addons, setAddons] = useState<any>({ purchased: [], available: [] })
+    const [purchasingAddon, setPurchasingAddon] = useState<string | null>(null)
+    const [cancellingAddon, setCancellingAddon] = useState<string | null>(null)
     const [toggling, setToggling] = useState<string | null>(null)
 
     // User creation dialog
@@ -179,13 +183,14 @@ export default function OrganizationDetailPage() {
     useEffect(() => {
         async function load() {
             try {
-                const [orgData, usageData, billingData, modulesData, usersData, sitesData] = await Promise.all([
+                const [orgData, usageData, billingData, modulesData, usersData, sitesData, addonsData] = await Promise.all([
                     getOrganization(orgId),
                     getOrgUsage(orgId),
                     getOrgBilling(orgId),
                     getOrgModules(orgId),
                     getOrgUsers(orgId),
                     getOrgSites(orgId),
+                    getOrgAddons(orgId),
                 ])
                 setOrg(orgData)
                 setUsage(usageData)
@@ -193,6 +198,7 @@ export default function OrganizationDetailPage() {
                 setModules(Array.isArray(modulesData) ? modulesData : [])
                 setUsers(Array.isArray(usersData) ? usersData : [])
                 setSites(Array.isArray(sitesData) ? sitesData : [])
+                setAddons(addonsData || { purchased: [], available: [] })
             } catch {
                 toast.error("Failed to load organization details")
             } finally {
@@ -302,6 +308,7 @@ export default function OrganizationDetailPage() {
     const tabs = [
         { key: 'overview', label: 'Overview', icon: Activity },
         { key: 'modules', label: 'Modules', icon: Layers },
+        { key: 'addons', label: `Add-ons (${addons.purchased?.filter((a: any) => a.status === 'active').length || 0})`, icon: Puzzle },
         { key: 'users', label: `Users (${users.length})`, icon: Users },
         { key: 'sites', label: `Sites (${sites.length})`, icon: Building2 },
         { key: 'usage', label: 'Usage', icon: TrendingUp },
@@ -900,6 +907,167 @@ export default function OrganizationDetailPage() {
                                             </div>
                                         </div>
                                     ))}
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
+
+            {/* ─── Add-ons Tab ────────────────────────────────────────── */}
+            {activeTab === 'addons' && (
+                <div className="space-y-6">
+                    {/* Active Purchased Add-ons */}
+                    <Card className="border-gray-100 shadow-sm">
+                        <CardHeader>
+                            <CardTitle className="text-lg font-bold">Active Add-ons</CardTitle>
+                            <CardDescription>Add-ons currently purchased for this organization</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {addons.purchased?.filter((p: any) => p.status === 'active').length > 0 ? (
+                                <div className="space-y-3">
+                                    {addons.purchased.filter((p: any) => p.status === 'active').map((p: any) => (
+                                        <div key={p.id} className="flex items-center justify-between p-4 bg-emerald-50/50 rounded-xl border border-emerald-100 hover:border-emerald-200 transition-all">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
+                                                    <Puzzle size={18} className="text-emerald-600" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-gray-900">{p.addon_name}</p>
+                                                    <div className="flex items-center gap-2 mt-0.5">
+                                                        <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 text-[10px]">{p.addon_type}</Badge>
+                                                        <span className="text-xs text-gray-400">×{p.quantity}</span>
+                                                        <span className="text-xs text-gray-400">• {p.billing_cycle}</span>
+                                                    </div>
+                                                    <p className="text-[10px] text-gray-400 mt-1">Purchased {p.purchased_at ? new Date(p.purchased_at).toLocaleDateString() : '—'}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <div className="text-right">
+                                                    <p className="font-black text-gray-900">${p.effective_price}</p>
+                                                    <p className="text-[10px] text-gray-400">{p.billing_cycle === 'ANNUAL' ? '/yr' : '/mo'}</p>
+                                                </div>
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    className="text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl"
+                                                    disabled={cancellingAddon === p.id}
+                                                    onClick={async () => {
+                                                        setCancellingAddon(p.id)
+                                                        try {
+                                                            await cancelAddon(orgId, p.id)
+                                                            toast.success(`Add-on "${p.addon_name}" cancelled`)
+                                                            const updated = await getOrgAddons(orgId)
+                                                            setAddons(updated || { purchased: [], available: [] })
+                                                        } catch { toast.error('Failed to cancel add-on') }
+                                                        finally { setCancellingAddon(null) }
+                                                    }}
+                                                >
+                                                    {cancellingAddon === p.id ? <Loader2 size={14} className="animate-spin" /> : <XCircle size={14} />}
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-8 text-gray-400">
+                                    <Puzzle size={32} className="mx-auto mb-2 opacity-30" />
+                                    <p className="font-medium">No active add-ons</p>
+                                    <p className="text-xs mt-1">Purchase add-ons below to extend capabilities</p>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Cancelled / Expired History */}
+                    {addons.purchased?.filter((p: any) => p.status !== 'active').length > 0 && (
+                        <Card className="border-gray-100 shadow-sm">
+                            <CardHeader>
+                                <CardTitle className="text-sm font-bold text-gray-500">History</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-2">
+                                    {addons.purchased.filter((p: any) => p.status !== 'active').map((p: any) => (
+                                        <div key={p.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 opacity-60">
+                                            <div>
+                                                <p className="font-medium text-gray-600 text-sm">{p.addon_name}</p>
+                                                <p className="text-[10px] text-gray-400">
+                                                    {p.status === 'cancelled' && p.cancelled_at
+                                                        ? `Cancelled ${new Date(p.cancelled_at).toLocaleDateString()}`
+                                                        : p.status}
+                                                </p>
+                                            </div>
+                                            <Badge className="bg-gray-100 text-gray-400 border-gray-200 text-[10px]">{p.status}</Badge>
+                                        </div>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* Available Add-ons for Purchase */}
+                    <Card className="border-gray-100 shadow-sm">
+                        <CardHeader>
+                            <CardTitle className="text-lg font-bold">Available Add-ons</CardTitle>
+                            <CardDescription>Add-ons available for this organization's plan</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {addons.available?.length > 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    {addons.available.map((a: any) => (
+                                        <div key={a.id} className={`p-4 rounded-xl border transition-all ${a.already_purchased
+                                                ? 'bg-gray-50 border-gray-100 opacity-50'
+                                                : 'bg-white border-gray-100 hover:border-indigo-200 hover:shadow-sm'
+                                            }`}>
+                                            <div className="flex items-start justify-between">
+                                                <div>
+                                                    <p className="font-bold text-gray-900">{a.name}</p>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <Badge variant="outline" className="text-[10px]">{a.addon_type}</Badge>
+                                                        <span className="text-xs text-gray-400">+{a.quantity} units</span>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="font-black text-gray-900">${a.monthly_price}</p>
+                                                    <p className="text-[10px] text-gray-400">/month</p>
+                                                    {a.annual_price !== '0.00' && (
+                                                        <p className="text-[10px] text-gray-400">${a.annual_price}/yr</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <Button
+                                                size="sm"
+                                                className={`w-full mt-3 rounded-xl font-bold text-xs ${a.already_purchased
+                                                        ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                                        : 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                                                    }`}
+                                                disabled={a.already_purchased || purchasingAddon === a.id}
+                                                onClick={async () => {
+                                                    setPurchasingAddon(a.id)
+                                                    try {
+                                                        const result = await purchaseAddon(orgId, a.id)
+                                                        toast.success(result.message || `Add-on "${a.name}" purchased`)
+                                                        const updated = await getOrgAddons(orgId)
+                                                        setAddons(updated || { purchased: [], available: [] })
+                                                    } catch { toast.error('Failed to purchase add-on') }
+                                                    finally { setPurchasingAddon(null) }
+                                                }}
+                                            >
+                                                {purchasingAddon === a.id
+                                                    ? <Loader2 size={14} className="animate-spin mr-1" />
+                                                    : a.already_purchased
+                                                        ? <Check size={14} className="mr-1" />
+                                                        : <ShoppingCart size={14} className="mr-1" />}
+                                                {a.already_purchased ? 'Already Purchased' : 'Purchase'}
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-8 text-gray-400">
+                                    <Package size={32} className="mx-auto mb-2 opacity-30" />
+                                    <p className="font-medium">No add-ons available</p>
+                                    <p className="text-xs mt-1">Create add-ons in Subscription Plans first</p>
                                 </div>
                             )}
                         </CardContent>
