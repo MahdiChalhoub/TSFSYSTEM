@@ -166,4 +166,76 @@ class ContactViewSet(TenantModelViewSet):
             },
             'balance': balance_data,
             'journal_entries': recent_journal,
+            'analytics': self._build_analytics(contact, orders, order_stats),
+            'pricing_rules': self._get_pricing_rules(contact, organization_id),
         })
+
+    def _build_analytics(self, contact, orders, order_stats):
+        """Build purchase/sales analytics for the contact."""
+        from django.db.models import Avg, F
+        from django.utils import timezone
+        import datetime
+
+        total_count = order_stats['total_count'] or 0
+        total_amount = float(order_stats['total_amount'] or 0)
+
+        analytics = {
+            'avg_order_value': round(total_amount / total_count, 2) if total_count > 0 else 0,
+            'total_orders': total_count,
+            'total_revenue': total_amount,
+            'top_products': [],
+            'monthly_frequency': 0,
+        }
+
+        # Monthly frequency (orders per month over last 12 months)
+        twelve_months_ago = timezone.now() - datetime.timedelta(days=365)
+        recent_count = orders.filter(created_at__gte=twelve_months_ago).count()
+        analytics['monthly_frequency'] = round(recent_count / 12, 1)
+
+        # Top products by revenue
+        try:
+            from apps.pos.models import OrderLine
+            top_products = OrderLine.objects.filter(
+                order__in=orders
+            ).values(
+                'product_name'
+            ).annotate(
+                total_qty=Sum('quantity'),
+                total_revenue=Sum(F('quantity') * F('unit_price'))
+            ).order_by('-total_revenue')[:5]
+            analytics['top_products'] = list(top_products)
+        except Exception:
+            pass
+
+        return analytics
+
+    def _get_pricing_rules(self, contact, organization_id):
+        """Get all pricing rules applicable to this contact."""
+        try:
+            from apps.crm.pricing_models import ClientPriceRule, PriceGroupMember
+            from apps.crm.pricing_serializers import ClientPriceRuleSerializer
+
+            # Direct rules
+            direct = ClientPriceRule.objects.filter(
+                contact_id=contact.id,
+                organization_id=organization_id,
+                is_active=True
+            )
+
+            # Group-based rules
+            group_ids = PriceGroupMember.objects.filter(
+                contact_id=contact.id,
+                organization_id=organization_id
+            ).values_list('price_group_id', flat=True)
+
+            group_rules = ClientPriceRule.objects.filter(
+                price_group_id__in=group_ids,
+                organization_id=organization_id,
+                is_active=True
+            )
+
+            from itertools import chain
+            all_rules = list(chain(direct, group_rules))
+            return ClientPriceRuleSerializer(all_rules, many=True).data
+        except Exception:
+            return []
