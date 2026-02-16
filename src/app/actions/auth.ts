@@ -221,3 +221,68 @@ export const getUser = cache(async function getUser() {
         throw error;
     }
 })
+
+/**
+ * Notifications
+ */
+export async function getNotifications() {
+    const { erpFetch } = await import("@/lib/erp-api")
+    return erpFetch('notifications/')
+}
+
+export async function markNotificationAsRead(id: number) {
+    const { erpFetch } = await import("@/lib/erp-api")
+    return erpFetch(`notifications/${id}/mark-read/`, { method: 'POST' })
+}
+
+export async function markAllNotificationsRead() {
+    const { erpFetch } = await import("@/lib/erp-api")
+    return erpFetch('notifications/mark-all-read/', { method: 'POST' })
+}
+
+/**
+ * Password Reset
+ */
+export async function requestPasswordResetAction(email: string) {
+    const { erpFetch } = await import("@/lib/erp-api")
+    return erpFetch('auth/password-reset/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+    })
+}
+
+export async function confirmPasswordResetAction(data: any) {
+    const { erpFetch } = await import("@/lib/erp-api")
+    return erpFetch('auth/password-reset/confirm/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+}
+
+/**
+ * User Admin (Approval Workflow)
+ */
+export async function getPendingUsers() {
+    const { erpFetch } = await import("@/lib/erp-api")
+    return erpFetch('users/?registration_status=PENDING')
+}
+
+export async function approveUserAction(id: number) {
+    const { erpFetch } = await import("@/lib/erp-api")
+    return erpFetch(`users/${id}/approve/`, { method: 'POST' })
+}
+
+export async function rejectUserAction(id: number) {
+    const { erpFetch } = await import("@/lib/erp-api")
+    return erpFetch(`users/${id}/reject/`, { method: 'POST' })
+}
+
+export async function requestCorrectionAction(id: number, notes: string) {
+    const { erpFetch } = await import("@/lib/erp-api")
+    return erpFetch(`users/${id}/request-correction/`, {
+        method: 'POST',
+        body: JSON.stringify({ notes })
+    })
+}

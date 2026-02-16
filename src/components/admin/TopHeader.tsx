@@ -4,6 +4,7 @@ import { useAdmin } from '@/context/AdminContext';
 import { Bell, Search, User, Menu } from 'lucide-react';
 import { SiteSwitcher } from './SiteSwitcher';
 import { TenantSwitcher } from './TenantSwitcher';
+import { NotificationBell } from './NotificationBell';
 
 export function TopHeader({ sites, organizations = [], currentSlug, user }: { sites: any[], organizations?: any[], currentSlug?: string, user?: any }) {
     const { toggleSidebar } = useAdmin();
@@ -69,18 +70,11 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: { si
             </div>
 
             <div className="flex items-center gap-2 md:gap-4">
-                {/* Search Toggle for Medium Screens */}
                 <button className="lg:hidden p-2.5 hover:bg-gray-100 rounded-xl text-gray-400">
                     <Search size={22} />
                 </button>
 
-                <button
-                    suppressHydrationWarning={true}
-                    className="p-2.5 relative hover:bg-gray-100/50 rounded-xl text-gray-500 hover:text-emerald-600 transition-colors"
-                >
-                    <Bell size={22} />
-                    <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white animate-pulse"></span>
-                </button>
+                <NotificationBell />
 
                 <div className="h-8 w-px bg-gray-200/60 hidden sm:block"></div>
 

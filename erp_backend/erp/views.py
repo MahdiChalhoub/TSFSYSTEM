@@ -20,6 +20,7 @@ from django.db.models import Q, Sum, F
 from rest_framework import viewsets, status, serializers, permissions
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, action, permission_classes
+from django.utils import timezone
 from .middleware import get_current_tenant_id
 from .mixins import AuditLogMixin
 from .throttles import TenantResolveRateThrottle
@@ -28,7 +29,7 @@ from .throttles import TenantResolveRateThrottle
 from .models import (
     Organization, Site, User, Country, Role,
     SystemModule, OrganizationModule, GlobalCurrency,
-    ManagerOverrideLog,
+    ManagerOverrideLog, Notification
 )
 
 # --- Business Module Models (optional — modules may be uninstalled) ---
@@ -49,7 +50,7 @@ except ImportError:
 # --- Kernel Serializers ---
 from .serializers import (
     OrganizationSerializer, SiteSerializer, UserSerializer,
-    CountrySerializer, RoleSerializer,
+    CountrySerializer, RoleSerializer, NotificationSerializer,
 )
 from .serializers.core import GlobalCurrencySerializer
 try:
@@ -256,6 +257,85 @@ class UserViewSet(TenantModelViewSet):
             'performed_at': log.performed_at.isoformat() if log.performed_at else None,
         } for log in logs]
         return Response(data)
+
+    @action(detail=True, methods=['post'], url_path='approve')
+    def approve(self, request, pk=None):
+        """SaaS Admin: Approve a pending business registration."""
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({"error": "Staff access required"}, status=status.HTTP_403_FORBIDDEN)
+        
+        user = self.get_object()
+        user.registration_status = 'APPROVED'
+        user.is_active = True
+        user.save(update_fields=['registration_status', 'is_active'])
+
+        # Create a notification for the user
+        Notification.objects.create(
+            user=user,
+            title="Account Approved",
+            message=f"Welcome! Your workspace '{user.organization.name}' has been approved.",
+            type='SUCCESS'
+        )
+
+        return Response({"message": f"User {user.username} approved."})
+
+    @action(detail=True, methods=['post'], url_path='reject')
+    def reject(self, request, pk=None):
+        """SaaS Admin: Reject a pending business registration."""
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({"error": "Staff access required"}, status=status.HTTP_403_FORBIDDEN)
+        
+        user = self.get_object()
+        user.registration_status = 'REJECTED'
+        user.is_active = False
+        user.save(update_fields=['registration_status', 'is_active'])
+        return Response({"message": f"User {user.username} rejected."})
+
+    @action(detail=True, methods=['post'], url_path='request-correction')
+    def request_correction(self, request, pk=None):
+        """SaaS Admin: Request corrections on a business registration."""
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({"error": "Staff access required"}, status=status.HTTP_403_FORBIDDEN)
+        
+        notes = request.data.get('notes', '')
+        if not notes:
+            return Response({"error": "Correction notes are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = self.get_object()
+        user.registration_status = 'CORRECTION_NEEDED'
+        user.correction_notes = notes
+        user.save(update_fields=['registration_status', 'correction_notes'])
+
+        Notification.objects.create(
+            user=user,
+            title="Correction Needed",
+            message=f"Please update your registration: {notes}",
+            type='WARNING'
+        )
+
+        return Response({"message": f"Correction requested for {user.username}."})
+
+
+class NotificationViewSet(viewsets.ModelViewSet):
+    """
+    Endpoints for current user notifications.
+    """
+    serializer_class = NotificationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Notification.objects.filter(user=self.request.user)
+
+    @action(detail=False, methods=['post'], url_path='mark-all-read')
+    def mark_all_read(self, request):
+        Notification.objects.filter(user=request.user, read_at__isnull=True).update(read_at=timezone.now())
+        return Response({"message": "All notifications marked as read."})
+
+    @action(detail=True, methods=['post'], url_path='mark-read')
+    def mark_read(self, request, pk=None):
+        notif = self.get_object()
+        notif.mark_as_read()
+        return Response({"message": "Notification marked as read."})
 
 
 class TenantResolutionView(viewsets.ViewSet):

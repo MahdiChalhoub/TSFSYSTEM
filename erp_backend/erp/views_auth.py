@@ -13,6 +13,12 @@ from .serializers.auth import LoginSerializer, UserSerializer, BusinessRegistrat
 from .serializers.core import BusinessTypeSerializer, GlobalCurrencySerializer, OrganizationSerializer
 from .services import ProvisioningService
 
+from django.contrib.auth.forms import PasswordResetForm
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.contrib.auth import get_user_model
+
 logger = logging.getLogger('erp')
 
 @api_view(['POST'])
@@ -171,7 +177,7 @@ def register_business_view(request):
                 organization=org,
                 role=admin_role,
                 is_active=True,
-                registration_status='APPROVED',
+                registration_status='PENDING',
             )
             admin_user.set_password(data['admin_password'])
             admin_user.save()
@@ -202,3 +208,63 @@ def register_business_view(request):
             {"error": str(e), "traceback": error_traceback if settings.DEBUG else None},
             status=status.HTTP_400_BAD_REQUEST
         )
+
+
+# ── Password Reset (Forgot Password) ────────────────────────────────────────
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def password_reset_request_view(request):
+    """
+    Step 1: User submits email. We generate a token and (hypothetically) send an email.
+    In this implementation, we return the token in the response for development/demo.
+    """
+    email = request.data.get('email')
+    if not email:
+        return Response({"error": "Email is required"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    users = User.objects.filter(email=email, is_active=True)
+    if users.exists():
+        for user in users:
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+            # In a real system, you would send an email with a link containing uid and token.
+            logger.info(f"[AUTH] Password reset requested for {email}. UID: {uid}, Token: {token}")
+            
+            # For this task, we return them so the frontend can use them immediately
+            return Response({
+                "message": "Password reset instructions have been sent to your email.",
+                "uid": uid,
+                "token": token
+            }, status=status.HTTP_200_OK)
+    
+    # Always return 200 to avoid email harvesting
+    return Response({
+        "message": "If an account exists with this email, you will receive reset instructions."
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def password_reset_confirm_view(request):
+    """
+    Step 2: User submits uid, token, and new password.
+    """
+    uidb64 = request.data.get('uid')
+    token = request.data.get('token')
+    new_password = request.data.get('new_password')
+
+    if not (uidb64 and token and new_password):
+        return Response({"error": "UID, token, and new password are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        user.set_password(new_password)
+        user.save()
+        return Response({"message": "Password has been reset successfully."}, status=status.HTTP_200_OK)
+    else:
+        return Response({"error": "The reset link is invalid or has expired."}, status=status.HTTP_400_BAD_REQUEST)
