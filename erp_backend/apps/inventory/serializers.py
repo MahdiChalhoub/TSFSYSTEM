@@ -9,6 +9,7 @@ from .models import (
     StockAdjustmentOrder, StockAdjustmentLine,
     StockTransferOrder, StockTransferLine,
     OperationalRequest, OperationalRequestLine,
+    ComboComponent,
 )
 from erp.models import Country
 
@@ -166,6 +167,7 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = [
             'id', 'sku', 'barcode', 'name', 'description',
+            'product_type',
             'category', 'brand', 'unit', 'country', 'parfum',
             'product_group', 'size', 'size_unit',
             'brand_name', 'country_name', 'country_code',
@@ -186,11 +188,31 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         model = Product
         fields = [
             'sku', 'barcode', 'name', 'description',
+            'product_type',
             'category', 'brand', 'unit', 'country', 'parfum',
             'product_group', 'size', 'size_unit',
             'cost_price', 'cost_price_ht', 'cost_price_ttc',
             'selling_price_ht', 'selling_price_ttc', 'tva_rate',
             'min_stock_level', 'is_expiry_tracked',
+        ]
+        read_only_fields = ['organization']
+
+
+class ComboComponentSerializer(serializers.ModelSerializer):
+    """Serializer for combo/bundle product components."""
+    component_name = serializers.CharField(source='component_product.name', read_only=True)
+    component_sku = serializers.CharField(source='component_product.sku', read_only=True)
+    component_price = serializers.DecimalField(
+        source='component_product.selling_price_ttc', max_digits=15, decimal_places=2, read_only=True
+    )
+
+    class Meta:
+        model = ComboComponent
+        fields = [
+            'id', 'combo_product', 'component_product',
+            'component_name', 'component_sku', 'component_price',
+            'quantity', 'price_override', 'sort_order',
+            'organization',
         ]
         read_only_fields = ['organization']
 

@@ -95,10 +95,17 @@ class ProductGroup(TenantModel):
 # =============================================================================
 
 class Product(TenantModel):
+    PRODUCT_TYPES = (
+        ('STANDARD', 'Standard'),
+        ('COMBO', 'Combo / Bundle'),
+        ('SERVICE', 'Service'),
+    )
+
     sku = models.CharField(max_length=100)
     barcode = models.CharField(max_length=100, null=True, blank=True)
     name = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
+    product_type = models.CharField(max_length=20, choices=PRODUCT_TYPES, default='STANDARD')
 
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
     brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
@@ -138,6 +145,32 @@ class Product(TenantModel):
 
     def __str__(self):
         return f"{self.sku} - {self.name}"
+
+
+class ComboComponent(TenantModel):
+    """Links a COMBO product to its child products with quantities."""
+    combo_product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name='combo_components',
+        help_text='The parent combo/bundle product'
+    )
+    component_product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name='part_of_combos',
+        help_text='The child product included in this combo'
+    )
+    quantity = models.DecimalField(max_digits=10, decimal_places=2, default=1)
+    price_override = models.DecimalField(
+        max_digits=15, decimal_places=2, null=True, blank=True,
+        help_text='Optional price override for this component within the combo'
+    )
+    sort_order = models.IntegerField(default=0)
+
+    class Meta:
+        db_table = 'combo_component'
+        unique_together = ('combo_product', 'component_product', 'organization')
+        ordering = ['sort_order']
+
+    def __str__(self):
+        return f"{self.combo_product.name} → {self.component_product.name} ×{self.quantity}"
 
 
 # =============================================================================
