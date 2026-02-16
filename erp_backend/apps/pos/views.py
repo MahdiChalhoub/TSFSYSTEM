@@ -161,6 +161,117 @@ class POSViewSet(viewsets.ViewSet):
             'recent': recent,
         })
 
+    @action(detail=False, methods=['get'], url_path='sales-analytics')
+    def sales_analytics(self, request):
+        """Sales analytics: top products, customer segments, daily trend."""
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({"error": "No organization context"}, status=status.HTTP_400_BAD_REQUEST)
+        organization = Organization.objects.get(id=organization_id)
+
+        from django.db.models import Sum, Count, Avg, F
+        from django.utils import timezone
+        from datetime import timedelta
+        from apps.pos.models import OrderLine
+
+        days = int(request.query_params.get('days', '30'))
+        end = timezone.now()
+        start = end - timedelta(days=days)
+
+        sales = Order.objects.filter(
+            organization=organization, type='SALE',
+            created_at__gte=start, created_at__lte=end,
+        )
+
+        # Top products by revenue
+        top_products = (
+            OrderLine.objects.filter(order__in=sales)
+            .values('product__name')
+            .annotate(
+                total_revenue=Sum('total'),
+                total_qty=Sum('quantity'),
+                avg_price=Avg('unit_price'),
+            )
+            .order_by('-total_revenue')[:10]
+        )
+
+        # Customer breakdown (top customers)
+        top_customers = (
+            sales.filter(contact__isnull=False)
+            .values('contact__name')
+            .annotate(
+                order_count=Count('id'),
+                total_spent=Sum('total_amount'),
+            )
+            .order_by('-total_spent')[:10]
+        )
+
+        # Daily trend
+        from django.db.models.functions import TruncDate
+        daily_trend = (
+            sales.annotate(day=TruncDate('created_at'))
+            .values('day')
+            .annotate(revenue=Sum('total_amount'), count=Count('id'))
+            .order_by('day')
+        )
+
+        # Payment method distribution
+        payment_dist = (
+            sales.values('payment_method')
+            .annotate(count=Count('id'), total=Sum('total_amount'))
+            .order_by('-total')
+        )
+
+        # Site performance
+        site_perf = (
+            sales.filter(site__isnull=False)
+            .values('site__name')
+            .annotate(count=Count('id'), total=Sum('total_amount'))
+            .order_by('-total')
+        )
+
+        # Overall stats for the period
+        overall = sales.aggregate(
+            total_revenue=Sum('total_amount'),
+            total_tax=Sum('tax_amount'),
+            total_discount=Sum('discount'),
+            order_count=Count('id'),
+            avg_order=Avg('total_amount'),
+        )
+
+        return Response({
+            'period': {'days': days, 'start': str(start.date()), 'end': str(end.date())},
+            'overall': {
+                'revenue': float(overall['total_revenue'] or 0),
+                'tax': float(overall['total_tax'] or 0),
+                'discount': float(overall['total_discount'] or 0),
+                'orders': overall['order_count'] or 0,
+                'avg_order': float(overall['avg_order'] or 0),
+            },
+            'top_products': [
+                {'name': p['product__name'], 'revenue': float(p['total_revenue'] or 0),
+                 'qty': float(p['total_qty'] or 0), 'avg_price': float(p['avg_price'] or 0)}
+                for p in top_products
+            ],
+            'top_customers': [
+                {'name': c['contact__name'], 'orders': c['order_count'],
+                 'spent': float(c['total_spent'] or 0)}
+                for c in top_customers
+            ],
+            'daily_trend': [
+                {'date': str(d['day']), 'revenue': float(d['revenue'] or 0), 'count': d['count']}
+                for d in daily_trend
+            ],
+            'payment_methods': [
+                {'method': p['payment_method'], 'count': p['count'], 'total': float(p['total'] or 0)}
+                for p in payment_dist
+            ],
+            'site_performance': [
+                {'site': s['site__name'], 'count': s['count'], 'total': float(s['total'] or 0)}
+                for s in site_perf
+            ],
+        })
+
 
 class PurchaseViewSet(viewsets.ViewSet):
     """Handles Purchase Order (PO) operations."""

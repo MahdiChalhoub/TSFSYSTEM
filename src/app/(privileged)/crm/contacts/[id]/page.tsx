@@ -12,7 +12,8 @@ import { toast } from "sonner"
 import {
     ArrowLeft, User, Mail, Phone, MapPin, DollarSign,
     ShoppingCart, CreditCard, BookOpen, FileText,
-    TrendingUp, Clock, CheckCircle2, AlertCircle
+    TrendingUp, Clock, CheckCircle2, AlertCircle,
+    Tag, Star, BarChart3, Percent, Hash
 } from "lucide-react"
 
 function fmt(n: number) {
@@ -34,7 +35,7 @@ export default function ContactDetailPage() {
     const router = useRouter()
     const [data, setData] = useState<any>(null)
     const [loading, setLoading] = useState(true)
-    const [activeTab, setActiveTab] = useState<'orders' | 'payments' | 'journal'>('orders')
+    const [activeTab, setActiveTab] = useState<'orders' | 'payments' | 'journal' | 'analytics' | 'pricing'>('orders')
 
     useEffect(() => {
         if (params.id) loadData()
@@ -75,7 +76,7 @@ export default function ContactDetailPage() {
         )
     }
 
-    const { contact, orders, payments, balance, journal_entries } = data
+    const { contact, orders, payments, balance, journal_entries, analytics, pricing_rules } = data
     const isCustomer = contact.type === 'CUSTOMER'
 
     return (
@@ -98,6 +99,16 @@ export default function ContactDetailPage() {
                                     <Badge className={isCustomer ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}>
                                         {contact.type}
                                     </Badge>
+                                    {contact.supplier_category && contact.supplier_category !== 'REGULAR' && (
+                                        <Badge className={contact.supplier_category === 'DEPOT_VENTE' ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700'}>
+                                            {contact.supplier_category === 'DEPOT_VENTE' ? 'Consignment' : 'Mixed'}
+                                        </Badge>
+                                    )}
+                                    {contact.customer_tier && contact.customer_tier !== 'STANDARD' && (
+                                        <Badge className={contact.customer_tier === 'VIP' ? 'bg-yellow-100 text-yellow-700' : 'bg-cyan-100 text-cyan-700'}>
+                                            {contact.customer_tier === 'VIP' && '⭐ '}{contact.customer_tier}
+                                        </Badge>
+                                    )}
                                     {contact.vat_id && (
                                         <span className="text-xs text-gray-400">VAT: {contact.vat_id}</span>
                                     )}
@@ -136,6 +147,18 @@ export default function ContactDetailPage() {
                             <div className="flex items-center gap-2 text-sm">
                                 <CreditCard size={14} className="text-gray-400" />
                                 <span>Credit Limit: {fmt(contact.credit_limit)}</span>
+                            </div>
+                        )}
+                        {contact.payment_terms_days > 0 && (
+                            <div className="flex items-center gap-2 text-sm">
+                                <Clock size={14} className="text-gray-400" />
+                                <span>Payment Terms: {contact.payment_terms_days} days</span>
+                            </div>
+                        )}
+                        {contact.loyalty_points > 0 && (
+                            <div className="flex items-center gap-2 text-sm">
+                                <Star size={14} className="text-yellow-500" />
+                                <span className="font-semibold text-yellow-600">{contact.loyalty_points} loyalty points</span>
                             </div>
                         )}
                     </CardContent>
@@ -189,13 +212,15 @@ export default function ContactDetailPage() {
                     { key: 'orders' as const, label: isCustomer ? 'Sales Orders' : 'Purchase Orders', icon: ShoppingCart },
                     { key: 'payments' as const, label: 'Payments', icon: CreditCard },
                     { key: 'journal' as const, label: 'Journal Entries', icon: BookOpen },
+                    { key: 'analytics' as const, label: 'Analytics', icon: BarChart3 },
+                    { key: 'pricing' as const, label: `Pricing (${(pricing_rules || []).length})`, icon: Tag },
                 ].map(({ key, label, icon: Icon }) => (
                     <button
                         key={key}
                         onClick={() => setActiveTab(key)}
                         className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === key
-                                ? 'border-blue-600 text-blue-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700'
+                            ? 'border-blue-600 text-blue-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700'
                             }`}
                     >
                         <Icon size={16} />
@@ -343,6 +368,89 @@ export default function ContactDetailPage() {
                                 </TableBody>
                             </Table>
                         )
+                    )}
+
+                    {/* Analytics Tab */}
+                    {activeTab === 'analytics' && (
+                        <div className="p-6 space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="bg-blue-50 rounded-xl p-4">
+                                    <p className="text-xs font-bold text-blue-600 uppercase">Avg Order Value</p>
+                                    <p className="text-2xl font-bold text-blue-900">{fmt(analytics?.avg_order_value || 0)}</p>
+                                </div>
+                                <div className="bg-emerald-50 rounded-xl p-4">
+                                    <p className="text-xs font-bold text-emerald-600 uppercase">Monthly Frequency</p>
+                                    <p className="text-2xl font-bold text-emerald-900">{analytics?.monthly_frequency || 0} orders/mo</p>
+                                </div>
+                                <div className="bg-purple-50 rounded-xl p-4">
+                                    <p className="text-xs font-bold text-purple-600 uppercase">Total Revenue</p>
+                                    <p className="text-2xl font-bold text-purple-900">{fmt(analytics?.total_revenue || 0)}</p>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 className="text-sm font-semibold text-gray-500 uppercase mb-3">Top Products</h3>
+                                {(analytics?.top_products || []).length === 0 ? (
+                                    <p className="text-gray-400 text-sm">No product data available yet.</p>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {analytics.top_products.map((p: any, i: number) => (
+                                            <div key={i} className="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
+                                                <span className="text-xs font-bold text-gray-400 w-6">#{i + 1}</span>
+                                                <span className="flex-1 font-medium text-sm text-gray-900">{p.product_name}</span>
+                                                <span className="text-xs text-gray-500">Qty: {p.total_qty}</span>
+                                                <span className="font-semibold text-sm">{fmt(p.total_revenue)}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Pricing Rules Tab */}
+                    {activeTab === 'pricing' && (
+                        <div className="p-6">
+                            {(pricing_rules || []).length === 0 ? (
+                                <div className="text-center py-12 text-gray-400">
+                                    <Tag size={48} className="mx-auto mb-3 opacity-30" />
+                                    <p>No pricing rules for this contact</p>
+                                    <p className="text-xs mt-1">Create rules from the Client Pricing page</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {pricing_rules.map((rule: any) => (
+                                        <div key={rule.id} className="flex items-center gap-4 bg-gray-50 rounded-xl p-4">
+                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${rule.discount_type === 'FIXED_PRICE' ? 'bg-emerald-100 text-emerald-600' :
+                                                    rule.discount_type === 'PERCENTAGE' ? 'bg-blue-100 text-blue-600' : 'bg-amber-100 text-amber-600'
+                                                }`}>
+                                                {rule.discount_type === 'PERCENTAGE' ? <Percent size={18} /> :
+                                                    rule.discount_type === 'AMOUNT_OFF' ? <Hash size={18} /> : <DollarSign size={18} />}
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2">
+                                                    <Badge className={
+                                                        rule.discount_type === 'FIXED_PRICE' ? 'bg-emerald-100 text-emerald-700' :
+                                                            rule.discount_type === 'PERCENTAGE' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'
+                                                    }>
+                                                        {rule.discount_type === 'FIXED_PRICE' ? 'Fixed Price' :
+                                                            rule.discount_type === 'PERCENTAGE' ? '% Discount' : 'Amount Off'}
+                                                    </Badge>
+                                                    <span className="font-bold">
+                                                        {rule.discount_type === 'PERCENTAGE' ? `${rule.value}%` : fmt(parseFloat(rule.value))}
+                                                    </span>
+                                                </div>
+                                                <p className="text-xs text-gray-500 mt-1">
+                                                    {rule.product_name || rule.category_name || 'All products'}
+                                                    {rule.group_name && ` · via ${rule.group_name}`}
+                                                    {rule.min_quantity > 1 && ` · min qty: ${rule.min_quantity}`}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     )}
                 </CardContent>
             </Card>
