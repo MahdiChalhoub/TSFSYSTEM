@@ -1,5 +1,10 @@
 'use server'
 
+export async function meAction() {
+    const { erpFetch } = await import("@/lib/erp-api")
+    return erpFetch('auth/me/')
+}
+
 import { cache } from 'react'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
@@ -112,9 +117,20 @@ export async function loginAction(prevState: any, formData: FormData) {
             body: JSON.stringify({
                 username,
                 password,
-                site_id: data.site_id
+                site_id: data.site_id,
+                otp_token: data.otp_token
             }),
         })
+
+        if (responseData.two_factor_required) {
+            return {
+                two_factor_required: true,
+                message: responseData.message,
+                _username: username,
+                _password: password,
+                _slug: data.slug
+            }
+        }
 
         const token = responseData.token
         const scopeAccess = responseData.scope_access || 'internal'
@@ -284,5 +300,32 @@ export async function requestCorrectionAction(id: number, notes: string) {
     return erpFetch(`users/${id}/request-correction/`, {
         method: 'POST',
         body: JSON.stringify({ notes })
+    })
+}
+
+// ── Two-Factor Authentication (2FA) ──────────────────────────────────────────
+
+export async function setup2FAAction() {
+    const { erpFetch } = await import("@/lib/erp-api")
+    return erpFetch('auth/2fa/setup/', {
+        method: 'POST'
+    })
+}
+
+export async function verify2FAAction(token: string) {
+    const { erpFetch } = await import("@/lib/erp-api")
+    return erpFetch('auth/2fa/verify/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token })
+    })
+}
+
+export async function disable2FAAction(token: string) {
+    const { erpFetch } = await import("@/lib/erp-api")
+    return erpFetch('auth/2fa/disable/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token })
     })
 }

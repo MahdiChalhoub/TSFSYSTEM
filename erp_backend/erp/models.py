@@ -475,6 +475,10 @@ class User(AbstractUser):
     override_pin = models.CharField(max_length=128, null=True, blank=True,
         help_text='Hashed PIN for manager-level overrides (void, refund, discount override)')
 
+    # 2FA (Advanced Security)
+    two_factor_secret = models.CharField(max_length=32, null=True, blank=True)
+    is_2fa_enabled = models.BooleanField(default=False)
+
     def set_scope_pin(self, scope: str, raw_pin: str | None):
         """Set or clear a scope PIN. scope must be 'official' or 'internal'."""
         from django.contrib.auth.hashers import make_password

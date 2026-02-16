@@ -1,6 +1,6 @@
 'use server'
 
-import { erpFetch } from '@/lib/erpFetch'
+import { erpFetch } from '@/lib/erp-api'
 
 /**
  * Get current inventory items marked as consignment.

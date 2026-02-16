@@ -1,4 +1,4 @@
-﻿"""
+"""
 Kernel Views — Infrastructure & Cross-Cutting Concerns Only
 ============================================================
 This file contains ONLY the kernel-level ViewSets:
@@ -1134,3 +1134,38 @@ class PermissionViewSet(viewsets.ReadOnlyModelViewSet):
         if module:
             qs = qs.filter(code__startswith=f"{module}.")
         return qs
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def import_sales_csv_view(request):
+    """
+    Endpoint to receive a CSV file and mapping for batch sales import.
+    """
+    from .services_sales_import import SalesImportService
+    
+    csv_file = request.FILES.get('file')
+    mapping_str = request.data.get('mapping')
+    warehouse_id = request.data.get('warehouse_id')
+    scope = request.data.get('scope', 'INTERNAL')
+
+    if not all([csv_file, mapping_str, warehouse_id]):
+        return Response({"error": "Missing file, mapping, or warehouse_id."}, status=400)
+
+    try:
+        import json
+        mapping = json.loads(mapping_str)
+        results = SalesImportService.process_csv(
+            organization=request.user.organization,
+            user=request.user,
+            warehouse_id=warehouse_id,
+            csv_file=csv_file,
+            mapping=mapping,
+            scope=scope
+        )
+        return Response(results)
+    except Exception as e:
+        import logging
+        logger = logging.getLogger('erp')
+        logger.error(f"[SALE_IMPORT_VIEW] Error: {e}")
+        return Response({"error": str(e)}, status=500)

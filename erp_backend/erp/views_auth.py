@@ -1,3 +1,4 @@
+import pyotp
 import logging
 from django.db import transaction
 from django.conf import settings
@@ -30,12 +31,27 @@ def login_view(request):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         scope_access = serializer.validated_data.get('scope_access', 'internal')
+
+        # ── 2FA Challenge ────────────────────────────────────────────────────────
+        if user.is_2fa_enabled:
+            otp_token = request.data.get('otp_token')
+            if not otp_token:
+                # Tell the frontend to show the 2FA input screen
+                return Response({
+                    "two_factor_required": True,
+                    "message": "Two-factor authentication is enabled on this account."
+                }, status=status.HTTP_200_OK)
+            
+            totp = pyotp.TOTP(user.two_factor_secret)
+            if not totp.verify(otp_token):
+                return Response({"error": "Invalid 2FA token"}, status=status.HTTP_400_BAD_REQUEST)
+
         token, created = Token.objects.get_or_create(user=user)
         
         return Response({
             'token': token.key,
             'user': UserSerializer(user).data,
-            'scope_access': scope_access,  # 'official' or 'internal'
+            'scope_access': scope_access,
         })
     except Exception as e:
         # DRF's raise_exception=True handles ValidationError → 400 JSON automatically.
@@ -268,3 +284,77 @@ def password_reset_confirm_view(request):
         return Response({"message": "Password has been reset successfully."}, status=status.HTTP_200_OK)
     else:
         return Response({"error": "The reset link is invalid or has expired."}, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ── Two-Factor Authentication (2FA) ──────────────────────────────────────────
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def setup_2fa_view(request):
+    """
+    Step 1: Generate a secret and return provisioning data.
+    """
+    user = request.user
+    if user.is_2fa_enabled:
+        return Response({"error": "2FA is already enabled"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Generate new secret if not already present or if re-setting up
+    secret = pyotp.random_base32()
+    user.two_factor_secret = secret
+    user.save(update_fields=['two_factor_secret'])
+    
+    otp_uri = pyotp.totp.TOTP(secret).provisioning_uri(
+        name=user.email,
+        issuer_name=getattr(settings, 'PLATFORM_NAME', 'BlancEngine')
+    )
+    
+    return Response({
+        "secret": secret,
+        "otp_uri": otp_uri
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def verify_2fa_setup_view(request):
+    """
+    Step 2: Verify the initial token and enable 2FA officially.
+    """
+    token = request.data.get('token')
+    if not token:
+        return Response({"error": "Verification token is required"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    user = request.user
+    if not user.two_factor_secret:
+        return Response({"error": "2FA setup not initiated"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    totp = pyotp.TOTP(user.two_factor_secret)
+    if totp.verify(token):
+        user.is_2fa_enabled = True
+        user.save(update_fields=['is_2fa_enabled'])
+        return Response({"message": "2FA has been successfully enabled."})
+    else:
+        return Response({"error": "Invalid token. Please try again."}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def disable_2fa_view(request):
+    """
+    Disable 2FA. Requires valid token if active.
+    """
+    user = request.user
+    if not user.is_2fa_enabled:
+         return Response({"error": "2FA is not enabled"}, status=status.HTTP_400_BAD_REQUEST)
+
+    token = request.data.get('token')
+    if not token:
+        return Response({"error": "Verification token required to disable 2FA"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    totp = pyotp.TOTP(user.two_factor_secret)
+    if totp.verify(token):
+        user.is_2fa_enabled = False
+        user.two_factor_secret = None
+        user.save(update_fields=['is_2fa_enabled', 'two_factor_secret'])
+        return Response({"message": "2FA has been disabled."})
+    else:
+        return Response({"error": "Invalid token. Security check failed."}, status=status.HTTP_400_BAD_REQUEST)

@@ -8,3 +8,4 @@ whitenoise
 Pillow
 httpx
 cryptography
+pyotp

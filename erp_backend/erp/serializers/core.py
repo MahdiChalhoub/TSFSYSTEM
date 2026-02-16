@@ -91,7 +91,8 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'organization', 'role',
-                  'is_staff', 'is_superuser', 'has_official_pin', 'has_internal_pin']
+                  'is_staff', 'is_superuser', 'has_official_pin', 'has_internal_pin',
+                  'is_2fa_enabled', 'registration_status', 'correction_notes']
 
     def get_has_official_pin(self, obj):
         return bool(obj.scope_pin_official)

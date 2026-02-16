@@ -1,6 +1,6 @@
 'use server'
 
-import { erpFetch } from '@/lib/erpFetch'
+import { erpFetch } from '@/lib/erp-api'
 
 /** Get products for label printing — returns full product details including barcode */
 export async function getProductsForLabels(productIds?: number[]) {
