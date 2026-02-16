@@ -191,40 +191,88 @@ class PurchaseService:
             return order
 
     @staticmethod
-    def receive_po(organization, order_id, warehouse_id, is_tax_recoverable=True):
-        from apps.pos.models import Order
+    def receive_po(organization, order_id, warehouse_id, receptions=None, is_tax_recoverable=True, scope='OFFICIAL', user=None):
+        from apps.pos.models import Order, OrderLine
+        from erp.services import ConfigurationService
         
         # Gated cross-module imports
         (Warehouse,) = _safe_import('apps.inventory.models', ['Warehouse'])
         (InventoryService,) = _safe_import('apps.inventory.services', ['InventoryService'])
+        (LedgerService,) = _safe_import('apps.finance.services', ['LedgerService'])
         
         if not Warehouse or not InventoryService:
             raise ValidationError("Inventory module is required for PO reception.")
-        """
-        Processes physical reception of all items in the PO.
-        """
-        scope = kwargs.get('scope', 'OFFICIAL')
+        if not LedgerService:
+            raise ValidationError("Finance module is required for PO reception accounting.")
+
         with transaction.atomic():
-            order = Order.objects.get(id=order_id, organization=organization, type='PURCHASE')
+            order = Order.objects.select_for_update().get(id=order_id, organization=organization, type='PURCHASE')
             warehouse = Warehouse.objects.get(id=warehouse_id, organization=organization)
             
             if order.status not in ['AUTHORIZED', 'PARTIAL_RECEIVED']:
                 raise ValidationError(f"Order status {order.status} is not eligible for reception.")
 
+            total_received_value = Decimal('0')
+            
+            # Map of line_id -> received_quantity
+            reception_map = {}
+            if receptions:
+                for r in receptions:
+                    reception_map[int(r['lineId'])] = Decimal(str(r['quantity']))
+            else:
+                # Default: receive all remaining
+                for line in order.lines.all():
+                    reception_map[line.id] = line.quantity - line.qty_received
+
             for line in order.lines.all():
+                qty_to_receive = reception_map.get(line.id, Decimal('0'))
+                if qty_to_receive <= 0: continue
+                
+                if line.qty_received + qty_to_receive > line.quantity:
+                    raise ValidationError(f"Cannot receive more than ordered for product {line.product.name}")
+
                 InventoryService.receive_stock(
                     organization=organization,
                     product=line.product,
                     warehouse=warehouse,
-                    quantity=line.quantity,
+                    quantity=qty_to_receive,
                     cost_price_ht=line.unit_price,
                     is_tax_recoverable=is_tax_recoverable,
                     reference=f"PO-REC-{order.id}",
                     scope=scope
                 )
-            
-            order.status = 'RECEIVED'
+                
+                line.qty_received += qty_to_receive
+                line.save()
+                
+                total_received_value += (qty_to_receive * line.unit_price)
+
+            # Update Order Status
+            all_received = all(line.qty_received >= line.quantity for line in order.lines.all())
+            order.status = 'RECEIVED' if all_received else 'PARTIAL_RECEIVED'
             order.save()
+
+            # ── Accounting Accrual ─────────────────────────────────────
+            rules = ConfigurationService.get_posting_rules(organization)
+            inv_acc = rules.get('purchases', {}).get('inventory')
+            susp_acc = rules.get('suspense', {}).get('reception')
+
+            if inv_acc and susp_acc:
+                LedgerService.create_journal_entry(
+                    organization=organization,
+                    transaction_date=timezone.now(),
+                    description=f"Stock Reception: PO #{order.id} | Warehouse: {warehouse.name}",
+                    reference=f"PO-REC-{order.id}",
+                    status='POSTED',
+                    scope=scope,
+                    site_id=warehouse.site_id,
+                    user=user,
+                    lines=[
+                        {"account_id": inv_acc, "debit": total_received_value, "credit": Decimal('0'), "description": "Inventory Value increase"},
+                        {"account_id": susp_acc, "debit": Decimal('0'), "credit": total_received_value, "description": "Accrued Reception Liaison"},
+                    ]
+                )
+            
             return order
 
     @staticmethod
@@ -489,30 +537,36 @@ class PurchaseService:
             return order
 
     @staticmethod
-    def invoice_po(organization, order_id, invoice_number, invoice_date=None):
-        from apps.pos.models import Order
+    def invoice_po(organization, order_id, invoice_number, invoice_date=None, user=None):
+        from apps.pos.models import Order, OrderLine
         from erp.services import ConfigurationService
         
         # Gated cross-module import
         (LedgerService,) = _safe_import('apps.finance.services', ['LedgerService'])
         if not LedgerService:
             raise ValidationError("Finance module is required for invoice processing.")
-        """
-        Converts the 'Accrued Reception' liability into a formal 'Accounts Payable'.
-        """
+
         with transaction.atomic():
-            order = Order.objects.get(id=order_id, organization=organization, type='PURCHASE')
-            if order.status != 'RECEIVED':
-                raise ValidationError("Order must be RECEIVED before it can be INVOICED.")
+            order = Order.objects.select_for_update().get(id=order_id, organization=organization, type='PURCHASE')
+            
+            # Check if there is anything received but not invoiced
+            total_invoiced_value = Decimal('0')
+            for line in order.lines.all():
+                qty_to_invoice = line.qty_received - line.qty_invoiced
+                if qty_to_invoice > 0:
+                    total_invoiced_value += (qty_to_invoice * line.unit_price)
+                    line.qty_invoiced += qty_to_invoice
+                    line.save()
+
+            if total_invoiced_value <= 0:
+                raise ValidationError("There are no received items pending invoicing on this order.")
 
             rules = ConfigurationService.get_posting_rules(organization)
             susp_acc = rules.get('suspense', {}).get('reception')
-            ap_acc = rules.get('purchases', {}).get('payable')
+            ap_acc = order.contact.linked_account_id or rules.get('purchases', {}).get('payable')
 
             if not susp_acc or not ap_acc:
                 raise ValidationError("Finance mapping missing: Accrued Reception or Accounts Payable not configured.")
-
-            total_invoice = order.total_amount
 
             LedgerService.create_journal_entry(
                 organization=organization,
@@ -522,23 +576,26 @@ class PurchaseService:
                 status='POSTED',
                 scope=order.scope,
                 site_id=order.site_id,
+                user=user,
                 lines=[
                     {
                         "account_id": susp_acc,
-                        "debit": total_invoice,
+                        "debit": total_invoiced_value,
                         "credit": Decimal('0'),
                         "description": "Clearing Accrued Reception"
                     },
                     {
                         "account_id": ap_acc,
                         "debit": Decimal('0'),
-                        "credit": total_invoice,
-                        "description": "Establishing Accounts Payable"
+                        "credit": total_invoiced_value,
+                        "description": f"Establishing Accounts Payable to {order.contact.name}"
                     }
                 ]
             )
 
-            order.status = 'INVOICED'
-            order.notes = f"{order.notes or ''}\nInvoice ref: {invoice_number}".strip()
+            # Update Order Status
+            all_invoiced = all(line.qty_invoiced >= line.quantity for line in order.lines.all())
+            order.status = 'INVOICED' if all_invoiced else 'PARTIAL_RECEIVED' 
+            order.notes = f"{order.notes or ''}\nInvoice ref: {invoice_number} | Value: {total_invoiced_value}".strip()
             order.save()
             return order

@@ -15,20 +15,33 @@ The goal of this module is to formalize the procurement process, allowing the us
 - **Inventory/Batches**: Updated upon "Reception".
 - **Journal Entries**: Posted upon "Reception" (Accrued reception) and "Invoicing" (Accounts Payable).
 
-## Status Lifecycle
-1. **DRAFT (RFQ)**: Negotiation phase. No stock or accounting impact.
-2. **AUTHORIZED (PO)**: Order confirmed with vendor.
-3. **RECEIVED**: Goods received at warehouse. 
-    - *Accounting*: Debit Inventory, Credit Accrued Reception (Liability).
-    - *Stock*: Increases quantity on hand.
-4. **INVOICED**: Vendor bill received and matched.
-    - *Accounting*: Debit Accrued Reception, Credit Accounts Payable.
+### Procurement Lifecycle & Accounting
 
-## User Interactions
-- **Procurement Center (`/purchases`)**: Unified dashboard to track all procurement activities.
-- **New RFQ (`/purchases/new-order`)**: Multi-item form to specify needs and negotiate prices.
-- **Order Detail (`/purchases/[id]`)**: Hub for state transitions (Confirm, Receive, Invoice).
-- **Quick Purchase (`/purchases/new`)**: Rapid stock entry for immediate purchases.
+The dedicated purchase order system follows a 4-stage lifecycle ensuring physical and financial integrity:
+
+1.  **DRAFT (RFQ)**: Request for Quotation. No accounting or stock impact.
+2.  **AUTHORIZED (PO)**: Confirmed order. Becomes a legal commitment.
+3.  **RECEIVED (Stock Entry)**:
+    - **Physical**: Stock levels increase in the target warehouse.
+    - **Financial**: `Debit Inventory` / `Credit Accrued Reception` (Suspense Liability).
+    - **Partial Support**: Orders can stay in `PARTIAL_RECEIVED` status until fully delivered.
+4.  **INVOICED (Vendor Bill)**:
+    - **Closing the Loop**: `Debit Accrued Reception` / `Credit Accounts Payable`.
+    - Matches physical receptions to financial liabilities.
+
+### User Interaction Workflow
+
+- **Procurement Center**: Unified dashboard at `/purchases` to track all procurement KPIs.
+- **Formal RFQ Form**: `/purchases/new-order` for line-by-line negotiations.
+- **Document Printing**: HIGH-FIDELITY PDF generation for RFQs and POs via the "Print" action.
+- **Receiving Interface**: Select warehouse and confirm reception on the PO detail page.
+
+### Accounting Posting Rules (Mandatory Configuration)
+
+Ensure the following accounts are mapped in `Settings > Posting Rules`:
+- `purchases.inventory`: Target account for stock value.
+- `suspense.reception`: Liability account for accrued receptions (Clears on invoice).
+- `purchases.payable`: Final account for vendor liabilities (Accounts Payable).
 
 ## Implementation Details
 - Uses `PurchaseService` for transaction-heavy logic.

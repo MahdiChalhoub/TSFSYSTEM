@@ -115,6 +115,11 @@ class OrderLine(TenantModel):
     tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'))
     expiry_date = models.DateField(null=True, blank=True)
     batch = models.ForeignKey('inventory.Inventory', on_delete=models.SET_NULL, null=True, blank=True, related_name='order_lines')
+    
+    # Procurement Tracking
+    qty_received = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    qty_invoiced = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    
     total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     price_override_detected = models.BooleanField(default=False)
 

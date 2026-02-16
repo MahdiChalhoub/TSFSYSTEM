@@ -19,6 +19,9 @@ from apps.pos.services import POSService, PurchaseService
 from apps.pos.returns_models import SalesReturn, CreditNote, PurchaseReturn
 from apps.pos.returns_service import ReturnsService
 from apps.pos.serializers import (
+    OrderSerializer, QuotationSerializer,
+    DeliveryZoneSerializer, DeliveryOrderSerializer,
+    DiscountRuleSerializer, DiscountUsageLogSerializer,
     SalesReturnSerializer, CreditNoteSerializer, PurchaseReturnSerializer
 )
 from erp.views import TenantModelViewSet
@@ -341,9 +344,28 @@ class PurchaseViewSet(viewsets.ViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=400)
 
-    @action(detail=True, methods=['post'])
-    def authorize(self, request, pk=None):
-        # ... (same as before)
+    @action(detail=True, methods=['get'])
+    def print(self, request, pk=None):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "No organization"}, status=400)
+        try:
+            order = Order.objects.get(pk=pk, organization_id=organization_id, type='PURCHASE')
+            context = PDFService.get_purchase_order_context(order)
+            pdf_content = PDFService.render_to_pdf('pos/purchase_order.html', context)
+            
+            if pdf_content:
+                filename = f"PO_{order.ref_code or order.id}.pdf"
+                if order.status == 'DRAFT':
+                    filename = f"RFQ_{order.ref_code or order.id}.pdf"
+                
+                response = HttpResponse(pdf_content, content_type='application/pdf')
+                response['Content-Disposition'] = f'attachment; filename="{filename}"'
+                return response
+            return Response({"error": "Failed to generate PDF"}, status=500)
+        except Order.DoesNotExist:
+            return Response({"error": "Order not found"}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
         organization_id = get_current_tenant_id()
         if not organization_id: return Response({"error": "No organization context"}, status=status.HTTP_400_BAD_REQUEST)
         organization = Organization.objects.get(id=organization_id)
