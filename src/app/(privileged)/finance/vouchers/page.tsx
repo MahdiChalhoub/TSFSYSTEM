@@ -39,7 +39,6 @@ export default function VouchersPage() {
             voucher_type: voucherType,
             amount: Number(fd.get("amount")),
             date: fd.get("date") as string,
-            reference: fd.get("reference") as string || undefined,
             description: fd.get("description") as string || undefined,
             source_account_id: fd.get("source_account_id") ? Number(fd.get("source_account_id")) : undefined,
             destination_account_id: fd.get("destination_account_id") ? Number(fd.get("destination_account_id")) : undefined,
@@ -137,12 +136,11 @@ export default function VouchersPage() {
                             <input name="date" type="date" required className="w-full px-3 py-2 border rounded-md bg-background" />
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-sm font-medium">Reference</label>
-                            <input name="reference" className="w-full px-3 py-2 border rounded-md bg-background" placeholder="VCH-001" />
-                        </div>
-                        <div className="space-y-1.5">
                             <label className="text-sm font-medium">Description</label>
                             <input name="description" className="w-full px-3 py-2 border rounded-md bg-background" placeholder="Optional description..." />
+                        </div>
+                        <div className="space-y-1.5 flex items-end">
+                            <p className="text-xs text-muted-foreground italic">Reference will be auto-generated</p>
                         </div>
 
                         {/* Conditional Fields */}

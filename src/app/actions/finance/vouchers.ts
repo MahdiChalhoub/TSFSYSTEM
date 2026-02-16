@@ -17,7 +17,6 @@ export type VoucherInput = {
     voucher_type: 'TRANSFER' | 'RECEIPT' | 'PAYMENT'
     amount: number
     date: string
-    reference?: string
     description?: string
     source_account_id?: number
     destination_account_id?: number
