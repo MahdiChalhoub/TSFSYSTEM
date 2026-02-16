@@ -13,17 +13,20 @@ from erp.models import Organization, User
 from apps.finance.models import (
     FinancialAccount, ChartOfAccount, FiscalYear, FiscalPeriod,
     JournalEntry, TransactionSequence, BarcodeSettings, Loan, FinancialEvent,
-    ForensicAuditLog
+    ForensicAuditLog, DeferredExpense, Asset, AmortizationSchedule, Voucher, ProfitDistribution
 )
 from apps.finance.serializers import (
     FinancialAccountSerializer, ChartOfAccountSerializer,
     FiscalYearSerializer, FiscalPeriodSerializer, JournalEntrySerializer,
     TransactionSequenceSerializer, BarcodeSettingsSerializer,
-    LoanSerializer, FinancialEventSerializer, ForensicAuditLogSerializer
+    LoanSerializer, FinancialEventSerializer, ForensicAuditLogSerializer,
+    DeferredExpenseSerializer, AssetSerializer, AmortizationScheduleSerializer,
+    VoucherSerializer, ProfitDistributionSerializer
 )
 from apps.finance.services import (
     FinancialAccountService, LedgerService, SequenceService,
-    BarcodeService, LoanService, FinancialEventService, AuditVerificationService
+    BarcodeService, LoanService, FinancialEventService, AuditVerificationService,
+    DeferredExpenseService, AssetService, VoucherService, ProfitDistributionService
 )
 from apps.inventory.services import InventoryService
 
@@ -616,3 +619,179 @@ class AuditVerificationViewSet(viewsets.ViewSet):
         
         result = InventoryService.reconcile_with_finance(organization)
         return Response(result)
+
+
+class DeferredExpenseViewSet(TenantModelViewSet):
+    queryset = DeferredExpense.objects.all()
+    serializer_class = DeferredExpenseSerializer
+
+    def get_queryset(self):
+        return super().get_queryset().order_by('-created_at')
+
+    def create(self, request, *args, **kwargs):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+
+        try:
+            expense = DeferredExpenseService.create_deferred_expense(
+                organization=organization,
+                data=request.data,
+                user=request.user,
+                scope=request.data.get('scope', 'OFFICIAL')
+            )
+            return Response(DeferredExpenseSerializer(expense).data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
+    @action(detail=True, methods=['post'])
+    def recognize(self, request, pk=None):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+
+        try:
+            period_date = request.data.get('period_date')
+            expense = DeferredExpenseService.recognize_monthly(organization, pk, period_date, user=request.user)
+            return Response(DeferredExpenseSerializer(expense).data)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
+
+class AssetViewSet(TenantModelViewSet):
+    queryset = Asset.objects.all()
+    serializer_class = AssetSerializer
+
+    def get_queryset(self):
+        return super().get_queryset().order_by('-created_at')
+
+    def create(self, request, *args, **kwargs):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+
+        try:
+            asset = AssetService.acquire_asset(
+                organization=organization,
+                data=request.data,
+                user=request.user,
+                scope=request.data.get('scope', 'OFFICIAL')
+            )
+            return Response(AssetSerializer(asset).data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
+    @action(detail=True, methods=['get'])
+    def schedule(self, request, pk=None):
+        asset = self.get_object()
+        lines = asset.amortization_lines.all().order_by('period_date')
+        return Response(AmortizationScheduleSerializer(lines, many=True).data)
+
+    @action(detail=True, methods=['post'], url_path='depreciate/(?P<schedule_id>[^/.]+)')
+    def depreciate(self, request, pk=None, schedule_id=None):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+
+        try:
+            line = AssetService.post_depreciation(organization, schedule_id, user=request.user)
+            return Response(AmortizationScheduleSerializer(line).data)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
+
+class VoucherViewSet(TenantModelViewSet):
+    queryset = Voucher.objects.all()
+    serializer_class = VoucherSerializer
+
+    def get_queryset(self):
+        vtype = self.request.query_params.get('type')
+        qs = super().get_queryset().order_by('-created_at')
+        if vtype:
+            qs = qs.filter(voucher_type=vtype)
+        return qs
+
+    def create(self, request, *args, **kwargs):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+
+        try:
+            voucher = VoucherService.create_voucher(
+                organization=organization,
+                data=request.data,
+                user=request.user,
+                scope=request.data.get('scope', 'OFFICIAL')
+            )
+            return Response(VoucherSerializer(voucher).data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
+    @action(detail=True, methods=['post'])
+    def post_voucher(self, request, pk=None):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+
+        try:
+            voucher = VoucherService.post_voucher(organization, pk, user=request.user)
+            return Response(VoucherSerializer(voucher).data)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
+
+class ProfitDistributionViewSet(TenantModelViewSet):
+    queryset = ProfitDistribution.objects.all()
+    serializer_class = ProfitDistributionSerializer
+
+    @action(detail=False, methods=['post'])
+    def calculate(self, request):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+
+        try:
+            result = ProfitDistributionService.calculate_distribution(
+                organization=organization,
+                fiscal_year_id=request.data.get('fiscal_year_id'),
+                allocations=request.data.get('allocations', {})
+            )
+            return Response(result)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
+    def create(self, request, *args, **kwargs):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+
+        try:
+            dist = ProfitDistributionService.create_distribution(
+                organization=organization,
+                fiscal_year_id=request.data.get('fiscal_year_id'),
+                allocations=request.data.get('allocations', {}),
+                distribution_date=request.data.get('distribution_date'),
+                notes=request.data.get('notes', ''),
+                user=request.user
+            )
+            return Response(ProfitDistributionSerializer(dist).data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
+    @action(detail=True, methods=['post'])
+    def post_distribution(self, request, pk=None):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+
+        try:
+            dist = ProfitDistributionService.post_distribution(
+                organization=organization,
+                distribution_id=pk,
+                retained_earnings_coa_id=request.data.get('retained_earnings_coa_id'),
+                allocation_coa_map=request.data.get('allocation_coa_map', {}),
+                user=request.user
+            )
+            return Response(ProfitDistributionSerializer(dist).data)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)

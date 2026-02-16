@@ -4,18 +4,19 @@ import { useTransition, useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { recalculateAccountBalances } from '@/app/actions/finance/ledger'
 import { FinancialSettingsState, updateFinancialSettings } from '@/app/actions/finance/settings'
-import { ShieldAlert, Target, Lock, GitCompareArrows, X } from 'lucide-react'
+import { type Currency } from '@/app/actions/currencies'
+import { ShieldAlert, Target, Lock, GitCompareArrows, X, Pencil, AlertTriangle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 interface Props {
     settings: FinancialSettingsState
     lock: { isLocked: boolean; reason: string | null }
+    currencies: Currency[]
 }
 
 // ────────────────────────────────────────────────────────
 // Company Type Definitions
 // ────────────────────────────────────────────────────────
-// Comparison rows for the table
 const COMPARE_ROWS = [
     { label: 'Pricing Basis', key: 'pricing' },
     { label: 'VAT Handling', key: 'vat' },
@@ -162,7 +163,44 @@ function TypeDetailCard({ type, compact = false }: { type: typeof COMPANY_TYPES[
     )
 }
 
-export default function FinancialSettingsForm({ settings, lock }: Props) {
+// ─── Edit Confirmation Modal ───
+function EditConfirmModal({ onConfirm, onCancel }: { onConfirm: () => void, onCancel: () => void }) {
+    return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
+            <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
+                <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2.5 bg-amber-100 rounded-xl text-amber-600">
+                        <AlertTriangle size={22} />
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-bold text-stone-900">Unlock Settings?</h3>
+                        <p className="text-xs text-stone-500">This will allow editing core financial settings</p>
+                    </div>
+                </div>
+                <p className="text-sm text-stone-600 mb-6 leading-relaxed">
+                    These settings are locked because they have already been saved and applied. Modifying them
+                    may affect existing transactions and reports. Are you sure you want to unlock and edit?
+                </p>
+                <div className="flex gap-3 justify-end">
+                    <button
+                        onClick={onCancel}
+                        className="px-4 py-2 text-sm font-medium text-stone-600 bg-stone-100 rounded-lg hover:bg-stone-200 transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={onConfirm}
+                        className="px-4 py-2 text-sm font-semibold text-white bg-amber-600 rounded-lg hover:bg-amber-700 transition-colors"
+                    >
+                        Yes, Unlock Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+export default function FinancialSettingsForm({ settings, lock, currencies }: Props) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const { register, handleSubmit, watch, setValue } = useForm<FinancialSettingsState>({
@@ -171,6 +209,16 @@ export default function FinancialSettingsForm({ settings, lock }: Props) {
     const [isRecalcPending, startRecalc] = useTransition()
     const [showCompare, setShowCompare] = useState(false)
     const [compareType, setCompareType] = useState<string>('')
+    const [showEditConfirm, setShowEditConfirm] = useState(false)
+
+    // Settings lock: after save, core fields are locked until user explicitly unlocks
+    const [settingsAreSaved, setSettingsAreSaved] = useState(() => {
+        // If currency and defaultTaxRate have values, settings were previously saved
+        return !!(settings.currency && settings.defaultTaxRate !== undefined && settings.defaultTaxRate !== null)
+    })
+    const [isUnlocked, setIsUnlocked] = useState(false)
+
+    const isCoreFieldsLocked = lock.isLocked || (settingsAreSaved && !isUnlocked)
 
     const companyType = watch('companyType')
     const dualView = watch('dualView')
@@ -192,6 +240,8 @@ export default function FinancialSettingsForm({ settings, lock }: Props) {
         startTransition(async () => {
             try {
                 await updateFinancialSettings(data)
+                setSettingsAreSaved(true)
+                setIsUnlocked(false)
                 alert('Settings Saved!')
             } catch (err: any) {
                 alert(err.message)
@@ -211,8 +261,25 @@ export default function FinancialSettingsForm({ settings, lock }: Props) {
         })
     }
 
+    const handleUnlockRequest = () => {
+        setShowEditConfirm(true)
+    }
+
+    const handleConfirmUnlock = () => {
+        setIsUnlocked(true)
+        setShowEditConfirm(false)
+    }
+
     return (
         <div className="flex gap-6 items-start">
+            {/* Edit Confirmation Modal */}
+            {showEditConfirm && (
+                <EditConfirmModal
+                    onConfirm={handleConfirmUnlock}
+                    onCancel={() => setShowEditConfirm(false)}
+                />
+            )}
+
             {/* ─── LEFT COLUMN: Main Form ─── */}
             <div className={`space-y-8 transition-all duration-300 ${showCompare ? 'w-1/2 shrink-0' : 'max-w-3xl w-full'}`}>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border border-stone-200">
@@ -230,6 +297,31 @@ export default function FinancialSettingsForm({ settings, lock }: Props) {
                                     <span className="font-bold">Structural core configuration fields have been set to read-only.</span>
                                 </p>
                             </div>
+                        </div>
+                    )}
+
+                    {/* Settings Saved Lock Banner */}
+                    {settingsAreSaved && !isUnlocked && !lock.isLocked && (
+                        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg flex gap-3 items-center justify-between">
+                            <div className="flex gap-3 items-start">
+                                <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+                                    <Lock size={18} />
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-bold text-blue-900">Settings Locked</h3>
+                                    <p className="text-xs text-blue-700 mt-0.5">
+                                        Core settings are locked after saving. Click Edit to modify.
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleUnlockRequest}
+                                className="flex items-center gap-1.5 px-3 py-2 bg-white border border-blue-200 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-bold transition-colors shadow-sm"
+                            >
+                                <Pencil size={12} />
+                                Edit
+                            </button>
                         </div>
                     )}
 
@@ -252,7 +344,7 @@ export default function FinancialSettingsForm({ settings, lock }: Props) {
 
                             <select
                                 {...register('companyType')}
-                                disabled={lock.isLocked}
+                                disabled={isCoreFieldsLocked}
                                 className="w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:ring-black focus:border-black disabled:bg-stone-100 disabled:text-stone-500"
                             >
                                 {COMPANY_TYPES.map(t => (
@@ -277,19 +369,30 @@ export default function FinancialSettingsForm({ settings, lock }: Props) {
                         <div className="grid grid-cols-2 gap-4 mt-4">
                             <div>
                                 <label className="block text-sm font-medium text-stone-700 mb-1">Default Currency</label>
-                                <input
+                                <select
                                     {...register('currency')}
-                                    disabled={lock.isLocked}
-                                    type="text"
-                                    className="w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm disabled:bg-stone-50"
-                                />
+                                    disabled={isCoreFieldsLocked}
+                                    className="w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:ring-black focus:border-black disabled:bg-stone-100 disabled:text-stone-500"
+                                >
+                                    <option value="">Select currency...</option>
+                                    {currencies.map(c => (
+                                        <option key={c.id} value={c.code}>{c.symbol} {c.name} ({c.code})</option>
+                                    ))}
+                                </select>
+                                <p className="mt-1 text-xs text-stone-400">
+                                    Manage currencies in{' '}
+                                    <a href="/saas/currencies" className="text-indigo-600 hover:underline">
+                                        SaaS → Currencies
+                                    </a>
+                                </p>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-stone-700 mb-1">Standard TVA Rate</label>
                                 <input
                                     {...register('defaultTaxRate', { valueAsNumber: true })}
+                                    disabled={isCoreFieldsLocked}
                                     type="number" step="0.01"
-                                    className="w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm"
+                                    className="w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm disabled:bg-stone-100 disabled:text-stone-500"
                                 />
                             </div>
                         </div>
@@ -366,7 +469,7 @@ export default function FinancialSettingsForm({ settings, lock }: Props) {
                             <h3 className="text-sm font-medium text-stone-900 mb-3">Manual Configuration</h3>
                             <div className="space-y-2">
                                 <div className="flex items-center">
-                                    <input {...register('worksInTTC')} disabled={lock.isLocked} type="checkbox" className="h-4 w-4 text-black border-stone-300 rounded disabled:opacity-50" />
+                                    <input {...register('worksInTTC')} disabled={isCoreFieldsLocked} type="checkbox" className="h-4 w-4 text-black border-stone-300 rounded disabled:opacity-50" />
                                     <label className="ml-2 text-sm text-stone-700">Works in TTC (Cost Effective Basis is TTC)</label>
                                 </div>
                                 <div className="flex items-center">
@@ -434,7 +537,7 @@ export default function FinancialSettingsForm({ settings, lock }: Props) {
                     <div className="pt-4 border-t border-stone-200">
                         <button
                             type="submit"
-                            disabled={isPending}
+                            disabled={isPending || isCoreFieldsLocked}
                             className="w-full bg-black text-white px-4 py-2 rounded-md hover:bg-stone-800 disabled:opacity-50"
                         >
                             {isPending ? 'Saving...' : 'Save Configuration'}

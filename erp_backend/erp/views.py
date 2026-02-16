@@ -27,7 +27,7 @@ from .throttles import TenantResolveRateThrottle
 # --- Kernel Models ---
 from .models import (
     Organization, Site, User, Country, Role,
-    SystemModule, OrganizationModule,
+    SystemModule, OrganizationModule, GlobalCurrency,
 )
 
 # --- Business Module Models (optional — modules may be uninstalled) ---
@@ -50,6 +50,7 @@ from .serializers import (
     OrganizationSerializer, SiteSerializer, UserSerializer,
     CountrySerializer, RoleSerializer,
 )
+from .serializers.core import GlobalCurrencySerializer
 try:
     from .serializers import ProductSerializer, BrandSerializer
 except ImportError:
@@ -554,6 +555,38 @@ class CountryViewSet(TenantModelViewSet):
 class RoleViewSet(TenantModelViewSet):
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
+
+
+class CurrencyViewSet(viewsets.ModelViewSet):
+    """
+    SaaS-level CRUD for GlobalCurrency.
+    All authenticated users can read. Staff/Superuser can write.
+    """
+    queryset = GlobalCurrency.objects.all().order_by('code')
+    serializer_class = GlobalCurrencySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({"error": "Staff access required"}, status=status.HTTP_403_FORBIDDEN)
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({"error": "Staff access required"}, status=status.HTTP_403_FORBIDDEN)
+        return super().update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({"error": "Staff access required"}, status=status.HTTP_403_FORBIDDEN)
+        # Prevent deleting a currency if it's used as base_currency by any org
+        currency = self.get_object()
+        if Organization.objects.filter(base_currency=currency).exists():
+            return Response(
+                {"error": "Cannot delete currency: it is currently in use as a base currency."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        return super().destroy(request, *args, **kwargs)
 
 # ============================================================================
 #  RECORD HISTORY & ENTITY GRAPH (Audit APIs)

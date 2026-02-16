@@ -8,7 +8,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     OrganizationViewSet, SiteViewSet, SettingsViewSet, health_check,
     TenantResolutionView, DashboardViewSet, CountryViewSet, RoleViewSet,
-    UserViewSet, RecordHistoryViewSet, EntityGraphViewSet
+    UserViewSet, RecordHistoryViewSet, EntityGraphViewSet, CurrencyViewSet
 )
 from .views_auth import login_view, logout_view, me_view, PublicConfigView, register_business_view
 from .views_saas_modules import SaaSModuleViewSet, OrgModuleViewSet, SaaSUpdateViewSet, SaaSPlansViewSet, PublicPricingView, SaaSClientViewSet
@@ -30,6 +30,7 @@ router.register(r'users', UserViewSet)
 router.register(r'record-history', RecordHistoryViewSet, basename='record-history')
 router.register(r'entity-graph', EntityGraphViewSet, basename='entity-graph')
 router.register(r'encryption', EncryptionViewSet, basename='encryption')
+router.register(r'currencies', CurrencyViewSet, basename='currencies')
 
 # SaaS Management
 router.register(r'saas/modules', SaaSModuleViewSet, basename='saas-modules')
