@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Standalone output for production deployment (required for Next.js 16 Turbopack)
+  output: 'standalone',
+
   // Server action configuration for Hostinger
   experimental: {
     serverActions: {
