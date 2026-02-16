@@ -461,6 +461,41 @@ class PlanAddon(models.Model):
         return f"{self.name} (+{self.quantity} {self.addon_type}) ${self.monthly_price}/mo"
 
 
+class OrganizationAddon(models.Model):
+    """Tracks add-ons purchased by a specific organization."""
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('cancelled', 'Cancelled'),
+        ('expired', 'Expired'),
+    ]
+    BILLING_CYCLES = [
+        ('MONTHLY', 'Monthly'),
+        ('ANNUAL', 'Annual'),
+    ]
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='purchased_addons')
+    addon = models.ForeignKey(PlanAddon, on_delete=models.PROTECT, related_name='purchases')
+    quantity = models.IntegerField(default=1, help_text="Number of units purchased")
+    billing_cycle = models.CharField(max_length=20, choices=BILLING_CYCLES, default='MONTHLY')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+    purchased_at = models.DateTimeField(auto_now_add=True)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    notes = models.TextField(blank=True, default='')
+
+    class Meta:
+        db_table = 'organizationaddon'
+        ordering = ['-purchased_at']
+
+    def __str__(self):
+        return f"{self.organization.name} — {self.addon.name} ({self.status})"
+
+    @property
+    def effective_price(self):
+        """Returns the effective price based on billing cycle."""
+        if self.billing_cycle == 'ANNUAL':
+            return self.addon.annual_price * self.quantity
+        return self.addon.monthly_price * self.quantity
+
+
 # =============================================================================
 # PACKAGE STORAGE & DEPLOYMENT CENTER
 # =============================================================================

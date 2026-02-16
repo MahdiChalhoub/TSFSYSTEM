@@ -7,13 +7,13 @@ import { erpFetch } from '@/lib/erp-api'
 export async function getFiscalYears() {
     try {
         const data = await erpFetch('fiscal-years/')
-        return data.map((year: any) => ({
+        const years = Array.isArray(data) ? data : (data?.results || [])
+        return years.map((year: any) => ({
             ...year,
             startDate: year.start_date,
             endDate: year.end_date,
             isHardLocked: year.is_hard_locked,
-            // Ensure periods are also mapped if necessary, but periods usually come from nested serializer
-            // If periods have snake_case, we might need to map them too ideally
+            status: year.status || (year.is_hard_locked ? 'FINALIZED' : year.is_closed ? 'CLOSED' : 'OPEN'),
         }))
     } catch (error) {
         console.error("Failed to fetch fiscal years:", error)
@@ -23,7 +23,8 @@ export async function getFiscalYears() {
 
 export async function getLatestFiscalYear() {
     try {
-        const years = await erpFetch('fiscal-years/?limit=1&ordering=-end_date')
+        const raw = await erpFetch('fiscal-years/?limit=1&ordering=-end_date')
+        const years = Array.isArray(raw) ? raw : (raw?.results || [])
         const year = years[0] || null
         if (year) {
             return {
