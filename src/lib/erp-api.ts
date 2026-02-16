@@ -1,5 +1,14 @@
-// Use 127.0.0.1 to avoid IPv6 resolution issues with localhost on Windows/Node 18+
-const DJANGO_URL = process.env.DJANGO_URL || 'http://127.0.0.1:8000';
+// Detect if running in browser or server
+const isClient = typeof window !== 'undefined';
+
+// Server-side: call Django directly (same machine)
+// Client-side: call via Next.js proxy route to avoid CORS/localhost issues
+const DJANGO_URL = isClient
+    ? ''  // Relative URL — browser calls /api/erp/proxy/...
+    : (process.env.DJANGO_URL || 'http://127.0.0.1:8000');
+
+// Client-side uses the Next.js API proxy to reach Django
+const API_PREFIX = isClient ? '/api/erp/proxy' : '/api';
 
 // Performance: Only log in development to avoid I/O overhead in production
 const isDev = process.env.NODE_ENV === 'development';
@@ -94,7 +103,7 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
         debug(`[DEBUG] erpFetch Context: SaaS/Root (No Tenant ID sent)`);
     }
 
-    const url = `${DJANGO_URL}/api/${path.startsWith('/') ? path.slice(1) : path}`;
+    const url = `${DJANGO_URL}${API_PREFIX}/${path.startsWith('/') ? path.slice(1) : path}`;
 
     // [CONTENT-TYPE FIX]
     // For JSON POST/PUT/PATCH requests, set Content-Type to application/json
