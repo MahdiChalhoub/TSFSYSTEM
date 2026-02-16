@@ -1,7 +1,11 @@
 'use client'
 
 import { useState, useEffect, useTransition, useMemo } from "react"
-import { getVouchers, createVoucher, updateVoucher, postVoucher, cancelVoucher, deleteVoucher, VoucherInput, VoucherUpdateInput } from "@/app/actions/finance/vouchers"
+import {
+    getVouchers, createVoucher, updateVoucher, postVoucher, deleteVoucher,
+    lockVoucher, unlockVoucher, verifyVoucher, getVoucherHistory,
+    VoucherInput, VoucherUpdateInput
+} from "@/app/actions/finance/vouchers"
 import { getFinancialAccounts } from "@/app/actions/finance/financial-accounts"
 import { getFinancialEvents } from "@/app/actions/finance/financial-events"
 import { Card, CardContent } from "@/components/ui/card"
@@ -9,17 +13,24 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import {
     FileText, Plus, Search, ArrowRightLeft, ArrowDownLeft, ArrowUpRight,
-    CheckCircle2, Clock, Send, Receipt, Pencil, Trash2, XCircle,
-    ArrowUpDown, ArrowUp, ArrowDown, Ban
+    CheckCircle2, Clock, Send, Receipt, Pencil, Trash2,
+    ArrowUpDown, ArrowUp, ArrowDown, Lock, Unlock, ShieldCheck, History
 } from "lucide-react"
 
-type SortKey = 'date' | 'voucher_type' | 'reference' | 'amount' | 'status'
+type SortKey = 'date' | 'voucher_type' | 'reference' | 'amount' | 'lifecycle_status'
 type SortDir = 'asc' | 'desc'
+
+const LIFECYCLE_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
+    OPEN: { label: 'Open', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', icon: Clock },
+    LOCKED: { label: 'Locked', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', icon: Lock },
+    VERIFIED: { label: 'Verified', color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200', icon: ShieldCheck },
+    CONFIRMED: { label: 'Confirmed', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', icon: CheckCircle2 },
+}
 
 export default function VouchersPage() {
     const [vouchers, setVouchers] = useState<any[]>([])
@@ -29,6 +40,8 @@ export default function VouchersPage() {
     const [dialogOpen, setDialogOpen] = useState(false)
     const [editVoucher, setEditVoucher] = useState<any>(null)
     const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null)
+    const [commentDialog, setCommentDialog] = useState<{ id: number; action: string } | null>(null)
+    const [historyDialog, setHistoryDialog] = useState<any[] | null>(null)
     const [voucherType, setVoucherType] = useState<'TRANSFER' | 'RECEIPT' | 'PAYMENT'>('TRANSFER')
     const [activeTab, setActiveTab] = useState<string>("ALL")
     const [searchQuery, setSearchQuery] = useState("")
@@ -64,7 +77,6 @@ export default function VouchersPage() {
         startTransition(async () => {
             try {
                 if (editVoucher) {
-                    // Update existing
                     const updateData: VoucherUpdateInput = {
                         amount: Number(fd.get("amount")),
                         date: fd.get("date") as string,
@@ -76,7 +88,6 @@ export default function VouchersPage() {
                     await updateVoucher(editVoucher.id, updateData)
                     toast.success("Voucher updated successfully")
                 } else {
-                    // Create new
                     const data: VoucherInput = {
                         voucher_type: voucherType,
                         amount: Number(fd.get("amount")),
@@ -97,70 +108,53 @@ export default function VouchersPage() {
         })
     }
 
+    // ─── Lifecycle Handlers ───────────────────────────────────────
+    async function handleLock(id: number) {
+        startTransition(async () => {
+            try { await lockVoucher(id); toast.success("Voucher locked"); loadData() }
+            catch (err: any) { toast.error(err.message || "Failed to lock") }
+        })
+    }
+    async function handleUnlock(id: number, comment: string) {
+        startTransition(async () => {
+            try { await unlockVoucher(id, comment); toast.success("Voucher unlocked"); loadData(); setCommentDialog(null) }
+            catch (err: any) { toast.error(err.message || "Failed to unlock") }
+        })
+    }
+    async function handleVerify(id: number) {
+        startTransition(async () => {
+            try { await verifyVoucher(id); toast.success("Voucher verified"); loadData() }
+            catch (err: any) { toast.error(err.message || "Failed to verify") }
+        })
+    }
     async function handlePost(id: number) {
         startTransition(async () => {
-            try {
-                await postVoucher(id)
-                toast.success("Voucher posted to ledger")
-                loadData()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to post voucher")
-            }
+            try { await postVoucher(id); toast.success("Voucher posted to ledger"); loadData() }
+            catch (err: any) { toast.error(err.message || "Failed to post voucher") }
         })
     }
-
-    async function handleCancel(id: number) {
-        startTransition(async () => {
-            try {
-                await cancelVoucher(id)
-                toast.success("Voucher cancelled")
-                loadData()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to cancel voucher")
-            }
-        })
-    }
-
     async function handleDelete(id: number) {
         startTransition(async () => {
-            try {
-                await deleteVoucher(id)
-                toast.success("Voucher deleted")
-                setDeleteConfirm(null)
-                loadData()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to delete voucher")
-            }
+            try { await deleteVoucher(id); toast.success("Voucher deleted"); setDeleteConfirm(null); loadData() }
+            catch (err: any) { toast.error(err.message || "Failed to delete voucher") }
         })
     }
-
-    function openEdit(v: any) {
-        setEditVoucher(v)
-        setVoucherType(v.voucher_type)
-        setDialogOpen(true)
+    async function showHistory(id: number) {
+        try {
+            const history = await getVoucherHistory(id)
+            setHistoryDialog(Array.isArray(history) ? history : [])
+        } catch { toast.error("Failed to load history") }
     }
 
-    function openCreate() {
-        setEditVoucher(null)
-        setVoucherType('TRANSFER')
-        setDialogOpen(true)
-    }
-
-    function closeDialog() {
-        setDialogOpen(false)
-        setEditVoucher(null)
-    }
+    function openEdit(v: any) { setEditVoucher(v); setVoucherType(v.voucher_type); setDialogOpen(true) }
+    function openCreate() { setEditVoucher(null); setVoucherType('TRANSFER'); setDialogOpen(true) }
+    function closeDialog() { setDialogOpen(false); setEditVoucher(null) }
 
     // ─── Sorting ──────────────────────────────────────────────────
     function toggleSort(key: SortKey) {
-        if (sortKey === key) {
-            setSortDir(d => d === 'asc' ? 'desc' : 'asc')
-        } else {
-            setSortKey(key)
-            setSortDir('asc')
-        }
+        if (sortKey === key) { setSortDir(d => d === 'asc' ? 'desc' : 'asc') }
+        else { setSortKey(key); setSortDir('asc') }
     }
-
     function SortIcon({ col }: { col: SortKey }) {
         if (sortKey !== col) return <ArrowUpDown size={12} className="text-stone-300 ml-1 inline" />
         return sortDir === 'asc'
@@ -204,13 +198,6 @@ export default function VouchersPage() {
         PAYMENT: { icon: ArrowUpRight, color: "text-rose-700", bg: "bg-rose-50 border-rose-200" },
     }
 
-    const statusConfig: Record<string, { icon: any; color: string; bg: string }> = {
-        POSTED: { icon: CheckCircle2, color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
-        DRAFT: { icon: Clock, color: "text-amber-700", bg: "bg-amber-50 border-amber-200" },
-        CANCELLED: { icon: Ban, color: "text-stone-500", bg: "bg-stone-100 border-stone-200" },
-    }
-
-    // Determine active type for conditional fields in the dialog
     const activeType = editVoucher ? editVoucher.voucher_type : voucherType
 
     // ─── Loading Skeleton ─────────────────────────────────────────
@@ -250,7 +237,7 @@ export default function VouchersPage() {
                             {editVoucher ? <><Pencil size={20} /> Edit Voucher <span className="text-xs font-mono text-stone-400 ml-2">{editVoucher.reference}</span></> : <><Receipt size={20} /> Create Voucher</>}
                         </DialogTitle>
                         <DialogDescription>
-                            {editVoucher ? "Modify the voucher details below. Only DRAFT vouchers can be edited." : "Select the voucher type and fill in the details below."}
+                            {editVoucher ? "Modify the voucher details below. Only OPEN vouchers can be edited." : "Select the voucher type and fill in the details below."}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -348,13 +335,59 @@ export default function VouchersPage() {
                 <DialogContent className="sm:max-w-sm">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-red-700"><Trash2 size={20} /> Delete Voucher</DialogTitle>
-                        <DialogDescription>This action is permanent and cannot be undone. Are you sure you want to delete this draft voucher?</DialogDescription>
+                        <DialogDescription>This action is permanent and cannot be undone. Are you sure you want to delete this voucher?</DialogDescription>
                     </DialogHeader>
                     <div className="flex justify-end gap-2 pt-3">
                         <Button variant="outline" onClick={() => setDeleteConfirm(null)} className="rounded-xl">Cancel</Button>
                         <Button variant="destructive" onClick={() => deleteConfirm && handleDelete(deleteConfirm)} disabled={isPending} className="rounded-xl gap-2">
                             {isPending ? "Deleting..." : <><Trash2 size={14} /> Delete</>}
                         </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* ─── Unlock Comment Dialog ────────────────────────────── */}
+            <Dialog open={commentDialog !== null} onOpenChange={(open) => { if (!open) setCommentDialog(null) }}>
+                <DialogContent className="sm:max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2"><Unlock size={20} /> Unlock Voucher</DialogTitle>
+                        <DialogDescription>Provide a reason for unlocking this voucher.</DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={(e) => { e.preventDefault(); const fd = new FormData(e.currentTarget); commentDialog && handleUnlock(commentDialog.id, fd.get('comment') as string) }} className="space-y-4">
+                        <Input name="comment" required placeholder="Reason for unlocking..." className="rounded-xl" />
+                        <div className="flex justify-end gap-2">
+                            <Button type="button" variant="outline" onClick={() => setCommentDialog(null)} className="rounded-xl">Cancel</Button>
+                            <Button type="submit" disabled={isPending} className="rounded-xl gap-2">
+                                {isPending ? "Unlocking..." : <><Unlock size={14} /> Unlock</>}
+                            </Button>
+                        </div>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* ─── History Dialog ───────────────────────────────────── */}
+            <Dialog open={historyDialog !== null} onOpenChange={(open) => { if (!open) setHistoryDialog(null) }}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2"><History size={20} /> Lifecycle History</DialogTitle>
+                        <DialogDescription>Complete audit trail for this voucher.</DialogDescription>
+                    </DialogHeader>
+                    <div className="max-h-80 overflow-y-auto space-y-3">
+                        {historyDialog?.length === 0 && <p className="text-center text-stone-400 py-6">No history yet</p>}
+                        {historyDialog?.map((h: any, i: number) => (
+                            <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-stone-50 border">
+                                <div className="w-8 h-8 rounded-lg bg-white border flex items-center justify-center shrink-0">
+                                    <Clock size={14} className="text-stone-400" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-semibold text-sm text-stone-800">{h.action}</p>
+                                    {h.comment && <p className="text-xs text-stone-500 mt-0.5">{h.comment}</p>}
+                                    <p className="text-xs text-stone-400 mt-1">
+                                        by {h.performed_by || 'System'} · {new Date(h.performed_at).toLocaleString()}
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </DialogContent>
             </Dialog>
@@ -378,11 +411,24 @@ export default function VouchersPage() {
                     <CardContent className="pt-5 pb-4 px-5">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-bold text-blue-400 uppercase tracking-wider">Transfers</p>
-                                <p className="text-3xl font-bold text-blue-900 mt-1">{vouchers.filter(v => v.voucher_type === "TRANSFER").length}</p>
+                                <p className="text-xs font-bold text-blue-400 uppercase tracking-wider">Open</p>
+                                <p className="text-3xl font-bold text-blue-900 mt-1">{vouchers.filter(v => v.lifecycle_status === "OPEN").length}</p>
                             </div>
                             <div className="w-12 h-12 rounded-2xl bg-blue-200/60 flex items-center justify-center">
-                                <ArrowRightLeft size={22} className="text-blue-500" />
+                                <Clock size={22} className="text-blue-500" />
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-amber-50 to-amber-100">
+                    <CardContent className="pt-5 pb-4 px-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-bold text-amber-400 uppercase tracking-wider">Locked</p>
+                                <p className="text-3xl font-bold text-amber-900 mt-1">{vouchers.filter(v => v.lifecycle_status === "LOCKED").length}</p>
+                            </div>
+                            <div className="w-12 h-12 rounded-2xl bg-amber-200/60 flex items-center justify-center">
+                                <Lock size={22} className="text-amber-500" />
                             </div>
                         </div>
                     </CardContent>
@@ -391,24 +437,11 @@ export default function VouchersPage() {
                     <CardContent className="pt-5 pb-4 px-5">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Receipts</p>
-                                <p className="text-3xl font-bold text-emerald-900 mt-1">{vouchers.filter(v => v.voucher_type === "RECEIPT").length}</p>
+                                <p className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Posted</p>
+                                <p className="text-3xl font-bold text-emerald-900 mt-1">{vouchers.filter(v => v.is_posted).length}</p>
                             </div>
                             <div className="w-12 h-12 rounded-2xl bg-emerald-200/60 flex items-center justify-center">
-                                <ArrowDownLeft size={22} className="text-emerald-500" />
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-rose-50 to-rose-100">
-                    <CardContent className="pt-5 pb-4 px-5">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-xs font-bold text-rose-400 uppercase tracking-wider">Payments</p>
-                                <p className="text-3xl font-bold text-rose-900 mt-1">{vouchers.filter(v => v.voucher_type === "PAYMENT").length}</p>
-                            </div>
-                            <div className="w-12 h-12 rounded-2xl bg-rose-200/60 flex items-center justify-center">
-                                <ArrowUpRight size={22} className="text-rose-500" />
+                                <CheckCircle2 size={22} className="text-emerald-500" />
                             </div>
                         </div>
                     </CardContent>
@@ -462,8 +495,8 @@ export default function VouchersPage() {
                             <TableHead className="text-xs font-bold uppercase text-stone-400 text-right cursor-pointer select-none" onClick={() => toggleSort('amount')}>
                                 Amount <SortIcon col="amount" />
                             </TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-center cursor-pointer select-none" onClick={() => toggleSort('status')}>
-                                Status <SortIcon col="status" />
+                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-center cursor-pointer select-none" onClick={() => toggleSort('lifecycle_status')}>
+                                Status <SortIcon col="lifecycle_status" />
                             </TableHead>
                             <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Actions</TableHead>
                         </TableRow>
@@ -471,10 +504,13 @@ export default function VouchersPage() {
                     <TableBody>
                         {filteredVouchers.map((v: any) => {
                             const tc = typeConfig[v.voucher_type] || typeConfig.TRANSFER
-                            const sc = statusConfig[v.status] || statusConfig.DRAFT
+                            const lc = LIFECYCLE_CONFIG[v.lifecycle_status] || LIFECYCLE_CONFIG.OPEN
                             const TypeIcon = tc.icon
-                            const StatusIcon = sc.icon
-                            const isDraft = v.status === "DRAFT"
+                            const LcIcon = lc.icon
+                            const isOpen = v.lifecycle_status === 'OPEN'
+                            const isLocked = v.lifecycle_status === 'LOCKED'
+                            const isVerified = v.lifecycle_status === 'VERIFIED'
+                            const isConfirmed = v.lifecycle_status === 'CONFIRMED'
                             return (
                                 <TableRow key={v.id} className="hover:bg-stone-50/50 transition-colors group">
                                     <TableCell className="text-sm text-stone-600">{v.date}</TableCell>
@@ -487,55 +523,70 @@ export default function VouchersPage() {
                                     <TableCell className="text-sm text-stone-600 max-w-[200px] truncate">{v.description || "—"}</TableCell>
                                     <TableCell className="text-right font-semibold text-stone-800">{Number(v.amount).toLocaleString()}</TableCell>
                                     <TableCell className="text-center">
-                                        <Badge variant="outline" className={`gap-1 rounded-lg border ${sc.bg} ${sc.color} font-semibold text-[11px]`}>
-                                            <StatusIcon size={12} /> {v.status}
-                                        </Badge>
+                                        <div className="flex items-center justify-center gap-1.5">
+                                            <Badge variant="outline" className={`gap-1 rounded-lg border ${lc.bg} ${lc.color} font-semibold text-[11px]`}>
+                                                <LcIcon size={12} /> {lc.label}
+                                            </Badge>
+                                            {v.is_posted && (
+                                                <Badge variant="outline" className="gap-1 rounded-lg border bg-emerald-50 border-emerald-200 text-emerald-700 font-semibold text-[11px]">
+                                                    <Send size={10} /> Posted
+                                                </Badge>
+                                            )}
+                                        </div>
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex items-center justify-end gap-1">
-                                            {isDraft && (
+                                            {/* OPEN: Edit, Lock, Delete */}
+                                            {isOpen && !v.is_posted && (
                                                 <>
-                                                    <Button
-                                                        size="sm" variant="ghost"
-                                                        onClick={() => openEdit(v)}
-                                                        className="h-8 w-8 p-0 text-stone-400 hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                                                        title="Edit"
-                                                    >
+                                                    <Button size="sm" variant="ghost" onClick={() => openEdit(v)}
+                                                        className="h-8 w-8 p-0 text-stone-400 hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" title="Edit">
                                                         <Pencil size={14} />
                                                     </Button>
-                                                    <Button
-                                                        size="sm" variant="outline"
-                                                        onClick={() => handlePost(v.id)}
-                                                        disabled={isPending}
-                                                        className="rounded-xl gap-1 text-emerald-700 border-emerald-200 hover:bg-emerald-50 h-8 text-xs font-semibold"
-                                                    >
-                                                        <Send size={12} /> Post
+                                                    <Button size="sm" variant="outline" onClick={() => handleLock(v.id)} disabled={isPending}
+                                                        className="rounded-xl gap-1 text-amber-700 border-amber-200 hover:bg-amber-50 h-8 text-xs font-semibold">
+                                                        <Lock size={12} /> Lock
                                                     </Button>
-                                                    <Button
-                                                        size="sm" variant="ghost"
-                                                        onClick={() => handleCancel(v.id)}
-                                                        disabled={isPending}
-                                                        className="h-8 w-8 p-0 text-stone-400 hover:text-amber-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                                                        title="Cancel"
-                                                    >
-                                                        <XCircle size={14} />
-                                                    </Button>
-                                                    <Button
-                                                        size="sm" variant="ghost"
-                                                        onClick={() => setDeleteConfirm(v.id)}
-                                                        className="h-8 w-8 p-0 text-stone-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                                                        title="Delete"
-                                                    >
+                                                    <Button size="sm" variant="ghost" onClick={() => setDeleteConfirm(v.id)}
+                                                        className="h-8 w-8 p-0 text-stone-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity" title="Delete">
                                                         <Trash2 size={14} />
                                                     </Button>
                                                 </>
                                             )}
-                                            {v.status === "POSTED" && (
-                                                <span className="text-xs text-stone-400 italic">Posted</span>
+                                            {/* LOCKED: Unlock, Verify */}
+                                            {isLocked && (
+                                                <>
+                                                    <Button size="sm" variant="outline" onClick={() => setCommentDialog({ id: v.id, action: 'unlock' })} disabled={isPending}
+                                                        className="rounded-xl gap-1 text-stone-600 border-stone-200 hover:bg-stone-50 h-8 text-xs font-semibold">
+                                                        <Unlock size={12} /> Unlock
+                                                    </Button>
+                                                    <Button size="sm" variant="outline" onClick={() => handleVerify(v.id)} disabled={isPending}
+                                                        className="rounded-xl gap-1 text-purple-700 border-purple-200 hover:bg-purple-50 h-8 text-xs font-semibold">
+                                                        <ShieldCheck size={12} /> Verify
+                                                    </Button>
+                                                </>
                                             )}
-                                            {v.status === "CANCELLED" && (
-                                                <span className="text-xs text-stone-400 italic">Cancelled</span>
+                                            {/* VERIFIED: auto-confirms, but show confirm button */}
+                                            {isVerified && (
+                                                <Badge variant="outline" className="gap-1 rounded-lg border bg-purple-50 border-purple-200 text-purple-700 font-semibold text-[11px]">
+                                                    <ShieldCheck size={10} /> Awaiting Confirmation
+                                                </Badge>
                                             )}
+                                            {/* CONFIRMED: Post */}
+                                            {isConfirmed && !v.is_posted && (
+                                                <Button size="sm" variant="outline" onClick={() => handlePost(v.id)} disabled={isPending}
+                                                    className="rounded-xl gap-1 text-emerald-700 border-emerald-200 hover:bg-emerald-50 h-8 text-xs font-semibold">
+                                                    <Send size={12} /> Post
+                                                </Button>
+                                            )}
+                                            {v.is_posted && (
+                                                <span className="text-xs text-emerald-600 font-medium italic">✓ Posted</span>
+                                            )}
+                                            {/* History — always visible */}
+                                            <Button size="sm" variant="ghost" onClick={() => showHistory(v.id)}
+                                                className="h-8 w-8 p-0 text-stone-400 hover:text-stone-600 opacity-0 group-hover:opacity-100 transition-opacity" title="History">
+                                                <History size={14} />
+                                            </Button>
                                         </div>
                                     </TableCell>
                                 </TableRow>

@@ -7,6 +7,7 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from erp.views import TenantModelViewSet
+from erp.lifecycle_mixin import LifecycleViewSetMixin
 from erp.middleware import get_current_tenant_id
 from erp.models import Organization, User
 
@@ -838,18 +839,19 @@ class AssetViewSet(TenantModelViewSet):
             return Response({"error": str(e)}, status=400)
 
 
-class VoucherViewSet(TenantModelViewSet):
+class VoucherViewSet(LifecycleViewSetMixin, TenantModelViewSet):
     queryset = Voucher.objects.all()
     serializer_class = VoucherSerializer
+    lifecycle_transaction_type = 'VOUCHER'
 
     def get_queryset(self):
         vtype = self.request.query_params.get('type')
-        status_filter = self.request.query_params.get('status')
+        lc_status = self.request.query_params.get('lifecycle_status')
         qs = super().get_queryset().order_by('-created_at')
         if vtype:
             qs = qs.filter(voucher_type=vtype)
-        if status_filter:
-            qs = qs.filter(status=status_filter)
+        if lc_status:
+            qs = qs.filter(lifecycle_status=lc_status)
         return qs
 
     def create(self, request, *args, **kwargs):
@@ -870,8 +872,8 @@ class VoucherViewSet(TenantModelViewSet):
 
     def update(self, request, *args, **kwargs):
         voucher = self.get_object()
-        if voucher.status != 'DRAFT':
-            return Response({"error": "Only DRAFT vouchers can be edited."}, status=400)
+        if not voucher.is_editable:
+            return Response({"error": "Only OPEN vouchers can be edited."}, status=400)
         # Only allow updating certain fields
         allowed = {'amount', 'date', 'description', 'source_account_id',
                    'destination_account_id', 'financial_event_id', 'contact_id'}
@@ -883,8 +885,8 @@ class VoucherViewSet(TenantModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         voucher = self.get_object()
-        if voucher.status != 'DRAFT':
-            return Response({"error": "Only DRAFT vouchers can be deleted."}, status=400)
+        if not voucher.is_editable:
+            return Response({"error": "Only OPEN vouchers can be deleted."}, status=400)
         voucher.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -893,6 +895,12 @@ class VoucherViewSet(TenantModelViewSet):
         organization_id = get_current_tenant_id()
         if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
         organization = Organization.objects.get(id=organization_id)
+
+        voucher = self.get_object()
+        if voucher.lifecycle_status != 'CONFIRMED':
+            return Response({"error": "Voucher must be CONFIRMED before posting."}, status=400)
+        if voucher.is_posted:
+            return Response({"error": "Voucher is already posted."}, status=400)
 
         try:
             voucher = VoucherService.post_voucher(organization, pk, user=request.user)
@@ -903,13 +911,12 @@ class VoucherViewSet(TenantModelViewSet):
     @action(detail=True, methods=['post'])
     def cancel_voucher(self, request, pk=None):
         voucher = self.get_object()
-        if voucher.status == 'CANCELLED':
-            return Response({"error": "Voucher is already cancelled."}, status=400)
-        if voucher.status == 'POSTED':
+        if voucher.is_posted:
             return Response({"error": "Posted vouchers cannot be cancelled. Create a reversal instead."}, status=400)
-        voucher.status = 'CANCELLED'
-        voucher.save()
-        return Response(VoucherSerializer(voucher).data)
+        if not voucher.is_editable:
+            return Response({"error": "Only OPEN vouchers can be cancelled."}, status=400)
+        voucher.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ProfitDistributionViewSet(TenantModelViewSet):

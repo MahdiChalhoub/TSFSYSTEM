@@ -3,10 +3,10 @@
 import { erpFetch } from "@/lib/erp-api"
 import { revalidatePath } from "next/cache"
 
-export async function getVouchers(type?: string, status?: string) {
+export async function getVouchers(type?: string, lifecycle_status?: string) {
     const params = new URLSearchParams()
     if (type) params.append('type', type)
-    if (status) params.append('status', status)
+    if (lifecycle_status) params.append('lifecycle_status', lifecycle_status)
     const qs = params.toString()
     return await erpFetch(`vouchers/${qs ? `?${qs}` : ''}`)
 }
@@ -102,4 +102,37 @@ export async function deleteVoucher(id: number) {
         console.error("Delete Voucher Failed", e)
         throw e
     }
+}
+
+// ─── Lifecycle Actions ──────────────────────────────────────────
+
+export async function lockVoucher(id: number, comment?: string) {
+    const result = await erpFetch(`vouchers/${id}/lock/`, {
+        method: 'POST',
+        body: JSON.stringify({ comment: comment || '' })
+    })
+    revalidatePath('/finance/vouchers')
+    return result
+}
+
+export async function unlockVoucher(id: number, comment: string) {
+    const result = await erpFetch(`vouchers/${id}/unlock/`, {
+        method: 'POST',
+        body: JSON.stringify({ comment })
+    })
+    revalidatePath('/finance/vouchers')
+    return result
+}
+
+export async function verifyVoucher(id: number, comment?: string) {
+    const result = await erpFetch(`vouchers/${id}/verify/`, {
+        method: 'POST',
+        body: JSON.stringify({ comment: comment || '' })
+    })
+    revalidatePath('/finance/vouchers')
+    return result
+}
+
+export async function getVoucherHistory(id: number) {
+    return await erpFetch(`vouchers/${id}/lifecycle_history/`)
 }
