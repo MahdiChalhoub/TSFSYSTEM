@@ -1,0 +1,12 @@
+{
+    "version": 3,
+    "pages404": true,
+    "basePath": "",
+    "redirects": [],
+    "rewrites": [],
+    "headers": [],
+    "staticRoutes": [],
+    "dynamicRoutes": [],
+    "dataRoutes": [],
+    "i18n": null
+}
