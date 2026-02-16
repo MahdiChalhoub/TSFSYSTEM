@@ -319,16 +319,33 @@ class UserViewSet(TenantModelViewSet):
 class NotificationViewSet(viewsets.ModelViewSet):
     """
     Endpoints for current user notifications.
+    [RESILIENCE] Wrapped with try/except to prevent 500 HTML errors on SaaS pages
+    where tenant context may not be fully resolved.
     """
     serializer_class = NotificationSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return Notification.objects.filter(user=self.request.user)
+        try:
+            return Notification.objects.filter(user=self.request.user)
+        except Exception:
+            return Notification.objects.none()
+
+    def list(self, request, *args, **kwargs):
+        """Resilient list — returns empty array on any backend error."""
+        try:
+            return super().list(request, *args, **kwargs)
+        except Exception as e:
+            import logging
+            logging.getLogger('erp').warning(f"NotificationViewSet.list failed: {e}")
+            return Response([], status=200)
 
     @action(detail=False, methods=['post'], url_path='mark-all-read')
     def mark_all_read(self, request):
-        Notification.objects.filter(user=request.user, read_at__isnull=True).update(read_at=timezone.now())
+        try:
+            Notification.objects.filter(user=request.user, read_at__isnull=True).update(read_at=timezone.now())
+        except Exception:
+            pass
         return Response({"message": "All notifications marked as read."})
 
     @action(detail=True, methods=['post'], url_path='mark-read')
