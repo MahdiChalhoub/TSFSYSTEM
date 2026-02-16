@@ -200,6 +200,11 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
             return null;
         }
 
+        const contentType = response.headers.get('Content-Type');
+        if (contentType && contentType.includes('application/pdf')) {
+            return await response.blob();
+        }
+
         return await response.json();
     } catch (error: any) {
         // Suppress noisy logs for expected auth redirection flows
