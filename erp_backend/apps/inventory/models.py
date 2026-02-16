@@ -366,3 +366,8 @@ class OperationalRequestLine(models.Model):
 
     def __str__(self):
         return f"{self.product} × {self.quantity}"
+
+
+# Import models from sub-files so Django discovers them for migrations
+from apps.inventory.advanced_models import ProductBatch, ProductSerial, ExpiryAlert, StockValuationEntry  # noqa: E402, F401
+
