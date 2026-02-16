@@ -108,6 +108,7 @@ const MENU_ITEMS = [
                     { title: 'POS Terminal', path: '/sales' },
                     { title: 'Sales Analytics', path: '/sales/analytics' },
                     { title: 'Quotations', path: '/sales/quotations' },
+                    { title: 'Deliveries', path: '/sales/deliveries' },
                 ]
             },
             {
