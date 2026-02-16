@@ -14,15 +14,18 @@ from erp.models import Organization, User
 from apps.finance.models import (
     FinancialAccount, ChartOfAccount, FiscalYear, FiscalPeriod,
     JournalEntry, TransactionSequence, BarcodeSettings, Loan, FinancialEvent,
-    ForensicAuditLog, DeferredExpense, DirectExpense, Asset, AmortizationSchedule, Voucher, ProfitDistribution
+    ForensicAuditLog, DeferredExpense, DirectExpense, Asset, AmortizationSchedule, Voucher, ProfitDistribution,
+    TaxGroup
 )
+from apps.finance.payment_models import Payment, CustomerBalance, SupplierBalance
 from apps.finance.serializers import (
     FinancialAccountSerializer, ChartOfAccountSerializer,
     FiscalYearSerializer, FiscalPeriodSerializer, JournalEntrySerializer,
     TransactionSequenceSerializer, BarcodeSettingsSerializer,
     LoanSerializer, FinancialEventSerializer, ForensicAuditLogSerializer,
     DeferredExpenseSerializer, DirectExpenseSerializer, AssetSerializer, AmortizationScheduleSerializer,
-    VoucherSerializer, ProfitDistributionSerializer
+    VoucherSerializer, ProfitDistributionSerializer, TaxGroupSerializer,
+    PaymentSerializer, CustomerBalanceSerializer, SupplierBalanceSerializer
 )
 from apps.finance.services import (
     FinancialAccountService, LedgerService, SequenceService,
@@ -974,3 +977,113 @@ class ProfitDistributionViewSet(TenantModelViewSet):
             return Response(ProfitDistributionSerializer(dist).data)
         except Exception as e:
             return Response({"error": str(e)}, status=400)
+
+
+class TaxGroupViewSet(TenantModelViewSet):
+    queryset = TaxGroup.objects.all()
+    serializer_class = TaxGroupSerializer
+
+    @action(detail=False, methods=['post'])
+    def set_default(self, request):
+        """Set a tax group as the default for this organization."""
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({"error": "Tenant context missing"}, status=400)
+        tax_group_id = request.data.get('tax_group_id')
+        if not tax_group_id:
+            return Response({"error": "tax_group_id required"}, status=400)
+        try:
+            TaxGroup.objects.filter(organization_id=organization_id).update(is_default=False)
+            tg = TaxGroup.objects.get(id=tax_group_id, organization_id=organization_id)
+            tg.is_default = True
+            tg.save()
+            return Response(TaxGroupSerializer(tg).data)
+        except TaxGroup.DoesNotExist:
+            return Response({"error": "Tax group not found"}, status=404)
+
+
+# =============================================================================
+# PAYMENTS & BALANCES
+# =============================================================================
+
+class PaymentViewSet(TenantModelViewSet):
+    queryset = Payment.objects.all()
+    serializer_class = PaymentSerializer
+
+    @action(detail=False, methods=['post'])
+    def supplier_payment(self, request):
+        """Record a payment to a supplier."""
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+        from apps.finance.payment_service import PaymentService
+        try:
+            payment = PaymentService.record_supplier_payment(
+                organization=organization,
+                contact_id=request.data.get('contact_id'),
+                amount=request.data.get('amount'),
+                payment_date=request.data.get('payment_date'),
+                payment_account_id=request.data.get('payment_account_id'),
+                method=request.data.get('method', 'CASH'),
+                description=request.data.get('description'),
+                supplier_invoice_id=request.data.get('supplier_invoice_id'),
+                scope=request.data.get('scope', 'OFFICIAL'),
+                user=request.user if request.user.is_authenticated else None
+            )
+            return Response(PaymentSerializer(payment).data, status=201)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
+    @action(detail=False, methods=['post'])
+    def customer_receipt(self, request):
+        """Record a receipt from a customer."""
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+        from apps.finance.payment_service import PaymentService
+        try:
+            payment = PaymentService.record_customer_receipt(
+                organization=organization,
+                contact_id=request.data.get('contact_id'),
+                amount=request.data.get('amount'),
+                payment_date=request.data.get('payment_date'),
+                payment_account_id=request.data.get('payment_account_id'),
+                method=request.data.get('method', 'CASH'),
+                description=request.data.get('description'),
+                sales_order_id=request.data.get('sales_order_id'),
+                scope=request.data.get('scope', 'OFFICIAL'),
+                user=request.user if request.user.is_authenticated else None
+            )
+            return Response(PaymentSerializer(payment).data, status=201)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
+    @action(detail=False, methods=['get'])
+    def aged_receivables(self, request):
+        """Get aged receivables report."""
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+        from apps.finance.payment_service import PaymentService
+        return Response(PaymentService.get_aged_receivables(organization))
+
+    @action(detail=False, methods=['get'])
+    def aged_payables(self, request):
+        """Get aged payables report."""
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+        from apps.finance.payment_service import PaymentService
+        return Response(PaymentService.get_aged_payables(organization))
+
+
+class CustomerBalanceViewSet(TenantModelViewSet):
+    queryset = CustomerBalance.objects.all()
+    serializer_class = CustomerBalanceSerializer
+
+
+class SupplierBalanceViewSet(TenantModelViewSet):
+    queryset = SupplierBalance.objects.all()
+    serializer_class = SupplierBalanceSerializer
+
+

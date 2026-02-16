@@ -6,8 +6,10 @@ from .models import (
     ChartOfAccount, FinancialAccount, FiscalYear, FiscalPeriod,
     JournalEntry, JournalEntryLine, Transaction, TransactionSequence,
     BarcodeSettings, Loan, LoanInstallment, FinancialEvent, ForensicAuditLog,
-    DeferredExpense, DirectExpense, Asset, AmortizationSchedule, Voucher, ProfitDistribution
+    DeferredExpense, DirectExpense, Asset, AmortizationSchedule, Voucher, ProfitDistribution,
+    TaxGroup
 )
+from .payment_models import Payment, CustomerBalance, SupplierBalance
 
 
 class ForensicAuditLogSerializer(serializers.ModelSerializer):
@@ -200,3 +202,43 @@ class ProfitDistributionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProfitDistribution
         fields = '__all__'
+
+
+class TaxGroupSerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    class Meta:
+        model = TaxGroup
+        fields = '__all__'
+
+
+# ── Payments & Balances ──────────────────────────────────────────
+
+class PaymentSerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+    contact_name = serializers.ReadOnlyField(source='contact.name')
+    payment_account_name = serializers.ReadOnlyField(source='payment_account.name')
+
+    class Meta:
+        model = Payment
+        fields = '__all__'
+
+
+class CustomerBalanceSerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+    contact_name = serializers.ReadOnlyField(source='contact.name')
+
+    class Meta:
+        model = CustomerBalance
+        fields = '__all__'
+
+
+class SupplierBalanceSerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+    contact_name = serializers.ReadOnlyField(source='contact.name')
+
+    class Meta:
+        model = SupplierBalance
+        fields = '__all__'
+
+
