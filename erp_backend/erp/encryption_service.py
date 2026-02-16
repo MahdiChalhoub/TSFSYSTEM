@@ -16,15 +16,25 @@ class EncryptionService:
     @staticmethod
     def check_addon_entitlement(org) -> bool:
         """
-        Check if the organization's subscription plan includes the encryption add-on.
-        Returns True if the org is entitled to use encryption.
+        Check if the organization is entitled to use encryption.
+        Returns True if:
+        1. The org's plan includes an encryption add-on, OR
+        2. The org has directly purchased an encryption add-on (OrganizationAddon).
         """
-        from erp.models import PlanAddon
+        from erp.models import PlanAddon, OrganizationAddon
         
+        # Check 1: Direct org-level purchase (OrganizationAddon)
+        if OrganizationAddon.objects.filter(
+            organization=org,
+            addon__addon_type='encryption',
+            status='active',
+        ).exists():
+            return True
+        
+        # Check 2: Plan-level entitlement (PlanAddon linked to org's plan)
         if not org.current_plan:
             return False
         
-        # Check if the plan has an active encryption addon
         return PlanAddon.objects.filter(
             plans=org.current_plan,
             addon_type='encryption',

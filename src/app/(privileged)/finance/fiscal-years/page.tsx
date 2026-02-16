@@ -1,11 +1,44 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import { getFiscalYears, getFiscalGaps } from '@/app/actions/finance/fiscal-year'
 import FiscalYearWizard from './wizard'
 import FiscalYearCard from './year-card'
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle, Loader2 } from 'lucide-react'
 
-export default async function FiscalYearsPage() {
-    const years = await getFiscalYears()
-    const gaps = await getFiscalGaps()
+export default function FiscalYearsPage() {
+    const [years, setYears] = useState<any[]>([])
+    const [gaps, setGaps] = useState<any[]>([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        async function load() {
+            try {
+                const [yearsData, gapsData] = await Promise.all([
+                    getFiscalYears(),
+                    getFiscalGaps()
+                ])
+                setYears(Array.isArray(yearsData) ? yearsData : [])
+                setGaps(Array.isArray(gapsData) ? gapsData : [])
+            } catch (err) {
+                console.error('Failed to load fiscal years:', err)
+            } finally {
+                setLoading(false)
+            }
+        }
+        load()
+    }, [])
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <div className="text-center space-y-4">
+                    <Loader2 size={40} className="animate-spin text-stone-400 mx-auto" />
+                    <p className="text-stone-400 font-medium text-sm">Loading fiscal years...</p>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="p-6">
@@ -44,7 +77,7 @@ export default async function FiscalYearsPage() {
                     <FiscalYearCard
                         key={y.id}
                         year={y}
-                        nextYear={years[idx - 1]} // Assuming desc order, idx-1 is the more recent year
+                        nextYear={years[idx - 1]}
                     />
                 ))}
 

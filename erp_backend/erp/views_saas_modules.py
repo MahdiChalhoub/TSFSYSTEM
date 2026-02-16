@@ -595,6 +595,127 @@ class SaaSPlansViewSet(viewsets.ViewSet):
             addon.plans.set(SubscriptionPlan.objects.filter(id__in=d['plan_ids']))
         return Response(self._serialize_addon(addon))
 
+    # ── Organization Add-on Purchase & Tracking ──────────────────────
+    @action(detail=False, methods=['get'], url_path='org-addons/(?P<org_id>[^/.]+)')
+    def org_addon_list(self, request, org_id=None):
+        """List an organization's purchased add-ons and available add-ons for purchase."""
+        from erp.models import Organization, OrganizationAddon, PlanAddon
+        try:
+            org = Organization.objects.get(id=org_id)
+        except Organization.DoesNotExist:
+            return Response({'error': 'Organization not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Purchased add-ons
+        purchased = OrganizationAddon.objects.filter(organization=org).select_related('addon')
+        purchased_data = [{
+            'id': str(p.id),
+            'addon_id': str(p.addon.id),
+            'addon_name': p.addon.name,
+            'addon_type': p.addon.addon_type,
+            'quantity': p.quantity,
+            'billing_cycle': p.billing_cycle,
+            'status': p.status,
+            'monthly_price': str(p.addon.monthly_price),
+            'annual_price': str(p.addon.annual_price),
+            'effective_price': str(p.effective_price),
+            'purchased_at': p.purchased_at.isoformat() if p.purchased_at else None,
+            'cancelled_at': p.cancelled_at.isoformat() if p.cancelled_at else None,
+            'notes': p.notes,
+        } for p in purchased]
+
+        # Available add-ons (active, and linked to org's plan or to all plans)
+        available_qs = PlanAddon.objects.filter(is_active=True).prefetch_related('plans')
+        if org.current_plan:
+            # Add-ons explicitly linked to this plan OR add-ons with no plans (available to all)
+            from django.db.models import Q
+            available_qs = available_qs.filter(
+                Q(plans=org.current_plan) | Q(plans__isnull=True)
+            ).distinct()
+
+        # Exclude add-ons already actively purchased
+        active_addon_ids = OrganizationAddon.objects.filter(
+            organization=org, status='active'
+        ).values_list('addon_id', flat=True)
+
+        available_data = [{
+            'id': str(a.id),
+            'name': a.name,
+            'addon_type': a.addon_type,
+            'quantity': a.quantity,
+            'monthly_price': str(a.monthly_price),
+            'annual_price': str(a.annual_price),
+            'already_purchased': a.id in active_addon_ids,
+        } for a in available_qs]
+
+        return Response({
+            'purchased': purchased_data,
+            'available': available_data,
+        })
+
+    @action(detail=False, methods=['post'], url_path='org-addons/(?P<org_id>[^/.]+)/purchase')
+    def org_addon_purchase(self, request, org_id=None):
+        """Purchase an add-on for a specific organization."""
+        from erp.models import Organization, OrganizationAddon, PlanAddon
+        try:
+            org = Organization.objects.get(id=org_id)
+        except Organization.DoesNotExist:
+            return Response({'error': 'Organization not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        addon_id = request.data.get('addon_id')
+        if not addon_id:
+            return Response({'error': 'addon_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            addon = PlanAddon.objects.get(id=addon_id, is_active=True)
+        except PlanAddon.DoesNotExist:
+            return Response({'error': 'Add-on not found or inactive'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Check if already purchased and active
+        if OrganizationAddon.objects.filter(organization=org, addon=addon, status='active').exists():
+            return Response({'error': 'This add-on is already active for this organization'}, status=status.HTTP_400_BAD_REQUEST)
+
+        quantity = request.data.get('quantity', 1)
+        billing_cycle = request.data.get('billing_cycle', 'MONTHLY')
+        notes = request.data.get('notes', '')
+
+        purchase = OrganizationAddon.objects.create(
+            organization=org,
+            addon=addon,
+            quantity=quantity,
+            billing_cycle=billing_cycle,
+            notes=notes,
+        )
+
+        return Response({
+            'id': str(purchase.id),
+            'message': f'Add-on "{addon.name}" purchased for {org.name}',
+            'addon_name': addon.name,
+            'addon_type': addon.addon_type,
+            'effective_price': str(purchase.effective_price),
+        }, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['post'], url_path='org-addons/(?P<org_id>[^/.]+)/cancel/(?P<purchase_id>[^/.]+)')
+    def org_addon_cancel(self, request, org_id=None, purchase_id=None):
+        """Cancel a purchased add-on for a specific organization."""
+        from erp.models import OrganizationAddon
+        from django.utils import timezone
+        try:
+            purchase = OrganizationAddon.objects.get(id=purchase_id, organization_id=org_id)
+        except OrganizationAddon.DoesNotExist:
+            return Response({'error': 'Purchase not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        if purchase.status != 'active':
+            return Response({'error': f'Cannot cancel — status is already "{purchase.status}"'}, status=status.HTTP_400_BAD_REQUEST)
+
+        purchase.status = 'cancelled'
+        purchase.cancelled_at = timezone.now()
+        purchase.save(update_fields=['status', 'cancelled_at'])
+
+        return Response({
+            'message': f'Add-on "{purchase.addon.name}" cancelled for organization',
+            'status': 'cancelled',
+        })
+
 class OrgModuleViewSet(viewsets.ViewSet):
     """Management of modules for a specific Organization (SaaS View)"""
     permission_classes = [permissions.IsAdminUser]
