@@ -249,6 +249,7 @@ const MENU_ITEMS = [
         module: 'crm',
         children: [
             { title: 'Contact Center', path: '/crm/contacts' },
+            { title: 'Client Pricing', path: '/crm/pricing', icon: Tag },
         ]
     },
     {
