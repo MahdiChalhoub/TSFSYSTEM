@@ -8,9 +8,13 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     OrganizationViewSet, SiteViewSet, SettingsViewSet, health_check,
     TenantResolutionView, DashboardViewSet, CountryViewSet, RoleViewSet,
-    UserViewSet, RecordHistoryViewSet, EntityGraphViewSet, CurrencyViewSet
+    UserViewSet, RecordHistoryViewSet, EntityGraphViewSet, CurrencyViewSet,
+    NotificationViewSet
 )
-from .views_auth import login_view, logout_view, me_view, PublicConfigView, register_business_view
+from .views_auth import (
+    login_view, logout_view, me_view, PublicConfigView, register_business_view,
+    password_reset_request_view, password_reset_confirm_view
+)
 from .views_saas_modules import SaaSModuleViewSet, OrgModuleViewSet, SaaSUpdateViewSet, SaaSPlansViewSet, PublicPricingView, SaaSClientViewSet
 from .views_modules import ModuleListView, ModuleEnableView, ModuleDisableView
 from .views_kernel import KernelViewSet
@@ -31,6 +35,7 @@ router.register(r'record-history', RecordHistoryViewSet, basename='record-histor
 router.register(r'entity-graph', EntityGraphViewSet, basename='entity-graph')
 router.register(r'encryption', EncryptionViewSet, basename='encryption')
 router.register(r'currencies', CurrencyViewSet, basename='currencies')
+router.register(r'notifications', NotificationViewSet, basename='notifications')
 
 # SaaS Management
 router.register(r'saas/modules', SaaSModuleViewSet, basename='saas-modules')
@@ -50,6 +55,8 @@ urlpatterns = [
     # Onboarding
     path('auth/config/', PublicConfigView.as_view(), name='auth_config'),
     path('auth/register/business/', register_business_view, name='register_business'),
+    path('auth/password-reset/', password_reset_request_view, name='password_reset_request'),
+    path('auth/password-reset/confirm/', password_reset_confirm_view, name='password_reset_confirm'),
     path('saas/pricing/', PublicPricingView.as_view(), name='public_pricing'),
     
     # Module Management (Tenant Side)

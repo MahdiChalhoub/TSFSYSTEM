@@ -7,7 +7,7 @@ from rest_framework import serializers
 from erp.models import (
     Organization, Site, User, Role, Country,
     SystemModule, OrganizationModule, SystemUpdate,
-    BusinessType, GlobalCurrency
+    BusinessType, GlobalCurrency, Notification
 )
 
 
@@ -134,6 +134,13 @@ class SystemUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = SystemUpdate
         fields = '__all__'
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = ['id', 'title', 'message', 'type', 'link', 'read_at', 'created_at']
+        read_only_fields = ['id', 'created_at']
 
 
 # =============================================================================

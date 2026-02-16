@@ -462,7 +462,7 @@ class User(AbstractUser):
     cash_register_id = models.IntegerField(null=True, blank=True, db_column='cash_register_id')
     is_active_account = models.BooleanField(default=True)
     
-    registration_status = models.CharField(max_length=50, default='APPROVED')
+    registration_status = models.CharField(max_length=50, default='PENDING')
     correction_notes = models.TextField(null=True, blank=True)
 
     # Scope Access Control — hashed PINs for dual-view scope switching
@@ -732,3 +732,30 @@ try:
     )
 except ImportError:
     pass
+
+class Notification(models.Model):
+    NOTIFICATION_TYPES = (
+        ('INFO', 'Information'),
+        ('SUCCESS', 'Success'),
+        ('WARNING', 'Warning'),
+        ('ERROR', 'Error'),
+    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    title = models.CharField(max_length=255)
+    message = models.TextField()
+    type = models.CharField(max_length=10, choices=NOTIFICATION_TYPES, default='INFO')
+    link = models.CharField(max_length=255, null=True, blank=True)
+    read_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'notification'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.title} for {self.user}"
+
+    def mark_as_read(self):
+        from django.utils import timezone
+        self.read_at = timezone.now()
+        self.save(update_fields=['read_at'])
