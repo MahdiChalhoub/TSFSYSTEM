@@ -5,6 +5,7 @@ import { CartItem } from '@/types/pos';
 import { useTransition, useState } from 'react';
 import { toast } from 'sonner';
 import { processSale } from '@/app/(privileged)/sales/actions';
+import { ReceiptModal } from './ReceiptModal';
 
 export function TicketSidebar({ cart, onUpdateQuantity, onClear }: {
     cart: CartItem[],
@@ -13,6 +14,10 @@ export function TicketSidebar({ cart, onUpdateQuantity, onClear }: {
 }) {
     const [isPending, startTransition] = useTransition();
     const [scope, setScope] = useState<'OFFICIAL' | 'INTERNAL'>('OFFICIAL');
+
+    // Receipt Modal State
+    const [lastOrder, setLastOrder] = useState<{ id: number; ref: string } | null>(null);
+    const [isReceiptOpen, setIsReceiptOpen] = useState(false);
 
     // Calculations
     const subtotal = cart.reduce((acc, item) => {
@@ -48,6 +53,8 @@ export function TicketSidebar({ cart, onUpdateQuantity, onClear }: {
 
                 if (result.success) {
                     toast.success(`Order Processed! Ref: ${result.ref}`);
+                    setLastOrder({ id: result.orderId, ref: result.ref });
+                    setIsReceiptOpen(true);
                     onClear();
                 }
             } catch (error) {
@@ -162,6 +169,13 @@ export function TicketSidebar({ cart, onUpdateQuantity, onClear }: {
                     )}
                 </button>
             </div>
+
+            <ReceiptModal
+                isOpen={isReceiptOpen}
+                onClose={() => setIsReceiptOpen(false)}
+                orderId={lastOrder?.id || null}
+                refCode={lastOrder?.ref || null}
+            />
         </div>
     );
 }

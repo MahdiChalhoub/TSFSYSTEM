@@ -106,6 +106,7 @@ const MENU_ITEMS = [
                 icon: ShoppingCart,
                 children: [
                     { title: 'POS Terminal', path: '/sales' },
+                    { title: 'Order History', path: '/sales/history' },
                     { title: 'Sales Analytics', path: '/sales/analytics' },
                     { title: 'Quotations', path: '/sales/quotations' },
                     { title: 'Deliveries', path: '/sales/deliveries' },

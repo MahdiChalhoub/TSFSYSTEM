@@ -22,6 +22,8 @@ from apps.pos.serializers import (
     SalesReturnSerializer, CreditNoteSerializer, PurchaseReturnSerializer
 )
 from erp.views import TenantModelViewSet
+from apps.pos.pdf_service import PDFService
+from django.http import HttpResponse
 
 
 class POSViewSet(viewsets.ViewSet):
@@ -49,6 +51,7 @@ class POSViewSet(viewsets.ViewSet):
             return Response({
                 "message": "Checkout successful",
                 "order_id": order.id,
+                "ref": order.invoice_number,
                 "total_amount": float(order.total_amount)
             }, status=status.HTTP_201_CREATED)
         except Exception as e:
@@ -160,6 +163,34 @@ class POSViewSet(viewsets.ViewSet):
             'hourly': hourly,
             'recent': recent,
         })
+
+    @action(detail=True, methods=['get'], url_path='invoice-pdf')
+    def invoice_pdf(self, request, pk=None):
+        """Generates and serves a professional PDF invoice for an order."""
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({"error": "No organization context"}, status=400)
+            
+        try:
+            order = Order.objects.select_related('organization', 'contact').get(
+                id=pk, organization_id=organization_id
+            )
+            
+            context = PDFService.get_invoice_context(order)
+            pdf_content = PDFService.render_to_pdf('pos/invoice.html', context)
+            
+            if not pdf_content:
+                return Response({"error": "Failed to generate PDF"}, status=500)
+                
+            response = HttpResponse(pdf_content, content_type='application/pdf')
+            filename = f"Invoice_{order.invoice_number or order.id}.pdf"
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            return response
+            
+        except Order.DoesNotExist:
+            return Response({"error": "Order not found"}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
 
     @action(detail=False, methods=['get'], url_path='sales-analytics')
     def sales_analytics(self, request):
@@ -693,3 +724,11 @@ class DiscountRuleViewSet(TenantModelViewSet):
         valid = [r for r in rules if r.is_valid]
         return Response(DiscountRuleSerializer(valid, many=True).data)
 
+
+class OrderViewSet(TenantModelViewSet):
+    """CRUD for sales/purchase orders."""
+    queryset = Order.objects.select_related('contact', 'user', 'site').all()
+    serializer_class = OrderSerializer
+    filterset_fields = ['type', 'status', 'contact', 'user']
+    search_fields = ['ref_code', 'invoice_number', 'notes']
+    ordering_fields = ['created_at', 'total_amount']

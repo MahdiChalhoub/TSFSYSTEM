@@ -53,6 +53,7 @@ export async function processSale(data: {
     cart: any[],
     paymentMethod: string,
     totalAmount: number,
+    scope?: string,
     notes?: string,
     warehouseId?: number,
     paymentAccountId?: number
@@ -69,11 +70,12 @@ export async function processSale(data: {
                 })),
                 warehouse_id: data.warehouseId || 1, // Fallback need actual ID
                 payment_account_id: data.paymentAccountId,
-                notes: data.notes
+                notes: data.notes,
+                scope: data.scope || 'OFFICIAL'
             })
         });
 
-        return { success: true, orderId: response.order_id, ref: "POS-WEB" };
+        return { success: true, orderId: response.order_id, ref: response.ref || "POS-WEB" };
     } catch (e: any) {
         console.error("POS Checkout Error:", e);
         throw new Error(e.message || "Checkout Failed");
