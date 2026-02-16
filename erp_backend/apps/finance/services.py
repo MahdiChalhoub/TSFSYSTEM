@@ -1454,12 +1454,16 @@ class VoucherService:
                 if not data.get('source_account_id') or not data.get('destination_account_id'):
                     raise ValidationError("Transfer vouchers require both source and destination accounts.")
 
+            # Auto-generate reference from Transaction Sequence
+            seq_type = f'VOUCHER_{voucher_type}'
+            reference = SequenceService.get_next_number(organization, seq_type)
+
             voucher = Voucher.objects.create(
                 organization=organization,
                 voucher_type=voucher_type,
                 amount=amount,
                 date=data['date'],
-                reference=data.get('reference'),
+                reference=reference,
                 description=data.get('description', ''),
                 source_account_id=data.get('source_account_id'),
                 destination_account_id=data.get('destination_account_id'),
