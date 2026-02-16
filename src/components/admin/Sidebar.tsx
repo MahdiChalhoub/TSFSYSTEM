@@ -141,6 +141,7 @@ const MENU_ITEMS = [
                     { title: 'Stock Adjustments', path: '/inventory/adjustments' },
                     { title: 'Global Inventory', path: '/inventory/global' },
                     { title: 'Barcode Configuration', path: '/inventory/barcode' },
+                    { title: 'Expiry Alerts', path: '/inventory/expiry-alerts' },
                 ]
             },
             {
