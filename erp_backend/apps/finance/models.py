@@ -571,3 +571,28 @@ class ForensicAuditLog(TenantModel):
             models.Index(fields=['organization', 'model_name', 'object_id']),
             models.Index(fields=['organization', 'timestamp']),
         ]
+
+
+# =============================================================================
+# TAX GROUPS
+# =============================================================================
+
+class TaxGroup(TenantModel):
+    """
+    Named tax rate groups that can be linked to products.
+    E.g., "Standard VAT 11%", "Reduced VAT 5.5%", "Zero-rated"
+    """
+    name = models.CharField(max_length=100)
+    rate = models.DecimalField(max_digits=5, decimal_places=2, help_text='Tax rate as percentage, e.g. 11.00 for 11%')
+    is_default = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    description = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+
+    class Meta:
+        db_table = 'taxgroup'
+        unique_together = ('name', 'organization')
+        ordering = ['-is_default', 'name']
+
+    def __str__(self):
+        return f"{self.name} ({self.rate}%)"
