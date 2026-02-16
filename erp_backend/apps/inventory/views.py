@@ -717,6 +717,66 @@ class InventoryViewSet(TenantModelViewSet):
         status_data = InventoryService.get_inventory_valuation(organization)
         return Response(status_data)
 
+    @action(detail=False, methods=['get'], url_path='stock-valuation')
+    def stock_valuation(self, request):
+        """Per-product stock valuation using FIFO/LIFO/Weighted Average."""
+        organization, err = _get_org_or_400()
+        if err: return err
+
+        warehouse_id = request.query_params.get('warehouse_id')
+        try:
+            from apps.inventory.valuation_service import ValuationService
+            products = ValuationService.get_stock_valuation_summary(
+                organization, warehouse_id=warehouse_id
+            )
+
+            # Also compute totals
+            from decimal import Decimal
+            total_qty = sum(p['quantity'] for p in products)
+            total_value = sum(p['total_value'] for p in products)
+
+            return Response({
+                'summary': {
+                    'total_products': len(products),
+                    'total_quantity': total_qty,
+                    'total_value': total_value,
+                },
+                'products': products,
+            })
+        except Exception as e:
+            # Fallback: use simple cost-price based valuation
+            from apps.inventory.models import Inventory, Product
+            from django.db.models import F, Sum
+            inventories = Inventory.objects.filter(
+                organization=organization,
+                quantity__gt=0,
+            ).select_related('product', 'warehouse').annotate(
+                item_value=F('quantity') * F('product__cost_price')
+            )
+
+            products = [{
+                'product_id': inv.product.id,
+                'product_name': inv.product.name,
+                'product_sku': getattr(inv.product, 'barcode', None),
+                'quantity': float(inv.quantity),
+                'total_value': float(inv.item_value or 0),
+                'avg_cost': float(inv.product.cost_price) if inv.product.cost_price else 0,
+                'method': 'COST_PRICE',
+                'warehouse': inv.warehouse.name if inv.warehouse else None,
+            } for inv in inventories]
+
+            total_qty = sum(p['quantity'] for p in products)
+            total_value = sum(p['total_value'] for p in products)
+
+            return Response({
+                'summary': {
+                    'total_products': len(products),
+                    'total_quantity': total_qty,
+                    'total_value': total_value,
+                },
+                'products': products,
+            })
+
     @action(detail=False, methods=['get'])
     def financial_status(self, request):
         organization, err = _get_org_or_400()
