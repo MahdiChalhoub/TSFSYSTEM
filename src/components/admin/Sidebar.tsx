@@ -143,6 +143,15 @@ const MENU_ITEMS = [
                 ]
             },
             {
+                title: 'Stock Orders',
+                icon: ClipboardList,
+                children: [
+                    { title: 'Adjustment Orders', path: '/inventory/adjustment-orders' },
+                    { title: 'Transfer Orders', path: '/inventory/transfer-orders' },
+                    { title: 'Operational Requests', path: '/inventory/requests' },
+                ]
+            },
+            {
                 title: 'Catalog Setup',
                 icon: FolderTree,
                 children: [
