@@ -1,0 +1,2 @@
+
+ALTER TABLE sync_state ADD COLUMN total_synced INTEGER DEFAULT 0;

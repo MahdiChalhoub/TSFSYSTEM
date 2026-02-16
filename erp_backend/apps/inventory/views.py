@@ -47,6 +47,7 @@ from apps.inventory.serializers import (
     StockAdjustmentOrderSerializer, StockAdjustmentLineSerializer,
     StockTransferOrderSerializer, StockTransferLineSerializer,
     OperationalRequestSerializer, OperationalRequestLineSerializer,
+    ProductAnalyticsSerializer,
 )
 from apps.inventory.services import InventoryService
 from erp.lifecycle_mixin import LifecycleViewSetMixin
@@ -311,6 +312,200 @@ class ProductViewSet(TenantModelViewSet):
             })
 
         return Response(data)
+
+    # ─── Product Analytics (analytical product list) ─────────────────
+    @action(detail=False, methods=['get'])
+    def product_analytics(self, request):
+        """
+        Returns products enriched with stock, sales metrics, health score,
+        and operational request lifecycle status. Uses batch queries.
+        """
+        organization, err = _get_org_or_400()
+        if err:
+            return err
+
+        # ── Query params ──
+        search = request.query_params.get('search', '')
+        category_id = request.query_params.get('category')
+        brand_id = request.query_params.get('brand')
+        warehouse_id = request.query_params.get('warehouse_id')
+        status_filter = request.query_params.get('status')  # AVAILABLE, REQUESTED, ORDER_CREATED, FAILED
+        hide_completed = request.query_params.get('hide_completed', 'false').lower() == 'true'
+        limit = min(int(request.query_params.get('limit', 50)), 200)
+        offset = int(request.query_params.get('offset', 0))
+
+        # ── Base queryset ──
+        products_qs = Product.objects.filter(
+            organization=organization, status='ACTIVE'
+        ).select_related('brand', 'category', 'unit')
+
+        if search:
+            products_qs = products_qs.filter(
+                Q(name__icontains=search) | Q(sku__icontains=search) | Q(barcode__icontains=search)
+            )
+        if category_id:
+            products_qs = products_qs.filter(category_id=category_id)
+        if brand_id:
+            products_qs = products_qs.filter(brand_id=brand_id)
+
+        total_count = products_qs.count()
+        product_list = list(products_qs.order_by('name')[offset:offset + limit])
+        product_ids = [p.id for p in product_list]
+
+        if not product_ids:
+            return Response({'products': [], 'total': 0})
+
+        thirty_days_ago = timezone.now() - timedelta(days=30)
+
+        # ── Batch: Stock ──
+        stock_filter = {'organization': organization, 'product_id__in': product_ids}
+        if warehouse_id:
+            stock_filter['warehouse_id'] = warehouse_id
+
+        stock_rows = Inventory.objects.filter(**stock_filter).values(
+            'product_id'
+        ).annotate(total_qty=Coalesce(Sum('quantity'), 0, output_field=DecimalField()))
+        stock_map = {r['product_id']: float(r['total_qty']) for r in stock_rows}
+
+        # ── Batch: Sales (OUT movements, last 30 days) ──
+        sales_rows = InventoryMovement.objects.filter(
+            organization=organization, product_id__in=product_ids,
+            type='OUT', created_at__gte=thirty_days_ago
+        ).values('product_id').annotate(total_out=Coalesce(Sum('quantity'), 0, output_field=DecimalField()))
+        sales_map = {r['product_id']: float(r['total_out']) for r in sales_rows}
+
+        # ── Batch: Purchases (IN movements, last 30 days) ──
+        purchase_rows = InventoryMovement.objects.filter(
+            organization=organization, product_id__in=product_ids,
+            type='IN', created_at__gte=thirty_days_ago
+        ).values('product_id').annotate(
+            total_in=Coalesce(Sum('quantity'), 0, output_field=DecimalField()),
+            total_cost=Coalesce(Sum('cost_price_ht'), 0, output_field=DecimalField()),
+            count=Count('id')
+        )
+        purchase_map = {r['product_id']: {
+            'total_in': float(r['total_in']),
+            'total_cost': float(r['total_cost']),
+            'count': r['count']
+        } for r in purchase_rows}
+
+        # ── Batch: Latest operational request per product ──
+        latest_request_lines = OperationalRequestLine.objects.filter(
+            product_id__in=product_ids,
+            request__organization=organization
+        ).select_related('request').order_by('product_id', '-request__created_at')
+
+        request_map = {}
+        for line in latest_request_lines:
+            pid = line.product_id
+            if pid not in request_map:
+                req = line.request
+                request_map[pid] = {
+                    'status': req.status,
+                    'type': req.request_type,
+                    'id': req.id,
+                    'priority': req.priority,
+                    'converted_to_type': req.converted_to_type,
+                    'converted_to_id': req.converted_to_id,
+                    'rejection_reason': req.rejection_reason,
+                }
+
+        # ── Build response ──
+        results = []
+        for p in product_list:
+            total_stock = stock_map.get(p.id, 0)
+            total_sold = sales_map.get(p.id, 0)
+            purch = purchase_map.get(p.id, {'total_in': 0, 'total_cost': 0, 'count': 0})
+
+            avg_daily = round(total_sold / 30.0, 2)
+            avg_monthly = round(total_sold, 2)
+            avg_unit_cost = round(purch['total_cost'] / purch['total_in'], 2) if purch['total_in'] > 0 else float(p.cost_price)
+            stock_days = round(total_stock / avg_daily, 1) if avg_daily > 0 else None
+
+            # Health score (0-100)
+            if avg_daily <= 0:
+                health = 50
+            elif stock_days is not None:
+                if stock_days >= 30:
+                    health = 95
+                elif stock_days >= 14:
+                    health = 80
+                elif stock_days >= 7:
+                    health = 60
+                elif stock_days >= 3:
+                    health = 40
+                else:
+                    health = 20
+            else:
+                health = 50
+
+            if total_stock <= 0:
+                health = max(health - 30, 0)
+            elif total_stock < p.min_stock_level:
+                health = max(health - 15, 0)
+
+            # Request lifecycle
+            req_info = request_map.get(p.id)
+            request_status_val = None
+            request_type_val = None
+            request_id_val = None
+            request_priority_val = None
+            order_type_val = None
+            order_id_val = None
+            rejection_reason_val = None
+
+            if req_info:
+                request_status_val = req_info['status']
+                request_type_val = req_info['type']
+                request_id_val = req_info['id']
+                request_priority_val = req_info['priority']
+                order_type_val = req_info['converted_to_type']
+                order_id_val = req_info['converted_to_id']
+                rejection_reason_val = req_info['rejection_reason']
+
+            # Apply status filter
+            if status_filter:
+                if status_filter == 'AVAILABLE' and request_status_val is not None:
+                    continue
+                if status_filter == 'REQUESTED' and request_status_val not in ('PENDING', 'APPROVED'):
+                    continue
+                if status_filter == 'ORDER_CREATED' and request_status_val != 'CONVERTED':
+                    continue
+                if status_filter == 'FAILED' and request_status_val != 'REJECTED':
+                    continue
+
+            if hide_completed and request_status_val == 'CONVERTED':
+                continue
+
+            results.append({
+                'id': p.id,
+                'sku': p.sku,
+                'barcode': p.barcode,
+                'name': p.name,
+                'category_name': p.category.name if p.category else None,
+                'brand_name': p.brand.name if p.brand else None,
+                'unit_code': p.unit.code if p.unit else None,
+                'total_stock': total_stock,
+                'min_stock_level': p.min_stock_level,
+                'cost_price': float(p.cost_price),
+                'selling_price_ttc': float(p.selling_price_ttc),
+                'avg_daily_sales': avg_daily,
+                'avg_monthly_sales': avg_monthly,
+                'total_sold_30d': total_sold,
+                'total_purchased_30d': purch['total_in'],
+                'avg_unit_cost': avg_unit_cost,
+                'health_score': health,
+                'stock_days_remaining': stock_days,
+                'request_status': request_status_val,
+                'request_type': request_type_val,
+                'request_id': request_id_val,
+                'request_priority': request_priority_val,
+                'order_type': order_type_val,
+                'order_id': order_id_val,
+                'rejection_reason': rejection_reason_val,
+            })
+
+        return Response({'products': results, 'total': total_count})
 
 
 # =============================================================================

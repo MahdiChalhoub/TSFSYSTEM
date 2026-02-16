@@ -397,3 +397,48 @@ class OperationalRequestSerializer(serializers.ModelSerializer):
 
     def get_line_count(self, obj):
         return obj.lines.count()
+
+
+# =============================================================================
+# PRODUCT ANALYTICS SERIALIZER
+# =============================================================================
+
+class ProductAnalyticsSerializer(serializers.Serializer):
+    """Read-only serializer for the product analytics endpoint."""
+    id = serializers.IntegerField()
+    sku = serializers.CharField()
+    barcode = serializers.CharField(allow_null=True)
+    name = serializers.CharField()
+    category_name = serializers.CharField(allow_null=True)
+    brand_name = serializers.CharField(allow_null=True)
+    unit_code = serializers.CharField(allow_null=True)
+
+    # Stock
+    total_stock = serializers.FloatField()
+    min_stock_level = serializers.IntegerField()
+
+    # Pricing
+    cost_price = serializers.FloatField()
+    selling_price_ttc = serializers.FloatField()
+
+    # Sales metrics
+    avg_daily_sales = serializers.FloatField()
+    avg_monthly_sales = serializers.FloatField()
+    total_sold_30d = serializers.FloatField()
+
+    # Purchase metrics
+    total_purchased_30d = serializers.FloatField()
+    avg_unit_cost = serializers.FloatField()
+
+    # Health
+    health_score = serializers.IntegerField()
+    stock_days_remaining = serializers.FloatField(allow_null=True)
+
+    # Request lifecycle
+    request_status = serializers.CharField(allow_null=True)
+    request_type = serializers.CharField(allow_null=True)
+    request_id = serializers.IntegerField(allow_null=True)
+    request_priority = serializers.CharField(allow_null=True)
+    order_type = serializers.CharField(allow_null=True)
+    order_id = serializers.IntegerField(allow_null=True)
+    rejection_reason = serializers.CharField(allow_null=True)

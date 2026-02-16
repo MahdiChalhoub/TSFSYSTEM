@@ -1,0 +1,3 @@
+DROP INDEX idx_session_assignments_user;
+DROP INDEX idx_session_assignments_session;
+DROP TABLE session_assignments;
