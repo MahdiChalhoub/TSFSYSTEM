@@ -59,7 +59,7 @@ Manage multi-tenant business instances from the SaaS admin panel. Lists all orga
    - Main Warehouse
    - Fiscal Year + 12 monthly periods
    - Full Chart of Accounts (16 accounts)
-   - Cash Drawer financial account
+   - Cash Drawer financial account 
    - Posting rules
    - Global financial settings
    - SaaS client linking (Contact in SaaS org's CRM)
