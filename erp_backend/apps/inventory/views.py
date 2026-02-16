@@ -874,6 +874,59 @@ class InventoryViewSet(TenantModelViewSet):
         except ExpiryAlert.DoesNotExist:
             return Response({"error": "Alert not found"}, status=404)
 
+    @action(detail=False, methods=['get'], url_path='low-stock')
+    def low_stock(self, request):
+        """Products where current stock is at or below min_stock_level."""
+        organization, err = _get_org_or_400()
+        if err: return err
+
+        from apps.inventory.models import Inventory
+        from django.db.models import Sum
+
+        products = Product.objects.filter(
+            organization=organization, is_active=True
+        )
+
+        alerts = []
+        for product in products:
+            total_qty = Inventory.objects.filter(
+                organization=organization, product=product
+            ).aggregate(total=Sum('quantity'))['total'] or 0
+
+            if total_qty <= product.min_stock_level:
+                shortage = product.min_stock_level - float(total_qty)
+                alerts.append({
+                    'product_id': product.id,
+                    'product_name': product.name,
+                    'barcode': getattr(product, 'barcode', None),
+                    'current_stock': float(total_qty),
+                    'min_stock_level': product.min_stock_level,
+                    'shortage': shortage,
+                    'severity': 'OUT' if total_qty == 0 else ('CRITICAL' if total_qty <= product.min_stock_level * 0.3 else 'LOW'),
+                    'cost_price': float(product.cost_price) if product.cost_price else 0,
+                    'restock_value': shortage * float(product.cost_price) if product.cost_price else 0,
+                })
+
+        # Sort: OUT first, then CRITICAL, then LOW
+        sev_order = {'OUT': 0, 'CRITICAL': 1, 'LOW': 2}
+        alerts.sort(key=lambda a: (sev_order.get(a['severity'], 3), -a['shortage']))
+
+        out_count = sum(1 for a in alerts if a['severity'] == 'OUT')
+        critical_count = sum(1 for a in alerts if a['severity'] == 'CRITICAL')
+        low_count = sum(1 for a in alerts if a['severity'] == 'LOW')
+        total_restock = sum(a['restock_value'] for a in alerts)
+
+        return Response({
+            'stats': {
+                'total_alerts': len(alerts),
+                'out_of_stock': out_count,
+                'critical': critical_count,
+                'low': low_count,
+                'total_restock_value': total_restock,
+            },
+            'products': alerts,
+        })
+
     @action(detail=False, methods=['post'])
     def transfer_stock(self, request):
         """Transfer stock between warehouses within the same organization."""

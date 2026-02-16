@@ -142,6 +142,7 @@ const MENU_ITEMS = [
                     { title: 'Global Inventory', path: '/inventory/global' },
                     { title: 'Barcode Configuration', path: '/inventory/barcode' },
                     { title: 'Expiry Alerts', path: '/inventory/expiry-alerts' },
+                    { title: 'Low Stock Alerts', path: '/inventory/low-stock' },
                 ]
             },
             {
@@ -207,6 +208,7 @@ const MENU_ITEMS = [
                     { title: 'Balance Sheet', path: '/finance/reports/balance-sheet' },
                     { title: 'Aging Report', path: '/finance/aging' },
                     { title: 'Audit Trail', path: '/finance/audit-trail' },
+                    { title: 'Cash Register', path: '/finance/cash-register' },
                 ]
             },
             {
