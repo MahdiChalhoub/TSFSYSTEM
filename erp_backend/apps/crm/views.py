@@ -5,6 +5,7 @@ ViewSets for customer/supplier contact management.
 from django.db import transaction
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from erp.views import TenantModelViewSet
 from erp.middleware import get_current_tenant_id
 from erp.models import Organization
@@ -126,22 +127,24 @@ class ContactViewSet(TenantModelViewSet):
             'last_payment_date': str(bal_obj.last_payment_date) if bal_obj and bal_obj.last_payment_date else None,
         }
 
-        # Journal entries linked to this contact
-        from apps.finance.models import JournalEntryLine
-        journal_lines = JournalEntryLine.objects.filter(
-            organization_id=organization_id,
-            contact=contact
-        ).select_related('journal_entry', 'account').order_by('-journal_entry__transaction_date')[:10]
+        # Journal entries via linked COA sub-account
+        recent_journal = []
+        if contact.linked_account:
+            from apps.finance.models import JournalEntryLine
+            journal_lines = JournalEntryLine.objects.filter(
+                organization_id=organization_id,
+                account_id=contact.linked_account
+            ).select_related('journal_entry', 'account').order_by('-journal_entry__transaction_date')[:10]
 
-        recent_journal = [{
-            'id': jl.journal_entry.id,
-            'date': str(jl.journal_entry.transaction_date.date()) if jl.journal_entry.transaction_date else None,
-            'reference': jl.journal_entry.reference,
-            'description': jl.description,
-            'account': jl.account.name if jl.account else None,
-            'debit': float(jl.debit),
-            'credit': float(jl.credit),
-        } for jl in journal_lines]
+            recent_journal = [{
+                'id': jl.journal_entry.id,
+                'date': str(jl.journal_entry.transaction_date.date()) if jl.journal_entry.transaction_date else None,
+                'reference': jl.journal_entry.reference,
+                'description': jl.description,
+                'account': jl.account.name if jl.account else None,
+                'debit': float(jl.debit),
+                'credit': float(jl.credit),
+            } for jl in journal_lines]
 
         return Response({
             'contact': ContactSerializer(contact).data,
