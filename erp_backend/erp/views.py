@@ -28,6 +28,7 @@ from .throttles import TenantResolveRateThrottle
 from .models import (
     Organization, Site, User, Country, Role,
     SystemModule, OrganizationModule, GlobalCurrency,
+    ManagerOverrideLog,
 )
 
 # --- Business Module Models (optional — modules may be uninstalled) ---

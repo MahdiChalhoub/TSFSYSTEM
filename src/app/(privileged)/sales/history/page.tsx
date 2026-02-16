@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
+import Link from "next/link"
 import {
     ShoppingCart, Download, Printer, FileText, Search,
     Filter, Calendar, ChevronRight, User, Hash, MoreVertical,
@@ -225,9 +226,12 @@ export default function OrderHistoryPage() {
                                             <button className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all shadow-sm">
                                                 <Printer size={18} />
                                             </button>
-                                            <button className="p-2 bg-gray-50 text-gray-400 rounded-lg hover:bg-gray-200 transition-all">
+                                            <Link
+                                                href={`/sales/${order.id}`}
+                                                className="p-2 bg-gray-50 text-gray-400 rounded-lg hover:bg-gray-200 transition-all"
+                                            >
                                                 <ChevronRight size={18} />
-                                            </button>
+                                            </Link>
                                         </div>
                                     </TableCell>
                                 </TableRow>
