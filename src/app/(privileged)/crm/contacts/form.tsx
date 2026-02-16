@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from 'react';
 import { createContact } from '@/app/actions/people';
-import { User, X, Briefcase, Phone, Mail, MapPin, Building2, CreditCard } from 'lucide-react';
+import { User, X, Briefcase, Phone, Mail, MapPin, Building2, CreditCard, Globe, FileText, Clock, Tag } from 'lucide-react';
 
 export default function ContactModal({
     sites,
@@ -13,17 +13,16 @@ export default function ContactModal({
     type?: string,
     onClose: () => void
 }) {
-    // Note: createContact expect FormData
     const [state, action, isPending] = useActionState(
-        createContact,
+        createContact as (prevState: any, formData: FormData) => Promise<{ success: boolean; message: string }>,
         { success: false, message: '' }
     );
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-500 border border-gray-100">
+            <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-500 border border-gray-100 max-h-[90vh] overflow-y-auto">
                 {/* Header */}
-                <div className="px-8 py-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+                <div className="px-8 py-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50 sticky top-0 z-10">
                     <div className="flex items-center gap-4">
                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg ${type === 'CUSTOMER' ? 'bg-blue-600 shadow-blue-200' : 'bg-amber-600 shadow-amber-200'} text-white`}>
                             {type === 'CUSTOMER' ? <User size={24} /> : <Briefcase size={24} />}
@@ -40,13 +39,11 @@ export default function ContactModal({
                     </button>
                 </div>
 
-                <form action={async (fd) => {
-                    const res = await action(fd);
-                    if (res?.success) onClose();
-                }} className="p-8 space-y-6">
+                <form action={action} className="p-8 space-y-6">
                     <input type="hidden" name="type" value={type} />
 
                     <div className="grid grid-cols-2 gap-6">
+                        {/* Name */}
                         <div className="col-span-2 md:col-span-1">
                             <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Entity / Individual Name</label>
                             <div className="relative">
@@ -60,6 +57,20 @@ export default function ContactModal({
                             </div>
                         </div>
 
+                        {/* Company Name */}
+                        <div className="col-span-2 md:col-span-1">
+                            <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Company Name</label>
+                            <div className="relative">
+                                <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                                <input
+                                    name="companyName"
+                                    className="w-full pl-12 pr-6 py-4 rounded-2xl bg-gray-50 border-none focus:ring-4 focus:ring-indigo-100 outline-none transition-all font-bold text-gray-800"
+                                    placeholder="Company / Organization"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Home Site */}
                         <div className="col-span-2 md:col-span-1">
                             <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Home / Origin Site</label>
                             <div className="relative">
@@ -77,6 +88,44 @@ export default function ContactModal({
                             </div>
                         </div>
 
+                        {/* Supplier Category — only for suppliers */}
+                        {type === 'SUPPLIER' && (
+                            <div className="col-span-2 md:col-span-1">
+                                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Supplier Category</label>
+                                <div className="relative">
+                                    <Tag className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                                    <select
+                                        name="supplierCategory"
+                                        className="w-full pl-12 pr-6 py-4 rounded-2xl bg-gray-50 border-none focus:ring-4 focus:ring-amber-100 outline-none transition-all font-bold text-gray-800 appearance-none"
+                                    >
+                                        <option value="REGULAR">Regular Supplier</option>
+                                        <option value="DEPOT_VENTE">Depot Vente (Consignment)</option>
+                                        <option value="MIXED">Mixed</option>
+                                    </select>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Customer Tier — only for customers */}
+                        {type === 'CUSTOMER' && (
+                            <div className="col-span-2 md:col-span-1">
+                                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Client Tier</label>
+                                <div className="relative">
+                                    <Tag className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                                    <select
+                                        name="customerTier"
+                                        className="w-full pl-12 pr-6 py-4 rounded-2xl bg-gray-50 border-none focus:ring-4 focus:ring-blue-100 outline-none transition-all font-bold text-gray-800 appearance-none"
+                                    >
+                                        <option value="STANDARD">Standard</option>
+                                        <option value="VIP">VIP</option>
+                                        <option value="WHOLESALE">Wholesale</option>
+                                        <option value="RETAIL">Retail</option>
+                                    </select>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Email */}
                         <div className="col-span-2 md:col-span-1">
                             <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Work Email</label>
                             <div className="relative">
@@ -90,6 +139,7 @@ export default function ContactModal({
                             </div>
                         </div>
 
+                        {/* Phone */}
                         <div className="col-span-2 md:col-span-1">
                             <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Primary Phone</label>
                             <div className="relative">
@@ -97,7 +147,37 @@ export default function ContactModal({
                                 <input
                                     name="phone"
                                     className="w-full pl-12 pr-6 py-4 rounded-2xl bg-gray-50 border-none focus:ring-4 focus:ring-indigo-100 outline-none transition-all font-bold text-gray-800"
-                                    placeholder="+961 XX XXX XXX"
+                                    placeholder="+225 XX XXX XXX"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Payment Terms */}
+                        <div className="col-span-2 md:col-span-1">
+                            <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Payment Terms (Days)</label>
+                            <div className="relative">
+                                <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                                <input
+                                    name="paymentTermsDays"
+                                    type="number"
+                                    min="0"
+                                    defaultValue="0"
+                                    className="w-full pl-12 pr-6 py-4 rounded-2xl bg-gray-50 border-none focus:ring-4 focus:ring-indigo-100 outline-none transition-all font-bold text-gray-800"
+                                    placeholder="0 = Immediate"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Notes */}
+                        <div className="col-span-2">
+                            <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Notes</label>
+                            <div className="relative">
+                                <FileText className="absolute left-4 top-4 text-gray-300" size={18} />
+                                <textarea
+                                    name="notes"
+                                    rows={2}
+                                    className="w-full pl-12 pr-6 py-4 rounded-2xl bg-gray-50 border-none focus:ring-4 focus:ring-indigo-100 outline-none transition-all font-bold text-gray-800 resize-none"
+                                    placeholder="Internal notes about this contact..."
                                 />
                             </div>
                         </div>
@@ -113,6 +193,12 @@ export default function ContactModal({
                             All transactions (Invoices, Receipts, Payables) will be accurately linked for real-time balance sheet maturity.
                         </p>
                     </div>
+
+                    {state?.message && !state.success && (
+                        <div className="p-4 bg-rose-50 rounded-2xl text-rose-600 text-sm font-bold">
+                            {state.message}
+                        </div>
+                    )}
 
                     <div className="pt-6 border-t border-gray-50 flex gap-4">
                         <button

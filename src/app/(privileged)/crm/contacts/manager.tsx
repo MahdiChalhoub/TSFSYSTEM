@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Plus, User, Briefcase, Building2, CreditCard, ChevronRight, Phone, Mail, Filter, TrendingUp, TrendingDown } from "lucide-react";
+import { Search, Plus, User, Briefcase, Building2, CreditCard, ChevronRight, Phone, Mail, Filter, TrendingUp, TrendingDown, Tag, Star, Users } from "lucide-react";
 import ContactModal from './form';
 import clsx from 'clsx';
 
@@ -13,7 +13,7 @@ export default function ContactManager({
     sites: any[]
 }) {
     const [search, setSearch] = useState('');
-    const [typeFilter, setTypeFilter] = useState<'ALL' | 'CUSTOMER' | 'SUPPLIER'>('ALL');
+    const [typeFilter, setTypeFilter] = useState<'ALL' | 'CUSTOMER' | 'SUPPLIER' | 'LEAD'>('ALL');
     const [siteFilter, setSiteFilter] = useState<string>('ALL');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalType, setModalType] = useState<'CUSTOMER' | 'SUPPLIER'>('CUSTOMER');
@@ -42,7 +42,7 @@ export default function ContactManager({
                     </div>
 
                     <div className="flex gap-2 bg-gray-50 p-1.5 rounded-2xl w-full md:w-auto">
-                        {['ALL', 'CUSTOMER', 'SUPPLIER'].map((t) => (
+                        {['ALL', 'CUSTOMER', 'SUPPLIER', 'LEAD'].map((t) => (
                             <button
                                 key={t}
                                 onClick={() => setTypeFilter(t as any)}
@@ -99,21 +99,44 @@ export default function ContactManager({
                         {/* Avatar / Icon */}
                         <div className={clsx(
                             "w-24 h-24 rounded-[32px] shrink-0 flex items-center justify-center shadow-inner transition-transform group-hover:scale-110 duration-500",
-                            contact.type === 'CUSTOMER' ? "bg-blue-50 text-blue-600" : "bg-amber-50 text-amber-600"
+                            contact.type === 'CUSTOMER' ? "bg-blue-50 text-blue-600" :
+                                contact.type === 'LEAD' ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
                         )}>
-                            {contact.type === 'CUSTOMER' ? <User size={40} /> : <Briefcase size={40} />}
+                            {contact.type === 'CUSTOMER' ? <User size={40} /> :
+                                contact.type === 'LEAD' ? <Users size={40} /> : <Briefcase size={40} />}
                         </div>
 
                         {/* Info */}
                         <div className="flex-1 text-center sm:text-left space-y-4">
                             <div>
-                                <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
+                                <div className="flex items-center justify-center sm:justify-start gap-2 mb-1 flex-wrap">
                                     <span className={clsx(
                                         "px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-tighter",
-                                        contact.type === 'CUSTOMER' ? "bg-blue-100 text-blue-700" : "bg-amber-100 text-amber-700"
+                                        contact.type === 'CUSTOMER' ? "bg-blue-100 text-blue-700" :
+                                            contact.type === 'LEAD' ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
                                     )}>
                                         {contact.type}
                                     </span>
+                                    {/* Supplier Category Badge */}
+                                    {contact.type === 'SUPPLIER' && contact.supplier_category && contact.supplier_category !== 'REGULAR' && (
+                                        <span className={clsx(
+                                            "px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-tighter",
+                                            contact.supplier_category === 'DEPOT_VENTE' ? "bg-purple-100 text-purple-700" : "bg-orange-100 text-orange-700"
+                                        )}>
+                                            {contact.supplier_category === 'DEPOT_VENTE' ? 'Consignment' : 'Mixed'}
+                                        </span>
+                                    )}
+                                    {/* Customer Tier Badge */}
+                                    {contact.type === 'CUSTOMER' && contact.customer_tier && contact.customer_tier !== 'STANDARD' && (
+                                        <span className={clsx(
+                                            "px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-tighter flex items-center gap-0.5",
+                                            contact.customer_tier === 'VIP' ? "bg-yellow-100 text-yellow-700" :
+                                                contact.customer_tier === 'WHOLESALE' ? "bg-cyan-100 text-cyan-700" : "bg-teal-100 text-teal-700"
+                                        )}>
+                                            {contact.customer_tier === 'VIP' && <Star size={10} />}
+                                            {contact.customer_tier}
+                                        </span>
+                                    )}
                                     {contact.homeSite && (
                                         <span className="flex items-center gap-1 text-[10px] font-bold text-gray-400">
                                             <Building2 size={10} /> {contact.homeSite.name}

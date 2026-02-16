@@ -64,6 +64,26 @@
 
 ---
 
+### Session: 2026-02-16 (v2.8.0 series)
+- **Agent**: Antigravity
+- **Status**: 🔄 IN_PROGRESS
+- **Worked On**: POS Spec-vs-Implementation gap analysis + Phase 1.1 Supplier Categories
+- **Files Modified**:
+  - `erp_backend/apps/crm/models.py` — Expanded Contact: 6 types, supplier_category, customer_tier, loyalty_points, payment_terms_days, company_name, website, notes, is_active
+  - `src/app/(privileged)/crm/contacts/form.tsx` — Conditional supplier category / customer tier fields, company name, payment terms, notes
+  - `src/app/(privileged)/crm/contacts/manager.tsx` — LEAD filter, supplier category badges, customer tier badges
+  - `src/app/(privileged)/crm/contacts/page.tsx` — New field mappings, Leads counter
+  - `src/app/actions/people.ts` — Extended createContact with new fields
+  - `DOCUMENTATION/MODULE_CRM_CONTACTS.md` — Created
+- **Git Versions**: v2.8.0-b001
+- **Discoveries**:
+  - Local database `tsf_db` does not exist — migrations can only be applied on server
+- **Warnings for Next Agent**:
+  - ⚠️ Migration file created but NOT applied (no local DB) — must run `python manage.py migrate crm` on server
+  - ⚠️ Remaining phases: 1.2 Client Pricing, 1.3 Client Intelligence, then Phases 2-6
+
+---
+
 <!-- 
 TEMPLATE for new sessions — copy below this line:
 

@@ -16,13 +16,25 @@ export async function getRoles() {
 
 export async function createContact(prevState: any, formData: FormData) {
     try {
-        const data = {
+        const type = formData.get('type') as string || 'CUSTOMER';
+        const data: Record<string, any> = {
             name: formData.get('name'),
-            type: formData.get('type') || 'CUSTOMER',
+            type,
             email: formData.get('email') || '',
             phone: formData.get('phone') || '',
+            company_name: formData.get('companyName') || '',
             home_site_id: formData.get('homeSiteId') || null,
+            payment_terms_days: parseInt(formData.get('paymentTermsDays') as string) || 0,
+            notes: formData.get('notes') || '',
         };
+        // Supplier-specific
+        if (type === 'SUPPLIER') {
+            data.supplier_category = formData.get('supplierCategory') || 'REGULAR';
+        }
+        // Customer-specific
+        if (type === 'CUSTOMER') {
+            data.customer_tier = formData.get('customerTier') || 'STANDARD';
+        }
         await erpFetch('contacts/', { method: 'POST', body: JSON.stringify(data) });
         return { success: true, message: 'Contact created successfully' };
     } catch (e: any) {
