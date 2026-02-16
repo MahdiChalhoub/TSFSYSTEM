@@ -113,6 +113,7 @@ const MENU_ITEMS = [
                 icon: Wallet,
                 children: [
                     { title: 'Active Invoices', path: '/purchases' },
+                    { title: 'Purchase Dashboard', path: '/purchases/dashboard' },
                     { title: 'New PO Invoice', path: '/purchases/new' },
                 ]
             },
@@ -211,6 +212,7 @@ const MENU_ITEMS = [
                     { title: 'Cash Register', path: '/finance/cash-register' },
                     { title: 'Bank Reconciliation', path: '/finance/bank-reconciliation' },
                     { title: 'Account Statements', path: '/finance/statements' },
+                    { title: 'Tax Reports', path: '/finance/tax-reports' },
                 ]
             },
             {
