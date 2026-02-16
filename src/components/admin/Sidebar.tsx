@@ -23,7 +23,21 @@ import {
     Sparkles,
     Cloud,
     MessageSquare,
-    Wrench
+    Wrench,
+    BookOpen,
+    TrendingUp,
+    Calendar,
+    DollarSign,
+    Bell,
+    Tag,
+    Warehouse,
+    FolderTree,
+    ServerCog,
+    Building2,
+    Shield,
+    ClipboardList,
+    ScrollText,
+    Wallet
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
@@ -52,14 +66,29 @@ const ICON_MAP: Record<string, any> = {
     Sparkles,
     Cloud,
     MessageSquare,
-    Wrench
+    Wrench,
+    BookOpen,
+    TrendingUp,
+    Calendar,
+    DollarSign,
+    Bell,
+    Tag,
+    Warehouse,
+    FolderTree,
+    ServerCog,
+    Building2,
+    Shield,
+    ClipboardList,
+    ScrollText,
+    Wallet
 };
 
 function getIcon(name: string) {
     return ICON_MAP[name] || Box;
 }
 
-// Data Structure for the Recursive Menu
+// ─── Tree-Structured Menu ────────────────────────────────────────
+// Module → Feature Group → Page
 const MENU_ITEMS = [
     {
         title: 'Dashboard',
@@ -72,14 +101,21 @@ const MENU_ITEMS = [
         icon: ShoppingBag,
         module: 'pos',
         children: [
-            { title: 'POS Terminal', path: '/sales' },
             {
-                title: 'Purchase Registry',
+                title: 'Point of Sale',
+                icon: ShoppingCart,
                 children: [
-                    { title: 'Active Invoices', path: '/purchases' },
+                    { title: 'POS Terminal', path: '/sales' },
                 ]
             },
-            { title: 'New PO Invoice', path: '/purchases/new' },
+            {
+                title: 'Purchasing',
+                icon: Wallet,
+                children: [
+                    { title: 'Active Invoices', path: '/purchases' },
+                    { title: 'New PO Invoice', path: '/purchases/new' },
+                ]
+            },
         ]
     },
     {
@@ -87,20 +123,38 @@ const MENU_ITEMS = [
         icon: Box,
         module: 'inventory',
         children: [
-            { title: 'Product Master', path: '/products' },
-            { title: 'Product Groups', path: '/products?view=grouped' },
-            { title: 'New Product Group', path: '/products/create-group' },
-            { title: 'Barcode Configuration', path: '/inventory/barcode', module: 'inventory' },
-            { title: 'Warehouses & Zones', path: '/inventory/warehouses' },
-            { title: 'Stock Adjustments', path: '/inventory/adjustments' },
-            { title: 'Global Inventory', path: '/inventory/global' },
-            { title: 'Categories', path: '/inventory/categories' },
-            { title: 'Categories Audit', path: '/inventory/categories/maintenance' },
-            { title: 'Units & Packaging', path: '/inventory/units' },
-            { title: 'Brands', path: '/inventory/brands' },
-            { title: 'Countries', path: '/inventory/countries' },
-            { title: 'Attributes', path: '/inventory/attributes' },
-            { title: 'System Maintenance', path: '/inventory/maintenance' },
+            {
+                title: 'Products',
+                icon: Tag,
+                children: [
+                    { title: 'Product Master', path: '/products' },
+                    { title: 'Product Groups', path: '/products?view=grouped' },
+                    { title: 'New Product Group', path: '/products/create-group' },
+                ]
+            },
+            {
+                title: 'Warehousing',
+                icon: Warehouse,
+                children: [
+                    { title: 'Warehouses & Zones', path: '/inventory/warehouses' },
+                    { title: 'Stock Adjustments', path: '/inventory/adjustments' },
+                    { title: 'Global Inventory', path: '/inventory/global' },
+                    { title: 'Barcode Configuration', path: '/inventory/barcode' },
+                ]
+            },
+            {
+                title: 'Catalog Setup',
+                icon: FolderTree,
+                children: [
+                    { title: 'Categories', path: '/inventory/categories' },
+                    { title: 'Categories Audit', path: '/inventory/categories/maintenance' },
+                    { title: 'Units & Packaging', path: '/inventory/units' },
+                    { title: 'Brands', path: '/inventory/brands' },
+                    { title: 'Countries', path: '/inventory/countries' },
+                    { title: 'Attributes', path: '/inventory/attributes' },
+                ]
+            },
+            { title: 'System Maintenance', path: '/inventory/maintenance', icon: Wrench },
         ]
     },
     {
@@ -108,23 +162,53 @@ const MENU_ITEMS = [
         icon: FileText,
         module: 'finance',
         children: [
-            { title: 'Performance Dashboard', path: '/finance/dashboard' },
-            { title: 'Accounts & Drawers', path: '/finance/accounts' },
-            { title: 'Chart of Accounts', path: '/finance/chart-of-accounts' },
-            { title: 'COA Templates', path: '/finance/chart-of-accounts/templates' },
-            { title: 'Migration Tool', path: '/finance/chart-of-accounts/migrate' },
-            { title: 'General Ledger', path: '/finance/ledger' },
-            { title: 'Opening Balances', path: '/finance/ledger/opening' },
-            { title: 'Account Statement', path: '/finance/reports/statement' },
-            { title: 'Trial Balance', path: '/finance/reports/trial-balance' },
-            { title: 'Profit & Loss', path: '/finance/reports/pnl' },
-            { title: 'Balance Sheet', path: '/finance/reports/balance-sheet' },
-            { title: 'Fiscal Years', path: '/finance/fiscal-years' },
-            { title: 'Pricing Engine', path: '/finance/pricing' },
-            { title: 'Loan Contracts', path: '/finance/loans' },
-            { title: 'Financial Events', path: '/finance/events' },
-            { title: 'Posting Rules', path: '/finance/settings/posting-rules' },
-            { title: 'Financial Settings', path: '/finance/settings' },
+            { title: 'Performance Dashboard', path: '/finance/dashboard', icon: BarChart3 },
+            {
+                title: 'Accounts & Ledger',
+                icon: BookOpen,
+                children: [
+                    { title: 'Accounts & Drawers', path: '/finance/accounts' },
+                    { title: 'Chart of Accounts', path: '/finance/chart-of-accounts' },
+                    { title: 'COA Templates', path: '/finance/chart-of-accounts/templates' },
+                    { title: 'Migration Tool', path: '/finance/chart-of-accounts/migrate' },
+                    { title: 'General Ledger', path: '/finance/ledger' },
+                    { title: 'Opening Balances', path: '/finance/ledger/opening' },
+                ]
+            },
+            {
+                title: 'Reports',
+                icon: TrendingUp,
+                children: [
+                    { title: 'Account Statement', path: '/finance/reports/statement' },
+                    { title: 'Trial Balance', path: '/finance/reports/trial-balance' },
+                    { title: 'Profit & Loss', path: '/finance/reports/pnl' },
+                    { title: 'Balance Sheet', path: '/finance/reports/balance-sheet' },
+                ]
+            },
+            {
+                title: 'Fiscal & Periods',
+                icon: Calendar,
+                children: [
+                    { title: 'Fiscal Years', path: '/finance/fiscal-years' },
+                ]
+            },
+            {
+                title: 'Loans & Pricing',
+                icon: DollarSign,
+                children: [
+                    { title: 'Loan Contracts', path: '/finance/loans' },
+                    { title: 'Pricing Engine', path: '/finance/pricing' },
+                ]
+            },
+            {
+                title: 'Events & Automation',
+                icon: Bell,
+                children: [
+                    { title: 'Financial Events', path: '/finance/events' },
+                    { title: 'Posting Rules', path: '/finance/settings/posting-rules' },
+                ]
+            },
+            { title: 'Financial Settings', path: '/finance/settings', icon: Settings },
         ]
     },
     {
@@ -149,15 +233,33 @@ const MENU_ITEMS = [
         icon: ShieldCheck,
         visibility: 'saas',
         children: [
-            { title: 'SaaS Dashboard', path: '/dashboard' },
-            { title: 'Organizations', path: '/organizations' },
-            { title: 'Global Registry', path: '/modules' },
-            { title: 'Connector Control', path: '/connector' },
-            { title: 'Instance Switcher', path: '/switcher' },
-            { title: 'Platform Health', path: '/health' },
-            { title: 'AES-256 Encryption', path: '/encryption' },
-            { title: 'Kernel Updates', path: '/updates' },
-            { title: 'Subscription Plans', path: '/subscription-plans' },
+            {
+                title: 'Platform',
+                icon: ServerCog,
+                children: [
+                    { title: 'SaaS Dashboard', path: '/dashboard' },
+                    { title: 'Platform Health', path: '/health' },
+                    { title: 'Kernel Updates', path: '/updates' },
+                ]
+            },
+            {
+                title: 'Organizations',
+                icon: Building2,
+                children: [
+                    { title: 'Organizations', path: '/organizations' },
+                    { title: 'Instance Switcher', path: '/switcher' },
+                    { title: 'Subscription Plans', path: '/subscription-plans' },
+                ]
+            },
+            {
+                title: 'Infrastructure',
+                icon: Shield,
+                children: [
+                    { title: 'Global Registry', path: '/modules' },
+                    { title: 'Connector Control', path: '/connector' },
+                    { title: 'AES-256 Encryption', path: '/encryption' },
+                ]
+            },
         ]
     },
     {
