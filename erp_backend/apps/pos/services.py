@@ -228,6 +228,54 @@ class PurchaseService:
             return order
 
     @staticmethod
+    def create_purchase_order(organization, supplier_id, site_id, warehouse_id, lines, scope='OFFICIAL', notes=None, ref_code=None, user=None):
+        from apps.pos.models import Order, OrderLine
+        (Product,) = _safe_import('apps.inventory.models', ['Product'])
+        (Contact,) = _safe_import('apps.crm.models', ['Contact'])
+        
+        if not Product: raise ValidationError("Inventory module required.")
+        if not Contact: raise ValidationError("CRM module required.")
+
+        with transaction.atomic():
+            supplier = Contact.objects.get(id=supplier_id, organization=organization)
+            
+            order = Order.objects.create(
+                organization=organization,
+                type='PURCHASE',
+                status='DRAFT', # RFQ initial state
+                scope=scope,
+                contact=supplier,
+                user=user,
+                site_id=site_id,
+                ref_code=ref_code,
+                notes=notes,
+                payment_method='CREDIT',
+                total_amount=Decimal('0')
+            )
+
+            total_amount = Decimal('0')
+            for line in lines:
+                product = Product.objects.get(id=line['productId'], organization=organization)
+                qty = Decimal(str(line['quantity']))
+                price = Decimal(str(line['unitPrice']))
+                
+                line_total = qty * price
+                total_amount += line_total
+                
+                OrderLine.objects.create(
+                    organization=organization,
+                    order=order,
+                    product=product,
+                    quantity=qty,
+                    unit_price=price,
+                    total=line_total
+                )
+            
+            order.total_amount = total_amount
+            order.save()
+            return order
+
+    @staticmethod
     def quick_purchase(organization, supplier_id, warehouse_id, site_id, scope, invoice_price_type, vat_recoverable, lines, notes=None, ref_code=None, user=None):
         from apps.pos.models import Order, OrderLine
         from erp.services import ConfigurationService
