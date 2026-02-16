@@ -1,20 +1,40 @@
 'use client'
 
-import { useState, useEffect, useTransition } from "react"
-import { getVouchers, createVoucher, postVoucher, VoucherInput } from "@/app/actions/finance/vouchers"
+import { useState, useEffect, useTransition, useMemo } from "react"
+import { getVouchers, createVoucher, updateVoucher, postVoucher, cancelVoucher, deleteVoucher, VoucherInput, VoucherUpdateInput } from "@/app/actions/finance/vouchers"
 import { getFinancialAccounts } from "@/app/actions/finance/financial-accounts"
 import { getFinancialEvents } from "@/app/actions/finance/financial-events"
+import { Card, CardContent } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog"
+import { Skeleton } from "@/components/ui/skeleton"
+import { toast } from "sonner"
+import {
+    FileText, Plus, Search, ArrowRightLeft, ArrowDownLeft, ArrowUpRight,
+    CheckCircle2, Clock, Send, Receipt, Pencil, Trash2, XCircle,
+    ArrowUpDown, ArrowUp, ArrowDown, Ban
+} from "lucide-react"
+
+type SortKey = 'date' | 'voucher_type' | 'reference' | 'amount' | 'status'
+type SortDir = 'asc' | 'desc'
 
 export default function VouchersPage() {
     const [vouchers, setVouchers] = useState<any[]>([])
     const [accounts, setAccounts] = useState<any[]>([])
     const [events, setEvents] = useState<any[]>([])
-    const [showForm, setShowForm] = useState(false)
+    const [loading, setLoading] = useState(true)
+    const [dialogOpen, setDialogOpen] = useState(false)
+    const [editVoucher, setEditVoucher] = useState<any>(null)
+    const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null)
     const [voucherType, setVoucherType] = useState<'TRANSFER' | 'RECEIPT' | 'PAYMENT'>('TRANSFER')
     const [activeTab, setActiveTab] = useState<string>("ALL")
+    const [searchQuery, setSearchQuery] = useState("")
+    const [sortKey, setSortKey] = useState<SortKey>('date')
+    const [sortDir, setSortDir] = useState<SortDir>('desc')
     const [isPending, startTransition] = useTransition()
-    const [error, setError] = useState("")
-    const [successMsg, setSuccessMsg] = useState("")
 
     useEffect(() => { loadData() }, [])
 
@@ -28,32 +48,51 @@ export default function VouchersPage() {
             setVouchers(Array.isArray(v) ? v : [])
             setAccounts(Array.isArray(accs) ? accs : [])
             setEvents(Array.isArray(evts) ? evts : [])
-        } catch { setVouchers([]); setAccounts([]); setEvents([]) }
+        } catch {
+            setVouchers([]); setAccounts([]); setEvents([])
+            toast.error("Failed to load vouchers")
+        } finally {
+            setLoading(false)
+        }
     }
 
-    async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
+    // ─── Create / Edit Handler ────────────────────────────────────
+    async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
-        setError("")
         const fd = new FormData(e.currentTarget)
-        const data: VoucherInput = {
-            voucher_type: voucherType,
-            amount: Number(fd.get("amount")),
-            date: fd.get("date") as string,
-            description: fd.get("description") as string || undefined,
-            source_account_id: fd.get("source_account_id") ? Number(fd.get("source_account_id")) : undefined,
-            destination_account_id: fd.get("destination_account_id") ? Number(fd.get("destination_account_id")) : undefined,
-            financial_event_id: fd.get("financial_event_id") ? Number(fd.get("financial_event_id")) : undefined,
-        }
 
         startTransition(async () => {
             try {
-                await createVoucher(data)
-                setShowForm(false)
-                setSuccessMsg("Voucher created successfully!")
-                setTimeout(() => setSuccessMsg(""), 3000)
+                if (editVoucher) {
+                    // Update existing
+                    const updateData: VoucherUpdateInput = {
+                        amount: Number(fd.get("amount")),
+                        date: fd.get("date") as string,
+                        description: fd.get("description") as string || undefined,
+                        source_account_id: fd.get("source_account_id") ? Number(fd.get("source_account_id")) : undefined,
+                        destination_account_id: fd.get("destination_account_id") ? Number(fd.get("destination_account_id")) : undefined,
+                        financial_event_id: fd.get("financial_event_id") ? Number(fd.get("financial_event_id")) : undefined,
+                    }
+                    await updateVoucher(editVoucher.id, updateData)
+                    toast.success("Voucher updated successfully")
+                } else {
+                    // Create new
+                    const data: VoucherInput = {
+                        voucher_type: voucherType,
+                        amount: Number(fd.get("amount")),
+                        date: fd.get("date") as string,
+                        description: fd.get("description") as string || undefined,
+                        source_account_id: fd.get("source_account_id") ? Number(fd.get("source_account_id")) : undefined,
+                        destination_account_id: fd.get("destination_account_id") ? Number(fd.get("destination_account_id")) : undefined,
+                        financial_event_id: fd.get("financial_event_id") ? Number(fd.get("financial_event_id")) : undefined,
+                    }
+                    await createVoucher(data)
+                    toast.success("Voucher created successfully")
+                }
+                closeDialog()
                 loadData()
             } catch (err: any) {
-                setError(err.message || "Failed to create voucher")
+                toast.error(err.message || `Failed to ${editVoucher ? 'update' : 'create'} voucher`)
             }
         })
     }
@@ -62,110 +101,228 @@ export default function VouchersPage() {
         startTransition(async () => {
             try {
                 await postVoucher(id)
-                setSuccessMsg("Voucher posted!")
-                setTimeout(() => setSuccessMsg(""), 3000)
+                toast.success("Voucher posted to ledger")
                 loadData()
             } catch (err: any) {
-                setError(err.message || "Failed to post voucher")
-                setTimeout(() => setError(""), 3000)
+                toast.error(err.message || "Failed to post voucher")
             }
         })
     }
 
-    const filteredVouchers = activeTab === "ALL" ? vouchers : vouchers.filter((v: any) => v.voucher_type === activeTab)
+    async function handleCancel(id: number) {
+        startTransition(async () => {
+            try {
+                await cancelVoucher(id)
+                toast.success("Voucher cancelled")
+                loadData()
+            } catch (err: any) {
+                toast.error(err.message || "Failed to cancel voucher")
+            }
+        })
+    }
+
+    async function handleDelete(id: number) {
+        startTransition(async () => {
+            try {
+                await deleteVoucher(id)
+                toast.success("Voucher deleted")
+                setDeleteConfirm(null)
+                loadData()
+            } catch (err: any) {
+                toast.error(err.message || "Failed to delete voucher")
+            }
+        })
+    }
+
+    function openEdit(v: any) {
+        setEditVoucher(v)
+        setVoucherType(v.voucher_type)
+        setDialogOpen(true)
+    }
+
+    function openCreate() {
+        setEditVoucher(null)
+        setVoucherType('TRANSFER')
+        setDialogOpen(true)
+    }
+
+    function closeDialog() {
+        setDialogOpen(false)
+        setEditVoucher(null)
+    }
+
+    // ─── Sorting ──────────────────────────────────────────────────
+    function toggleSort(key: SortKey) {
+        if (sortKey === key) {
+            setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+        } else {
+            setSortKey(key)
+            setSortDir('asc')
+        }
+    }
+
+    function SortIcon({ col }: { col: SortKey }) {
+        if (sortKey !== col) return <ArrowUpDown size={12} className="text-stone-300 ml-1 inline" />
+        return sortDir === 'asc'
+            ? <ArrowUp size={12} className="text-emerald-600 ml-1 inline" />
+            : <ArrowDown size={12} className="text-emerald-600 ml-1 inline" />
+    }
+
+    // ─── Filtering + Sorting ──────────────────────
+    const filteredVouchers = useMemo(() => {
+        let list = vouchers
+            .filter(v => activeTab === "ALL" || v.voucher_type === activeTab)
+            .filter(v =>
+                !searchQuery ||
+                (v.reference || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (v.description || "").toLowerCase().includes(searchQuery.toLowerCase())
+            )
+
+        list.sort((a, b) => {
+            let cmp = 0
+            const av = a[sortKey], bv = b[sortKey]
+            if (sortKey === 'amount') {
+                cmp = Number(av || 0) - Number(bv || 0)
+            } else {
+                cmp = String(av || '').localeCompare(String(bv || ''))
+            }
+            return sortDir === 'asc' ? cmp : -cmp
+        })
+        return list
+    }, [vouchers, activeTab, searchQuery, sortKey, sortDir])
 
     const tabs = [
-        { key: "ALL", label: "All Vouchers" },
-        { key: "TRANSFER", label: "Transfers" },
-        { key: "RECEIPT", label: "Receipts" },
-        { key: "PAYMENT", label: "Payments" },
+        { key: "ALL", label: "All", icon: FileText },
+        { key: "TRANSFER", label: "Transfers", icon: ArrowRightLeft },
+        { key: "RECEIPT", label: "Receipts", icon: ArrowDownLeft },
+        { key: "PAYMENT", label: "Payments", icon: ArrowUpRight },
     ]
 
-    const typeColors: Record<string, string> = {
-        TRANSFER: "bg-blue-100 text-blue-800",
-        RECEIPT: "bg-green-100 text-green-800",
-        PAYMENT: "bg-red-100 text-red-800",
+    const typeConfig: Record<string, { icon: any; color: string; bg: string }> = {
+        TRANSFER: { icon: ArrowRightLeft, color: "text-blue-700", bg: "bg-blue-50 border-blue-200" },
+        RECEIPT: { icon: ArrowDownLeft, color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
+        PAYMENT: { icon: ArrowUpRight, color: "text-rose-700", bg: "bg-rose-50 border-rose-200" },
+    }
+
+    const statusConfig: Record<string, { icon: any; color: string; bg: string }> = {
+        POSTED: { icon: CheckCircle2, color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
+        DRAFT: { icon: Clock, color: "text-amber-700", bg: "bg-amber-50 border-amber-200" },
+        CANCELLED: { icon: Ban, color: "text-stone-500", bg: "bg-stone-100 border-stone-200" },
+    }
+
+    // Determine active type for conditional fields in the dialog
+    const activeType = editVoucher ? editVoucher.voucher_type : voucherType
+
+    // ─── Loading Skeleton ─────────────────────────────────────────
+    if (loading) {
+        return (
+            <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto">
+                <div className="flex justify-between items-center">
+                    <div><Skeleton className="h-10 w-48" /><Skeleton className="h-4 w-64 mt-2" /></div>
+                    <Skeleton className="h-10 w-36" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-28 rounded-2xl" />)}
+                </div>
+                <Skeleton className="h-96 rounded-2xl" />
+            </div>
+        )
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto">
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Vouchers</h1>
-                    <p className="text-muted-foreground mt-1">Manage transfers, receipts, and payment vouchers</p>
+                    <h1 className="text-4xl font-bold text-stone-900 font-serif tracking-tight">Vouchers</h1>
+                    <p className="text-stone-500 font-medium mt-1">Manage transfers, receipts, and payment vouchers</p>
                 </div>
-                <button
-                    onClick={() => setShowForm(!showForm)}
-                    className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors font-medium"
-                >
-                    {showForm ? "Cancel" : "+ New Voucher"}
-                </button>
+                <Button onClick={openCreate} className="rounded-xl gap-2 shadow-md hover:shadow-lg transition-all">
+                    <Plus size={16} /> New Voucher
+                </Button>
             </div>
 
-            {successMsg && <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">✓ {successMsg}</div>}
-            {error && <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">✕ {error}</div>}
+            {/* ─── Create / Edit Dialog ────────────────────────────── */}
+            <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) closeDialog(); else setDialogOpen(true) }}>
+                <DialogContent className="sm:max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            {editVoucher ? <><Pencil size={20} /> Edit Voucher <span className="text-xs font-mono text-stone-400 ml-2">{editVoucher.reference}</span></> : <><Receipt size={20} /> Create Voucher</>}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {editVoucher ? "Modify the voucher details below. Only DRAFT vouchers can be edited." : "Select the voucher type and fill in the details below."}
+                        </DialogDescription>
+                    </DialogHeader>
 
-            {/* Create Form */}
-            {showForm && (
-                <div className="bg-card border rounded-lg p-6 shadow-sm">
-                    <h2 className="text-lg font-semibold mb-4">Create Voucher</h2>
+                    {/* Type Selector — only for new vouchers */}
+                    {!editVoucher && (
+                        <div className="flex gap-2 pt-2">
+                            {(["TRANSFER", "RECEIPT", "PAYMENT"] as const).map(t => {
+                                const cfg = typeConfig[t]
+                                const Icon = cfg.icon
+                                return (
+                                    <button
+                                        key={t}
+                                        type="button"
+                                        onClick={() => setVoucherType(t)}
+                                        className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold border transition-all ${voucherType === t
+                                            ? `${cfg.bg} ${cfg.color} shadow-sm`
+                                            : "bg-stone-50 text-stone-400 border-stone-100 hover:bg-stone-100"
+                                            }`}
+                                    >
+                                        <Icon size={14} />
+                                        {t === "TRANSFER" ? "Transfer" : t === "RECEIPT" ? "Receipt" : "Payment"}
+                                    </button>
+                                )
+                            })}
+                        </div>
+                    )}
 
-                    {/* Type Selector */}
-                    <div className="flex gap-2 mb-5">
-                        {(["TRANSFER", "RECEIPT", "PAYMENT"] as const).map(t => (
-                            <button
-                                key={t}
-                                type="button"
-                                onClick={() => setVoucherType(t)}
-                                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${voucherType === t ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"
-                                    }`}
-                            >
-                                {t === "TRANSFER" ? "🔄 Transfer" : t === "RECEIPT" ? "📥 Receipt" : "📤 Payment"}
-                            </button>
-                        ))}
-                    </div>
+                    {/* Locked type badge for editing */}
+                    {editVoucher && (
+                        <div className="pt-2">
+                            <Badge variant="outline" className={`gap-1 rounded-lg border ${typeConfig[editVoucher.voucher_type]?.bg} ${typeConfig[editVoucher.voucher_type]?.color} font-semibold`}>
+                                {editVoucher.voucher_type}
+                            </Badge>
+                        </div>
+                    )}
 
-                    <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4 pt-2">
                         <div className="space-y-1.5">
-                            <label className="text-sm font-medium">Amount *</label>
-                            <input name="amount" type="number" step="0.01" min="0.01" required className="w-full px-3 py-2 border rounded-md bg-background" placeholder="1000.00" />
+                            <label className="text-xs font-bold text-stone-500 uppercase">Amount *</label>
+                            <Input name="amount" type="number" step="0.01" min="0.01" required placeholder="1,000.00" className="rounded-xl" defaultValue={editVoucher?.amount || ""} />
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-sm font-medium">Date *</label>
-                            <input name="date" type="date" required className="w-full px-3 py-2 border rounded-md bg-background" />
+                            <label className="text-xs font-bold text-stone-500 uppercase">Date *</label>
+                            <Input name="date" type="date" required className="rounded-xl" defaultValue={editVoucher?.date || ""} />
                         </div>
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-medium">Description</label>
-                            <input name="description" className="w-full px-3 py-2 border rounded-md bg-background" placeholder="Optional description..." />
-                        </div>
-                        <div className="space-y-1.5 flex items-end">
-                            <p className="text-xs text-muted-foreground italic">Reference will be auto-generated</p>
+                        <div className="col-span-2 space-y-1.5">
+                            <label className="text-xs font-bold text-stone-500 uppercase">Description</label>
+                            <Input name="description" placeholder="Optional description..." className="rounded-xl" defaultValue={editVoucher?.description || ""} />
                         </div>
 
-                        {/* Conditional Fields */}
-                        {(voucherType === "TRANSFER" || voucherType === "PAYMENT") && (
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-medium">Source Account *</label>
-                                <select name="source_account_id" required className="w-full px-3 py-2 border rounded-md bg-background">
+                        {(activeType === "TRANSFER" || activeType === "PAYMENT") && (
+                            <div className="col-span-2 space-y-1.5">
+                                <label className="text-xs font-bold text-stone-500 uppercase">Source Account *</label>
+                                <select name="source_account_id" required className="w-full px-3 py-2 border rounded-xl bg-background text-sm" defaultValue={editVoucher?.source_account_id || editVoucher?.source_account || ""}>
                                     <option value="">Select source...</option>
                                     {accounts.map((a: any) => <option key={a.id} value={a.id}>{a.name}</option>)}
                                 </select>
                             </div>
                         )}
-                        {(voucherType === "TRANSFER" || voucherType === "RECEIPT") && (
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-medium">Destination Account *</label>
-                                <select name="destination_account_id" required className="w-full px-3 py-2 border rounded-md bg-background">
+                        {(activeType === "TRANSFER" || activeType === "RECEIPT") && (
+                            <div className="col-span-2 space-y-1.5">
+                                <label className="text-xs font-bold text-stone-500 uppercase">Destination Account *</label>
+                                <select name="destination_account_id" required className="w-full px-3 py-2 border rounded-xl bg-background text-sm" defaultValue={editVoucher?.destination_account_id || editVoucher?.destination_account || ""}>
                                     <option value="">Select destination...</option>
                                     {accounts.map((a: any) => <option key={a.id} value={a.id}>{a.name}</option>)}
                                 </select>
                             </div>
                         )}
-                        {(voucherType === "RECEIPT" || voucherType === "PAYMENT") && (
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-medium">Financial Event *</label>
-                                <select name="financial_event_id" required className="w-full px-3 py-2 border rounded-md bg-background">
+                        {(activeType === "RECEIPT" || activeType === "PAYMENT") && (
+                            <div className="col-span-2 space-y-1.5">
+                                <label className="text-xs font-bold text-stone-500 uppercase">Financial Event</label>
+                                <select name="financial_event_id" className="w-full px-3 py-2 border rounded-xl bg-background text-sm" defaultValue={editVoucher?.financial_event_id || editVoucher?.financial_event || ""}>
                                     <option value="">Select event...</option>
                                     {events.map((e: any) => (
                                         <option key={e.id} value={e.id}>
@@ -176,105 +333,245 @@ export default function VouchersPage() {
                             </div>
                         )}
 
-                        <div className="md:col-span-2 flex justify-end gap-2 pt-2">
-                            <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 border rounded-md hover:bg-muted transition-colors">Cancel</button>
-                            <button type="submit" disabled={isPending} className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 transition-colors">
-                                {isPending ? "Creating..." : "Create Voucher"}
-                            </button>
+                        <div className="col-span-2 flex justify-end gap-2 pt-3 border-t">
+                            <Button type="button" variant="outline" onClick={closeDialog} className="rounded-xl">Cancel</Button>
+                            <Button type="submit" disabled={isPending} className="rounded-xl gap-2">
+                                {isPending ? (editVoucher ? "Saving..." : "Creating...") : <><Send size={14} /> {editVoucher ? "Save Changes" : "Create Voucher"}</>}
+                            </Button>
                         </div>
                     </form>
-                </div>
-            )}
+                </DialogContent>
+            </Dialog>
+
+            {/* ─── Delete Confirmation Dialog ───────────────────────── */}
+            <Dialog open={deleteConfirm !== null} onOpenChange={(open) => { if (!open) setDeleteConfirm(null) }}>
+                <DialogContent className="sm:max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-red-700"><Trash2 size={20} /> Delete Voucher</DialogTitle>
+                        <DialogDescription>This action is permanent and cannot be undone. Are you sure you want to delete this draft voucher?</DialogDescription>
+                    </DialogHeader>
+                    <div className="flex justify-end gap-2 pt-3">
+                        <Button variant="outline" onClick={() => setDeleteConfirm(null)} className="rounded-xl">Cancel</Button>
+                        <Button variant="destructive" onClick={() => deleteConfirm && handleDelete(deleteConfirm)} disabled={isPending} className="rounded-xl gap-2">
+                            {isPending ? "Deleting..." : <><Trash2 size={14} /> Delete</>}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-card border rounded-lg p-5 shadow-sm">
-                    <p className="text-sm text-muted-foreground">Total Vouchers</p>
-                    <p className="text-2xl font-bold mt-1">{vouchers.length}</p>
-                </div>
-                <div className="bg-card border rounded-lg p-5 shadow-sm border-l-4 border-l-blue-500">
-                    <p className="text-sm text-muted-foreground">Transfers</p>
-                    <p className="text-2xl font-bold mt-1">{vouchers.filter((v: any) => v.voucher_type === "TRANSFER").length}</p>
-                </div>
-                <div className="bg-card border rounded-lg p-5 shadow-sm border-l-4 border-l-green-500">
-                    <p className="text-sm text-muted-foreground">Receipts</p>
-                    <p className="text-2xl font-bold mt-1">{vouchers.filter((v: any) => v.voucher_type === "RECEIPT").length}</p>
-                </div>
-                <div className="bg-card border rounded-lg p-5 shadow-sm border-l-4 border-l-red-500">
-                    <p className="text-sm text-muted-foreground">Payments</p>
-                    <p className="text-2xl font-bold mt-1">{vouchers.filter((v: any) => v.voucher_type === "PAYMENT").length}</p>
-                </div>
+                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-stone-50 to-stone-100">
+                    <CardContent className="pt-5 pb-4 px-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-bold text-stone-400 uppercase tracking-wider">Total</p>
+                                <p className="text-3xl font-bold text-stone-900 mt-1">{vouchers.length}</p>
+                            </div>
+                            <div className="w-12 h-12 rounded-2xl bg-stone-200/60 flex items-center justify-center">
+                                <FileText size={22} className="text-stone-500" />
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-blue-50 to-blue-100">
+                    <CardContent className="pt-5 pb-4 px-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-bold text-blue-400 uppercase tracking-wider">Transfers</p>
+                                <p className="text-3xl font-bold text-blue-900 mt-1">{vouchers.filter(v => v.voucher_type === "TRANSFER").length}</p>
+                            </div>
+                            <div className="w-12 h-12 rounded-2xl bg-blue-200/60 flex items-center justify-center">
+                                <ArrowRightLeft size={22} className="text-blue-500" />
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-emerald-50 to-emerald-100">
+                    <CardContent className="pt-5 pb-4 px-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Receipts</p>
+                                <p className="text-3xl font-bold text-emerald-900 mt-1">{vouchers.filter(v => v.voucher_type === "RECEIPT").length}</p>
+                            </div>
+                            <div className="w-12 h-12 rounded-2xl bg-emerald-200/60 flex items-center justify-center">
+                                <ArrowDownLeft size={22} className="text-emerald-500" />
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-rose-50 to-rose-100">
+                    <CardContent className="pt-5 pb-4 px-5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-bold text-rose-400 uppercase tracking-wider">Payments</p>
+                                <p className="text-3xl font-bold text-rose-900 mt-1">{vouchers.filter(v => v.voucher_type === "PAYMENT").length}</p>
+                            </div>
+                            <div className="w-12 h-12 rounded-2xl bg-rose-200/60 flex items-center justify-center">
+                                <ArrowUpRight size={22} className="text-rose-500" />
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
 
-            {/* Tabs & Table */}
-            <div className="bg-card border rounded-lg shadow-sm overflow-hidden">
-                <div className="px-6 py-3 border-b flex gap-1 bg-muted/30">
-                    {tabs.map(tab => (
-                        <button
-                            key={tab.key}
-                            onClick={() => setActiveTab(tab.key)}
-                            className={`px-4 py-2 text-sm rounded-md transition-colors ${activeTab === tab.key ? "bg-background shadow-sm font-medium" : "text-muted-foreground hover:text-foreground"
-                                }`}
-                        >
-                            {tab.label}
-                        </button>
-                    ))}
+            {/* Tabs + Search + Table */}
+            <Card className="rounded-2xl shadow-sm overflow-hidden">
+                <div className="px-5 py-3 border-b flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between bg-stone-50/50">
+                    <div className="flex gap-1">
+                        {tabs.map(tab => {
+                            const Icon = tab.icon
+                            return (
+                                <button
+                                    key={tab.key}
+                                    onClick={() => setActiveTab(tab.key)}
+                                    className={`flex items-center gap-1.5 px-3.5 py-2 text-sm rounded-xl transition-all ${activeTab === tab.key
+                                        ? "bg-white shadow-sm font-semibold text-stone-900"
+                                        : "text-stone-400 hover:text-stone-600"
+                                        }`}
+                                >
+                                    <Icon size={13} />
+                                    {tab.label}
+                                </button>
+                            )
+                        })}
+                    </div>
+                    <div className="relative w-full sm:w-64">
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                        <Input
+                            placeholder="Search reference or description..."
+                            value={searchQuery}
+                            onChange={e => setSearchQuery(e.target.value)}
+                            className="pl-9 rounded-xl text-sm h-9 bg-white"
+                        />
+                    </div>
                 </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="bg-muted/50">
-                            <tr>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Date</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Type</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Reference</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Description</th>
-                                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Amount</th>
-                                <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase">Status</th>
-                                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y">
-                            {filteredVouchers.map((v: any) => (
-                                <tr key={v.id} className="hover:bg-muted/30 transition-colors">
-                                    <td className="px-4 py-3 text-sm">{v.date}</td>
-                                    <td className="px-4 py-3">
-                                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${typeColors[v.voucher_type] || "bg-gray-100 text-gray-800"}`}>
-                                            {v.voucher_type}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-3 text-sm font-mono">{v.reference || "-"}</td>
-                                    <td className="px-4 py-3 text-sm">{v.description || "-"}</td>
-                                    <td className="px-4 py-3 text-right font-medium">{Number(v.amount).toLocaleString()}</td>
-                                    <td className="px-4 py-3 text-center">
-                                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${v.status === "POSTED" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
-                                            }`}>
-                                            {v.status}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-3 text-right">
-                                        {v.status === "DRAFT" && (
-                                            <button
-                                                onClick={() => handlePost(v.id)}
-                                                disabled={isPending}
-                                                className="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-colors disabled:opacity-50"
-                                            >
-                                                Post
-                                            </button>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-                            {filteredVouchers.length === 0 && (
-                                <tr>
-                                    <td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">
-                                        No vouchers found. Click &quot;+ New Voucher&quot; to create one.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                <Table>
+                    <TableHeader>
+                        <TableRow className="bg-stone-50/30">
+                            <TableHead className="text-xs font-bold uppercase text-stone-400 cursor-pointer select-none" onClick={() => toggleSort('date')}>
+                                Date <SortIcon col="date" />
+                            </TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-stone-400 cursor-pointer select-none" onClick={() => toggleSort('voucher_type')}>
+                                Type <SortIcon col="voucher_type" />
+                            </TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-stone-400 cursor-pointer select-none" onClick={() => toggleSort('reference')}>
+                                Reference <SortIcon col="reference" />
+                            </TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-stone-400">Description</TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right cursor-pointer select-none" onClick={() => toggleSort('amount')}>
+                                Amount <SortIcon col="amount" />
+                            </TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-center cursor-pointer select-none" onClick={() => toggleSort('status')}>
+                                Status <SortIcon col="status" />
+                            </TableHead>
+                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {filteredVouchers.map((v: any) => {
+                            const tc = typeConfig[v.voucher_type] || typeConfig.TRANSFER
+                            const sc = statusConfig[v.status] || statusConfig.DRAFT
+                            const TypeIcon = tc.icon
+                            const StatusIcon = sc.icon
+                            const isDraft = v.status === "DRAFT"
+                            return (
+                                <TableRow key={v.id} className="hover:bg-stone-50/50 transition-colors group">
+                                    <TableCell className="text-sm text-stone-600">{v.date}</TableCell>
+                                    <TableCell>
+                                        <Badge variant="outline" className={`gap-1 rounded-lg border ${tc.bg} ${tc.color} font-semibold text-[11px]`}>
+                                            <TypeIcon size={12} /> {v.voucher_type}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell className="font-mono text-sm text-stone-500">{v.reference || "—"}</TableCell>
+                                    <TableCell className="text-sm text-stone-600 max-w-[200px] truncate">{v.description || "—"}</TableCell>
+                                    <TableCell className="text-right font-semibold text-stone-800">{Number(v.amount).toLocaleString()}</TableCell>
+                                    <TableCell className="text-center">
+                                        <Badge variant="outline" className={`gap-1 rounded-lg border ${sc.bg} ${sc.color} font-semibold text-[11px]`}>
+                                            <StatusIcon size={12} /> {v.status}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <div className="flex items-center justify-end gap-1">
+                                            {isDraft && (
+                                                <>
+                                                    <Button
+                                                        size="sm" variant="ghost"
+                                                        onClick={() => openEdit(v)}
+                                                        className="h-8 w-8 p-0 text-stone-400 hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        title="Edit"
+                                                    >
+                                                        <Pencil size={14} />
+                                                    </Button>
+                                                    <Button
+                                                        size="sm" variant="outline"
+                                                        onClick={() => handlePost(v.id)}
+                                                        disabled={isPending}
+                                                        className="rounded-xl gap-1 text-emerald-700 border-emerald-200 hover:bg-emerald-50 h-8 text-xs font-semibold"
+                                                    >
+                                                        <Send size={12} /> Post
+                                                    </Button>
+                                                    <Button
+                                                        size="sm" variant="ghost"
+                                                        onClick={() => handleCancel(v.id)}
+                                                        disabled={isPending}
+                                                        className="h-8 w-8 p-0 text-stone-400 hover:text-amber-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        title="Cancel"
+                                                    >
+                                                        <XCircle size={14} />
+                                                    </Button>
+                                                    <Button
+                                                        size="sm" variant="ghost"
+                                                        onClick={() => setDeleteConfirm(v.id)}
+                                                        className="h-8 w-8 p-0 text-stone-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        title="Delete"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </Button>
+                                                </>
+                                            )}
+                                            {v.status === "POSTED" && (
+                                                <span className="text-xs text-stone-400 italic">Posted</span>
+                                            )}
+                                            {v.status === "CANCELLED" && (
+                                                <span className="text-xs text-stone-400 italic">Cancelled</span>
+                                            )}
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            )
+                        })}
+                        {filteredVouchers.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={7} className="py-16 text-center">
+                                    <div className="flex flex-col items-center gap-3">
+                                        <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center">
+                                            <FileText size={28} className="text-stone-300" />
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-stone-600">No vouchers found</p>
+                                            <p className="text-sm text-stone-400 mt-1">Create your first voucher to get started</p>
+                                        </div>
+                                        <Button variant="outline" onClick={openCreate} className="rounded-xl gap-2 mt-2">
+                                            <Plus size={14} /> New Voucher
+                                        </Button>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+
+                {/* Table Footer */}
+                {filteredVouchers.length > 0 && (
+                    <div className="px-5 py-3 border-t bg-stone-50/30 flex items-center justify-between text-sm text-stone-500">
+                        <span>{filteredVouchers.length} voucher{filteredVouchers.length !== 1 ? 's' : ''} shown</span>
+                        <span className="font-semibold text-stone-700">
+                            Total: {filteredVouchers.reduce((s, v) => s + Number(v.amount || 0), 0).toLocaleString()}
+                        </span>
+                    </div>
+                )}
+            </Card>
         </div>
     )
 }
