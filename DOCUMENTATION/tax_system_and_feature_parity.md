@@ -1,7 +1,29 @@
-# HMZ Tax System & Feature Parity
+# Tax System & Feature Parity
 
 ## Goal
-Achieve feature parity with the HMZ system by implementing core financial functionalities missing in TSF.
+Implement core financial functionalities: tax-aware pricing, returns & credit notes, payments & collections, signals, and advanced inventory.
+
+## Frontend Pages
+
+### Payments & Collections (`/finance/payments`)
+- **Goal**: View all payments, record supplier payments and customer receipts
+- **Data READ**: `GET /payments/`, `GET /payments/aged_receivables/`, `GET /payments/aged_payables/`, `GET /customer-balances/`, `GET /supplier-balances/`
+- **Data SAVED**: `POST /payments/supplier_payment/`, `POST /payments/customer_receipt/`
+- **Tabs**: All Payments, Supplier, Customer, Aged AR, Aged AP, Balances
+- **Features**: Sortable columns, search, summary cards (total/paid-out/received/net-flow)
+
+### Sales Returns (`/finance/sales-returns`)
+- **Goal**: Manage customer returns and credit notes
+- **Data READ**: `GET /sales-returns/`, `GET /credit-notes/`
+- **Data SAVED**: `POST /sales-returns/{id}/approve/`, `POST /sales-returns/{id}/cancel/`
+- **Tabs**: Returns (with approve/cancel actions), Credit Notes
+- **Features**: Sortable columns, confirmation dialogs, summary cards
+
+### Purchase Returns (`/finance/purchase-returns`)
+- **Goal**: Manage returns to suppliers with reversing GL entries
+- **Data READ**: `GET /purchase-returns/`
+- **Data SAVED**: `POST /purchase-returns/{id}/complete/`
+- **Features**: Complete action removes stock and posts reversing journals
 
 ## What Was Implemented
 
