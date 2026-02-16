@@ -106,6 +106,7 @@ const MENU_ITEMS = [
                 icon: ShoppingCart,
                 children: [
                     { title: 'POS Terminal', path: '/sales' },
+                    { title: 'Sales Analytics', path: '/sales/analytics' },
                 ]
             },
             {
@@ -213,6 +214,7 @@ const MENU_ITEMS = [
                     { title: 'Bank Reconciliation', path: '/finance/bank-reconciliation' },
                     { title: 'Account Statements', path: '/finance/statements' },
                     { title: 'Tax Reports', path: '/finance/tax-reports' },
+                    { title: 'Budget Overview', path: '/finance/budget' },
                 ]
             },
             {
@@ -250,6 +252,7 @@ const MENU_ITEMS = [
         children: [
             { title: 'Contact Center', path: '/crm/contacts' },
             { title: 'Client Pricing', path: '/crm/pricing', icon: Tag },
+            { title: 'Supplier Performance', path: '/crm/supplier-performance' },
         ]
     },
     {
