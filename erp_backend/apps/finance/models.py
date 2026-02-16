@@ -6,7 +6,7 @@ All models retain their original db_table, so no database migration is needed.
 from django.db import models
 from django.core.exceptions import ValidationError
 from decimal import Decimal
-from erp.models import TenantModel, Organization, Site, Country
+from erp.models import TenantModel, VerifiableModel, Organization, Site, Country
 
 
 # =============================================================================
@@ -489,16 +489,15 @@ class AmortizationSchedule(TenantModel):
 # VOUCHERS
 # =============================================================================
 
-class Voucher(TenantModel):
+class Voucher(VerifiableModel):
+    """
+    Financial voucher with lifecycle verification.
+    Flow: OPEN → LOCKED → VERIFIED → CONFIRMED → Posted
+    """
     VOUCHER_TYPES = (
         ('TRANSFER', 'Transfer Voucher'),
         ('RECEIPT', 'Receipt Voucher'),
         ('PAYMENT', 'Payment Voucher'),
-    )
-    STATUS_CHOICES = (
-        ('DRAFT', 'Draft'),
-        ('POSTED', 'Posted'),
-        ('CANCELLED', 'Cancelled'),
     )
     voucher_type = models.CharField(max_length=20, choices=VOUCHER_TYPES)
     amount = models.DecimalField(max_digits=15, decimal_places=2)
@@ -511,7 +510,7 @@ class Voucher(TenantModel):
     contact = models.ForeignKey('crm.Contact', on_delete=models.SET_NULL, null=True, blank=True)
     journal_entry = models.ForeignKey(JournalEntry, on_delete=models.SET_NULL, null=True, blank=True)
     scope = models.CharField(max_length=20, default='OFFICIAL')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
+    is_posted = models.BooleanField(default=False, help_text='Whether the voucher has been posted to the ledger')
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 

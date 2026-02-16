@@ -3,6 +3,10 @@
 import { erpFetch } from "@/lib/erp-api"
 import { revalidatePath } from "next/cache"
 
+export async function getWarehouses() {
+    return await erpFetch('warehouses/')
+}
+
 export type WarehouseState = {
     message?: string;
     errors?: {
