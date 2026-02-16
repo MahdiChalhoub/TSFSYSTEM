@@ -1,32 +1,53 @@
 'use server'
 
-/**
- * CRM Module - Contacts Actions (Stub)
- * These are placeholder exports for when CRM module is not installed.
- * Returns empty data gracefully.
- */
-
-export async function getContactsByType(type: 'PARTNER' | 'SUPPLIER' | 'CUSTOMER') {
-    // Stub: Return empty when CRM module not installed
-    return []
-}
+import { erpFetch } from "@/lib/erp-api"
 
 export async function getContacts() {
-    return []
+    try {
+        const data = await erpFetch('contacts/')
+        return Array.isArray(data) ? data : []
+    } catch {
+        return []
+    }
+}
+
+export async function getContactsByType(type: 'PARTNER' | 'SUPPLIER' | 'CUSTOMER') {
+    try {
+        const all = await erpFetch('contacts/')
+        return Array.isArray(all) ? all.filter((c: any) => c.type === type) : []
+    } catch {
+        return []
+    }
 }
 
 export async function getContact(id: number) {
-    return null
+    try {
+        return await erpFetch(`contacts/${id}/`)
+    } catch {
+        return null
+    }
+}
+
+export async function getContactSummary(contactId: number) {
+    return await erpFetch(`contacts/${contactId}/summary/`)
 }
 
 export async function createContact(data: any) {
-    throw new Error('CRM module not installed')
+    return await erpFetch('contacts/', {
+        method: 'POST',
+        body: JSON.stringify(data)
+    })
 }
 
 export async function updateContact(id: number, data: any) {
-    throw new Error('CRM module not installed')
+    return await erpFetch(`contacts/${id}/`, {
+        method: 'PATCH',
+        body: JSON.stringify(data)
+    })
 }
 
 export async function deleteContact(id: number) {
-    throw new Error('CRM module not installed')
+    return await erpFetch(`contacts/${id}/`, {
+        method: 'DELETE'
+    })
 }
