@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('erp', '0001_initial'),
+        ('erp', '0039_remove_taskqueue_source_approval_and_more'),
     ]
 
     operations = [
@@ -27,7 +27,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'category',
-                'unique_together': {('name', 'organization')},
+                # 'unique_together': {('name', 'organization')},
             },
         ),
         migrations.CreateModel(
@@ -42,7 +42,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'brand',
-                'unique_together': {('name', 'organization')},
+                # 'unique_together': {('name', 'organization')},
             },
         ),
         migrations.CreateModel(
@@ -56,7 +56,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'parfum',
-                'unique_together': {('name', 'organization')},
+                # 'unique_together': {('name', 'organization')},
             },
         ),
         migrations.CreateModel(
@@ -92,7 +92,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'unit',
-                'unique_together': {('code', 'organization')},
+                # 'unique_together': {('code', 'organization')},
             },
         ),
         migrations.CreateModel(
@@ -125,7 +125,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'product',
-                'unique_together': {('barcode', 'organization'), ('sku', 'organization')},
+                # 'unique_together': {('barcode', 'organization'), ('sku', 'organization')},
             },
         ),
         migrations.CreateModel(

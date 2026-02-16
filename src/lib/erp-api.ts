@@ -100,7 +100,13 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
         debug(`[DEBUG] erpFetch Context: SaaS/Root (No Tenant ID sent)`);
     }
 
-    const url = `${DJANGO_URL}/api/${path.startsWith('/') ? path.slice(1) : path}`;
+    let url = `${DJANGO_URL}/api/${path.startsWith('/') ? path.slice(1) : path}`;
+
+    // Support for complex query params (UDLE Filtering)
+    if (options.body === undefined && (options.method === 'GET' || !options.method)) {
+        // Option to pass params as an object in options (if we want to expand erpFetch later)
+        // For now, most callers append them manually to the path, but UDLE might need it cleaner.
+    }
 
     // [CONTENT-TYPE FIX]
     // For JSON POST/PUT/PATCH requests, set Content-Type to application/json

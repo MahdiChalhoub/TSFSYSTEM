@@ -38,7 +38,7 @@ from apps.inventory.models import (
     StockAdjustmentOrder, StockAdjustmentLine,
     StockTransferOrder, StockTransferLine,
     OperationalRequest, OperationalRequestLine,
-    ComboComponent,
+    ComboComponent, ProductSerial, SerialLog,
 )
 from apps.inventory.serializers import (
     ProductSerializer, ProductCreateSerializer, UnitSerializer,
@@ -49,6 +49,7 @@ from apps.inventory.serializers import (
     StockTransferOrderSerializer, StockTransferLineSerializer,
     OperationalRequestSerializer, OperationalRequestLineSerializer,
     ProductAnalyticsSerializer, ComboComponentSerializer,
+    ProductSerialSerializer, SerialLogSerializer,
 )
 from apps.inventory.services import InventoryService
 from erp.lifecycle_mixin import LifecycleViewSetMixin
@@ -73,20 +74,30 @@ def _get_org_or_400():
 # UNIT
 # =============================================================================
 
-class UnitViewSet(TenantModelViewSet):
+from erp.mixins import (
+    AuditLogMixin, ConnectorAwareMixin, TenantFilterMixin, 
+    PriceChangeWorkflowMixin, UDLEViewSetMixin
+)
+
+class UnitViewSet(UDLEViewSetMixin, TenantModelViewSet):
     queryset = Unit.objects.all()
     serializer_class = UnitSerializer
+    filterset_fields = ['name']
+    search_fields = ['name']
 
 
 # =============================================================================
 # PRODUCT
 # =============================================================================
 
-class ProductViewSet(TenantModelViewSet):
+class ProductViewSet(UDLEViewSetMixin, TenantModelViewSet):
     queryset = Product.objects.select_related(
         'brand', 'country', 'category', 'unit', 'parfum', 'size_unit', 'product_group'
     ).all()
     serializer_class = ProductSerializer
+    filterset_fields = ['category', 'brand', 'product_type', 'is_active', 'tracks_serials']
+    search_fields = ['name', 'sku', 'barcode', 'description']
+    ordering_fields = ['name', 'sku', 'selling_price_ttc', 'cost_price', 'stock_level', 'created_at']
 
     # --- C3: Throttled public storefront ---
     class StorefrontThrottle(AnonRateThrottle):
@@ -1500,10 +1511,13 @@ class ProductGroupViewSet(TenantModelViewSet):
 # L6: INVENTORY MOVEMENT (read-only audit trail)
 # =============================================================================
 
-class InventoryMovementViewSet(TenantModelViewSet):
+class InventoryMovementViewSet(UDLEViewSetMixin, TenantModelViewSet):
     queryset = InventoryMovement.objects.select_related('product', 'warehouse').all()
     serializer_class = InventoryMovementSerializer
     http_method_names = ['get', 'head', 'options']  # Read-only
+    filterset_fields = ['type', 'product', 'warehouse']
+    search_fields = ['reference', 'product__name', 'warehouse__name']
+    ordering_fields = ['created_at', 'quantity', 'cost_price']
 
     @action(detail=False, methods=['get'])
     def by_product(self, request):
@@ -1875,3 +1889,30 @@ class OperationalRequestViewSet(TenantModelViewSet):
             'order_id': req.converted_to_id,
             'order_type': req.converted_to_type,
         })
+
+
+class ProductSerialViewSet(TenantModelViewSet):
+    queryset = ProductSerial.objects.all()
+    serializer_class = ProductSerialSerializer
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        product_id = self.request.query_params.get('product_id')
+        serial_number = self.request.query_params.get('serial_number')
+        if product_id:
+            qs = qs.filter(product_id=product_id)
+        if serial_number:
+            qs = qs.filter(serial_number__icontains=serial_number)
+        return qs
+
+    @action(detail=True, methods=['get'])
+    def history(self, request, pk=None):
+        serial = self.get_object()
+        logs = serial.logs.all()
+        serializer = SerialLogSerializer(logs, many=True)
+        return Response(serializer.data)
+
+
+class SerialLogViewSet(TenantModelViewSet):
+    queryset = SerialLog.objects.all()
+    serializer_class = SerialLogSerializer

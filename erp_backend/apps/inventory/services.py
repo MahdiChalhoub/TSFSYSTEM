@@ -19,7 +19,7 @@ class InventoryService:
         return ht * (Decimal('1') + rate)
 
     @staticmethod
-    def receive_stock(organization, product, warehouse, quantity, cost_price_ht, is_tax_recoverable=True, reference=None, user=None, scope='OFFICIAL'):
+    def receive_stock(organization, product, warehouse, quantity, cost_price_ht, is_tax_recoverable=True, reference=None, user=None, scope='OFFICIAL', serials=None):
         from apps.inventory.models import Inventory, InventoryMovement
         from apps.finance.services import ForensicAuditService
         
@@ -52,6 +52,16 @@ class InventoryService:
             inventory.save()
             
             InventoryMovement.objects.create(organization=organization, product=product, warehouse=warehouse, type='IN', quantity=inbound_qty, cost_price=effective_cost, reference=reference, scope=scope)
+            
+            # Serial Tracking Integration
+            if product.tracks_serials:
+                if not serials or len(serials) != int(inbound_qty):
+                    raise ValidationError(f"Product {product.name} requires {int(inbound_qty)} serial numbers.")
+                for sn in serials:
+                    InventoryService.register_serial_entry(
+                        organization, product, warehouse, sn, reference, 
+                        cost_price=effective_cost, user_name=user.username if user else None
+                    )
             
             # Cross-module: create journal entry for stock reception
             from erp.services import ConfigurationService
@@ -240,7 +250,7 @@ class InventoryService:
             return inventory
 
     @staticmethod
-    def reduce_stock(organization, product, warehouse, quantity, reference=None, user=None, scope='OFFICIAL'):
+    def reduce_stock(organization, product, warehouse, quantity, reference=None, user=None, scope='OFFICIAL', serials=None):
         """Reduces stock and captures AMC for COGS booking."""
         from apps.inventory.models import Inventory, InventoryMovement
         from apps.finance.services import ForensicAuditService
@@ -274,6 +284,17 @@ class InventoryService:
                 reference=reference or f"SALE-{uuid.uuid4().hex[:6].upper()}",
                 scope=scope
             )
+
+            # Serial Tracking Integration
+            if product.tracks_serials:
+                if not serials or len(serials) != int(qty_to_reduce):
+                    raise ValidationError(f"Product {product.name} requires {int(qty_to_reduce)} serial numbers for exit.")
+                for sn in serials:
+                    InventoryService.register_serial_exit(
+                        organization, product, warehouse, sn, 
+                        reference or f"SALE-SERIAL-{product.id}", 
+                        user_name=user.username if user else None
+                    )
 
             ForensicAuditService.log_mutation(
                 organization=organization,
@@ -419,3 +440,124 @@ class InventoryService:
             "valuation": physical_valuation,
             "timestamp": timezone.now()
         }
+
+    @staticmethod
+    def register_serial_exit(organization, product, warehouse, serial_number, reference, user_name=None):
+        from apps.inventory.advanced_models import ProductSerial, SerialLog
+        serial = ProductSerial.objects.filter(
+            organization=organization,
+            product=product,
+            serial_number=serial_number,
+            status='AVAILABLE'
+        ).first()
+        
+        if not serial:
+            raise ValidationError(f"Serial {serial_number} not available in inventory for {product.name}.")
+            
+        serial.status = 'SOLD'
+        serial.warehouse = None
+        serial.save()
+        
+        SerialLog.objects.create(
+            organization=organization,
+            serial=serial,
+            action='SALE',
+            reference=reference,
+            user_name=user_name
+        )
+
+    @staticmethod
+    def register_serial_entry(organization, product, warehouse, serial_number, reference, cost_price=Decimal('0'), user_name=None):
+        from apps.inventory.advanced_models import ProductSerial, SerialLog
+        serial, created = ProductSerial.objects.get_or_create(
+            organization=organization,
+            product=product,
+            serial_number=serial_number,
+            defaults={
+                'status': 'AVAILABLE',
+                'warehouse': warehouse,
+                'cost_price': cost_price
+            }
+        )
+        
+        if not created:
+            if serial.status == 'AVAILABLE':
+                raise ValidationError(f"Serial {serial_number} already exists in inventory (Warehouse: {serial.warehouse.name}).")
+            serial.status = 'AVAILABLE'
+            serial.warehouse = warehouse
+            serial.cost_price = cost_price
+            serial.save()
+            
+        SerialLog.objects.create(
+            organization=organization,
+            serial=serial,
+            action='PURCHASE',
+            reference=reference,
+            warehouse=warehouse,
+            user_name=user_name
+        )
+
+    @staticmethod
+    def get_purchase_suggestions(organization, days=None):
+        """
+        AI/Statistical Suggested Reorders.
+        Calculates sales velocity and predicts missing stock based on:
+        - Configured analysis period (default 30 days)
+        - Safety stock (min_stock_level)
+        - Current arrival pipeline (if any)
+        """
+        from erp.services import ConfigurationService
+        from apps.inventory.models import Product, Inventory, InventoryMovement
+        from datetime import timedelta
+        from django.db.models import Sum, Q
+        from django.utils import timezone
+        import math
+
+        if days is None:
+            days = ConfigurationService.get_setting(organization, 'purchase_analysis_days', 30)
+            
+        cutoff = timezone.now() - timedelta(days=days)
+        suggestions = []
+
+        # 1. Calculate sales velocity per product
+        sales_data = InventoryMovement.objects.filter(
+            organization=organization,
+            type='OUT',
+            created_at__gte=cutoff
+        ).values('product_id').annotate(
+            total_sold=Sum('quantity')
+        )
+        velocity_map = {item['product_id']: Decimal(str(item['total_sold'])) / Decimal(str(days)) for item in sales_data}
+
+        # 2. Analyze all active products
+        products = Product.objects.filter(organization=organization, status='ACTIVE', is_active=True)
+        
+        for p in products:
+            agg_stock = Inventory.objects.filter(product=p, organization=organization).aggregate(total=Sum('quantity'))['total']
+            current_stock = Decimal(str(agg_stock or '0'))
+            
+            daily_velocity = velocity_map.get(p.id, Decimal('0'))
+            safety_stock = Decimal(str(p.min_stock_level or 0))
+            
+            # Prediction: Stock needed for the next 14 days + safety stock
+            expected_demand = daily_velocity * Decimal('14')
+            target_stock = expected_demand + safety_stock
+            
+            if current_stock < target_stock:
+                shortage = target_stock - current_stock
+                # Round up to 1 significant decimal or integer if possible
+                suggested_qty = math.ceil(float(shortage))
+                
+                if suggested_qty > 0:
+                    suggestions.append({
+                        "product_id": p.id,
+                        "product_name": p.name,
+                        "sku": p.sku,
+                        "current_stock": float(current_stock),
+                        "daily_velocity": float(daily_velocity),
+                        "suggested_qty": suggested_qty,
+                        "priority": "HIGH" if current_stock < safety_stock else "MEDIUM",
+                        "reason": "Low Stock" if current_stock < safety_stock else "Projected Demand"
+                    })
+
+        return sorted(suggestions, key=lambda x: (x['priority'] == 'HIGH', x['suggested_qty']), reverse=True)

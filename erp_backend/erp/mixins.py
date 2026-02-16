@@ -316,3 +316,74 @@ class PriceChangeWorkflowMixin:
         # Proceed with update
         return serializer.save()
 
+
+from rest_framework.decorators import action
+from django.db import models as dj_models
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
+
+class UDLEViewSetMixin:
+    """
+    Universal Dynamic List Engine (UDLE) Mixin.
+    Provides:
+    1. Schema metadata action for frontend introspection.
+    2. Standardized filtering, searching, and ordering.
+    3. Customization hooks for column visibility and defaults.
+    """
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    
+    # Override in subclass if needed
+    udle_exclude_fields = ['password', 'secret', 'token']
+    
+    @action(detail=False, methods=['get'], url_path='schema-meta')
+    def schema_meta(self, request):
+        """
+        Returns JSON metadata describing the model fields for dynamic UI generation.
+        """
+        model = self.get_queryset().model
+        meta = model._meta
+        
+        fields_info = []
+        for field in meta.get_fields():
+            # Skip reverse relations and explicitly excluded fields
+            if field.one_to_many or field.many_to_many or field.name in self.udle_exclude_fields:
+                continue
+                
+            field_type = "string"
+            choices = None
+            
+            if isinstance(field, dj_models.IntegerField) or isinstance(field, dj_models.AutoField):
+                field_type = "number"
+            elif isinstance(field, dj_models.DecimalField) or isinstance(field, dj_models.FloatField):
+                field_type = "decimal"
+            elif isinstance(field, dj_models.BooleanField):
+                field_type = "boolean"
+            elif isinstance(field, dj_models.DateTimeField):
+                field_type = "datetime"
+            elif isinstance(field, dj_models.DateField):
+                field_type = "date"
+            elif isinstance(field, dj_models.ForeignKey):
+                field_type = "relation"
+            
+            if hasattr(field, 'choices') and field.choices:
+                choices = [{"value": c[0], "label": str(c[1])} for c in field.choices]
+                field_type = "select"
+
+            fields_info.append({
+                "name": field.name,
+                "label": getattr(field, 'verbose_name', field.name).capitalize(),
+                "type": field_type,
+                "required": not field.null if hasattr(field, 'null') else False,
+                "sortable": True,
+                "filterable": True,
+                "choices": choices
+            })
+
+        return Response({
+            "model": meta.model_name,
+            "verbose_name": meta.verbose_name.capitalize(),
+            "verbose_name_plural": meta.verbose_name_plural.capitalize(),
+            "fields": fields_info,
+            "default_columns": [f["name"] for f in fields_info[:8]], # Suggest first 8 as default
+        })
+

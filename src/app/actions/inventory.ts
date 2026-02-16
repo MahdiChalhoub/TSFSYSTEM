@@ -115,3 +115,40 @@ export async function updateUnit(id: number, prevState: UnitState, formData: For
         return { message: 'Failed to update unit' };
     }
 }
+
+export async function getSerialsAction(query: string = "") {
+    try {
+        const url = query ? `serials/?search=${encodeURIComponent(query)}` : 'serials/';
+        return await erpFetch(url);
+    } catch (e) {
+        console.error("Failed to fetch serials", e);
+    }
+}
+
+export async function getInventoryMovementsUDLE(params: string = "") {
+    try {
+        const url = params ? `inventory/inventory-movements/?${params}` : 'inventory/inventory-movements/';
+        return await erpFetch(url);
+    } catch (e) {
+        console.error("Failed to fetch movements", e);
+        return [];
+    }
+}
+
+export async function getInventoryMovementsMeta() {
+    try {
+        return await erpFetch('inventory/inventory-movements/schema-meta/');
+    } catch (e) {
+        console.error("Failed to fetch movements metadata", e);
+        throw e;
+    }
+}
+
+export async function getSerialHistoryAction(serialId: number) {
+    try {
+        return await erpFetch(`serials/${serialId}/history/`);
+    } catch (e) {
+        console.error("Failed to fetch serial history", e);
+        return [];
+    }
+}
