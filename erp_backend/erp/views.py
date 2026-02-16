@@ -50,7 +50,7 @@ except ImportError:
 # --- Kernel Serializers ---
 from .serializers import (
     OrganizationSerializer, SiteSerializer, UserSerializer,
-    CountrySerializer, RoleSerializer, NotificationSerializer,
+    CountrySerializer, RoleSerializer, NotificationSerializer, PermissionSerializer,
 )
 from .serializers.core import GlobalCurrencySerializer
 try:
@@ -1116,3 +1116,21 @@ try:
     from apps.hr.views import EmployeeViewSet  # noqa: F401, E402
 except ImportError:
     pass
+
+
+class PermissionViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    List all available permissions in the system.
+    Used by the Role Manager UI.
+    """
+    queryset = Permission.objects.all().order_by('code')
+    serializer_class = PermissionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # Allow filtering by module/prefix if needed
+        qs = super().get_queryset()
+        module = self.request.query_params.get('module')
+        if module:
+            qs = qs.filter(code__startswith=f"{module}.")
+        return qs
