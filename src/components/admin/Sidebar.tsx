@@ -107,6 +107,7 @@ const MENU_ITEMS = [
                 children: [
                     { title: 'POS Terminal', path: '/sales' },
                     { title: 'Sales Analytics', path: '/sales/analytics' },
+                    { title: 'Quotations', path: '/sales/quotations' },
                 ]
             },
             {
@@ -219,6 +220,8 @@ const MENU_ITEMS = [
                     { title: 'Tax Reports', path: '/finance/tax-reports' },
                     { title: 'Budget Overview', path: '/finance/budget' },
                     { title: 'Profit Centers', path: '/finance/profit-centers' },
+                    { title: 'Revenue Breakdown', path: '/finance/revenue' },
+                    { title: 'Expense Tracker', path: '/finance/expenses' },
                 ]
             },
             {
@@ -257,6 +260,7 @@ const MENU_ITEMS = [
             { title: 'Contact Center', path: '/crm/contacts' },
             { title: 'Client Pricing', path: '/crm/pricing', icon: Tag },
             { title: 'Supplier Performance', path: '/crm/supplier-performance' },
+            { title: 'Customer Insights', path: '/crm/insights' },
         ]
     },
     {

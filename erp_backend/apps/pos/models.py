@@ -124,4 +124,5 @@ class OrderLine(TenantModel):
 
 # Import models from sub-files so Django discovers them for migrations
 from apps.pos.returns_models import SalesReturn, SalesReturnLine, CreditNote, PurchaseReturn, PurchaseReturnLine  # noqa: E402, F401
+from apps.pos.quotation_models import Quotation, QuotationLine  # noqa: E402, F401
 
