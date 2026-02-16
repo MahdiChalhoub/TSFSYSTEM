@@ -287,7 +287,7 @@ const MENU_ITEMS = [
                 title: 'Platform',
                 icon: ServerCog,
                 children: [
-                    { title: 'SaaS Dashboard', path: '/dashboard' },
+                    { title: 'SaaS Dashboard', path: '/saas-dashboard' },
                     { title: 'Platform Health', path: '/health' },
                     { title: 'Kernel Updates', path: '/updates' },
                 ]
