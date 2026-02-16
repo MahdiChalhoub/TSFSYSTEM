@@ -150,6 +150,7 @@ const MENU_ITEMS = [
                     { title: 'Adjustment Orders', path: '/inventory/adjustment-orders' },
                     { title: 'Transfer Orders', path: '/inventory/transfer-orders' },
                     { title: 'Operational Requests', path: '/inventory/requests' },
+                    { title: 'Stock Valuation', path: '/inventory/valuation' },
                 ]
             },
             {
