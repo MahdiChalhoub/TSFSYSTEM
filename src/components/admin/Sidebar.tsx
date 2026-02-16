@@ -206,6 +206,7 @@ const MENU_ITEMS = [
                     { title: 'Profit & Loss', path: '/finance/reports/pnl' },
                     { title: 'Balance Sheet', path: '/finance/reports/balance-sheet' },
                     { title: 'Aging Report', path: '/finance/aging' },
+                    { title: 'Audit Trail', path: '/finance/audit-trail' },
                 ]
             },
             {
