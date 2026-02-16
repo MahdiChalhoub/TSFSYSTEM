@@ -16,7 +16,11 @@ import {
     Zap, DollarSign, Clock, Calendar, ArrowUpRight, Brain
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { erpFetch } from '@/lib/erp-fetch'
+
+/** Client-safe API fetch (erpFetch uses server-only cookies) */
+async function apiFetch(path: string, opts?: RequestInit) {
+    return fetch(`/api${path}`, { credentials: 'include', ...opts })
+}
 
 interface UsageData {
     total_tokens: number
@@ -51,7 +55,7 @@ export default function MCPUsagePage() {
     async function loadData() {
         setLoading(true)
         try {
-            const res = await erpFetch(`/mcp/usage/?days=${period}`)
+            const res = await apiFetch(`/mcp/usage/?days=${period}`)
             if (res.ok) {
                 const data = await res.json()
                 setUsage(data)
@@ -103,8 +107,8 @@ export default function MCPUsagePage() {
                                 key={p.value}
                                 onClick={() => setPeriod(p.value as '7' | '30' | '90')}
                                 className={`px-5 py-3 rounded-xl text-sm font-bold transition-all ${period === p.value
-                                        ? 'bg-white text-gray-900 shadow-lg'
-                                        : 'text-gray-500 hover:text-gray-700'
+                                    ? 'bg-white text-gray-900 shadow-lg'
+                                    : 'text-gray-500 hover:text-gray-700'
                                     }`}
                             >
                                 {p.label}

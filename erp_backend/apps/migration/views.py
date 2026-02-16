@@ -1,0 +1,207 @@
+"""
+Migration Module API Views.
+Provides endpoints for uploading SQL dumps, running migrations, checking status, and rollback.
+"""
+import os
+import threading
+import logging
+
+from django.conf import settings
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+
+from apps.migration.models import MigrationJob, MigrationMapping
+from apps.migration.serializers import (
+    MigrationJobSerializer, MigrationJobDetailSerializer,
+    MigrationUploadSerializer, MigrationDirectDBSerializer,
+    MigrationMappingSerializer, MigrationPreviewSerializer,
+)
+from apps.migration.services import MigrationService, MigrationRollbackService
+from apps.migration.parsers import SQLDumpParser
+
+logger = logging.getLogger(__name__)
+
+# Directory where uploaded SQL files are stored
+MIGRATION_UPLOAD_DIR = os.path.join(
+    getattr(settings, 'MEDIA_ROOT', os.path.join(settings.BASE_DIR, 'media')),
+    'migration_uploads'
+)
+
+
+class MigrationViewSet(viewsets.ModelViewSet):
+    """
+    API for managing data migrations from UltimatePOS.
+
+    list:    GET  /api/migration/jobs/
+    detail:  GET  /api/migration/jobs/{id}/
+    upload:  POST /api/migration/upload/
+    connect: POST /api/migration/connect/
+    preview: GET  /api/migration/jobs/{id}/preview/
+    start:   POST /api/migration/jobs/{id}/start/
+    logs:    GET  /api/migration/jobs/{id}/logs/
+    rollback: POST /api/migration/jobs/{id}/rollback/
+    """
+    serializer_class = MigrationJobSerializer
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+    def get_queryset(self):
+        org_id = self.request.headers.get('X-Tenant-Id') or \
+                 getattr(self.request.user, 'organization_id', None)
+        return MigrationJob.objects.filter(organization_id=org_id)
+
+    def get_serializer_class(self):
+        if self.action == 'retrieve':
+            return MigrationJobDetailSerializer
+        return MigrationJobSerializer
+
+    @action(detail=False, methods=['post'], url_path='upload')
+    def upload(self, request):
+        """Upload a SQL dump file and create a pending migration job."""
+        serializer = MigrationUploadSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        uploaded_file = serializer.validated_data['file']
+        name = serializer.validated_data.get('name', 'UltimatePOS Migration')
+
+        # Ensure upload directory exists
+        os.makedirs(MIGRATION_UPLOAD_DIR, exist_ok=True)
+
+        # Save file
+        import uuid
+        filename = f"{uuid.uuid4().hex}_{uploaded_file.name}"
+        file_path = os.path.join(MIGRATION_UPLOAD_DIR, filename)
+
+        with open(file_path, 'wb+') as f:
+            for chunk in uploaded_file.chunks():
+                f.write(chunk)
+
+        # Get org_id
+        org_id = request.headers.get('X-Tenant-Id') or \
+                 getattr(request.user, 'organization_id', None)
+
+        # Create job
+        job = MigrationJob.objects.create(
+            organization_id=org_id,
+            name=name,
+            source_type='SQL_DUMP',
+            file_path=file_path,
+            created_by=request.user if request.user.is_authenticated else None,
+        )
+
+        return Response(
+            MigrationJobSerializer(job).data,
+            status=status.HTTP_201_CREATED
+        )
+
+    @action(detail=False, methods=['post'], url_path='connect')
+    def connect(self, request):
+        """Create a migration job using direct DB connection."""
+        serializer = MigrationDirectDBSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        org_id = request.headers.get('X-Tenant-Id') or \
+                 getattr(request.user, 'organization_id', None)
+
+        job = MigrationJob.objects.create(
+            organization_id=org_id,
+            name=serializer.validated_data.get('name', 'UltimatePOS Migration'),
+            source_type='DIRECT_DB',
+            db_host=serializer.validated_data['db_host'],
+            db_port=serializer.validated_data.get('db_port', 3306),
+            db_name=serializer.validated_data['db_name'],
+            db_user=serializer.validated_data['db_user'],
+            db_password=serializer.validated_data['db_password'],
+            created_by=request.user if request.user.is_authenticated else None,
+        )
+
+        return Response(
+            MigrationJobSerializer(job).data,
+            status=status.HTTP_201_CREATED
+        )
+
+    @action(detail=True, methods=['get'], url_path='preview')
+    def preview(self, request, pk=None):
+        """Preview what data will be migrated (table counts)."""
+        job = self.get_object()
+
+        if job.source_type == 'SQL_DUMP':
+            parser = SQLDumpParser(file_path=job.file_path)
+            parser.parse()
+            counts = parser.get_table_counts()
+        else:
+            from apps.migration.parsers import DirectDBReader
+            reader = DirectDBReader(
+                host=job.db_host, port=job.db_port or 3306,
+                database=job.db_name, user=job.db_user, password=job.db_password,
+            )
+            reader.connect()
+            counts = reader.get_table_counts()
+            reader.close()
+
+        return Response({'tables': counts})
+
+    @action(detail=True, methods=['post'], url_path='start')
+    def start(self, request, pk=None):
+        """Start the migration in a background thread."""
+        job = self.get_object()
+
+        if job.status not in ('PENDING', 'FAILED'):
+            return Response(
+                {'error': f'Cannot start migration in status: {job.status}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        org_id = request.headers.get('X-Tenant-Id') or \
+                 getattr(request.user, 'organization_id', None)
+
+        # Run migration in background thread
+        def run_migration():
+            try:
+                service = MigrationService(job, organization_id=org_id)
+                service.run()
+            except Exception as e:
+                logger.exception(f"Background migration failed: {str(e)}")
+
+        thread = threading.Thread(target=run_migration, daemon=True)
+        thread.start()
+
+        job.status = 'PARSING'
+        job.save()
+
+        return Response(MigrationJobSerializer(job).data)
+
+    @action(detail=True, methods=['get'], url_path='logs')
+    def logs(self, request, pk=None):
+        """Get migration mappings/logs for a job."""
+        job = self.get_object()
+        entity_type = request.query_params.get('entity_type')
+
+        mappings = MigrationMapping.objects.filter(job=job)
+        if entity_type:
+            mappings = mappings.filter(entity_type=entity_type.upper())
+
+        mappings = mappings.order_by('-created_at')[:200]
+
+        return Response({
+            'error_log': job.error_log,
+            'mappings': MigrationMappingSerializer(mappings, many=True).data
+        })
+
+    @action(detail=True, methods=['post'], url_path='rollback')
+    def rollback(self, request, pk=None):
+        """Rollback a migration — delete all imported data."""
+        job = self.get_object()
+
+        if job.status not in ('COMPLETED', 'FAILED'):
+            return Response(
+                {'error': f'Cannot rollback migration in status: {job.status}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        deleted = MigrationRollbackService.rollback(job)
+        return Response({
+            'status': 'rolled_back',
+            'deleted_count': deleted,
+        })

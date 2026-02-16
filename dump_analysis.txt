@@ -1,0 +1,65 @@
+﻿Analyzing: C:\Users\chalh\Downloads\u739151801_dataPOS.sql
+Size: 360.6 MB
+
+============================================================
+TABLES FOUND: 55
+============================================================
+Table                                          Rows
+---------------------------------------- ----------
+account_transactions                            431
+account_types                                     1
+accounts                                          1
+activity_log                                    748
+barcodes                                          1
+bookings                                          1
+brands                                            1
+business                                          1
+business_locations                                1
+cash_denominations                                1
+cash_register_transactions                      256
+cash_registers                                    1
+categories                                        1
+contacts                                          3
+currencies                                        1
+customer_groups                                   1
+expense_categories                                1
+group_sub_taxes                                   1
+inventory_management                              1
+inventory_management_log                        446
+inventory_management_product                    202
+invoice_layouts                                   1
+invoice_schemes                                   1
+media                                             1
+migrations                                        1
+model_has_permissions                             1
+model_has_roles                                   1
+notification_templates                            2
+password_resets                                   1
+permissions                                       1
+product_locations                                 4
+product_racks                                    22
+product_variations                               16
+products                                         71
+purchase_lines                                  201
+reference_counts                                  1
+res_product_modifier_sets                         1
+role_has_permissions                              1
+roles                                             1
+selling_price_groups                              1
+stock_adjustment_lines                            3
+system                                            1
+tax_rates                                         1
+transaction_payments                            638
+transaction_sell_lines                         1782
+transaction_sell_lines_purchase_lines           709
+transactions                                   1924
+units                                             1
+user_contact_access                               1
+users                                             1
+variation_group_prices                            4
+variation_location_details                       19
+variation_templates                               1
+variation_value_templates                         1
+variations                                       34
+---------------------------------------- ----------
+TOTAL                                          7550

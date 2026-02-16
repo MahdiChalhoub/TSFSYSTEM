@@ -23,6 +23,7 @@ from erp.views import health_check
 urlpatterns = [
     path('tsf-system-kernel-7788/', admin.site.urls),
     path('api/', include('erp.urls')),
+    path('api/migration/', include('apps.migration.urls')),
     path('health/', health_check),
 ]
 
