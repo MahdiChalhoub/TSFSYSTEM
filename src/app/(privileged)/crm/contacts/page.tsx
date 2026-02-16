@@ -20,7 +20,12 @@ async function getContacts() {
         return data.map((c: any) => ({
             ...c,
             homeSite: c.home_site,
-            linkedAccount: c.linked_account
+            linkedAccount: c.linked_account,
+            supplierCategory: c.supplier_category,
+            customerTier: c.customer_tier,
+            companyName: c.company_name,
+            paymentTermsDays: c.payment_terms_days,
+            loyaltyPoints: c.loyalty_points,
         }));
     } catch (e) {
         console.error("Failed to fetch contacts", e);
@@ -71,6 +76,10 @@ export default async function ContactsPage() {
                         <div className="text-center px-6 border-r border-gray-100 last:border-0">
                             <div className="text-4xl font-black text-gray-900 tracking-tighter mb-1">{contacts.filter((c: any) => c.type === 'SUPPLIER').length}</div>
                             <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Suppliers</div>
+                        </div>
+                        <div className="text-center px-6 border-r border-gray-100 last:border-0">
+                            <div className="text-4xl font-black text-gray-900 tracking-tighter mb-1">{contacts.filter((c: any) => c.type === 'LEAD').length}</div>
+                            <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Leads</div>
                         </div>
                     </div>
                 </div>
