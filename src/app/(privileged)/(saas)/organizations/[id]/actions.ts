@@ -184,3 +184,29 @@ export async function setOrgClient(orgId: string, clientId: string | null) {
         body: JSON.stringify({ client_id: clientId })
     })
 }
+
+// ─── Add-on Management ──────────────────────────────────────────
+
+export async function getOrgAddons(orgId: string) {
+    try {
+        return await erpFetch(`saas/plans/org-addons/${orgId}/`)
+    } catch (error) {
+        console.error("[SaaS] Error fetching org addons:", error)
+        return { purchased: [], available: [] }
+    }
+}
+
+export async function purchaseAddon(orgId: string, addonId: string, quantity: number = 1, billingCycle: string = 'MONTHLY') {
+    return await erpFetch(`saas/plans/org-addons/${orgId}/purchase/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ addon_id: addonId, quantity, billing_cycle: billingCycle })
+    })
+}
+
+export async function cancelAddon(orgId: string, purchaseId: string) {
+    return await erpFetch(`saas/plans/org-addons/${orgId}/cancel/${purchaseId}/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+    })
+}
