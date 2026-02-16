@@ -1,4 +1,4 @@
-import { erpFetch } from '@/lib/erpFetch'
+import { erpFetch } from '@/lib/erp-fetch'
 import ComboManager from './manager'
 
 interface Product {
