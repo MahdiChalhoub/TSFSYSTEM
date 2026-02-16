@@ -17,7 +17,7 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="en" className="dark scroll-smooth" suppressHydrationWarning data-scroll-behavior="smooth">
+        <html lang="en" className="scroll-smooth" suppressHydrationWarning data-scroll-behavior="smooth">
             <head>
                 <link rel="manifest" href="/manifest.json" />
                 <meta name="theme-color" content="#6366f1" />
