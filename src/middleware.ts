@@ -59,9 +59,14 @@ export default async function middleware(req: NextRequest) {
                 return NextResponse.redirect(new URL(`${cleanPath}${searchParams ? '?' + searchParams : ''}`, req.url));
             }
 
-            // 2. Redirect root / to /dashboard for SaaS subdomain (Resolves conflict with (store))
+            // 2. Redirect root / to /saas-dashboard for SaaS subdomain
             if (url.pathname === '/') {
-                return NextResponse.redirect(new URL(`/dashboard${searchParams ? '?' + searchParams : ''}`, req.url));
+                return NextResponse.redirect(new URL(`/saas-dashboard${searchParams ? '?' + searchParams : ''}`, req.url));
+            }
+
+            // 3. Rewrite /dashboard to /saas-dashboard on SaaS subdomain
+            if (url.pathname === '/dashboard') {
+                return NextResponse.rewrite(new URL(`/saas-dashboard${searchParams ? '?' + searchParams : ''}`, req.url));
             }
 
             return NextResponse.next();
