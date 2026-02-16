@@ -209,6 +209,8 @@ const MENU_ITEMS = [
                     { title: 'Aging Report', path: '/finance/aging' },
                     { title: 'Audit Trail', path: '/finance/audit-trail' },
                     { title: 'Cash Register', path: '/finance/cash-register' },
+                    { title: 'Bank Reconciliation', path: '/finance/bank-reconciliation' },
+                    { title: 'Account Statements', path: '/finance/statements' },
                 ]
             },
             {

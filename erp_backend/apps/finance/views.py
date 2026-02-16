@@ -438,6 +438,108 @@ class JournalEntryViewSet(TenantModelViewSet):
     def partial_update(self, request, *args, **kwargs):
         return self.update(request, *args, **kwargs)
 
+    @action(detail=False, methods=['get'], url_path='bank-reconciliation')
+    def bank_reconciliation(self, request):
+        """Bank reconciliation — unreconciled entries on bank/cash accounts."""
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({"error": "No organization context"}, status=status.HTTP_400_BAD_REQUEST)
+        organization = Organization.objects.get(id=organization_id)
+
+        from django.db.models import Sum, Q
+        account_id = request.query_params.get('account_id')
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+
+        # List bank/cash accounts (COA type = ASSET, sub_type in bank/cash)
+        bank_accounts = ChartOfAccount.objects.filter(
+            organization=organization,
+            is_active=True,
+            type='ASSET',
+        ).filter(
+            Q(sub_type__icontains='bank') |
+            Q(sub_type__icontains='cash') |
+            Q(name__icontains='bank') |
+            Q(name__icontains='caisse') |
+            Q(syscohada_class='5')
+        )
+
+        if not account_id:
+            # Return list of bank accounts with balances
+            accounts_data = []
+            for acc in bank_accounts:
+                lines = JournalEntryLine.objects.filter(
+                    organization=organization,
+                    account=acc,
+                    journal_entry__status='POSTED',
+                )
+                total_debit = float(lines.aggregate(s=Sum('debit'))['s'] or 0)
+                total_credit = float(lines.aggregate(s=Sum('credit'))['s'] or 0)
+                book_balance = total_debit - total_credit
+                accounts_data.append({
+                    'id': acc.id,
+                    'code': acc.code,
+                    'name': acc.name,
+                    'book_balance': book_balance,
+                    'coa_balance': float(acc.balance),
+                    'entry_count': lines.count(),
+                })
+            return Response({'accounts': accounts_data})
+
+        # Detail: journal entries for specific account
+        try:
+            account = ChartOfAccount.objects.get(id=account_id, organization=organization)
+        except ChartOfAccount.DoesNotExist:
+            return Response({"error": "Account not found"}, status=404)
+
+        lines_qs = JournalEntryLine.objects.filter(
+            organization=organization,
+            account=account,
+            journal_entry__status='POSTED',
+        ).select_related('journal_entry')
+
+        if start_date:
+            lines_qs = lines_qs.filter(journal_entry__transaction_date__gte=start_date)
+        if end_date:
+            lines_qs = lines_qs.filter(journal_entry__transaction_date__lte=end_date)
+
+        lines_qs = lines_qs.order_by('journal_entry__transaction_date')
+
+        total_debit = 0
+        total_credit = 0
+        entries = []
+        for line in lines_qs:
+            d = float(line.debit)
+            c = float(line.credit)
+            total_debit += d
+            total_credit += c
+            entries.append({
+                'id': line.id,
+                'je_id': line.journal_entry_id,
+                'date': str(line.journal_entry.transaction_date.date()) if line.journal_entry.transaction_date else None,
+                'reference': line.journal_entry.reference,
+                'description': line.description or line.journal_entry.description,
+                'debit': d,
+                'credit': c,
+                'running_balance': total_debit - total_credit,
+            })
+
+        return Response({
+            'account': {
+                'id': account.id,
+                'code': account.code,
+                'name': account.name,
+            },
+            'summary': {
+                'total_debit': total_debit,
+                'total_credit': total_credit,
+                'book_balance': total_debit - total_credit,
+                'entry_count': len(entries),
+            },
+            'entries': entries,
+        })
+
+
 
 class BarcodeSettingsViewSet(viewsets.ViewSet):
     def list(self, request):

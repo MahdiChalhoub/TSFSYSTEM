@@ -1,0 +1,965 @@
+﻿========== add product.docx ==========
+? SIDE 1: USER INPUTS
+1. Basic Information
+?? Active? (Toggle)
+?? Product Type: [Single, Combo, Service, Gift]
+?? Product Name
+?? SKU / Internal Reference
+?? Barcode(s): One per unit level
+?? Category Tree: Category  Subcategory  Sub-subcategory
+?? Brand
+?? Main Unit Type: [Weight, Volume, etc.]
+?? Main Unit: (Piece, Pack, Carton, etc.)
+?? Description (Optional)
+??? Image
+1.5 Inventory Rules
+?? Track Inventory [Yes/No]
+?? For Sale? [Yes/No]
+?? For Purchase? [Yes/No]
+?? Default Stock Location
+?? Needs IMEI or Serial Tracking?
+?? Warranty Required?
+?? Enable Expiry? [Yes/No]
+Default Expiry Days (Auto-calc from invoices)
+?? Min Stock Alert (Optional; can auto-calc from sales trends)
+?? Valuation Method: [FIFO, Average, Manual]
+2. Combo Product Definition (only if Product Type = Combo)
+?? Search bar to add items
+?? Table of Components
+Name + Barcode
+Quantity
+Unit Cost Price (Default)
+Margin %
+Selling Price (Default)
+?? Summary
+Total Items
+Total Cost
+Total Selling Price
+Total Margin
+3. Pricing Structure
+?? Tax Group (HT/TTC logic)
+?? Cost Price (HT)
+?? Cost Price (TTC)
+?? Selling Price (HT/TTC) (Default view depends on system setting)
+?? Margin % (Auto-calculated - primary view and secondary as hint)
+?? Price Group
+Similar Item Grouping or Client-Specific Assignment
+Fallback to system default if not grouped
+4. Physical Properties
+?? Weight
+?? Volume/CBM
+?? Dimensions (L x W x H)
+5. Product Behavior
+?? Stockable
+?? Service
+?? Combo
+Allows selection of components and quantity
+Triggers combo pricing logic
+
+? SIDE 2: SYSTEM-GENERATED & LINKED INFO
+6. Supplier Association
+?? Preferred Supplier(s)
+?? Usual Purchase Price
+? Lead Time (Days)
+?? Supplier Rating / Priority
+7. Lifecycle Metadata
+????? Created By
+?? Created On
+?? Status: Editable  Locked  Verified  Finalized
+
+? SIDE 2: SYSTEM-GENERATED & LINKED INFO (Continued)
+1. Packaging Tree Display & Setup
+?? Visual Level Overview
+? Barcode & Conversion Table
+? Add New Level via Popup
+?? Auto-Boxing Rules (Optional)
+?? Unit Name (e.g. 1 Pack = 10 Pieces)
+Barcode per level
+Conversion Ratio
+2. Pricing Linkages (with Tab View for Client & Group)
+?? Price Group Siblings
+?? Client-Specific Pricing
+Show if this product is directly priced or included in a group
+?? Promotions Linked to Product
+3. Combo Linkage Map
+?? Where this product is used in other combos
+?? Dependency overview
+4. Stock Analysis
+?? Quantity by Unit & Location
+?? Stock Card (In/Out)
+?? Cost Card (Valuation History)
+5. Change Tracking
+?? Change Type
+?? Modified By
+?? Date
+?? Status: Pending / Locked / Verified
+6. Price History
+?? Change Log
+?? Modified By / Supplier
+?? Date & Time
+7. Expiry Monitoring
+?? Active Batches
+?? Expiry Risk vs Sales Trend
+?? Expiry Alerts
+
+?? CONDITIONAL PANELS
+?? Approval Panel (Name, Price, Barcode, etc.)
+?? Document Attachments (Images, Certificates, etc.)
+??? Print Layout Preview (Barcode/Label Designer)
+
+?? INTELLIGENT FEATURES
+?? AI-Based Reorder Suggestions
+?? Profit Simulator
+????? Permission Controls (e.g., hide cost from cashiers)
+
+
+
+========== ALLL SALES.docx ==========
+?? SUBMODULE: All Sales Invoices
+?? Purpose:Central hub to view, manage, track, filter, and export every finalized sale - whether it was created via POS, manual entry, quotation conversion, or import. It provides full traceability, lifecycle status, payment tracking, and links to delivery or return actions.
+
+?? KEY UI ELEMENTS
+?? Search & Filter Panel
+Date Range (From - To)
+Client Name / Phone / Code
+Invoice Number
+Invoice Status (Draft, Locked, Verified, Paid, Returned, Cancelled)
+Payment Status (Paid, Partial, Due, Overdue)
+Sale Type (POS, Manual, Quotation, Import)
+User / Cashier
+Delivery Status (Pending, In Transit, Delivered)
+Location / Branch
+? Export Button (CSV, Excel, PDF)
+
+?? Invoice List Table View
+Column
+Description
+
+?? Reference
+Unique invoice number or reference ID (clickable to open invoice view)
+
+?? Location
+Store or branch where the sale occurred
+
+?? Client Name
+Name of the client (with badge for loyalty tier or type, e.g. Walk-in)
+
+?? Total Qte
+Total number of units sold (all products combined)
+
+?? Total Volume
+Optional - summed volume of products (if tracked, e.g., liters, m3)
+
+?? Total Weight
+Optional - total weight sold (if tracked, e.g., kg, tons)
+
+?? Description
+Notes, special delivery instructions, or sale reason
+
+?? Total Amount
+Final invoice total (including discounts and taxes)
+
+?? Paid
+Amount already paid
+
+?? Due
+Remaining amount to be collected
+
+?? Status
+Invoice lifecycle: Draft / Locked / Verified / Cancelled
+
+?? Payment Status
+Paid / Partial / Due / Overdue (with visual tags)
+
+?? Delivery
+Status: Not Assigned / Preparing / Dispatched / Delivered / Failed
+
+?? Actions
+View
+
+
+?? Lifecycle Controls (Role-Based)
+?? Draft / Open: Can be edited
+?? Locked: Prevents edits, needs manager code to unlock
+? Verified: Final state, can only be reversed by Admin
+?? Cancelled: Disabled from impact in reports, requires reason
+?? Audit Trail: Every update timestamped + user tracked
+
+?? Linked Documents
+Delivery Order (if any)
+Return Invoice(s) (if initiated)
+Payments Made (Linked receipts)
+Quotation Origin (if converted)
+
+?? Financial Logic
+Linked to client's financial account
+Auto-updates:
+Revenue
+Accounts Receivable
+Cash/Bank balance
+Shows:
+Cost Price Total (for margin calc)
+Profit per invoice (if enabled)
+Tax Breakdown
+
+?? Action Buttons (Role-Restricted)
+Action
+Description
+
+?? View
+Full invoice preview with payment + delivery info
+
+?? Print
+Printable PDF with optional delivery note
+
+?? Return
+Start a return for selected items (if allowed)
+
+?? Edit
+Only if status is "Open" or with manager override
+
+?? Lock
+Lock invoice to prevent further edits
+
+? Verify
+Finalize sale (Admin only or with permission)
+
+? Cancel
+Only if not verified or with special permission
+
+
+?? REPORTING SYNC
+All sales here are included in:
+Sales Dashboard
+Revenue Reports
+Client Sales Analysis
+Tax Summary
+Inventory Movement
+
+?? CONFIGURABLE SETTINGS
+Allow delete only before lock (toggle)
+Require reason for cancellation (toggle)
+Auto-lock after X hours/days
+Allow inline refund (toggle)
+
+?? NOTIFICATIONS & FLAGS
+?? Red tag if margin is below minimum allowed
+?? Yellow tag if due amount is overdue
+?? Blue badge for verified invoices
+?? Green badge for fully paid
+
+
+//
+
+WITH FILTER AS PER TYPE OF SLAES DEPOT A VENDRE OR NORMAL SALES ALSO
+
+
+========== omo.docx ==========
+Absolutely - here's a detailed child-friendly developer-style description for each UI element in your Add New Product screen. This includes what each field is, what it does, and whether it's optional, required, calculated, or interactive:
+
+?? ?? PRODUCT INFO SECTION
+Field
+Type
+What It Does
+Notes
+
+Product Type
+Dropdown
+Choose if it's a Stockable, Service, or Combo item
+Required
+
+Product Name
+Text
+Name of the product (e.g., "Omo 1kg")
+Required
+
+Category
+Dropdown
+Choose the product's category (e.g., "Cleaning")
+Required
+
+Subcategory
+Dropdown
+Auto-filters based on the selected category (e.g., "Laundry")
+Optional / Hierarchical
+
+The sub category it will keep showing  as a tree, until  we achieve the child item if we have 3 sub category will show 3 sub category 
+
+Barcode
+Text
+The scannable barcode for this product unit
+Required (per unit)
+
+SKU Code
+Text
+Internal stock code (your internal product reference)
+Optional but useful
+
+Supplier SKU Code
+Text
+Supplier-specific SKU code if different suppliers provide different units
+Optional / Per supplier
+
+This it will be optionaly and it will be activated by setting is just to do link with database of different supplier as per every supplier have his own sku code , so we will ad the sku code of each supplier  for this product , will appear in purchase order and he will be editable or variable in maintance mode also , to be able to repair or audit data base with filter with product have not define his sku for a specific supplier [ in screen will be name / example this will be availnlkein advance mode with a table or pop up table 
+
+Unit Type
+Dropdown
+The format sold (weight, volume, count, etc.)
+Required
+
+Unit
+Dropdown
+The base unit for sales or stock tracking
+Like in weight i will see kg , g in volume , litrein count pcs , pcs of 6 ...
+Required
+
+
+?? ?? TOGGLES AND SWITCHES
+Field
+Switch/Toggle
+What It Does
+Notes
+
+Track Stock
+? Yes / No
+Turn on if you want to track quantity for this item
+Must be ON for stockable
+
+Serial Number Tracking
+? Yes / No
+Enable if each item needs a serial or lot number
+Optional
+
+Enable Expiry Date
+? Yes / No
+Tracks expiry dates (per product or per batch)
+Useful for food/pharma
+
+With iption to see if sleect date is obligated to be filled inselling or we will use fifo mode as a seeling with keeping a teack fro what we have sold as expection like fifo mode , to be confirmed when we do inventory note that if stock 0 before purchase it will be automatically verified  that we have finish the first lot of stock before buying new one 
+
+Warranty Enabled
+? Yes / No
+Marks if this product has warranty
+Optional
+
+Warranty how much ,m type of warranty [ all, pcs, maintance... to be editable and as tree
+
+Active
+? Yes / No
+Controls if the product is visible or usable in the system
+ON by default
+
+
+?? ?? PRICING SECTION
+Field
+Type
+What It Does
+Notes
+
+Cost Type
+Dropdown
+Choose cost accounting method (FIFO, LIFO, Average)
+Impacts inventory valuation
+
+Price HT (Excl. Tax)
+Number
+Purchase price before tax
+Auto or Manual
+
+TVA %
+Number
+Tax rate (e.g., 18%)
+Used to compute TTC
+
+Price TTC (Incl. Tax)
+Number
+Final price including tax
+User edits or auto-computed
+
+Price ttc will be the most important  by defaults otherwise defined other tahn that 
+
+Margin
+Auto
+Automatically shows margin between cost and selling price
+Read-only
+
+Selling Price
+Number
+Price the product will be sold at
+Manual
+
+All product will be selled as their price ttc , other than  requested  by setting if price HT we need to  add tva if required 
+
+Pricing Group
+Dropdown
+Assign to special pricing rules for client types (VIP, Retail, Wholesale)
+Optional
+
+We have 2 type of pricing group , pricing group for different type of client and pricing group for similar item to get same price always, to increase all together amd to decrease all together or group of combo packaging [ when pcs is increased i should increase his parent ... ] so we have 3 type of pricing group, and pricing group for clint wil be the parent  and pricing group of 
+
+Eeven pricing grou p i wnat to see table for it  to be eavle to give some client a special price 
+
+
+?? ?? COMBO / PROMO SECTION [ to be defined of is normal combo or just promo combo or gift combo or packaging combo
+Field
+Table Field
+What It Does
+Notes
+
+Sub-Items Table
+Table Row
+List of products included in the combo with quantity
+Used only in Combo products
+
+Quantity
+Number
+How many units of that item are in the combo
+Required for combos
+
+Remove
+Action
+Remove item from the combo
+Icon/button
+
+
+
+
+
+
+
+?? ?? CALCULATED FIELDS for combo after selecting all combo 
+Field
+Type
+What It Does
+Notes
+
+Price Total ttc and ht 
+Auto
+Sum of all costs of items x quantity in combo
+For combo-type items
+
+Selling Total Admin Price
+Manual
+The total price admin decides to sell this combo or product
+Optional override
+
+Auto-Sync Margin
+Auto
+Shows the profit margin (Selling Price - Cost Price)
+Based on input
+
+
+?? ?? HIERARCHY / PACKAGING
+Field
+Card/Text Tree
+What It Does
+Notes
+
+Product Hierarchy
+Text Tree
+Describes product packaging structure (e.g., 1 Carton = 10 Packs)
+Used for boxing/deboxing
+
+Add Packaging / Boxing
+Button/Card
+Allows defining other levels like Pack, Box, Crate
+Optional
+
+Here the most important as advanced mode is  to see all combo of this item and especially packaging combo:  to see the herachi and relation between them like i have a Paquet of biscuit of 12 pcs  i can sell the whole packet for normal client  , or i can sell it in micro retrial pcs, or i can sell it in carton for whole sale so i need to see :name of each one, barcode, his relation with his oarent adn child i f exist  with price  of each one ,
+
+
+??? ?? BOTTOM ACTIONS
+Field
+Type
+What It Does
+Notes
+
+Save Button
+Button
+Adds product to inventory system
+Submit form + validate
+
+Cancel
+Button
+Cancels entry
+Optional UX
+
+
+
+
+========== SALES ON SALE.docx ==========
+Depot Vente Logic (Consignment Sales)
+?? Concept:
+In Depot Vente, stock is transferred to the client without immediate sale. The invoice reflects only items actually sold by the client. You only charge when they declare or report a sale.
+
+?? Lifecycle & Rules
+Step
+Depot Vente
+Normal Sale
+
+1??
+Products shipped to client location
+Products sold to client
+
+2??
+No immediate invoice or "Provisional" invoice
+Invoice is created and locked immediately
+
+3??
+Client reports sold items
+Sale invoice created with declared quantities
+
+4??
+Return unsold items if needed
+No returns unless refund
+
+5??
+Only sold quantity billed and locked
+Entire quantity billed immediately
+
+6??
+Client is billed on verified sold quantity
+Full invoice generated at sale time
+
+
+?? Permissions & Audit
+Only manager can convert Depot Vente  Invoice
+Track:
+Initial quantity delivered
+Quantity sold (declared)
+Quantity returned
+Remaining stock at client site
+Auto-link to Client Financial Account upon verification
+
+?? Suggested Enhancements
+"Depot Vente Tracker" tab in Sales
+Filter by client, product, delivery date
+Show available quantity still at client site
+Alert when depot stock > X days without sale
+Visual tag on invoice (?? Depot Vente)
+Add button: "Mark Quantity as Sold" for depot invoices
+
+
+========== sales.docx ==========
+?? SALES MODULE  DELIVERY SUBMODULE
+?? Purpose:Manage all deliveries linked to sales invoices or quotations. Track the delivery lifecycle, assign delivery personnel, calculate charges, confirm customer receipt, and sync with inventory and financials.
+
+?? MAIN FEATURES
+1?? Delivery Order Creation
+Generated from:
+Sales Invoice (auto-link)
+Quotation (optional)
+Fields:
+?? Linked Sale Invoice #
+???????? Client info (name, address, phone)
+?? Delivery Address (can be different from client address)
+?? Assigned Delivery Agent or Team
+?? Delivery Date & Time Slot
+?? Delivery Notes / Instructions
+?? Delivery Charge (manual or tariff-based)
+?? Delivery Method (Internal, Third-party, Pickup, Drop-off)
+?? Attached Documents (signed invoice, delivery slip, photo)
+
+2?? Delivery Status Tracking
+Statuses (editable lifecycle with role control):
+? Pending Preparation
+?? Ready for Dispatch
+?? Out for Delivery
+? Delivered & Confirmed
+? Failed / Returned
+?? Reattempt Scheduled
+Status is updated by:
+Delivery team (mobile/web app)
+Admin (dashboard panel)
+Client confirmation (signature or OTP optional)
+
+3?? Delivery Charge Management
+Delivery Zone Tariff Table:
+Define delivery fees per:
+Distance
+Zone
+Weight / Volume
+Client Category (VIP = Free)
+Can override manually per delivery
+Auto-add charge to client invoice (optional)
+
+4?? Driver / Agent Assignment
+Assign deliveries to:
+Internal delivery staff
+External partner (FedEx, DHL, etc.)
+Map integration (optional for planning routes)
+Track:
+Delivery agent name
+Vehicle (optional)
+GPS route (if mobile app enabled)
+Delivery performance (on-time %, return %, satisfaction)
+
+5?? Delivery Receipt / Confirmation
+Confirmation methods:
+? Digital Signature
+?? OTP Code
+?? Photo Upload (of delivered items)
+?? Physical Document Upload (signed slip)
+Stored in delivery record
+Triggers:
+Inventory status update (delivered = stock finalized)
+Financial update (invoice marked as completed if COD)
+
+6?? Return & Failed Delivery Handling
+Choose reason:
+?Client unavailable
+?Payment refused
+?Damaged product
+?Wrong address
+Actions:
+Create reverse delivery or return order
+Restock item (optional with condition check)
+Auto-alert sales manager
+Add comment & delivery attempt log
+
+7?? Delivery Reports
+Filter by:
+Date
+Status
+Client
+Delivery person
+Zone
+Metrics:
+Total deliveries
+Success rate
+Avg. delivery time
+Revenue from delivery fees
+Return rate per zone or agent
+Export: CSV, Excel, PDF
+
+?? ROLE-BASED ACCESS & SECURITY
+Only assigned agents can update delivery status
+Delivery fee edits restricted by role
+Confirmation override requires admin code
+Every delivery update is logged by user and timestamp
+
+?? MODULE INTEGRATIONS
+? Inventory: Updates stock-out only after successful delivery (optional)
+? Accounting: Adds delivery charge to invoice total and reflects in revenue
+? POS: Marks invoice as "delivered" only after confirmation
+? Notification: Sends SMS/Email when:
+Delivery scheduled
+Agent dispatched
+Delivery failed
+Confirmation received
+
+?? CONFIGURATIONS
+Enable/disable:
+Multi-attempt deliveries
+Delivery confirmation method
+Auto-charge by tariff
+Require agent signature or OTP
+Set default delivery charge rules
+Assign default delivery location per POS or cashier
+
+
+
+? EXISTING SALES MODULE SECTIONS (FROM IMAGES)
+1. Navigation Sidebar
+Menu Items:
+Toutes les ventes
+Ajouter une vente
+Liste POS (PDV)
+POS (PDV)
+Ajouter un brouillon
+Liste des brouillons
+Ajouter un devis
+Liste des citations
+Liste Vendre Retour
+Envois
+Réductions
+Ventes à l'importation
+?? Comment: Very complete! But the order and groupings could be improved visually (see proposal below).
+
+2. Sales Invoice Form (Classic UI)
+Includes: Document type, reference, date, client, contact, credit limit, plant/site, currency, VAT, product list, totals.
+?? Targeted for B2B/Industrial sales
+?? Comment: Functional but dated visually. Lacks clear distinction between editable fields and calculated totals. UI/UX can benefit from:
+Field grouping into sections (Client Info, Product Entry, Totals).
+Cleaner layout with spacing.
+Dynamic validations (e.g., show red when missing client or qty = 0).
+Real-time cost margin calculation based on selling vs. cost price.
+
+3. Sales List View (Detailed Table)
+Includes invoice ref, date, status, client, plant, volume, net, description, verification.
+?? Comment: Efficient for backend/finance roles. Improvements:
+Add export options (CSV, PDF, Excel).
+Color-coded rows by status.
+Filter by client, product, user, date, payment status.
+
+4. Modern UI (TSF POS Web App - Add Sale + Sale List)
+Modern layout with:
+Client selection
+Product search
+Payment section
+Multi-payment method
+Discount & tax fields
+Return & delivery fields
+Export options
+?? Comment: This is excellent and closer to what you want. You already have:
+Modern input layout
+Payment tracking
+Sale return
+Multi-method payments
+CSV/PDF export
+Responsive layout
+? Missing from this UI:
+Client-specific price detection.
+Real-time product stock (per location).
+Expiry-related warnings (for FIFO items sold).
+Margin calculation & alert if margin is low.
+Secure deletion or price edit with manager code.
+Show linked returns, history, or edit log on invoice.
+
+?? PROPOSED UI STRUCTURE (WITH FIGMA-STYLE SECTIONS)
+?? SALES MODULE MENU REORGANIZATION:
+plaintext
+CopierModifier
+?? SALES MANAGEMENT
+├── ?? All Sales Invoices
+│   ├── View, Filter, Export
+│   ├── Edit, Lock, Verify
+│   └── Status Badges (Draft, Locked, Verified, Returned)
+│
+├── ? New Sale
+│   ├── Manual Sale Form (Invoice)
+│   └── Auto-Save & Client-Specific Price
+│
+├── ?? POS (Point of Sale)
+│   ├── Open POS Interface (Full Screen)
+│   ├── POS History (Only POS Invoices)
+│   └── Pending Sync (Offline Mode)
+│
+├── ?? Draft Sales
+│   ├── List of Drafts (Auto-Saved)
+│   ├── Resume/Edit Draft
+│   └── Convert to Final Sale
+│
+├── ?? Quotations / Proforma
+│   ├── Add New Quotation
+│   ├── Quotation List
+│   ├── Convert to Invoice
+│   └── Validity Tracker
+│
+├── ?? Sales Returns
+│   ├── Initiate Return from Invoice
+│   ├── Full or Partial Return
+│   ├── Stock Reversal & Refund Tracking
+│   └── Return History
+│
+├── ?? Discount Manager
+│   ├── Set Discount Rules
+│   ├── Assign Per Product/Client
+│   ├── Role & Limit Control
+│   └── Discount Usage Log
+│
+├── ?? Delivery Orders
+│   ├── Linked to Sales
+│   ├── Assign Agent / Track Status
+│   ├── Delivery Charges & Confirmation
+│   └── Return or Reattempt Delivery
+│
+├── ?? Import Sales
+│   ├── Upload CSV/Excel
+│   ├── Map Columns to Fields
+│   ├── Validate and Sync
+│   └── Import History & Status
+│
+├── ?? Sales Reports
+│   ├── Daily / Monthly Sales
+│   ├── Best Sellers
+│   ├── Client Revenue
+│   ├── POS Performance
+│   └── Export PDF/Excel
+?? MODERN SALES INVOICE UI (AS PER YOUR SPECS)
+Split the screen into sections:
+1?? Client & Sale Info
+Location + Salesperson + Date + Invoice #
+Client (with balance, points, zone)
+Type de services
+Statut (draft, posted, etc.)
+2?? Product Entry Section
+Add Product by Barcode/Name/SKU
+Live Stock at selected location
+Price (with margin auto-calc)
+Discount
+Expiry date check if FIFO
+Add to cart (with live editable table)
+3?? Totals & Payments
+Summary (Qty, Total, Discounts, Net)
+Multi-payment method entry (cash, bank, Wave...)
+Return Change
+Add payment note
+4?? Delivery & Additional Details
+Livraison à, Détails d'envoi
+Status of Delivery
+Link to delivery note
+Add document upload
+5?? Security Actions
+Manager code to:
+Delete item
+Apply high discount
+Modify unit price
+Cancel invoice
+Audit log per sale
+6?? Linked Actions
+Show: Returns linked to this sale
+History log: who modified, locked, verified
+
+? RECOMMENDED IMPROVEMENTS
+? Add margin auto-calculation and low-margin alert
+? Show real-time stock per location in product row
+? Add a "Recently Sold with Expired Date" tab/button
+? Add manual override for price/discount (with code)
+? Expand "Payment Notes" for accounting reconciliation
+? Add toggle to hide/display inactive products
+? Implement "Draft Auto-Save" like Google Sheets
+? Add visual status badges for invoice (Draft, Paid, Return Done, Verified)
+? Integrate with dashboard widgets (Best Seller, Sales Summary, Return Summary)
+
+Would you like me to generate a full Figma-style screen wireframe text description or React component code based on this improved layout?
+Vous avez dit :
+this is 2 system that i used before based on them and baszed on my files and my requirment we can descripe the sub module under the sales modules
+ChatGPT a dit :
+Perfect. Let's now build a structured, professional breakdown of the Sales Module in your POS system, inspired by:
+Your uploaded screenshots of the two previous systems
+The full roadmap & feature files you shared (especially NEW ROAD MAP.rtf and MORE DETAILES.docx)NEW ROAD MAPMORE DETAILES
+Your personal requirements such as role restrictions, price control, margin alerts, FIFO expiry, draft auto-save, offline mode, client price detection, etc.
+
+?? MAIN MODULE: SALES MANAGEMENT
+?? Purpose:Manage all sale-related activities including POS sales, invoices, returns, quotations, draft orders, discounts, and shipment. All actions follow a strict lifecycle (Edit  Lock  Verify  Secure) and are integrated with inventory, client financials, and accounting.
+
+?? SUBMODULES UNDER SALES:
+1?? POS (Point of Sale)
+Real-time product search by barcode or name
+Select walk-in or registered client (show loyalty points, balance)
+Display live stock per location
+Apply client-specific price or promotion rules
+Multi-payment method (Cash, Bank, Mobile Money, Split)
+Discount limits (requires code if exceeded)
+Prevent item deletion, unit price change without manager code
+Invoice draft auto-save (offline support)
+Auto-print/email invoice
+Linked to accounting (revenue, tax, receivable)
+? Variants:
+POS Terminal (full-screen mode)
+POS Mobile Lite (for smaller devices)
+POS Offline Mode (sync when online)
+
+2?? Sales Invoice Management
+Add New Sale (with or without POS)
+Real-time stock check (per location)
+Support for:
+Manual discount or client-specific rule
+Multiple packaging units
+Cost margin display and alert
+FIFO expiry alert (show if sold item was expired)
+Lifecycle Control:
+Draft (editable)
+Locked (requires code)
+Verified (admin only)
+Secure (final)
+Link with client financial account (Accounts Receivable)
+Allow "Sale by Quotation" conversion
+?? Advanced Features:
+Split invoice
+Clone past sale
+Add extra notes/attachments
+See all linked return documents
+Role-based actions (Edit, Lock, Verify, Refund)
+
+3?? Quotation / Proforma Management
+Add New Quotation
+Client selection + expected delivery info
+Auto-calculate prices, discounts, taxes
+Optional validity date + follow-up status
+Convert to sale in one click
+Attach files (contract, offer, etc.)
+Export as PDF/email to client
+
+4?? Sale Drafts
+Save any sale as draft
+View draft list with filters
+Resume & convert to final invoice
+Track:
+Created by
+Last modified
+Status: Open / In Review / Verified / Deleted
+Auto-delete if expired (optional setting)
+Assign draft to another user
+
+5?? Sale Returns
+Linked to original sale
+Full or partial return
+Return reason (Damaged, Expired, Client refused)
+Refund method (Cash, Mobile Money, Client credit)
+Update client balance
+Auto-update stock & inventory logs
+Requires manager verification
+Block refund for expired invoices (optional)
+
+6?? Discount Management
+Create discount rules (fixed/percentage)
+Apply by:
+Product
+Category
+Client
+Time period
+View discount usage history
+Restrict:
+Max amount or %
+Role access (who can apply/approve)
+Approval code requirement for exceeding limit
+
+7?? Imported Sales
+Upload external sales data (CSV or API)
+Map to product codes, clients, dates
+Validate before sync
+Track import history
+Supports manual approval of imported invoices
+
+8?? Shipment & Delivery
+Add delivery info per invoice
+Track:
+Shipped or not
+Courier
+Cost
+Status: Preparing, Dispatched, Delivered, Failed
+Link to sale
+Auto-calculate delivery charges
+Client confirmation receipt
+
+9?? Sales History & List View
+View all sales
+Filter by:
+Date, Client, Product, Status, User
+Export to CSV, PDF, Excel
+Show invoice status: Draft, Paid, Partial, Overdue, Returned
+Quick action:
+Re-print
+Refund
+Edit (if not verified)
+Cancel (requires role permission)
+
+?? Reports & Analytics
+Best-selling products
+Daily/weekly/monthly sales trend
+Client sales analysis
+Profit margin per sale
+Product sales volume per category
+Expiry sales report (FIFO vs. expiry)
+Client loyalty metrics
+Payment type breakdown (Cash, Bank, Orange, Wave...)
+
+?? SECURITY & LIFECYCLE CONTROLS (Cross-module)
+All actions follow: Edit  Lock (with code)  Verify (admin only)
+Permissions per action: who can edit, lock, delete, verify, refund
+Margin alert: sale price below cost = alert or block
+Full audit logs (by user, timestamp, action)
+
+
