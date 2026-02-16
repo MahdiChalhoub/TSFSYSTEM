@@ -13,14 +13,14 @@ from erp.models import Organization, User
 from apps.finance.models import (
     FinancialAccount, ChartOfAccount, FiscalYear, FiscalPeriod,
     JournalEntry, TransactionSequence, BarcodeSettings, Loan, FinancialEvent,
-    ForensicAuditLog, DeferredExpense, Asset, AmortizationSchedule, Voucher, ProfitDistribution
+    ForensicAuditLog, DeferredExpense, DirectExpense, Asset, AmortizationSchedule, Voucher, ProfitDistribution
 )
 from apps.finance.serializers import (
     FinancialAccountSerializer, ChartOfAccountSerializer,
     FiscalYearSerializer, FiscalPeriodSerializer, JournalEntrySerializer,
     TransactionSequenceSerializer, BarcodeSettingsSerializer,
     LoanSerializer, FinancialEventSerializer, ForensicAuditLogSerializer,
-    DeferredExpenseSerializer, AssetSerializer, AmortizationScheduleSerializer,
+    DeferredExpenseSerializer, DirectExpenseSerializer, AssetSerializer, AmortizationScheduleSerializer,
     VoucherSerializer, ProfitDistributionSerializer
 )
 from apps.finance.services import (
@@ -656,6 +656,144 @@ class DeferredExpenseViewSet(TenantModelViewSet):
             return Response(DeferredExpenseSerializer(expense).data)
         except Exception as e:
             return Response({"error": str(e)}, status=400)
+
+
+class DirectExpenseViewSet(TenantModelViewSet):
+    queryset = DirectExpense.objects.all()
+    serializer_class = DirectExpenseSerializer
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        category = self.request.query_params.get('category')
+        status_filter = self.request.query_params.get('status')
+        if category:
+            qs = qs.filter(category=category)
+        if status_filter:
+            qs = qs.filter(status=status_filter)
+        return qs
+
+    def create(self, request, *args, **kwargs):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+
+        try:
+            data = request.data.copy()
+            # Auto-generate reference
+            ref = TransactionSequence.next_value(organization, 'EXPENSE')
+            expense = DirectExpense.objects.create(
+                organization=organization,
+                name=data.get('name'),
+                description=data.get('description', ''),
+                category=data.get('category', 'OTHER'),
+                amount=data.get('amount'),
+                date=data.get('date'),
+                reference=ref,
+                source_account_id=data.get('source_account_id'),
+                expense_coa_id=data.get('expense_coa_id'),
+                scope=data.get('scope', 'OFFICIAL'),
+            )
+            return Response(DirectExpenseSerializer(expense).data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
+    def update(self, request, *args, **kwargs):
+        expense = self.get_object()
+        if expense.status != 'DRAFT':
+            return Response({"error": "Only DRAFT expenses can be edited."}, status=400)
+        allowed = {'name', 'description', 'category', 'amount', 'date',
+                   'source_account_id', 'expense_coa_id'}
+        update_data = {k: v for k, v in request.data.items() if k in allowed}
+        for key, value in update_data.items():
+            setattr(expense, key, value)
+        expense.save()
+        return Response(DirectExpenseSerializer(expense).data)
+
+    def destroy(self, request, *args, **kwargs):
+        expense = self.get_object()
+        if expense.status != 'DRAFT':
+            return Response({"error": "Only DRAFT expenses can be deleted."}, status=400)
+        expense.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['post'])
+    def post_expense(self, request, pk=None):
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "Tenant context missing"}, status=400)
+        organization = Organization.objects.get(id=organization_id)
+
+        try:
+            expense = DirectExpense.objects.get(id=pk, organization=organization)
+            if expense.status != 'DRAFT':
+                return Response({"error": "Only DRAFT expenses can be posted."}, status=400)
+
+            with transaction.atomic():
+                # 1. Create financial event
+                event = FinancialEvent.objects.create(
+                    organization=organization,
+                    event_type='EXPENSE',
+                    amount=expense.amount,
+                    date=expense.date,
+                    reference=expense.reference,
+                    notes=f"Direct Expense: {expense.name}",
+                    financial_account=expense.source_account,
+                    scope=expense.scope,
+                    status='COMPLETED',
+                )
+
+                # 2. Create journal entry (Debit expense COA, Credit source account COA)
+                je = JournalEntry.objects.create(
+                    organization=organization,
+                    transaction_date=expense.date,
+                    description=f"Direct Expense: {expense.name}",
+                    reference=expense.reference,
+                    scope=expense.scope,
+                    status='POSTED',
+                    created_by=request.user if request.user.is_authenticated else None,
+                    posted_by=request.user if request.user.is_authenticated else None,
+                )
+                from apps.finance.models import JournalEntryLine
+                # Debit expense account
+                if expense.expense_coa:
+                    JournalEntryLine.objects.create(
+                        organization=organization,
+                        journal_entry=je,
+                        account=expense.expense_coa,
+                        debit=expense.amount,
+                        credit=0,
+                        description=expense.name,
+                    )
+                # Credit source account's linked COA
+                if expense.source_account and expense.source_account.linked_coa:
+                    JournalEntryLine.objects.create(
+                        organization=organization,
+                        journal_entry=je,
+                        account=expense.source_account.linked_coa,
+                        debit=0,
+                        credit=expense.amount,
+                        description=expense.name,
+                    )
+
+                # 3. Update expense record
+                expense.financial_event = event
+                expense.journal_entry = je
+                expense.status = 'POSTED'
+                expense.save()
+
+            return Response(DirectExpenseSerializer(expense).data)
+        except DirectExpense.DoesNotExist:
+            return Response({"error": "Expense not found"}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
+    @action(detail=True, methods=['post'])
+    def cancel_expense(self, request, pk=None):
+        expense = self.get_object()
+        if expense.status != 'DRAFT':
+            return Response({"error": "Only DRAFT expenses can be cancelled."}, status=400)
+        expense.status = 'CANCELLED'
+        expense.save()
+        return Response(DirectExpenseSerializer(expense).data)
 
 
 class AssetViewSet(TenantModelViewSet):
