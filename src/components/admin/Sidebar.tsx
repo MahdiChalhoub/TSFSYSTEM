@@ -176,6 +176,15 @@ const MENU_ITEMS = [
                 ]
             },
             {
+                title: 'Operations',
+                icon: ClipboardList,
+                children: [
+                    { title: 'Vouchers', path: '/finance/vouchers' },
+                    { title: 'Deferred Expenses', path: '/finance/deferred-expenses' },
+                    { title: 'Assets & Depreciation', path: '/finance/assets' },
+                ]
+            },
+            {
                 title: 'Reports',
                 icon: TrendingUp,
                 children: [
@@ -190,6 +199,7 @@ const MENU_ITEMS = [
                 icon: Calendar,
                 children: [
                     { title: 'Fiscal Years', path: '/finance/fiscal-years' },
+                    { title: 'Profit Distribution', path: '/finance/profit-distribution' },
                 ]
             },
             {
@@ -209,6 +219,7 @@ const MENU_ITEMS = [
                 ]
             },
             { title: 'Financial Settings', path: '/finance/settings', icon: Settings },
+
         ]
     },
     {
