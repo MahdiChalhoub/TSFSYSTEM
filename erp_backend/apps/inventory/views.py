@@ -785,6 +785,95 @@ class InventoryViewSet(TenantModelViewSet):
         status_data = InventoryService.get_inventory_financial_status(organization)
         return Response(status_data)
 
+    @action(detail=False, methods=['get'], url_path='expiry-alerts')
+    def expiry_alerts(self, request):
+        """List all expiry alerts, optionally filtered by severity."""
+        organization, err = _get_org_or_400()
+        if err: return err
+
+        from apps.inventory.advanced_models import ExpiryAlert
+        severity = request.query_params.get('severity')
+        show_acknowledged = request.query_params.get('acknowledged', 'false') == 'true'
+
+        qs = ExpiryAlert.objects.filter(organization=organization)
+        if not show_acknowledged:
+            qs = qs.filter(is_acknowledged=False)
+        if severity:
+            qs = qs.filter(severity=severity)
+
+        qs = qs.select_related('product', 'batch', 'batch__warehouse')
+
+        alerts = [{
+            'id': a.id,
+            'severity': a.severity,
+            'product_name': a.product.name if a.product else 'Unknown',
+            'product_id': a.product_id,
+            'batch_number': a.batch.batch_number if a.batch else '—',
+            'expiry_date': str(a.batch.expiry_date) if a.batch and a.batch.expiry_date else None,
+            'days_until_expiry': a.days_until_expiry,
+            'quantity_at_risk': float(a.quantity_at_risk),
+            'value_at_risk': float(a.value_at_risk),
+            'warehouse': a.batch.warehouse.name if a.batch and a.batch.warehouse else None,
+            'is_acknowledged': a.is_acknowledged,
+            'created_at': str(a.created_at) if a.created_at else None,
+        } for a in qs[:100]]
+
+        # Summary stats
+        from django.db.models import Sum, Count
+        stats = ExpiryAlert.objects.filter(
+            organization=organization, is_acknowledged=False
+        ).aggregate(
+            expired=Count('id', filter=models.Q(severity='EXPIRED')),
+            critical=Count('id', filter=models.Q(severity='CRITICAL')),
+            warning=Count('id', filter=models.Q(severity='WARNING')),
+            total_value=Sum('value_at_risk'),
+            total_qty=Sum('quantity_at_risk'),
+        )
+
+        return Response({
+            'stats': {
+                'expired': stats['expired'] or 0,
+                'critical': stats['critical'] or 0,
+                'warning': stats['warning'] or 0,
+                'total_value': float(stats['total_value'] or 0),
+                'total_quantity': float(stats['total_qty'] or 0),
+            },
+            'alerts': alerts,
+        })
+
+    @action(detail=False, methods=['post'], url_path='scan-expiry')
+    def scan_expiry(self, request):
+        """Trigger a scan to generate/update expiry alerts."""
+        organization, err = _get_org_or_400()
+        if err: return err
+
+        from apps.inventory.valuation_service import ValuationService
+        new_alerts = ValuationService.check_expiry_alerts(organization)
+        return Response({
+            'new_alerts_created': len(new_alerts),
+            'message': f'{len(new_alerts)} new expiry alert(s) generated.'
+        })
+
+    @action(detail=False, methods=['post'], url_path='acknowledge-alert')
+    def acknowledge_alert(self, request):
+        """Acknowledge an expiry alert."""
+        organization, err = _get_org_or_400()
+        if err: return err
+
+        from apps.inventory.advanced_models import ExpiryAlert
+        alert_id = request.data.get('alert_id')
+        if not alert_id:
+            return Response({"error": "alert_id required"}, status=400)
+
+        try:
+            alert = ExpiryAlert.objects.get(id=alert_id, organization=organization)
+            alert.is_acknowledged = True
+            alert.acknowledged_by = request.user if request.user.is_authenticated else None
+            alert.save()
+            return Response({"message": "Alert acknowledged"})
+        except ExpiryAlert.DoesNotExist:
+            return Response({"error": "Alert not found"}, status=404)
+
     @action(detail=False, methods=['post'])
     def transfer_stock(self, request):
         """Transfer stock between warehouses within the same organization."""
