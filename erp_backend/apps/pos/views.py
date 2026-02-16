@@ -775,3 +775,54 @@ class OrderViewSet(TenantModelViewSet):
     filterset_fields = ['type', 'status', 'contact', 'user']
     search_fields = ['ref_code', 'invoice_number', 'notes']
     ordering_fields = ['created_at', 'total_amount']
+
+
+# ── Sourcing & Vendor Pricing ──────────────────────────────
+
+from .sourcing_models import ProductSupplier, SupplierPriceHistory
+from .serializers import ProductSupplierSerializer, SupplierPriceHistorySerializer
+
+
+class ProductSupplierViewSet(TenantModelViewSet):
+    queryset = ProductSupplier.objects.all()
+    serializer_class = ProductSupplierSerializer
+
+    @action(detail=False, methods=['get'], url_path='by-product/(?P<product_id>\d+)')
+    def by_product(self, request, product_id=None):
+        organization_id = get_current_tenant_id()
+        suppliers = self.queryset.filter(product_id=product_id, organization_id=organization_id)
+        serializer = self.get_serializer(suppliers, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='comparison')
+    def comparison_dashboard(self, request):
+        """Returns summarized sourcing intelligence for the dashboard."""
+        organization_id = get_current_tenant_id()
+        if not organization_id: return Response({"error": "No org"}, status=400)
+        
+        from django.db.models import Max, Min, Avg, Count
+        
+        # Products grouped with their suppliers
+        stats = ProductSupplier.objects.filter(organization_id=organization_id, is_active=True).values(
+            'product_id', 'product__name', 'product__sku', 'product__category__name'
+        ).annotate(
+            supplier_count=Count('supplier_id'),
+            min_price=Min('last_purchased_price'),
+            max_price=Max('last_purchased_price'),
+            avg_price=Avg('last_purchased_price'),
+            best_lead_time=Min('lead_time_days')
+        ).order_by('product__name')
+
+        return Response(stats)
+
+
+class SupplierPriceHistoryViewSet(TenantModelViewSet):
+    queryset = SupplierPriceHistory.objects.all()
+    serializer_class = SupplierPriceHistorySerializer
+
+    @action(detail=False, methods=['get'], url_path='trends/(?P<product_id>\d+)')
+    def trends(self, request, product_id=None):
+        organization_id = get_current_tenant_id()
+        history = self.queryset.filter(product_id=product_id, organization_id=organization_id).order_by('effective_date')
+        serializer = self.get_serializer(history, many=True)
+        return Response(serializer.data)

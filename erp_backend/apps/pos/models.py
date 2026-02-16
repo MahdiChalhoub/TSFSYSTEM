@@ -132,4 +132,5 @@ from apps.pos.returns_models import SalesReturn, SalesReturnLine, CreditNote, Pu
 from apps.pos.quotation_models import Quotation, QuotationLine  # noqa: E402, F401
 from apps.pos.delivery_models import DeliveryZone, DeliveryOrder  # noqa: E402, F401
 from apps.pos.discount_models import DiscountRule, DiscountUsageLog  # noqa: E402, F401
+from apps.pos.sourcing_models import ProductSupplier, SupplierPriceHistory  # noqa: E402, F401
 

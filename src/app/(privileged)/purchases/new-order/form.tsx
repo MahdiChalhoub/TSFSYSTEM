@@ -3,6 +3,7 @@
 import { useActionState, useState, useEffect } from "react";
 import { createFormalPurchaseOrder } from "@/app/actions/commercial/purchases";
 import { searchProductsSimple } from "@/app/actions/inventory/product-actions";
+import { erpFetch } from "@/lib/erp-api";
 import { Plus, Trash2, Search, Info, AlertTriangle, CheckCircle2, ShoppingCart, ArrowRight } from "lucide-react";
 
 export default function FormalOrderForm({
@@ -17,6 +18,8 @@ export default function FormalOrderForm({
 
     const [scope, setScope] = useState<'OFFICIAL' | 'INTERNAL'>('OFFICIAL');
     const [selectedSiteId, setSelectedSiteId] = useState<number | ''>('');
+    const [selectedSupplierId, setSelectedSupplierId] = useState<number | ''>('');
+    const [supplierPriceHints, setSupplierPriceHints] = useState<Record<number, number>>({});
     const [availableWarehouses, setAvailableWarehouses] = useState<any[]>([]);
     const [lines, setLines] = useState<any[]>([]);
 
@@ -29,14 +32,33 @@ export default function FormalOrderForm({
         }
     }, [selectedSiteId, sites]);
 
+    // Fetch Supplier Price Hints
+    useEffect(() => {
+        if (selectedSupplierId) {
+            erpFetch(`sourcing/?supplier=${selectedSupplierId}`).then(data => {
+                const hints: Record<number, number> = {};
+                data.forEach((item: any) => {
+                    hints[item.product] = parseFloat(item.last_purchased_price);
+                });
+                setSupplierPriceHints(hints);
+            }).catch(console.error);
+        } else {
+            setSupplierPriceHints({});
+        }
+    }, [selectedSupplierId]);
+
     const addProductToLines = (product: any) => {
         if (lines.find(l => l.productId === product.id)) return;
+
+        // Use supplier hint if available, otherwise fallback to product cost price
+        const suggestedPrice = supplierPriceHints[product.id] || product.costPriceHT || 0;
+
         setLines([{
             productId: product.id,
             productName: product.name,
             sku: product.sku,
             quantity: 1,
-            unitPrice: product.costPriceHT || 0,
+            unitPrice: suggestedPrice,
         }, ...lines]);
     };
 
@@ -85,7 +107,13 @@ export default function FormalOrderForm({
                 {/* Supplier */}
                 <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-center">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 text-center">Supplier</label>
-                    <select className="w-full text-xs font-bold bg-transparent border-none focus:ring-0 text-center" name="supplierId" required>
+                    <select
+                        className="w-full text-xs font-bold bg-transparent border-none focus:ring-0 text-center"
+                        name="supplierId"
+                        required
+                        value={selectedSupplierId}
+                        onChange={(e) => setSelectedSupplierId(Number(e.target.value))}
+                    >
                         <option value="">Select Supplier...</option>
                         {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                     </select>
@@ -107,7 +135,7 @@ export default function FormalOrderForm({
                             <tr>
                                 <th className="p-6">Product</th>
                                 <th className="p-6 w-32 text-center">Quantity</th>
-                                <th className="p-6 w-48 text-center">Expected Price</th>
+                                <th className="p-6 w-48 text-center">Expected Price (HT)</th>
                                 <th className="p-6 text-right">Subtotal</th>
                                 <th className="p-6 w-10"></th>
                             </tr>
@@ -137,19 +165,26 @@ export default function FormalOrderForm({
                                             />
                                         </td>
                                         <td className="p-6">
-                                            <div className="relative">
-                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
+                                            <div className="relative flex items-center">
                                                 <input
                                                     type="number" step="0.01"
-                                                    className="w-full bg-white border border-gray-200 rounded-xl p-2.5 pl-8 text-center font-bold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition-all"
+                                                    className="w-full bg-white border border-gray-200 rounded-xl p-2.5 pr-10 text-center font-bold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition-all"
                                                     value={line.unitPrice}
                                                     onChange={(e) => updateLine(idx, { unitPrice: Number(e.target.value) })}
                                                     name={`lines[${idx}][unitPrice]`}
                                                 />
+                                                <span className="absolute right-3 text-[10px] font-black text-gray-300">XOF</span>
+                                                {supplierPriceHints[line.productId] && (
+                                                    <div className="absolute -top-6 left-0 right-0 text-center">
+                                                        <span className="bg-emerald-50 text-emerald-600 text-[8px] font-black uppercase px-2 py-0.5 rounded-full border border-emerald-100">
+                                                            Vendor Hint: {supplierPriceHints[line.productId].toLocaleString()}
+                                                        </span>
+                                                    </div>
+                                                )}
                                             </div>
                                         </td>
-                                        <td className="p-6 text-right font-black text-gray-900">
-                                            ${(line.quantity * line.unitPrice).toLocaleString()}
+                                        <td className="p-6 text-right font-black text-gray-900 whitespace-nowrap">
+                                            {(line.quantity * line.unitPrice).toLocaleString()} XOF
                                         </td>
                                         <td className="p-6 text-center">
                                             <button type="button" onClick={() => removeLine(idx)} className="p-2 text-gray-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all">
@@ -185,7 +220,7 @@ export default function FormalOrderForm({
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-lg font-bold">Estimated Total</span>
-                                <span className="text-3xl font-black text-indigo-400">${totalAmount.toLocaleString()}</span>
+                                <span className="text-3xl font-black text-indigo-400">{totalAmount.toLocaleString()} XOF</span>
                             </div>
                         </div>
 
@@ -257,8 +292,8 @@ function ProductSearch({ callback, siteId }: { callback: (p: any) => void, siteI
                                 <div className="font-bold text-sm text-gray-900 group-hover:text-indigo-700">{r.name}</div>
                                 <div className="text-[10px] text-gray-400">SKU: {r.sku} ΓÇó In Stock: {r.stockLevel}</div>
                             </div>
-                            <div className="text-right">
-                                <div className="text-xs font-black text-indigo-600">${r.costPriceHT} HT</div>
+                            <div className="text-right whitespace-nowrap">
+                                <div className="text-xs font-black text-indigo-600">{r.costPriceHT?.toLocaleString()} XOF HT</div>
                             </div>
                         </button>
                     ))}
