@@ -596,3 +596,8 @@ class TaxGroup(TenantModel):
 
     def __str__(self):
         return f"{self.name} ({self.rate}%)"
+
+
+# Import models from sub-files so Django discovers them for migrations
+from apps.finance.payment_models import Payment, CustomerBalance, SupplierBalance  # noqa: E402, F401
+

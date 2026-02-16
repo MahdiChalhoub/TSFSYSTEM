@@ -120,3 +120,8 @@ class OrderLine(TenantModel):
 
     class Meta:
         db_table = 'pos_orderline'
+
+
+# Import models from sub-files so Django discovers them for migrations
+from apps.pos.returns_models import SalesReturn, SalesReturnLine, CreditNote, PurchaseReturn, PurchaseReturnLine  # noqa: E402, F401
+
