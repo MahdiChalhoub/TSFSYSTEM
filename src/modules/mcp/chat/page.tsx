@@ -287,7 +287,7 @@ Always be specific with numbers and actionable recommendations.`
     if (providers.length === 0) {
         return (
             <div className="space-y-6 animate-in fade-in duration-500">
-                <Link href="/saas/mcp" className="text-gray-400 hover:text-gray-600 flex items-center gap-2 text-sm font-medium">
+                <Link href="/mcp" className="text-gray-400 hover:text-gray-600 flex items-center gap-2 text-sm font-medium">
                     <ArrowLeft size={16} />
                     Back to MCP Dashboard
                 </Link>
@@ -299,7 +299,7 @@ Always be specific with numbers and actionable recommendations.`
                         <p className="text-gray-500 mb-6">
                             Configure an AI provider to unlock full analytics capabilities.
                         </p>
-                        <Link href="/saas/mcp/providers">
+                        <Link href="/mcp/providers">
                             <Button className="bg-purple-600 hover:bg-purple-500">
                                 <Plus size={16} />
                                 Add AI Provider
@@ -316,7 +316,7 @@ Always be specific with numbers and actionable recommendations.`
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-4">
-                    <Link href="/saas/mcp" className="text-gray-400 hover:text-gray-600">
+                    <Link href="/mcp" className="text-gray-400 hover:text-gray-600">
                         <ArrowLeft size={20} />
                     </Link>
                     <div className="flex items-center gap-2">
@@ -390,8 +390,8 @@ Always be specific with numbers and actionable recommendations.`
                                             key={conv.id}
                                             onClick={() => setCurrentConversation(conv.id)}
                                             className={`w-full text-left px-3 py-2 rounded-xl text-sm transition-colors ${currentConversation === conv.id
-                                                    ? 'bg-purple-100 text-purple-700'
-                                                    : 'hover:bg-gray-100 text-gray-700'
+                                                ? 'bg-purple-100 text-purple-700'
+                                                : 'hover:bg-gray-100 text-gray-700'
                                                 }`}
                                         >
                                             <div className="flex items-center gap-2">
@@ -456,18 +456,18 @@ Always be specific with numbers and actionable recommendations.`
                                                 }`}>
                                                 {msg.role !== 'user' && (
                                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${msg.role === 'assistant'
-                                                            ? 'bg-gradient-to-br from-purple-500 to-indigo-600 text-white'
-                                                            : 'bg-blue-100 text-blue-600'
+                                                        ? 'bg-gradient-to-br from-purple-500 to-indigo-600 text-white'
+                                                        : 'bg-blue-100 text-blue-600'
                                                         }`}>
                                                         {msg.role === 'assistant' ? <Bot size={16} /> : <Wrench size={14} />}
                                                     </div>
                                                 )}
 
                                                 <div className={`max-w-[70%] ${msg.role === 'user'
-                                                        ? 'bg-purple-600 text-white rounded-2xl rounded-br-md px-4 py-3'
-                                                        : msg.role === 'tool'
-                                                            ? 'bg-blue-50 text-blue-800 rounded-2xl px-4 py-3'
-                                                            : 'bg-gray-100 text-gray-800 rounded-2xl rounded-bl-md px-4 py-3'
+                                                    ? 'bg-purple-600 text-white rounded-2xl rounded-br-md px-4 py-3'
+                                                    : msg.role === 'tool'
+                                                        ? 'bg-blue-50 text-blue-800 rounded-2xl px-4 py-3'
+                                                        : 'bg-gray-100 text-gray-800 rounded-2xl rounded-bl-md px-4 py-3'
                                                     }`}>
                                                     {msg.role === 'tool' && msg.tool_calls ? (
                                                         <div className="space-y-2">

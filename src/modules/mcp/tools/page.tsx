@@ -208,7 +208,7 @@ export default function MCPToolsPage() {
             {/* Header */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
                 <div>
-                    <Link href="/saas/mcp" className="text-gray-400 hover:text-gray-600 flex items-center gap-2 mb-4 text-sm font-medium">
+                    <Link href="/mcp" className="text-gray-400 hover:text-gray-600 flex items-center gap-2 mb-4 text-sm font-medium">
                         <ArrowLeft size={16} />
                         Back to MCP Dashboard
                     </Link>
@@ -399,9 +399,9 @@ export default function MCPToolsPage() {
                                         </div>
                                     </div>
                                     <Badge variant="outline" className={`text-xs ${tool.http_method === 'GET' ? 'text-green-600 border-green-200' :
-                                            tool.http_method === 'POST' ? 'text-blue-600 border-blue-200' :
-                                                tool.http_method === 'DELETE' ? 'text-red-600 border-red-200' :
-                                                    'text-amber-600 border-amber-200'
+                                        tool.http_method === 'POST' ? 'text-blue-600 border-blue-200' :
+                                            tool.http_method === 'DELETE' ? 'text-red-600 border-red-200' :
+                                                'text-amber-600 border-amber-200'
                                         }`}>
                                         {tool.http_method}
                                     </Badge>

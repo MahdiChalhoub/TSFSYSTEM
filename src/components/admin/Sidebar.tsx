@@ -307,6 +307,7 @@ const MENU_ITEMS = [
                 children: [
                     { title: 'Global Registry', path: '/modules' },
                     { title: 'Connector Control', path: '/connector' },
+                    { title: 'MCP AI Connector', path: '/mcp' },
                     { title: 'AES-256 Encryption', path: '/encryption' },
                 ]
             },

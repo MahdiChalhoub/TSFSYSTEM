@@ -84,7 +84,7 @@ export default function MCPDashboardPage() {
                     >
                         <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
                     </Button>
-                    <Link href="/saas/mcp/settings">
+                    <Link href="/mcp/settings">
                         <Button variant="outline" className="rounded-2xl px-6 py-5 font-bold">
                             <Settings size={18} />
                             Settings
@@ -166,7 +166,7 @@ export default function MCPDashboardPage() {
 
             {/* Navigation Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                <Link href="/saas/mcp/chat">
+                <Link href="/mcp/chat">
                     <Card className="rounded-2xl shadow-lg border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50 hover:shadow-xl transition-shadow cursor-pointer group">
                         <CardHeader className="pb-3">
                             <div className="flex items-center justify-between">
@@ -185,7 +185,7 @@ export default function MCPDashboardPage() {
                     </Card>
                 </Link>
 
-                <Link href="/saas/mcp/providers">
+                <Link href="/mcp/providers">
                     <Card className="rounded-2xl shadow-lg border-gray-100 hover:shadow-xl transition-shadow cursor-pointer group">
                         <CardHeader className="pb-3">
                             <div className="flex items-center justify-between">
@@ -204,7 +204,7 @@ export default function MCPDashboardPage() {
                     </Card>
                 </Link>
 
-                <Link href="/saas/mcp/tools">
+                <Link href="/mcp/tools">
                     <Card className="rounded-2xl shadow-lg border-gray-100 hover:shadow-xl transition-shadow cursor-pointer group">
                         <CardHeader className="pb-3">
                             <div className="flex items-center justify-between">
@@ -223,7 +223,7 @@ export default function MCPDashboardPage() {
                     </Card>
                 </Link>
 
-                <Link href="/saas/mcp/conversations">
+                <Link href="/mcp/conversations">
                     <Card className="rounded-2xl shadow-lg border-gray-100 hover:shadow-xl transition-shadow cursor-pointer group">
                         <CardHeader className="pb-3">
                             <div className="flex items-center justify-between">
@@ -242,7 +242,7 @@ export default function MCPDashboardPage() {
                     </Card>
                 </Link>
 
-                <Link href="/saas/mcp/usage">
+                <Link href="/mcp/usage">
                     <Card className="rounded-2xl shadow-lg border-gray-100 hover:shadow-xl transition-shadow cursor-pointer group">
                         <CardHeader className="pb-3">
                             <div className="flex items-center justify-between">
@@ -276,7 +276,7 @@ export default function MCPDashboardPage() {
                             {data.recent_conversations.map((conv) => (
                                 <Link
                                     key={conv.id}
-                                    href={`/saas/mcp/conversations/${conv.id}`}
+                                    href={`/mcp/conversations/${conv.id}`}
                                     className="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
                                 >
                                     <div>
@@ -316,13 +316,13 @@ export default function MCPDashboardPage() {
                                     Connect your AI providers to enable intelligent automation across your platform.
                                 </p>
                                 <div className="flex gap-3">
-                                    <Link href="/saas/mcp/providers">
+                                    <Link href="/mcp/providers">
                                         <Button className="rounded-xl bg-purple-600 hover:bg-purple-500">
                                             <Cloud size={16} />
                                             Add Provider
                                         </Button>
                                     </Link>
-                                    <Link href="/saas/mcp/tools">
+                                    <Link href="/mcp/tools">
                                         <Button variant="outline" className="rounded-xl">
                                             <Wrench size={16} />
                                             Configure Tools
