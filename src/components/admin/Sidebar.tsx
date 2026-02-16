@@ -203,6 +203,7 @@ const MENU_ITEMS = [
                     { title: 'Trial Balance', path: '/finance/reports/trial-balance' },
                     { title: 'Profit & Loss', path: '/finance/reports/pnl' },
                     { title: 'Balance Sheet', path: '/finance/reports/balance-sheet' },
+                    { title: 'Aging Report', path: '/finance/aging' },
                 ]
             },
             {
