@@ -132,6 +132,7 @@ const MENU_ITEMS = [
                     { title: 'Product Master', path: '/products' },
                     { title: 'Product Analytics', path: '/inventory/analytics' },
                     { title: 'Combo & Bundles', path: '/inventory/combo' },
+                    { title: 'Label Printing', path: '/inventory/labels' },
                     { title: 'Product Groups', path: '/products?view=grouped' },
                     { title: 'New Product Group', path: '/products/create-group' },
                 ]
