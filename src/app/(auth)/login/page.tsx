@@ -114,77 +114,123 @@ function LoginContent() {
                             </div>
                         )}
 
-                        <div className="space-y-4">
-                            {/* If Root, show Workspace Slug Input */}
-                            {isRoot && (
+                        {state?.two_factor_required ? (
+                            <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
+                                <div className="p-4 bg-emerald-500/10 border-l-4 border-emerald-500 text-emerald-400 text-sm font-medium flex items-center gap-3">
+                                    <ShieldCheck size={20} />
+                                    {state.message}
+                                </div>
+
                                 <div className="space-y-2">
-                                    <Label className="text-xs uppercase font-bold text-slate-500">Workspace</Label>
-                                    <div className="relative">
-                                        <input type="hidden" name="slug" value={searchParams.get('slug') || ''} />
-                                        <Input
-                                            id="slug"
-                                            name="slug"
-                                            placeholder="acme"
-                                            required
-                                            defaultValue={searchParams.get('slug') || ''}
-                                            suppressHydrationWarning
-                                            className="bg-[#1e293b] border-slate-700 h-14 rounded-lg text-white font-mono pl-4 pr-32 focus:ring-emerald-500 focus:border-emerald-500"
-                                        />
-                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs font-mono select-none">
-                                            {branding.suffix}
+                                    <Label className="text-xs uppercase font-bold text-slate-500">Security Token</Label>
+                                    <Input
+                                        name="otp_token"
+                                        placeholder="000 000"
+                                        required
+                                        autoFocus
+                                        className="bg-[#1e293b] border-slate-700 h-16 rounded-lg text-white font-mono text-center text-3xl tracking-[0.2em] focus:ring-emerald-500 focus:border-emerald-500"
+                                    />
+                                    <p className="text-[10px] text-slate-500 uppercase font-black text-center mt-2">Enter the verification code from your device</p>
+                                </div>
+
+                                {/* Persistent hidden fields to maintain context for the multi-step action */}
+                                <input type="hidden" name="username" defaultValue={(state as any)._username} />
+                                <input type="hidden" name="password" defaultValue={(state as any)._password} />
+                                {isRoot && <input type="hidden" name="slug" defaultValue={(state as any)._slug} />}
+
+                                <Button className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-lg rounded-lg shadow-lg shadow-emerald-900/20 transition-all uppercase tracking-tighter" disabled={isPending}>
+                                    {isPending ? <Loader2 className="animate-spin" /> : "Verify Identity"}
+                                </Button>
+
+                                <div className="text-center">
+                                    <button
+                                        type="button"
+                                        onClick={() => window.location.reload()}
+                                        className="text-xs font-bold text-slate-500 hover:text-white uppercase tracking-widest transition-colors"
+                                    >
+                                        Cancel & Restart
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="space-y-4">
+                                    {/* If Root, show Workspace Slug Input */}
+                                    {isRoot && (
+                                        <div className="space-y-2">
+                                            <Label className="text-xs uppercase font-bold text-slate-500">Workspace</Label>
+                                            <div className="relative">
+                                                <Input
+                                                    id="slug"
+                                                    name="slug"
+                                                    placeholder="acme"
+                                                    required
+                                                    defaultValue={searchParams.get('slug') || ''}
+                                                    suppressHydrationWarning
+                                                    className="bg-[#1e293b] border-slate-700 h-14 rounded-lg text-white font-mono pl-4 pr-32 focus:ring-emerald-500 focus:border-emerald-500"
+                                                />
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs font-mono select-none">
+                                                    {branding.suffix}
+                                                </div>
+                                            </div>
+                                            <p className="text-[10px] text-slate-600 font-bold uppercase tracking-tighter">
+                                                Don't have a workspace? <a href="/register/business" className="text-emerald-400 hover:text-emerald-300 font-black underline">Create one</a>
+                                            </p>
                                         </div>
+                                    )}
+
+                                    <div className="space-y-2">
+                                        <Label className="text-xs uppercase font-bold text-slate-500">Username</Label>
+                                        <Input
+                                            name="username"
+                                            required
+                                            defaultValue={prefilledUsername}
+                                            suppressHydrationWarning
+                                            className="bg-[#1e293b] border-slate-700 h-14 rounded-lg text-white font-medium focus:ring-emerald-500 focus:border-emerald-500"
+                                        />
+                                        {(state?.error as any)?.username && (
+                                            <p className="text-xs text-red-500 font-bold mt-1">{(state?.error as any).username[0]}</p>
+                                        )}
                                     </div>
-                                    <p className="text-[10px] text-slate-600">
-                                        Don't have a workspace? <a href="/register/business" className="text-emerald-400 hover:text-emerald-300 font-bold underline">Create one</a>
-                                    </p>
+
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <Label className="text-xs uppercase font-bold text-slate-500">Password</Label>
+                                            <a href="/forgot-password" className="text-[10px] font-black uppercase text-emerald-400 hover:text-emerald-300 transition-colors">
+                                                Forgot?
+                                            </a>
+                                        </div>
+                                        <Input
+                                            name="password"
+                                            type="password"
+                                            required
+                                            suppressHydrationWarning
+                                            className="bg-[#1e293b] border-slate-700 h-14 rounded-lg text-white focus:ring-emerald-500 focus:border-emerald-500"
+                                        />
+                                    </div>
+
+                                    {!isRoot && sites.length > 0 && (
+                                        <div className="space-y-2">
+                                            <Label className="text-xs uppercase font-bold text-slate-500">Site Location</Label>
+                                            <Select name="site_id" defaultValue={sites[0]?.id?.toString()}>
+                                                <SelectTrigger className="bg-[#1e293b] border-slate-700 h-14 rounded-lg text-white">
+                                                    <SelectValue placeholder="Select Base" />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-[#1e293b] border-slate-700 text-white">
+                                                    {sites.map((s: any) => (
+                                                        <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
 
-                            <div className="space-y-2">
-                                <Label className="text-xs uppercase font-bold text-slate-500">Username</Label>
-                                <Input
-                                    name="username"
-                                    required
-                                    defaultValue={prefilledUsername}
-                                    suppressHydrationWarning
-                                    className="bg-[#1e293b] border-slate-700 h-14 rounded-lg text-white font-medium focus:ring-emerald-500 focus:border-emerald-500"
-                                />
-                                {(state?.error as any)?.username && (
-                                    <p className="text-xs text-red-500 font-bold mt-1">{(state?.error as any).username[0]}</p>
-                                )}
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label className="text-xs uppercase font-bold text-slate-500">Password</Label>
-                                <Input
-                                    name="password"
-                                    type="password"
-                                    required
-                                    suppressHydrationWarning
-                                    className="bg-[#1e293b] border-slate-700 h-14 rounded-lg text-white focus:ring-emerald-500 focus:border-emerald-500"
-                                />
-                            </div>
-
-                            {!isRoot && sites.length > 0 && (
-                                <div className="space-y-2">
-                                    <Label className="text-xs uppercase font-bold text-slate-500">Site Location</Label>
-                                    <Select name="site_id" defaultValue={sites[0]?.id?.toString()}>
-                                        <SelectTrigger className="bg-[#1e293b] border-slate-700 h-14 rounded-lg text-white">
-                                            <SelectValue placeholder="Select Base" />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-[#1e293b] border-slate-700 text-white">
-                                            {sites.map((s: any) => (
-                                                <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            )}
-                        </div>
-
-                        <Button className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-lg rounded-lg shadow-lg shadow-emerald-900/20 transition-all" disabled={isPending}>
-                            {isPending ? <Loader2 className="animate-spin" /> : (isRoot ? "Continue" : "Sign In")}
-                        </Button>
+                                <Button className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-lg rounded-lg shadow-lg shadow-emerald-900/20 transition-all uppercase tracking-tighter" disabled={isPending}>
+                                    {isPending ? <Loader2 className="animate-spin" /> : (isRoot ? "Continue" : "Sign In")}
+                                </Button>
+                            </>
+                        )}
 
                         {!isRoot && (
                             <div className="text-center">

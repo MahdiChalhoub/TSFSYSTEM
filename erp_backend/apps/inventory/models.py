@@ -126,6 +126,7 @@ class Product(TenantModel):
     tva_rate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'))
     min_stock_level = models.IntegerField(default=10)
     is_expiry_tracked = models.BooleanField(default=False)
+    tracks_serials = models.BooleanField(default=False, help_text='Requires Serial/IMEI per unit')
 
     status = models.CharField(max_length=20, default='ACTIVE')
     is_active = models.BooleanField(default=True)

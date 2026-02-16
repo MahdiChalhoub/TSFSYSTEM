@@ -9,11 +9,12 @@ from .views import (
     OrganizationViewSet, SiteViewSet, SettingsViewSet, health_check,
     TenantResolutionView, DashboardViewSet, CountryViewSet, RoleViewSet,
     UserViewSet, RecordHistoryViewSet, EntityGraphViewSet, CurrencyViewSet,
-    NotificationViewSet, PermissionViewSet
+    NotificationViewSet, PermissionViewSet, import_sales_csv_view
 )
 from .views_auth import (
     login_view, logout_view, me_view, PublicConfigView, register_business_view,
-    password_reset_request_view, password_reset_confirm_view
+    password_reset_request_view, password_reset_confirm_view,
+    setup_2fa_view, verify_2fa_setup_view, disable_2fa_view
 )
 from .views_saas_modules import SaaSModuleViewSet, OrgModuleViewSet, SaaSUpdateViewSet, SaaSPlansViewSet, PublicPricingView, SaaSClientViewSet
 from .views_modules import ModuleListView, ModuleEnableView, ModuleDisableView
@@ -58,6 +59,10 @@ urlpatterns = [
     path('auth/register/business/', register_business_view, name='register_business'),
     path('auth/password-reset/', password_reset_request_view, name='password_reset_request'),
     path('auth/password-reset/confirm/', password_reset_confirm_view, name='password_reset_confirm'),
+    path('auth/2fa/setup/', setup_2fa_view, name='setup-2fa'),
+    path('auth/2fa/verify/', verify_2fa_setup_view, name='verify-2fa'),
+    path('auth/2fa/disable/', disable_2fa_view, name='disable-2fa'),
+    path('sales/import-csv/', import_sales_csv_view, name='import-sales-csv'),
     path('saas/pricing/', PublicPricingView.as_view(), name='public_pricing'),
     
     # Module Management (Tenant Side)
