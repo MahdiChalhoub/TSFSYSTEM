@@ -6,6 +6,7 @@ const APPROVED_DIRS = [
     '[...slug]', // Next.js catch-all dynamic route
     '[code]',
     'connector',
+    'currencies',   // Global currency management (SaaS admin feature)
     'dashboard',
     'encryption',   // AES-256 encryption management (core security feature)
     'health',
