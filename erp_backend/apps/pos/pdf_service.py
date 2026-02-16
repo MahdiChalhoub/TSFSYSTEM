@@ -40,6 +40,21 @@ class PDFService:
         return None
 
     @staticmethod
+    def get_purchase_order_context(order):
+        """Prepares the context data for the purchase order / RFQ template."""
+        return {
+            'order': order,
+            'lines': order.lines.select_related('product').all(),
+            'organization': order.organization,
+            'contact': order.contact,
+            'total': float(order.total_amount),
+            'subtotal': float(order.total_amount - order.tax_amount),
+            'tax': float(order.tax_amount),
+            'date': order.created_at.strftime('%d/%m/%Y') if order.created_at else '',
+            'currency': 'XOF', # Default
+        }
+
+    @staticmethod
     def get_invoice_context(order):
         """Prepares the context data for the invoice template."""
         return {

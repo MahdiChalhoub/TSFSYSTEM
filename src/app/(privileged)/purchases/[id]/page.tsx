@@ -68,9 +68,14 @@ export default async function PurchaseDetailPage({ params }: { params: { id: str
                 </div>
 
                 <div className="flex gap-3">
-                    <button className="p-3.5 bg-white border border-gray-100 rounded-2xl text-gray-400 hover:text-gray-900 transition-all shadow-sm">
+                    <a
+                        href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/purchase/${id}/print/`}
+                        target="_blank"
+                        className="p-3.5 bg-white border border-gray-100 rounded-2xl text-gray-400 hover:text-emerald-600 hover:border-emerald-100 transition-all shadow-sm flex items-center gap-2"
+                    >
                         <Printer size={20} />
-                    </button>
+                        <span className="text-xs font-bold uppercase tracking-wider">Print {order.status === 'DRAFT' ? 'RFQ' : 'PO'}</span>
+                    </a>
                     {order.status === 'DRAFT' && (
                         <form action={authorizePurchaseOrder.bind(null, id)}>
                             <button className="bg-indigo-600 text-white px-8 py-3.5 rounded-2xl font-black shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all flex items-center gap-2">
@@ -79,7 +84,7 @@ export default async function PurchaseDetailPage({ params }: { params: { id: str
                             </button>
                         </form>
                     )}
-                    {order.status === 'AUTHORIZED' && (
+                    {(order.status === 'AUTHORIZED' || order.status === 'PARTIAL_RECEIVED') && (
                         <form action={receivePurchaseOrder.bind(null, id)} className="flex gap-2">
                             <select name="warehouseId" className="bg-white border border-gray-200 rounded-2xl px-4 py-3.5 text-sm font-bold shadow-sm" required>
                                 <option value="">Target WH...</option>
@@ -91,7 +96,7 @@ export default async function PurchaseDetailPage({ params }: { params: { id: str
                             </button>
                         </form>
                     )}
-                    {order.status === 'RECEIVED' && (
+                    {(order.status === 'RECEIVED' || order.status === 'PARTIAL_RECEIVED') && (
                         <form action={invoicePurchaseOrder.bind(null, id)} className="flex gap-2">
                             <input name="invoiceNumber" placeholder="Vendor Bill #" className="bg-white border border-gray-200 rounded-2xl px-4 py-3.5 text-sm font-bold shadow-sm" required />
                             <button className="bg-gray-900 text-white px-8 py-3.5 rounded-2xl font-black shadow-lg shadow-gray-200 hover:bg-gray-800 transition-all flex items-center gap-2">
@@ -149,7 +154,8 @@ export default async function PurchaseDetailPage({ params }: { params: { id: str
                                 <thead>
                                     <tr className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
                                         <th className="p-6">Product</th>
-                                        <th className="p-6 text-center">Qty</th>
+                                        <th className="p-6 text-center">Ordered</th>
+                                        <th className="p-6 text-center">Received</th>
                                         <th className="p-6 text-right">Unit Cost</th>
                                         <th className="p-6 text-right">Total</th>
                                     </tr>
@@ -159,16 +165,21 @@ export default async function PurchaseDetailPage({ params }: { params: { id: str
                                         <tr key={line.id} className="text-sm">
                                             <td className="p-6">
                                                 <div className="font-bold text-gray-900">{line.product_name}</div>
-                                                <div className="text-[10px] text-gray-400 font-mono">Reference: 29384-ERP</div>
+                                                <div className="text-[10px] text-gray-400 font-mono">Reference: {line.product_sku || 'N/A'}</div>
                                             </td>
-                                            <td className="p-6 text-center font-bold text-gray-600">
+                                            <td className="p-6 text-center font-bold text-gray-900">
                                                 {line.quantity}
                                             </td>
+                                            <td className="p-6 text-center">
+                                                <span className={`px-2 py-1 rounded-lg font-bold text-xs ${parseFloat(line.qty_received) >= parseFloat(line.quantity) ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+                                                    {line.qty_received}
+                                                </span>
+                                            </td>
                                             <td className="p-6 text-right font-medium text-gray-500">
-                                                ${parseFloat(line.unit_price).toFixed(2)}
+                                                {parseFloat(line.unit_price).toLocaleString()} XOF
                                             </td>
                                             <td className="p-6 text-right font-black text-gray-900">
-                                                ${parseFloat(line.total).toLocaleString()}
+                                                {parseFloat(line.total).toLocaleString()} XOF
                                             </td>
                                         </tr>
                                     ))}
