@@ -1,6 +1,6 @@
 """
 Management command to fix migration inconsistencies.
-Directly inserts missing migration records into django_migrations table.
+Removes fake migration records and lets them run properly.
 Usage: python manage.py fix_migrations
 """
 from django.core.management.base import BaseCommand
@@ -9,102 +9,115 @@ from django.utils import timezone
 
 
 class Command(BaseCommand):
-    help = 'Fix migration inconsistencies by inserting missing dependency records'
+    help = 'Fix migration inconsistencies'
+
+    def add_arguments(self, parser):
+        parser.add_argument('--fix', action='store_true', help='Actually fix (delete and re-record)')
+        parser.add_argument('--check-tables', action='store_true', help='Check which pos/finance tables exist')
 
     def handle(self, *args, **options):
         cursor = connection.cursor()
+        do_fix = options.get('fix', False)
+        check_tables = options.get('check_tables', False)
 
-        # Step 1: Show current state
-        cursor.execute(
-            "SELECT app, name FROM django_migrations WHERE app = 'finance' ORDER BY id"
-        )
-        applied_finance = [row[1] for row in cursor.fetchall()]
-        self.stdout.write('\n=== APPLIED FINANCE MIGRATIONS ===')
-        for m in applied_finance:
-            self.stdout.write(f'  [X] {m}')
+        if check_tables:
+            self.stdout.write('\n=== CHECKING TABLES IN DATABASE ===')
+            cursor.execute("""
+                SELECT table_name FROM information_schema.tables 
+                WHERE table_schema='public' AND table_name LIKE 'pos_%'
+                ORDER BY table_name
+            """)
+            pos_tables = [r[0] for r in cursor.fetchall()]
+            self.stdout.write(f'POS tables ({len(pos_tables)}):')
+            for t in pos_tables:
+                self.stdout.write(f'  {t}')
 
-        cursor.execute(
-            "SELECT app, name FROM django_migrations WHERE app = 'erp' AND name LIKE '%043%' ORDER BY id"
-        )
-        erp_43 = cursor.fetchall()
-        self.stdout.write(f'\n=== ERP 0043 STATE ===')
-        if erp_43:
-            self.stdout.write(f'  [X] Already applied: {erp_43}')
-        else:
-            self.stdout.write(f'  [ ] NOT applied — this is the problem')
+            cursor.execute("""
+                SELECT table_name FROM information_schema.tables 
+                WHERE table_schema='public' AND table_name LIKE 'finance_%'
+                ORDER BY table_name
+            """)
+            fin_tables = [r[0] for r in cursor.fetchall()]
+            self.stdout.write(f'\nFinance tables ({len(fin_tables)}):')
+            for t in fin_tables:
+                self.stdout.write(f'  {t}')
 
-        # Step 2: Check what erp migrations ARE applied (up to and around 43)
-        cursor.execute(
-            "SELECT name FROM django_migrations WHERE app = 'erp' ORDER BY id"
-        )
-        applied_erp = [row[0] for row in cursor.fetchall()]
-        self.stdout.write(f'\n=== APPLIED ERP MIGRATIONS (last 10) ===')
-        for m in applied_erp[-10:]:
-            self.stdout.write(f'  [X] {m}')
-        self.stdout.write(f'  Total: {len(applied_erp)} migrations applied')
+            cursor.execute("""
+                SELECT table_name FROM information_schema.tables 
+                WHERE table_schema='public' AND table_name LIKE 'crm_%'
+                ORDER BY table_name
+            """)
+            crm_tables = [r[0] for r in cursor.fetchall()]
+            self.stdout.write(f'\nCRM tables ({len(crm_tables)}):')
+            for t in crm_tables:
+                self.stdout.write(f'  {t}')
+            return
 
-        # Step 3: Fix — insert erp 0043 if missing
-        if not erp_43:
-            self.stdout.write('\n=== FIXING: Inserting erp.0043_transaction_lifecycle ===')
-            
-            # First, check which erp migrations exist prior to 0043
-            # We need to fake-insert all unapplied erp migrations up to and including 0043
-            import os
-            erp_migration_dir = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-                'migrations'
+        # Show currently applied per app
+        for app in ['erp', 'pos', 'crm', 'finance', 'inventory']:
+            cursor.execute(
+                "SELECT name FROM django_migrations WHERE app = %s ORDER BY id", [app]
             )
-            self.stdout.write(f'  Looking for erp migrations in: {erp_migration_dir}')
+            rows = [r[0] for r in cursor.fetchall()]
+            self.stdout.write(f'\n=== {app.upper()} ({len(rows)} applied) ===')
+            for r in rows[-5:]:
+                self.stdout.write(f'  [X] {r}')
+            if len(rows) > 5:
+                self.stdout.write(f'  ... and {len(rows)-5} more')
+
+        if do_fix:
+            self.stdout.write('\n\n=== APPLYING FIX ===')
             
-            # Get all migration file names
-            if os.path.exists(erp_migration_dir):
-                all_erp_files = sorted([
-                    f.replace('.py', '') for f in os.listdir(erp_migration_dir)
-                    if f.endswith('.py') and f != '__init__.py'
-                ])
-                self.stdout.write(f'  Found {len(all_erp_files)} migration files on disk')
+            # Delete fake POS migration records for migrations whose tables don't exist
+            cursor.execute("""
+                SELECT table_name FROM information_schema.tables 
+                WHERE table_schema='public' AND table_name = 'pos_order'
+            """)
+            pos_order_exists = cursor.fetchone()
+            
+            if not pos_order_exists:
+                self.stdout.write('pos_order table does NOT exist.')
+                self.stdout.write('Removing ALL pos migration records so they can run fresh...')
+                cursor.execute("DELETE FROM django_migrations WHERE app = 'pos'")
+                self.stdout.write('  -> Deleted all POS migration records')
                 
-                # Find unapplied migrations up to and including 0043
-                unapplied = [m for m in all_erp_files if m not in applied_erp and m <= '0043_transaction_lifecycle']
-                self.stdout.write(f'  Unapplied up to 0043: {len(unapplied)}')
-                for m in unapplied:
-                    self.stdout.write(f'    [ ] {m}')
-                
-                # Insert all unapplied ones
-                now = timezone.now()
-                for m in unapplied:
-                    cursor.execute(
-                        "INSERT INTO django_migrations (app, name, applied) VALUES (%s, %s, %s)",
-                        ['erp', m, now]
-                    )
-                    self.stdout.write(f'    -> Inserted erp.{m}')
-                
-                self.stdout.write(f'\n  Done! Inserted {len(unapplied)} migration records.')
-            else:
-                # Fallback: just insert 0043 directly
-                self.stdout.write(f'  Migration dir not found, inserting 0043 directly')
-                cursor.execute(
-                    "INSERT INTO django_migrations (app, name, applied) VALUES (%s, %s, %s)",
-                    ['erp', '0043_transaction_lifecycle', timezone.now()]
-                )
-                self.stdout.write('  -> Inserted erp.0043_transaction_lifecycle')
+                # Also need to remove erp migrations that were fake-applied
+                # if their tables don't exist
+                cursor.execute("""
+                    SELECT table_name FROM information_schema.tables 
+                    WHERE table_schema='public' AND table_name LIKE 'erp_%'
+                    ORDER BY table_name
+                """)
+                erp_tables = [r[0] for r in cursor.fetchall()]
+                self.stdout.write(f'\nExisting erp tables: {len(erp_tables)}')
 
-        # Step 4: Verify
-        cursor.execute(
-            "SELECT app, name FROM django_migrations WHERE app = 'erp' AND name LIKE '%043%'"
-        )
-        check = cursor.fetchall()
-        self.stdout.write(f'\n=== VERIFICATION ===')
-        self.stdout.write(f'  erp.0043 now applied: {bool(check)}')
-
-        # Step 5: Try migrate plan
-        self.stdout.write('\n=== TESTING MIGRATE --PLAN ===')
-        try:
-            from django.core.management import call_command
-            from io import StringIO
-            out = StringIO()
-            call_command('migrate', '--plan', stdout=out, stderr=out)
-            plan = out.getvalue()
-            self.stdout.write(plan[:1000] if plan else '  (empty plan — all up to date)')
-        except Exception as e:
-            self.stdout.write(f'  Still has error: {e}')
+            # Check finance tables
+            cursor.execute("""
+                SELECT table_name FROM information_schema.tables 
+                WHERE table_schema='public' AND table_name = 'finance_payment'
+            """)
+            payment_exists = cursor.fetchone()
+            if not payment_exists:
+                self.stdout.write('\nfinance_payment table does NOT exist.')
+                self.stdout.write('Checking which finance migrations need to be unapplied...')
+                # Keep initial migrations that created existing tables, remove later ones
+                cursor.execute("""
+                    SELECT name FROM django_migrations WHERE app = 'finance' ORDER BY id
+                """)
+                applied = [r[0] for r in cursor.fetchall()]
+                self.stdout.write(f'  Currently applied: {applied}')
+                
+                # Delete finance migrations that reference non-existent tables
+                # Keep 0001-0004 (basic setup), delete 0005+ (they reference pos/erp tables)
+                migrations_to_remove = [m for m in applied if m >= '0005']
+                if migrations_to_remove:
+                    for m in migrations_to_remove:
+                        cursor.execute(
+                            "DELETE FROM django_migrations WHERE app = 'finance' AND name = %s", [m]
+                        )
+                        self.stdout.write(f'    -> Removed finance.{m}')
+            
+            self.stdout.write('\n=== FIX APPLIED. Try "python manage.py migrate" now ===')
+        else:
+            self.stdout.write('\n\nRun with --fix to apply changes')
+            self.stdout.write('Run with --check-tables to see which tables exist')
