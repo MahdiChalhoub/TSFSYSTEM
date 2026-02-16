@@ -1,7 +1,7 @@
 import React from 'react'
 import ConsignmentManager from './manager'
 import { getAvailableConsignmentStock, getPendingConsignmentItems, getConsignmentSettlements } from '@/app/actions/consignment'
-import { getContacts } from '@/app/actions/crm'
+import { getContacts } from '@/app/actions/crm/contacts'
 
 export default async function ConsignmentPage() {
     const [availableStock, pendingItems, settlements, contacts] = await Promise.all([
