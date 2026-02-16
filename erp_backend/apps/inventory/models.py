@@ -198,6 +198,18 @@ class Inventory(TenantModel):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='inventory')
     quantity = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
     expiry_date = models.DateField(null=True, blank=True)
+
+    # Consignment Tracking
+    is_consignment = models.BooleanField(default=False)
+    supplier = models.ForeignKey(
+        'crm.Contact', on_delete=models.SET_NULL, null=True, blank=True, 
+        limit_choices_to={'type': 'SUPPLIER'},
+        related_name='consignment_stock'
+    )
+    consignment_cost = models.DecimalField(
+        max_digits=15, decimal_places=2, default=Decimal('0.00'), 
+        help_text='Agreed payout amount to supplier per unit'
+    )
     batch_number = models.CharField(max_length=100, null=True, blank=True)
     batch = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='sub_batches')
 

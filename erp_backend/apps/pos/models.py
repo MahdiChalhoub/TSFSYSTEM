@@ -123,6 +123,14 @@ class OrderLine(TenantModel):
     total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     price_override_detected = models.BooleanField(default=False)
 
+    # Consignment Management
+    is_consignment = models.BooleanField(default=False)
+    consignment_settled = models.BooleanField(default=False)
+    consignment_payout = models.DecimalField(
+        max_digits=15, decimal_places=2, default=Decimal('0.00'),
+        help_text='Amount to be paid to supplier'
+    )
+
     class Meta:
         db_table = 'pos_orderline'
 
@@ -132,5 +140,6 @@ from apps.pos.returns_models import SalesReturn, SalesReturnLine, CreditNote, Pu
 from apps.pos.quotation_models import Quotation, QuotationLine  # noqa: E402, F401
 from apps.pos.delivery_models import DeliveryZone, DeliveryOrder  # noqa: E402, F401
 from apps.pos.discount_models import DiscountRule, DiscountUsageLog  # noqa: E402, F401
+from apps.pos.consignment_models import ConsignmentSettlement, ConsignmentSettlementLine  # noqa: E402, F401
 from apps.pos.sourcing_models import ProductSupplier, SupplierPriceHistory  # noqa: E402, F401
 

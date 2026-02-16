@@ -716,6 +716,28 @@ class InventoryViewSet(TenantModelViewSet):
     queryset = Inventory.objects.select_related('product', 'warehouse').all()
     serializer_class = InventorySerializer
 
+    @action(detail=False, methods=['get'], url_path='available-consignment')
+    def available_consignment(self, request):
+        """Returns current inventory items that are marked as consignment."""
+        organization_id = get_current_tenant_id()
+        stock = Inventory.objects.filter(
+            organization_id=organization_id,
+            is_consignment=True,
+            quantity__gt=0
+        ).select_related('product', 'warehouse', 'supplier')
+        
+        data = [{
+            'id': inv.id,
+            'product_name': inv.product.name,
+            'sku': inv.product.sku,
+            'warehouse_name': inv.warehouse.name,
+            'quantity': inv.quantity,
+            'supplier_name': inv.supplier.name if inv.supplier else 'Unknown',
+            'consignment_cost': inv.consignment_cost,
+        } for inv in stock]
+        
+        return Response(data)
+
     # --- H4: cross-tenant validation ---
     @action(detail=False, methods=['post'])
     def receive_stock(self, request):
