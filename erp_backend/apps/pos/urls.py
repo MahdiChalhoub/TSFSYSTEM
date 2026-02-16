@@ -7,7 +7,7 @@ from rest_framework.routers import DefaultRouter
 from apps.pos.views import (
     POSViewSet, PurchaseViewSet,
     SalesReturnViewSet, CreditNoteViewSet, PurchaseReturnViewSet,
-    QuotationViewSet,
+    QuotationViewSet, DeliveryZoneViewSet, DeliveryOrderViewSet,
 )
 
 router = DefaultRouter()
@@ -17,6 +17,8 @@ router.register(r'sales-returns', SalesReturnViewSet)
 router.register(r'credit-notes', CreditNoteViewSet)
 router.register(r'purchase-returns', PurchaseReturnViewSet)
 router.register(r'quotations', QuotationViewSet)
+router.register(r'delivery-zones', DeliveryZoneViewSet)
+router.register(r'deliveries', DeliveryOrderViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
