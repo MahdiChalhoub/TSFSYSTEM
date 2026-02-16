@@ -471,6 +471,10 @@ class User(AbstractUser):
     scope_pin_internal = models.CharField(max_length=128, null=True, blank=True,
         help_text='Hashed PIN required to access Internal scope. Null = free access.')
 
+    # Manager Override PIN — for authorizing sensitive POS operations
+    override_pin = models.CharField(max_length=128, null=True, blank=True,
+        help_text='Hashed PIN for manager-level overrides (void, refund, discount override)')
+
     def set_scope_pin(self, scope: str, raw_pin: str | None):
         """Set or clear a scope PIN. scope must be 'official' or 'internal'."""
         from django.contrib.auth.hashers import make_password
@@ -489,8 +493,46 @@ class User(AbstractUser):
             return True  # No PIN set = free access
         return check_password(raw_pin, stored)
 
+    def set_override_pin(self, raw_pin: str | None):
+        """Set or clear the manager override PIN."""
+        from django.contrib.auth.hashers import make_password
+        self.override_pin = make_password(raw_pin) if raw_pin else None
+
+    def check_override_pin(self, raw_pin: str) -> bool:
+        """Verify override PIN. Returns False if no PIN is set (not authorized)."""
+        from django.contrib.auth.hashers import check_password
+        if not self.override_pin:
+            return False  # No override PIN = not a manager
+        return check_password(raw_pin, self.override_pin)
+
     def __str__(self):
         return self.email if self.email else self.username
+
+
+class ManagerOverrideLog(TenantModel):
+    """Audit trail for manager override PIN usage."""
+    ACTION_CHOICES = (
+        ('VOID_ORDER', 'Void Order'),
+        ('APPLY_DISCOUNT', 'Apply Manual Discount'),
+        ('PRICE_OVERRIDE', 'Price Override'),
+        ('REFUND', 'Process Refund'),
+        ('DELETE_LINE', 'Delete Order Line'),
+        ('REOPEN_ORDER', 'Reopen Closed Order'),
+        ('OTHER', 'Other Override'),
+    )
+    action = models.CharField(max_length=30, choices=ACTION_CHOICES)
+    manager = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='override_logs')
+    order = models.ForeignKey('pos.Order', on_delete=models.SET_NULL, null=True, blank=True)
+    details = models.TextField(null=True, blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    performed_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+
+    class Meta:
+        db_table = 'manager_override_log'
+        ordering = ['-performed_at']
+
+    def __str__(self):
+        return f"{self.get_action_display()} by {self.manager} at {self.performed_at}"
 
 
 # =============================================================================
