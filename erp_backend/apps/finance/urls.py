@@ -11,7 +11,7 @@ from apps.finance.views import (
     FiscalYearViewSet, FiscalPeriodViewSet, JournalEntryViewSet,
     BarcodeSettingsViewSet, LoanViewSet, FinancialEventViewSet,
     TransactionSequenceViewSet, ForensicAuditLogViewSet, AuditVerificationViewSet,
-    DeferredExpenseViewSet, AssetViewSet, VoucherViewSet, ProfitDistributionViewSet
+    DeferredExpenseViewSet, DirectExpenseViewSet, AssetViewSet, VoucherViewSet, ProfitDistributionViewSet
 )
 
 router = SimpleRouter()
@@ -27,6 +27,7 @@ router.register(r'sequences', TransactionSequenceViewSet)
 router.register(r'audit-logs', ForensicAuditLogViewSet, basename='audit-log')
 router.register(r'audit', AuditVerificationViewSet, basename='quantum-audit')
 router.register(r'deferred-expenses', DeferredExpenseViewSet)
+router.register(r'expenses', DirectExpenseViewSet)
 router.register(r'assets', AssetViewSet)
 router.register(r'vouchers', VoucherViewSet)
 router.register(r'profit-distribution', ProfitDistributionViewSet)

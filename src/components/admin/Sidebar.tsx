@@ -180,6 +180,7 @@ const MENU_ITEMS = [
                 icon: ClipboardList,
                 children: [
                     { title: 'Vouchers', path: '/finance/vouchers' },
+                    { title: 'Expenses', path: '/finance/expenses' },
                     { title: 'Deferred Expenses', path: '/finance/deferred-expenses' },
                     { title: 'Assets & Depreciation', path: '/finance/assets' },
                 ]

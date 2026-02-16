@@ -6,7 +6,7 @@ from .models import (
     ChartOfAccount, FinancialAccount, FiscalYear, FiscalPeriod,
     JournalEntry, JournalEntryLine, Transaction, TransactionSequence,
     BarcodeSettings, Loan, LoanInstallment, FinancialEvent, ForensicAuditLog,
-    DeferredExpense, Asset, AmortizationSchedule, Voucher, ProfitDistribution
+    DeferredExpense, DirectExpense, Asset, AmortizationSchedule, Voucher, ProfitDistribution
 )
 
 
@@ -135,6 +135,16 @@ class DeferredExpenseSerializer(serializers.ModelSerializer):
         if obj.duration_months == 0:
             return 100
         return round((obj.months_recognized / obj.duration_months) * 100, 1)
+
+
+class DirectExpenseSerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+    source_account_name = serializers.ReadOnlyField(source='source_account.name')
+    expense_coa_name = serializers.ReadOnlyField(source='expense_coa.name')
+
+    class Meta:
+        model = DirectExpense
+        fields = '__all__'
 
 
 class AssetSerializer(serializers.ModelSerializer):
