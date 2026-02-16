@@ -247,6 +247,26 @@ class PurchaseService:
                 
                 total_received_value += (qty_to_receive * line.unit_price)
 
+                # ── Sourcing Intelligence Update ───────────────────────
+                from apps.pos.sourcing_models import ProductSupplier, SupplierPriceHistory
+                sourcing_link, _ = ProductSupplier.objects.get_or_create(
+                    organization=organization,
+                    product=line.product,
+                    supplier=order.contact
+                )
+                sourcing_link.last_purchased_price = line.unit_price
+                sourcing_link.last_purchased_date = timezone.now()
+                sourcing_link.save()
+
+                SupplierPriceHistory.objects.create(
+                    organization=organization,
+                    product=line.product,
+                    supplier=order.contact,
+                    price=line.unit_price,
+                    reference_order=order,
+                    notes=f"Reception via PO #{order.id}"
+                )
+
             # Update Order Status
             all_received = all(line.qty_received >= line.quantity for line in order.lines.all())
             order.status = 'RECEIVED' if all_received else 'PARTIAL_RECEIVED'
@@ -474,6 +494,26 @@ class PurchaseService:
                 if line.get('sellingPriceHT'): product.selling_price_ht = Decimal(str(line['sellingPriceHT']))
                 if line.get('sellingPriceTTC'): product.selling_price_ttc = Decimal(str(line['sellingPriceTTC']))
                 product.save()
+
+                # ── Sourcing Intelligence Update ───────────────────────
+                from apps.pos.sourcing_models import ProductSupplier, SupplierPriceHistory
+                sourcing_link, _ = ProductSupplier.objects.get_or_create(
+                    organization=organization,
+                    product=product,
+                    supplier=supplier
+                )
+                sourcing_link.last_purchased_price = final_effective_cost
+                sourcing_link.last_purchased_date = timezone.now()
+                sourcing_link.save()
+
+                SupplierPriceHistory.objects.create(
+                    organization=organization,
+                    product=product,
+                    supplier=supplier,
+                    price=final_effective_cost,
+                    reference_order=order,
+                    notes=f"Quick Purchase #{order.id}"
+                )
 
             order.total_amount = total_amount_ht + total_tax + total_airsi
             order.tax_amount = total_tax
