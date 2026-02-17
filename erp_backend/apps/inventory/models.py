@@ -423,6 +423,6 @@ class OperationalRequestLine(models.Model):
 
 
 # Import models from sub-files so Django discovers them for migrations
-from apps.inventory.advanced_models import ProductBatch, ProductSerial, ExpiryAlert, StockValuationEntry  # noqa: E402, F401
+from apps.inventory.advanced_models import ProductBatch, ProductSerial, SerialLog, ExpiryAlert, StockValuationEntry  # noqa: E402, F401
 from apps.inventory.counting_models import InventorySession, InventorySessionLine  # noqa: E402, F401
 

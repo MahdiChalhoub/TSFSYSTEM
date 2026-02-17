@@ -25,7 +25,10 @@ from apps.pos.serializers import (
     SalesReturnSerializer, CreditNoteSerializer, PurchaseReturnSerializer
 )
 from erp.views import TenantModelViewSet
-from apps.pos.pdf_service import PDFService
+try:
+    from apps.pos.pdf_service import PDFService
+except ImportError:
+    PDFService = None  # xhtml2pdf not installed — PDF generation disabled
 from django.http import HttpResponse
 
 
@@ -179,6 +182,8 @@ class POSViewSet(viewsets.ViewSet):
                 id=pk, organization_id=organization_id
             )
             
+            if PDFService is None:
+                return Response({"error": "PDF generation not available (xhtml2pdf not installed)"}, status=501)
             context = PDFService.get_invoice_context(order)
             pdf_content = PDFService.render_to_pdf('pos/invoice.html', context)
             
@@ -350,6 +355,8 @@ class PurchaseViewSet(viewsets.ViewSet):
         if not organization_id: return Response({"error": "No organization"}, status=400)
         try:
             order = Order.objects.get(pk=pk, organization_id=organization_id, type='PURCHASE')
+            if PDFService is None:
+                return Response({"error": "PDF generation not available (xhtml2pdf not installed)"}, status=501)
             context = PDFService.get_purchase_order_context(order)
             pdf_content = PDFService.render_to_pdf('pos/purchase_order.html', context)
             
