@@ -893,7 +893,20 @@ class OrgModuleViewSet(viewsets.ViewSet):
 
         user_count = User.objects.filter(organization=org).count()
         site_count = Site.original_objects.filter(organization=org).count()
-        module_count = OrganizationModule.objects.filter(organization=org, is_enabled=True).count()
+        
+        # [FIX] Module count must match the modules() list logic:
+        # Count OrganizationModule records that are enabled PLUS core modules
+        # that are always considered INSTALLED even without an OrganizationModule record.
+        enabled_module_names = set(
+            OrganizationModule.objects.filter(organization=org, is_enabled=True)
+            .values_list('module_name', flat=True)
+        )
+        # Add core modules that are always INSTALLED
+        for sm in SystemModule.objects.all():
+            is_core = sm.manifest.get('is_core', False) or sm.manifest.get('required', False) or sm.name in ['core', 'coreplatform']
+            if is_core:
+                enabled_module_names.add(sm.name)
+        module_count = len(enabled_module_names)
         storage_mb = round(org.data_usage_bytes / (1024 * 1024), 1) if org.data_usage_bytes else 0
 
         # Invoice count this month (from SubscriptionPayment)
