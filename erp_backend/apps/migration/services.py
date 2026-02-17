@@ -107,11 +107,25 @@ class MigrationService:
             raise
 
     def _parse_source(self):
-        """Parse the data source into self.tables_data."""
+        """Parse the data source into self.tables_data, filtered by business_id if set."""
         if self.job.source_type == 'SQL_DUMP':
             parser = SQLDumpParser(file_path=self.job.file_path)
-            self.tables_data = parser.parse()
+            parser.parse()
+
+            # If a specific business is selected, filter all data
+            biz_id = self.job.source_business_id
+            if biz_id:
+                logger.info(f"Filtering data for business_id={biz_id}")
+                for table_name in parser.tables_data.keys():
+                    self.tables_data[table_name] = parser.get_table_data_for_business(
+                        table_name, biz_id
+                    )
+            else:
+                self.tables_data = parser.tables_data
+
         elif self.job.source_type == 'DIRECT_DB':
+            biz_id = self.job.source_business_id
+            where = f"business_id = {int(biz_id)}" if biz_id else None
             reader = DirectDBReader(
                 host=self.job.db_host,
                 port=self.job.db_port or 3306,
@@ -123,13 +137,16 @@ class MigrationService:
             try:
                 for table_name in SQLDumpParser.TABLE_COLUMNS.keys():
                     try:
-                        self.tables_data[table_name] = reader.read_table(table_name)
+                        self.tables_data[table_name] = reader.read_table(table_name, where)
                     except Exception as e:
                         self._log_error(f"Failed to read table {table_name}: {str(e)}")
             finally:
                 reader.close()
 
         logger.info(f"Parsed {len(self.tables_data)} tables")
+        for t, rows in self.tables_data.items():
+            if rows:
+                logger.info(f"  {t}: {len(rows)} rows")
 
     def _log_error(self, message):
         """Log an error for reporting."""
@@ -137,7 +154,12 @@ class MigrationService:
         logger.warning(message)
 
     def _get_or_create_mapping(self, entity_type, source_id, source_table):
-        """Check if a mapping already exists (for idempotency)."""
+        """
+        Check if a mapping already exists (for idempotency).
+        In SYNC mode, also checks mappings from ALL previous jobs for the same org,
+        so we skip records that were imported in any prior migration.
+        """
+        # First check current job
         try:
             mapping = MigrationMapping.objects.get(
                 job=self.job,
@@ -146,7 +168,26 @@ class MigrationService:
             )
             return mapping.target_id
         except MigrationMapping.DoesNotExist:
-            return None
+            pass
+
+        # In SYNC mode, check all previous completed jobs for the same org
+        if self.job.migration_mode == 'SYNC':
+            try:
+                previous = MigrationMapping.objects.filter(
+                    job__organization_id=self.organization_id,
+                    job__status__in=['COMPLETED', 'RUNNING'],
+                    entity_type=entity_type,
+                    source_id=source_id,
+                ).exclude(job=self.job).first()
+                if previous:
+                    # Record it in current job too for completeness
+                    self._save_mapping(entity_type, source_id, previous.target_id,
+                                        source_table, {'synced_from_job': previous.job_id})
+                    return previous.target_id
+            except Exception:
+                pass
+
+        return None
 
     def _save_mapping(self, entity_type, source_id, target_id, source_table, extra_data=None):
         """Save an old_id → new_id mapping."""

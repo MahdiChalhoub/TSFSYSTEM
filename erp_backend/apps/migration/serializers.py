@@ -12,6 +12,7 @@ class MigrationJobSerializer(serializers.ModelSerializer):
         model = MigrationJob
         fields = [
             'id', 'name', 'source_type', 'status', 'progress', 'current_step',
+            'source_business_id', 'source_business_name', 'migration_mode',
             'total_units', 'total_categories', 'total_brands', 'total_products',
             'total_contacts', 'total_transactions', 'total_accounts', 'total_errors',
             'error_log', 'created_by_name', 'started_at', 'completed_at',

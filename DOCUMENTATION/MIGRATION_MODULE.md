@@ -1,7 +1,8 @@
-# Data Migration Module (UltimatePOS → TSF)
+# Import from Third Party Module
 
 ## Goal
-Migrate all business data from UltimatePOS (Laravel/MySQL) into the TSF ERP system. Handles SQL dump file uploads, parses INSERT statements, maps source data to TSF models, and imports in dependency order with full rollback capability.
+Migrate all business data from UltimatePOS (Laravel/MySQL) into the TSF ERP system. Handles SQL dump file uploads, parses INSERT statements, maps source data to TSF models, and imports in dependency order with full rollback support.
+Supports business-level selection (choose which UltimatePOS business to import) and sync mode (incremental import of only new records).
 
 ## Architecture
 

@@ -1,38 +1,44 @@
-"""Quick script to analyze the SQL dump — run with: python apps/migration/analyze_dump.py"""
+"""Extract business table columns and data from SQL dump."""
 import re, sys, os
 
 SQL_FILE = r'C:\Users\chalh\Downloads\u739151801_dataPOS.sql'
 
-table_rows = {}
-business_ids = set()
+# We need to find column names for tables that have them in the INSERT statements
+# UltimatePOS phpMyAdmin exports include: INSERT INTO `table` (`col1`, `col2`, ...) VALUES (...)
 
-print(f"Analyzing: {SQL_FILE}")
-print(f"Size: {os.path.getsize(SQL_FILE) / (1024*1024):.1f} MB")
+tables_to_check = ['business', 'business_locations', 'contacts', 'products', 
+                    'transactions', 'categories', 'brands', 'units', 'accounts',
+                    'variations', 'transaction_sell_lines', 'purchase_lines',
+                    'variation_location_details', 'currencies']
+
+table_columns = {}
 
 with open(SQL_FILE, 'r', encoding='utf-8', errors='replace') as f:
     for line in f:
-        m = re.match(r"INSERT\s+INTO\s+`?(\w+)`?\s", line, re.IGNORECASE)
-        if m:
-            table = m.group(1)
-            count = line.count('),(') + 1
-            table_rows[table] = table_rows.get(table, 0) + count
-            
-            # Extract business_ids from business table
-            if table == 'business':
-                ids = re.findall(r"\((\d+),", line)
-                business_ids.update(ids)
+        for table in tables_to_check:
+            pattern = rf"INSERT\s+INTO\s+`{table}`\s*\(([^)]+)\)\s*VALUES"
+            m = re.match(pattern, line, re.I)
+            if m and table not in table_columns:
+                cols = [c.strip().strip('`').strip() for c in m.group(1).split(',')]
+                table_columns[table] = cols
+        
+        if len(table_columns) == len(tables_to_check):
+            break
 
-print(f"\n{'='*60}")
-print(f"TABLES FOUND: {len(table_rows)}")
-print(f"{'='*60}")
-print(f"{'Table':<40} {'Rows':>10}")
-print(f"{'-'*40} {'-'*10}")
-for t in sorted(table_rows.keys()):
-    print(f"{t:<40} {table_rows[t]:>10}")
+# Output results
+for table in sorted(table_columns.keys()):
+    cols = table_columns[table]
+    print(f"\n=== {table} ({len(cols)} columns) ===")
+    for i, c in enumerate(cols):
+        print(f"  '{c}',")
 
-total = sum(table_rows.values())
-print(f"{'-'*40} {'-'*10}")
-print(f"{'TOTAL':<40} {total:>10}")
-
-if business_ids:
-    print(f"\nBusiness IDs found: {sorted(business_ids)}")
+# Also output in Python dict format for copy-paste into parser
+print("\n\n# ===== PYTHON DICT FORMAT =====")
+print("TABLE_COLUMNS = {")
+for table in sorted(table_columns.keys()):
+    cols = table_columns[table]
+    print(f"    '{table}': [")
+    for c in cols:
+        print(f"        '{c}',")
+    print(f"    ],")
+print("}")

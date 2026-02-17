@@ -39,14 +39,25 @@ export async function getMigrationJobDetail(jobId: number) {
     return res;
 }
 
-export async function previewMigration(jobId: number) {
-    const res = await erpFetch(`/api/migration/jobs/${jobId}/preview/`);
+export async function getBusinesses(jobId: number) {
+    const res = await erpFetch(`/api/migration/jobs/${jobId}/businesses/`);
     return res;
 }
 
-export async function startMigration(jobId: number) {
+export async function previewMigration(jobId: number, businessId?: number) {
+    let url = `/api/migration/jobs/${jobId}/preview/`;
+    if (businessId) url += `?business_id=${businessId}`;
+    const res = await erpFetch(url);
+    return res;
+}
+
+export async function startMigration(
+    jobId: number,
+    params?: { source_business_id?: number; source_business_name?: string; migration_mode?: string }
+) {
     const res = await erpFetch(`/api/migration/jobs/${jobId}/start/`, {
         method: 'POST',
+        body: params ? JSON.stringify(params) : undefined,
     });
     return res;
 }

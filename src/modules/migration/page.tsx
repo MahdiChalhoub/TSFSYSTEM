@@ -8,7 +8,7 @@ import {
     CheckCircle2, XCircle, Loader2, ArrowRight, ArrowLeft,
     Eye, AlertTriangle, RefreshCw, Database, Layers,
     Package, Users, ShoppingCart, Banknote, Tag, Ruler,
-    BarChart3, Trash2
+    BarChart3, Trash2, Building2, Globe, ChevronRight
 } from "lucide-react"
 import { erpFetch } from "@/lib/erp-api"
 
@@ -23,6 +23,9 @@ interface MigrationJob {
     status: string
     progress: number
     current_step: string | null
+    source_business_id: number | null
+    source_business_name: string | null
+    migration_mode: string
     total_units: number
     total_categories: number
     total_brands: number
@@ -42,6 +45,19 @@ interface MigrationJob {
 interface PreviewData {
     tables: Record<string, number>
 }
+
+interface Business {
+    id: number
+    name: string
+    currency_id?: number
+    start_date?: string
+    products?: number
+    contacts?: number
+    transactions?: number
+    locations?: number
+}
+
+type WizardStep = "LIST" | "SOURCE" | "UPLOAD" | "BUSINESSES" | "PREVIEW" | "RUNNING" | "RESULTS"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // STATUS VISUALS
@@ -67,15 +83,58 @@ const entityIcons: Record<string, any> = {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// THIRD-PARTY SOURCES
+// ─────────────────────────────────────────────────────────────────────────────
+
+const IMPORT_SOURCES = [
+    {
+        id: "ultimatepos",
+        name: "UltimatePOS",
+        description: "Import from UltimatePOS (Laravel/MySQL) via SQL dump",
+        icon: "🛒",
+        available: true,
+        color: "from-orange-500/20 to-red-500/20 border-orange-500/30",
+    },
+    {
+        id: "odoo",
+        name: "Odoo",
+        description: "Import from Odoo ERP (coming soon)",
+        icon: "🔮",
+        available: false,
+        color: "from-purple-500/10 to-indigo-500/10 border-purple-500/20",
+    },
+    {
+        id: "quickbooks",
+        name: "QuickBooks",
+        description: "Import from QuickBooks (coming soon)",
+        icon: "📊",
+        available: false,
+        color: "from-green-500/10 to-emerald-500/10 border-green-500/20",
+    },
+    {
+        id: "csv",
+        name: "CSV / Excel",
+        description: "Import from CSV or Excel files (coming soon)",
+        icon: "📄",
+        available: false,
+        color: "from-blue-500/10 to-cyan-500/10 border-blue-500/20",
+    },
+]
+
+// ─────────────────────────────────────────────────────────────────────────────
 // MAIN PAGE
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function MigrationPage() {
-    const [step, setStep] = useState<"LIST" | "UPLOAD" | "PREVIEW" | "RUNNING" | "RESULTS">("LIST")
+    const [step, setStep] = useState<WizardStep>("LIST")
     const [jobs, setJobs] = useState<MigrationJob[]>([])
     const [activeJob, setActiveJob] = useState<MigrationJob | null>(null)
     const [preview, setPreview] = useState<PreviewData | null>(null)
+    const [businesses, setBusinesses] = useState<Business[]>([])
+    const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null)
+    const [syncMode, setSyncMode] = useState(false)
     const [uploading, setUploading] = useState(false)
+    const [loadingBusinesses, setLoadingBusinesses] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [dragActive, setDragActive] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
@@ -123,19 +182,58 @@ export default function MigrationPage() {
         try {
             const formData = new FormData()
             formData.append("file", file)
-            formData.append("name", `UltimatePOS Migration - ${new Date().toLocaleDateString()}`)
+            formData.append("name", `UltimatePOS Import - ${new Date().toLocaleDateString()}`)
 
             const job = await erpFetch("/api/migration/jobs/upload/", {
                 method: "POST",
                 body: formData,
             })
             setActiveJob(job)
-            setStep("PREVIEW")
             fetchJobs()
+
+            // Auto-discover businesses
+            setLoadingBusinesses(true)
+            try {
+                const bizData = await erpFetch(`/api/migration/jobs/${job.id}/businesses/`)
+                const bizList = bizData?.businesses ?? []
+                setBusinesses(bizList)
+                if (bizList.length > 1) {
+                    setStep("BUSINESSES")
+                } else if (bizList.length === 1) {
+                    // Only one business — auto-select it
+                    setSelectedBusiness(bizList[0])
+                    const previewData = await erpFetch(`/api/migration/jobs/${job.id}/preview/?business_id=${bizList[0].id}`)
+                    setPreview(previewData)
+                    setStep("PREVIEW")
+                } else {
+                    // No business table? Go straight to preview
+                    const previewData = await erpFetch(`/api/migration/jobs/${job.id}/preview/`)
+                    setPreview(previewData)
+                    setStep("PREVIEW")
+                }
+            } catch {
+                setStep("PREVIEW")
+            } finally {
+                setLoadingBusinesses(false)
+            }
         } catch (e: any) {
             setError(e.message || "Upload failed")
         } finally {
             setUploading(false)
+        }
+    }
+
+    // ── Select Business ─────────────────────────────────────────────────────
+    const handleSelectBusiness = async (biz: Business) => {
+        setSelectedBusiness(biz)
+        setError(null)
+        if (!activeJob) return
+        try {
+            const previewData = await erpFetch(`/api/migration/jobs/${activeJob.id}/preview/?business_id=${biz.id}`)
+            setPreview(previewData)
+            setStep("PREVIEW")
+        } catch (e: any) {
+            setError(e.message || "Preview failed")
         }
     }
 
@@ -144,11 +242,28 @@ export default function MigrationPage() {
         setActiveJob(job)
         setError(null)
         try {
-            const data = await erpFetch(`/api/migration/jobs/${job.id}/preview/`)
-            setPreview(data)
-            setStep("PREVIEW")
+            // Fetch businesses first
+            setLoadingBusinesses(true)
+            const bizData = await erpFetch(`/api/migration/jobs/${job.id}/businesses/`)
+            const bizList = bizData?.businesses ?? []
+            setBusinesses(bizList)
+            setLoadingBusinesses(false)
+
+            if (bizList.length > 1) {
+                setStep("BUSINESSES")
+            } else {
+                if (bizList.length === 1) setSelectedBusiness(bizList[0])
+                const bizId = bizList[0]?.id
+                const url = bizId
+                    ? `/api/migration/jobs/${job.id}/preview/?business_id=${bizId}`
+                    : `/api/migration/jobs/${job.id}/preview/`
+                const data = await erpFetch(url)
+                setPreview(data)
+                setStep("PREVIEW")
+            }
         } catch (e: any) {
             setError(e.message || "Preview failed")
+            setLoadingBusinesses(false)
         }
     }
 
@@ -157,7 +272,17 @@ export default function MigrationPage() {
         if (!activeJob) return
         setError(null)
         try {
-            const data = await erpFetch(`/api/migration/jobs/${activeJob.id}/start/`, { method: "POST" })
+            const body: any = {
+                migration_mode: syncMode ? "SYNC" : "FULL",
+            }
+            if (selectedBusiness) {
+                body.source_business_id = selectedBusiness.id
+                body.source_business_name = selectedBusiness.name
+            }
+            const data = await erpFetch(`/api/migration/jobs/${activeJob.id}/start/`, {
+                method: "POST",
+                body: JSON.stringify(body),
+            })
             setActiveJob(data)
             setStep("RUNNING")
         } catch (e: any) {
@@ -202,6 +327,17 @@ export default function MigrationPage() {
         if (e.dataTransfer.files?.[0]) handleUpload(e.dataTransfer.files[0])
     }
 
+    // ── Reset to list ───────────────────────────────────────────────────────
+    const goBack = () => {
+        setStep("LIST")
+        setActiveJob(null)
+        setError(null)
+        setPreview(null)
+        setBusinesses([])
+        setSelectedBusiness(null)
+        setSyncMode(false)
+    }
+
     // ═══════════════════════════════════════════════════════════════════════
     // RENDER
     // ═══════════════════════════════════════════════════════════════════════
@@ -215,7 +351,7 @@ export default function MigrationPage() {
                         <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => { setStep("LIST"); setActiveJob(null); setError(null); setPreview(null); }}
+                            onClick={goBack}
                             className="text-white/60 hover:text-white hover:bg-white/10"
                         >
                             <ArrowLeft className="w-4 h-4 mr-1" /> Back
@@ -223,18 +359,18 @@ export default function MigrationPage() {
                     )}
                     <div>
                         <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 flex items-center gap-3">
-                            <DatabaseZap className="w-8 h-8 text-purple-400" />
-                            Data Migration
+                            <Globe className="w-8 h-8 text-purple-400" />
+                            Import from Third Party
                         </h1>
-                        <p className="text-white/50 mt-1">Import data from UltimatePOS into your TSF system</p>
+                        <p className="text-white/50 mt-1">Migrate data from external systems into TSF</p>
                     </div>
                 </div>
                 {step === "LIST" && (
                     <Button
-                        onClick={() => setStep("UPLOAD")}
+                        onClick={() => setStep("SOURCE")}
                         className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-6 py-2 rounded-xl shadow-lg shadow-purple-500/20"
                     >
-                        <Upload className="w-4 h-4 mr-2" /> New Migration
+                        <Upload className="w-4 h-4 mr-2" /> New Import
                     </Button>
                 )}
             </div>
@@ -254,14 +390,14 @@ export default function MigrationPage() {
                     {jobs.length === 0 ? (
                         <Card className="bg-white/5 border-white/10 backdrop-blur-xl">
                             <CardContent className="flex flex-col items-center justify-center py-16">
-                                <DatabaseZap className="w-16 h-16 text-white/20 mb-4" />
-                                <p className="text-white/40 text-lg">No migrations yet</p>
-                                <p className="text-white/25 text-sm mt-1">Upload a .sql file from UltimatePOS to get started</p>
+                                <Globe className="w-16 h-16 text-white/20 mb-4" />
+                                <p className="text-white/40 text-lg">No imports yet</p>
+                                <p className="text-white/25 text-sm mt-1">Import data from an external POS or ERP system</p>
                                 <Button
-                                    onClick={() => setStep("UPLOAD")}
+                                    onClick={() => setStep("SOURCE")}
                                     className="mt-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500"
                                 >
-                                    <Upload className="w-4 h-4 mr-2" /> Upload SQL Dump
+                                    <Upload className="w-4 h-4 mr-2" /> Start Import
                                 </Button>
                             </CardContent>
                         </Card>
@@ -277,10 +413,28 @@ export default function MigrationPage() {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <h3 className="text-white font-semibold truncate">{job.name}</h3>
-                                            <div className="flex items-center gap-4 mt-1 text-sm text-white/40">
+                                            <div className="flex items-center gap-4 mt-1 text-sm text-white/40 flex-wrap">
                                                 <span>{config.label}</span>
                                                 <span>•</span>
                                                 <span>{new Date(job.created_at).toLocaleDateString()}</span>
+                                                {job.source_business_name && (
+                                                    <>
+                                                        <span>•</span>
+                                                        <span className="text-orange-400 flex items-center gap-1">
+                                                            <Building2 className="w-3 h-3" />
+                                                            {job.source_business_name}
+                                                        </span>
+                                                    </>
+                                                )}
+                                                {job.migration_mode === "SYNC" && (
+                                                    <>
+                                                        <span>•</span>
+                                                        <span className="text-cyan-400 flex items-center gap-1">
+                                                            <RefreshCw className="w-3 h-3" />
+                                                            Sync
+                                                        </span>
+                                                    </>
+                                                )}
                                                 {job.current_step && (
                                                     <>
                                                         <span>•</span>
@@ -333,11 +487,55 @@ export default function MigrationPage() {
                 </div>
             )}
 
+            {/* ─── STEP: SOURCE SELECTION ──────────────────────────────────────── */}
+            {step === "SOURCE" && (
+                <div className="max-w-3xl mx-auto">
+                    <div className="text-center mb-8">
+                        <h2 className="text-2xl font-bold text-white mb-2">Choose Import Source</h2>
+                        <p className="text-white/40">Select the system you're migrating from</p>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {IMPORT_SOURCES.map((source) => (
+                            <button
+                                key={source.id}
+                                disabled={!source.available}
+                                onClick={() => source.available && setStep("UPLOAD")}
+                                className={`text-left p-6 rounded-2xl border transition-all
+                                    bg-gradient-to-br ${source.color}
+                                    ${source.available
+                                        ? "hover:scale-[1.02] hover:shadow-lg cursor-pointer"
+                                        : "opacity-40 cursor-not-allowed"
+                                    }`}
+                            >
+                                <div className="flex items-start justify-between">
+                                    <div>
+                                        <span className="text-3xl">{source.icon}</span>
+                                        <h3 className="text-white font-bold text-lg mt-3">{source.name}</h3>
+                                        <p className="text-white/40 text-sm mt-1">{source.description}</p>
+                                    </div>
+                                    {source.available && (
+                                        <ChevronRight className="w-5 h-5 text-white/40 mt-1" />
+                                    )}
+                                </div>
+                                {!source.available && (
+                                    <span className="inline-block mt-3 text-xs px-2 py-1 rounded-full bg-white/10 text-white/30">
+                                        Coming Soon
+                                    </span>
+                                )}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             {/* ─── STEP: UPLOAD ───────────────────────────────────────────────── */}
             {step === "UPLOAD" && (
                 <Card className="bg-white/5 border-white/10 backdrop-blur-xl max-w-2xl mx-auto">
                     <CardHeader className="text-center pb-2">
-                        <CardTitle className="text-2xl text-white">Upload SQL Dump</CardTitle>
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                            <span className="text-2xl">🛒</span>
+                            <CardTitle className="text-2xl text-white">UltimatePOS Import</CardTitle>
+                        </div>
                         <CardDescription className="text-white/40">
                             Export your UltimatePOS database from phpMyAdmin as a .sql file
                         </CardDescription>
@@ -365,12 +563,12 @@ export default function MigrationPage() {
                             {uploading ? (
                                 <div className="flex flex-col items-center">
                                     <Loader2 className="w-12 h-12 text-purple-400 animate-spin mb-4" />
-                                    <p className="text-white/60">Uploading and parsing...</p>
+                                    <p className="text-white/60">Uploading and analyzing businesses...</p>
                                 </div>
                             ) : (
                                 <div className="flex flex-col items-center">
-                                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center mb-4">
-                                        <FileUp className="w-8 h-8 text-purple-400" />
+                                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500/20 to-red-500/20 flex items-center justify-center mb-4">
+                                        <FileUp className="w-8 h-8 text-orange-400" />
                                     </div>
                                     <p className="text-white text-lg font-medium mb-1">
                                         Drop your .sql file here
@@ -398,6 +596,81 @@ export default function MigrationPage() {
                 </Card>
             )}
 
+            {/* ─── STEP: BUSINESS SELECTOR ────────────────────────────────────── */}
+            {step === "BUSINESSES" && (
+                <div className="max-w-3xl mx-auto space-y-6">
+                    <div className="text-center mb-4">
+                        <h2 className="text-2xl font-bold text-white mb-2 flex items-center justify-center gap-3">
+                            <Building2 className="w-7 h-7 text-orange-400" />
+                            Select Business to Import
+                        </h2>
+                        <p className="text-white/40">
+                            Your SQL dump contains <strong className="text-white/70">{businesses.length} businesses</strong>.
+                            Choose which one to import into this TSF organization.
+                        </p>
+                    </div>
+
+                    {loadingBusinesses ? (
+                        <div className="flex items-center justify-center py-16">
+                            <Loader2 className="w-8 h-8 text-purple-400 animate-spin mr-3" />
+                            <span className="text-white/40">Discovering businesses...</span>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {businesses.map((biz) => (
+                                <button
+                                    key={biz.id}
+                                    onClick={() => handleSelectBusiness(biz)}
+                                    className="w-full text-left p-5 rounded-2xl bg-white/5 border border-white/10
+                                        hover:bg-white/[0.08] hover:border-orange-500/30 hover:scale-[1.01]
+                                        transition-all group"
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-amber-500/20
+                                            border border-orange-500/30 flex items-center justify-center shrink-0">
+                                            <Building2 className="w-5 h-5 text-orange-400" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="text-white font-semibold text-lg truncate">
+                                                {biz.name || `Business #${biz.id}`}
+                                            </h3>
+                                            <div className="flex items-center gap-4 mt-1 text-sm text-white/40">
+                                                <span>ID: {biz.id}</span>
+                                                {biz.products !== undefined && (
+                                                    <>
+                                                        <span>•</span>
+                                                        <span className="flex items-center gap-1">
+                                                            <Package className="w-3 h-3" /> {biz.products?.toLocaleString()} products
+                                                        </span>
+                                                    </>
+                                                )}
+                                                {biz.contacts !== undefined && (
+                                                    <>
+                                                        <span>•</span>
+                                                        <span className="flex items-center gap-1">
+                                                            <Users className="w-3 h-3" /> {biz.contacts?.toLocaleString()} contacts
+                                                        </span>
+                                                    </>
+                                                )}
+                                                {biz.transactions !== undefined && (
+                                                    <>
+                                                        <span>•</span>
+                                                        <span className="flex items-center gap-1">
+                                                            <ShoppingCart className="w-3 h-3" /> {biz.transactions?.toLocaleString()} transactions
+                                                        </span>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <ChevronRight className="w-5 h-5 text-white/20 group-hover:text-orange-400 transition-colors" />
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
             {/* ─── STEP: PREVIEW ──────────────────────────────────────────────── */}
             {step === "PREVIEW" && activeJob && (
                 <div className="max-w-3xl mx-auto space-y-6">
@@ -405,7 +678,13 @@ export default function MigrationPage() {
                         <CardHeader>
                             <CardTitle className="text-xl text-white flex items-center gap-2">
                                 <Eye className="w-5 h-5 text-purple-400" />
-                                Migration Preview
+                                Import Preview
+                                {selectedBusiness && (
+                                    <span className="ml-2 text-sm font-normal text-orange-400 flex items-center gap-1">
+                                        <Building2 className="w-4 h-4" />
+                                        {selectedBusiness.name}
+                                    </span>
+                                )}
                             </CardTitle>
                             <CardDescription className="text-white/40">
                                 Review the data that will be imported into your TSF system
@@ -443,29 +722,34 @@ export default function MigrationPage() {
                                         )
                                     })}
 
-                                    {/* Show other tables with data */}
-                                    {Object.entries(preview.tables)
-                                        .filter(([t]) => !["units", "categories", "brands", "products", "contacts", "transactions", "transaction_sell_lines", "purchase_lines", "accounts", "variation_location_details", "migrations", "password_resets", "sessions"].includes(t))
-                                        .filter(([, c]) => c > 0)
-                                        .length > 0 && (
-                                            <details className="mt-4">
-                                                <summary className="text-white/40 text-sm cursor-pointer hover:text-white/60">
-                                                    Other tables ({Object.entries(preview.tables).filter(([t]) => !["units", "categories", "brands", "products", "contacts", "transactions", "transaction_sell_lines", "purchase_lines", "accounts", "variation_location_details"].includes(t)).filter(([, c]) => c > 0).length} more)
-                                                </summary>
-                                                <div className="mt-2 space-y-2">
-                                                    {Object.entries(preview.tables)
-                                                        .filter(([t]) => !["units", "categories", "brands", "products", "contacts", "transactions", "transaction_sell_lines", "purchase_lines", "accounts", "variation_location_details"].includes(t))
-                                                        .filter(([, c]) => c > 0)
-                                                        .sort(([, a], [, b]) => b - a)
-                                                        .map(([table, count]) => (
-                                                            <div key={table} className="flex items-center justify-between p-2 rounded-lg bg-white/[0.03]">
-                                                                <span className="text-white/40 text-sm">{table}</span>
-                                                                <span className="text-white/30 text-sm font-mono">{count}</span>
-                                                            </div>
-                                                        ))}
-                                                </div>
-                                            </details>
-                                        )}
+                                    {/* Sync mode toggle */}
+                                    <div className="mt-6 p-4 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
+                                        <label className="flex items-center gap-3 cursor-pointer">
+                                            <div className="relative">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={syncMode}
+                                                    onChange={(e) => setSyncMode(e.target.checked)}
+                                                    className="sr-only peer"
+                                                />
+                                                <div className="w-11 h-6 bg-white/10 rounded-full peer peer-checked:bg-cyan-500 transition-colors" />
+                                                <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow
+                                                    peer-checked:translate-x-5 transition-transform" />
+                                            </div>
+                                            <div>
+                                                <span className="text-white font-medium flex items-center gap-2">
+                                                    <RefreshCw className="w-4 h-4 text-cyan-400" />
+                                                    Sync Mode
+                                                </span>
+                                                <p className="text-white/40 text-sm mt-0.5">
+                                                    {syncMode
+                                                        ? "Only import NEW records that haven't been imported before"
+                                                        : "Full import — all records will be processed (duplicates skipped automatically)"
+                                                    }
+                                                </p>
+                                            </div>
+                                        </label>
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="flex items-center justify-center py-8">
@@ -476,20 +760,30 @@ export default function MigrationPage() {
                         </CardContent>
                     </Card>
 
-                    <div className="flex justify-end gap-3">
+                    <div className="flex justify-between">
                         <Button
                             variant="ghost"
-                            onClick={() => { setStep("LIST"); setActiveJob(null); }}
+                            onClick={() => {
+                                if (businesses.length > 1) {
+                                    setStep("BUSINESSES")
+                                    setSelectedBusiness(null)
+                                    setPreview(null)
+                                } else {
+                                    goBack()
+                                }
+                            }}
                             className="text-white/60 hover:text-white hover:bg-white/10"
                         >
-                            Cancel
+                            <ArrowLeft className="w-4 h-4 mr-1" />
+                            {businesses.length > 1 ? "Change Business" : "Cancel"}
                         </Button>
                         <Button
                             onClick={handleStart}
                             disabled={!preview}
                             className="bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white px-8 rounded-xl shadow-lg shadow-emerald-500/20"
                         >
-                            <Play className="w-4 h-4 mr-2" /> Start Migration
+                            <Play className="w-4 h-4 mr-2" />
+                            {syncMode ? "Start Sync" : "Start Import"}
                         </Button>
                     </div>
                 </div>
@@ -500,10 +794,18 @@ export default function MigrationPage() {
                 <Card className="bg-white/5 border-white/10 backdrop-blur-xl max-w-2xl mx-auto">
                     <CardContent className="py-12 text-center">
                         <Loader2 className="w-16 h-16 text-purple-400 animate-spin mx-auto mb-6" />
-                        <h2 className="text-2xl font-bold text-white mb-2">Migration in Progress</h2>
-                        <p className="text-white/50 mb-6">
+                        <h2 className="text-2xl font-bold text-white mb-2">
+                            {activeJob.migration_mode === "SYNC" ? "Syncing Data..." : "Import in Progress"}
+                        </h2>
+                        <p className="text-white/50 mb-1">
                             {activeJob.current_step || "Starting..."}
                         </p>
+                        {selectedBusiness && (
+                            <p className="text-orange-400/60 text-sm mb-4 flex items-center justify-center gap-1">
+                                <Building2 className="w-3 h-3" />
+                                {selectedBusiness.name}
+                            </p>
+                        )}
 
                         {/* Progress bar */}
                         <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden mx-auto max-w-md mb-4">
@@ -553,10 +855,16 @@ export default function MigrationPage() {
                             )}
                             <div>
                                 <h2 className="text-xl font-bold text-white">
-                                    {activeJob.status === "COMPLETED" ? "Migration Completed!" :
-                                        activeJob.status === "FAILED" ? "Migration Failed" : "Migration Running..."}
+                                    {activeJob.status === "COMPLETED"
+                                        ? (activeJob.migration_mode === "SYNC" ? "Sync Completed!" : "Import Completed!")
+                                        : activeJob.status === "FAILED" ? "Import Failed" : "Import Running..."}
                                 </h2>
                                 <p className="text-white/50 text-sm">
+                                    {activeJob.source_business_name && (
+                                        <span className="text-orange-400 mr-2">
+                                            {activeJob.source_business_name} •
+                                        </span>
+                                    )}
                                     {activeJob.completed_at
                                         ? `Finished at ${new Date(activeJob.completed_at).toLocaleString()}`
                                         : activeJob.current_step}
@@ -630,10 +938,10 @@ export default function MigrationPage() {
                                 onClick={() => handleRollback(activeJob)}
                                 className="text-red-400 hover:bg-red-500/10 border border-red-500/20"
                             >
-                                <Trash2 className="w-4 h-4 mr-2" /> Rollback Migration
+                                <Trash2 className="w-4 h-4 mr-2" /> Rollback Import
                             </Button>
                             <Button
-                                onClick={() => { setStep("LIST"); setActiveJob(null); }}
+                                onClick={goBack}
                                 className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500"
                             >
                                 Done
