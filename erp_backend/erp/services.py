@@ -178,7 +178,7 @@ class ConfigurationService:
             connector = ConnectorEngine()
             response = connector.route_read(
                 target_module='finance',
-                endpoint='chart-of-accounts',
+                endpoint='coa',
                 organization_id=str(organization.id),
                 source_module='kernel',
                 params={'is_active': True}
