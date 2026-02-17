@@ -1,11 +1,11 @@
 {
     "code": "migration",
-    "name": "Data Migration",
-    "version": "1.0.0",
-    "description": "Migrate data from UltimatePOS and other systems into TSF.",
+    "name": "Import from Third Party",
+    "version": "1.1.0",
+    "description": "Import data from UltimatePOS and other third-party systems into TSF.",
     "category": "first-party",
     "isolation": "shared",
-    "icon": "DatabaseZap",
+    "icon": "Globe",
     "routes": [
         "/migration/*"
     ],

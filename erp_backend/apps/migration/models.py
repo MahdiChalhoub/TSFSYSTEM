@@ -33,6 +33,23 @@ class MigrationJob(TenantModel):
     db_user = models.CharField(max_length=255, null=True, blank=True)
     db_password = models.CharField(max_length=255, null=True, blank=True)
 
+    # Business selection — which UPOS business to migrate
+    source_business_id = models.IntegerField(
+        null=True, blank=True,
+        help_text='UltimatePOS business_id to migrate. NULL = all businesses.'
+    )
+    source_business_name = models.CharField(max_length=255, null=True, blank=True)
+
+    # Migration mode
+    MIGRATION_MODES = (
+        ('FULL', 'Full Import'),
+        ('SYNC', 'Sync (only new records)'),
+    )
+    migration_mode = models.CharField(
+        max_length=10, choices=MIGRATION_MODES, default='FULL',
+        help_text='FULL = import all, SYNC = skip records already imported'
+    )
+
     # Statistics
     total_units = models.IntegerField(default=0)
     total_categories = models.IntegerField(default=0)

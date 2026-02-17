@@ -121,15 +121,56 @@ class MigrationViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED
         )
 
-    @action(detail=True, methods=['get'], url_path='preview')
-    def preview(self, request, pk=None):
-        """Preview what data will be migrated (table counts)."""
+    @action(detail=True, methods=['get'], url_path='businesses')
+    def businesses(self, request, pk=None):
+        """Discover available businesses in the uploaded SQL dump."""
         job = self.get_object()
 
         if job.source_type == 'SQL_DUMP':
             parser = SQLDumpParser(file_path=job.file_path)
             parser.parse()
-            counts = parser.get_table_counts()
+            businesses = parser.get_businesses()
+
+            # Also count records per business for context
+            for biz in businesses:
+                biz_id = biz['id']
+                biz['products'] = len(parser.get_table_data_for_business('products', biz_id))
+                biz['contacts'] = len(parser.get_table_data_for_business('contacts', biz_id))
+                biz['transactions'] = len(parser.get_table_data_for_business('transactions', biz_id))
+                biz['locations'] = len(parser.get_table_data_for_business('business_locations', biz_id))
+        else:
+            # For direct DB, query the business table
+            from apps.migration.parsers import DirectDBReader
+            reader = DirectDBReader(
+                host=job.db_host, port=job.db_port or 3306,
+                database=job.db_name, user=job.db_user, password=job.db_password,
+            )
+            reader.connect()
+            businesses_raw = reader.read_table('business')
+            reader.close()
+            businesses = [
+                {'id': b.get('id'), 'name': b.get('name', f"Business #{b.get('id')}")}
+                for b in businesses_raw
+            ]
+
+        return Response({'businesses': businesses})
+
+    @action(detail=True, methods=['get'], url_path='preview')
+    def preview(self, request, pk=None):
+        """Preview what data will be migrated (table counts), optionally filtered by business_id."""
+        job = self.get_object()
+        business_id = request.query_params.get('business_id') or job.source_business_id
+
+        if job.source_type == 'SQL_DUMP':
+            parser = SQLDumpParser(file_path=job.file_path)
+            parser.parse()
+            if business_id:
+                counts = {}
+                for table_name in parser.tables_data.keys():
+                    filtered = parser.get_table_data_for_business(table_name, business_id)
+                    counts[table_name] = len(filtered)
+            else:
+                counts = parser.get_table_counts()
         else:
             from apps.migration.parsers import DirectDBReader
             reader = DirectDBReader(
@@ -152,6 +193,19 @@ class MigrationViewSet(viewsets.ModelViewSet):
                 {'error': f'Cannot start migration in status: {job.status}'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+        # Accept business selection and sync mode
+        source_business_id = request.data.get('source_business_id')
+        source_business_name = request.data.get('source_business_name')
+        migration_mode = request.data.get('migration_mode', 'FULL')
+
+        if source_business_id:
+            job.source_business_id = int(source_business_id)
+        if source_business_name:
+            job.source_business_name = source_business_name
+        if migration_mode in ('FULL', 'SYNC'):
+            job.migration_mode = migration_mode
+        job.save()
 
         org_id = request.headers.get('X-Tenant-Id') or \
                  getattr(request.user, 'organization_id', None)

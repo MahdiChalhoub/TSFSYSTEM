@@ -175,33 +175,32 @@ class SQLDumpParser:
         else:
             raise ValueError("Either file_path or file_content must be provided")
 
-        # Find all INSERT INTO statements
-        pattern = r"INSERT\s+INTO\s+`?(\w+)`?\s*(?:\([^)]+\))?\s*VALUES\s*(.+?);"
+        # Find all INSERT INTO statements — capture optional column list
+        # Pattern: INSERT INTO `table` (`col1`, `col2`, ...) VALUES (...)
+        pattern = r"INSERT\s+INTO\s+`?(\w+)`?\s*(?:\(([^)]+)\))?\s*VALUES\s*(.+?);"
         matches = re.findall(pattern, content, re.IGNORECASE | re.DOTALL)
 
-        for table_name, values_block in matches:
+        for table_name, inline_cols_str, values_block in matches:
             if table_name not in self.tables_data:
                 self.tables_data[table_name] = []
 
             rows = self._parse_values_block(values_block)
-            columns = self.TABLE_COLUMNS.get(table_name)
+
+            # Determine column names: inline > TABLE_COLUMNS > auto-numbered
+            if inline_cols_str and '`' in inline_cols_str:
+                columns = [c.strip().strip('`').strip() for c in inline_cols_str.split(',')]
+            else:
+                columns = self.TABLE_COLUMNS.get(table_name)
 
             if columns:
                 for row_values in rows:
-                    if len(row_values) <= len(columns):
-                        row_dict = {}
-                        for i, val in enumerate(row_values):
-                            row_dict[columns[i]] = self._clean_value(val)
-                        self.tables_data[table_name].append(row_dict)
-                    else:
-                        # More values than expected columns — store raw
-                        row_dict = {}
-                        for i, val in enumerate(row_values):
-                            col = columns[i] if i < len(columns) else f'_extra_{i}'
-                            row_dict[col] = self._clean_value(val)
-                        self.tables_data[table_name].append(row_dict)
+                    row_dict = {}
+                    for i, val in enumerate(row_values):
+                        col = columns[i] if i < len(columns) else f'_extra_{i}'
+                        row_dict[col] = self._clean_value(val)
+                    self.tables_data[table_name].append(row_dict)
             else:
-                # Unknown table — store with numbered keys
+                # Completely unknown table — store with numbered keys
                 for row_values in rows:
                     row_dict = {f'col_{i}': self._clean_value(v) for i, v in enumerate(row_values)}
                     self.tables_data[table_name].append(row_dict)
@@ -219,6 +218,34 @@ class SQLDumpParser:
     def get_table_counts(self):
         """Get row counts per table."""
         return {table: len(rows) for table, rows in self.tables_data.items()}
+
+    def get_businesses(self):
+        """
+        Extract business id/name pairs from parsed data.
+        Returns list of dicts: [{'id': 1, 'name': 'Business Name'}, ...]
+        """
+        businesses = self.get_table_data('business')
+        result = []
+        for b in businesses:
+            result.append({
+                'id': b.get('id'),
+                'name': b.get('name', f"Business #{b.get('id', '?')}"),
+                'currency_id': b.get('currency_id'),
+                'start_date': b.get('start_date'),
+                'owner_id': b.get('owner_id'),
+            })
+        return result
+
+    def get_table_data_for_business(self, table_name, business_id):
+        """Get parsed data filtered by business_id."""
+        rows = self.get_table_data(table_name)
+        if not rows:
+            return []
+        # Only filter tables that have business_id column
+        first = rows[0]
+        if 'business_id' in first:
+            return [r for r in rows if str(r.get('business_id')) == str(business_id)]
+        return rows  # Tables without business_id (e.g. currencies) return all
 
     def _parse_values_block(self, values_block):
         """Parse the VALUES (...), (...), ... block into list of tuples."""
