@@ -74,6 +74,9 @@ function ModuleCard({ module, onToggle, toggling, onFeatureToggle }: {
                     <div>
                         <h4 className="font-bold text-gray-900 text-sm">{module.name}</h4>
                         <p className="text-[10px] text-gray-400 font-mono uppercase tracking-widest">{module.code}</p>
+                        {module.description && (
+                            <p className="text-[10px] text-gray-500 mt-0.5 line-clamp-1">{module.description}</p>
+                        )}
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -1016,8 +1019,8 @@ export default function OrganizationDetailPage() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     {addons.available.map((a: any) => (
                                         <div key={a.id} className={`p-4 rounded-xl border transition-all ${a.already_purchased
-                                                ? 'bg-gray-50 border-gray-100 opacity-50'
-                                                : 'bg-white border-gray-100 hover:border-indigo-200 hover:shadow-sm'
+                                            ? 'bg-gray-50 border-gray-100 opacity-50'
+                                            : 'bg-white border-gray-100 hover:border-indigo-200 hover:shadow-sm'
                                             }`}>
                                             <div className="flex items-start justify-between">
                                                 <div>
@@ -1038,8 +1041,8 @@ export default function OrganizationDetailPage() {
                                             <Button
                                                 size="sm"
                                                 className={`w-full mt-3 rounded-xl font-bold text-xs ${a.already_purchased
-                                                        ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                                                        : 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                                                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                                    : 'bg-indigo-600 hover:bg-indigo-500 text-white'
                                                     }`}
                                                 disabled={a.already_purchased || purchasingAddon === a.id}
                                                 onClick={async () => {

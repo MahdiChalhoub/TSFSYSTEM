@@ -1,55 +1,47 @@
-"""Check which ViewSets can be imported from inventory views."""
-import os
+"""Test ONLY inventory URL registration."""
+import os, sys, logging
+logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings")
 import django
 django.setup()
 
-# Try each import individually
-names = [
-    "ProductViewSet", "UnitViewSet", "WarehouseViewSet", "InventoryViewSet",
-    "BrandViewSet", "CategoryViewSet", "ParfumViewSet", "ProductGroupViewSet",
-    "InventoryMovementViewSet",
-    "StockAdjustmentOrderViewSet", "StockTransferOrderViewSet",
-    "OperationalRequestViewSet", "ProductSerialViewSet", "SerialLogViewSet",
-]
+# Replicate what erp/urls.py does for inventory
+import importlib
+from django.urls import path, include
 
-print("=== Testing inventory views imports ===")
+print("=== Step 1: Import inventory urls ===")
 try:
-    from apps.inventory import views
-    print("views module imported OK")
-    for name in names:
-        if hasattr(views, name):
-            print(f"  OK: {name}")
-        else:
-            print(f"  MISSING: {name}")
+    mod = importlib.import_module('apps.inventory.urls')
+    print(f"OK, {len(mod.urlpatterns)} url patterns")
+    for p in mod.urlpatterns[:5]:
+        print(f"  {p}")
 except Exception as e:
-    print(f"views import FAILED: {e}")
+    print(f"FAILED: {e}")
+    sys.exit(1)
 
-print("\n=== Testing inventory models ===")
+print("\n=== Step 2: Try flat include ===")
 try:
-    from apps.inventory import models
-    print("models module imported OK")
-    model_names = [n for n in dir(models) if n[0].isupper() and not n.startswith('_')]
-    print(f"  Available: {model_names}")
+    flat = path('', include('apps.inventory.urls'))
+    print(f"OK: {flat}")
 except Exception as e:
-    print(f"models import FAILED: {e}")
+    print(f"FAILED: {e}")
 
-print("\n=== Testing pos urls ===")
+print("\n=== Step 3: Try namespaced include ===")
 try:
-    from apps.pos import urls
-    print(f"pos urls OK, {len(urls.urlpatterns)} patterns")
+    ns = path('inventory/', include('apps.inventory.urls'))
+    print(f"OK: {ns}")
 except Exception as e:
-    print(f"pos urls FAILED: {e}")
+    print(f"FAILED: {e}")
 
-print("\n=== Testing ALL module urls ===")
-from pathlib import Path
-apps_dir = Path("/root/TSFSYSTEM/erp_backend/apps")
-for d in sorted(apps_dir.iterdir()):
-    if d.is_dir() and (d / "urls.py").exists():
-        try:
-            import importlib
-            mod = importlib.import_module(f"apps.{d.name}.urls")
-            n = len(getattr(mod, 'urlpatterns', []))
-            print(f"  OK: {d.name} ({n} patterns)")
-        except Exception as e:
-            print(f"  FAIL: {d.name} - {str(e)[:100]}")
+print("\n=== Step 4: Check erp/urls.py registration ===")
+from erp.urls import urlpatterns
+inv_patterns = [p for p in urlpatterns if hasattr(p, 'pattern') and 'inventory' in str(p.pattern)]
+print(f"Inventory-related patterns: {len(inv_patterns)}")
+for p in inv_patterns:
+    print(f"  {p}")
+    
+# Check if format suffix converter already registered
+print("\n=== Step 5: Check registered URL converters ===")
+from django.urls.converters import REGISTERED_CONVERTERS
+for name, conv in REGISTERED_CONVERTERS.items():
+    print(f"  {name}: {conv}")
