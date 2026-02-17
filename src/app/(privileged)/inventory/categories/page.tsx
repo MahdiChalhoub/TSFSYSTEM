@@ -18,37 +18,28 @@ async function getCategoriesData() {
     if (Array.isArray(categories)) {
         // Initialize Map with empty children array
         categories.forEach((c: any) => {
-            categoryMap.set(c.id, { ...c, children: [] });
+            categoryMap.set(c.id, {
+                ...c,
+                children: [],
+                // Normalize: backend may send productCount (camelCase from with_counts) or product_count
+                product_count: c.product_count ?? c.productCount ?? 0,
+            });
         });
 
         // Link Children to Parents
+        // DRF sends FK as 'parent' (the field name on the model), value is the parent's PK
         categories.forEach((c: any) => {
             const node = categoryMap.get(c.id);
-            if (c.parentId) { // Ensure backend sends camelCase or we map keys.
-                // DRF default is snake_case unless configured.
-                // Standard ModelSerializer uses model field names.
-                // Category model: name, short_name, code, parent.
-                // So backend returns: parent, short_name etc.
-                // Frontend code uses: parentId.
-                // WE NEED TO MAP or ADJUST.
-                // Refactoring: Let's check CategorySerializer.
-                // It uses fields='__all__'. So it emits 'parent'.
-                // Frontend expects 'parentId'.
-                // 'parent' in DRF defaults to PK if not nested. So 'parent': 5.
-                // So c.parent is the ID.
-                const parentId = c.parent;
-                if (parentId) {
-                    const parent = categoryMap.get(parentId);
-                    if (parent) {
-                        parent.children.push(node);
-                    } else {
-                        roots.push(node);
-                    }
+            const parentId = c.parent; // DRF FK field = model field name = 'parent'
+            if (parentId) {
+                const parent = categoryMap.get(parentId);
+                if (parent) {
+                    parent.children.push(node);
                 } else {
-                    roots.push(node);
+                    roots.push(node); // Parent not in current org's data
                 }
             } else {
-                roots.push(node);
+                roots.push(node); // Root category (no parent)
             }
         });
     }
