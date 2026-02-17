@@ -25,7 +25,7 @@ MODULE_CONTRACTS = {
     'finance': {
         'provides': {
             'read_endpoints': [
-                'chart-of-accounts/',
+                'coa/',
                 'fiscal-years/',
                 'fiscal-periods/',
                 'financial-accounts/',
@@ -165,7 +165,7 @@ MODULE_CONTRACTS = {
                 {'module': 'kernel', 'event': 'org:provisioned'},
             ],
             'data_from': [
-                {'module': 'finance', 'endpoint': 'chart-of-accounts/', 'blocking': False},
+                {'module': 'finance', 'endpoint': 'coa/', 'blocking': False},
             ],
         },
         'rules': {

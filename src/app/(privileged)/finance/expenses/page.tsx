@@ -26,7 +26,7 @@ export default function ExpenseTrackerPage() {
         try {
             const { erpFetch } = await import("@/lib/erp-api")
             const [accts, jrnls] = await Promise.all([
-                erpFetch('finance/chart-of-accounts/'),
+                erpFetch('coa/'),
                 erpFetch('finance/journal/'),
             ])
             setAccounts((Array.isArray(accts) ? accts : accts.results || []).filter((a: any) => a.type === 'EXPENSE'))

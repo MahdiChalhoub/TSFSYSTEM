@@ -24,7 +24,7 @@ export default function BudgetPlanningPage() {
         setLoading(true)
         try {
             const { erpFetch } = await import("@/lib/erp-api")
-            const data = await erpFetch('finance/chart-of-accounts/')
+            const data = await erpFetch('coa/')
             const accts = Array.isArray(data) ? data : data.results || []
             // Only show income and expense accounts for budget view
             setAccounts(accts.filter((a: any) =>

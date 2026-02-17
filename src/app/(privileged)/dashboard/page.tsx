@@ -38,7 +38,7 @@ export default function CustomDashboard() {
                 erpFetch('inventory/low-stock/').catch(() => []),
                 erpFetch('hr/employees/').catch(() => []),
                 erpFetch('crm/contacts/').catch(() => []),
-                erpFetch('finance/chart-of-accounts/').catch(() => []),
+                erpFetch('coa/').catch(() => []),
                 erpFetch('inventory/inventory-movements/').catch(() => []),
             ])
             setData({

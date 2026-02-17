@@ -5,7 +5,7 @@ import { erpFetch } from '@/lib/erp-api';
 
 export default async function SalesImportPage() {
     const warehouses = await erpFetch('warehouses/');
-    const accounts = await erpFetch('finance/chart-of-accounts/?is_active=true');
+    const accounts = await erpFetch('coa/?is_active=true');
 
     return (
         <div className="p-4 md:p-8 space-y-8 animate-in fade-in duration-700">

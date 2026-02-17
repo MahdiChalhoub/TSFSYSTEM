@@ -24,7 +24,7 @@ export default function ProfitCentersPage() {
         setLoading(true)
         try {
             const { erpFetch } = await import("@/lib/erp-api")
-            const data = await erpFetch('finance/chart-of-accounts/')
+            const data = await erpFetch('coa/')
             setAccounts(Array.isArray(data) ? data : data.results || [])
         } catch {
             toast.error("Failed to load account data")
