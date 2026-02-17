@@ -8,6 +8,9 @@ from django.core.exceptions import ValidationError
 from decimal import Decimal
 from django.db.models import Sum, F
 import uuid
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class InventoryService:
