@@ -1,0 +1,64 @@
+'use client'
+
+import { useActionState } from "react"
+import { loginAction } from "@/app/actions/auth"
+import { ArrowRight, Loader2, AlertCircle, Lock } from "lucide-react"
+
+const initialState: { error: any; success?: boolean } = { error: {} }
+
+export function TenantQuickLogin({ slug, suffix }: { slug: string; suffix: string }) {
+    const [state, action, isPending] = useActionState(loginAction, initialState)
+
+    return (
+        <div className="p-10 bg-slate-900/40 backdrop-blur-3xl border border-white/5 rounded-[3rem] space-y-8 shadow-2xl relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="flex justify-between items-center relative">
+                <div className="space-y-1">
+                    <h2 className="text-xl font-bold text-white">Secure Access</h2>
+                    <p className="text-[10px] text-slate-500 font-medium tracking-wide uppercase">{slug}{suffix}</p>
+                </div>
+                <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-white border border-white/10 group-hover:scale-110 transition-transform">
+                    <Lock size={20} />
+                </div>
+            </div>
+
+            <form action={action} className="space-y-4 pt-2 relative">
+                {/* Error Display */}
+                {(state?.error as any)?.root && (
+                    <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-sm font-medium flex items-center gap-3">
+                        <AlertCircle size={18} className="shrink-0" />
+                        {(state?.error as any).root[0]}
+                    </div>
+                )}
+
+                <input type="hidden" name="slug" value="" />
+
+                <input
+                    name="username"
+                    type="text"
+                    placeholder="Username"
+                    required
+                    className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-emerald-500 transition-all focus:ring-4 focus:ring-emerald-500/5 placeholder:text-slate-700"
+                />
+                <input
+                    name="password"
+                    type="password"
+                    placeholder="Access Key"
+                    required
+                    className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-emerald-500 transition-all focus:ring-4 focus:ring-emerald-500/5 placeholder:text-slate-700"
+                />
+                <button
+                    type="submit"
+                    disabled={isPending}
+                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-5 rounded-2xl font-black transition-all shadow-xl shadow-emerald-900/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-60 disabled:hover:scale-100"
+                >
+                    {isPending ? (
+                        <Loader2 className="animate-spin" size={20} />
+                    ) : (
+                        <>Initialize Session <ArrowRight size={20} /></>
+                    )}
+                </button>
+            </form>
+        </div>
+    )
+}
