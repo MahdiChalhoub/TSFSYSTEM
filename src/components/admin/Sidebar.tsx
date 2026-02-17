@@ -37,7 +37,8 @@ import {
     Shield,
     ClipboardList,
     ScrollText,
-    Wallet
+    Wallet,
+    Globe
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
@@ -80,7 +81,8 @@ const ICON_MAP: Record<string, any> = {
     Shield,
     ClipboardList,
     ScrollText,
-    Wallet
+    Wallet,
+    Globe
 };
 
 function getIcon(name: string) {

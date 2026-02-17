@@ -118,7 +118,15 @@ export function AdminProvider({ children, contextKey = 'default' }: { children: 
     const openTab = (title: string, path: string) => {
         const id = path;
         setOpenTabs(prev => {
+            // Already open with same path — just navigate
             if (prev.find(t => t.id === id)) return prev;
+            // Deduplicate by title: if a tab with same title exists, replace its path
+            const existingByTitle = prev.findIndex(t => t.title === title);
+            if (existingByTitle !== -1) {
+                const updated = [...prev];
+                updated[existingByTitle] = { id, title, path };
+                return updated;
+            }
             return [...prev, { id, title, path }];
         });
         router.push(path);

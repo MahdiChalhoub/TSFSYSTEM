@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import '../globals.css';
@@ -110,7 +111,9 @@ export default async function AdminLayout({
 
                         {/* 3. The Page Content */}
                         <main className="flex-1 overflow-auto relative p-6 md:p-8">
-                            {children}
+                            <Suspense fallback={null}>
+                                {children}
+                            </Suspense>
                         </main>
                     </div>
                     <DebugOverlay />
