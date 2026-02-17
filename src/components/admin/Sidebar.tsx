@@ -281,6 +281,12 @@ const MENU_ITEMS = [
         ]
     },
     {
+        title: 'Import from Third Party',
+        icon: Globe,
+        path: '/migration',
+        module: 'migration',
+    },
+    {
         title: 'SaaS Control',
         icon: ShieldCheck,
         visibility: 'saas',
