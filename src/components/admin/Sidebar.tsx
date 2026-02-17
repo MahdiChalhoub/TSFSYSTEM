@@ -285,15 +285,7 @@ const MENU_ITEMS = [
         icon: ShieldCheck,
         visibility: 'saas',
         children: [
-            {
-                title: 'Platform',
-                icon: ServerCog,
-                children: [
-                    { title: 'SaaS Dashboard', path: '/saas-dashboard' },
-                    { title: 'Platform Health', path: '/health' },
-                    { title: 'Kernel Updates', path: '/updates' },
-                ]
-            },
+            { title: 'SaaS Dashboard', path: '/saas-dashboard', icon: Globe },
             {
                 title: 'Organizations',
                 icon: Building2,
@@ -307,6 +299,8 @@ const MENU_ITEMS = [
                 title: 'Infrastructure',
                 icon: Shield,
                 children: [
+                    { title: 'Platform Health', path: '/health' },
+                    { title: 'Kernel Updates', path: '/updates' },
                     { title: 'Global Registry', path: '/modules' },
                     { title: 'Connector Control', path: '/connector' },
                     { title: 'MCP AI Connector', path: '/mcp' },
