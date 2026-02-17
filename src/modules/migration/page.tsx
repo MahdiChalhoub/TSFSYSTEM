@@ -143,7 +143,7 @@ export default function MigrationPage() {
     // ── Fetch Jobs ──────────────────────────────────────────────────────────
     const fetchJobs = useCallback(async () => {
         try {
-            const data = await erpFetch("/api/migration/jobs/")
+            const data = await erpFetch("migration/jobs/")
             setJobs(data?.results ?? (Array.isArray(data) ? data : []))
         } catch { }
     }, [])
@@ -157,7 +157,7 @@ export default function MigrationPage() {
         if (activeJob && (activeJob.status === "PARSING" || activeJob.status === "RUNNING")) {
             pollRef.current = setInterval(async () => {
                 try {
-                    const data = await erpFetch(`/api/migration/jobs/${activeJob.id}/`)
+                    const data = await erpFetch(`migration/jobs/${activeJob.id}/`)
                     setActiveJob(data)
                     if (data.status === "COMPLETED" || data.status === "FAILED") {
                         setStep("RESULTS")
@@ -184,7 +184,7 @@ export default function MigrationPage() {
             formData.append("file", file)
             formData.append("name", `UltimatePOS Import - ${new Date().toLocaleDateString()}`)
 
-            const job = await erpFetch("/api/migration/jobs/upload/", {
+            const job = await erpFetch("migration/jobs/upload/", {
                 method: "POST",
                 body: formData,
             })
@@ -194,7 +194,7 @@ export default function MigrationPage() {
             // Auto-discover businesses
             setLoadingBusinesses(true)
             try {
-                const bizData = await erpFetch(`/api/migration/jobs/${job.id}/businesses/`)
+                const bizData = await erpFetch(`migration/jobs/${job.id}/businesses/`)
                 const bizList = bizData?.businesses ?? []
                 setBusinesses(bizList)
                 if (bizList.length > 1) {
@@ -202,12 +202,12 @@ export default function MigrationPage() {
                 } else if (bizList.length === 1) {
                     // Only one business — auto-select it
                     setSelectedBusiness(bizList[0])
-                    const previewData = await erpFetch(`/api/migration/jobs/${job.id}/preview/?business_id=${bizList[0].id}`)
+                    const previewData = await erpFetch(`migration/jobs/${job.id}/preview/?business_id=${bizList[0].id}`)
                     setPreview(previewData)
                     setStep("PREVIEW")
                 } else {
                     // No business table? Go straight to preview
-                    const previewData = await erpFetch(`/api/migration/jobs/${job.id}/preview/`)
+                    const previewData = await erpFetch(`migration/jobs/${job.id}/preview/`)
                     setPreview(previewData)
                     setStep("PREVIEW")
                 }
@@ -229,7 +229,7 @@ export default function MigrationPage() {
         setError(null)
         if (!activeJob) return
         try {
-            const previewData = await erpFetch(`/api/migration/jobs/${activeJob.id}/preview/?business_id=${biz.id}`)
+            const previewData = await erpFetch(`migration/jobs/${activeJob.id}/preview/?business_id=${biz.id}`)
             setPreview(previewData)
             setStep("PREVIEW")
         } catch (e: any) {
@@ -244,7 +244,7 @@ export default function MigrationPage() {
         try {
             // Fetch businesses first
             setLoadingBusinesses(true)
-            const bizData = await erpFetch(`/api/migration/jobs/${job.id}/businesses/`)
+            const bizData = await erpFetch(`migration/jobs/${job.id}/businesses/`)
             const bizList = bizData?.businesses ?? []
             setBusinesses(bizList)
             setLoadingBusinesses(false)
@@ -255,8 +255,8 @@ export default function MigrationPage() {
                 if (bizList.length === 1) setSelectedBusiness(bizList[0])
                 const bizId = bizList[0]?.id
                 const url = bizId
-                    ? `/api/migration/jobs/${job.id}/preview/?business_id=${bizId}`
-                    : `/api/migration/jobs/${job.id}/preview/`
+                    ? `migration/jobs/${job.id}/preview/?business_id=${bizId}`
+                    : `migration/jobs/${job.id}/preview/`
                 const data = await erpFetch(url)
                 setPreview(data)
                 setStep("PREVIEW")
@@ -279,7 +279,7 @@ export default function MigrationPage() {
                 body.source_business_id = selectedBusiness.id
                 body.source_business_name = selectedBusiness.name
             }
-            const data = await erpFetch(`/api/migration/jobs/${activeJob.id}/start/`, {
+            const data = await erpFetch(`migration/jobs/${activeJob.id}/start/`, {
                 method: "POST",
                 body: JSON.stringify(body),
             })
@@ -294,7 +294,7 @@ export default function MigrationPage() {
     const handleRollback = async (job: MigrationJob) => {
         if (!confirm("This will DELETE all data imported by this migration. Are you sure?")) return
         try {
-            await erpFetch(`/api/migration/jobs/${job.id}/rollback/`, { method: "POST" })
+            await erpFetch(`migration/jobs/${job.id}/rollback/`, { method: "POST" })
             fetchJobs()
             setActiveJob(null)
             setStep("LIST")
@@ -306,7 +306,7 @@ export default function MigrationPage() {
     // ── View Results ────────────────────────────────────────────────────────
     const viewResults = async (job: MigrationJob) => {
         try {
-            const data = await erpFetch(`/api/migration/jobs/${job.id}/`)
+            const data = await erpFetch(`migration/jobs/${job.id}/`)
             setActiveJob(data)
             setStep("RESULTS")
         } catch { }

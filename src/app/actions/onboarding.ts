@@ -96,8 +96,10 @@ export async function registerBusinessAction(prevState: any, formData: FormData)
         return { success: true, login_url: data.login_url };
 
     } catch (error: any) {
+        const msg = error?.message || 'Unknown error';
+        // Try to parse as JSON first (erpFetch sometimes wraps errors as JSON strings)
         try {
-            const errData = JSON.parse(error.message);
+            const errData = JSON.parse(msg);
             // Check for generic DRF error structure
             if (errData.detail) {
                 return { error: { root: [errData.detail] } };
@@ -109,6 +111,11 @@ export async function registerBusinessAction(prevState: any, formData: FormData)
             }
             return { error: errData };
         } catch (e) {
+            // Not JSON — erpFetch throws plain string messages for extracted errors
+            // e.g. "This business slug is already taken." or "ERP Error: Bad Request"
+            if (msg && msg !== 'Unknown error') {
+                return { error: { root: [msg] } };
+            }
             return { error: { root: ["Connection failed or invalid response"] } };
         }
     }
@@ -146,10 +153,14 @@ export async function registerUserAction(prevState: any, formData: FormData) {
 
     } catch (error: any) {
         console.error("User Register Error", error);
+        const msg = error?.message || 'Unknown error';
         try {
-            const errData = JSON.parse(error.message);
+            const errData = JSON.parse(msg);
             return { error: errData };
         } catch (e) {
+            if (msg && msg !== 'Unknown error') {
+                return { error: { root: [msg] } };
+            }
             return { error: { root: ["Connection failed"] } };
         }
     }
