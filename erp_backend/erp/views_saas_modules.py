@@ -790,9 +790,16 @@ class OrgModuleViewSet(viewsets.ViewSet):
             if not available_features:
                 available_features = self.DEFAULT_FEATURES.get(m.name, [])
             
+            # [FIX] Use human-readable name and description from manifest
+            display_name = m.manifest.get('name', m.name.replace('_', ' ').title())
+            description = m.manifest.get('description', '')
+            icon = m.manifest.get('icon', '')
+            
             data.append({
                 'code': m.name,
-                'name': m.name,
+                'name': display_name,
+                'description': description,
+                'icon': icon,
                 'status': 'INSTALLED' if (is_core or m.name in enabled_map) else 'UNINSTALLED',
                 'is_core': is_core,
                 'active_features': om_record.active_features if om_record else [],
