@@ -718,6 +718,37 @@ class WarehouseViewSet(TenantModelViewSet):
     queryset = Warehouse.objects.select_related('site').all()
     serializer_class = WarehouseSerializer
 
+    def perform_create(self, serializer):
+        """Auto-resolve site from organization if not provided by the frontend."""
+        user = self.request.user
+        header_tenant_id = get_current_tenant_id()
+
+        if not (user.is_staff or user.is_superuser):
+            organization_id = user.organization_id
+        else:
+            organization_id = header_tenant_id or user.organization_id
+
+        if not organization_id:
+            raise serializers.ValidationError({
+                "error": "Organization context missing."
+            })
+
+        # Auto-resolve site: use provided site, or fall back to org's first site
+        site_id = self.request.data.get('site')
+        if not site_id:
+            site = Site.objects.filter(organization_id=organization_id).first()
+            if not site:
+                # Auto-create a default site for this organization
+                org = Organization.objects.get(id=organization_id)
+                site = Site.objects.create(
+                    name=f"{org.name} - Main Site",
+                    organization_id=organization_id,
+                    is_active=True,
+                )
+            site_id = site.id
+
+        serializer.save(organization_id=organization_id, site_id=site_id)
+
 
 # =============================================================================
 # INVENTORY  (L1: removed no-op get_queryset override)

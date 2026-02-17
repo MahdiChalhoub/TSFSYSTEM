@@ -11,7 +11,7 @@ from .models import (
     OperationalRequest, OperationalRequestLine,
     ComboComponent, ProductSerial, SerialLog
 )
-from erp.models import Country
+from erp.models import Country, Site
 
 
 # =============================================================================
@@ -224,6 +224,9 @@ class ComboComponentSerializer(serializers.ModelSerializer):
 class WarehouseSerializer(serializers.ModelSerializer):
     site_name = serializers.CharField(source='site.name', read_only=True, default=None)
     inventory_count = serializers.SerializerMethodField()
+    site = serializers.PrimaryKeyRelatedField(
+        queryset=Site.objects.all(), required=False, allow_null=True
+    )
 
     class Meta:
         model = Warehouse
