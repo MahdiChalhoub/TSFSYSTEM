@@ -94,6 +94,15 @@ _APPS_DIR = _Path(__file__).resolve().parent.parent / 'apps'
 # Modules managed by kernel (not auto-included)
 _KERNEL_MANAGED = {'packages'}
 
+# Pre-register DRF's format_suffix converter to prevent conflicts
+# when multiple routers are included in the same URL configuration.
+try:
+    from django.urls.converters import register_converter
+    from rest_framework.urlpatterns import _FormatSuffixConverter
+    register_converter(_FormatSuffixConverter, 'drf_format_suffix')
+except Exception:
+    pass  # Already registered or DRF not available
+
 if _APPS_DIR.exists():
     for _app_dir in sorted(_APPS_DIR.iterdir()):
         if not _app_dir.is_dir():
@@ -117,15 +126,5 @@ if _APPS_DIR.exists():
             
             _logger.info(f"[URLs] Registered module: {_module_code} (flat + namespaced)")
         except Exception as _e:
-            if "drf_format_suffix" in str(_e):
-                # This is a known DRF clash when multiple routers are included in the same context
-                # We can safely continue as the first one already registered the converter
-                try:
-                    urlpatterns.insert(0, path('', include(_module_path)))
-                    urlpatterns.insert(1, path(f'{_module_code}/', include(_module_path)))
-                    _logger.debug(f"[URLs] Registered module {_module_code} (ignoring converter conflict)")
-                    continue
-                except Exception as _inner_e:
-                    _e = _inner_e
             _logger.warning(f"[URLs] Skipping module {_module_code}: {_e}")
 
