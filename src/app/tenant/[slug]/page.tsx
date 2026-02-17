@@ -1,10 +1,11 @@
 import { getOrganizationBySlug, getPublicProducts } from "./actions"
 import { notFound } from "next/navigation"
 import { headers } from "next/headers"
-import { ShieldCheck, Lock, ArrowRight, Building2, Globe, Command, Sparkles, Activity, Users } from "lucide-react"
+import { ShieldCheck, Building2, Globe, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { StorefrontCatalog } from "@/components/tenant/StorefrontCatalog"
+import { TenantQuickLogin } from "@/components/tenant/TenantQuickLogin"
 import { PLATFORM_CONFIG, getDynamicBranding } from "@/lib/branding"
 
 export default async function TenantWelcomePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -77,48 +78,9 @@ export default async function TenantWelcomePage({ params }: { params: Promise<{ 
                             </div>
                         </div>
 
-                        <div className="p-10 bg-slate-900/40 backdrop-blur-3xl border border-white/5 rounded-[3rem] space-y-8 shadow-2xl relative overflow-hidden group">
-                            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                            <div className="flex justify-between items-center relative">
-                                <div className="space-y-1">
-                                    <h2 className="text-xl font-bold text-white">Secure Access</h2>
-                                    <p className="text-[10px] text-slate-500 font-medium tracking-wide uppercase">{slug}{branding.suffix}</p>
-                                </div>
-                                <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-white border border-white/10 group-hover:scale-110 transition-transform">
-                                    <Lock size={20} />
-                                </div>
-                            </div>
-
-                            <div className="space-y-4 pt-2 relative">
-                                <input
-                                    type="email"
-                                    placeholder="Credentials"
-                                    className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-emerald-500 transition-all focus:ring-4 focus:ring-emerald-500/5 placeholder:text-slate-700"
-                                />
-                                <input
-                                    type="password"
-                                    placeholder="Access Key"
-                                    className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-emerald-500 transition-all focus:ring-4 focus:ring-emerald-500/5 placeholder:text-slate-700"
-                                />
-                                <button className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-5 rounded-2xl font-black transition-all shadow-xl shadow-emerald-900/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3">
-                                    Initialize Session <ArrowRight size={20} />
-                                </button>
-                                <div className="flex justify-center">
-                                    <Link href="/login" className="text-[10px] text-slate-500 hover:text-white font-bold uppercase tracking-[0.2em] transition-colors mt-2">
-                                        Advanced Authentication
-                                    </Link>
-                                </div>
-                            </div>
-                        </div>
+                        <TenantQuickLogin slug={slug} suffix={branding.suffix} />
 
                         <div className="flex items-center gap-6 pt-4">
-                            <a
-                                href={`http://saas.${branding.domain}/saas/dashboard`}
-                                className="inline-flex items-center gap-2 text-[10px] text-slate-600 hover:text-emerald-500 font-bold uppercase tracking-[0.2em] transition-colors"
-                            >
-                                <ShieldCheck size={14} /> Master Panel
-                            </a>
-                            <div className="h-px w-10 bg-white/5" />
                             <span className="text-[10px] text-slate-700 font-bold uppercase tracking-widest whitespace-nowrap">ID: {org.id.split('-')[0]}</span>
                         </div>
                     </div>
