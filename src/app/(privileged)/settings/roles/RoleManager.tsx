@@ -17,6 +17,7 @@ import {
     createRole, updateRole, deleteRole
 } from '@/app/actions/roles';
 import { toast } from 'sonner';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { cn } from '@/lib/utils';
 import {
     Dialog, DialogContent,
@@ -46,6 +47,7 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [newRole, setNewRole] = useState({ name: '', description: '' });
     const [loading, setLoading] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
 
     // Group permissions by module
     const groupedPermissions = useMemo(() => {
@@ -93,16 +95,17 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
         }
     };
 
-    const handleDeleteRole = async (id: number) => {
-        if (!confirm("Are you sure you want to delete this role? This might affect users assigned to it.")) return;
+    const handleDeleteRole = async () => {
+        if (deleteTarget === null) return;
         try {
-            await deleteRole(id);
-            setRoles(prev => prev.filter(r => r.id !== id));
-            if (selectedRole?.id === id) setSelectedRole(roles.find(r => r.id !== id) || null);
+            await deleteRole(deleteTarget);
+            setRoles(prev => prev.filter(r => r.id !== deleteTarget));
+            if (selectedRole?.id === deleteTarget) setSelectedRole(roles.find(r => r.id !== deleteTarget) || null);
             toast.success("Role deleted");
         } catch (error) {
             toast.error("Failed to delete role");
         }
+        setDeleteTarget(null);
     };
 
     return (
@@ -164,7 +167,7 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
                                     </div>
                                     {selectedRole?.id !== role.id && role.name !== 'Admin' && (
                                         <button
-                                            onClick={(e) => { e.stopPropagation(); handleDeleteRole(role.id); }}
+                                            onClick={(e) => { e.stopPropagation(); setDeleteTarget(role.id); }}
                                             className="opacity-0 group-hover:opacity-100 p-1.5 hover:text-red-500 transition-all"
                                         >
                                             <Trash2 size={14} />
@@ -301,6 +304,16 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
                     </div>
                 </DialogContent>
             </Dialog>
+
+            <ConfirmDialog
+                open={deleteTarget !== null}
+                onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
+                onConfirm={handleDeleteRole}
+                title="Delete Role?"
+                description="This will permanently remove this role. Users assigned to it may lose their permissions."
+                confirmText="Delete"
+                variant="danger"
+            />
         </div>
     );
 }

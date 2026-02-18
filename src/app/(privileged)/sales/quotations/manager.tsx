@@ -14,6 +14,7 @@ import {
     convertQuotationToOrder,
 } from '@/app/actions/quotations'
 import { toast } from 'sonner'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 interface Contact { id: number; name: string }
 interface Product { id: number; sku: string; name: string; selling_price_ttc: number; tva_rate: number }
@@ -94,15 +95,18 @@ export default function QuotationManager({
         setLoading(false)
     }
 
-    const handleDelete = async (id: number) => {
-        if (!confirm('Delete this quotation?')) return
+    const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
+
+    const handleDelete = async () => {
+        if (deleteTarget === null) return
         setLoading(true)
         try {
-            await deleteQuotation(id)
-            setQuotations(prev => prev.filter(q => q.id !== id))
-            if (selected?.id === id) setSelected(null)
+            await deleteQuotation(deleteTarget)
+            setQuotations(prev => prev.filter(q => q.id !== deleteTarget))
+            if (selected?.id === deleteTarget) setSelected(null)
         } catch { /* ignore */ }
         setLoading(false)
+        setDeleteTarget(null)
     }
 
     const handleAddLine = async () => {
@@ -278,7 +282,7 @@ export default function QuotationManager({
                                         </button>
                                     )}
                                     {selected.status === 'DRAFT' && (
-                                        <button onClick={() => handleDelete(selected.id)} disabled={loading}
+                                        <button onClick={() => setDeleteTarget(selected.id)} disabled={loading}
                                             className="flex items-center gap-1.5 px-4 py-2 bg-gray-100 text-red-600 text-xs font-bold rounded-lg hover:bg-red-50 disabled:opacity-40 ml-auto">
                                             <Trash2 size={14} /> Delete
                                         </button>
@@ -449,6 +453,15 @@ export default function QuotationManager({
                     </div>
                 </div>
             )}
+            <ConfirmDialog
+                open={deleteTarget !== null}
+                onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
+                onConfirm={handleDelete}
+                title="Delete Quotation?"
+                description="This will permanently remove this quotation and all its line items."
+                confirmText="Delete"
+                variant="danger"
+            />
         </div>
     )
 }

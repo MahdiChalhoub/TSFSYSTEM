@@ -5,21 +5,25 @@ import { Plus, Search, Warehouse, MapPin, Edit3, Trash2, Store } from "lucide-re
 import WarehouseModal from './form';
 import { deleteWarehouse } from '@/app/actions/inventory/warehouses';
 import { toast } from 'sonner';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 export default function WarehouseManager({ warehouses }: { warehouses: any[] }) {
     const [search, setSearch] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingWarehouse, setEditingWarehouse] = useState<any>(null);
+    const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
 
     const filtered = warehouses.filter(w =>
         w.name.toLowerCase().includes(search.toLowerCase()) ||
         w.code?.toLowerCase().includes(search.toLowerCase())
     );
 
-    const handleDelete = async (id: number) => {
-        if (!confirm('Are you sure you want to delete this warehouse?')) return;
-        const res = await deleteWarehouse(id);
+    const handleDelete = async () => {
+        if (deleteTarget === null) return;
+        const res = await deleteWarehouse(deleteTarget);
         if (!res.success) toast.error(res.message);
+        else toast.success('Warehouse deleted');
+        setDeleteTarget(null);
     };
 
     return (
@@ -107,7 +111,7 @@ export default function WarehouseManager({ warehouses }: { warehouses: any[] }) 
                                         <Edit3 size={18} />
                                     </button>
                                     <button
-                                        onClick={() => handleDelete(wh.id)}
+                                        onClick={() => setDeleteTarget(wh.id)}
                                         className="p-2 hover:bg-red-50 text-red-600 rounded-xl transition-colors"
                                     >
                                         <Trash2 size={18} />
@@ -148,6 +152,16 @@ export default function WarehouseManager({ warehouses }: { warehouses: any[] }) 
                     onClose={() => setIsModalOpen(false)}
                 />
             )}
+
+            <ConfirmDialog
+                open={deleteTarget !== null}
+                onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
+                onConfirm={handleDelete}
+                title="Delete Warehouse?"
+                description="This will permanently remove this warehouse and its configuration. Inventory data may be affected."
+                confirmText="Delete"
+                variant="danger"
+            />
         </div>
     );
 }
