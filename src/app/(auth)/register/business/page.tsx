@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, AlertCircle, Building2, ShieldCheck, Sparkles, ArrowRight, CheckCircle2, Globe, Rocket } from "lucide-react";
 import { PLATFORM_CONFIG, useDynamicBranding } from "@/lib/saas_config";
+import { PasswordStrength } from "@/components/ui/password-strength";
 
 const slugify = (text: string) => {
     return text
@@ -35,6 +36,7 @@ function BusinessRegisterContent() {
     const [businessTypeId, setBusinessTypeId] = useState<string>("");
     const [currencyId, setCurrencyId] = useState<string>("1");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [adminPassword, setAdminPassword] = useState("");
     const [stepErrors, setStepErrors] = useState<string[]>([]);
     const branding = useDynamicBranding();
 
@@ -169,7 +171,8 @@ function BusinessRegisterContent() {
                                 </div>
                                 <div className="space-y-2 text-left">
                                     <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Password</Label>
-                                    <Input name="admin_password" type="password" required className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white focus:ring-2 focus:ring-cyan-500/20" />
+                                    <Input name="admin_password" type="password" required value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white focus:ring-2 focus:ring-cyan-500/20" />
+                                    <PasswordStrength password={adminPassword} />
                                 </div>
                                 <div className="space-y-2 text-left">
                                     <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Confirm Password</Label>

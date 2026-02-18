@@ -98,8 +98,44 @@ Comprehensive UX audit and remediation of the TSF multi-tenant ERP platform. 14 
 ---
 
 ## Deferred Items
-- **#4 — Password Strength Indicator**: Requires new component. Low security risk since password is validated server-side.
-- **#9/#11 — Search Bar**: Currently placeholder, functional implementation deferred.
-- **#10 — User Profile Dropdown**: Needs navigation menu implementation.
-- **#12 — Sidebar Logo**: Currently shows "T" hardcoded, needs org logo integration.
+None — all identified issues have been addressed.
+
+### 10. `src/components/ui/password-strength.tsx` [NEW]
+**Fix #4 — Password Strength Indicator**
+- **Goal**: Give users real-time feedback on password strength during registration.
+- **Data READ**: Password string from parent component state.
+- **Data SAVED**: N/A (display-only).
+- **Workflow**: Checks password length (≥6, ≥10), uppercase, numbers, and special characters. Displays a 5-bar strength meter with labels: Weak, Fair, Good, Strong, Very Strong.
+
+### 11. `src/components/admin/TopHeader.tsx`
+**Fixes #7, #10 — TopHeader Jargon & Profile Dropdown**
+- **Goal**: Replace remaining jargon labels and add a functional user profile dropdown.
+- **Data READ**: `user` prop (first_name, last_name, email, username, is_superuser).
+- **Data SAVED**: N/A.
+- **Variables user interacts with**: Profile dropdown toggle, Settings button, Help button, Logout button.
+- **Workflow**:
+  - 'Vector' label → 'Industry'
+  - 'Commander'/'Staff' role labels → 'Admin'/'Member'
+  - Profile avatar now opens a dropdown with user info, Settings, Help & Support, and Log Out.
+
+### 12. `src/components/admin/Sidebar.tsx`
+**Fix #12 — Dynamic Sidebar Logo**
+- **Goal**: Replace hardcoded 'T' logo with the platform name's first letter.
+- **Data READ**: `PLATFORM_CONFIG.name`.
+- **Data SAVED**: N/A.
+- **Workflow**: `PLATFORM_CONFIG.name.charAt(0).toUpperCase()` replaces the static 'T'.
+
+### 13. `src/app/(auth)/register/business/page.tsx`
+**Fix #4 — Password Strength in Business Registration**
+- **Goal**: Show password strength indicator below the password field.
+- **Data READ**: `adminPassword` state variable.
+- **Data SAVED**: N/A.
+- **Workflow**: Password field value tracked via `onChange`; `<PasswordStrength>` component renders below.
+
+### 14. `src/app/(auth)/register/user/page.tsx`
+**Fix #4 — Password Strength in User Registration**
+- **Goal**: Show password strength indicator below the password field.
+- **Data READ**: `passwordValue` state variable.
+- **Data SAVED**: N/A.
+- **Workflow**: Password field value tracked via `onChange`; `<PasswordStrength>` component renders below.
 - **#25 — Forgot Password Wording**: Minor polish item.

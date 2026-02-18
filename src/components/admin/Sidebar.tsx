@@ -416,7 +416,7 @@ export function Sidebar({
             )}>
                 <div className="p-8 border-b border-gray-800/50 flex items-center gap-4 shrink-0">
                     <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-900/20 text-white font-bold text-xl">
-                        T
+                        {PLATFORM_CONFIG.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
                         <h1 className="text-xl font-bold text-white tracking-tight leading-none">{PLATFORM_CONFIG.name}</h1>
