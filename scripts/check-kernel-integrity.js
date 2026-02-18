@@ -11,8 +11,10 @@ const APPROVED_DIRS = [
     'encryption',   // AES-256 encryption management (core security feature)
     'health',
     'kernel',       // Kernel version management (core infrastructure)
+    'mcp',          // MCP AI Connector (SaaS-integrated AI module)
     'modules',
     'organizations',
+    'saas-dashboard', // SaaS admin overview dashboard
     'settings',
     'subscription',
     'subscription-plans',
