@@ -36,16 +36,14 @@ export async function validateTenantAccess(slug: string) {
  */
 export async function getPublicProducts(slug: string) {
     try {
-        // We use a specific endpoint or filter by slug. 
-        // For now, we'll fetch from a public-facing API or use a service account token if needed.
-        // But since it's a "Storefront", we want it to be light.
-        const res = await fetch(`http://127.0.0.1:8000/api/products/storefront/?organization_slug=${slug}`, {
+        const djangoUrl = process.env.DJANGO_URL || 'http://127.0.0.1:8000';
+        const res = await fetch(`${djangoUrl}/api/products/storefront/?organization_slug=${slug}`, {
             next: { revalidate: 300 } // Cache for 5 mins
         });
         if (!res.ok) return [];
         return await res.json();
     } catch (error) {
-        console.error("[STOREFRONT] Failed to fetch products:", error);
+        // Storefront products are optional — fail silently
         return [];
     }
 }
