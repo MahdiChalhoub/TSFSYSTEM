@@ -94,7 +94,7 @@ export async function loginAction(prevState: any, formData: FormData) {
 
             // Only redirect if we are not already on that host
             if (host !== newHost) {
-                redirect(`${protocol}://${newHost}/login?u=${btoa(data.username as string)}`);
+                redirect(`${protocol}://${newHost}/login`);
                 return;
             }
         }

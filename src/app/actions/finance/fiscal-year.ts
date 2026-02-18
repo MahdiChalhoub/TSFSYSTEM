@@ -141,6 +141,8 @@ export async function updatePeriodStatus(periodId: number, newStatus: string) {
     }
 }
 
+// NOTE: Fiscal year lock is intentionally one-way (no unlock).
+// Once locked/finalized, a fiscal year cannot be reopened per accounting standards.
 export async function lockFiscalYear(id: number) {
     try {
         await erpFetch(`fiscal-years/${id}/lock/`, {

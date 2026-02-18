@@ -22,19 +22,7 @@ function LoginContent() {
     const searchParams = useSearchParams();
     const branding = useDynamicBranding();
 
-    let prefilledUsername = "";
-    const uParam = searchParams.get('u');
-    const userParam = searchParams.get('username');
-
-    if (uParam) {
-        try {
-            prefilledUsername = atob(uParam);
-        } catch (e) {
-            console.error("Failed to decode username");
-        }
-    } else if (userParam) {
-        prefilledUsername = userParam;
-    }
+    const prefilledUsername = "";
 
     const [subdomain, setSubdomain] = useState("");
 

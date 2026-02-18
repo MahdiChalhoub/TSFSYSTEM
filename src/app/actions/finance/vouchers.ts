@@ -136,6 +136,15 @@ export async function verifyVoucher(id: number, comment?: string) {
     return result
 }
 
+export async function confirmVoucher(id: number, comment?: string) {
+    const result = await erpFetch(`vouchers/${id}/confirm/`, {
+        method: 'POST',
+        body: JSON.stringify({ comment: comment || '' })
+    })
+    revalidatePath('/finance/vouchers')
+    return result
+}
+
 export async function getVoucherHistory(id: number) {
     return await erpFetch(`vouchers/${id}/lifecycle_history/`)
 }

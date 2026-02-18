@@ -3,7 +3,7 @@
 import { useState, useEffect, useTransition, useMemo } from "react"
 import {
     getVouchers, createVoucher, updateVoucher, postVoucher, deleteVoucher,
-    lockVoucher, unlockVoucher, verifyVoucher, getVoucherHistory,
+    lockVoucher, unlockVoucher, verifyVoucher, confirmVoucher, getVoucherHistory,
     VoucherInput, VoucherUpdateInput
 } from "@/app/actions/finance/vouchers"
 import { getFinancialAccounts } from "@/app/actions/finance/financial-accounts"
@@ -125,6 +125,12 @@ export default function VouchersPage() {
         startTransition(async () => {
             try { await verifyVoucher(id); toast.success("Voucher verified"); loadData() }
             catch (err: any) { toast.error(err.message || "Failed to verify") }
+        })
+    }
+    async function handleConfirm(id: number) {
+        startTransition(async () => {
+            try { await confirmVoucher(id); toast.success("Voucher confirmed"); loadData() }
+            catch (err: any) { toast.error(err.message || "Failed to confirm") }
         })
     }
     async function handlePost(id: number) {
@@ -566,11 +572,12 @@ export default function VouchersPage() {
                                                     </Button>
                                                 </>
                                             )}
-                                            {/* VERIFIED: auto-confirms, but show confirm button */}
+                                            {/* VERIFIED: Confirm */}
                                             {isVerified && (
-                                                <Badge variant="outline" className="gap-1 rounded-lg border bg-purple-50 border-purple-200 text-purple-700 font-semibold text-[11px]">
-                                                    <ShieldCheck size={10} /> Awaiting Confirmation
-                                                </Badge>
+                                                <Button size="sm" variant="outline" onClick={() => handleConfirm(v.id)} disabled={isPending}
+                                                    className="rounded-xl gap-1 text-purple-700 border-purple-200 hover:bg-purple-50 h-8 text-xs font-semibold">
+                                                    <CheckCircle2 size={12} /> Confirm
+                                                </Button>
                                             )}
                                             {/* CONFIRMED: Post */}
                                             {isConfirmed && !v.is_posted && (
