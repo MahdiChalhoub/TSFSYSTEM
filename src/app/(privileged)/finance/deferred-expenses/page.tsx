@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useTransition } from "react"
+import type { DeferredExpense, FinancialAccount } from '@/types/erp'
 import { getDeferredExpenses, createDeferredExpense, recognizeDeferredExpense, DeferredExpenseInput } from "@/app/actions/finance/deferred-expenses"
 import { getFinancialAccounts } from "@/app/actions/finance/financial-accounts"
 import { Card, CardContent } from "@/components/ui/card"
@@ -17,8 +18,8 @@ import {
 } from "lucide-react"
 
 export default function DeferredExpensesPage() {
-    const [expenses, setExpenses] = useState<any[]>([])
-    const [accounts, setAccounts] = useState<any[]>([])
+    const [expenses, setExpenses] = useState<DeferredExpense[]>([])
+    const [accounts, setAccounts] = useState<FinancialAccount[]>([])
     const [loading, setLoading] = useState(true)
     const [dialogOpen, setDialogOpen] = useState(false)
     const [searchQuery, setSearchQuery] = useState("")

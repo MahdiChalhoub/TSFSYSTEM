@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from "react"
+import type { TaxGroup, TaxSummary } from '@/types/erp'
 import { getTaxGroups, getTaxSummary } from "@/app/actions/finance/tax-reports"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -16,8 +17,8 @@ function fmt(n: number) {
 }
 
 export default function TaxReportsPage() {
-    const [taxGroups, setTaxGroups] = useState<any[]>([])
-    const [summary, setSummary] = useState<any>(null)
+    const [taxGroups, setTaxGroups] = useState<TaxGroup[]>([])
+    const [summary, setSummary] = useState<TaxSummary | null>(null)
     const [loading, setLoading] = useState(true)
 
     useEffect(() => { loadData() }, [])
