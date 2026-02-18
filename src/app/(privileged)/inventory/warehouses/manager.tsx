@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Plus, Search, Warehouse, MapPin, Edit3, Trash2, Store } from "lucide-react";
 import WarehouseModal from './form';
 import { deleteWarehouse } from '@/app/actions/inventory/warehouses';
+import { toast } from 'sonner';
 
 export default function WarehouseManager({ warehouses }: { warehouses: any[] }) {
     const [search, setSearch] = useState('');
@@ -18,7 +19,7 @@ export default function WarehouseManager({ warehouses }: { warehouses: any[] }) 
     const handleDelete = async (id: number) => {
         if (!confirm('Are you sure you want to delete this warehouse?')) return;
         const res = await deleteWarehouse(id);
-        if (!res.success) alert(res.message);
+        if (!res.success) toast.error(res.message);
     };
 
     return (

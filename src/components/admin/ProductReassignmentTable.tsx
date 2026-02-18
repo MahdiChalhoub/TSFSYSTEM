@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ArrowRightLeft, CheckSquare, Square, Save, Loader2 } from 'lucide-react';
 import { CategoryTreeSelector } from './CategoryTreeSelector';
 import { moveProducts } from '@/app/actions/categories';
+import { toast } from 'sonner';
 
 type Props = {
     products: any[];
@@ -78,7 +79,7 @@ export function ProductReassignmentTable({ products, categories, currentCategory
             setIsMoveModalOpen(false);
             setTargetCategoryId([]);
         } else {
-            alert('Failed to move products');
+            toast.error('Failed to move products');
         }
     };
 

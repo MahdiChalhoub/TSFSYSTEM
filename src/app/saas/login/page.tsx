@@ -29,7 +29,7 @@ export default function SaaSLoginPage() {
                     <div className="w-16 h-16 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 mx-auto mb-4 shadow-[0_0_20px_rgba(6,182,212,0.15)]">
                         <Command size={32} />
                     </div>
-                    <CardTitle className="text-2xl font-black text-white uppercase tracking-widest">Federation Command</CardTitle>
+                    <CardTitle className="text-2xl font-black text-white uppercase tracking-widest">Admin Login</CardTitle>
                     <CardDescription className="font-mono text-cyan-500/60 text-xs mt-2 uppercase tracking-widest">Restricted Access // Level 5 Clearance</CardDescription>
                 </CardHeader>
 
@@ -68,7 +68,7 @@ export default function SaaSLoginPage() {
                         </div>
 
                         <Button className="w-full h-14 bg-cyan-600 hover:bg-cyan-500 text-white font-bold tracking-widest uppercase transition-all shadow-[0_0_20px_rgba(8,145,178,0.3)] hover:shadow-[0_0_30px_rgba(8,145,178,0.5)]" disabled={isPending}>
-                            {isPending ? <Loader2 className="animate-spin" /> : "Authenticate Uplink"}
+                            {isPending ? <Loader2 className="animate-spin" /> : "Sign In"}
                         </Button>
                     </form>
 

@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { deleteFiscalYear, updatePeriodStatus, closeFiscalYear, hardLockFiscalYear, transferBalancesToNextYear } from '@/app/actions/finance/fiscal-year'
 import { Trash2, Lock, Edit2, PlayCircle, Clock, ShieldCheck, Forward } from 'lucide-react'
 import PeriodEditor from './period-editor'
+import { toast } from 'sonner'
 
 export default function FiscalYearCard({ year, nextYear }: { year: any, nextYear?: any }) {
     const [isPending, startTransition] = useTransition()
@@ -17,9 +18,9 @@ export default function FiscalYearCard({ year, nextYear }: { year: any, nextYear
         startTransition(async () => {
             try {
                 await transferBalancesToNextYear(year.id, nextYear.id)
-                alert("Balances transferred successfully!")
+                toast.success("Balances transferred successfully!")
             } catch (err: any) {
-                alert(err.message)
+                toast.error(err.message)
             }
         })
     }
@@ -31,7 +32,7 @@ export default function FiscalYearCard({ year, nextYear }: { year: any, nextYear
             try {
                 await deleteFiscalYear(year.id)
             } catch (err: any) {
-                alert(err.message)
+                toast.error(err.message)
             }
         })
     }
@@ -56,7 +57,7 @@ export default function FiscalYearCard({ year, nextYear }: { year: any, nextYear
             try {
                 await updatePeriodStatus(periodId, status)
             } catch (err: any) {
-                alert(err.message)
+                toast.error(err.message)
             }
         })
     }
@@ -154,8 +155,8 @@ export default function FiscalYearCard({ year, nextYear }: { year: any, nextYear
 
                             <div className="flex justify-center items-center gap-1 mt-2">
                                 <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${periodStatus === 'OPEN' ? 'bg-green-100 text-green-700' :
-                                        periodStatus === 'CLOSED' ? 'bg-stone-200 text-stone-600' :
-                                            'bg-blue-100 text-blue-700'
+                                    periodStatus === 'CLOSED' ? 'bg-stone-200 text-stone-600' :
+                                        'bg-blue-100 text-blue-700'
                                     }`}>
                                     {periodStatus}
                                 </span>

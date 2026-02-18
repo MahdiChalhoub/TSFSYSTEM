@@ -95,7 +95,7 @@ function LoginContent() {
                     </div>
                     <div className="flex items-center gap-2 text-xs text-slate-500 font-mono uppercase tracking-widest pt-8">
                         <Globe size={14} className="text-emerald-500" />
-                        <span>SaaS Federation Secured</span>
+                        <span>Platform Secured</span>
                     </div>
                 </div>
             </div>

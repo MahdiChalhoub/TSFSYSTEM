@@ -5,6 +5,7 @@ import { Search, ArrowRightLeft, CheckSquare, Square, X, AlertCircle, Layers, Ch
 import { moveProductsGeneric } from '@/app/actions/maintenance';
 import { createGroupFromProducts } from '@/app/actions/product-groups';
 import { CategoryTreeSelector } from '../CategoryTreeSelector';
+import { toast } from 'sonner';
 
 type Props = {
     products: any[];
@@ -57,7 +58,7 @@ export function UnifiedReassignmentTable({ products, targetEntities, type, curre
                 setSelectedProductIds([]);
                 setTargetId(null);
             } else {
-                alert(result.message);
+                toast.error(result.message);
             }
         });
     };
@@ -216,7 +217,7 @@ function GroupModal({ isOpen, onClose, productIds, onSuccess }: any) {
             if (result.success) {
                 onSuccess();
             } else {
-                alert(result.message);
+                toast.error(result.message);
             }
         });
     };

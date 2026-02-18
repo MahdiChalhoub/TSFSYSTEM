@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { Save, Library, Info, ChevronRight, Zap, Target, Package, Users, ShoppingCart, CreditCard, BarChart3 } from 'lucide-react'
 import { savePostingRules, PostingRulesConfig } from '@/app/actions/finance/posting-rules'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
 export default function PostingRulesForm({
     initialConfig,
@@ -43,7 +44,7 @@ export default function PostingRulesForm({
         startTransition(async () => {
             await savePostingRules(config)
             router.refresh()
-            alert('Posting rules updated successfully!')
+            toast.success('Posting rules updated successfully!')
         })
     }
 
@@ -96,9 +97,9 @@ export default function PostingRulesForm({
         ].filter(v => v !== null).length
 
         if (foundCount === 0) {
-            alert('Could not find matching accounts automatically. Ensure you have imported an Accounting Standard (IFRS, French, etc.) first.')
+            toast.error('Could not find matching accounts automatically. Ensure you have imported an Accounting Standard (IFRS, French, etc.) first.')
         } else {
-            alert(`Auto-detection complete. Identified ${foundCount} account matches. Please review and save.`)
+            toast.success(`Auto-detection complete. Identified ${foundCount} account matches. Please review and save.`)
         }
     }
 

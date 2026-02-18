@@ -51,27 +51,27 @@ export default function LandingPage() {
         try {
             if (mode === 'register') {
                 if (!formData.name || !formData.slug) {
-                    throw new Error("Missing tactical coordinates (Name & Slug).")
+                    throw new Error("Please enter a Business Name and Workspace ID.")
                 }
 
                 // First, check if the desired slug is taken
                 const check = await checkWorkspace(formData.slug)
                 if (check.exists) {
-                    setError("Business ID collision detected. This designation is already active.")
+                    setError("This Workspace ID is already taken. Try one of the suggestions below.")
                     setSuggestions(generateSuggestions(formData.slug))
                     setLoading(false)
                     return
                 }
 
                 // If available, redirect to full registration form with initial data
-                toast.success("Designation available. Initializing onboarding sequence...")
+                toast.success("Workspace ID available! Redirecting to registration...")
                 setTimeout(() => {
                     window.location.href = `/register/business?slug=${formData.slug}&name=${encodeURIComponent(formData.name)}`
                 }, 1000)
                 return
             } else {
                 // Discovery for Login/Signup
-                if (!formData.workspace) throw new Error("Workspace ID required for uplink.")
+                if (!formData.workspace) throw new Error("Please enter your Workspace ID.")
 
                 // Special Handling for SaaS (Bypass Resolve Check for the Control Plane)
                 if (formData.workspace === 'saas') {
@@ -108,11 +108,11 @@ export default function LandingPage() {
                         window.location.href = host
                     }
                 } else {
-                    setError(`Workspace '${formData.workspace}' not found in the federation.`)
+                    setError(`Workspace '${formData.workspace}' not found. Please check the ID and try again.`)
                 }
             }
         } catch (err: any) {
-            setError(err.message || "Uplink failure. Please check connection.")
+            setError(err.message || "Connection failed. Please check your network.")
         } finally {
             setLoading(false)
         }
@@ -134,7 +134,7 @@ export default function LandingPage() {
                 {(isLogin || isSignup) && (
                     <div className="space-y-3">
                         <Label className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500 flex items-center gap-2">
-                            Target Workspace ID
+                            Workspace ID
                         </Label>
                         <Input
                             placeholder="e.g. acme"
@@ -179,7 +179,7 @@ export default function LandingPage() {
                         </div>
                         {suggestions.length > 0 && (
                             <div className="space-y-2">
-                                <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Suggested Available Designations:</p>
+                                <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black">Suggested Available IDs:</p>
                                 <div className="flex flex-wrap gap-2">
                                     {suggestions.map(s => (
                                         <button
@@ -207,11 +207,11 @@ export default function LandingPage() {
                     {loading ? (
                         <div className="flex items-center gap-2">
                             <RotateCcw className="animate-spin" size={20} />
-                            Establishing Uplink...
+                            Connecting...
                         </div>
                     ) : (
                         <div className="flex items-center justify-center gap-2">
-                            {isLogin ? "Initialize Command" : isSignup ? "Request Recruitment" : "Found Federation"}
+                            {isLogin ? "Sign In" : isSignup ? "Join Workspace" : "Register Business"}
                             <ArrowRight className="w-5 h-5" />
                         </div>
                     )}
@@ -231,7 +231,7 @@ export default function LandingPage() {
             <div className="text-center mb-16 space-y-4 relative z-10 transition-all duration-1000">
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-emerald-500/5 border border-emerald-500/10 rounded-full text-[10px] font-black uppercase tracking-[0.3em] text-emerald-400 mb-6 backdrop-blur-xl">
                     <Sparkles size={14} className="animate-pulse" />
-                    Strategic Tactical OS Backbone
+                    Enterprise Business Platform
                 </div>
                 <h1 className="text-6xl md:text-9xl font-black text-white tracking-tighter leading-none italic select-none">
                     {PLATFORM_CONFIG.name.split(' ')[0]} <span className="text-transparent bg-clip-text bg-gradient-to-br from-emerald-400 to-cyan-400 not-italic drop-shadow-2xl">{PLATFORM_CONFIG.name.split(' ').slice(1).join(' ')}</span>
@@ -252,7 +252,7 @@ export default function LandingPage() {
                         className={`py-8 flex flex-col items-center gap-3 transition-all relative ${mode === 'login' ? 'text-emerald-400' : 'text-slate-500 hover:text-slate-300'}`}
                     >
                         <LogIn size={24} />
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Entrance</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Sign In</span>
                         {mode === 'login' && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-emerald-500 rounded-t-full" />}
                     </button>
                     <button
@@ -260,7 +260,7 @@ export default function LandingPage() {
                         className={`py-8 flex flex-col items-center gap-3 transition-all relative ${mode === 'signup' ? 'text-cyan-400' : 'text-slate-500 hover:text-slate-300'}`}
                     >
                         <UserPlus size={24} />
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Recruit</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Join</span>
                         {mode === 'signup' && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-cyan-500 rounded-t-full" />}
                     </button>
                     <button
@@ -268,7 +268,7 @@ export default function LandingPage() {
                         className={`py-8 flex flex-col items-center gap-3 transition-all relative ${mode === 'register' ? 'text-amber-400' : 'text-slate-500 hover:text-slate-300'}`}
                     >
                         <Building2 size={24} />
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Found</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Register</span>
                         {mode === 'register' && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-amber-500 rounded-t-full" />}
                     </button>
                 </div>
@@ -284,7 +284,7 @@ export default function LandingPage() {
                     <div className="grid grid-cols-3 gap-4 text-center">
                         <div className="space-y-1">
                             <div className="text-white font-black text-xl flex items-center justify-center gap-2"><Zap size={16} className="text-emerald-400" /> 2.4s</div>
-                            <div className="text-[9px] text-slate-500 uppercase tracking-widest font-bold">Latency Uplink</div>
+                            <div className="text-[9px] text-slate-500 uppercase tracking-widest font-bold">Response Time</div>
                         </div>
                         <div className="space-y-1">
                             <div className="text-white font-black text-xl flex items-center justify-center gap-2"><CheckCircle2 size={16} className="text-cyan-400" /> AES</div>
@@ -304,7 +304,7 @@ export default function LandingPage() {
             {/* Bottom Credits */}
             <div className="mt-16 text-[11px] font-black text-slate-700 uppercase tracking-[0.8em] relative z-10 flex items-center gap-4">
                 <div className="h-[1px] w-12 bg-slate-800" />
-                Secured by {PLATFORM_CONFIG.federation_name} Core
+                Secured by {PLATFORM_CONFIG.federation_name}
                 <div className="h-[1px] w-12 bg-slate-800" />
             </div>
         </div>

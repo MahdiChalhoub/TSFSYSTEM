@@ -3,6 +3,7 @@
 import { useState, useEffect, useTransition } from 'react'
 import { getCurrencies, createCurrency, updateCurrency, deleteCurrency, type Currency } from '@/app/actions/currencies'
 import { Coins, Plus, Pencil, Trash2, X, Check, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 export default function CurrenciesPage() {
     const [currencies, setCurrencies] = useState<Currency[]>([])
@@ -64,7 +65,7 @@ export default function CurrenciesPage() {
             if (res.success) {
                 await loadCurrencies()
             } else {
-                alert(res.error || 'Failed to delete currency')
+                toast.error(res.error || 'Failed to delete currency')
             }
         })
     }

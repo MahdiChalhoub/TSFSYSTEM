@@ -6,6 +6,7 @@ import { postFinancialEvent } from "@/app/actions/finance/financial-events"
 import { Button } from "@/components/ui/button"
 import { FinanceAccountSelector } from "@/components/finance/finance-account-selector"
 import { Loader2 } from "lucide-react"
+import { toast } from 'sonner'
 
 export function PostEventButton({
     eventId,
@@ -75,7 +76,7 @@ export function PostEventButton({
 
     const handlePost = async () => {
         if (!financialAccountId) {
-            alert("Please select a target account (Safe/Bank)")
+            toast.error("Please select a target account (Safe/Bank)")
             return
         }
 
@@ -92,7 +93,7 @@ export function PostEventButton({
             }
         } catch (error) {
             console.error(error)
-            alert("Failed to post event")
+            toast.error("Failed to post event")
         } finally {
             setLoading(false)
         }

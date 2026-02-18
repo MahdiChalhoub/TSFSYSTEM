@@ -3,6 +3,7 @@
 import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Edit2, RotateCcw, Eye } from 'lucide-react'
+import { toast } from 'sonner'
 import { reverseJournalEntry } from '@/app/actions/finance/ledger'
 
 export function LedgerEntryActions({ entryId, status, isLocked }: { entryId: number, status: string, isLocked: boolean }) {
@@ -17,7 +18,7 @@ export function LedgerEntryActions({ entryId, status, isLocked }: { entryId: num
                 await reverseJournalEntry(entryId)
                 router.refresh()
             } catch (err: any) {
-                alert(err.message)
+                toast.error(err.message)
             }
         })
     }

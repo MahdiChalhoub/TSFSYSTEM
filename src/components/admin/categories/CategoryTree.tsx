@@ -4,6 +4,7 @@ import { useState, useCallback, memo } from 'react';
 import { ChevronRight, ChevronDown, Edit2, Trash2, Plus, Folder, AlertCircle } from 'lucide-react';
 import { CategoryFormModal } from './CategoryFormModal';
 import { deleteCategory } from '@/app/actions/categories';
+import { toast } from 'sonner';
 
 type CategoryNode = {
     id: number;
@@ -76,7 +77,7 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
 
     const handleDelete = async () => {
         if (hasChildren) {
-            alert('Cannot delete a category that has sub-categories. Please delete the sub-categories first.');
+            toast.error('Cannot delete a category that has sub-categories. Please delete the sub-categories first.');
             return;
         }
         if (confirm(`Are you sure you want to delete "${category.name}"?`)) {

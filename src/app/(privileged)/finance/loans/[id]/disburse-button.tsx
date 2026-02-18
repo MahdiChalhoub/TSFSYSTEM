@@ -8,6 +8,7 @@ import { FinanceAccountSelector } from "@/components/finance/finance-account-sel
 import { disburseLoan } from "@/app/actions/finance/loans"
 import { useRouter } from "next/navigation"
 import { Wallet } from "lucide-react"
+import { toast } from 'sonner'
 
 export function DisburseButton({ loanId, amount }: { loanId: number, amount: number }) {
     const [open, setOpen] = useState(false)
@@ -27,7 +28,7 @@ export function DisburseButton({ loanId, amount }: { loanId: number, amount: num
             }
         } catch (error) {
             console.error(error)
-            alert("Failed to disburse")
+            toast.error("Failed to disburse")
         } finally {
             setLoading(false)
         }
