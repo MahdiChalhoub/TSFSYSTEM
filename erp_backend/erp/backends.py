@@ -57,6 +57,10 @@ class TenantAuthBackend(ModelBackend):
             User().set_password(password)
             return None
         except User.MultipleObjectsReturned:
+            import logging
+            logging.getLogger('erp').warning(
+                f"[AUTH] MultipleObjectsReturned for username='{username}' - data integrity issue"
+            )
             return None
 
         if user.check_password(password) and self.user_can_authenticate(user):

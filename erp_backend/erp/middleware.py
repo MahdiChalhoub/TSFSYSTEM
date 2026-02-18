@@ -49,13 +49,13 @@ class TenantMiddleware:
 
     def process_view(self, request, view_func, view_args, view_kwargs):
         # Enforce Read-Only Mode for Expired Subscriptions
-        # We need to fetch the Organization object efficiently.
-        # Since middleware runs on every request, we should be careful.
-        # However, for rigorous enforcement, we must check.
         tenant_id = get_current_tenant_id()
         if tenant_id and request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
-            # Allow login/logout/safe endpoints if necessary? 
-            # For now, strict block on API write methods.
+            # Whitelist auth endpoints — users must be able to login/logout even on expired tenants
+            auth_safe_paths = ['/api/auth/login/', '/api/auth/logout/', '/api/auth/password-reset/']
+            if any(request.path.startswith(p) for p in auth_safe_paths):
+                return None
+            
             from .models import Organization
             try:
                 org = Organization.objects.get(id=tenant_id)
