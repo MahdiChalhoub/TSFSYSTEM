@@ -25,20 +25,30 @@ export default async function middleware(req: NextRequest) {
     }
 
     // ─── HTTPS ENFORCEMENT (Security) ───
-    // Force HTTPS on sensitive routes to protect credentials in transit.
+    // Force HTTPS on ALL non-static routes in production.
     // Cloudflare sets x-forwarded-proto; if it's "http", redirect to https.
     // Skip for localhost/dev environments.
     const proto = req.headers.get('x-forwarded-proto') || 'https';
     const host = req.headers.get('host') || '';
     const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
-    const isSensitiveRoute = url.pathname.startsWith('/login') ||
-        url.pathname.startsWith('/register') ||
-        url.pathname.startsWith('/saas/login');
 
-    if (proto === 'http' && !isLocal && isSensitiveRoute) {
+    if (proto === 'http' && !isLocal) {
         const httpsUrl = new URL(req.url);
         httpsUrl.protocol = 'https:';
         return NextResponse.redirect(httpsUrl, 301);
+    }
+
+    // ─── AUTH REDIRECT (Security) ───
+    // Redirect unauthenticated users away from privileged routes.
+    // This prevents layout shells from rendering for unauthenticated visitors.
+    const isAuthRoute = url.pathname.startsWith('/login') || url.pathname.startsWith('/register');
+    const isPublicRoute = url.pathname === '/' || url.pathname.startsWith('/landing') || isAuthRoute;
+    const hasAuthToken = req.cookies.has('auth_token');
+
+    if (!hasAuthToken && !isPublicRoute && !url.pathname.startsWith('/saas/login')) {
+        const loginUrl = new URL('/login', req.url);
+        loginUrl.searchParams.set('error', 'session_expired');
+        return NextResponse.redirect(loginUrl);
     }
 
     // IP Address or Localhost handling for Root

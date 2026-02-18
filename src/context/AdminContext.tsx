@@ -35,7 +35,7 @@ type AdminContextType = {
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
-export function AdminProvider({ children, contextKey = 'default' }: { children: React.ReactNode, contextKey?: string }) {
+export function AdminProvider({ children, contextKey = 'default', initialScopeAccess }: { children: React.ReactNode, contextKey?: string, initialScopeAccess?: 'official' | 'internal' | null }) {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [openTabs, setOpenTabs] = useState<Tab[]>([]);
     const [viewScope, setViewScope] = useState<'OFFICIAL' | 'INTERNAL'>('INTERNAL');
@@ -75,13 +75,12 @@ export function AdminProvider({ children, contextKey = 'default' }: { children: 
             setViewScope(savedScope);
         }
 
-        // Read scope_access from cookie (set at login)
-        const scopeCookie = document.cookie.match(/scope_access=([^;]+)/)?.[1];
-        if (scopeCookie === 'official') {
+        // scope_access is now httpOnly — read from server-side prop
+        if (initialScopeAccess === 'official') {
             setScopeAccess('official');
             setViewScope('OFFICIAL');
         } else {
-            // Default to full access if no cookie or 'internal' cookie
+            // Default to full access if not specified or 'internal'
             setScopeAccess('internal');
         }
 
