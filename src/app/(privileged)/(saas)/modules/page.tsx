@@ -47,7 +47,7 @@ export default function SaaSModulesPage() {
     async function loadModules() {
         setLoading(true)
         try {
-            console.log("Fetching fresh module list...")
+
             const data = await getSaaSModules()
             setModules(data)
             setLastSynced(new Date().toLocaleTimeString())

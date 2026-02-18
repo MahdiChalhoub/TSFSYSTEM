@@ -4,9 +4,9 @@ import { erpFetch } from "@/lib/erp-api"
 
 export async function getOrganization(id: string) {
     try {
-        console.log(`[SaaS Detail] Fetching org: organizations/${id}/`)
+
         const result = await erpFetch(`organizations/${id}/`)
-        console.log(`[SaaS Detail] Org result:`, result ? 'OK' : 'null')
+
         return result
     } catch (error: any) {
         console.error(`[SaaS Detail] Error fetching org ${id}:`, error?.message || error)
