@@ -223,12 +223,12 @@ const MENU_ITEMS = [
                     { title: 'Audit Trail', path: '/finance/audit-trail' },
                     { title: 'Cash Register', path: '/finance/cash-register' },
                     { title: 'Bank Reconciliation', path: '/finance/bank-reconciliation' },
-                    { title: 'Account Statements', path: '/finance/statements' },
+                    { title: 'Period Statements', path: '/finance/statements' },
                     { title: 'Tax Reports', path: '/finance/tax-reports' },
                     { title: 'Budget Overview', path: '/finance/budget' },
                     { title: 'Profit Centers', path: '/finance/profit-centers' },
                     { title: 'Revenue Breakdown', path: '/finance/revenue' },
-                    { title: 'Expense Tracker', path: '/finance/expenses' },
+
                 ]
             },
             {

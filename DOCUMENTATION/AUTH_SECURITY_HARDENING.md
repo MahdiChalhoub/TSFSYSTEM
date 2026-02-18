@@ -56,6 +56,16 @@ Close all critical, high, and medium security vulnerabilities identified during 
 - **After**: Credentials stored in Django cache (5-min TTL) with UUID challenge_id. Frontend only receives `challenge_id`, sends `challenge_id + otp_token` to resolve
 - **Security**: Password never appears in DOM, React state, or client-side memory
 
+### Cross-Subdomain Cookie Domain
+- **File**: `src/app/actions/auth.ts`
+- **Before**: Cookies scoped to individual subdomain (double-hop redirect on root login)
+- **After**: Cookies use `.tsf.ci` domain, shared across all subdomains
+
+### Deterministic isRoot Detection
+- **File**: `src/app/(auth)/login/page.tsx`
+- **Before**: `isRoot` depended on async `getPublicConfig()` API response (race condition possible)
+- **After**: `isRoot` determined purely from hostname — no subdomain = root
+
 ## Environment Variables Required
 | Variable | Default | Purpose |
 |---|---|---|

@@ -29,7 +29,10 @@ services:
       - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-tsfdb}
       - DB_HOST=db
       - DB_PORT=5432
-      - DEBUG=1
+      - DEBUG=0
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DJANGO_ALLOWED_HOSTS=.tsf.ci,localhost,127.0.0.1
+      - TOKEN_TTL_HOURS=24
     depends_on:
       - db
     networks:

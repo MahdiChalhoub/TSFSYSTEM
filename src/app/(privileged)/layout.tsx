@@ -68,15 +68,14 @@ export default async function AdminLayout({
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '0.2s' }} />
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '0.4s' }} />
                 </div>
-                <script dangerouslySetInnerHTML={{ __html: 'setTimeout(() => window.location.reload(), 2000)' }} />
+                <script dangerouslySetInnerHTML={{ __html: 'setTimeout(() => window.location.reload(), 10000)' }} />
             </div>
         );
     }
 
     if (!user) {
-        // If we are in SaaS context, redirect to SaaS login
         if (isSaas) {
-            redirect('/login?error=session_expired');
+            redirect('/saas/login?error=session_expired');
         }
         redirect('/login?error=session_expired');
     }

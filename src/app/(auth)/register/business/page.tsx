@@ -34,6 +34,8 @@ function BusinessRegisterContent() {
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
     const [businessTypeId, setBusinessTypeId] = useState<string>("");
     const [currencyId, setCurrencyId] = useState<string>("1");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [stepErrors, setStepErrors] = useState<string[]>([]);
     const branding = useDynamicBranding();
 
     useEffect(() => {
@@ -66,8 +68,8 @@ function BusinessRegisterContent() {
                 <div className="absolute inset-0 bg-emerald-500/5 blur-[160px] rounded-full" />
                 <Card className="w-full max-w-md bg-[#0f172a]/60 border-emerald-500/20 backdrop-blur-[40px] rounded-[2.5rem] text-center p-12 relative z-10 transition-all duration-1000">
                     <Rocket className="mx-auto text-emerald-400 mb-6 animate-bounce" size={48} />
-                    <h2 className="text-3xl font-black text-white tracking-tighter italic mb-4 uppercase">Federation Established</h2>
-                    <p className="text-slate-400 font-medium mb-8">Provisioning your strategic infrastructure. Stand by for redirection.</p>
+                    <h2 className="text-3xl font-black text-white tracking-tighter italic mb-4 uppercase">Registration Complete</h2>
+                    <p className="text-slate-400 font-medium mb-8">Your workspace is being set up. You'll be redirected shortly.</p>
                     <Loader2 className="mx-auto h-8 w-8 animate-spin text-emerald-500" />
                 </Card>
             </div>
@@ -77,8 +79,7 @@ function BusinessRegisterContent() {
     const steps = [
         { id: 1, name: "Admin Setup", icon: ShieldCheck },
         { id: 2, name: "Business Identity", icon: Building2 },
-        { id: 3, name: "Location & Intel", icon: Globe },
-        { id: 4, name: "Status", icon: CheckCircle2 },
+        { id: 3, name: "Location & Contact", icon: Globe },
     ];
 
     return (
@@ -159,22 +160,49 @@ function BusinessRegisterContent() {
                                     <Input name="admin_last_name" required className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-bold focus:ring-2 focus:ring-cyan-500/20" />
                                 </div>
                                 <div className="space-y-2 text-left">
-                                    <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Master Credentials (Username)</Label>
+                                    <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Username</Label>
                                     <Input name="admin_username" required className="bg-slate-900/50 border-white/10 h-14 rounded-xl font-mono text-cyan-400 focus:ring-2 focus:ring-cyan-500/20" />
                                 </div>
                                 <div className="space-y-2 text-left">
-                                    <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Official Uplink (Email)</Label>
+                                    <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Email</Label>
                                     <Input name="admin_email" type="email" required className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium focus:ring-2 focus:ring-cyan-500/20" />
                                 </div>
-                                <div className="space-y-2 text-left md:col-span-2">
-                                    <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Master Security Key (Password)</Label>
+                                <div className="space-y-2 text-left">
+                                    <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Password</Label>
                                     <Input name="admin_password" type="password" required className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white focus:ring-2 focus:ring-cyan-500/20" />
+                                </div>
+                                <div className="space-y-2 text-left">
+                                    <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Confirm Password</Label>
+                                    <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white focus:ring-2 focus:ring-cyan-500/20" />
                                 </div>
                             </div>
 
+                            {stepErrors.length > 0 && (
+                                <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-xs font-bold animate-in zoom-in-95">
+                                    <div className="flex items-center gap-2 mb-1"><AlertCircle size={14} /> Please fix the following:</div>
+                                    <ul className="list-disc list-inside space-y-0.5">{stepErrors.map((e, i) => <li key={i}>{e}</li>)}</ul>
+                                </div>
+                            )}
+
                             <div className="pt-8">
-                                <Button type="button" onClick={() => setStep(2)} className="w-full h-16 bg-cyan-600 hover:bg-cyan-500 text-white font-black text-lg rounded-2xl shadow-xl transition-all">
-                                    Next: Identity Registration <ArrowRight className="ml-2" />
+                                <Button type="button" onClick={() => {
+                                    const form = document.querySelector('form');
+                                    const errors: string[] = [];
+                                    const firstName = (form?.querySelector('[name=admin_first_name]') as HTMLInputElement)?.value?.trim();
+                                    const lastName = (form?.querySelector('[name=admin_last_name]') as HTMLInputElement)?.value?.trim();
+                                    const username = (form?.querySelector('[name=admin_username]') as HTMLInputElement)?.value?.trim();
+                                    const email = (form?.querySelector('[name=admin_email]') as HTMLInputElement)?.value?.trim();
+                                    const password = (form?.querySelector('[name=admin_password]') as HTMLInputElement)?.value;
+                                    if (!firstName) errors.push('First name is required');
+                                    if (!lastName) errors.push('Last name is required');
+                                    if (!username) errors.push('Username is required');
+                                    if (!email) errors.push('Email is required');
+                                    if (!password || password.length < 6) errors.push('Password must be at least 6 characters');
+                                    if (password !== confirmPassword) errors.push('Passwords do not match');
+                                    setStepErrors(errors);
+                                    if (errors.length === 0) setStep(2);
+                                }} className="w-full h-16 bg-cyan-600 hover:bg-cyan-500 text-white font-black text-lg rounded-2xl shadow-xl transition-all">
+                                    Next: Business Identity <ArrowRight className="ml-2" />
                                 </Button>
                             </div>
                         </div>
@@ -190,7 +218,7 @@ function BusinessRegisterContent() {
 
                             <div className="space-y-8">
                                 <div className="space-y-2 text-left">
-                                    <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Entity Designation (Business Name)</Label>
+                                    <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Business Name</Label>
                                     <Input
                                         name="business_name"
                                         required
@@ -202,7 +230,7 @@ function BusinessRegisterContent() {
                                 </div>
 
                                 <div className="space-y-2 text-left">
-                                    <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Digital Coordinates (Workspace Slug)</Label>
+                                    <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Workspace URL (Slug)</Label>
                                     <div className="flex items-center gap-2 group">
                                         <div className="bg-slate-900 border border-white/10 h-14 rounded-xl flex items-center px-4 font-mono text-[10px] text-slate-500">https://</div>
                                         <Input
@@ -219,10 +247,10 @@ function BusinessRegisterContent() {
 
                                 <div className="grid grid-cols-2 gap-8">
                                     <div className="space-y-2 text-left">
-                                        <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Industry Vector</Label>
+                                        <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Business Type</Label>
                                         <Select name="business_type_id" value={businessTypeId} onValueChange={setBusinessTypeId}>
                                             <SelectTrigger className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium">
-                                                <SelectValue placeholder="Select Sector" />
+                                                <SelectValue placeholder="Select type" />
                                             </SelectTrigger>
                                             <SelectContent className="bg-slate-900 border-white/10 text-white">
                                                 {config.business_types.map((t: any) => (
@@ -232,10 +260,10 @@ function BusinessRegisterContent() {
                                         </Select>
                                     </div>
                                     <div className="space-y-2 text-left">
-                                        <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Monetary Standard (Currency)</Label>
+                                        <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Currency</Label>
                                         <Select name="currency_id" value={currencyId} onValueChange={setCurrencyId}>
                                             <SelectTrigger className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium">
-                                                <SelectValue placeholder="Select Standard" />
+                                                <SelectValue placeholder="Select currency" />
                                             </SelectTrigger>
                                             <SelectContent className="bg-slate-900 border-white/10 text-white">
                                                 {config.currencies.map((c: any) => (
@@ -253,9 +281,10 @@ function BusinessRegisterContent() {
                                     type="button"
                                     onClick={() => {
                                         if (!businessTypeId) {
-                                            alert("Please select an Industry Vector (Business Type)");
+                                            setStepErrors(['Please select a Business Type']);
                                             return;
                                         }
+                                        setStepErrors([]);
                                         setStep(3);
                                     }}
                                     className="h-16 flex-[2] bg-amber-600 hover:bg-amber-500 text-white font-black text-lg rounded-2xl shadow-xl"
@@ -278,7 +307,7 @@ function BusinessRegisterContent() {
                                 {/* Left Side: Media & Core Info */}
                                 <div className="space-y-8">
                                     <div className="space-y-4">
-                                        <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Brand Insignia (Logo)</Label>
+                                        <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Logo (Optional)</Label>
                                         <div className="flex items-center gap-4">
                                             <div className="w-24 h-24 rounded-2xl bg-slate-900 border-2 border-dashed border-white/10 flex items-center justify-center overflow-hidden">
                                                 {logoPreview ? (
@@ -305,7 +334,7 @@ function BusinessRegisterContent() {
                                             <Input name="email" type="email" required placeholder="contact@hq.com" className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium" />
                                         </div>
                                         <div className="space-y-2 text-left">
-                                            <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Comm-Link (Phone)</Label>
+                                            <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Phone</Label>
                                             <Input name="phone" placeholder="+1..." className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium" />
                                         </div>
                                     </div>
@@ -314,7 +343,7 @@ function BusinessRegisterContent() {
                                 {/* Right Side: Location Info */}
                                 <div className="space-y-8">
                                     <div className="space-y-2 text-left">
-                                        <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Physical Coordinates (Address)</Label>
+                                        <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Address</Label>
                                         <Input name="address" placeholder="HQ Physical Address" className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium" />
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
@@ -329,7 +358,7 @@ function BusinessRegisterContent() {
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2 text-left">
-                                            <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Nation (Country)</Label>
+                                            <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Country</Label>
                                             <Input name="country" placeholder="e.g. United Kingdom" className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium" />
                                         </div>
                                         <div className="space-y-2 text-left">
@@ -345,7 +374,7 @@ function BusinessRegisterContent() {
                                 <Button type="submit" disabled={isPending} className="h-20 flex-[3] bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xl rounded-2xl shadow-emerald-500/20 shadow-2xl transition-all active:scale-[0.98] group">
                                     {isPending ? <Loader2 className="animate-spin" /> : (
                                         <div className="flex items-center gap-3">
-                                            Establish Global Federation <ArrowRight className="group-hover:translate-x-2 transition-transform" />
+                                            Register Business <ArrowRight className="group-hover:translate-x-2 transition-transform" />
                                         </div>
                                     )}
                                 </Button>

@@ -120,6 +120,9 @@ export async function loginAction(prevState: any, formData: FormData) {
             const hStore = await import('next/headers');
             const hList = await hStore.headers();
             const isSecure = hList.get('x-forwarded-proto') === 'https';
+            const host2 = hList.get('host') || '';
+            const isLocal = host2.includes('localhost');
+            const cookieDomain = isLocal ? undefined : `.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'tsf.ci'}`;
 
             const cookieStore = await cookies()
             cookieStore.set('auth_token', token, {
@@ -128,6 +131,7 @@ export async function loginAction(prevState: any, formData: FormData) {
                 sameSite: 'lax',
                 path: '/',
                 maxAge: 60 * 60 * 24 * 7,
+                ...(cookieDomain && { domain: cookieDomain }),
             })
             cookieStore.set('scope_access', scopeAccess, {
                 httpOnly: false,
@@ -135,6 +139,7 @@ export async function loginAction(prevState: any, formData: FormData) {
                 sameSite: 'lax',
                 path: '/',
                 maxAge: 60 * 60 * 24 * 7,
+                ...(cookieDomain && { domain: cookieDomain }),
             })
         } catch (error: any) {
             let message = 'Verification failed'
@@ -196,6 +201,11 @@ export async function loginAction(prevState: any, formData: FormData) {
         const hStore = await import('next/headers');
         const hList = await hStore.headers();
         const isSecure = hList.get('x-forwarded-proto') === 'https';
+        const host = hList.get('host') || '';
+
+        // Shared cookie domain: .tsf.ci allows auth across all subdomains
+        const isLocalhost = host.includes('localhost');
+        const cookieDomain = isLocalhost ? undefined : `.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'tsf.ci'}`;
 
         const cookieStore = await cookies()
         cookieStore.set('auth_token', token, {
@@ -203,17 +213,17 @@ export async function loginAction(prevState: any, formData: FormData) {
             secure: isSecure,
             sameSite: 'lax',
             path: '/',
-            maxAge: 60 * 60 * 24 * 7, // 7 days session for better DX
+            maxAge: 60 * 60 * 24 * 7,
+            ...(cookieDomain && { domain: cookieDomain }),
         })
-        // Store scope access level (official-only or full internal access)
         cookieStore.set('scope_access', scopeAccess, {
-            httpOnly: false,  // Frontend needs to read this
+            httpOnly: false,
             secure: isSecure,
             sameSite: 'lax',
             path: '/',
             maxAge: 60 * 60 * 24 * 7,
+            ...(cookieDomain && { domain: cookieDomain }),
         })
-        console.log(`[AUTH_ACTION] Cookie set successfully (Secure: ${isSecure}, Scope: ${scopeAccess}) for token: ${token.substring(0, 5)}...`);
 
     } catch (error: any) {
         console.error('Login Tactical Error:', error)
