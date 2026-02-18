@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from "react"
+import type { ValuationResponse, Warehouse as WarehouseType } from '@/types/erp'
 import { getStockValuation, getWarehouses } from "@/app/actions/inventory/valuation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -31,8 +32,8 @@ const METHOD_BADGES: Record<string, string> = {
 type SortKey = 'product_name' | 'quantity' | 'total_value' | 'avg_cost'
 
 export default function InventoryValuationPage() {
-    const [data, setData] = useState<any>(null)
-    const [warehouses, setWarehouses] = useState<any[]>([])
+    const [data, setData] = useState<ValuationResponse | null>(null)
+    const [warehouses, setWarehouses] = useState<WarehouseType[]>([])
     const [loading, setLoading] = useState(true)
     const [warehouseFilter, setWarehouseFilter] = useState<string>('all')
     const [search, setSearch] = useState('')

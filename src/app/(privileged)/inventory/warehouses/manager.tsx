@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import type { Warehouse as WarehouseType } from '@/types/erp';
 import { Plus, Search, Warehouse, MapPin, Edit3, Trash2, Store } from "lucide-react";
 import WarehouseModal from './form';
 import { deleteWarehouse } from '@/app/actions/inventory/warehouses';
@@ -10,7 +11,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 export default function WarehouseManager({ warehouses }: { warehouses: any[] }) {
     const [search, setSearch] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingWarehouse, setEditingWarehouse] = useState<any>(null);
+    const [editingWarehouse, setEditingWarehouse] = useState<WarehouseType | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
 
     const filtered = warehouses.filter(w =>

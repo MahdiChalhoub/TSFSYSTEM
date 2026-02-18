@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from "react"
+import type { LowStockResponse } from '@/types/erp'
 import { getLowStockAlerts } from "@/app/actions/inventory/low-stock"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -26,7 +27,7 @@ const SEVERITY_CONFIG: Record<string, { color: string, bg: string, label: string
 type SortKey = 'product_name' | 'current_stock' | 'shortage' | 'restock_value'
 
 export default function LowStockPage() {
-    const [data, setData] = useState<any>(null)
+    const [data, setData] = useState<LowStockResponse | null>(null)
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
     const [activeFilter, setActiveFilter] = useState<string | null>(null)

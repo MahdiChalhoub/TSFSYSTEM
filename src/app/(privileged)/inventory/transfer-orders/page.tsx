@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useTransition, useMemo } from "react"
+import type { TransferOrder, Warehouse as WarehouseType, Product, LifecycleHistoryEntry } from '@/types/erp'
 import {
     getTransferOrders, createTransferOrder, addTransferLine, removeTransferLine,
     postTransferOrder, lockTransferOrder, unlockTransferOrder, verifyTransferOrder,
@@ -29,15 +30,15 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }>
 }
 
 export default function TransferOrdersPage() {
-    const [orders, setOrders] = useState<any[]>([])
-    const [warehouses, setWarehouses] = useState<any[]>([])
-    const [products, setProducts] = useState<any[]>([])
+    const [orders, setOrders] = useState<TransferOrder[]>([])
+    const [warehouses, setWarehouses] = useState<WarehouseType[]>([])
+    const [products, setProducts] = useState<Product[]>([])
     const [loading, setLoading] = useState(true)
     const [dialogOpen, setDialogOpen] = useState(false)
     const [lineDialogOpen, setLineDialogOpen] = useState(false)
     const [activeOrder, setActiveOrder] = useState<number | null>(null)
     const [expandedOrder, setExpandedOrder] = useState<number | null>(null)
-    const [historyDialog, setHistoryDialog] = useState<any[] | null>(null)
+    const [historyDialog, setHistoryDialog] = useState<LifecycleHistoryEntry[] | null>(null)
     const [activeTab, setActiveTab] = useState("ALL")
     const [searchQuery, setSearchQuery] = useState("")
     const [isPending, startTransition] = useTransition()
@@ -169,7 +170,7 @@ export default function TransferOrdersPage() {
     const totalOrders = orders.length
     const openCount = orders.filter(o => o.lifecycle_status === 'OPEN').length
     const postedCount = orders.filter(o => o.is_posted).length
-    const totalQty = orders.reduce((s, o) => s + parseFloat(o.total_qty_transferred || 0), 0)
+    const totalQty = orders.reduce((s, o) => s + parseFloat(String(o.total_qty_transferred || 0)), 0)
 
     const tabs = [
         { key: "ALL", label: "All", count: orders.length },
@@ -296,7 +297,7 @@ export default function TransferOrdersPage() {
                             <TableBody>
                                 {filtered.map(order => {
                                     const isExpanded = expandedOrder === order.id
-                                    const statusCfg = STATUS_CONFIG[order.lifecycle_status] || STATUS_CONFIG.OPEN
+                                    const statusCfg = STATUS_CONFIG[order.lifecycle_status ?? 'OPEN'] || STATUS_CONFIG.OPEN
                                     const StatusIcon = statusCfg.icon
                                     return (
                                         <>
@@ -357,7 +358,7 @@ export default function TransferOrdersPage() {
                                             {isExpanded && (
                                                 <TableRow key={`${order.id}-lines`}>
                                                     <TableCell colSpan={8} className="bg-muted/20 p-4">
-                                                        {order.lines?.length > 0 ? (
+                                                        {(order.lines?.length ?? 0) > 0 ? (
                                                             <div className="rounded-lg border overflow-hidden">
                                                                 <Table>
                                                                     <TableHeader>
@@ -369,7 +370,7 @@ export default function TransferOrdersPage() {
                                                                         </TableRow>
                                                                     </TableHeader>
                                                                     <TableBody>
-                                                                        {order.lines.map((line: any) => (
+                                                                        {(order.lines ?? []).map((line: any) => (
                                                                             <TableRow key={line.id}>
                                                                                 <TableCell className="text-sm font-medium">
                                                                                     <div className="flex items-center gap-2">
