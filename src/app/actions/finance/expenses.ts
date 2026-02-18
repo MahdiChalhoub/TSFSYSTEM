@@ -33,6 +33,9 @@ export type ExpenseUpdateInput = {
 }
 
 export async function createExpense(data: ExpenseInput) {
+    if (!data.amount || data.amount <= 0) {
+        throw new Error('Expense amount must be greater than zero.')
+    }
     try {
         const expense = await erpFetch('expenses/', {
             method: 'POST',

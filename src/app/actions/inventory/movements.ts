@@ -20,6 +20,8 @@ export async function receiveStock(
     costPriceHT: number,
     reference: string = "RECEPTION"
 ): Promise<StockMovementState> {
+    if (quantity <= 0) return { success: false, message: "Quantity must be greater than zero." }
+    if (costPriceHT < 0) return { success: false, message: "Cost price cannot be negative." }
     try {
         const result = await erpFetch('inventory/receive_stock/', {
             method: 'POST',
