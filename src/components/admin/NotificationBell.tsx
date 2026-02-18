@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { AppNotification } from "@/types/erp";
 import { Bell, Check, Trash2, Clock, Info, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import {
     getNotifications,
@@ -22,7 +23,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export function NotificationBell() {
-    const [notifications, setNotifications] = useState<any[]>([]);
+    const [notifications, setNotifications] = useState<AppNotification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(false);
 

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { SaasPlan } from "@/types/erp"
 import { getPublicPlans } from "@/app/actions/onboarding"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -8,7 +9,7 @@ import { CheckCircle2, Loader2, Users, Building2, HardDrive, Package, Mail } fro
 import { Badge } from "@/components/ui/badge"
 
 export default function PricingSection() {
-    const [plans, setPlans] = useState<any[]>([])
+    const [plans, setPlans] = useState<SaasPlan[]>([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {

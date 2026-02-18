@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from "react"
+import { SaasSite } from "@/types/erp"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -9,7 +10,7 @@ import { toast } from "sonner"
 import { erpFetch } from "@/lib/erp-api"
 
 export default function SitesPage() {
-    const [sites, setSites] = useState<any[]>([])
+    const [sites, setSites] = useState<SaasSite[]>([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {

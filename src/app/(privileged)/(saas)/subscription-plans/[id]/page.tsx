@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from "react"
-import { SaasPlan } from "@/types/erp"
+import { SaasPlan, SaasModule } from "@/types/erp"
 import { useParams, useRouter } from "next/navigation"
 import { getPlanDetail, updatePlan, togglePlanPublic, getModuleFeatures } from "./actions"
 import { getSaaSModules } from "@/app/actions/saas/modules"
@@ -24,7 +24,7 @@ export default function PlanDetailPage() {
     const [saving, setSaving] = useState(false)
     const [tab, setTab] = useState<'overview' | 'modules' | 'limits' | 'orgs'>('overview')
     const [editing, setEditing] = useState(false)
-    const [availableModules, setAvailableModules] = useState<any[]>([])
+    const [availableModules, setAvailableModules] = useState<SaasModule[]>([])
     const [moduleFeatures, setModuleFeatures] = useState<Record<string, { name: string, features: { code: string, name: string, default: boolean }[] }>>({})
     const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set())
 

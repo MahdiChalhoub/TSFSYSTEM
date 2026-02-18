@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from "react"
+import { SaasPlan, PlanCategory, SaasModule, SaasAddon } from "@/types/erp"
 import { useRouter } from "next/navigation"
 import { getPlans, getPlanCategories, createPlan, createPlanCategory } from "./actions"
 import { getAddons, createAddon, deleteAddon } from "./[id]/actions"
@@ -23,10 +24,10 @@ const ADDON_TYPE_LABELS: Record<string, string> = { users: 'Extra Users', sites:
 
 export default function SubscriptionPlansPage() {
     const router = useRouter()
-    const [plans, setPlans] = useState<any[]>([])
-    const [categories, setCategories] = useState<any[]>([])
-    const [availableModules, setAvailableModules] = useState<any[]>([])
-    const [addons, setAddons] = useState<any[]>([])
+    const [plans, setPlans] = useState<SaasPlan[]>([])
+    const [categories, setCategories] = useState<PlanCategory[]>([])
+    const [availableModules, setAvailableModules] = useState<SaasModule[]>([])
+    const [addons, setAddons] = useState<SaasAddon[]>([])
     const [loading, setLoading] = useState(true)
 
     // Add-on modal

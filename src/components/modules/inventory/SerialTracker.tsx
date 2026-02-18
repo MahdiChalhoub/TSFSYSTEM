@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { SerialNumber } from "@/types/erp";
+import { SerialNumber, SerialHistoryLog } from "@/types/erp";
 import {
     Search, Barcode, History, Package,
     Warehouse, Calendar, User, ArrowRight,
@@ -15,10 +15,10 @@ import { toast } from 'sonner';
 
 export function SerialTracker() {
     const [query, setQuery] = useState("");
-    const [serials, setSerials] = useState<any[]>([]);
+    const [serials, setSerials] = useState<SerialNumber[]>([]);
     const [loading, setLoading] = useState(false);
     const [selectedSerial, setSelectedSerial] = useState<SerialNumber | null>(null);
-    const [history, setHistory] = useState<any[]>([]);
+    const [history, setHistory] = useState<SerialHistoryLog[]>([]);
     const [historyLoading, setHistoryLoading] = useState(false);
 
     const handleSearch = async () => {

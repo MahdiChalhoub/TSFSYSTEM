@@ -80,7 +80,7 @@ export function UniversalDataTable({
     actions
 }: UniversalDataTableProps) {
     const [meta, setMeta] = useState<UDLEMeta | null>(null);
-    const [data, setData] = useState<any[]>([]);
+    const [data, setData] = useState<Record<string, unknown>[]>([]);
     const [loading, setLoading] = useState(true);
     const [visibleColumns, setVisibleColumns] = useState<string[]>([]);
     const [filters, setFilters] = useState<Record<string, any>>({});

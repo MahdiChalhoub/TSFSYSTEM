@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from "react"
-import { SaasOrganization, SaasUsageData, SaasBillingData, SaasAddonData, SaasPlan } from "@/types/erp"
+import { SaasOrganization, SaasUsageData, SaasBillingData, SaasAddonData, SaasPlan, SaasModule, SaasUser, SaasSite } from "@/types/erp"
 import { useParams, useRouter } from "next/navigation"
 import { getOrganization, getOrgUsage, getOrgBilling, getOrgModules, toggleOrgModule, updateModuleFeatures, changeOrgPlan, getOrgUsers, createOrgUser, resetOrgUserPassword, getOrgSites, createOrgSite, toggleOrgSite, listClients, createClient, setOrgClient, getOrgAddons, purchaseAddon, cancelAddon } from "./actions"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -146,9 +146,9 @@ export default function OrganizationDetailPage() {
     const [org, setOrg] = useState<SaasOrganization | null>(null)
     const [usage, setUsage] = useState<SaasUsageData | null>(null)
     const [billing, setBilling] = useState<SaasBillingData>({ history: [], balance: { total_paid: '0.00', total_credits: '0.00', net_balance: '0.00' }, client: null })
-    const [modules, setModules] = useState<any[]>([])
-    const [users, setUsers] = useState<any[]>([])
-    const [sites, setSites] = useState<any[]>([])
+    const [modules, setModules] = useState<SaasModule[]>([])
+    const [users, setUsers] = useState<SaasUser[]>([])
+    const [sites, setSites] = useState<SaasSite[]>([])
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState<'overview' | 'modules' | 'usage' | 'billing' | 'users' | 'sites' | 'addons'>('overview')
     const [addons, setAddons] = useState<SaasAddonData>({ purchased: [], available: [] })
@@ -178,7 +178,7 @@ export default function OrganizationDetailPage() {
 
     // Client assignment
     const [showClientDialog, setShowClientDialog] = useState(false)
-    const [allClients, setAllClients] = useState<any[]>([])
+    const [allClients, setAllClients] = useState<Record<string, unknown>[]>([])
     const [clientSearch, setClientSearch] = useState('')
     const [showNewClient, setShowNewClient] = useState(false)
     const [newClient, setNewClient] = useState({ first_name: '', last_name: '', email: '', phone: '', company_name: '' })

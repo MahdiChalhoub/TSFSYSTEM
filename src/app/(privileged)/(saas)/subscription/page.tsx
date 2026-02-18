@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from "react"
-import { SaasOrganization } from "@/types/erp"
+import { SaasOrganization, SaasPlan } from "@/types/erp"
 import { getOrganizations } from "@/app/(privileged)/(saas)/organizations/actions"
 import { getSubscriptionPlans, subscribeToPlan } from "./actions"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 export default function SubscriptionPage() {
     const [org, setOrg] = useState<SaasOrganization | null>(null)
     const [loading, setLoading] = useState(true)
-    const [plans, setPlans] = useState<any[]>([])
+    const [plans, setPlans] = useState<SaasPlan[]>([])
     const [upgradeOpen, setUpgradeOpen] = useState(false)
     const [upgrading, setUpgrading] = useState(false)
 

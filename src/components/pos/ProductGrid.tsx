@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { Product } from "@/types/erp";
 import { getPosProducts } from '@/app/(privileged)/sales/actions';
 import clsx from 'clsx';
 import { AlertCircle, Loader2, PackageX, WifiOff } from 'lucide-react';
@@ -11,7 +12,7 @@ const ITEMS_PER_LOAD = 50; // Load 50 products at a time
 const SEARCH_DEBOUNCE_MS = 300; // Wait 300ms after user stops typing
 
 export function ProductGrid({ searchQuery, onAddToCart }: { searchQuery: string, onAddToCart: (p: any) => void }) {
-    const [products, setProducts] = useState<any[]>([]);
+    const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [hasMore, setHasMore] = useState(true);

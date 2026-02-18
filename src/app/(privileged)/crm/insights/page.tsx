@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from "react"
+import { Contact } from "@/types/erp"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
@@ -16,8 +17,8 @@ function fmt(n: number) {
 }
 
 export default function CustomerInsightsPage() {
-    const [contacts, setContacts] = useState<any[]>([])
-    const [orders, setOrders] = useState<any[]>([])
+    const [contacts, setContacts] = useState<Contact[]>([])
+    const [orders, setOrders] = useState<Record<string, unknown>[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
 

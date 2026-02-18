@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from "react"
+import { SaasModule, SaasBackup } from "@/types/erp"
 import { useRouter } from "next/navigation"
 import {
     getSaaSModules,
@@ -34,7 +35,7 @@ import {
 
 export default function SaaSModulesPage() {
     const router = useRouter()
-    const [modules, setModules] = useState<any[]>([])
+    const [modules, setModules] = useState<SaasModule[]>([])
     const [loading, setLoading] = useState(true)
     const [syncing, setSyncing] = useState(false)
     const [processing, setProcessing] = useState<string | null>(null)
@@ -435,7 +436,7 @@ export default function SaaSModulesPage() {
 }
 
 function BackupList({ moduleCode, onRollback, currentVersion }: { moduleCode: string, onRollback: (v: string) => void, currentVersion: string }) {
-    const [backups, setBackups] = useState<any[]>([])
+    const [backups, setBackups] = useState<SaasBackup[]>([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
