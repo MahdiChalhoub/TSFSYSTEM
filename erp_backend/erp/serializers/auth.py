@@ -24,16 +24,18 @@ class LoginSerializer(serializers.Serializer):
                 
                 # Filter by tenant if present, otherwise assume root/null org
                 if tenant_id:
-                    user_obj = User.objects.get(username=username, organization_id=tenant_id)
+                    user_obj = User.objects.filter(username=username, organization_id=tenant_id).first()
                 else:
                     # ROOT LOGIN (SaaS Panel) - User must belong to 'saas' org
-                    user_obj = User.objects.get(username=username, organization__slug='saas')
+                    user_obj = User.objects.filter(username=username, organization__slug='saas').first()
                     
                     # STRICT ACCESS CONTROL: Only SaaS Staff can enter the Root Panel
-                    if not (user_obj.is_staff or user_obj.is_superuser):
+                    if user_obj and not (user_obj.is_staff or user_obj.is_superuser):
                          raise serializers.ValidationError(_("Access Restricted. Only SaaS Federation Staff authorized."), code='forbidden')
 
-            except (User.DoesNotExist, User.MultipleObjectsReturned):
+            except serializers.ValidationError:
+                raise  # Re-raise validation errors
+            except Exception:
                 pass
 
             # 1. Try main password (Django authenticate) → full 'internal' access

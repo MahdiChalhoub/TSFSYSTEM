@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
     Tag, Plus, Percent, DollarSign, Package, Layers, Calendar,
     History, Edit2, Trash2, X, Check, Power, AlertCircle, ShoppingCart
@@ -165,14 +166,17 @@ export default function DiscountRulesPage() {
         } catch { toast.error("Failed to save discount rule") }
     }
 
-    async function handleDelete(id: number) {
-        if (!confirm("Delete this discount rule? This will also delete its usage history.")) return
+    const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
+
+    async function handleDelete() {
+        if (deleteTarget === null) return
         try {
             const { erpFetch } = await import("@/lib/erp-api")
-            await erpFetch(`pos/discount-rules/${id}/`, { method: 'DELETE' })
+            await erpFetch(`pos/discount-rules/${deleteTarget}/`, { method: 'DELETE' })
             toast.success("Discount rule deleted")
             await loadData()
         } catch { toast.error("Failed to delete rule") }
+        setDeleteTarget(null)
     }
 
     if (loading) {
@@ -403,7 +407,7 @@ export default function DiscountRulesPage() {
                                         <button onClick={() => startEdit(rule)} className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-blue-600">
                                             <Edit2 size={14} />
                                         </button>
-                                        <button onClick={() => handleDelete(rule.id)} className="p-1.5 rounded hover:bg-red-50 text-gray-400 hover:text-red-500">
+                                        <button onClick={() => setDeleteTarget(rule.id)} className="p-1.5 rounded hover:bg-red-50 text-gray-400 hover:text-red-500">
                                             <Trash2 size={14} />
                                         </button>
                                     </div>
@@ -492,6 +496,16 @@ export default function DiscountRulesPage() {
                     </div>
                 </div>
             )}
+
+            <ConfirmDialog
+                open={deleteTarget !== null}
+                onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
+                onConfirm={handleDelete}
+                title="Delete Discount Rule?"
+                description="This will permanently remove this discount rule and its usage history."
+                confirmText="Delete"
+                variant="danger"
+            />
         </div>
     )
 }

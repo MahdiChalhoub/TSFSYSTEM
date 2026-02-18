@@ -5,51 +5,88 @@ import { deleteFiscalYear, updatePeriodStatus, closeFiscalYear, hardLockFiscalYe
 import { Trash2, Lock, Edit2, PlayCircle, Clock, ShieldCheck, Forward } from 'lucide-react'
 import PeriodEditor from './period-editor'
 import { toast } from 'sonner'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 export default function FiscalYearCard({ year, nextYear }: { year: any, nextYear?: any }) {
     const [isPending, startTransition] = useTransition()
     const [editingPeriod, setEditingPeriod] = useState<any>(null)
 
-    // ... (logic)
+    const [pendingAction, setPendingAction] = useState<{ type: string; title: string; description: string; variant: 'danger' | 'warning' | 'info' } | null>(null)
+
+    const actionHandlers: Record<string, () => void> = {
+        rollForward: () => {
+            startTransition(async () => {
+                try {
+                    await transferBalancesToNextYear(year.id, nextYear.id)
+                    toast.success("Balances transferred successfully!")
+                } catch (err: any) {
+                    toast.error(err.message)
+                }
+            })
+        },
+        delete: () => {
+            startTransition(async () => {
+                try {
+                    await deleteFiscalYear(year.id)
+                } catch (err: any) {
+                    toast.error(err.message)
+                }
+            })
+        },
+        close: () => {
+            startTransition(async () => {
+                await closeFiscalYear(year.id)
+            })
+        },
+        hardLock: () => {
+            startTransition(async () => {
+                await hardLockFiscalYear(year.id)
+            })
+        },
+    }
+
     const handleRollForward = () => {
         if (!nextYear) return
-        if (!confirm(`This will calculate all Asset, Liability, and Equity balances for ${year.name} and create an Opening Entry in ${nextYear.name}. Continue?`)) return
-
-        startTransition(async () => {
-            try {
-                await transferBalancesToNextYear(year.id, nextYear.id)
-                toast.success("Balances transferred successfully!")
-            } catch (err: any) {
-                toast.error(err.message)
-            }
+        setPendingAction({
+            type: 'rollForward',
+            title: 'Transfer Balances?',
+            description: `This will calculate all Asset, Liability, and Equity balances for ${year.name} and create an Opening Entry in ${nextYear.name}.`,
+            variant: 'warning',
         })
     }
 
     const handleDelete = () => {
-        if (!confirm('Are you sure you want to delete this Fiscal Year? check will be performed...')) return
-
-        startTransition(async () => {
-            try {
-                await deleteFiscalYear(year.id)
-            } catch (err: any) {
-                toast.error(err.message)
-            }
+        setPendingAction({
+            type: 'delete',
+            title: 'Delete Fiscal Year?',
+            description: 'This will permanently remove this fiscal year. A safety check will be performed.',
+            variant: 'danger',
         })
     }
 
     const handleCloseYear = () => {
-        if (!confirm('Are you sure you want to CLOSE this Fiscal Year? This acts as a Soft Close.')) return
-
-        startTransition(async () => {
-            await closeFiscalYear(year.id)
+        setPendingAction({
+            type: 'close',
+            title: 'Close Fiscal Year?',
+            description: 'This acts as a Soft Close. You can still reopen periods if needed.',
+            variant: 'warning',
         })
     }
 
     const handleHardLock = () => {
-        if (!confirm('CRITICAL: Hard Locking is permanent and ensures compliance. You will NOT be able to reopen periods. Proceed?')) return
-        startTransition(async () => {
-            await hardLockFiscalYear(year.id)
+        setPendingAction({
+            type: 'hardLock',
+            title: 'Hard Lock Fiscal Year?',
+            description: 'CRITICAL: Hard Locking is permanent and ensures compliance. You will NOT be able to reopen periods.',
+            variant: 'danger',
         })
+    }
+
+    const handleConfirmAction = () => {
+        if (pendingAction) {
+            actionHandlers[pendingAction.type]?.()
+            setPendingAction(null)
+        }
     }
 
     const handleChangeStatus = (periodId: number, status: 'OPEN' | 'CLOSED' | 'FUTURE') => {
@@ -206,6 +243,16 @@ export default function FiscalYearCard({ year, nextYear }: { year: any, nextYear
             {editingPeriod && (
                 <PeriodEditor period={editingPeriod} onClose={() => setEditingPeriod(null)} />
             )}
+
+            <ConfirmDialog
+                open={pendingAction !== null}
+                onOpenChange={(open) => { if (!open) setPendingAction(null) }}
+                onConfirm={handleConfirmAction}
+                title={pendingAction?.title ?? ''}
+                description={pendingAction?.description ?? ''}
+                confirmText="Confirm"
+                variant={pendingAction?.variant ?? 'danger'}
+            />
         </div>
     )
 }

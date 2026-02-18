@@ -49,18 +49,14 @@ class TenantAuthBackend(ModelBackend):
                 # - org.slug='saas' (SaaS Federation panel users)
                 query &= (Q(organization__isnull=True) | Q(organization__slug='saas'))
             
-            user = User.objects.get(query)
+            user = User.objects.filter(query).first()
+            if user is None:
+                # No user found — run hasher to prevent timing attacks
+                User().set_password(password)
+                return None
             
-        except User.DoesNotExist:
-            # Run the default password hasher once to reduce the timing
-            # difference between an existing and a nonexistent user (#20760).
-            User().set_password(password)
-            return None
-        except User.MultipleObjectsReturned:
-            import logging
-            logging.getLogger('erp').warning(
-                f"[AUTH] MultipleObjectsReturned for username='{username}' - data integrity issue"
-            )
+        except Exception:
+            # Unexpected DB error — fail safely
             return None
 
         if user.check_password(password) and self.user_can_authenticate(user):

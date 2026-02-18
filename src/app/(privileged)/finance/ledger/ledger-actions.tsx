@@ -1,18 +1,18 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Edit2, RotateCcw, Eye } from 'lucide-react'
 import { toast } from 'sonner'
 import { reverseJournalEntry } from '@/app/actions/finance/ledger'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 export function LedgerEntryActions({ entryId, status, isLocked }: { entryId: number, status: string, isLocked: boolean }) {
     const [isPending, startTransition] = useTransition()
+    const [showReverse, setShowReverse] = useState(false)
     const router = useRouter()
 
     const handleReverse = async () => {
-        if (!confirm('Are you sure you want to reverse this entry? This will create a mirrored transaction to cancel out the balances.')) return
-
         startTransition(async () => {
             try {
                 await reverseJournalEntry(entryId)
@@ -21,6 +21,7 @@ export function LedgerEntryActions({ entryId, status, isLocked }: { entryId: num
                 toast.error(err.message)
             }
         })
+        setShowReverse(false)
     }
 
     return (
@@ -36,7 +37,7 @@ export function LedgerEntryActions({ entryId, status, isLocked }: { entryId: num
 
             {status === 'POSTED' && (
                 <button
-                    onClick={handleReverse}
+                    onClick={() => setShowReverse(true)}
                     disabled={isPending || isLocked}
                     className="p-1.5 hover:bg-rose-50 rounded text-rose-500 disabled:opacity-30"
                     title="Reverse Entry"
@@ -52,6 +53,16 @@ export function LedgerEntryActions({ entryId, status, isLocked }: { entryId: num
             >
                 <Eye size={14} />
             </button>
+
+            <ConfirmDialog
+                open={showReverse}
+                onOpenChange={setShowReverse}
+                onConfirm={handleReverse}
+                title="Reverse Entry?"
+                description="This will create a mirrored transaction to cancel out the balances. This action cannot be undone."
+                confirmText="Reverse"
+                variant="warning"
+            />
         </div>
     )
 }
