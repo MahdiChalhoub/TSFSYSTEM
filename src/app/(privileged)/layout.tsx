@@ -8,6 +8,7 @@ import { TopHeader } from '@/components/admin/TopHeader';
 import { TabNavigator } from '@/components/admin/TabNavigator';
 import { DevProvider } from '@/context/DevContext';
 import DebugOverlay from '@/components/dev/DebugOverlay';
+import { CommandPalette } from '@/components/admin/CommandPalette';
 
 
 import { getSites } from '@/app/actions/sites';
@@ -116,6 +117,7 @@ export default async function AdminLayout({
                         </main>
                     </div>
                     <DebugOverlay />
+                    <CommandPalette />
                 </div>
             </DevProvider>
         </AdminProvider>

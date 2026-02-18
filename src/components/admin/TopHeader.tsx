@@ -57,22 +57,27 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: { si
                     </div>
                 </div>
 
-                {/* Search - Full width on desktop, hidden on mobile (will move to actions if needed) */}
+                {/* Search Trigger — opens Command Palette (Ctrl+K) */}
                 <div className="flex-1 max-w-xl mx-4 lg:mx-8 hidden lg:block">
-                    <div className="relative group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-500 transition-colors pointer-events-none" size={18} />
-                        <input
-                            type="text"
-                            suppressHydrationWarning={true}
-                            placeholder="Type to search (Ctrl+K)"
-                            className="w-full pl-12 pr-4 py-3 bg-gray-100/30 border border-transparent focus:bg-white focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 rounded-2xl text-sm outline-none transition-all placeholder:text-gray-400"
-                        />
-                    </div>
+                    <button
+                        type="button"
+                        onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
+                        className="w-full flex items-center gap-3 pl-4 pr-4 py-3 bg-gray-100/30 border border-transparent hover:bg-white hover:border-gray-200 rounded-2xl text-sm transition-all group cursor-text"
+                    >
+                        <Search size={18} className="text-gray-400 group-hover:text-emerald-500 transition-colors" />
+                        <span className="flex-1 text-left text-gray-400">Search pages, settings, reports...</span>
+                        <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-1 text-[10px] font-mono font-bold text-gray-400 bg-gray-100 rounded-lg border border-gray-200">
+                            Ctrl+K
+                        </kbd>
+                    </button>
                 </div>
             </div>
 
             <div className="flex items-center gap-2 md:gap-4">
-                <button className="lg:hidden p-2.5 hover:bg-gray-100 rounded-xl text-gray-400">
+                <button
+                    onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
+                    className="lg:hidden p-2.5 hover:bg-gray-100 rounded-xl text-gray-400"
+                >
                     <Search size={22} />
                 </button>
 
