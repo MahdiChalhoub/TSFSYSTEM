@@ -120,13 +120,18 @@ export interface Payment {
     reference?: string
     amount: number
     date: string
+    payment_date?: string
     type: string
     status?: string
+    method?: string
     contact_id?: number
+    contact?: number
     contact_name?: string
     account_id?: number
     account_name?: string
+    payment_account_id?: number
     notes?: string
+    [key: string]: unknown
 }
 
 export interface AgingBucket {
@@ -161,15 +166,25 @@ export interface Asset {
     id: number
     name: string
     code?: string
-    acquisition_date: string
-    acquisition_cost: number
-    useful_life_months: number
-    salvage_value: number
+    description?: string
+    category?: string
+    acquisition_date?: string
+    purchase_date?: string
+    acquisition_cost?: number
+    purchase_value?: number
+    book_value?: number
+    useful_life_months?: number
+    useful_life_years?: number
+    salvage_value?: number
+    residual_value?: number
+    accumulated_depreciation?: number
     depreciation_method: string
     account_id?: number
     account_name?: string
+    source_account_id?: number
     status: string
     current_value?: number
+    [key: string]: unknown
 }
 
 export interface DepreciationScheduleItem {

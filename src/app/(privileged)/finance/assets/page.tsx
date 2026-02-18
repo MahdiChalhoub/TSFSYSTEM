@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useTransition } from "react"
+import type { Asset, FinancialAccount, DepreciationScheduleItem } from '@/types/erp'
 import { getAssets, getAssetSchedule, createAsset, postDepreciation, AssetInput } from "@/app/actions/finance/assets"
 import { getFinancialAccounts } from "@/app/actions/finance/financial-accounts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -17,12 +18,12 @@ import {
 } from "lucide-react"
 
 export default function AssetsPage() {
-    const [assets, setAssets] = useState<any[]>([])
-    const [accounts, setAccounts] = useState<any[]>([])
+    const [assets, setAssets] = useState<Asset[]>([])
+    const [accounts, setAccounts] = useState<FinancialAccount[]>([])
     const [loading, setLoading] = useState(true)
     const [dialogOpen, setDialogOpen] = useState(false)
-    const [selectedAsset, setSelectedAsset] = useState<any>(null)
-    const [schedule, setSchedule] = useState<any[]>([])
+    const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null)
+    const [schedule, setSchedule] = useState<DepreciationScheduleItem[]>([])
     const [searchQuery, setSearchQuery] = useState("")
     const [isPending, startTransition] = useTransition()
 
