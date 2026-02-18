@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useTransition, useMemo } from "react"
+import type { OperationalRequest, Warehouse, Product } from '@/types/erp'
 import {
     getOperationalRequests, createOperationalRequest, addRequestLine,
     approveRequest, rejectRequest, convertRequest, OperationalRequestInput
@@ -41,9 +42,9 @@ const PRIORITY_CONFIG: Record<string, { label: string; color: string }> = {
 }
 
 export default function OperationalRequestsPage() {
-    const [requests, setRequests] = useState<any[]>([])
-    const [warehouses, setWarehouses] = useState<any[]>([])
-    const [products, setProducts] = useState<any[]>([])
+    const [requests, setRequests] = useState<OperationalRequest[]>([])
+    const [warehouses, setWarehouses] = useState<Warehouse[]>([])
+    const [products, setProducts] = useState<Product[]>([])
     const [loading, setLoading] = useState(true)
     const [dialogOpen, setDialogOpen] = useState(false)
     const [lineDialogOpen, setLineDialogOpen] = useState(false)
@@ -53,7 +54,7 @@ export default function OperationalRequestsPage() {
     const [searchQuery, setSearchQuery] = useState("")
     const [isPending, startTransition] = useTransition()
     const [rejectDialog, setRejectDialog] = useState<number | null>(null)
-    const [convertDialog, setConvertDialog] = useState<any | null>(null)
+    const [convertDialog, setConvertDialog] = useState<OperationalRequest | null>(null)
 
     useEffect(() => { loadData() }, [])
 
@@ -302,7 +303,7 @@ export default function OperationalRequestsPage() {
                                     const statusCfg = STATUS_CONFIG[req.status] || STATUS_CONFIG.PENDING
                                     const StatusIcon = statusCfg.icon
                                     const TypeIcon = typeCfg.icon
-                                    const priCfg = PRIORITY_CONFIG[req.priority] || PRIORITY_CONFIG.NORMAL
+                                    const priCfg = PRIORITY_CONFIG[req.priority ?? 'NORMAL'] || PRIORITY_CONFIG.NORMAL
                                     return (
                                         <>
                                             <TableRow key={req.id} className="cursor-pointer hover:bg-muted/30" onClick={() => setExpandedRequest(isExpanded ? null : req.id)}>
@@ -356,7 +357,7 @@ export default function OperationalRequestsPage() {
                                                                     <p className="text-sm">{req.description}</p>
                                                                 </div>
                                                             )}
-                                                            {req.lines?.length > 0 ? (
+                                                            {(req.lines?.length ?? 0) > 0 ? (
                                                                 <div className="rounded-lg border overflow-hidden">
                                                                     <Table>
                                                                         <TableHeader>
@@ -368,7 +369,7 @@ export default function OperationalRequestsPage() {
                                                                             </TableRow>
                                                                         </TableHeader>
                                                                         <TableBody>
-                                                                            {req.lines.map((line: any) => (
+                                                                            {(req.lines ?? []).map((line: any) => (
                                                                                 <TableRow key={line.id}>
                                                                                     <TableCell className="text-sm font-medium">
                                                                                         <div className="flex items-center gap-2">

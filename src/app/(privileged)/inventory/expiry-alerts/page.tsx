@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from "react"
+import type { ExpiryAlertResponse } from '@/types/erp'
 import { getExpiryAlerts, scanForExpiry, acknowledgeAlert } from "@/app/actions/inventory/expiry-alerts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -24,7 +25,7 @@ const SEVERITY_CONFIG: Record<string, { color: string, bg: string, icon: any, la
 }
 
 export default function ExpiryAlertsPage() {
-    const [data, setData] = useState<any>(null)
+    const [data, setData] = useState<ExpiryAlertResponse | null>(null)
     const [loading, setLoading] = useState(true)
     const [scanning, setScanning] = useState(false)
     const [activeFilter, setActiveFilter] = useState<string | null>(null)
@@ -228,7 +229,7 @@ export default function ExpiryAlertsPage() {
                                                 {a.expiry_date || '—'}
                                             </TableCell>
                                             <TableCell className={`text-right font-bold ${a.days_until_expiry <= 0 ? 'text-red-600' :
-                                                    a.days_until_expiry <= 30 ? 'text-orange-600' : 'text-yellow-600'
+                                                a.days_until_expiry <= 30 ? 'text-orange-600' : 'text-yellow-600'
                                                 }`}>
                                                 {a.days_until_expiry <= 0 ? `${Math.abs(a.days_until_expiry)} overdue` : `${a.days_until_expiry}d`}
                                             </TableCell>

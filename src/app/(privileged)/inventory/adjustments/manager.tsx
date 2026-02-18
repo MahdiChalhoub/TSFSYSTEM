@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition, useEffect } from 'react';
+import type { Product } from '@/types/erp';
 import { Search, Package, Save, AlertTriangle, CheckCircle, ArrowRightLeft, Info } from 'lucide-react';
 import { getGlobalInventory } from '@/app/actions/inventory/viewer';
 import { adjustStock } from '@/app/actions/inventory/movements';
@@ -31,8 +32,8 @@ export default function StockAdjustmentManager({
 
     // Product Search State
     const [search, setSearch] = useState('');
-    const [products, setProducts] = useState<any[]>([]);
-    const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+    const [products, setProducts] = useState<Product[]>([]);
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [loadingProducts, setLoadingProducts] = useState(false);
 
     // Feedback

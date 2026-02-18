@@ -345,41 +345,58 @@ export interface DiagnosticItem {
 export interface Product {
     id: number
     name: string
-    sku: string
+    sku?: string
     barcode?: string
     category_id?: number
     category_name?: string
     brand_id?: number
     brand_name?: string
-    selling_price_ttc: number
+    selling_price_ttc?: number
+    cost_price?: number
     cost_price_ht?: number
+    costPrice?: number
     tva_rate?: number
-    stock_level: number
+    stock_level?: number
     min_stock?: number
     max_stock?: number
-    is_active: boolean
+    is_active?: boolean
+    unit?: string
+    siteStock?: Record<number, number>
+    [key: string]: unknown
 }
 
 export interface Warehouse {
     id: number
     name: string
     code?: string
+    type?: string
     site_id?: number
+    siteId?: number | null
     site_name?: string
-    is_active: boolean
+    site?: { name: string }
+    is_active?: boolean
+    [key: string]: unknown
 }
 
 export interface TransferOrder {
     id: number
-    reference: string
-    from_warehouse_id: number
+    reference?: string
+    from_warehouse: number
+    from_warehouse_id?: number
     from_warehouse_name?: string
-    to_warehouse_id: number
+    to_warehouse: number
+    to_warehouse_id?: number
     to_warehouse_name?: string
-    status: string
+    driver?: string
+    status?: string
     date: string
-    lines: TransferOrderLine[]
+    lines?: TransferOrderLine[] | Record<string, unknown>[]
     lifecycle_status?: string
+    is_posted?: boolean
+    total_qty_transferred?: number | string
+    reason?: string
+    notes?: string
+    [key: string]: unknown
 }
 
 export interface TransferOrderLine {
@@ -392,14 +409,18 @@ export interface TransferOrderLine {
 
 export interface AdjustmentOrder {
     id: number
-    reference: string
-    warehouse_id: number
+    reference?: string
+    warehouse?: number
+    warehouse_id?: number
     warehouse_name?: string
-    reason: string
-    status: string
+    reason?: string
+    status?: string
     date: string
-    lines: AdjustmentOrderLine[]
+    lines?: AdjustmentOrderLine[] | Record<string, unknown>[]
     lifecycle_status?: string
+    is_posted?: boolean
+    notes?: string
+    [key: string]: unknown
 }
 
 export interface AdjustmentOrderLine {
@@ -412,14 +433,17 @@ export interface AdjustmentOrderLine {
 
 export interface OperationalRequest {
     id: number
-    reference: string
+    reference?: string
     request_type: string
-    warehouse_id: number
+    warehouse_id?: number
     warehouse_name?: string
     status: string
     date: string
     priority?: string
-    lines: OperationalRequestLine[]
+    description?: string
+    notes?: string
+    lines?: OperationalRequestLine[] | Record<string, unknown>[]
+    [key: string]: unknown
 }
 
 export interface OperationalRequestLine {
@@ -687,6 +711,49 @@ export interface ContactStatementEntry {
     debit: number
     credit: number
     balance: number
+}
+
+export interface LifecycleHistoryEntry {
+    action: string
+    level?: number
+    performed_by_name?: string
+    performed_at: string
+    comment?: string
+    [key: string]: unknown
+}
+
+export interface ValuationResponse {
+    summary?: {
+        total_value: number
+        total_products: number
+        total_quantity: number
+    }
+    products?: Record<string, unknown>[]
+    [key: string]: unknown
+}
+
+export interface LowStockResponse {
+    stats?: {
+        total_alerts: number
+        out_of_stock: number
+        critical: number
+        low: number
+        total_restock_value: number
+    }
+    products?: Record<string, unknown>[]
+    [key: string]: unknown
+}
+
+export interface ExpiryAlertResponse {
+    stats?: {
+        expired: number
+        critical: number
+        warning: number
+        total_value: number
+        total_quantity: number
+    }
+    alerts?: Record<string, unknown>[]
+    [key: string]: unknown
 }
 
 // ─── Common ─────────────────────────────────────────────────────
