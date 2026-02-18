@@ -229,10 +229,11 @@ def register_business_view(request):
 # ── Password Reset (Forgot Password) ────────────────────────────────────────
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([LoginRateThrottle])
 def password_reset_request_view(request):
     """
-    Step 1: User submits email. We generate a token and (hypothetically) send an email.
-    In this implementation, we return the token in the response for development/demo.
+    Step 1: User submits email. We generate a reset token.
+    Token is logged server-side for dev/demo. In production, integrate email sending.
     """
     email = request.data.get('email')
     if not email:
@@ -243,17 +244,11 @@ def password_reset_request_view(request):
         for user in users:
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
-            # In a real system, you would send an email with a link containing uid and token.
-            logger.info(f"[AUTH] Password reset requested for {email}. UID: {uid}, Token: {token}")
-            
-            # For this task, we return them so the frontend can use them immediately
-            return Response({
-                "message": "Password reset instructions have been sent to your email.",
-                "uid": uid,
-                "token": token
-            }, status=status.HTTP_200_OK)
+            # TODO: Send email with reset link containing uid and token
+            # For now, log server-side only (never expose to client)
+            logger.info(f"[AUTH] Password reset token generated for {email}. UID: {uid}, Token: {token}")
     
-    # Always return 200 to avoid email harvesting
+    # Always return identical response to prevent email enumeration
     return Response({
         "message": "If an account exists with this email, you will receive reset instructions."
     }, status=status.HTTP_200_OK)

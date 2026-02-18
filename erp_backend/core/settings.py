@@ -25,12 +25,21 @@ load_dotenv(BASE_DIR / '.env')
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-)0h!pr&=2%m5q1__kj=t)7z=r8q3v(&c8+^ctx3o!!s#(1fkx)'
+_INSECURE_KEY = 'django-insecure-)0h!pr&=2%m5q1__kj=t)7z=r8q3v(&c8+^ctx3o!!s#(1fkx)'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', '')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = os.getenv('DJANGO_DEBUG', 'False').lower() in ('true', '1')
 
-ALLOWED_HOSTS = ['*']
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = _INSECURE_KEY  # Only in dev
+    else:
+        import warnings
+        warnings.warn('DJANGO_SECRET_KEY not set! Using insecure fallback. SET THIS IN PRODUCTION!', RuntimeWarning)
+        SECRET_KEY = _INSECURE_KEY
+
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '.tsf.ci,localhost,127.0.0.1').split(',')
 
 
 # Application definition
@@ -75,7 +84,13 @@ MIDDLEWARE = [
     'erp.middleware.TenantMiddleware',
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS — restrict to known origins
+CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL', 'False').lower() in ('true', '1')
+CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'https://tsf.ci,https://pos.tsf.ci,https://saas.tsf.ci').split(',')
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r'^https://.*\.tsf\.ci$',  # Any subdomain of tsf.ci
+]
+CORS_ALLOW_CREDENTIALS = True
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
