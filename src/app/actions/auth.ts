@@ -100,7 +100,66 @@ export async function loginAction(prevState: any, formData: FormData) {
         }
     }
 
-    // Normal Login (Tenant Context detected or ignored)
+    // ── 2FA Challenge Resolution (Step 2) ──────────────────────────────────────
+    // When challenge_id is present, the user already authenticated in step 1.
+    // Credentials are stored server-side — only challenge_id + OTP needed.
+    if (data.challenge_id && data.challenge_id.toString().trim() !== '') {
+        const { erpFetch } = await import("@/lib/erp-api")
+        try {
+            const responseData = await erpFetch('auth/login/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    challenge_id: data.challenge_id,
+                    otp_token: data.otp_token
+                }),
+            })
+
+            const token = responseData.token
+            const scopeAccess = responseData.scope_access || 'internal'
+            const hStore = await import('next/headers');
+            const hList = await hStore.headers();
+            const isSecure = hList.get('x-forwarded-proto') === 'https';
+
+            const cookieStore = await cookies()
+            cookieStore.set('auth_token', token, {
+                httpOnly: true,
+                secure: isSecure,
+                sameSite: 'lax',
+                path: '/',
+                maxAge: 60 * 60 * 24 * 7,
+            })
+            cookieStore.set('scope_access', scopeAccess, {
+                httpOnly: false,
+                secure: isSecure,
+                sameSite: 'lax',
+                path: '/',
+                maxAge: 60 * 60 * 24 * 7,
+            })
+        } catch (error: any) {
+            let message = 'Verification failed'
+            try {
+                const errData = JSON.parse(error.message)
+                if (errData.error) message = errData.error
+                else if (errData.detail) message = errData.detail
+            } catch (e) {
+                message = error.message || 'Service unavailable'
+            }
+            return { error: { root: [message] } }
+        }
+
+        // Redirect after successful 2FA
+        const headerStore = await import('next/headers');
+        const hList = await headerStore.headers();
+        const host = hList.get('host') || '';
+        if (data.slug === 'saas' || host.includes('saas')) {
+            redirect('/dashboard')
+        } else {
+            redirect('/')
+        }
+    }
+
+    // ── Normal Login (Step 1) ────────────────────────────────────────────────
     const validated = LoginSchema.safeParse(data)
 
     if (!validated.success) {
@@ -126,8 +185,8 @@ export async function loginAction(prevState: any, formData: FormData) {
             return {
                 two_factor_required: true,
                 message: responseData.message,
+                challenge_id: responseData.challenge_id,
                 _username: username,
-                _password: password,
                 _slug: data.slug
             }
         }
