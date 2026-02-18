@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from "react"
+import type { Contact } from '@/types/erp'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
@@ -19,11 +20,11 @@ function fmt(n: number) {
 }
 
 export default function StatementsPage() {
-    const [contacts, setContacts] = useState<any[]>([])
+    const [contacts, setContacts] = useState<Contact[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
-    const [selectedContact, setSelectedContact] = useState<any>(null)
-    const [detail, setDetail] = useState<any>(null)
+    const [selectedContact, setSelectedContact] = useState<Contact | null>(null)
+    const [detail, setDetail] = useState<Record<string, unknown> | null>(null)
     const [activeTab, setActiveTab] = useState<'orders' | 'payments' | 'journal'>('orders')
 
     useEffect(() => { loadContacts() }, [])

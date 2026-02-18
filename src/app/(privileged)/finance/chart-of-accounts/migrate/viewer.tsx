@@ -17,7 +17,7 @@ export default function CoaMigrationTool({
     const [step, setStep] = useState(1)
     const [selectedTemplate, setSelectedTemplate] = useState<string>('')
     const [mappings, setMappings] = useState<Record<number, number>>({})
-    const [targetAccounts, setTargetAccounts] = useState<any[]>([])
+    const [targetAccounts, setTargetAccounts] = useState<Record<string, unknown>[]>([])
     const [isPending, startTransition] = useTransition()
     const router = useRouter()
 

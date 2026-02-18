@@ -32,7 +32,7 @@ const TYPE_CONFIG: Record<string, { color: string, bg: string }> = {
 }
 
 export default function CashRegisterPage() {
-    const [data, setData] = useState<any>(null)
+    const [data, setData] = useState<Record<string, unknown> | null>(null)
     const [loading, setLoading] = useState(true)
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
     const [period, setPeriod] = useState<'today' | 'week' | 'month'>('today')

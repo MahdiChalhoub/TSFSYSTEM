@@ -11,7 +11,7 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
     const [data, setData] = useState(initialData)
     const [isPending, startTransition] = useTransition()
     const [showDiagnostics, setShowDiagnostics] = useState(false)
-    const [diagnostics, setDiagnostics] = useState<any[]>([])
+    const [diagnostics, setDiagnostics] = useState<Record<string, unknown>[]>([])
     const [mounted, setMounted] = useState(false)
     const [isHealing, setIsHealing] = useState(false)
     const router = useRouter()

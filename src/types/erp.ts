@@ -102,9 +102,14 @@ export interface FiscalYear {
     name: string
     start_date: string
     end_date: string
+    startDate?: string
+    endDate?: string
     status: 'OPEN' | 'CLOSED' | 'LOCKED'
     is_locked: boolean
+    is_closed?: boolean
+    isClosed?: boolean
     periods: FiscalPeriod[]
+    [key: string]: unknown
 }
 
 export interface FiscalPeriod {
@@ -250,11 +255,16 @@ export interface TaxSummary {
 export interface ProfitDistribution {
     id: number
     fiscal_year_id: number
+    fiscal_year?: number
     fiscal_year_name?: string
     status: string
     total_profit: number
+    net_profit?: number
     date: string
-    allocations?: ProfitAllocation[]
+    distribution_date?: string
+    allocations?: Record<string, unknown>
+    notes?: string
+    [key: string]: unknown
 }
 
 export interface ProfitAllocation {
@@ -500,10 +510,16 @@ export interface SalesReturn {
     reference: string
     order_id: number
     order_reference?: string
+    original_order?: number
+    original_order_ref?: string
     date: string
+    return_date?: string
     status: string
     total: number
+    reason?: string
+    customer_name?: string
     lines?: SalesReturnLine[]
+    [key: string]: unknown
 }
 
 export interface SalesReturnLine {
@@ -609,9 +625,16 @@ export interface PurchaseReturn {
     reference: string
     order_id: number
     order_reference?: string
+    original_order?: number
+    original_order_ref?: string
     date: string
+    return_date?: string
     status: string
     total: number
+    reason?: string
+    supplier_name?: string
+    supplier?: number
+    [key: string]: unknown
 }
 
 // ─── CRM & HR ───────────────────────────────────────────────────
@@ -626,6 +649,7 @@ export interface Contact {
     company?: string
     tax_id?: string
     balance?: number
+    [key: string]: unknown
 }
 
 export interface Employee {
