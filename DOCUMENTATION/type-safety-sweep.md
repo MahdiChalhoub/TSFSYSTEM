@@ -4,7 +4,7 @@
 Deep elimination of remaining `any` types after Phase 1 (which eliminated all `useState<any[]>`).
 
 ## Summary
-**300+ `any` type instances eliminated** across **130+ files** in 4 sub-phases, with clean builds verified after each phase.
+**300+ `any` type instances eliminated** across **220+ files** in 5 sub-phases, with clean builds verified after each phase.
 
 ## Phases Completed
 
@@ -26,12 +26,18 @@ Deep elimination of remaining `any` types after Phase 1 (which eliminated all `u
 - Covered component props, function params, local variables, widget data types
 - Also updated type interfaces: `SidebarDynamicItem` (+path/module/visibility), `AppNotification` (+title), `AppUser` (+name)
 
+### Phase 2E: `as any` Assertions (51 analyzed)
+- **Auth pages** (15 instances): Kept — `useActionState` discriminated unions require these
+- **Window globals** (6 instances): Kept — architectural pattern for parent→child communication
+- **Tab key casts** (5 instances): Kept — string→union type conversions
+- **Prisma/Legacy** (5 instances): Kept — dead code placeholders
+- **Added** `AuthActionState` interface for future auth page typing
+
 ## Remaining `any` Usage
 The following categories of `any` remain intentionally:
-- `as any` type assertions (~50) — used for window globals, tab key casts, legacy Prisma refs
+- `as any` type assertions (~50) — auth unions, window globals, tab casts, legacy Prisma refs
 - `Record<string, any>` — pragmatic typing for untyped API responses (stepping stone)
 - Core engine `EventHandler` — uses `...args: any[]` for flexible event dispatch
-- `prisma = null as any` — dead code placeholder
 
 ## Data Flow
 - **READ**: Type definitions from `@/types/erp`
@@ -41,3 +47,18 @@ The following categories of `any` remain intentionally:
 ## Verification
 - `npx next build` → exit code 0 after each phase
 - Zero `useState<any>`, `useState<any[]>`, `catch (x: any)`, bare `(param: any)` remaining
+
+## Step-by-Step Workflow
+1. Scan for each `any` pattern category using `grep_search`
+2. Apply bulk PowerShell replacements for mechanical patterns
+3. Fix individual files requiring specific type interfaces
+4. Update type definitions in `src/types/erp.ts` as needed
+5. Verify build after each phase with `npx next build`
+6. Commit and push to `origin/main`
+
+## Commits
+| Version | Scope | Files |
+|---------|-------|-------|
+| v1.4.0-b001 | Phase 1: useState arrays | 22 |
+| v1.4.0-b002 | Phase 2: deep sweep | 219 |
+| v1.4.0-b003 | AuthActionState interface | 1 |
