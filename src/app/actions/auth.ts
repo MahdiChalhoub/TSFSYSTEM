@@ -205,7 +205,7 @@ export async function logoutAction() {
 
     cookieStore.delete('auth_token')
     cookieStore.delete('scope_access')
-    redirect('/login')
+    redirect('/')
 }
 
 /**
