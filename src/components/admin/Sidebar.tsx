@@ -91,7 +91,7 @@ function getIcon(name: string) {
 
 // ─── Tree-Structured Menu ────────────────────────────────────────
 // Module → Feature Group → Page
-const MENU_ITEMS = [
+export const MENU_ITEMS = [
     {
         title: 'Dashboard',
         icon: LayoutDashboard,
