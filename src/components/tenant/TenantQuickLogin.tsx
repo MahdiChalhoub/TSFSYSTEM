@@ -31,7 +31,7 @@ export function TenantQuickLogin({ slug, suffix }: { slug: string; suffix: strin
                     </div>
                 )}
 
-                <input type="hidden" name="slug" value="" />
+                <input type="hidden" name="slug" value={slug} />
 
                 <input
                     name="username"
