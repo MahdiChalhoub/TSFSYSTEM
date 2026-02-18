@@ -94,7 +94,7 @@ function BusinessRegisterContent() {
             <div className="text-center mb-12 space-y-4 relative z-10 w-full max-w-lg">
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-amber-500/5 border border-amber-500/10 rounded-full text-[10px] font-black uppercase tracking-[0.3em] text-amber-400 mb-4 backdrop-blur-xl">
                     <Sparkles size={14} className="animate-pulse" />
-                    Strategic Infrastructure Genesis
+                    New Business Setup
                 </div>
                 <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter italic uppercase">
                     Initialize <span className="text-transparent bg-clip-text bg-gradient-to-br from-amber-400 to-emerald-400 not-italic">{PLATFORM_CONFIG.name.split(' ')[0]}</span>
@@ -149,7 +149,7 @@ function BusinessRegisterContent() {
                                 <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 shadow-inner">
                                     <ShieldCheck size={24} />
                                 </div>
-                                <h3 className="text-2xl font-black text-white italic tracking-tight uppercase">Master Authorization</h3>
+                                <h3 className="text-2xl font-black text-white italic tracking-tight uppercase">Admin Account</h3>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -216,7 +216,7 @@ function BusinessRegisterContent() {
                                 <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shadow-inner">
                                     <Building2 size={24} />
                                 </div>
-                                <h3 className="text-2xl font-black text-white italic tracking-tight uppercase">Operational Identity</h3>
+                                <h3 className="text-2xl font-black text-white italic tracking-tight uppercase">Business Details</h3>
                             </div>
 
                             <div className="space-y-8">
@@ -303,7 +303,7 @@ function BusinessRegisterContent() {
                                 <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shadow-inner">
                                     <Globe size={24} />
                                 </div>
-                                <h3 className="text-2xl font-black text-white italic tracking-tight uppercase">Infrastructure & Intel</h3>
+                                <h3 className="text-2xl font-black text-white italic tracking-tight uppercase">Location & Contact</h3>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">

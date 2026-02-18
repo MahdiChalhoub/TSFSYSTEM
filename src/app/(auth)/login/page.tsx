@@ -123,7 +123,7 @@ function LoginContent() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label className="text-xs uppercase font-bold text-slate-500">Security Token</Label>
+                                    <Label className="text-xs uppercase font-bold text-slate-500">Verification Code</Label>
                                     <Input
                                         name="otp_token"
                                         placeholder="000 000"
