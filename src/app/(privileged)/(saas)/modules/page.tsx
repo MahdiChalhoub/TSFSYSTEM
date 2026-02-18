@@ -442,7 +442,7 @@ function BackupList({ moduleCode, onRollback, currentVersion }: { moduleCode: st
         getModuleBackups(moduleCode).then((data: any[]) => {
             setBackups(data)
             setLoading(false)
-        })
+        }).catch(() => setLoading(false))
     }, [moduleCode])
 
     if (loading) return <div className="text-center py-8 text-gray-500 text-sm">Loading history...</div>

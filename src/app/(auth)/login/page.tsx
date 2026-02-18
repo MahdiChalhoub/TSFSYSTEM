@@ -27,7 +27,7 @@ function LoginContent() {
     const [subdomain, setSubdomain] = useState("");
 
     useEffect(() => {
-        getPublicConfig().then(setConfig);
+        getPublicConfig().then(setConfig).catch(() => { });
         if (typeof window !== 'undefined') {
             const host = window.location.hostname;
             const parts = host.split('.');
