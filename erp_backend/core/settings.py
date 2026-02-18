@@ -94,7 +94,7 @@ CORS_ALLOW_CREDENTIALS = True
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.TokenAuthentication',
+        'erp.auth_token.ExpiringTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
@@ -113,6 +113,9 @@ REST_FRAMEWORK = {
         'tenant_resolve': '30/minute',  # Tenant resolution
     }
 }
+
+# Token expiration (hours) — tokens older than this are auto-rejected
+TOKEN_TTL_HOURS = int(os.getenv('TOKEN_TTL_HOURS', '24'))
 
 
 # SaaS Admin IP Whitelisting

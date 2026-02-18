@@ -1,4 +1,4 @@
-# Auth Security Hardening — v1.3.0-b019
+# Auth Security Hardening — v1.3.0-b020
 
 ## Goal
 Close all critical, high, and medium security vulnerabilities identified during expert auth audit.
@@ -43,6 +43,19 @@ Close all critical, high, and medium security vulnerabilities identified during 
 - **Before**: `validate_admin_username` was a no-op
 - **After**: Checks uniqueness within the `saas` org scope
 
+### Token Expiration (HIGH)
+- **File**: `erp_backend/erp/auth_token.py` (NEW)
+- **Before**: DRF default Token — never expires
+- **After**: Custom `ExpiringTokenAuthentication` with configurable TTL (default 24h)
+- **Behavior**: Expired tokens auto-deleted, returns 401 to trigger re-login
+- **Token Rotation**: Old token deleted + new token created on each login
+
+### Server-Side 2FA Challenge (HIGH)
+- **Files**: `erp_backend/erp/views_auth.py`, `src/app/actions/auth.ts`, `src/app/(auth)/login/page.tsx`, `src/components/tenant/TenantQuickLogin.tsx`
+- **Before**: Password returned to frontend in React state during 2FA step
+- **After**: Credentials stored in Django cache (5-min TTL) with UUID challenge_id. Frontend only receives `challenge_id`, sends `challenge_id + otp_token` to resolve
+- **Security**: Password never appears in DOM, React state, or client-side memory
+
 ## Environment Variables Required
 | Variable | Default | Purpose |
 |---|---|---|
@@ -51,6 +64,7 @@ Close all critical, high, and medium security vulnerabilities identified during 
 | `DJANGO_ALLOWED_HOSTS` | `.tsf.ci,localhost,127.0.0.1` | Allowed request hosts |
 | `CORS_ALLOW_ALL` | `False` | Override CORS to allow all |
 | `CORS_ALLOWED_ORIGINS` | `https://tsf.ci,...` | Explicit CORS origins |
+| `TOKEN_TTL_HOURS` | `24` | Auth token lifetime in hours |
 
 ## Data Flow
 - **Reads**: `User`, `Organization`, `Token` tables

@@ -27,6 +27,12 @@ logger = logging.getLogger('erp')
 @throttle_classes([LoginRateThrottle])
 def login_view(request):
     try:
+        # ── 2FA Challenge Resolution (Step 2) ────────────────────────────────────
+        challenge_id = request.data.get('challenge_id')
+        if challenge_id:
+            return _resolve_2fa_challenge(request, challenge_id)
+
+        # ── Normal Login (Step 1) ────────────────────────────────────────────────
         serializer = LoginSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
@@ -36,9 +42,17 @@ def login_view(request):
         if user.is_2fa_enabled:
             otp_token = request.data.get('otp_token')
             if not otp_token:
-                # Tell the frontend to show the 2FA input screen
+                # Store credentials server-side, return only a challenge ID
+                import uuid
+                from django.core.cache import cache
+                cid = str(uuid.uuid4())
+                cache.set(f'2fa:{cid}', {
+                    'user_id': str(user.pk),
+                    'scope_access': scope_access,
+                }, timeout=300)  # 5 minute TTL
                 return Response({
                     "two_factor_required": True,
+                    "challenge_id": cid,
                     "message": "Two-factor authentication is enabled on this account."
                 }, status=status.HTTP_200_OK)
             
@@ -46,7 +60,9 @@ def login_view(request):
             if not totp.verify(otp_token):
                 return Response({"error": "Invalid 2FA token"}, status=status.HTTP_400_BAD_REQUEST)
 
-        token, created = Token.objects.get_or_create(user=user)
+        # Delete old token and create fresh one (ensures token rotation on each login)
+        Token.objects.filter(user=user).delete()
+        token = Token.objects.create(user=user)
         
         return Response({
             'token': token.key,
@@ -66,6 +82,54 @@ def login_view(request):
             {"error": "Login failed due to a server error. Please try again."},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+def _resolve_2fa_challenge(request, challenge_id):
+    """
+    Resolves a 2FA challenge using server-side cached credentials.
+    The password never leaves the server — only the challenge_id is exchanged.
+    """
+    from django.core.cache import cache
+    
+    otp_token = request.data.get('otp_token')
+    if not otp_token:
+        return Response({"error": "OTP token is required"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Retrieve cached challenge
+    cache_key = f'2fa:{challenge_id}'
+    challenge_data = cache.get(cache_key)
+    
+    if not challenge_data:
+        return Response(
+            {"error": "2FA challenge expired or invalid. Please log in again."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    try:
+        user = User.objects.get(pk=challenge_data['user_id'])
+    except User.DoesNotExist:
+        cache.delete(cache_key)
+        return Response({"error": "User not found"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Verify OTP
+    totp = pyotp.TOTP(user.two_factor_secret)
+    if not totp.verify(otp_token):
+        return Response({"error": "Invalid 2FA token"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Clean up challenge (one-time use)
+    cache.delete(cache_key)
+    
+    # Issue token (with rotation)
+    Token.objects.filter(user=user).delete()
+    token = Token.objects.create(user=user)
+    
+    scope_access = challenge_data.get('scope_access', 'internal')
+    
+    return Response({
+        'token': token.key,
+        'user': UserSerializer(user).data,
+        'scope_access': scope_access,
+    })
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

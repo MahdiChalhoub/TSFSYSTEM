@@ -133,9 +133,8 @@ function LoginContent() {
                                     <p className="text-[10px] text-slate-500 uppercase font-black text-center mt-2">Enter the verification code from your device</p>
                                 </div>
 
-                                {/* Persistent hidden fields to maintain context for the multi-step action */}
-                                <input type="hidden" name="username" defaultValue={(state as any)._username} />
-                                <input type="hidden" name="password" defaultValue={(state as any)._password} />
+                                {/* Server-side 2FA challenge — no passwords in DOM */}
+                                <input type="hidden" name="challenge_id" defaultValue={(state as any).challenge_id} />
                                 {isRoot && <input type="hidden" name="slug" defaultValue={(state as any)._slug} />}
 
                                 <Button className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-lg rounded-lg shadow-lg shadow-emerald-900/20 transition-all uppercase tracking-tighter" disabled={isPending}>

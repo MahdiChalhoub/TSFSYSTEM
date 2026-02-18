@@ -50,9 +50,8 @@ export function TenantQuickLogin({ slug, suffix }: { slug: string; suffix: strin
                             className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white text-center text-2xl font-mono tracking-[0.3em] outline-none focus:border-emerald-500 transition-all focus:ring-4 focus:ring-emerald-500/5 placeholder:text-slate-700"
                         />
 
-                        {/* Persist credentials through 2FA step */}
-                        <input type="hidden" name="username" defaultValue={(state as any)._username} />
-                        <input type="hidden" name="password" defaultValue={(state as any)._password} />
+                        {/* Server-side 2FA challenge — no passwords in DOM */}
+                        <input type="hidden" name="challenge_id" defaultValue={(state as any).challenge_id} />
 
                         <button
                             type="submit"
