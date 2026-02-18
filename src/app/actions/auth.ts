@@ -65,7 +65,7 @@ export async function loginAction(prevState: any, formData: FormData) {
             // We CANNOT redirect to saas.91.99.186.183
             // So we skip the redirection and allow the login to proceed on this host.
             // The user will just stay on the IP.
-            console.log(`[AUTH] IP Address detected (${host}). Skipping subdomain redirect for slug: ${slug}`);
+            // IP address detected — skip subdomain redirect
         }
         else {
             // Domain-based logic (localhost or production domain)

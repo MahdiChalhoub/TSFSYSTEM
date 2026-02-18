@@ -349,7 +349,7 @@ const TEMPLATES = {
 }
 
 export async function importChartOfAccountsTemplate(templateKey: keyof typeof TEMPLATES, options?: { reset?: boolean }) {
-    console.log(`[COA_TEMPLATE] Starting import for ${templateKey}, reset=${options?.reset}`)
+
 
     try {
         const { erpFetch } = await import('@/lib/erp-api')
@@ -386,7 +386,7 @@ export async function getTemplatePreview(templateKey: keyof typeof TEMPLATES) {
  * Moves all balances from old accounts to new ones and deactivates old ones.
  */
 export async function migrateBalances(data: { mappings: any[], description: string }) {
-    console.log(`[COA_MIGRATE] Executing migration: ${data.description}`)
+
     try {
         const { erpFetch } = await import('@/lib/erp-api')
         return await erpFetch('coa/migrate/', {

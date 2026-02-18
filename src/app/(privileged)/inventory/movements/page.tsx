@@ -40,7 +40,7 @@ export default function InventoryMovementsPage() {
                 endpoint="inventory/inventory-movements"
                 fetcher={getInventoryMovementsUDLE}
                 metaFetcher={getInventoryMovementsMeta}
-                onRowClick={(row) => console.log("Selected Row:", row)}
+                onRowClick={() => { }}
             />
         </div>
     );
