@@ -12,7 +12,7 @@ const isDev = process.env.NODE_ENV === 'development';
 const debug = (...args: any[]) => isDev && console.log(...args);
 
 /** Custom error class for ERP API errors — used for type-safe catch blocks */
-class ErpApiError extends Error {
+export class ErpApiError extends Error {
     status: number
     constructor(message: string, status: number) {
         super(message)

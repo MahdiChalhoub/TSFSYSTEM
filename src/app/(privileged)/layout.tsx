@@ -16,7 +16,7 @@ import { getOrganizations } from '@/app/(privileged)/(saas)/organizations/action
 import { getUser } from '@/app/actions/auth';
 import { getGlobalFinancialSettings } from '@/app/actions/settings';
 
-import { headers } from 'next/headers';
+import { headers, cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
@@ -90,8 +90,11 @@ export default async function AdminLayout({
 
 
 
+    const cookieStore = await cookies();
+    const scopeAccess = cookieStore.get('scope_access')?.value as 'official' | 'internal' | undefined;
+
     return (
-        <AdminProvider contextKey={currentSlug}>
+        <AdminProvider contextKey={currentSlug} initialScopeAccess={scopeAccess || 'internal'}>
             <DevProvider>
                 <div className="flex h-screen bg-gray-50 overflow-hidden font-sans text-gray-900">
                     {/* Left Panel: Sidebar Tree */}

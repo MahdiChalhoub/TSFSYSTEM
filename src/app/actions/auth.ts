@@ -10,6 +10,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { PLATFORM_CONFIG } from '@/lib/saas_config'
+import { ErpApiError } from '@/lib/erp-api'
 
 // Original schema
 const LoginSchema = z.object({
@@ -134,7 +135,7 @@ export async function loginAction(prevState: any, formData: FormData) {
                 ...(cookieDomain && { domain: cookieDomain }),
             })
             cookieStore.set('scope_access', scopeAccess, {
-                httpOnly: false,
+                httpOnly: true,
                 secure: isSecure,
                 sameSite: 'lax',
                 path: '/',
@@ -217,7 +218,7 @@ export async function loginAction(prevState: any, formData: FormData) {
             ...(cookieDomain && { domain: cookieDomain }),
         })
         cookieStore.set('scope_access', scopeAccess, {
-            httpOnly: false,
+            httpOnly: true,
             secure: isSecure,
             sameSite: 'lax',
             path: '/',
@@ -290,8 +291,7 @@ export const getUser = cache(async function getUser() {
         // Robust check for session expiry / invalid credentials
         const msg = error.message?.toLowerCase() || '';
         const isAuthError =
-            msg.includes('401') ||
-            msg.includes('403') ||
+            (error instanceof ErpApiError && (error.status === 401 || error.status === 403)) ||
             msg.includes('invalid token') ||
             msg.includes('credentials') ||
             msg.includes('unauthorized') ||
@@ -337,12 +337,25 @@ export async function requestPasswordResetAction(email: string) {
     })
 }
 
+const PasswordResetSchema = z.object({
+    token: z.string().min(1, 'Reset token is required'),
+    new_password: z.string().min(8, 'Password must be at least 8 characters'),
+    confirm_password: z.string().min(1, 'Password confirmation is required'),
+}).refine(data => data.new_password === data.confirm_password, {
+    message: 'Passwords do not match',
+    path: ['confirm_password'],
+})
+
 export async function confirmPasswordResetAction(data: any) {
+    const validated = PasswordResetSchema.safeParse(data)
+    if (!validated.success) {
+        throw new Error(validated.error.issues[0]?.message || 'Invalid input')
+    }
     const { erpFetch } = await import("@/lib/erp-api")
     return erpFetch('auth/password-reset/confirm/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify(validated.data)
     })
 }
 
