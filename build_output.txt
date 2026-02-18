@@ -3,28 +3,27 @@
 - Experiments (use with caution):
   ┬╖ serverActions
 
-node.exe : ΓÜá The "middleware" file 
-convention is deprecated. Please use 
-"proxy" instead. Learn more: https://nextjs.
-org/docs/messages/middleware-to-proxy
+node.exe : ΓÜá The "middleware" file convention 
+is deprecated. Please use "proxy" instead. Learn 
+more: https://nextjs.org/docs/messages/middleware
+-to-proxy
 At C:\Program Files\nodejs\npx.ps1:29 char:3
 +   & $NODE_EXE $NPX_CLI_JS $args
 +   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    + CategoryInfo          : NotSpecified: 
-    (ΓÜá The "middle...leware-to-proxy:Str  
-  ing) [], RemoteException
-    + FullyQualifiedErrorId : NativeCommand 
-   Error
+    + CategoryInfo          : NotSpecified: (ΓÜá 
+    The "middle...leware-to-proxy:String) [], R  
+  emoteException
+    + FullyQualifiedErrorId : NativeCommandError
  
   Creating an optimized production build ...
-Γ£ô Compiled successfully in 15.7s
+Γ£ô Compiled successfully in 14.8s
   Skipping validation of types
   Collecting page data using 11 workers ...
   Generating static pages using 11 workers (0/10) ...
   Generating static pages using 11 workers (2/10) 
   Generating static pages using 11 workers (4/10) 
   Generating static pages using 11 workers (7/10) 
-Γ£ô Generating static pages using 11 workers (10/10) in 577.7ms
+Γ£ô Generating static pages using 11 workers (10/10) in 441.4ms
   Finalizing page optimization ...
 
 Route (app)

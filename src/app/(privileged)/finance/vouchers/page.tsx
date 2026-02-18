@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useTransition, useMemo } from "react"
+import type { Voucher, FinancialAccount, FinancialEvent, LifecycleHistoryEntry } from '@/types/erp'
 import {
     getVouchers, createVoucher, updateVoucher, postVoucher, deleteVoucher,
     lockVoucher, unlockVoucher, verifyVoucher, confirmVoucher, getVoucherHistory,
@@ -33,15 +34,15 @@ const LIFECYCLE_CONFIG: Record<string, { label: string; color: string; bg: strin
 }
 
 export default function VouchersPage() {
-    const [vouchers, setVouchers] = useState<any[]>([])
-    const [accounts, setAccounts] = useState<any[]>([])
-    const [events, setEvents] = useState<any[]>([])
+    const [vouchers, setVouchers] = useState<Voucher[]>([])
+    const [accounts, setAccounts] = useState<FinancialAccount[]>([])
+    const [events, setEvents] = useState<FinancialEvent[]>([])
     const [loading, setLoading] = useState(true)
     const [dialogOpen, setDialogOpen] = useState(false)
-    const [editVoucher, setEditVoucher] = useState<any>(null)
+    const [editVoucher, setEditVoucher] = useState<Voucher | null>(null)
     const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null)
     const [commentDialog, setCommentDialog] = useState<{ id: number; action: string } | null>(null)
-    const [historyDialog, setHistoryDialog] = useState<any[] | null>(null)
+    const [historyDialog, setHistoryDialog] = useState<LifecycleHistoryEntry[] | null>(null)
     const [voucherType, setVoucherType] = useState<'TRANSFER' | 'RECEIPT' | 'PAYMENT'>('TRANSFER')
     const [activeTab, setActiveTab] = useState<string>("ALL")
     const [searchQuery, setSearchQuery] = useState("")

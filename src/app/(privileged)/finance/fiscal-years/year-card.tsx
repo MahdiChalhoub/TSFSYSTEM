@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import type { FiscalPeriod } from '@/types/erp'
 import { deleteFiscalYear, updatePeriodStatus, closeFiscalYear, hardLockFiscalYear, transferBalancesToNextYear } from '@/app/actions/finance/fiscal-year'
 import { Trash2, Lock, Edit2, PlayCircle, Clock, ShieldCheck, Forward } from 'lucide-react'
 import PeriodEditor from './period-editor'
@@ -9,7 +10,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 export default function FiscalYearCard({ year, nextYear }: { year: any, nextYear?: any }) {
     const [isPending, startTransition] = useTransition()
-    const [editingPeriod, setEditingPeriod] = useState<any>(null)
+    const [editingPeriod, setEditingPeriod] = useState<FiscalPeriod | null>(null)
 
     const [pendingAction, setPendingAction] = useState<{ type: string; title: string; description: string; variant: 'danger' | 'warning' | 'info' } | null>(null)
 

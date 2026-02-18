@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import { getFiscalYears, getFiscalGaps } from '@/app/actions/finance/fiscal-year'
+import type { FiscalYear } from '@/types/erp'
 import FiscalYearWizard from './wizard'
 import FiscalYearCard from './year-card'
 import { AlertTriangle, Loader2 } from 'lucide-react'
 
 export default function FiscalYearsPage() {
-    const [years, setYears] = useState<any[]>([])
-    const [gaps, setGaps] = useState<any[]>([])
+    const [years, setYears] = useState<FiscalYear[]>([])
+    const [gaps, setGaps] = useState<{ days: number; after: string; startDate: string; endDate: string }[]>([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {

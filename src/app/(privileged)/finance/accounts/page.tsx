@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from "react"
+import type { ChartOfAccount } from '@/types/erp'
 import { getFinancialAccounts, deleteFinancialAccount, assignUserToAccount, unassignUser } from "./actions"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -20,7 +21,7 @@ import {
 import { UserPicker } from "@/components/admin/user-picker" // Assuming this exists or I'll create one
 
 export default function FinancialAccountsPage() {
-    const [accounts, setAccounts] = useState<any[]>([])
+    const [accounts, setAccounts] = useState<ChartOfAccount[]>([])
     const [loading, setLoading] = useState(true)
 
     const load = async () => {
