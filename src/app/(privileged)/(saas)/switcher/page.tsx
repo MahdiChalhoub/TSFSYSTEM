@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from "react"
+import { SaasOrganization } from "@/types/erp"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -9,7 +10,7 @@ import { toast } from "sonner"
 import { getOrganizations } from "@/app/(privileged)/(saas)/organizations/actions"
 
 export default function SwitcherPage() {
-    const [orgs, setOrgs] = useState<any[]>([])
+    const [orgs, setOrgs] = useState<SaasOrganization[]>([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { AppUser } from "@/types/erp";
 import { Check, ChevronsUpDown, Loader2, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -25,7 +26,7 @@ export function UserPicker({ value, onChange, disabled = false }: {
     disabled?: boolean
 }) {
     const [open, setOpen] = useState(false);
-    const [users, setUsers] = useState<any[]>([]);
+    const [users, setUsers] = useState<AppUser[]>([]);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {

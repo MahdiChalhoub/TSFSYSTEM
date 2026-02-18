@@ -1090,3 +1090,107 @@ export interface PackageStats {
     pending_count?: number
     [key: string]: unknown
 }
+
+// ─── SaaS Array Elements ────────────────────────────────────────
+
+export interface SaasModule {
+    id: number
+    name: string
+    code: string
+    is_active?: boolean
+    is_core?: boolean
+    [key: string]: unknown
+}
+
+export interface SaasUser {
+    id: number
+    username: string
+    email?: string
+    first_name?: string
+    last_name?: string
+    role?: string
+    is_active?: boolean
+    [key: string]: unknown
+}
+
+export interface SaasSite {
+    id: number
+    name: string
+    address?: string
+    is_active?: boolean
+    [key: string]: unknown
+}
+
+export interface SaasAddon {
+    id: number
+    name: string
+    code?: string
+    price?: number | string
+    description?: string
+    [key: string]: unknown
+}
+
+export interface PlanCategory {
+    id: number
+    name: string
+    [key: string]: unknown
+}
+
+export interface SaasUpdateHistoryEntry {
+    id: number
+    version: string
+    applied_at?: string
+    status?: string
+    [key: string]: unknown
+}
+
+export interface SaasBackup {
+    id: number
+    filename?: string
+    size?: number
+    created_at?: string
+    [key: string]: unknown
+}
+
+// ─── Admin / UI Array Elements ──────────────────────────────────
+
+export interface SidebarDynamicItem {
+    label: string
+    href: string
+    icon?: string
+    children?: SidebarDynamicItem[]
+    [key: string]: unknown
+}
+
+export interface AppNotification {
+    id: number
+    message: string
+    type?: string
+    read_at?: string | null
+    created_at?: string
+    [key: string]: unknown
+}
+
+export interface BusinessType {
+    id: number
+    name: string
+    [key: string]: unknown
+}
+
+export interface Currency {
+    id: number
+    code: string
+    name: string
+    symbol?: string
+    [key: string]: unknown
+}
+
+export interface AppUser {
+    id: number
+    username: string
+    email?: string
+    first_name?: string
+    last_name?: string
+    role?: string
+    [key: string]: unknown
+}

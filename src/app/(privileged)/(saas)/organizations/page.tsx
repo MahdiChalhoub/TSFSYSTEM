@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from "react"
-import { SaasOrganization } from "@/types/erp"
+import { SaasOrganization, BusinessType, Currency, SaasModule } from "@/types/erp"
 import { useRouter } from "next/navigation"
 import { getOrganizations, toggleOrganizationStatus, createOrganization, deleteOrganization, getBusinessTypes, getCurrencies } from "./actions"
 import { getOrgModules, toggleOrgModule, updateOrgModuleFeatures } from "@/app/actions/saas/modules"
@@ -17,9 +17,9 @@ import { Label } from "@/components/ui/label"
 import { PLATFORM_CONFIG, useDynamicBranding } from "@/lib/saas_config"
 
 export default function OrganizationsPage() {
-    const [orgs, setOrgs] = useState<any[]>([])
-    const [businessTypes, setBusinessTypes] = useState<any[]>([])
-    const [currencies, setCurrencies] = useState<any[]>([])
+    const [orgs, setOrgs] = useState<SaasOrganization[]>([])
+    const [businessTypes, setBusinessTypes] = useState<BusinessType[]>([])
+    const [currencies, setCurrencies] = useState<Currency[]>([])
     const [loading, setLoading] = useState(true)
     const [mounted, setMounted] = useState(false)
     const [pendingDeleteOrg, setPendingDeleteOrg] = useState<SaasOrganization | null>(null)
@@ -151,7 +151,7 @@ export default function OrganizationsPage() {
     }
 
     const [selectedOrg, setSelectedOrg] = useState<SaasOrganization | null>(null)
-    const [orgModules, setOrgModules] = useState<any[]>([])
+    const [orgModules, setOrgModules] = useState<SaasModule[]>([])
     const [loadingModules, setLoadingModules] = useState(false)
     const [modulesOpen, setModulesOpen] = useState(false)
 

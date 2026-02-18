@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from "react"
+import { FinancialAccount } from "@/types/erp"
 import { getFinancialAccounts } from "@/app/actions/finance/financial-accounts"
 
 
@@ -13,7 +14,7 @@ export function FinanceAccountSelector({
     onChange: (val: string) => void,
     label?: string
 }) {
-    const [accounts, setAccounts] = useState<any[]>([])
+    const [accounts, setAccounts] = useState<FinancialAccount[]>([])
 
     useEffect(() => {
         getFinancialAccounts().then(setAccounts)

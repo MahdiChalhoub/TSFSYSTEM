@@ -13,7 +13,7 @@ export default function DebugOverlay() {
     const { viewScope } = useAdmin();
     const [mounted, setMounted] = useState(false);
     const [settings, setSettings] = useState<Record<string, unknown> | null>(null);
-    const [recentLedger, setRecentLedger] = useState<any[]>([]);
+    const [recentLedger, setRecentLedger] = useState<Record<string, unknown>[]>([]);
 
     // Only show in development
     useEffect(() => {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useAdmin } from '@/context/AdminContext';
+import { SidebarDynamicItem } from "@/types/erp";
 import {
     ShoppingBag,
     Box,
@@ -344,7 +345,7 @@ export function Sidebar({
 }) {
     const { sidebarOpen, toggleSidebar, openTab, activeTab, viewScope, setViewScope, canToggleScope, scopeAccess } = useAdmin();
     const [installedModules, setInstalledModules] = useState<Set<string>>(new Set(['core']));
-    const [dynamicItems, setDynamicItems] = useState<any[]>([]);
+    const [dynamicItems, setDynamicItems] = useState<SidebarDynamicItem[]>([]);
 
     useEffect(() => {
         async function fetchData() {

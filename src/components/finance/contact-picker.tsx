@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from "react"
+import { Contact } from "@/types/erp"
 import { getContactsByType } from "@/app/actions/crm/contacts"
 
 
@@ -15,7 +16,7 @@ export function ContactPicker({
     onChange: (val: string) => void,
     label?: string
 }) {
-    const [contacts, setContacts] = useState<any[]>([])
+    const [contacts, setContacts] = useState<Contact[]>([])
 
     useEffect(() => {
         getContactsByType(type).then(setContacts)

@@ -17,7 +17,7 @@ function fmt(n: number) {
 }
 
 export default function LabelPrintingPage() {
-    const [products, setProducts] = useState<any[]>([])
+    const [products, setProducts] = useState<Product[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
     const [selected, setSelected] = useState<Set<number>>(new Set())
