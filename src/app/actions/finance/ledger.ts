@@ -40,7 +40,9 @@ export async function createJournalEntry(data: any) {
             account_id: l.accountId || l.account_id,
             debit: l.debit,
             credit: l.credit,
-            description: l.description
+            description: l.description,
+            contact_id: l.contactId || l.contact_id || null,
+            employee_id: l.employeeId || l.employee_id || null,
         }))
     }
 
@@ -64,7 +66,9 @@ export async function updateJournalEntry(id: number, data: any) {
             account_id: l.accountId || l.account_id,
             debit: l.debit,
             credit: l.credit,
-            description: l.description
+            description: l.description,
+            contact_id: l.contactId || l.contact_id || null,
+            employee_id: l.employeeId || l.employee_id || null,
         }))
     }
 
@@ -128,7 +132,10 @@ export async function recalculateAccountBalances() {
     }
 }
 
-export async function clearAllJournalEntries() {
+export async function clearAllJournalEntries(confirm: 'YES_DELETE_ALL' | null = null) {
+    if (confirm !== 'YES_DELETE_ALL') {
+        return { success: false, message: 'Confirmation required: pass "YES_DELETE_ALL" to proceed.' }
+    }
     try {
         await erpFetch('journal/clear_all/', {
             method: 'POST'

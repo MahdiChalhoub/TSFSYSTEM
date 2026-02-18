@@ -15,8 +15,8 @@ export async function getChartOfAccounts(includeInactive: boolean = false, scope
         const result = await erpFetch(`coa/coa/?${query}`)
         return serialize(result.map((acc: any) => ({
             ...acc,
-            balance: Number(acc.rollup_balance),
-            directBalance: Number(acc.temp_balance)
+            balance: Number(acc.rollup_balance ?? 0),
+            directBalance: Number(acc.temp_balance ?? 0)
         })))
     } catch (error) {
         console.error("Failed to fetch COA:", error)
@@ -104,13 +104,13 @@ export async function getAccountStatement(accountId: number, filter?: { startDat
         return serialize({
             account: {
                 ...result.account,
-                balance: Number(result.account.balance)
+                balance: Number(result.account.balance ?? 0)
             },
-            openingBalance: Number(result.opening_balance),
+            openingBalance: Number(result.opening_balance ?? 0),
             lines: result.lines.map((l: any) => ({
                 ...l,
-                debit: Number(l.debit),
-                credit: Number(l.credit)
+                debit: Number(l.debit ?? 0),
+                credit: Number(l.credit ?? 0)
             }))
         })
     } catch (error) {
@@ -129,8 +129,8 @@ export async function getTrialBalanceReport(asOfDate?: Date, legalReport: boolea
         const result = await erpFetch(`coa/trial_balance/?${query}`)
         return serialize(result.map((acc: any) => ({
             ...acc,
-            balance: Number(acc.rollup_balance),
-            directBalance: Number(acc.temp_balance)
+            balance: Number(acc.rollup_balance ?? 0),
+            directBalance: Number(acc.temp_balance ?? 0)
         })))
     } catch (error) {
         console.error("Failed to fetch trial balance:", error)
@@ -140,16 +140,20 @@ export async function getTrialBalanceReport(asOfDate?: Date, legalReport: boolea
 
 export async function getProfitAndLossReport(startDate: Date, endDate: Date, scope: 'OFFICIAL' | 'INTERNAL' = 'INTERNAL') {
     try {
-        // Use trial balance data filtered to INCOME and EXPENSE accounts
-        const query = new URLSearchParams({ scope }).toString()
+        // Pass date range to backend so it returns period-specific balances
+        const query = new URLSearchParams({
+            scope,
+            start_date: startDate.toISOString(),
+            end_date: endDate.toISOString()
+        }).toString()
         const result = await erpFetch(`coa/trial_balance/?${query}`)
         return serialize(
             result
                 .filter((acc: any) => acc.type === 'INCOME' || acc.type === 'EXPENSE')
                 .map((acc: any) => ({
                     ...acc,
-                    balance: Number(acc.rollup_balance),
-                    directBalance: Number(acc.temp_balance)
+                    balance: Number(acc.rollup_balance ?? 0),
+                    directBalance: Number(acc.temp_balance ?? 0)
                 }))
         )
     } catch (error) {
@@ -160,15 +164,20 @@ export async function getProfitAndLossReport(startDate: Date, endDate: Date, sco
 
 export async function getBalanceSheetReport(asOfDate: Date, scope: 'OFFICIAL' | 'INTERNAL' = 'INTERNAL') {
     try {
-        const query = new URLSearchParams({ scope }).toString()
+        const query = new URLSearchParams({
+            scope,
+            as_of: asOfDate.toISOString()
+        }).toString()
         const result = await erpFetch(`coa/trial_balance/?${query}`)
         const mapped = result.map((acc: any) => ({
             ...acc,
-            balance: Number(acc.rollup_balance),
-            directBalance: Number(acc.temp_balance)
+            balance: Number(acc.rollup_balance ?? 0),
+            directBalance: Number(acc.temp_balance ?? 0)
         }))
 
-        // Compute net profit from income - expense for the equity section
+        // Net Profit = Total Income - Total Expense
+        // We use root-level accounts only (!a.parent) because rollup_balance
+        // already aggregates all child account balances into parents.
         const totalIncome = mapped
             .filter((a: any) => a.type === 'INCOME' && !a.parent)
             .reduce((sum: number, a: any) => sum + a.balance, 0)

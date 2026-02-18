@@ -38,6 +38,9 @@ export type VoucherUpdateInput = {
 }
 
 export async function createVoucher(data: VoucherInput) {
+    if (!data.amount || data.amount <= 0) {
+        throw new Error('Voucher amount must be greater than zero.')
+    }
     try {
         const voucher = await erpFetch('vouchers/', {
             method: 'POST',

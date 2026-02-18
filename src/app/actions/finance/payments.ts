@@ -25,6 +25,9 @@ export async function recordSupplierPayment(data: {
     supplier_invoice_id?: number
     payment_account_id?: number
 }) {
+    if (!data.amount || data.amount <= 0) {
+        throw new Error('Payment amount must be greater than zero.')
+    }
     const result = await erpFetch('payments/supplier_payment/', {
         method: 'POST',
         body: JSON.stringify(data)
@@ -42,6 +45,9 @@ export async function recordCustomerReceipt(data: {
     sales_order_id?: number
     payment_account_id?: number
 }) {
+    if (!data.amount || data.amount <= 0) {
+        throw new Error('Receipt amount must be greater than zero.')
+    }
     const result = await erpFetch('payments/customer_receipt/', {
         method: 'POST',
         body: JSON.stringify(data)
