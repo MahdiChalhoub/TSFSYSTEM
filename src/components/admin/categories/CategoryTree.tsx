@@ -5,6 +5,7 @@ import { ChevronRight, ChevronDown, Edit2, Trash2, Plus, Folder, AlertCircle } f
 import { CategoryFormModal } from './CategoryFormModal';
 import { deleteCategory } from '@/app/actions/categories';
 import { toast } from 'sonner';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 type CategoryNode = {
     id: number;
@@ -18,6 +19,7 @@ type CategoryNode = {
 
 export function CategoryTree({ categories, allCategories = [] }: { categories: CategoryNode[], allCategories?: any[] }) {
     const [activeModal, setActiveModal] = useState<{ type: 'edit' | 'add-child' | 'none', category?: CategoryNode, parentId?: number }>({ type: 'none' });
+    const [deleteTarget, setDeleteTarget] = useState<CategoryNode | null>(null);
 
     const handleEdit = useCallback((category: CategoryNode) => {
         setActiveModal({ type: 'edit', category });
@@ -26,6 +28,17 @@ export function CategoryTree({ categories, allCategories = [] }: { categories: C
     const handleAddChild = useCallback((parentId: number) => {
         setActiveModal({ type: 'add-child', parentId });
     }, []);
+
+    const handleRequestDelete = useCallback((category: CategoryNode) => {
+        setDeleteTarget(category);
+    }, []);
+
+    const handleConfirmDelete = async () => {
+        if (!deleteTarget) return;
+        await deleteCategory(deleteTarget.id);
+        toast.success(`"${deleteTarget.name}" deleted`);
+        setDeleteTarget(null);
+    };
 
     const closeModals = useCallback(() => {
         setActiveModal({ type: 'none' });
@@ -41,6 +54,7 @@ export function CategoryTree({ categories, allCategories = [] }: { categories: C
                     allCategories={allCategories}
                     onEdit={handleEdit}
                     onAddChild={handleAddChild}
+                    onDelete={handleRequestDelete}
                 />
             ))}
 
@@ -54,6 +68,16 @@ export function CategoryTree({ categories, allCategories = [] }: { categories: C
                     potentialParents={allCategories}
                 />
             )}
+
+            <ConfirmDialog
+                open={deleteTarget !== null}
+                onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
+                onConfirm={handleConfirmDelete}
+                title={`Delete "${deleteTarget?.name}"?`}
+                description="This will permanently remove this category. Make sure it has no products assigned."
+                confirmText="Delete"
+                variant="danger"
+            />
         </div>
     );
 }
@@ -63,26 +87,26 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
     level,
     allCategories,
     onEdit,
-    onAddChild
+    onAddChild,
+    onDelete
 }: {
     category: CategoryNode;
     level: number;
     allCategories: any[];
     onEdit: (cat: CategoryNode) => void;
     onAddChild: (id: number) => void;
+    onDelete: (cat: CategoryNode) => void;
 }) {
     const [isExpanded, setIsExpanded] = useState(true);
 
     const hasChildren = category.children && category.children.length > 0;
 
-    const handleDelete = async () => {
+    const handleDelete = () => {
         if (hasChildren) {
             toast.error('Cannot delete a category that has sub-categories. Please delete the sub-categories first.');
             return;
         }
-        if (confirm(`Are you sure you want to delete "${category.name}"?`)) {
-            await deleteCategory(category.id);
-        }
+        onDelete(category);
     };
 
     return (
@@ -174,6 +198,7 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
                             allCategories={allCategories}
                             onEdit={onEdit}
                             onAddChild={onAddChild}
+                            onDelete={onDelete}
                         />
                     ))}
                 </div>

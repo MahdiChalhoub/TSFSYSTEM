@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { ChevronRight, ChevronDown, Edit2, Trash2, Plus, Package } from 'lucide-react';
 import { UnitFormModal } from './UnitFormModal';
 import { deleteUnit } from '@/app/actions/inventory';
+import { toast } from 'sonner';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 type UnitNode = {
     id: number;
@@ -32,12 +34,19 @@ function UnitTreeNode({ unit, level, potentialParents }: { unit: UnitNode; level
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [isAddChildOpen, setIsAddChildOpen] = useState(false);
 
+    const [deleteTarget, setDeleteTarget] = useState<UnitNode | null>(null);
+
     const hasChildren = unit.children && unit.children.length > 0;
 
-    const handleDelete = async () => {
-        if (confirm(`Are you sure you want to delete ${unit.name}? This cannot be undone.`)) {
-            await deleteUnit(unit.id);
-        }
+    const handleDelete = () => {
+        setDeleteTarget(unit);
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteTarget) return;
+        await deleteUnit(deleteTarget.id);
+        toast.success(`"${deleteTarget.name}" deleted`);
+        setDeleteTarget(null);
     };
 
     return (
@@ -145,6 +154,16 @@ function UnitTreeNode({ unit, level, potentialParents }: { unit: UnitNode; level
                 baseUnitId={unit.id}
                 baseUnitName={unit.name}
                 potentialParents={potentialParents}
+            />
+
+            <ConfirmDialog
+                open={deleteTarget !== null}
+                onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
+                onConfirm={confirmDelete}
+                title={`Delete "${deleteTarget?.name}"?`}
+                description="This will permanently remove this unit. Products using it may be affected."
+                confirmText="Delete"
+                variant="danger"
             />
         </div>
     );
