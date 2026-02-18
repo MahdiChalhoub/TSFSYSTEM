@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { PLATFORM_CONFIG } from "@/lib/branding";
-import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
     title: `${PLATFORM_CONFIG.name} | Access Gateway`,
@@ -15,7 +14,6 @@ export default function LoginLayout({
     return (
         <>
             {children}
-            <Toaster position="top-center" richColors />
         </>
     );
 }

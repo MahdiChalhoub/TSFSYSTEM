@@ -17,7 +17,7 @@ export default function PrivilegedError({
                 <AlertCircle size={32} />
             </div>
             <h2 className="text-2xl font-black text-gray-900 tracking-tight underline decoration-red-500 decoration-4 underline-offset-4">
-                Platform Sync Interrupted
+                Something Went Wrong
             </h2>
             <p className="text-gray-500 mt-4 font-medium max-w-sm mx-auto leading-relaxed">
                 An unexpected error occurred while loading this page. Please try again or return to the dashboard.
