@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import {
     createDiscountRule, deleteDiscountRule, toggleDiscountRule, getDiscountUsageLog
 } from '@/app/actions/discounts'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 interface DiscountRule {
     id: number; name: string; code: string | null
@@ -92,10 +93,13 @@ export default function DiscountManager({
         setRules(prev => prev.map(r => r.id === id ? res : r))
     }
 
-    const handleDelete = async (id: number) => {
-        if (!confirm('Delete this discount rule?')) return
-        await deleteDiscountRule(id)
-        setRules(prev => prev.filter(r => r.id !== id))
+    const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
+
+    const handleDelete = async () => {
+        if (deleteTarget === null) return
+        await deleteDiscountRule(deleteTarget)
+        setRules(prev => prev.filter(r => r.id !== deleteTarget))
+        setDeleteTarget(null)
     }
 
     const handleViewLog = async (ruleId: number) => {
@@ -179,7 +183,7 @@ export default function DiscountManager({
                                         className={`p-2 rounded-lg ${rule.is_active ? 'text-emerald-600 hover:bg-emerald-50' : 'text-gray-400 hover:bg-gray-200'}`}>
                                         {rule.is_active ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
                                     </button>
-                                    <button onClick={() => handleDelete(rule.id)}
+                                    <button onClick={() => setDeleteTarget(rule.id)}
                                         className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
                                         <Trash2 size={14} />
                                     </button>
@@ -336,6 +340,16 @@ export default function DiscountManager({
                     </div>
                 </div>
             )}
+
+            <ConfirmDialog
+                open={deleteTarget !== null}
+                onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
+                onConfirm={handleDelete}
+                title="Delete Discount Rule?"
+                description="This will permanently remove this discount rule and its usage history."
+                confirmText="Delete"
+                variant="danger"
+            />
         </div>
     )
 }

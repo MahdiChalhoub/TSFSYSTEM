@@ -22,6 +22,7 @@ import {
     Plus, Search, Clock, AlertTriangle, CheckCircle2, Sparkles,
     Package, ClipboardList, Trash2, Eye, ShieldCheck, Loader2, Users
 } from "lucide-react"
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 // ─── Types ───────────────────────────────────────────────────────
 interface Session {
@@ -99,13 +100,16 @@ export default function StockCountPage() {
     const pending = sessions.filter(s => s.status === 'WAITING_VERIFICATION').length
     const completed = sessions.filter(s => s.status === 'VERIFIED' || s.status === 'ADJUSTED').length
 
+    const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
+
     // ─── Delete ───
-    const handleDelete = (id: number) => {
-        if (!confirm("Delete this session? This cannot be undone.")) return
+    const handleDelete = () => {
+        if (deleteTarget === null) return
         startTransition(async () => {
-            await deleteCountingSession(id)
+            await deleteCountingSession(deleteTarget)
             fetchSessions()
         })
+        setDeleteTarget(null)
     }
 
     // ─── Create callback ───
@@ -238,7 +242,7 @@ export default function StockCountPage() {
                                                         <Eye className="w-3.5 h-3.5 mr-1" /> View
                                                     </Button>
                                                 )}
-                                                <Button size="sm" variant="ghost" className="text-destructive" onClick={() => handleDelete(s.id)}>
+                                                <Button size="sm" variant="ghost" className="text-destructive" onClick={() => setDeleteTarget(s.id)}>
                                                     <Trash2 className="w-3.5 h-3.5" />
                                                 </Button>
                                             </div>
@@ -253,6 +257,16 @@ export default function StockCountPage() {
 
             {/* Create Modal */}
             {showCreate && <CreateSessionDialog onClose={() => setShowCreate(false)} onCreated={handleCreated} />}
+
+            <ConfirmDialog
+                open={deleteTarget !== null}
+                onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
+                onConfirm={handleDelete}
+                title="Delete Session?"
+                description="This will permanently delete this counting session. This cannot be undone."
+                confirmText="Delete"
+                variant="danger"
+            />
         </div>
     )
 }

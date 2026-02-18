@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
     MapPin, Plus, DollarSign, Clock, Layers, Edit2, Trash2, X, Check
 } from "lucide-react"
@@ -80,16 +81,19 @@ export default function DeliveryZonesPage() {
         }
     }
 
-    async function handleDelete(id: number) {
-        if (!confirm("Delete this delivery zone?")) return
+    const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
+
+    async function handleDelete() {
+        if (deleteTarget === null) return
         try {
             const { erpFetch } = await import("@/lib/erp-api")
-            await erpFetch(`pos/delivery-zones/${id}/`, { method: 'DELETE' })
+            await erpFetch(`pos/delivery-zones/${deleteTarget}/`, { method: 'DELETE' })
             toast.success("Zone deleted")
             await loadData()
         } catch {
             toast.error("Failed to delete zone")
         }
+        setDeleteTarget(null)
     }
 
     const activeZones = zones.filter(z => z.is_active !== false).length
@@ -237,7 +241,7 @@ export default function DeliveryZonesPage() {
                                             className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600">
                                             <Edit2 size={14} />
                                         </button>
-                                        <button onClick={() => handleDelete(z.id)}
+                                        <button onClick={() => setDeleteTarget(z.id)}
                                             className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500">
                                             <Trash2 size={14} />
                                         </button>
@@ -263,6 +267,16 @@ export default function DeliveryZonesPage() {
                     ))}
                 </div>
             )}
+
+            <ConfirmDialog
+                open={deleteTarget !== null}
+                onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
+                onConfirm={handleDelete}
+                title="Delete Delivery Zone?"
+                description="This will permanently remove this delivery zone."
+                confirmText="Delete"
+                variant="danger"
+            />
         </div>
     )
 }
