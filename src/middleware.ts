@@ -94,8 +94,7 @@ export default async function middleware(req: NextRequest) {
         return NextResponse.rewrite(new URL(`/landing${path === "/" ? "" : path}`, req.url));
     }
 
-    // TENANT SUBDOMAIN (e.g. demo.tsfcloud.com)
-    // Rewrite to /tenant/[slug]
+    // TENANT SUBDOMAIN (e.g. pos.tsf.ci)
     const currentHost = hostname.replace(`.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}`, "");
 
     // Check for reserved subdomains just in case
@@ -103,9 +102,17 @@ export default async function middleware(req: NextRequest) {
         return NextResponse.rewrite(new URL(`/landing${path === "/" ? "" : path}`, req.url));
     }
 
-    return NextResponse.rewrite(
-        new URL(`/tenant/${currentHost}${path}`, req.url)
-    );
+    // On tenant subdomains, only rewrite the root "/" to the tenant welcome page.
+    // All other routes (sales, dashboard, finance, etc.) pass through to the
+    // regular app routes — the tenant context is established via cookies/headers.
+    if (url.pathname === '/') {
+        return NextResponse.rewrite(
+            new URL(`/tenant/${currentHost}${path}`, req.url)
+        );
+    }
+
+    // Let all app routes work normally on tenant subdomains
+    return NextResponse.next();
 }
 
 export const config = {
