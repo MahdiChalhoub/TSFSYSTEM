@@ -1,8 +1,16 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
 
 import { erpFetch } from '@/lib/erp-api'
+
+const PeriodUpdateSchema = z.object({
+    name: z.string().min(1).optional(),
+    start_date: z.string().optional(),
+    end_date: z.string().optional(),
+    status: z.enum(['OPEN', 'CLOSED', 'LOCKED']).optional(),
+}).passthrough()
 
 export async function getFiscalYears() {
     try {
@@ -111,12 +119,13 @@ export async function deleteFiscalYear(id: number) {
     }
 }
 
-export async function updatePeriod(periodId: number, data: any) {
+export async function updatePeriod(periodId: number, data: unknown) {
+    const parsed = PeriodUpdateSchema.parse(data)
     try {
         await erpFetch(`fiscal-periods/${periodId}/`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+            body: JSON.stringify(parsed)
         })
         revalidatePath('/finance/fiscal-years')
         return { success: true }

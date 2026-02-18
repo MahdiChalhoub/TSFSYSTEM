@@ -24,6 +24,8 @@ import {
 } from './offline/sync';
 
 export class OfflinePOSManager {
+    private static onlineHandler: (() => void) | null = null;
+
     /**
      * Initialize offline subsystems
      */
@@ -34,10 +36,22 @@ export class OfflinePOSManager {
         startAutoSync();
 
         // Listen for online events to trigger immediate sync
-        window.addEventListener('online', () => {
+        this.onlineHandler = () => {
             console.log("🌐 Connection restored! Triggering sync...");
             syncPendingOrders();
-        });
+        };
+        window.addEventListener('online', this.onlineHandler);
+    }
+
+    /**
+     * Clean up event listeners (call on unmount)
+     */
+    static cleanup() {
+        if (this.onlineHandler) {
+            window.removeEventListener('online', this.onlineHandler);
+            this.onlineHandler = null;
+        }
+        stopAutoSync();
     }
 
     /**

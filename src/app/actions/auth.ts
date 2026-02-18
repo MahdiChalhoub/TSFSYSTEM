@@ -270,7 +270,7 @@ export async function logoutAction() {
                     'Authorization': `Token ${token}`
                 },
             })
-        } catch (e) { }
+        } catch (e) { console.error('Logout backend call failed (non-blocking):', e) }
     }
 
     cookieStore.delete('auth_token')

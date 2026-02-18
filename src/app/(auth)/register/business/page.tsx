@@ -41,7 +41,7 @@ function BusinessRegisterContent() {
     const branding = useDynamicBranding();
 
     useEffect(() => {
-        getPublicConfig().then(setConfig);
+        getPublicConfig().then(setConfig).catch(() => { });
         const initialSlug = searchParams.get('slug');
         const initialName = searchParams.get('name');
         if (initialSlug) { setSlug(initialSlug); setSlugManuallyEdited(true); }

@@ -3,6 +3,25 @@
 import { erpFetch } from "@/lib/erp-api"
 import { revalidatePath } from 'next/cache'
 import { serialize } from '@/lib/utils'
+import { z } from 'zod'
+
+const FinancialAccountSchema = z.object({
+    name: z.string().min(1, 'Account name is required'),
+    type: z.string().min(1, 'Account type is required'),
+    siteId: z.number().int().positive().optional(),
+    currency: z.string().default('USD'),
+})
+
+const CoaAccountSchema = z.object({
+    code: z.string().min(1, 'Account code is required'),
+    name: z.string().min(1, 'Account name is required'),
+    type: z.string().min(1, 'Account type is required'),
+    subType: z.string().optional(),
+    parentId: z.number().int().positive().nullable().optional(),
+    syscohadaCode: z.string().optional(),
+    syscohadaClass: z.string().optional(),
+    isActive: z.boolean().optional(),
+}).passthrough()
 
 export type AccountType = 'ASSET' | 'LIABILITY' | 'EQUITY' | 'INCOME' | 'EXPENSE'
 
@@ -28,15 +47,16 @@ export async function getInactiveAccounts() {
     return getChartOfAccounts(true)
 }
 
-export async function createFinancialAccount(data: any) {
+export async function createFinancialAccount(data: unknown) {
+    const parsed = FinancialAccountSchema.parse(data)
     try {
         const result = await erpFetch('accounts/', {
             method: 'POST',
             body: JSON.stringify({
-                name: data.name,
-                type: data.type,
-                site_id: data.siteId,
-                currency: data.currency || 'USD'
+                name: parsed.name,
+                type: parsed.type,
+                site_id: parsed.siteId,
+                currency: parsed.currency
             })
         })
         revalidatePath('/finance/chart-of-accounts')
@@ -47,18 +67,19 @@ export async function createFinancialAccount(data: any) {
     }
 }
 
-export async function createAccount(data: any) {
+export async function createAccount(data: unknown) {
+    const parsed = CoaAccountSchema.parse(data)
     try {
         const result = await erpFetch('coa/', {
             method: 'POST',
             body: JSON.stringify({
-                code: data.code,
-                name: data.name,
-                type: data.type,
-                sub_type: data.subType,
-                parent: data.parentId,
-                syscohada_code: data.syscohadaCode,
-                syscohada_class: data.syscohadaClass
+                code: parsed.code,
+                name: parsed.name,
+                type: parsed.type,
+                sub_type: parsed.subType,
+                parent: parsed.parentId,
+                syscohada_code: parsed.syscohadaCode,
+                syscohada_class: parsed.syscohadaClass
             })
         })
         revalidatePath('/finance/chart-of-accounts')
@@ -69,19 +90,20 @@ export async function createAccount(data: any) {
     }
 }
 
-export async function updateChartOfAccount(id: number, data: any) {
+export async function updateChartOfAccount(id: number, data: unknown) {
+    const parsed = CoaAccountSchema.partial().parse(data)
     try {
         const result = await erpFetch(`coa/${id}/`, {
             method: 'PATCH',
             body: JSON.stringify({
-                code: data.code,
-                name: data.name,
-                type: data.type,
-                sub_type: data.subType,
-                parent: data.parentId,
-                syscohada_code: data.syscohadaCode,
-                syscohada_class: data.syscohadaClass,
-                is_active: data.isActive
+                code: parsed.code,
+                name: parsed.name,
+                type: parsed.type,
+                sub_type: parsed.subType,
+                parent: parsed.parentId,
+                syscohada_code: parsed.syscohadaCode,
+                syscohada_class: parsed.syscohadaClass,
+                is_active: parsed.isActive
             })
         })
         revalidatePath('/finance/chart-of-accounts')

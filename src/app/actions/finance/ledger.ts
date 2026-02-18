@@ -2,6 +2,28 @@
 
 import { erpFetch } from '@/lib/erp-api'
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
+
+const JournalLineSchema = z.object({
+    accountId: z.number({ message: 'Account is required' }).int().positive().optional(),
+    account_id: z.number().int().positive().optional(),
+    debit: z.number().min(0, 'Debit must be non-negative'),
+    credit: z.number().min(0, 'Credit must be non-negative'),
+    description: z.string().optional(),
+    contactId: z.number().int().positive().nullable().optional(),
+    contact_id: z.number().int().positive().nullable().optional(),
+    employeeId: z.number().int().positive().nullable().optional(),
+    employee_id: z.number().int().positive().nullable().optional(),
+}).refine(d => (d.accountId || d.account_id), { message: 'Each line must have an account' })
+
+const JournalEntrySchema = z.object({
+    description: z.string().optional(),
+    date: z.string().optional(),
+    reference: z.string().optional(),
+    entry_type: z.string().optional(),
+    scope: z.enum(['OFFICIAL', 'INTERNAL']).optional(),
+    lines: z.array(JournalLineSchema).min(1, 'At least one journal line is required'),
+}).passthrough()
 
 export type JournalLineInput = {
     accountId: number
@@ -32,11 +54,12 @@ export async function verifyTrialBalance() {
     }
 }
 
-export async function createJournalEntry(data: any) {
+export async function createJournalEntry(data: unknown) {
+    const parsed = JournalEntrySchema.parse(data)
     // Map camelCase lines to snake_case for Django if needed, 
     // although ViewSet now handles some of it, let's be explicit.
-    if (data.lines) {
-        data.lines = data.lines.map((l: any) => ({
+    if (parsed.lines) {
+        parsed.lines = parsed.lines.map((l) => ({
             account_id: l.accountId || l.account_id,
             debit: l.debit,
             credit: l.credit,
@@ -50,7 +73,7 @@ export async function createJournalEntry(data: any) {
         const result = await erpFetch('journal/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+            body: JSON.stringify(parsed)
         })
         revalidatePath('/finance/ledger')
         return result
@@ -60,9 +83,10 @@ export async function createJournalEntry(data: any) {
     }
 }
 
-export async function updateJournalEntry(id: number, data: any) {
-    if (data.lines) {
-        data.lines = data.lines.map((l: any) => ({
+export async function updateJournalEntry(id: number, data: unknown) {
+    const parsed = JournalEntrySchema.parse(data)
+    if (parsed.lines) {
+        parsed.lines = parsed.lines.map((l) => ({
             account_id: l.accountId || l.account_id,
             debit: l.debit,
             credit: l.credit,
@@ -76,7 +100,7 @@ export async function updateJournalEntry(id: number, data: any) {
         const result = await erpFetch(`journal/${id}/`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+            body: JSON.stringify(parsed)
         })
         revalidatePath('/finance/ledger')
         return result
@@ -169,9 +193,10 @@ export async function getJournalEntry(id: number) {
     }
 }
 
-export async function createOpeningBalanceEntry(data: any) {
+export async function createOpeningBalanceEntry(data: unknown) {
+    const parsed = JournalEntrySchema.parse(data)
     return createJournalEntry({
-        ...data,
+        ...parsed,
         entry_type: 'OPENING_BALANCE'
     })
 }

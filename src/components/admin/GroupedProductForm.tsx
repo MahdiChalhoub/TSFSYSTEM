@@ -93,7 +93,7 @@ export function GroupedProductForm({ brands, categories, units, countries, initi
 
     const addVariant = () => {
         setVariants([...variants, {
-            id: Date.now(), // temp
+            id: Date.now() + Math.random(), // temp
             countryId: '',
             sku: '',
             barcode: '',

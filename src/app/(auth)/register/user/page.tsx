@@ -17,7 +17,7 @@ export default function UserRegisterPage() {
     const [passwordValue, setPasswordValue] = useState('');
 
     useEffect(() => {
-        getPublicConfig().then(setConfig);
+        getPublicConfig().then(setConfig).catch(() => { });
     }, []);
 
     const tenantName = config.tenant?.name || PLATFORM_CONFIG.name;

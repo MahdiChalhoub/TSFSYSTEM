@@ -1,6 +1,18 @@
 'use server'
 
 import { erpFetch } from "@/lib/erp-api"
+import { z } from 'zod'
+
+const ContactSchema = z.object({
+    name: z.string().min(1, 'Contact name is required'),
+    type: z.enum(['PARTNER', 'SUPPLIER', 'CUSTOMER']).optional(),
+    email: z.string().email().optional().or(z.literal('')),
+    phone: z.string().optional(),
+    address: z.string().optional(),
+    company: z.string().optional(),
+    tax_id: z.string().optional(),
+    notes: z.string().optional(),
+}).passthrough()
 
 export async function getContacts() {
     try {
@@ -32,17 +44,19 @@ export async function getContactSummary(contactId: number) {
     return await erpFetch(`contacts/${contactId}/summary/`)
 }
 
-export async function createContact(data: any) {
+export async function createContact(data: unknown) {
+    const parsed = ContactSchema.parse(data)
     return await erpFetch('contacts/', {
         method: 'POST',
-        body: JSON.stringify(data)
+        body: JSON.stringify(parsed)
     })
 }
 
-export async function updateContact(id: number, data: any) {
+export async function updateContact(id: number, data: unknown) {
+    const parsed = ContactSchema.partial().parse(data)
     return await erpFetch(`contacts/${id}/`, {
         method: 'PATCH',
-        body: JSON.stringify(data)
+        body: JSON.stringify(parsed)
     })
 }
 
