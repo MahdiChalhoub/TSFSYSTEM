@@ -139,7 +139,7 @@ function LoginContent() {
                                 {isRoot && <input type="hidden" name="slug" defaultValue={(state as any)._slug} />}
 
                                 <Button className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-lg rounded-lg shadow-lg shadow-emerald-900/20 transition-all uppercase tracking-tighter" disabled={isPending}>
-                                    {isPending ? <Loader2 className="animate-spin" /> : "Verify Identity"}
+                                    {isPending ? <Loader2 className="animate-spin" /> : "Verify"}
                                 </Button>
 
                                 <div className="text-center">

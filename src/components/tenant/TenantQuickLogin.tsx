@@ -61,7 +61,7 @@ export function TenantQuickLogin({ slug, suffix }: { slug: string; suffix: strin
                             {isPending ? (
                                 <Loader2 className="animate-spin" size={20} />
                             ) : (
-                                <>Verify Identity <ShieldCheck size={20} /></>
+                                <>Sign In <ShieldCheck size={20} /></>
                             )}
                         </button>
 

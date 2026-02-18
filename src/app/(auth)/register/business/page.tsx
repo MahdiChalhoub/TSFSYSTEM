@@ -135,7 +135,7 @@ function BusinessRegisterContent() {
                             <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3 text-red-400 text-xs font-bold animate-in zoom-in-95">
                                 <AlertCircle size={16} />
                                 <div className="flex-1">
-                                    {(state as any).error.root ? (Array.isArray((state as any).error.root) ? (state as any).error.root[0] : (state as any).error.root) : "Registration sequence failed. Verify coordinates."}
+                                    {(state as any).error.root ? (Array.isArray((state as any).error.root) ? (state as any).error.root[0] : (state as any).error.root) : "Registration failed. Please check your details and try again."}
                                     {Object.keys((state as any).error || {}).map(k => k !== 'root' && (
                                         <div key={k} className="mt-1 opacity-80 uppercase tracking-tighter">Field Error: {k}</div>
                                     ))}
