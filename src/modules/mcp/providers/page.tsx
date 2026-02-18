@@ -33,6 +33,7 @@ import {
     Cloud, CheckCircle, XCircle, Zap, Eye, EyeOff
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
     getMCPProviders, createMCPProvider, updateMCPProvider,
     deleteMCPProvider, testMCPProvider, setDefaultProvider
@@ -82,6 +83,7 @@ export default function MCPProvidersPage() {
     const [saving, setSaving] = useState(false)
     const [testing, setTesting] = useState<number | null>(null)
     const [showApiKey, setShowApiKey] = useState(false)
+    const [deleteProviderId, setDeleteProviderId] = useState<number | null>(null)
 
     useEffect(() => {
         loadData()
@@ -147,16 +149,20 @@ export default function MCPProvidersPage() {
     }
 
     async function handleDelete(id: number) {
-        if (!confirm('Delete this provider?')) return
+        setDeleteProviderId(id)
+    }
 
+    async function confirmDeleteProvider() {
+        if (deleteProviderId === null) return
         try {
-            const res = await deleteMCPProvider(id)
+            const res = await deleteMCPProvider(deleteProviderId)
             if (!res.success) throw new Error(res.error)
             toast.success('Provider deleted')
             await loadData()
         } catch (e: any) {
             toast.error(e.message)
         }
+        setDeleteProviderId(null)
     }
 
     async function handleTest(id: number) {
@@ -471,6 +477,15 @@ export default function MCPProvidersPage() {
                     ))}
                 </div>
             )}
+
+            <ConfirmDialog
+                open={deleteProviderId !== null}
+                onOpenChange={(open) => { if (!open) setDeleteProviderId(null) }}
+                onConfirm={confirmDeleteProvider}
+                title="Delete Provider?"
+                description="This AI provider configuration will be permanently removed."
+                variant="danger"
+            />
         </div>
     )
 }

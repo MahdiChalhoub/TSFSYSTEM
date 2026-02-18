@@ -18,6 +18,7 @@ import {
     MessagesSquare, Calendar, Brain, TrendingUp
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 /** Client-safe API fetch (erpFetch uses server-only cookies) */
 async function apiFetch(path: string, opts?: RequestInit) {
@@ -39,6 +40,7 @@ export default function MCPConversationsPage() {
     const [loading, setLoading] = useState(true)
     const [searchQuery, setSearchQuery] = useState('')
     const [selectedConv, setSelectedConv] = useState<Conversation | null>(null)
+    const [deleteConvId, setDeleteConvId] = useState<number | null>(null)
 
     useEffect(() => {
         loadData()
@@ -60,12 +62,16 @@ export default function MCPConversationsPage() {
     }
 
     async function handleDelete(id: number) {
-        if (!confirm('Delete this conversation permanently?')) return
+        setDeleteConvId(id)
+    }
+
+    async function confirmDeleteConv() {
+        if (deleteConvId === null) return
         try {
-            const res = await apiFetch(`/mcp/conversations/${id}/`, { method: 'DELETE' })
+            const res = await apiFetch(`/mcp/conversations/${deleteConvId}/`, { method: 'DELETE' })
             if (res.ok) {
                 toast.success('Conversation deleted')
-                if (selectedConv?.id === id) setSelectedConv(null)
+                if (selectedConv?.id === deleteConvId) setSelectedConv(null)
                 await loadData()
             } else {
                 toast.error('Failed to delete')
@@ -73,6 +79,7 @@ export default function MCPConversationsPage() {
         } catch {
             toast.error('Delete failed')
         }
+        setDeleteConvId(null)
     }
 
     const filtered = conversations.filter(c =>
@@ -311,6 +318,15 @@ export default function MCPConversationsPage() {
                     {(totalTokens / 1000).toFixed(1)}K tokens used
                 </span>
             </div>
+
+            <ConfirmDialog
+                open={deleteConvId !== null}
+                onOpenChange={(open) => { if (!open) setDeleteConvId(null) }}
+                onConfirm={confirmDeleteConv}
+                title="Delete Conversation?"
+                description="This conversation will be permanently deleted."
+                variant="danger"
+            />
         </div>
     )
 }

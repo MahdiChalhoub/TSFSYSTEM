@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button"
 import { Box, RefreshCw, Zap, ShieldCheck, Info, Trash2, XCircle, UploadCloud, History as HistoryIcon, RotateCcw } from "lucide-react"
 import { toast } from "sonner"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Badge } from "@/components/ui/badge"
 import {
     Dialog,
@@ -39,6 +40,9 @@ export default function SaaSModulesPage() {
     const [processing, setProcessing] = useState<string | null>(null)
     const [lastSynced, setLastSynced] = useState<string>("")
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const [pendingUninstall, setPendingUninstall] = useState<string | null>(null)
+    const [pendingDelete, setPendingDelete] = useState<string | null>(null)
+    const [pendingRollback, setPendingRollback] = useState<{ code: string; version: string } | null>(null)
 
     useEffect(() => {
         loadModules()
@@ -102,7 +106,6 @@ export default function SaaSModulesPage() {
     }
 
     async function handleGlobalUninstall(code: string) {
-        if (!confirm(`Are you sure you want to revoke ${code} from ALL organizations?`)) return;
         setProcessing(code)
         try {
             const res = await uninstallModuleGlobal(code)
@@ -117,7 +120,6 @@ export default function SaaSModulesPage() {
     }
 
     async function handleDelete(code: string) {
-        if (!confirm(`Warning: This is a DESTRUCTIVE action.\n\nIt will check for active data usage. If any tenant has used this module, deletion will be BLOCKED to prevent data loss.\n\nProceed with safety check?`)) return;
         setProcessing(code)
         try {
             const res = await deleteModule(code)
@@ -153,7 +155,6 @@ export default function SaaSModulesPage() {
     }
 
     async function handleRollback(code: string, version: string) {
-        if (!confirm(`Confirm rollback of ${code} to version ${version}? This cannot be undone.`)) return;
         setProcessing(code)
         try {
             const res = await rollbackModule(code, version)
@@ -327,7 +328,7 @@ export default function SaaSModulesPage() {
                                             Push
                                         </Button>
                                         <Button
-                                            onClick={() => handleGlobalUninstall(m.code)}
+                                            onClick={() => setPendingUninstall(m.code)}
                                             disabled={processing === m.code || m.is_core}
                                             variant="outline"
                                             className="border-gray-100 bg-gray-50 hover:bg-red-50 hover:text-red-500 hover:border-red-100 text-gray-400 rounded-2xl py-6 font-black transition-all flex gap-2"
@@ -355,12 +356,12 @@ export default function SaaSModulesPage() {
                                                         Select a previous version to restore. This will replace the source code but <strong>will not revert database schemas</strong>.
                                                     </DialogDescription>
                                                 </DialogHeader>
-                                                <BackupList moduleCode={m.code} onRollback={(v) => handleRollback(m.code, v)} currentVersion={m.version} />
+                                                <BackupList moduleCode={m.code} onRollback={(v) => setPendingRollback({ code: m.code, version: v })} currentVersion={m.version} />
                                             </DialogContent>
                                         </Dialog>
 
                                         <Button
-                                            onClick={() => handleDelete(m.code)}
+                                            onClick={() => setPendingDelete(m.code)}
                                             disabled={processing === m.code || m.is_core}
                                             variant="ghost"
                                             className="col-span-2 text-gray-600 hover:text-red-600 hover:bg-red-950/20 font-bold rounded-2xl py-4 text-xs flex gap-2"
@@ -388,6 +389,45 @@ export default function SaaSModulesPage() {
                     </p>
                 </div>
             </div>
+
+            <ConfirmDialog
+                open={pendingUninstall !== null}
+                onOpenChange={(open) => { if (!open) setPendingUninstall(null) }}
+                onConfirm={() => {
+                    if (pendingUninstall) handleGlobalUninstall(pendingUninstall)
+                    setPendingUninstall(null)
+                }}
+                title="Revoke Module"
+                description={`Are you sure you want to revoke ${pendingUninstall || ''} from ALL organizations?`}
+                confirmText="Revoke"
+                variant="danger"
+            />
+
+            <ConfirmDialog
+                open={pendingDelete !== null}
+                onOpenChange={(open) => { if (!open) setPendingDelete(null) }}
+                onConfirm={() => {
+                    if (pendingDelete) handleDelete(pendingDelete)
+                    setPendingDelete(null)
+                }}
+                title="Delete Module"
+                description="This is a DESTRUCTIVE action. It will check for active data usage. If any organization has used this module, deletion will be BLOCKED to prevent data loss. Proceed with safety check?"
+                confirmText="Delete from System"
+                variant="danger"
+            />
+
+            <ConfirmDialog
+                open={pendingRollback !== null}
+                onOpenChange={(open) => { if (!open) setPendingRollback(null) }}
+                onConfirm={() => {
+                    if (pendingRollback) handleRollback(pendingRollback.code, pendingRollback.version)
+                    setPendingRollback(null)
+                }}
+                title="Rollback Module"
+                description={`Confirm rollback of ${pendingRollback?.code || ''} to version ${pendingRollback?.version || ''}? This cannot be undone.`}
+                confirmText="Rollback"
+                variant="warning"
+            />
         </div>
     )
 

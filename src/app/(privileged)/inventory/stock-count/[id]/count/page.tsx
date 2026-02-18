@@ -19,6 +19,7 @@ import {
     ArrowLeft, Search, CheckCircle2, AlertTriangle, Package,
     Loader2, Save, Send, Hash
 } from "lucide-react"
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 // ─── Types ───────────────────────────────────────────────────────
 interface Line {
@@ -114,13 +115,15 @@ export default function CountingPage() {
         })
     }
 
+    const [showCompleteConfirm, setShowCompleteConfirm] = useState(false)
+
     // ─── Complete ───
     const handleComplete = () => {
-        if (!confirm("Mark counting as complete? This will send the session for verification.")) return
         startTransition(async () => {
             await completeSession(sessionId)
             router.push('/inventory/stock-count')
         })
+        setShowCompleteConfirm(false)
     }
 
     if (loading) {
@@ -145,7 +148,7 @@ export default function CountingPage() {
                     </p>
                 </div>
                 {session?.status === 'IN_PROGRESS' && (
-                    <Button onClick={handleComplete} disabled={isPending || countedCount === 0} className="bg-green-600 hover:bg-green-700">
+                    <Button onClick={() => setShowCompleteConfirm(true)} disabled={isPending || countedCount === 0} className="bg-green-600 hover:bg-green-700">
                         <Send className="w-4 h-4 mr-2" /> Submit for Verification
                     </Button>
                 )}
@@ -288,6 +291,16 @@ export default function CountingPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <ConfirmDialog
+                open={showCompleteConfirm}
+                onOpenChange={setShowCompleteConfirm}
+                onConfirm={handleComplete}
+                title="Submit for Verification?"
+                description="Mark counting as complete? This will send the session for verification."
+                confirmText="Submit"
+                variant="warning"
+            />
         </div>
     )
 }

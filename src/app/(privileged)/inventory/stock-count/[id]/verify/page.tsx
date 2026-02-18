@@ -17,6 +17,7 @@ import {
     Loader2, Sparkles, XCircle, Package
 } from "lucide-react"
 import { toast } from 'sonner'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 // ─── Types ───────────────────────────────────────────────────────
 interface Line {
@@ -121,23 +122,43 @@ export default function VerifyPage() {
         })
     }
 
+    const [pendingAction, setPendingAction] = useState<{ type: string; title: string; description: string; variant: 'danger' | 'warning' | 'info' } | null>(null)
+
     const handleVerifyAll = () => {
-        if (!confirm("Verify all lines and mark session as Verified?")) return
-        startTransition(async () => {
-            await verifySession(sessionId)
-            reload()
+        setPendingAction({
+            type: 'verifyAll',
+            title: 'Verify All Lines?',
+            description: 'This will verify all lines and mark the session as Verified.',
+            variant: 'warning',
         })
     }
 
     const handleCreateAdjustment = () => {
-        if (!confirm("Create a Stock Adjustment Order from the differences found?")) return
-        startTransition(async () => {
-            const result = await adjustSession(sessionId)
-            if (result?.adjustment_order_id) {
-                toast.success(`Adjustment order created (${result.adjustments_created} lines). You can review it in Adjustment Orders.`)
-            }
-            reload()
+        setPendingAction({
+            type: 'createAdjustment',
+            title: 'Create Stock Adjustment?',
+            description: 'This will create a Stock Adjustment Order from the differences found.',
+            variant: 'warning',
         })
+    }
+
+    const handleConfirmAction = () => {
+        if (!pendingAction) return
+        if (pendingAction.type === 'verifyAll') {
+            startTransition(async () => {
+                await verifySession(sessionId)
+                reload()
+            })
+        } else if (pendingAction.type === 'createAdjustment') {
+            startTransition(async () => {
+                const result = await adjustSession(sessionId)
+                if (result?.adjustment_order_id) {
+                    toast.success(`Adjustment order created (${result.adjustments_created} lines). You can review it in Adjustment Orders.`)
+                }
+                reload()
+            })
+        }
+        setPendingAction(null)
     }
 
     const toggleSelect = (id: number) => {
@@ -330,6 +351,16 @@ export default function VerifyPage() {
                     </Table>
                 </CardContent>
             </Card>
+
+            <ConfirmDialog
+                open={pendingAction !== null}
+                onOpenChange={(open) => { if (!open) setPendingAction(null) }}
+                onConfirm={handleConfirmAction}
+                title={pendingAction?.title ?? ''}
+                description={pendingAction?.description ?? ''}
+                confirmText="Confirm"
+                variant={pendingAction?.variant ?? 'warning'}
+            />
         </div>
     )
 }

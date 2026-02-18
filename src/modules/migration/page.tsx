@@ -11,6 +11,7 @@ import {
     BarChart3, Trash2, Building2, Globe, ChevronRight
 } from "lucide-react"
 import { erpFetch } from "@/lib/erp-api"
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -139,6 +140,7 @@ export default function MigrationPage() {
     const [dragActive, setDragActive] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
     const pollRef = useRef<NodeJS.Timeout | null>(null)
+    const [rollbackTarget, setRollbackTarget] = useState<MigrationJob | null>(null)
 
     // ── Fetch Jobs ──────────────────────────────────────────────────────────
     const fetchJobs = useCallback(async () => {
@@ -292,15 +294,20 @@ export default function MigrationPage() {
 
     // ── Rollback ────────────────────────────────────────────────────────────
     const handleRollback = async (job: MigrationJob) => {
-        if (!confirm("This will DELETE all data imported by this migration. Are you sure?")) return
+        setRollbackTarget(job)
+    }
+
+    const confirmRollback = async () => {
+        if (!rollbackTarget) return
         try {
-            await erpFetch(`migration/jobs/${job.id}/rollback/`, { method: "POST" })
+            await erpFetch(`migration/jobs/${rollbackTarget.id}/rollback/`, { method: "POST" })
             fetchJobs()
             setActiveJob(null)
             setStep("LIST")
         } catch (e: any) {
             setError(e.message || "Rollback failed")
         }
+        setRollbackTarget(null)
     }
 
     // ── View Results ────────────────────────────────────────────────────────
@@ -951,5 +958,16 @@ export default function MigrationPage() {
                 </div>
             )}
         </div>
+
+            <ConfirmDialog
+                open={rollbackTarget !== null}
+                onOpenChange={(open) => { if (!open) setRollbackTarget(null) }}
+                onConfirm={confirmRollback}
+                title="Rollback Migration?"
+                description="This will DELETE all data imported by this migration. This action cannot be undone."
+                confirmText="Rollback"
+                variant="danger"
+            />
+        </div >
     )
 }

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Plus, Trash2, Calculator, Save, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
 import { createOpeningBalanceEntry } from '@/app/actions/finance/ledger'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 interface Props {
     accounts: any[]
@@ -81,15 +82,9 @@ export default function OpeningBalanceForm({ accounts }: Props) {
 
     const { totalDebit, totalCredit, diff } = calculatePreview()
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
+    const [showBalanceWarning, setShowBalanceWarning] = useState(false)
 
-        if (Math.abs(diff) > 0.01) {
-            if (!confirm(`Your opening balances are not equal (Difference: ${diff.toFixed(2)}). \n\nThe system will automatically post the difference to "Opening Balance Equity" to ensure the ledger balances. \n\nProceed?`)) {
-                return
-            }
-        }
-
+    const doSubmit = () => {
         const linesToPost: any[] = []
 
         rows.forEach(r => {
@@ -128,7 +123,7 @@ export default function OpeningBalanceForm({ accounts }: Props) {
                     transactionDate: new Date(date),
                     lines: linesToPost,
                     description: "Initial Opening Balance Import",
-                    autoBalance: true // Use new auto-balance feature
+                    autoBalance: true
                 })
                 toast.success('Opening balances updated.')
                 router.push('/finance/chart-of-accounts')
@@ -136,6 +131,17 @@ export default function OpeningBalanceForm({ accounts }: Props) {
                 toast.error('Error: ' + e.message)
             }
         })
+    }
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+
+        if (Math.abs(diff) > 0.01) {
+            setShowBalanceWarning(true)
+            return
+        }
+
+        doSubmit()
     }
 
     const removeRow = (id: number) => setRows(rows.filter(r => r.id !== id))
@@ -282,6 +288,16 @@ export default function OpeningBalanceForm({ accounts }: Props) {
                     </button>
                 </div>
             </div>
+
+            <ConfirmDialog
+                open={showBalanceWarning}
+                onOpenChange={setShowBalanceWarning}
+                onConfirm={() => { setShowBalanceWarning(false); doSubmit() }}
+                title="Unbalanced Opening Balances"
+                description={`Your opening balances are not equal (Difference: ${diff.toFixed(2)}). The system will automatically post the difference to "Opening Balance Equity" to ensure the ledger balances.`}
+                confirmText="Proceed Anyway"
+                variant="warning"
+            />
         </div>
     )
 }

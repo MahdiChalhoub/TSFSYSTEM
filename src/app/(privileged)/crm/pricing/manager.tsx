@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Plus, Tag, Users, DollarSign, Percent, Hash, Trash2, ChevronRight, Search, Calendar, Star, AlertCircle } from "lucide-react";
 import clsx from 'clsx';
 import { createPriceGroup, createPriceRule, deletePriceGroup, deletePriceRule } from '@/app/actions/pricing';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 export default function PricingManager({
     priceGroups,
@@ -80,15 +81,34 @@ export default function PricingManager({
         }
     };
 
+    const [deleteTarget, setDeleteTarget] = useState<{ type: 'group' | 'rule'; id: number; title: string; description: string } | null>(null);
+
     const handleDeleteGroup = async (id: number) => {
-        if (!confirm('Delete this price group? All members and rules will be removed.')) return;
-        await deletePriceGroup(id);
-        window.location.reload();
+        setDeleteTarget({
+            type: 'group',
+            id,
+            title: 'Delete Price Group?',
+            description: 'All members and rules in this group will be removed.',
+        });
     };
 
     const handleDeleteRule = async (id: number) => {
-        if (!confirm('Delete this price rule?')) return;
-        await deletePriceRule(id);
+        setDeleteTarget({
+            type: 'rule',
+            id,
+            title: 'Delete Price Rule?',
+            description: 'This price rule will be permanently removed.',
+        });
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!deleteTarget) return;
+        if (deleteTarget.type === 'group') {
+            await deletePriceGroup(deleteTarget.id);
+        } else {
+            await deletePriceRule(deleteTarget.id);
+        }
+        setDeleteTarget(null);
         window.location.reload();
     };
 
@@ -385,6 +405,15 @@ export default function PricingManager({
                     </div>
                 </div>
             )}
+
+            <ConfirmDialog
+                open={deleteTarget !== null}
+                onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
+                onConfirm={handleConfirmDelete}
+                title={deleteTarget?.title ?? ''}
+                description={deleteTarget?.description ?? ''}
+                variant="danger"
+            />
         </div>
     );
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
     Wallet,
     TrendingUp,
@@ -253,8 +254,10 @@ function InventoryIntegrityCard({ status }: { status: any }) {
 
     const isOutOfSync = Math.abs(status.discrepancy) > 0.01
 
+    const [showSyncConfirm, setShowSyncConfirm] = useState(false)
+
     const handleSync = async () => {
-        if (!confirm('This will create a Journal Entry to match your ledger to the physical stock value. Continue?')) return
+        setShowSyncConfirm(false)
         setIsSyncing(true)
         try {
             const res = await syncInventoryValueToLedger()
@@ -277,7 +280,7 @@ function InventoryIntegrityCard({ status }: { status: any }) {
                 </div>
                 {isOutOfSync && (
                     <button
-                        onClick={handleSync}
+                        onClick={() => setShowSyncConfirm(true)}
                         disabled={isSyncing}
                         className="p-2 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100 transition-all disabled:opacity-50"
                         title="Sync Ledger to Stock Value"
@@ -311,6 +314,16 @@ function InventoryIntegrityCard({ status }: { status: any }) {
                     </span>
                 </div>
             </div>
+
+            <ConfirmDialog
+                open={showSyncConfirm}
+                onOpenChange={setShowSyncConfirm}
+                onConfirm={handleSync}
+                title="Sync Inventory to Ledger?"
+                description="This will create a Journal Entry to match your ledger to the physical stock value."
+                confirmText="Sync Now"
+                variant="warning"
+            />
         </div>
     )
 }

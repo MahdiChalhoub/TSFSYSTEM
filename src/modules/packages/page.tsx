@@ -14,6 +14,7 @@ import {
     HardDrive, Shield
 } from "lucide-react"
 import { apiClient } from "@/lib/api"
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 interface PackageUpload {
     id: string
@@ -54,6 +55,7 @@ export default function PackagesPage() {
     const [isUploading, setIsUploading] = useState(false)
     const [selectedType, setSelectedType] = useState<string>("all")
     const [stats, setStats] = useState<any>(null)
+    const [pendingAction, setPendingAction] = useState<{ type: 'apply' | 'rollback' | 'delete'; pkg: PackageUpload } | null>(null)
 
     const fetchPackages = async () => {
         try {
@@ -122,33 +124,33 @@ export default function PackagesPage() {
     })
 
     const applyPackage = async (pkg: PackageUpload) => {
-        if (!confirm(`Apply ${pkg.name} v${pkg.version}?`)) return
-        try {
-            await apiClient.post(`/api/packages/${pkg.id}/apply/`)
-            fetchPackages()
-        } catch (error) {
-            console.error("Apply failed:", error)
-        }
+        setPendingAction({ type: 'apply', pkg })
     }
 
     const rollbackPackage = async (pkg: PackageUpload) => {
-        if (!confirm(`Rollback ${pkg.name} v${pkg.version}?`)) return
-        try {
-            await apiClient.post(`/api/packages/${pkg.id}/rollback/`)
-            fetchPackages()
-        } catch (error) {
-            console.error("Rollback failed:", error)
-        }
+        setPendingAction({ type: 'rollback', pkg })
     }
 
     const deletePackage = async (pkg: PackageUpload) => {
-        if (!confirm(`Delete ${pkg.name} v${pkg.version}?`)) return
+        setPendingAction({ type: 'delete', pkg })
+    }
+
+    const confirmAction = async () => {
+        if (!pendingAction) return
+        const { type, pkg } = pendingAction
+        setPendingAction(null)
         try {
-            await apiClient.delete(`/api/packages/${pkg.id}/`)
+            if (type === 'apply') {
+                await apiClient.post(`/api/packages/${pkg.id}/apply/`)
+            } else if (type === 'rollback') {
+                await apiClient.post(`/api/packages/${pkg.id}/rollback/`)
+            } else if (type === 'delete') {
+                await apiClient.delete(`/api/packages/${pkg.id}/`)
+                fetchStats()
+            }
             fetchPackages()
-            fetchStats()
         } catch (error) {
-            console.error("Delete failed:", error)
+            console.error(`${type} failed:`, error)
         }
     }
 
@@ -218,8 +220,8 @@ export default function PackagesPage() {
                         <div
                             {...getRootProps()}
                             className={`border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all ${isDragActive
-                                    ? "border-cyan-500 bg-cyan-500/10"
-                                    : "border-white/10 hover:border-white/20 hover:bg-white/5"
+                                ? "border-cyan-500 bg-cyan-500/10"
+                                : "border-white/10 hover:border-white/20 hover:bg-white/5"
                                 }`}
                         >
                             <input {...getInputProps()} />
@@ -339,6 +341,23 @@ export default function PackagesPage() {
                     </CardContent>
                 </Card>
             </div>
+
+            <ConfirmDialog
+                open={pendingAction !== null}
+                onOpenChange={(open) => { if (!open) setPendingAction(null) }}
+                onConfirm={confirmAction}
+                title={
+                    pendingAction?.type === 'apply' ? `Apply ${pendingAction.pkg.name} v${pendingAction.pkg.version}?` :
+                        pendingAction?.type === 'rollback' ? `Rollback ${pendingAction.pkg.name} v${pendingAction.pkg.version}?` :
+                            `Delete ${pendingAction?.pkg.name} v${pendingAction?.pkg.version}?`
+                }
+                description={
+                    pendingAction?.type === 'apply' ? 'This package will be applied to the system.' :
+                        pendingAction?.type === 'rollback' ? 'This will revert the system to the previous version.' :
+                            'This package will be permanently deleted.'
+                }
+                variant={pendingAction?.type === 'delete' ? 'danger' : 'warning'}
+            />
         </div>
     )
 }

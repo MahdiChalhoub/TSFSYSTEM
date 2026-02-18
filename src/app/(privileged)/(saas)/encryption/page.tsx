@@ -1,4 +1,5 @@
 'use client'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 import { useEffect, useState, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -43,6 +44,7 @@ export default function EncryptionPage() {
     const [success, setSuccess] = useState<string | null>(null)
     const [showDemo, setShowDemo] = useState(false)
     const [demoData, setDemoData] = useState<{ original: string; encrypted: string; masked: string } | null>(null)
+    const [showRotateConfirm, setShowRotateConfirm] = useState(false)
 
     // Load organizations
     const fetchOrgs = useCallback(async () => {
@@ -125,7 +127,6 @@ export default function EncryptionPage() {
     }
 
     const handleRotateKey = async () => {
-        if (!confirm('⚠️ Key rotation will re-encrypt ALL encrypted data with a new key. This cannot be undone. Continue?')) return
         setActionLoading('rotate')
         setError(null)
         setSuccess(null)
@@ -362,7 +363,7 @@ export default function EncryptionPage() {
 
                             {isActive && hasKey && (
                                 <button
-                                    onClick={handleRotateKey}
+                                    onClick={() => setShowRotateConfirm(true)}
                                     disabled={actionLoading !== null}
                                     className="w-full flex items-center justify-center gap-3 px-6 py-3 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-600 font-bold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
@@ -453,6 +454,19 @@ export default function EncryptionPage() {
                     </CardContent>
                 </Card>
             )}
+
+            <ConfirmDialog
+                open={showRotateConfirm}
+                onOpenChange={(open) => { if (!open) setShowRotateConfirm(false) }}
+                onConfirm={() => {
+                    handleRotateKey()
+                    setShowRotateConfirm(false)
+                }}
+                title="Rotate Encryption Key"
+                description="Key rotation will re-encrypt ALL encrypted data with a new key. This operation cannot be undone. Are you sure you want to continue?"
+                confirmText="Rotate Key"
+                variant="warning"
+            />
 
             {/* Security Footer */}
             <div className="flex items-center gap-3 py-4 px-5 rounded-xl bg-gray-50 border border-gray-200/60">

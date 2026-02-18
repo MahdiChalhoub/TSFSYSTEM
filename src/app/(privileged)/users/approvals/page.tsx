@@ -17,6 +17,7 @@ import {
     Clock, RefreshCw, Send, AlertCircle
 } from "lucide-react";
 import { toast } from "sonner";
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import {
     Dialog,
     DialogContent,
@@ -64,10 +65,16 @@ export default function ApprovalsPage() {
         setProcessing(null);
     };
 
+    const [rejectTarget, setRejectTarget] = useState<number | null>(null);
+
     const handleReject = async (id: number) => {
-        if (!confirm("Are you sure you want to reject this registration permanently?")) return;
-        setProcessing(id);
-        const res = await rejectUserAction(id);
+        setRejectTarget(id);
+    };
+
+    const confirmReject = async () => {
+        if (rejectTarget === null) return;
+        setProcessing(rejectTarget);
+        const res = await rejectUserAction(rejectTarget);
         if (res.success) {
             toast.success("User rejected");
             await loadData();
@@ -75,6 +82,7 @@ export default function ApprovalsPage() {
             toast.error("Process failed", { description: res.error });
         }
         setProcessing(null);
+        setRejectTarget(null);
     };
 
     const submitCorrection = async () => {
@@ -292,6 +300,15 @@ export default function ApprovalsPage() {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            <ConfirmDialog
+                open={rejectTarget !== null}
+                onOpenChange={(open) => { if (!open) setRejectTarget(null) }}
+                onConfirm={confirmReject}
+                title="Reject Registration?"
+                description="This will permanently reject this user registration. This action cannot be undone."
+                variant="danger"
+            />
         </div>
     );
 }
