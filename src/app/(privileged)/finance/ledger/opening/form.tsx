@@ -8,7 +8,7 @@ import { createOpeningBalanceEntry } from '@/app/actions/finance/ledger'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 interface Props {
-    accounts: any[]
+    accounts: Record<string, any>[]
 }
 
 // Simple Row for user input
@@ -48,7 +48,7 @@ export default function OpeningBalanceForm({ accounts }: Props) {
 
     const addRow = () => setRows([...rows, { id: Date.now(), accountId: '', balance: '' }])
 
-    const updateRow = (id: number, field: keyof EntryRow, val: any) => {
+    const updateRow = (id: number, field: keyof EntryRow, val: Record<string, any>) => {
         setRows(rows.map(r => r.id === id ? { ...r, [field]: val } : r))
     }
 
@@ -85,7 +85,7 @@ export default function OpeningBalanceForm({ accounts }: Props) {
     const [showBalanceWarning, setShowBalanceWarning] = useState(false)
 
     const doSubmit = () => {
-        const linesToPost: any[] = []
+        const linesToPost: Record<string, any>[] = []
 
         rows.forEach(r => {
             const acc = accounts.find(a => a.id.toString() === r.accountId)
@@ -127,8 +127,8 @@ export default function OpeningBalanceForm({ accounts }: Props) {
                 })
                 toast.success('Opening balances updated.')
                 router.push('/finance/chart-of-accounts')
-            } catch (e: any) {
-                toast.error('Error: ' + e.message)
+            } catch (e: unknown) {
+                toast.error('Error: ' + (e instanceof Error ? e.message : String(e)))
             }
         })
     }

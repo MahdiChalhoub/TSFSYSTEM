@@ -11,8 +11,8 @@ export default function FormalOrderForm({
     suppliers,
     sites
 }: {
-    suppliers: any[],
-    sites: any[]
+    suppliers: Record<string, any>[],
+    sites: Record<string, any>[]
 }) {
     const initialState = { message: '', errors: {} };
     const [state, formAction, isPending] = useActionState(createFormalPurchaseOrder, initialState);
@@ -38,7 +38,7 @@ export default function FormalOrderForm({
         if (selectedSupplierId) {
             erpFetch(`sourcing/?supplier=${selectedSupplierId}`).then(data => {
                 const hints: Record<number, number> = {};
-                data.forEach((item: any) => {
+                data.forEach((item: Record<string, any>) => {
                     hints[item.product] = parseFloat(item.last_purchased_price);
                 });
                 setSupplierPriceHints(hints);
@@ -48,7 +48,7 @@ export default function FormalOrderForm({
         }
     }, [selectedSupplierId]);
 
-    const addProductToLines = (product: any) => {
+    const addProductToLines = (product: Record<string, any>) => {
         if (lines.find(l => l.productId === product.id)) return;
 
         // Use supplier hint if available, otherwise fallback to product cost price
@@ -63,7 +63,7 @@ export default function FormalOrderForm({
         }, ...lines]);
     };
 
-    const updateLine = (idx: number, updates: any) => {
+    const updateLine = (idx: number, updates: Record<string, any>) => {
         const newLines = [...lines];
         newLines[idx] = { ...newLines[idx], ...updates };
         setLines(newLines);
@@ -247,7 +247,7 @@ export default function FormalOrderForm({
     );
 }
 
-function ProductSearch({ callback, siteId }: { callback: (p: any) => void, siteId: number }) {
+function ProductSearch({ callback, siteId }: { callback: (p: Record<string, any>) => void, siteId: number }) {
     const [query, setQuery] = useState('');
     const [results, setResults] = useState<Record<string, unknown>[]>([]);
     const [open, setOpen] = useState(false);

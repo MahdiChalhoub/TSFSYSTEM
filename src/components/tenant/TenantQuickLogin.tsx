@@ -4,7 +4,7 @@ import { useActionState } from "react"
 import { loginAction } from "@/app/actions/auth"
 import { ArrowRight, Loader2, AlertCircle, Lock, ShieldCheck } from "lucide-react"
 
-const initialState: any = { error: {} }
+const initialState: Record<string, any> = { error: {} }
 
 export function TenantQuickLogin({ slug, suffix }: { slug: string; suffix: string }) {
     const [state, action, isPending] = useActionState(loginAction, initialState)

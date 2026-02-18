@@ -345,7 +345,7 @@ function InspectorTab({ readDetails, writeDetails }: { readDetails: string[], wr
     );
 }
 
-function LedgerTab({ recentLedger }: { recentLedger: any[] }) {
+function LedgerTab({ recentLedger }: { recentLedger: Record<string, any>[] }) {
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -376,7 +376,7 @@ function LedgerTab({ recentLedger }: { recentLedger: any[] }) {
                             <div className="p-3">
                                 <p className="text-[11px] font-bold text-gray-700 mb-2 truncate">{entry.description}</p>
                                 <div className="space-y-1.5 font-mono">
-                                    {entry.lines.map((line: any) => (
+                                    {entry.lines.map((line: Record<string, any>) => (
                                         <div key={line.id} className="flex justify-between items-center text-[9px] leading-none py-1 border-b border-gray-50 last:border-0">
                                             <div className="flex gap-2">
                                                 <span className="text-gray-400 w-8">{line.account?.code}</span>

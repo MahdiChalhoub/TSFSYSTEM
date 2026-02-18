@@ -6,8 +6,8 @@ import { FileText, Calendar, Search } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface Props {
-    accounts: any[]
-    fiscalYears: any[]
+    accounts: Record<string, any>[]
+    fiscalYears: Record<string, any>[]
 }
 
 export default function StatementGenerator({ accounts, fiscalYears }: Props) {

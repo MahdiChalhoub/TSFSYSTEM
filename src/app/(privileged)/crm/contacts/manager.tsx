@@ -9,8 +9,8 @@ export default function ContactManager({
     contacts,
     sites
 }: {
-    contacts: any[],
-    sites: any[]
+    contacts: Record<string, any>[],
+    sites: Record<string, any>[]
 }) {
     const [search, setSearch] = useState('');
     const [typeFilter, setTypeFilter] = useState<'ALL' | 'CUSTOMER' | 'SUPPLIER' | 'LEAD'>('ALL');

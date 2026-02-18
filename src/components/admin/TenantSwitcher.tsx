@@ -5,7 +5,7 @@ import { Building, ChevronDown, Check, DoorOpen, ExternalLink } from 'lucide-rea
 import clsx from 'clsx';
 import { PLATFORM_CONFIG, useDynamicBranding } from '@/lib/saas_config';
 
-export function TenantSwitcher({ organizations, forcedSlug, user }: { organizations: any[], forcedSlug?: string, user?: any }) {
+export function TenantSwitcher({ organizations, forcedSlug, user }: { organizations: Record<string, any>[], forcedSlug?: string, user?: Record<string, any> }) {
     const [isOpen, setIsOpen] = useState(false);
     const [isPending, startTransition] = useTransition();
 

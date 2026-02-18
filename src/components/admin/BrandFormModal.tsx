@@ -9,9 +9,9 @@ import { CategoryTreeSelector } from './CategoryTreeSelector';
 type BrandFormModalProps = {
     isOpen: boolean;
     onClose: () => void;
-    brand?: any; // If provided, edit mode
-    countries: any[];
-    categories: any[]; // NEW: Categories for linking
+    brand?: Record<string, any>; // If provided, edit mode
+    countries: Record<string, any>[];
+    categories: Record<string, any>[]; // NEW: Categories for linking
 };
 
 type CategoryNode = {
@@ -23,7 +23,7 @@ type CategoryNode = {
 };
 
 // Helper to build tree from flat list
-function buildCategoryTree(flatCategories: any[]): CategoryNode[] {
+function buildCategoryTree(flatCategories: Record<string, any>[]): CategoryNode[] {
     const categoryMap = new Map<number, CategoryNode>();
     const roots: CategoryNode[] = [];
 
@@ -60,13 +60,13 @@ export function BrandFormModal({ isOpen, onClose, brand, countries, categories }
     const [state, formAction] = useActionState(brand ? updateBrand.bind(null, brand.id) : createBrand, initialState);
     const [pending, setPending] = useState(false);
     const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>(
-        brand?.categories?.map((c: any) => c.id) || []
+        brand?.categories?.map((c: Record<string, any>) => c.id) || []
     );
 
     // Reset selected categories when brand changes (for edit mode)
     useEffect(() => {
         if (isOpen) {
-            setSelectedCategoryIds(brand?.categories?.map((c: any) => c.id) || []);
+            setSelectedCategoryIds(brand?.categories?.map((c: Record<string, any>) => c.id) || []);
             setPending(false); // Reset pending state when opening
         }
     }, [isOpen, brand]);
@@ -133,7 +133,7 @@ export function BrandFormModal({ isOpen, onClose, brand, countries, categories }
                         </label>
                         <div className="grid grid-cols-2 gap-2 p-3 bg-gray-50 rounded-xl border border-gray-100 max-h-40 overflow-y-auto">
                             {countries.map(c => {
-                                const isChecked = brand?.countries?.some((bc: any) => bc.id === c.id);
+                                const isChecked = brand?.countries?.some((bc: Record<string, any>) => bc.id === c.id);
                                 return (
                                     <label key={c.id} className="flex items-center gap-2 cursor-pointer hover:bg-white p-1 rounded transition-colors">
                                         <input

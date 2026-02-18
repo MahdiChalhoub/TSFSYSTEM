@@ -1156,14 +1156,18 @@ export interface SaasBackup {
 
 export interface SidebarDynamicItem {
     label: string
-    href: string
+    href?: string
+    path?: string
     icon?: string
+    module?: string
+    visibility?: string
     children?: SidebarDynamicItem[]
     [key: string]: unknown
 }
 
 export interface AppNotification {
     id: number
+    title?: string
     message: string
     type?: string
     read_at?: string | null
@@ -1187,6 +1191,7 @@ export interface Currency {
 
 export interface AppUser {
     id: number
+    name?: string
     username: string
     email?: string
     first_name?: string

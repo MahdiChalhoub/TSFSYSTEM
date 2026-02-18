@@ -111,7 +111,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-50">
-                                    {order.lines?.map((line: any) => (
+                                    {order.lines?.map((line: Record<string, any>) => (
                                         <tr key={line.id} className="text-sm">
                                             <td className="p-6">
                                                 <div className="font-bold text-gray-900">{line.product_name}</div>

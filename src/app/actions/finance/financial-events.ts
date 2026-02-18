@@ -42,7 +42,7 @@ export async function createFinancialEvent(data: FinancialEventInput) {
 
         revalidatePath('/finance/events')
         return { success: true, eventId: event.id }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Create Event Failed", e)
         throw e
     }

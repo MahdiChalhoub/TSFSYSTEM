@@ -30,7 +30,7 @@ export default function ExpenseTrackerPage() {
                 erpFetch('coa/'),
                 erpFetch('finance/journal/'),
             ])
-            setAccounts((Array.isArray(accts) ? accts : accts.results || []).filter((a: any) => a.type === 'EXPENSE'))
+            setAccounts((Array.isArray(accts) ? accts : accts.results || []).filter((a: Record<string, any>) => a.type === 'EXPENSE'))
             setJournals(Array.isArray(jrnls) ? jrnls : jrnls.results || [])
         } catch {
             toast.error("Failed to load expense data")
@@ -135,7 +135,7 @@ export default function ExpenseTrackerPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-2">
-                        {enriched.filter(a => a.absBalance > 0).map((a: any) => {
+                        {enriched.filter(a => a.absBalance > 0).map((a: Record<string, any>) => {
                             const pct = totalExpense > 0 ? (a.absBalance / totalExpense * 100) : 0
                             return (
                                 <div key={a.id} className="flex items-center gap-3">
@@ -175,7 +175,7 @@ export default function ExpenseTrackerPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {enriched.map((a: any, i: number) => {
+                            {enriched.map((a: Record<string, any>, i: number) => {
                                 const pct = totalExpense > 0 ? (a.absBalance / totalExpense * 100) : 0
                                 return (
                                     <TableRow key={a.id} className="hover:bg-gray-50/50">

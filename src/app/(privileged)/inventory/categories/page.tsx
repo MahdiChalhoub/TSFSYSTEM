@@ -13,11 +13,11 @@ async function getCategoriesData() {
 
     // Build Tree (Client-side logic moved here or kept? Logic is pure JS, can stay)
     const categoryMap = new Map();
-    const roots: any[] = [];
+    const roots: Record<string, any>[] = [];
 
     if (Array.isArray(categories)) {
         // Initialize Map with empty children array
-        categories.forEach((c: any) => {
+        categories.forEach((c: Record<string, any>) => {
             categoryMap.set(c.id, {
                 ...c,
                 children: [],
@@ -28,7 +28,7 @@ async function getCategoriesData() {
 
         // Link Children to Parents
         // DRF sends FK as 'parent' (the field name on the model), value is the parent's PK
-        categories.forEach((c: any) => {
+        categories.forEach((c: Record<string, any>) => {
             const node = categoryMap.get(c.id);
             const parentId = c.parent; // DRF FK field = model field name = 'parent'
             if (parentId) {

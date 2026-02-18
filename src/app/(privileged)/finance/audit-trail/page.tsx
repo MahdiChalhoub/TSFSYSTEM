@@ -15,7 +15,7 @@ import {
     User, Clock, ChevronLeft, ChevronRight, FileText, Filter, Eye
 } from "lucide-react"
 
-const ACTION_CONFIG: Record<string, { icon: any, color: string, bg: string }> = {
+const ACTION_CONFIG: Record<string, { icon: Record<string, any>, color: string, bg: string }> = {
     CREATE: { icon: Plus, color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
     UPDATE: { icon: Edit, color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
     DELETE: { icon: Trash2, color: 'text-red-700', bg: 'bg-red-50 border-red-200' },
@@ -54,7 +54,7 @@ export default function AuditTrailPage() {
         const items = data.results || []
         if (!search) return items
         const s = search.toLowerCase()
-        return items.filter((log: any) =>
+        return items.filter((log: Record<string, any>) =>
             log.model_name?.toLowerCase().includes(s) ||
             log.object_id?.toLowerCase().includes(s) ||
             JSON.stringify(log.payload)?.toLowerCase().includes(s)
@@ -63,7 +63,7 @@ export default function AuditTrailPage() {
 
     // Extract unique model names for filter
     const modelNames = useMemo(() => {
-        const all = (data.results || []).map((l: any) => l.model_name).filter(Boolean)
+        const all = (data.results || []).map((l: Record<string, any>) => l.model_name).filter(Boolean)
         return [...new Set(all)] as string[]
     }, [data])
 
@@ -150,7 +150,7 @@ export default function AuditTrailPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {logs.map((log: any) => {
+                                {logs.map((log: Record<string, any>) => {
                                     const cfg = ACTION_CONFIG[log.change_type] || ACTION_CONFIG.UPDATE
                                     const Icon = cfg.icon
                                     const isExpanded = expandedRow === log.id

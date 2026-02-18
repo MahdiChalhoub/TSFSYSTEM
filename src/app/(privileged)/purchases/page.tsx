@@ -29,9 +29,9 @@ export default async function PurchaseRegistryPage() {
     const purchases = await getPurchases();
 
     // Simple Analytics for Dashboard
-    const rfqCount = purchases.filter((p: any) => p.status === 'DRAFT').length;
-    const pendingReception = purchases.filter((p: any) => p.status === 'AUTHORIZED').length;
-    const totalValue = purchases.reduce((acc: number, p: any) => acc + (p.totalAmount || 0), 0);
+    const rfqCount = purchases.filter((p: Record<string, any>) => p.status === 'DRAFT').length;
+    const pendingReception = purchases.filter((p: Record<string, any>) => p.status === 'AUTHORIZED').length;
+    const totalValue = purchases.reduce((acc: number, p: Record<string, any>) => acc + (p.totalAmount || 0), 0);
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
@@ -108,7 +108,7 @@ export default async function PurchaseRegistryPage() {
                                 </td>
                             </tr>
                         ) : (
-                            purchases.map((p: any) => (
+                            purchases.map((p: Record<string, any>) => (
                                 <tr key={p.id} className="hover:bg-gray-50 group transition-colors">
                                     <td className="p-6">
                                         <Link href={`/purchases/${p.id}`} className="flex flex-col">

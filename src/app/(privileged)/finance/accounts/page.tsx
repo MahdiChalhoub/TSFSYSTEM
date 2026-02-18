@@ -50,8 +50,8 @@ export default function FinancialAccountsPage() {
             await deleteFinancialAccount(deleteTarget)
             toast.success("Account deleted")
             load()
-        } catch (e: any) {
-            toast.error(e.message)
+        } catch (e: unknown) {
+            toast.error((e instanceof Error ? e.message : String(e)))
         }
         setDeleteTarget(null)
     }
@@ -97,7 +97,7 @@ export default function FinancialAccountsPage() {
     )
 }
 
-function AccountCard({ account, onDelete, onRefresh }: { account: any, onDelete: () => void, onRefresh: () => void }) {
+function AccountCard({ account, onDelete, onRefresh }: { account: Record<string, any>, onDelete: () => void, onRefresh: () => void }) {
     const icon: Record<string, any> = {
         'CASH': Wallet,
         'BANK': Building,
@@ -158,7 +158,7 @@ function AccountCard({ account, onDelete, onRefresh }: { account: any, onDelete:
                     </div>
                     <div className="flex flex-wrap gap-2">
                         {account.assignedUsers && account.assignedUsers.length > 0 ? (
-                            account.assignedUsers.map((u: any) => (
+                            account.assignedUsers.map((u: Record<string, any>) => (
                                 <Badge key={u.id} variant="secondary" className="flex items-center gap-1 pr-1">
                                     <UserIcon className="h-3 w-3" />
                                     {u.name}
@@ -207,8 +207,8 @@ function AssignUserDialog({ accountId, onAssign }: { accountId: number, onAssign
             toast.success("User assigned")
             setOpen(false)
             onAssign()
-        } catch (e: any) {
-            toast.error(e.message)
+        } catch (e: unknown) {
+            toast.error((e instanceof Error ? e.message : String(e)))
         }
     }
 

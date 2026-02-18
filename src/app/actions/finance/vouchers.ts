@@ -48,7 +48,7 @@ export async function createVoucher(data: VoucherInput) {
         })
         revalidatePath('/finance/vouchers')
         return { success: true, id: voucher.id, reference: voucher.reference }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Create Voucher Failed", e)
         throw e
     }
@@ -62,7 +62,7 @@ export async function updateVoucher(id: number, data: VoucherUpdateInput) {
         })
         revalidatePath('/finance/vouchers')
         return { success: true, data: voucher }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Update Voucher Failed", e)
         throw e
     }
@@ -75,7 +75,7 @@ export async function postVoucher(id: number) {
         })
         revalidatePath('/finance/vouchers')
         return { success: true, data: result }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Post Voucher Failed", e)
         throw e
     }
@@ -88,7 +88,7 @@ export async function cancelVoucher(id: number) {
         })
         revalidatePath('/finance/vouchers')
         return { success: true, data: result }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Cancel Voucher Failed", e)
         throw e
     }
@@ -101,7 +101,7 @@ export async function deleteVoucher(id: number) {
         })
         revalidatePath('/finance/vouchers')
         return { success: true }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Delete Voucher Failed", e)
         throw e
     }

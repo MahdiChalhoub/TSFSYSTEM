@@ -13,7 +13,7 @@ export async function getPriceGroups() {
     }
 }
 
-export async function createPriceGroup(prevState: any, formData: FormData) {
+export async function createPriceGroup(prevState: Record<string, any>, formData: FormData) {
     try {
         const data = {
             name: formData.get('name'),
@@ -24,8 +24,8 @@ export async function createPriceGroup(prevState: any, formData: FormData) {
         };
         await erpFetch('price-groups/', { method: 'POST', body: JSON.stringify(data) });
         return { success: true, message: 'Price group created' };
-    } catch (e: any) {
-        return { success: false, message: e.message || 'Failed to create price group' };
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to create price group' };
     }
 }
 
@@ -33,8 +33,8 @@ export async function deletePriceGroup(id: number) {
     try {
         await erpFetch(`price-groups/${id}/`, { method: 'DELETE' });
         return { success: true };
-    } catch (e: any) {
-        return { success: false, message: e.message || 'Failed to delete' };
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to delete' };
     }
 }
 
@@ -55,8 +55,8 @@ export async function addGroupMember(groupId: number, contactId: number) {
             body: JSON.stringify({ contact_id: contactId }),
         });
         return { success: true };
-    } catch (e: any) {
-        return { success: false, message: e.message };
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) };
     }
 }
 
@@ -67,8 +67,8 @@ export async function removeGroupMember(groupId: number, contactId: number) {
             body: JSON.stringify({ contact_id: contactId }),
         });
         return { success: true };
-    } catch (e: any) {
-        return { success: false, message: e.message };
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) };
     }
 }
 
@@ -83,7 +83,7 @@ export async function getPriceRules() {
     }
 }
 
-export async function createPriceRule(prevState: any, formData: FormData) {
+export async function createPriceRule(prevState: Record<string, any>, formData: FormData) {
     try {
         const data: Record<string, any> = {
             discount_type: formData.get('discountType') || 'FIXED_PRICE',
@@ -107,8 +107,8 @@ export async function createPriceRule(prevState: any, formData: FormData) {
 
         await erpFetch('price-rules/', { method: 'POST', body: JSON.stringify(data) });
         return { success: true, message: 'Price rule created' };
-    } catch (e: any) {
-        return { success: false, message: e.message || 'Failed to create price rule' };
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to create price rule' };
     }
 }
 
@@ -116,8 +116,8 @@ export async function deletePriceRule(id: number) {
     try {
         await erpFetch(`price-rules/${id}/`, { method: 'DELETE' });
         return { success: true };
-    } catch (e: any) {
-        return { success: false, message: e.message || 'Failed to delete' };
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to delete' };
     }
 }
 

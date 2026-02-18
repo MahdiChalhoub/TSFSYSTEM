@@ -9,8 +9,8 @@ export default function EmployeeModal({
     roles,
     onClose
 }: {
-    sites: any[],
-    roles: any[],
+    sites: Record<string, any>[],
+    roles: Record<string, any>[],
     onClose: () => void
 }) {
     const [state, action, isPending] = useActionState(

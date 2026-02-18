@@ -26,7 +26,7 @@ import {
 type SortKey = 'date' | 'voucher_type' | 'reference' | 'amount' | 'lifecycle_status'
 type SortDir = 'asc' | 'desc'
 
-const LIFECYCLE_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
+const LIFECYCLE_CONFIG: Record<string, { label: string; color: string; bg: string; icon: Record<string, any> }> = {
     OPEN: { label: 'Open', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', icon: Clock },
     LOCKED: { label: 'Locked', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', icon: Lock },
     VERIFIED: { label: 'Verified', color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200', icon: ShieldCheck },
@@ -103,8 +103,8 @@ export default function VouchersPage() {
                 }
                 closeDialog()
                 loadData()
-            } catch (err: any) {
-                toast.error(err.message || `Failed to ${editVoucher ? 'update' : 'create'} voucher`)
+            } catch (err: unknown) {
+                toast.error((err instanceof Error ? err.message : String(err)) || `Failed to ${editVoucher ? 'update' : 'create'} voucher`)
             }
         })
     }
@@ -113,37 +113,37 @@ export default function VouchersPage() {
     async function handleLock(id: number) {
         startTransition(async () => {
             try { await lockVoucher(id); toast.success("Voucher locked"); loadData() }
-            catch (err: any) { toast.error(err.message || "Failed to lock") }
+            catch (err: unknown) { toast.error((err instanceof Error ? err.message : String(err)) || "Failed to lock") }
         })
     }
     async function handleUnlock(id: number, comment: string) {
         startTransition(async () => {
             try { await unlockVoucher(id, comment); toast.success("Voucher unlocked"); loadData(); setCommentDialog(null) }
-            catch (err: any) { toast.error(err.message || "Failed to unlock") }
+            catch (err: unknown) { toast.error((err instanceof Error ? err.message : String(err)) || "Failed to unlock") }
         })
     }
     async function handleVerify(id: number) {
         startTransition(async () => {
             try { await verifyVoucher(id); toast.success("Voucher verified"); loadData() }
-            catch (err: any) { toast.error(err.message || "Failed to verify") }
+            catch (err: unknown) { toast.error((err instanceof Error ? err.message : String(err)) || "Failed to verify") }
         })
     }
     async function handleConfirm(id: number) {
         startTransition(async () => {
             try { await confirmVoucher(id); toast.success("Voucher confirmed"); loadData() }
-            catch (err: any) { toast.error(err.message || "Failed to confirm") }
+            catch (err: unknown) { toast.error((err instanceof Error ? err.message : String(err)) || "Failed to confirm") }
         })
     }
     async function handlePost(id: number) {
         startTransition(async () => {
             try { await postVoucher(id); toast.success("Voucher posted to ledger"); loadData() }
-            catch (err: any) { toast.error(err.message || "Failed to post voucher") }
+            catch (err: unknown) { toast.error((err instanceof Error ? err.message : String(err)) || "Failed to post voucher") }
         })
     }
     async function handleDelete(id: number) {
         startTransition(async () => {
             try { await deleteVoucher(id); toast.success("Voucher deleted"); setDeleteConfirm(null); loadData() }
-            catch (err: any) { toast.error(err.message || "Failed to delete voucher") }
+            catch (err: unknown) { toast.error((err instanceof Error ? err.message : String(err)) || "Failed to delete voucher") }
         })
     }
     async function showHistory(id: number) {
@@ -153,7 +153,7 @@ export default function VouchersPage() {
         } catch { toast.error("Failed to load history") }
     }
 
-    function openEdit(v: any) { setEditVoucher(v); setVoucherType(v.voucher_type); setDialogOpen(true) }
+    function openEdit(v: Record<string, any>) { setEditVoucher(v); setVoucherType(v.voucher_type); setDialogOpen(true) }
     function openCreate() { setEditVoucher(null); setVoucherType('TRANSFER'); setDialogOpen(true) }
     function closeDialog() { setDialogOpen(false); setEditVoucher(null) }
 
@@ -199,7 +199,7 @@ export default function VouchersPage() {
         { key: "PAYMENT", label: "Payments", icon: ArrowUpRight },
     ]
 
-    const typeConfig: Record<string, { icon: any; color: string; bg: string }> = {
+    const typeConfig: Record<string, { icon: Record<string, any>; color: string; bg: string }> = {
         TRANSFER: { icon: ArrowRightLeft, color: "text-blue-700", bg: "bg-blue-50 border-blue-200" },
         RECEIPT: { icon: ArrowDownLeft, color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
         PAYMENT: { icon: ArrowUpRight, color: "text-rose-700", bg: "bg-rose-50 border-rose-200" },
@@ -300,7 +300,7 @@ export default function VouchersPage() {
                                 <label className="text-xs font-bold text-stone-500 uppercase">Source Account *</label>
                                 <select name="source_account_id" required className="w-full px-3 py-2 border rounded-xl bg-background text-sm" defaultValue={editVoucher?.source_account_id || editVoucher?.source_account || ""}>
                                     <option value="">Select source...</option>
-                                    {accounts.map((a: any) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                                    {accounts.map((a: Record<string, any>) => <option key={a.id} value={a.id}>{a.name}</option>)}
                                 </select>
                             </div>
                         )}
@@ -309,7 +309,7 @@ export default function VouchersPage() {
                                 <label className="text-xs font-bold text-stone-500 uppercase">Destination Account *</label>
                                 <select name="destination_account_id" required className="w-full px-3 py-2 border rounded-xl bg-background text-sm" defaultValue={editVoucher?.destination_account_id || editVoucher?.destination_account || ""}>
                                     <option value="">Select destination...</option>
-                                    {accounts.map((a: any) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                                    {accounts.map((a: Record<string, any>) => <option key={a.id} value={a.id}>{a.name}</option>)}
                                 </select>
                             </div>
                         )}
@@ -318,7 +318,7 @@ export default function VouchersPage() {
                                 <label className="text-xs font-bold text-stone-500 uppercase">Financial Event</label>
                                 <select name="financial_event_id" className="w-full px-3 py-2 border rounded-xl bg-background text-sm" defaultValue={editVoucher?.financial_event_id || editVoucher?.financial_event || ""}>
                                     <option value="">Select event...</option>
-                                    {events.map((e: any) => (
+                                    {events.map((e: Record<string, any>) => (
                                         <option key={e.id} value={e.id}>
                                             {(e.event_type || e.eventType || "").replace(/_/g, " ")} — {Number(e.amount).toLocaleString()}
                                         </option>
@@ -381,7 +381,7 @@ export default function VouchersPage() {
                     </DialogHeader>
                     <div className="max-h-80 overflow-y-auto space-y-3">
                         {historyDialog?.length === 0 && <p className="text-center text-stone-400 py-6">No history yet</p>}
-                        {historyDialog?.map((h: any, i: number) => (
+                        {historyDialog?.map((h: Record<string, any>, i: number) => (
                             <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-stone-50 border">
                                 <div className="w-8 h-8 rounded-lg bg-white border flex items-center justify-center shrink-0">
                                     <Clock size={14} className="text-stone-400" />
@@ -509,7 +509,7 @@ export default function VouchersPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {filteredVouchers.map((v: any) => {
+                        {filteredVouchers.map((v: Record<string, any>) => {
                             const tc = typeConfig[v.voucher_type] || typeConfig.TRANSFER
                             const lc = LIFECYCLE_CONFIG[v.lifecycle_status] || LIFECYCLE_CONFIG.OPEN
                             const TypeIcon = tc.icon

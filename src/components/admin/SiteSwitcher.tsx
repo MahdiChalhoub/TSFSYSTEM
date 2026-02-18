@@ -5,7 +5,7 @@ import { Building2, ChevronDown, Check, Globe } from 'lucide-react';
 import { setCurrentSite, getCurrentSiteId } from '@/app/actions/context';
 import clsx from 'clsx';
 
-export function SiteSwitcher({ sites }: { sites: any[] }) {
+export function SiteSwitcher({ sites }: { sites: Record<string, any>[] }) {
     const [isOpen, setIsOpen] = useState(false);
     const [currentId, setCurrentId] = useState<number | null>(null);
     const [isPending, startTransition] = useTransition();

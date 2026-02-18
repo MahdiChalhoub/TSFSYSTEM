@@ -16,7 +16,7 @@ export async function getFiscalYears() {
     try {
         const data = await erpFetch('fiscal-years/')
         const years = Array.isArray(data) ? data : (data?.results || [])
-        return years.map((year: any) => ({
+        return years.map((year: Record<string, any>) => ({
             ...year,
             startDate: year.start_date,
             endDate: year.end_date,
@@ -87,7 +87,7 @@ export async function createFiscalYear(config: FiscalYearConfig) {
         })
         revalidatePath('/finance/fiscal-years')
         return { success: true, id: result.id }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Failed to create fiscal year:", error)
         throw error
     }
@@ -100,7 +100,7 @@ export async function closeFiscalYear(id: number) {
         })
         revalidatePath('/finance/fiscal-years')
         return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Failed to close fiscal year:", error)
         throw error
     }
@@ -113,7 +113,7 @@ export async function deleteFiscalYear(id: number) {
         })
         revalidatePath('/finance/fiscal-years')
         return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Failed to delete fiscal year:", error)
         throw error
     }
@@ -129,7 +129,7 @@ export async function updatePeriod(periodId: number, data: unknown) {
         })
         revalidatePath('/finance/fiscal-years')
         return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Failed to update period:", error)
         throw error
     }
@@ -144,7 +144,7 @@ export async function updatePeriodStatus(periodId: number, newStatus: string) {
         })
         revalidatePath('/finance/fiscal-years')
         return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Failed to update period status:", error)
         throw error
     }
@@ -159,7 +159,7 @@ export async function lockFiscalYear(id: number) {
         })
         revalidatePath('/finance/fiscal-years')
         return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Failed to lock fiscal year:", error)
         throw error
     }
@@ -174,7 +174,7 @@ export async function hardLockFiscalYear(id: number) {
         })
         revalidatePath('/finance/fiscal-years')
         return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Failed to hard lock fiscal year:", error)
         throw error
     }
@@ -202,7 +202,7 @@ export async function transferBalancesToNextYear(fromYearId: number, toYearId: n
         })
         revalidatePath('/finance/fiscal-years')
         return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Failed to transfer balances:", error)
         throw error
     }

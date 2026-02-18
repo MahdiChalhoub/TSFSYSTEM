@@ -30,7 +30,7 @@ export default function RevenueBreakdownPage() {
                 erpFetch('coa/'),
                 erpFetch('finance/journal/'),
             ])
-            setAccounts((Array.isArray(accts) ? accts : accts.results || []).filter((a: any) => a.type === 'INCOME'))
+            setAccounts((Array.isArray(accts) ? accts : accts.results || []).filter((a: Record<string, any>) => a.type === 'INCOME'))
             setJournals(Array.isArray(jrnls) ? jrnls : jrnls.results || [])
         } catch {
             toast.error("Failed to load revenue data")
@@ -132,7 +132,7 @@ export default function RevenueBreakdownPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-2">
-                        {enriched.map((a: any) => {
+                        {enriched.map((a: Record<string, any>) => {
                             const pct = totalRevenue > 0 ? (a.balance / totalRevenue * 100) : 0
                             return (
                                 <div key={a.id} className="flex items-center gap-3">
@@ -172,7 +172,7 @@ export default function RevenueBreakdownPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {enriched.map((a: any, i: number) => {
+                            {enriched.map((a: Record<string, any>, i: number) => {
                                 const pct = totalRevenue > 0 ? (a.balance / totalRevenue * 100) : 0
                                 return (
                                     <TableRow key={a.id} className="hover:bg-gray-50/50">

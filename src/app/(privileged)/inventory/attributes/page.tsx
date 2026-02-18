@@ -6,7 +6,7 @@ async function getCategories() {
     try {
         const categories = await erpFetch('categories/');
         // Sort explicitly if backend doesn't guarantee order
-        return categories.sort((a: any, b: any) => a.name.localeCompare(b.name));
+        return categories.sort((a: Record<string, any>, b: Record<string, any>) => a.name.localeCompare(b.name));
     } catch (e) {
         console.error("Failed to fetch categories", e);
         return [];

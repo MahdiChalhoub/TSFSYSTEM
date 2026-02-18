@@ -8,10 +8,10 @@ import { useEffect, useState } from 'react';
 type UnitFormModalProps = {
     isOpen: boolean;
     onClose: () => void;
-    unit?: any; // If provided, it's edit mode
+    unit?: Record<string, any>; // If provided, it's edit mode
     baseUnitId?: number | null; // For adding children
     baseUnitName?: string;
-    potentialParents?: any[]; // For generic creation
+    potentialParents?: Record<string, any>[]; // For generic creation
 };
 
 const initialState: UnitState = { message: '', errors: {} };

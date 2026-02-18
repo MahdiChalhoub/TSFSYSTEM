@@ -32,7 +32,7 @@ export async function getChartOfAccounts(includeInactive: boolean = false, scope
             include_inactive: includeInactive.toString()
         }).toString()
         const result = await erpFetch(`coa/coa/?${query}`)
-        return serialize(result.map((acc: any) => ({
+        return serialize(result.map((acc: Record<string, any>) => ({
             ...acc,
             balance: Number(acc.rollup_balance ?? 0),
             directBalance: Number(acc.temp_balance ?? 0)
@@ -129,7 +129,7 @@ export async function getAccountStatement(accountId: number, filter?: { startDat
                 balance: Number(result.account.balance ?? 0)
             },
             openingBalance: Number(result.opening_balance ?? 0),
-            lines: result.lines.map((l: any) => ({
+            lines: result.lines.map((l: Record<string, any>) => ({
                 ...l,
                 debit: Number(l.debit ?? 0),
                 credit: Number(l.credit ?? 0)
@@ -149,7 +149,7 @@ export async function getTrialBalanceReport(asOfDate?: Date, legalReport: boolea
         }).toString()
 
         const result = await erpFetch(`coa/trial_balance/?${query}`)
-        return serialize(result.map((acc: any) => ({
+        return serialize(result.map((acc: Record<string, any>) => ({
             ...acc,
             balance: Number(acc.rollup_balance ?? 0),
             directBalance: Number(acc.temp_balance ?? 0)
@@ -171,8 +171,8 @@ export async function getProfitAndLossReport(startDate: Date, endDate: Date, sco
         const result = await erpFetch(`coa/trial_balance/?${query}`)
         return serialize(
             result
-                .filter((acc: any) => acc.type === 'INCOME' || acc.type === 'EXPENSE')
-                .map((acc: any) => ({
+                .filter((acc: Record<string, any>) => acc.type === 'INCOME' || acc.type === 'EXPENSE')
+                .map((acc: Record<string, any>) => ({
                     ...acc,
                     balance: Number(acc.rollup_balance ?? 0),
                     directBalance: Number(acc.temp_balance ?? 0)
@@ -191,7 +191,7 @@ export async function getBalanceSheetReport(asOfDate: Date, scope: 'OFFICIAL' | 
             as_of: asOfDate.toISOString()
         }).toString()
         const result = await erpFetch(`coa/trial_balance/?${query}`)
-        const mapped = result.map((acc: any) => ({
+        const mapped = result.map((acc: Record<string, any>) => ({
             ...acc,
             balance: Number(acc.rollup_balance ?? 0),
             directBalance: Number(acc.temp_balance ?? 0)
@@ -201,14 +201,14 @@ export async function getBalanceSheetReport(asOfDate: Date, scope: 'OFFICIAL' | 
         // We use root-level accounts only (!a.parent) because rollup_balance
         // already aggregates all child account balances into parents.
         const totalIncome = mapped
-            .filter((a: any) => a.type === 'INCOME' && !a.parent)
-            .reduce((sum: number, a: any) => sum + a.balance, 0)
+            .filter((a: Record<string, any>) => a.type === 'INCOME' && !a.parent)
+            .reduce((sum: number, a: Record<string, any>) => sum + a.balance, 0)
         const totalExpense = mapped
-            .filter((a: any) => a.type === 'EXPENSE' && !a.parent)
-            .reduce((sum: number, a: any) => sum + a.balance, 0)
+            .filter((a: Record<string, any>) => a.type === 'EXPENSE' && !a.parent)
+            .reduce((sum: number, a: Record<string, any>) => sum + a.balance, 0)
 
         return serialize({
-            accounts: mapped.filter((a: any) => ['ASSET', 'LIABILITY', 'EQUITY'].includes(a.type)),
+            accounts: mapped.filter((a: Record<string, any>) => ['ASSET', 'LIABILITY', 'EQUITY'].includes(a.type)),
             netProfit: totalIncome - totalExpense
         })
     } catch (error) {

@@ -13,11 +13,11 @@ export default function PricingManager({
     products,
     categories,
 }: {
-    priceGroups: any[],
-    priceRules: any[],
-    contacts: any[],
-    products: any[],
-    categories: any[],
+    priceGroups: Record<string, any>[],
+    priceRules: Record<string, any>[],
+    contacts: Record<string, any>[],
+    products: Record<string, any>[],
+    categories: Record<string, any>[],
 }) {
     const [tab, setTab] = useState<'groups' | 'rules'>('groups');
     const [showGroupForm, setShowGroupForm] = useState(false);
@@ -356,7 +356,7 @@ export default function PricingManager({
                                     <select value={ruleContactId} onChange={(e) => { setRuleContactId(e.target.value); if (e.target.value) setRuleGroupId(''); }}
                                         className="w-full px-4 py-2.5 rounded-xl bg-white border-none focus:ring-2 focus:ring-violet-200 outline-none font-bold text-gray-800 text-sm appearance-none">
                                         <option value="">— None —</option>
-                                        {contacts.map((c: any) => <option key={c.id} value={c.id}>{c.name} ({c.type})</option>)}
+                                        {contacts.map((c: Record<string, any>) => <option key={c.id} value={c.id}>{c.name} ({c.type})</option>)}
                                     </select>
                                 </div>
                                 <div>
@@ -364,7 +364,7 @@ export default function PricingManager({
                                     <select value={ruleGroupId} onChange={(e) => { setRuleGroupId(e.target.value); if (e.target.value) setRuleContactId(''); }}
                                         className="w-full px-4 py-2.5 rounded-xl bg-white border-none focus:ring-2 focus:ring-violet-200 outline-none font-bold text-gray-800 text-sm appearance-none">
                                         <option value="">— None —</option>
-                                        {priceGroups.map((g: any) => <option key={g.id} value={g.id}>{g.name}</option>)}
+                                        {priceGroups.map((g: Record<string, any>) => <option key={g.id} value={g.id}>{g.name}</option>)}
                                     </select>
                                 </div>
                             </div>
@@ -376,7 +376,7 @@ export default function PricingManager({
                                     <select value={ruleProductId} onChange={(e) => setRuleProductId(e.target.value)}
                                         className="w-full px-4 py-2.5 rounded-xl bg-white border-none focus:ring-2 focus:ring-gray-200 outline-none font-bold text-gray-800 text-sm appearance-none">
                                         <option value="">All Products</option>
-                                        {products.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                        {products.map((p: Record<string, any>) => <option key={p.id} value={p.id}>{p.name}</option>)}
                                     </select>
                                 </div>
                                 <div>
@@ -384,7 +384,7 @@ export default function PricingManager({
                                     <select value={ruleCategoryId} onChange={(e) => setRuleCategoryId(e.target.value)}
                                         className="w-full px-4 py-2.5 rounded-xl bg-white border-none focus:ring-2 focus:ring-gray-200 outline-none font-bold text-gray-800 text-sm appearance-none">
                                         <option value="">All Categories</option>
-                                        {categories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                        {categories.map((c: Record<string, any>) => <option key={c.id} value={c.id}>{c.name}</option>)}
                                     </select>
                                 </div>
                             </div>

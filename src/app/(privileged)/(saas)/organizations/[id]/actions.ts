@@ -8,7 +8,7 @@ export async function getOrganization(id: string) {
         const result = await erpFetch(`organizations/${id}/`)
 
         return result
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error(`[SaaS Detail] Error fetching org ${id}:`, error?.message || error)
         return null
     }

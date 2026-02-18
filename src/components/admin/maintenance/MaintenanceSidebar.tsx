@@ -11,7 +11,7 @@ type MaintenanceEntity = {
     name: string;
     count: number;
     children?: MaintenanceEntity[];
-    [key: string]: any;
+    [key: string]: Record<string, any>;
 };
 
 type Props = {

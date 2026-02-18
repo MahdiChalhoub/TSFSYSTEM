@@ -73,7 +73,7 @@ export default function FinancialEventsPage() {
                 e.event_type?.toLowerCase().includes(s)
             )
         }
-        return items.sort((a: any, b: any) => new Date(b.date || b.created_at).getTime() - new Date(a.date || a.created_at).getTime())
+        return items.sort((a: Record<string, any>, b: Record<string, any>) => new Date(b.date || b.created_at).getTime() - new Date(a.date || a.created_at).getTime())
     }, [events, typeFilter, search])
 
     const totalInflows = events
@@ -211,7 +211,7 @@ export default function FinancialEventsPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filtered.map((e: any) => {
+                                {filtered.map((e: Record<string, any>) => {
                                     const cfg = EVENT_CONFIG[e.event_type] || { icon: '📋', color: 'text-gray-700', bg: 'bg-gray-50', label: e.event_type }
                                     return (
                                         <TableRow key={e.id} className="hover:bg-gray-50/50">

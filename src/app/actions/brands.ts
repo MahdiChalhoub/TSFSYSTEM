@@ -35,7 +35,7 @@ export async function createBrand(prevState: BrandState, formData: FormData): Pr
 
         revalidatePath('/inventory/brands');
         return { message: 'success' };
-    } catch (e: any) {
+    } catch (e: unknown) {
         return { message: 'Database Error: Failed to create brand.' };
     }
 }

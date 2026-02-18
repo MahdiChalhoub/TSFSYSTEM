@@ -5,13 +5,13 @@ import { erpFetch } from "@/lib/erp-api"
 export async function getPlanDetail(id: string) {
     try {
         return await erpFetch(`saas/plans/${id}/`)
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("[SaaS] Error fetching plan detail:", error)
         return null
     }
 }
 
-export async function updatePlan(id: string, data: any) {
+export async function updatePlan(id: string, data: Record<string, any>) {
     return await erpFetch(`saas/plans/${id}/`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -28,13 +28,13 @@ export async function togglePlanPublic(id: string) {
 export async function getAddons() {
     try {
         return await erpFetch('saas/plans/addons/')
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("[SaaS] Error fetching addons:", error)
         return []
     }
 }
 
-export async function createAddon(data: any) {
+export async function createAddon(data: Record<string, any>) {
     return await erpFetch('saas/plans/addons/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -42,7 +42,7 @@ export async function createAddon(data: any) {
     })
 }
 
-export async function updateAddon(id: string, data: any) {
+export async function updateAddon(id: string, data: Record<string, any>) {
     return await erpFetch(`saas/plans/addons/${id}/`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -59,7 +59,7 @@ export async function deleteAddon(id: string) {
 export async function getModuleFeatures() {
     try {
         return await erpFetch('saas/plans/module-features/')
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("[SaaS] Error fetching module features:", error)
         return {}
     }

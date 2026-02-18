@@ -77,8 +77,8 @@ export default function HealthPage() {
             setHealth(data)
             setError(null)
             setLastRefresh(new Date())
-        } catch (e: any) {
-            setError(e.message || 'Failed to fetch health data')
+        } catch (e: unknown) {
+            setError((e instanceof Error ? e.message : String(e)) || 'Failed to fetch health data')
         } finally {
             setLoading(false)
         }

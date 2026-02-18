@@ -11,8 +11,8 @@ export default function CoaMigrationTool({
     currentAccounts,
     availableTemplates
 }: {
-    currentAccounts: any[],
-    availableTemplates: any
+    currentAccounts: Record<string, any>[],
+    availableTemplates: Record<string, any>
 }) {
     const [step, setStep] = useState(1)
     const [selectedTemplate, setSelectedTemplate] = useState<string>('')
@@ -38,8 +38,8 @@ export default function CoaMigrationTool({
                 const allAccounts = await getChartOfAccounts(false) // Only active ones
                 setTargetAccounts(allAccounts)
                 setStep(2)
-            } catch (err: any) {
-                toast.error('Error preparing target: ' + err.message)
+            } catch (err: unknown) {
+                toast.error('Error preparing target: ' + (err instanceof Error ? err.message : String(err)))
             }
         })
     }
@@ -83,8 +83,8 @@ export default function CoaMigrationTool({
                 toast.success('Success! System switched to the new standard.')
                 router.push('/finance/chart-of-accounts')
                 router.refresh()
-            } catch (err: any) {
-                toast.error('Migration Error: ' + err.message)
+            } catch (err: unknown) {
+                toast.error('Migration Error: ' + (err instanceof Error ? err.message : String(err)))
             }
         })
     }

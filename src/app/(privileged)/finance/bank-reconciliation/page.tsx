@@ -65,7 +65,7 @@ export default function BankReconciliationPage() {
         if (!detail?.entries) return []
         if (!search) return detail.entries
         const s = search.toLowerCase()
-        return detail.entries.filter((e: any) =>
+        return detail.entries.filter((e: Record<string, any>) =>
             e.reference?.toLowerCase().includes(s) ||
             e.description?.toLowerCase().includes(s)
         )
@@ -164,7 +164,7 @@ export default function BankReconciliationPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filteredEntries.map((e: any) => (
+                                {filteredEntries.map((e: Record<string, any>) => (
                                     <TableRow key={e.id} className="hover:bg-gray-50/50">
                                         <TableCell className="text-sm">{e.date || '—'}</TableCell>
                                         <TableCell className="font-mono text-xs text-blue-600">{e.reference || '—'}</TableCell>
@@ -220,7 +220,7 @@ export default function BankReconciliationPage() {
 
             {/* Account Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {accounts.map((acc: any) => (
+                {accounts.map((acc: Record<string, any>) => (
                     <Card
                         key={acc.id}
                         className="cursor-pointer hover:shadow-lg transition-all hover:-translate-y-0.5 border-l-4 border-l-blue-400"

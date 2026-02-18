@@ -124,7 +124,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
                                     <td colSpan={5} className="py-12 text-center text-gray-500">No products found.</td>
                                 </tr>
                             ) : (
-                                data.map((item: any) => isGrouped ? <GroupRow key={item.id} group={item} /> : <ProductRow key={item.id} product={item} />)
+                                data.map((item: Record<string, any>) => isGrouped ? <GroupRow key={item.id} group={item} /> : <ProductRow key={item.id} product={item} />)
                             )}
                         </tbody>
                     </table>
@@ -159,8 +159,8 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
     );
 }
 
-function ProductRow({ product }: { product: any }) {
-    const totalStock = product.inventory?.reduce((acc: number, inv: any) => acc + Number(inv.quantity), 0) || 0;
+function ProductRow({ product }: { product: Record<string, any> }) {
+    const totalStock = product.inventory?.reduce((acc: number, inv: Record<string, any>) => acc + Number(inv.quantity), 0) || 0;
 
     return (
         <tr className="hover:bg-gray-50/60 transition-colors">
@@ -217,16 +217,16 @@ function ProductRow({ product }: { product: any }) {
     );
 }
 
-function GroupRow({ group }: { group: any }) {
+function GroupRow({ group }: { group: Record<string, any> }) {
     // Aggregate Stock
-    const totalVarStock = group.products?.reduce((acc: number, p: any) => {
-        const pStock = p.inventory?.reduce((invAcc: number, inv: any) => invAcc + Number(inv.quantity), 0) || 0;
+    const totalVarStock = group.products?.reduce((acc: number, p: Record<string, any>) => {
+        const pStock = p.inventory?.reduce((invAcc: number, inv: Record<string, any>) => invAcc + Number(inv.quantity), 0) || 0;
         return acc + pStock;
     }, 0) || 0;
 
     const variantCount = group.products?.length || 0;
     // Extract Unique Countries
-    const uniqueCountries = Array.from(new Set(group.products?.map((p: any) => p.country?.code).filter(Boolean)));
+    const uniqueCountries = Array.from(new Set(group.products?.map((p: Record<string, any>) => p.country?.code).filter(Boolean)));
 
     return (
         <tr className="hover:bg-gray-50/60 transition-colors bg-gray-50/30">
@@ -243,7 +243,7 @@ function GroupRow({ group }: { group: any }) {
                 <div className="flex flex-col gap-1">
                     <span className="text-sm font-medium text-gray-900">{variantCount} Variants</span>
                     <div className="flex gap-1 flex-wrap">
-                        {uniqueCountries.map((c: any) => (
+                        {uniqueCountries.map((c: Record<string, any>) => (
                             <span key={c} className="text-[10px] bg-white border border-gray-200 px-1.5 py-0.5 rounded shadow-sm flex items-center gap-0.5">
                                 <Globe size={8} className="text-gray-400" /> {c}
                             </span>

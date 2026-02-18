@@ -43,7 +43,7 @@ export function usePermissions(): { permissions: string[]; isAdmin: boolean; loa
                 setIsAdmin(admin);
                 localStorage.setItem('user_permissions', JSON.stringify({ permissions: perms, isAdmin: admin }));
             })
-            .catch((err: any) => {
+            .catch((err: unknown) => {
                 console.error('Failed to fetch permissions', err);
             })
             .finally(() => {

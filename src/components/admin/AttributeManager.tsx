@@ -7,8 +7,8 @@ import { getAttributeHierarchy } from '@/app/actions/attributes';
 import { AttributeFormModal } from './AttributeFormModal';
 
 type AttributeManagerProps = {
-    attributes: any[];
-    categories: any[];
+    attributes: Record<string, any>[];
+    categories: Record<string, any>[];
 };
 
 export function AttributeManager({ attributes, categories }: AttributeManagerProps) {
@@ -21,11 +21,11 @@ export function AttributeManager({ attributes, categories }: AttributeManagerPro
     const filteredAttributes = attributes.filter(a => {
         const matchesSearch = a.name.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesCategory = selectedCategory === 'all' ||
-            (a.categories && a.categories.some((c: any) => c.id === Number(selectedCategory)));
+            (a.categories && a.categories.some((c: Record<string, any>) => c.id === Number(selectedCategory)));
         return matchesSearch && matchesCategory;
     });
 
-    const handleEdit = (attr: any) => {
+    const handleEdit = (attr: Record<string, any>) => {
         setEditingAttribute(attr);
         setIsModalOpen(true);
     };
@@ -77,7 +77,7 @@ export function AttributeManager({ attributes, categories }: AttributeManagerPro
                                 className="appearance-none pl-9 pr-8 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:border-emerald-500 cursor-pointer min-w-[150px]"
                             >
                                 <option value="all">All Categories</option>
-                                {categories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                {categories.map((c: Record<string, any>) => <option key={c.id} value={c.id}>{c.name}</option>)}
                             </select>
                             <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
                         </div>
@@ -96,7 +96,7 @@ export function AttributeManager({ attributes, categories }: AttributeManagerPro
                 </div>
 
                 <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
-                    {filteredAttributes.map((attr: any) => (
+                    {filteredAttributes.map((attr: Record<string, any>) => (
                         viewMode === 'list' ? (
                             <AttributeRow key={attr.id} attribute={attr} onEdit={handleEdit} />
                         ) : (
@@ -111,7 +111,7 @@ export function AttributeManager({ attributes, categories }: AttributeManagerPro
     );
 }
 
-function AttributeCard({ attribute, onEdit }: any) {
+function AttributeCard({ attribute, onEdit }: Record<string, any>) {
     return (
         <div className="group border border-gray-100 rounded-2xl p-6 hover:shadow-lg transition-all bg-white relative overflow-hidden flex flex-col cursor-pointer hover:border-emerald-200" onClick={() => onEdit(attribute)}>
             <div className="flex justify-between items-start mb-4">
@@ -126,7 +126,7 @@ function AttributeCard({ attribute, onEdit }: any) {
             {attribute.short_name && <p className="text-sm text-gray-500">{attribute.short_name}</p>}
 
             <div className="mt-4 pt-3 border-t border-gray-50 flex flex-wrap gap-1">
-                {attribute.categories && attribute.categories.map((c: any) => (
+                {attribute.categories && attribute.categories.map((c: Record<string, any>) => (
                     <span key={c.id} className="text-[10px] bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded border border-purple-100">{c.name}</span>
                 ))}
             </div>
@@ -134,7 +134,7 @@ function AttributeCard({ attribute, onEdit }: any) {
     );
 }
 
-function AttributeRow({ attribute, onEdit }: any) {
+function AttributeRow({ attribute, onEdit }: Record<string, any>) {
     const [isExpanded, setIsExpanded] = useState(false);
     const [data, setData] = useState<AdminHierarchyGroup[] | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -175,7 +175,7 @@ function AttributeRow({ attribute, onEdit }: any) {
                     {isLoading && <div className="text-center py-4 text-emerald-600"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-current inline-block"></div></div>}
                     {!isLoading && data && (
                         <div className="space-y-4 pl-0 md:pl-12">
-                            {data.map((brand: any) => (
+                            {data.map((brand: Record<string, any>) => (
                                 <div key={brand.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
                                     <div className="px-4 py-2 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100 flex justify-between items-center">
                                         <div className="flex items-center gap-2">
@@ -185,7 +185,7 @@ function AttributeRow({ attribute, onEdit }: any) {
                                         <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Stock: {brand.totalStock}</span>
                                     </div>
                                     <div className="divide-y divide-gray-50">
-                                        {brand.products.map((p: any) => (
+                                        {brand.products.map((p: Record<string, any>) => (
                                             <div key={p.id} className="px-4 py-2 flex justify-between items-center text-sm hover:bg-gray-50">
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-1.5 h-1.5 rounded-full bg-gray-200"></div>

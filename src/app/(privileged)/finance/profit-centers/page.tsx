@@ -36,7 +36,7 @@ export default function ProfitCentersPage() {
 
     // Group SYSCOHADA accounts by class prefix to create "profit centers"
     const centers = useMemo(() => {
-        const classGroups: Record<string, { name: string; income: number; expense: number; accounts: any[] }> = {}
+        const classGroups: Record<string, { name: string; income: number; expense: number; accounts: Record<string, any>[] }> = {}
 
         const CLASS_NAMES: Record<string, string> = {
             '1': 'Capital & Reserves',
@@ -194,7 +194,7 @@ export default function ProfitCentersPage() {
                                 {c.accounts
                                     .sort((a, b) => Math.abs(parseFloat(b.balance || 0)) - Math.abs(parseFloat(a.balance || 0)))
                                     .slice(0, 5)
-                                    .map((a: any) => {
+                                    .map((a: Record<string, any>) => {
                                         const bal = parseFloat(a.balance || 0)
                                         const total = Math.max(c.income, c.expense, 1)
                                         const pct = (Math.abs(bal) / total * 100)

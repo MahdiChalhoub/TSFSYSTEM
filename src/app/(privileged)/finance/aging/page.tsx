@@ -74,13 +74,13 @@ export default function AgingReportPage() {
 
     const allItems = data && !activeBucket
         ? Object.entries(data).flatMap(([key, bucket]) =>
-            (bucket?.items || []).map((item: any) => ({ ...item, bucket: key }))
+            (bucket?.items || []).map((item: Record<string, any>) => ({ ...item, bucket: key }))
         )
         : data && activeBucket
-            ? (data[activeBucket as keyof AgingData]?.items || []).map((item: any) => ({ ...item, bucket: activeBucket }))
+            ? (data[activeBucket as keyof AgingData]?.items || []).map((item: Record<string, any>) => ({ ...item, bucket: activeBucket }))
             : []
 
-    allItems.sort((a: any, b: any) => b.days - a.days)
+    allItems.sort((a: Record<string, any>, b: Record<string, any>) => b.days - a.days)
 
     if (loading) {
         return (
@@ -226,7 +226,7 @@ export default function AgingReportPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {allItems.map((item: any, idx: number) => {
+                                {allItems.map((item: Record<string, any>, idx: number) => {
                                     const bucketCfg = BUCKET_CONFIG.find(b => b.key === item.bucket)
                                     return (
                                         <TableRow key={idx} className="hover:bg-gray-50/50">

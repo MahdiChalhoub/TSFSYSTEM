@@ -4,7 +4,7 @@ import { useState, useTransition, useMemo, useEffect } from 'react'
 import { getProfitAndLossReport } from '@/app/actions/finance/accounts'
 import { Printer, Calendar, TrendingUp, TrendingDown, ChevronRight, ChevronDown, Download } from 'lucide-react'
 
-export default function PnlViewer({ initialData, fiscalYears }: { initialData: any[], fiscalYears: any[] }) {
+export default function PnlViewer({ initialData, fiscalYears }: { initialData: Record<string, any>[], fiscalYears: Record<string, any>[] }) {
     const now = new Date()
     const [startDate, setStartDate] = useState(new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0])
     const [endDate, setEndDate] = useState(new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0])
@@ -156,7 +156,7 @@ export default function PnlViewer({ initialData, fiscalYears }: { initialData: a
     )
 }
 
-function SummaryCard({ title, amount, icon, color, formatAmount }: any) {
+function SummaryCard({ title, amount, icon, color, formatAmount }: Record<string, any>) {
     return (
         <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm flex items-center justify-between">
             <div>
@@ -170,7 +170,7 @@ function SummaryCard({ title, amount, icon, color, formatAmount }: any) {
     )
 }
 
-function ReportRow({ account, level, allAccounts, formatAmount }: any) {
+function ReportRow({ account, level, allAccounts, formatAmount }: Record<string, any>) {
     const [expanded, setExpanded] = useState(level < 1)
     const isParent = account.children && account.children.length > 0
     const hasBalance = Math.abs(account.balance) > 0.001
@@ -195,8 +195,8 @@ function ReportRow({ account, level, allAccounts, formatAmount }: any) {
                     {formatAmount(account.balance)}
                 </td>
             </tr>
-            {isParent && expanded && account.children.map((childId: any) => {
-                const child = typeof childId === 'object' ? childId : allAccounts.find((a: any) => a.id === childId)
+            {isParent && expanded && account.children.map((childId: Record<string, any>) => {
+                const child = typeof childId === 'object' ? childId : allAccounts.find((a: Record<string, any>) => a.id === childId)
                 if (!child) return null
                 return <ReportRow key={child.id} account={child} level={level + 1} allAccounts={allAccounts} formatAmount={formatAmount} />
             })}
@@ -204,7 +204,7 @@ function ReportRow({ account, level, allAccounts, formatAmount }: any) {
     )
 }
 
-function TotalRow({ title, amount, color, formatAmount }: any) {
+function TotalRow({ title, amount, color, formatAmount }: Record<string, any>) {
     const isEmerald = color === 'emerald'
     return (
         <tr className={isEmerald ? 'bg-emerald-50/50' : 'bg-rose-50/50'}>

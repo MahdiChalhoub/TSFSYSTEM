@@ -60,8 +60,8 @@ export default function DeferredExpensesPage() {
                 setDialogOpen(false)
                 toast.success("Deferred expense created successfully")
                 loadData()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to create")
+            } catch (err: unknown) {
+                toast.error((err instanceof Error ? err.message : String(err)) || "Failed to create")
             }
         })
     }
@@ -73,8 +73,8 @@ export default function DeferredExpensesPage() {
                 await recognizeDeferredExpense(id, today)
                 toast.success("Month recognized successfully")
                 loadData()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to recognize")
+            } catch (err: unknown) {
+                toast.error((err instanceof Error ? err.message : String(err)) || "Failed to recognize")
             }
         })
     }
@@ -99,7 +99,7 @@ export default function DeferredExpensesPage() {
     const totalCommitted = expenses.reduce((s, e) => s + Number(e.total_amount || 0), 0)
     const totalRemaining = expenses.reduce((s, e) => s + Number(e.remaining_amount || 0), 0)
 
-    const statusConfig: Record<string, { icon: any; color: string; bg: string }> = {
+    const statusConfig: Record<string, { icon: Record<string, any>; color: string; bg: string }> = {
         ACTIVE: { icon: PlayCircle, color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
         COMPLETED: { icon: CheckCircle2, color: "text-blue-700", bg: "bg-blue-50 border-blue-200" },
     }
@@ -165,7 +165,7 @@ export default function DeferredExpensesPage() {
                                 <label className="text-xs font-bold text-stone-500 uppercase">Source Account *</label>
                                 <select name="source_account_id" required className="w-full px-3 py-2 border rounded-xl bg-background text-sm">
                                     <option value="">Select account...</option>
-                                    {accounts.map((a: any) => <option key={a.id} value={a.id}>{a.name} ({a.type})</option>)}
+                                    {accounts.map((a: Record<string, any>) => <option key={a.id} value={a.id}>{a.name} ({a.type})</option>)}
                                 </select>
                             </div>
                             <div className="col-span-2 space-y-1.5">
@@ -267,7 +267,7 @@ export default function DeferredExpensesPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {filteredExpenses.map((exp: any) => {
+                        {filteredExpenses.map((exp: Record<string, any>) => {
                             const progress = exp.duration_months > 0 ? Math.round((exp.months_recognized / exp.duration_months) * 100) : 100
                             const sc = statusConfig[exp.status] || statusConfig.ACTIVE
                             const StatusIcon = sc.icon

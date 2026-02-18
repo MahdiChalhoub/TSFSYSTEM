@@ -40,9 +40,9 @@ export async function receiveStock(
         revalidatePath('/finance/ledger')
 
         return { success: true, message: result.message || `Successfully received ${quantity} items.` }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Reception Error:", e)
-        return { success: false, message: "Error: " + (e.message || e) }
+        return { success: false, message: "Error: " + ((e instanceof Error ? e.message : String(e)) || e) }
     }
 }
 
@@ -73,9 +73,9 @@ export async function adjustStock(
 
         revalidatePath('/inventory')
         return { success: true, message: result.message || `Successfully adjusted stock by ${quantity}.` }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Adjustment Error:", e)
-        return { success: false, message: "Error: " + (e.message || e) }
+        return { success: false, message: "Error: " + ((e instanceof Error ? e.message : String(e)) || e) }
     }
 }
 
@@ -109,8 +109,8 @@ export async function transferStock(
 
         revalidatePath('/inventory')
         return { success: true, message: result.message || `Successfully transferred ${quantity} items.` }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Transfer Error:", e)
-        return { success: false, message: "Error: " + (e.message || e) }
+        return { success: false, message: "Error: " + ((e instanceof Error ? e.message : String(e)) || e) }
     }
 }

@@ -12,7 +12,7 @@ async function getCountries() {
         // The Frontend Manager likely displays the count.
         // If it strictly needs `_count.products` structure, we map it here.
         const countries = await erpFetch('countries/');
-        return countries.map((c: any) => ({
+        return countries.map((c: Record<string, any>) => ({
             ...c,
             _count: { products: c.product_count || 0 }
             // Note: We are NOT returning the list of products anymore to save bandwidth.

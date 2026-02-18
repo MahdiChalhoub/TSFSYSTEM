@@ -14,9 +14,9 @@ export default function EmployeeManager({
     sites,
     roles
 }: {
-    employees: any[],
-    sites: any[],
-    roles: any[]
+    employees: Record<string, any>[],
+    sites: Record<string, any>[],
+    roles: Record<string, any>[]
 }) {
     const [search, setSearch] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -25,7 +25,7 @@ export default function EmployeeManager({
     const [glMessage, setGLMessage] = useState<{ id: string; type: 'success' | 'error'; text: string } | null>(null);
     const { scopeAccess } = useAdmin();
 
-    async function handleLinkGL(emp: any, empType: 'EMPLOYEE' | 'PARTNER' | 'BOTH') {
+    async function handleLinkGL(emp: Record<string, any>, empType: 'EMPLOYEE' | 'PARTNER' | 'BOTH') {
         setLinkingGL(emp.id);
         setGLMessage(null);
         const result = await linkGLAccount(emp.id, empType);

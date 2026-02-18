@@ -11,8 +11,8 @@ export default async function ViewJournalEntryPage({ params }: { params: Promise
     const entry = await getJournalEntry(entryId) as any
     if (!entry) notFound()
 
-    const totalDebit = entry.lines.reduce((sum: number, l: any) => sum + Number(l.debit), 0)
-    const totalCredit = entry.lines.reduce((sum: number, l: any) => sum + Number(l.credit), 0)
+    const totalDebit = entry.lines.reduce((sum: number, l: Record<string, any>) => sum + Number(l.debit), 0)
+    const totalCredit = entry.lines.reduce((sum: number, l: Record<string, any>) => sum + Number(l.credit), 0)
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
@@ -98,7 +98,7 @@ export default async function ViewJournalEntryPage({ params }: { params: Promise
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-stone-100">
-                        {entry.lines.map((line: any) => (
+                        {entry.lines.map((line: Record<string, any>) => (
                             <tr key={line.id} className="hover:bg-stone-50/50 transition-colors">
                                 <td className="px-6 py-4">
                                     <div className="font-mono text-xs font-bold text-stone-400 mb-0.5">{line.account.code}</div>

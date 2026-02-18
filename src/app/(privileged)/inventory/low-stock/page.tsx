@@ -57,15 +57,15 @@ export default function LowStockPage() {
     const products = useMemo(() => {
         if (!data?.products) return []
         let items = [...data.products]
-        if (activeFilter) items = items.filter((p: any) => p.severity === activeFilter)
+        if (activeFilter) items = items.filter((p: Record<string, any>) => p.severity === activeFilter)
         if (search) {
             const s = search.toLowerCase()
-            items = items.filter((p: any) =>
+            items = items.filter((p: Record<string, any>) =>
                 p.product_name?.toLowerCase().includes(s) ||
                 p.barcode?.toLowerCase().includes(s)
             )
         }
-        items.sort((a: any, b: any) => {
+        items.sort((a: Record<string, any>, b: Record<string, any>) => {
             const av = a[sortKey] ?? 0
             const bv = b[sortKey] ?? 0
             if (typeof av === 'string') return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av)
@@ -188,7 +188,7 @@ export default function LowStockPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {products.map((p: any) => {
+                                {products.map((p: Record<string, any>) => {
                                     const cfg = SEVERITY_CONFIG[p.severity] || SEVERITY_CONFIG.LOW
                                     const stockPct = p.min_stock_level > 0 ? (p.current_stock / p.min_stock_level) * 100 : 0
                                     return (

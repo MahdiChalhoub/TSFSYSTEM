@@ -25,7 +25,7 @@ export async function getMaintenanceEntities(type: 'category' | 'brand' | 'unit'
     try {
         const data = await erpFetch(endpointMap[type]);
 
-        return data.map((item: any) => ({
+        return data.map((item: Record<string, any>) => ({
             id: item.id,
             name: item.name,
             count: item.product_count || 0,
@@ -60,8 +60,8 @@ export async function moveProductsGeneric(
         revalidatePath('/products');
 
         return { success: true, message: `Successfully moved ${productIds.length} products.` };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Bulk Move Error:', error);
-        return { success: false, message: error.message || 'Failed to move products.' };
+        return { success: false, message: (error instanceof Error ? error.message : String(error)) || 'Failed to move products.' };
     }
 }

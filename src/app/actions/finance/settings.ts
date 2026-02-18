@@ -33,8 +33,8 @@ export async function getFinancialSettings() {
             salesTaxPercentage: Number(result.salesTaxPercentage),
             purchaseTaxPercentage: Number(result.purchaseTaxPercentage),
         }
-    } catch (error: any) {
-        const isContextError = error.message && error.message.includes('No organization context');
+    } catch (error: unknown) {
+        const isContextError = (error instanceof Error ? error.message : String(error)) && (error instanceof Error ? error.message : String(error)).includes('No organization context');
 
         if (!isContextError) {
             console.error("Failed to fetch settings:", error)

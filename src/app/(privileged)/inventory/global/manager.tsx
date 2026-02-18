@@ -8,8 +8,8 @@ export default function GlobalInventoryManager({
     initialData,
     fetchAction
 }: {
-    initialData: any,
-    fetchAction: any
+    initialData: Record<string, any>,
+    fetchAction: Record<string, any>
 }) {
     const [data, setData] = useState(initialData);
     const [search, setSearch] = useState('');
@@ -40,8 +40,8 @@ export default function GlobalInventoryManager({
 
     const stats = {
         totalItems: data.totalCount,
-        totalStock: data.products.reduce((acc: number, p: any) => acc + p.totalQty, 0),
-        totalValue: data.products.reduce((acc: number, p: any) => acc + (p.totalQty * p.costPrice), 0)
+        totalStock: data.products.reduce((acc: number, p: Record<string, any>) => acc + p.totalQty, 0),
+        totalValue: data.products.reduce((acc: number, p: Record<string, any>) => acc + (p.totalQty * p.costPrice), 0)
     };
 
     return (
@@ -102,7 +102,7 @@ export default function GlobalInventoryManager({
                             <tr className="bg-gray-50/50">
                                 <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] border-b border-gray-100">Product Info</th>
                                 <th className="px-6 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] border-b border-gray-100">Category / Brand</th>
-                                {data.sites.map((site: any) => (
+                                {data.sites.map((site: Record<string, any>) => (
                                     <th key={site.id} className="px-6 py-6 text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] border-b border-gray-100 text-center bg-indigo-50/20">
                                         {site.name}
                                     </th>
@@ -112,7 +112,7 @@ export default function GlobalInventoryManager({
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
-                            {data.products.map((product: any) => (
+                            {data.products.map((product: Record<string, any>) => (
                                 <tr key={product.id} className="hover:bg-gray-50 transition-colors group">
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-4">
@@ -134,7 +134,7 @@ export default function GlobalInventoryManager({
                                             <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">{product.brand}</span>
                                         </div>
                                     </td>
-                                    {data.sites.map((site: any) => (
+                                    {data.sites.map((site: Record<string, any>) => (
                                         <td key={site.id} className="px-6 py-6 text-center border-l border-gray-50/50">
                                             <div className={clsx(
                                                 "inline-block px-3 py-1.5 rounded-xl font-black text-sm",

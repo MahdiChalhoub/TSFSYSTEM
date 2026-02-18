@@ -17,7 +17,7 @@ async function getContacts() {
         // Let's assume snake_case from backend and map to camelCase for frontend components if they expect it.
         // The previous code used Prisma which returns camelCase.
         // So I MUST mapping.
-        return data.map((c: any) => ({
+        return data.map((c: Record<string, any>) => ({
             ...c,
             homeSite: c.home_site,
             linkedAccount: c.linked_account,
@@ -70,15 +70,15 @@ export default async function ContactsPage() {
 
                     <div className="flex flex-col sm:flex-row gap-6 bg-white p-8 rounded-[40px] shadow-2xl shadow-indigo-900/5 border border-gray-50">
                         <div className="text-center px-6 border-r border-gray-100 last:border-0">
-                            <div className="text-4xl font-black text-gray-900 tracking-tighter mb-1">{contacts.filter((c: any) => c.type === 'CUSTOMER').length}</div>
+                            <div className="text-4xl font-black text-gray-900 tracking-tighter mb-1">{contacts.filter((c: Record<string, any>) => c.type === 'CUSTOMER').length}</div>
                             <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Active Clients</div>
                         </div>
                         <div className="text-center px-6 border-r border-gray-100 last:border-0">
-                            <div className="text-4xl font-black text-gray-900 tracking-tighter mb-1">{contacts.filter((c: any) => c.type === 'SUPPLIER').length}</div>
+                            <div className="text-4xl font-black text-gray-900 tracking-tighter mb-1">{contacts.filter((c: Record<string, any>) => c.type === 'SUPPLIER').length}</div>
                             <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Suppliers</div>
                         </div>
                         <div className="text-center px-6 border-r border-gray-100 last:border-0">
-                            <div className="text-4xl font-black text-gray-900 tracking-tighter mb-1">{contacts.filter((c: any) => c.type === 'LEAD').length}</div>
+                            <div className="text-4xl font-black text-gray-900 tracking-tighter mb-1">{contacts.filter((c: Record<string, any>) => c.type === 'LEAD').length}</div>
                             <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Leads</div>
                         </div>
                     </div>

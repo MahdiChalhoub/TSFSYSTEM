@@ -160,8 +160,8 @@ export default function MCPToolsPage() {
             }
             setIsDialogOpen(false)
             await loadData()
-        } catch (e: any) {
-            toast.error(e.message)
+        } catch (e: unknown) {
+            toast.error((e instanceof Error ? e.message : String(e)))
         } finally {
             setSaving(false)
         }
@@ -178,8 +178,8 @@ export default function MCPToolsPage() {
             if (!res.success) throw new Error(res.error)
             toast.success('Tool deleted')
             await loadData()
-        } catch (e: any) {
-            toast.error(e.message)
+        } catch (e: unknown) {
+            toast.error((e instanceof Error ? e.message : String(e)))
         }
         setDeleteToolId(null)
     }
@@ -196,8 +196,8 @@ export default function MCPToolsPage() {
             if (!res.success) throw new Error(res.error)
             toast.success('Default tools registered')
             await loadData()
-        } catch (e: any) {
-            toast.error(e.message)
+        } catch (e: unknown) {
+            toast.error((e instanceof Error ? e.message : String(e)))
         } finally {
             setGenerating(false)
         }

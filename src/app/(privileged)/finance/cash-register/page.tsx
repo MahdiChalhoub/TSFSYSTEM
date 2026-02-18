@@ -293,7 +293,7 @@ export default function CashRegisterPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {recent.map((t: any) => {
+                                {recent.map((t: Record<string, any>) => {
                                     const cfg = TYPE_CONFIG[t.type] || TYPE_CONFIG.SALE
                                     return (
                                         <TableRow key={t.id} className="hover:bg-gray-50/50">

@@ -47,9 +47,9 @@ export default function NewLoanPage() {
             if (res.success) {
                 router.push(`/finance/loans/${res.loanId}`)
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error(error)
-            toast.error("Failed to create contract: " + (error.message || "Unknown error"))
+            toast.error("Failed to create contract: " + ((error instanceof Error ? error.message : String(error)) || "Unknown error"))
         } finally {
             setLoading(false)
         }

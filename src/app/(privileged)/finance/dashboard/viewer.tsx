@@ -26,7 +26,7 @@ import { useTransition, useEffect } from 'react'
 import clsx from 'clsx'
 import { toast } from 'sonner'
 
-export default function FinanceDashboardViewer({ initialStats }: { initialStats: any }) {
+export default function FinanceDashboardViewer({ initialStats }: { initialStats: Record<string, any> }) {
     const { viewScope } = useAdmin()
     const [stats, setStats] = useState(initialStats)
     const [isPending, startTransition] = useTransition()
@@ -100,8 +100,8 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
                     </div>
 
                     <div className="h-64 flex items-end justify-between gap-4 px-4">
-                        {stats.trends.map((t: any, i: number) => {
-                            const maxVal = Math.max(...stats.trends.map((x: any) => Math.max(x.income, x.expense))) || 1
+                        {stats.trends.map((t: Record<string, any>, i: number) => {
+                            const maxVal = Math.max(...stats.trends.map((x: Record<string, any>) => Math.max(x.income, x.expense))) || 1
                             const incHeight = (t.income / maxVal) * 100
                             const expHeight = (t.expense / maxVal) * 100
 
@@ -172,7 +172,7 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-stone-50">
-                            {stats.recentEntries.map((entry: any) => (
+                            {stats.recentEntries.map((entry: Record<string, any>) => (
                                 <tr key={entry.id} className="hover:bg-stone-50/50 transition-colors group">
                                     <td className="p-6 text-stone-500 font-mono text-xs">
                                         {new Date(entry.transactionDate).toLocaleDateString()}
@@ -183,7 +183,7 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
                                     </td>
                                     <td className="p-6">
                                         <div className="flex gap-1 flex-wrap">
-                                            {entry.lines.map((l: any, i: number) => (
+                                            {entry.lines.map((l: Record<string, any>, i: number) => (
                                                 <span key={i} className="px-2 py-0.5 bg-stone-100 text-stone-500 text-[10px] rounded font-bold">
                                                     {l.account.name}
                                                 </span>
@@ -229,7 +229,7 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
     )
 }
 
-function MetricCard({ title, value, icon, description, isProfit, color = 'stone' }: any) {
+function MetricCard({ title, value, icon, description, isProfit, color = 'stone' }: Record<string, any>) {
     const isNeg = isProfit && value < 0
     return (
         <div className="bg-white p-6 rounded-3xl border border-stone-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
@@ -248,7 +248,7 @@ function MetricCard({ title, value, icon, description, isProfit, color = 'stone'
     )
 }
 
-function InventoryIntegrityCard({ status }: { status: any }) {
+function InventoryIntegrityCard({ status }: { status: Record<string, any> }) {
     const [isSyncing, setIsSyncing] = useState(false)
     const router = useRouter()
 
@@ -265,8 +265,8 @@ function InventoryIntegrityCard({ status }: { status: any }) {
                 toast.success(res.message)
                 window.location.reload()
             }
-        } catch (e: any) {
-            toast.error(e.message)
+        } catch (e: unknown) {
+            toast.error((e instanceof Error ? e.message : String(e)))
         } finally {
             setIsSyncing(false)
         }
@@ -328,7 +328,7 @@ function InventoryIntegrityCard({ status }: { status: any }) {
     )
 }
 
-function QuickLink({ href, icon, title, desc }: any) {
+function QuickLink({ href, icon, title, desc }: Record<string, any>) {
     return (
         <Link
             href={href}

@@ -8,7 +8,7 @@ import { deleteWarehouse } from '@/app/actions/inventory/warehouses';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
-export default function WarehouseManager({ warehouses }: { warehouses: any[] }) {
+export default function WarehouseManager({ warehouses }: { warehouses: Record<string, any>[] }) {
     const [search, setSearch] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingWarehouse, setEditingWarehouse] = useState<WarehouseType | null>(null);

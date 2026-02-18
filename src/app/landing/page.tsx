@@ -111,8 +111,8 @@ export default function LandingPage() {
                     setError(`Workspace '${formData.workspace}' not found. Please check the ID and try again.`)
                 }
             }
-        } catch (err: any) {
-            setError(err.message || "Connection failed. Please check your network.")
+        } catch (err: unknown) {
+            setError((err instanceof Error ? err.message : String(err)) || "Connection failed. Please check your network.")
         } finally {
             setLoading(false)
         }

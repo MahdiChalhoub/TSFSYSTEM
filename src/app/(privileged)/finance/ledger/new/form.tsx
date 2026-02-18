@@ -7,16 +7,16 @@ import { Plus, Trash2, Save, FileText, Send, CheckCircle2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 // Helper to find the correct Fiscal Year/Period for a date
-function findFiscalContext(date: string, years: any[]) {
+function findFiscalContext(date: string, years: Record<string, any>[]) {
     const d = new Date(date)
-    const year = years.find((y: any) => new Date(y.startDate) <= d && new Date(y.endDate) >= d)
+    const year = years.find((y: Record<string, any>) => new Date(y.startDate) <= d && new Date(y.endDate) >= d)
     if (!year) return { yearId: null, periodId: null }
 
-    const period = year.periods.find((p: any) => new Date(p.startDate) <= d && new Date(p.endDate) >= d)
+    const period = year.periods.find((p: Record<string, any>) => new Date(p.startDate) <= d && new Date(p.endDate) >= d)
     return { yearId: year.id, periodId: period?.id }
 }
 
-export default function JournalEntryForm({ accounts, fiscalYears, initialEntry }: { accounts: any[], fiscalYears: any[], initialEntry?: any }) {
+export default function JournalEntryForm({ accounts, fiscalYears, initialEntry }: { accounts: Record<string, any>[], fiscalYears: Record<string, any>[], initialEntry?: Record<string, any> }) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
 
@@ -28,7 +28,7 @@ export default function JournalEntryForm({ accounts, fiscalYears, initialEntry }
         reference: initialEntry?.reference || ''
     })
 
-    const [lines, setLines] = useState(initialEntry?.lines.map((l: any) => ({
+    const [lines, setLines] = useState(initialEntry?.lines.map((l: Record<string, any>) => ({
         accountId: l.accountId.toString(),
         searchString: `${l.account?.code || ''} ${l.account?.name || ''}`.trim(),
         debit: Number(l.debit) || '',
@@ -141,7 +141,7 @@ export default function JournalEntryForm({ accounts, fiscalYears, initialEntry }
                     fiscalYearId: yearId,
                     fiscalPeriodId: periodId,
                     status,
-                    lines: lines.map((l: any) => ({
+                    lines: lines.map((l: Record<string, any>) => ({
                         accountId: Number(l.accountId),
                         debit: Number(l.debit) || 0,
                         credit: Number(l.credit) || 0,
@@ -157,8 +157,8 @@ export default function JournalEntryForm({ accounts, fiscalYears, initialEntry }
 
                 router.push('/finance/ledger')
                 router.refresh()
-            } catch (err: any) {
-                toast.error(err.message)
+            } catch (err: unknown) {
+                toast.error((err instanceof Error ? err.message : String(err)))
             }
         })
     }
@@ -207,7 +207,7 @@ export default function JournalEntryForm({ accounts, fiscalYears, initialEntry }
                                 <span className="flex items-center gap-1 text-green-700">
                                     <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
                                     {fiscalYears.find(y => y.id === fiscalContext.yearId)?.name}
-                                    {fiscalContext.periodId && ` - Period ${fiscalYears.find(y => y.id === fiscalContext.yearId)?.periods.find((p: any) => p.id === fiscalContext.periodId)?.number}`}
+                                    {fiscalContext.periodId && ` - Period ${fiscalYears.find(y => y.id === fiscalContext.yearId)?.periods.find((p: Record<string, any>) => p.id === fiscalContext.periodId)?.number}`}
                                 </span>
                             ) : (
                                 <span className="text-red-500">INVALID DATE: Out of Fiscal Scope</span>

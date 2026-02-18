@@ -5,8 +5,8 @@ export type ModuleDefinition = {
     code: string;
     name: string;
     description?: string;
-    dashboardWidgets?: React.ComponentType<{ data: any }>[];
-    recentActivity?: React.ComponentType<{ data: any }>;
+    dashboardWidgets?: React.ComponentType<{ data: Record<string, any> }>[];
+    recentActivity?: React.ComponentType<{ data: Record<string, any> }>;
     settingsPanel?: React.ComponentType;
     // [FUTURE] Support for modular landing page sections
     landingComponents?: React.ComponentType[];
@@ -33,7 +33,7 @@ export function registerModule(def: ModuleDefinition) {
 
 // Helper to get active widgets based on installed modules
 export function getActiveWidgets(installedModuleCodes: string[]) {
-    const widgets: React.ComponentType<{ data: any }>[] = [];
+    const widgets: React.ComponentType<{ data: Record<string, any> }>[] = [];
 
     // Always include Core widgets if any
     if (MODULE_REGISTRY['core']?.dashboardWidgets) {

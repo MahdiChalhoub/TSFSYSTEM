@@ -33,7 +33,7 @@ export default function SupplierPerformancePage() {
                 erpFetch('pos/purchase/'),
             ])
             const contacts = Array.isArray(contactsData) ? contactsData : contactsData.results || []
-            setSuppliers(contacts.filter((c: any) => c.type === 'SUPPLIER' || c.type === 'BOTH'))
+            setSuppliers(contacts.filter((c: Record<string, any>) => c.type === 'SUPPLIER' || c.type === 'BOTH'))
             setOrders(Array.isArray(ordersData) ? ordersData : ordersData.results || [])
         } catch {
             toast.error("Failed to load supplier data")
@@ -51,7 +51,7 @@ export default function SupplierPerformancePage() {
             const totalSpent = sOrders.reduce((sum, o) => sum + parseFloat(o.total_amount || 0), 0)
             const completedOrders = sOrders.filter(o => o.status === 'COMPLETED')
             const completionRate = sOrders.length > 0 ? (completedOrders.length / sOrders.length * 100) : 0
-            const lastOrder = sOrders.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
+            const lastOrder = sOrders.sort((a: Record<string, any>, b: Record<string, any>) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
 
             return {
                 ...s,
@@ -175,7 +175,7 @@ export default function SupplierPerformancePage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filtered.map((s: any, i: number) => (
+                                {filtered.map((s: Record<string, any>, i: number) => (
                                     <TableRow key={s.id} className="hover:bg-gray-50/50">
                                         <TableCell className="font-bold text-gray-400">{i + 1}</TableCell>
                                         <TableCell>

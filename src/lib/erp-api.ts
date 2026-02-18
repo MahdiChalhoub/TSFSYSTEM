@@ -9,7 +9,7 @@ const DJANGO_URL = isClient
 
 // Performance: Only log in development to avoid I/O overhead in production
 const isDev = process.env.NODE_ENV === 'development';
-const debug = (...args: any[]) => isDev && console.log(...args);
+const debug = (...args: Record<string, any>[]) => isDev && console.log(...args);
 
 /** Custom error class for ERP API errors — used for type-safe catch blocks */
 export class ErpApiError extends Error {
@@ -142,7 +142,7 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
         // [SMART CACHE]
         // GET requests: allow Next.js to revalidate (stale-while-revalidate pattern, 30s)
         // Mutating requests (POST/PUT/PATCH/DELETE): always no-store
-        const fetchOptions: any = {
+        const fetchOptions: Record<string, any> = {
             ...options,
             headers: headersRaw,
         };
@@ -183,7 +183,7 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
                 }));
             }
 
-            let errorData: any = {}
+            let errorData: Record<string, any> = {}
             try {
                 errorData = JSON.parse(errorText)
 
@@ -222,13 +222,13 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
         }
 
         return await response.json();
-    } catch (error: any) {
+    } catch (error: unknown) {
         // Suppress noisy logs for expected auth redirection flows
         const isAuthError =
-            error.message?.includes('Authentication credentials') ||
-            error.message?.includes('Invalid token') ||
-            error.message?.includes('401') ||
-            error.message?.includes('403');
+            (error instanceof Error ? error.message : String(error))?.includes('Authentication credentials') ||
+            (error instanceof Error ? error.message : String(error))?.includes('Invalid token') ||
+            (error instanceof Error ? error.message : String(error))?.includes('401') ||
+            (error instanceof Error ? error.message : String(error))?.includes('403');
 
         if (!isAuthError) {
             console.error(`[ERP_API] Request to ${path} failed:`, error);

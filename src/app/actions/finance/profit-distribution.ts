@@ -21,7 +21,7 @@ export async function calculateDistribution(fiscalYearId: number, allocations: R
             })
         })
         return { success: true, data: result }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Calculate Distribution Failed", e)
         throw e
     }
@@ -42,7 +42,7 @@ export async function createDistribution(data: DistributionInput) {
         })
         revalidatePath('/finance/profit-distribution')
         return { success: true, id: dist.id }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Create Distribution Failed", e)
         throw e
     }
@@ -63,7 +63,7 @@ export async function postDistribution(
         })
         revalidatePath('/finance/profit-distribution')
         return { success: true, data: result }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Post Distribution Failed", e)
         throw e
     }

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { createFiscalYear } from '@/app/actions/finance/fiscal-year'
 import { toast } from 'sonner'
 
-export default function FiscalYearWizard({ lastCreatedYear }: { lastCreatedYear?: any }) {
+export default function FiscalYearWizard({ lastCreatedYear }: { lastCreatedYear?: Record<string, any> }) {
     const [isOpen, setIsOpen] = useState(false)
     const [isPending, setIsPending] = useState(false)
 
@@ -70,8 +70,8 @@ export default function FiscalYearWizard({ lastCreatedYear }: { lastCreatedYear?
                 includeAuditPeriod: formData.includeAuditPeriod
             })
             setIsOpen(false)
-        } catch (err: any) {
-            toast.error(err.message)
+        } catch (err: unknown) {
+            toast.error((err instanceof Error ? err.message : String(err)))
         } finally {
             setIsPending(false)
         }

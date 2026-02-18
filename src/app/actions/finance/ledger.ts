@@ -41,7 +41,7 @@ export type JournalLineInput = {
 export async function verifyTrialBalance() {
     try {
         const accounts = await erpFetch('coa/trial_balance/')
-        const total = accounts.reduce((acc: number, cur: any) => acc + (cur.temp_balance || 0), 0)
+        const total = accounts.reduce((acc: number, cur: Record<string, any>) => acc + (cur.temp_balance || 0), 0)
 
         if (Math.abs(total) > 0.01) {
             console.error(`CRITICAL: System Out of Balance! Trial Balance Total: ${total}`)
@@ -77,7 +77,7 @@ export async function createJournalEntry(data: unknown) {
         })
         revalidatePath('/finance/ledger')
         return result
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Failed to create journal entry:", error)
         throw error
     }
@@ -104,7 +104,7 @@ export async function updateJournalEntry(id: number, data: unknown) {
         })
         revalidatePath('/finance/ledger')
         return result
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Failed to update journal entry:", error)
         throw error
     }
@@ -135,7 +135,7 @@ export async function reverseJournalEntry(id: number) {
         })
         revalidatePath('/finance/ledger')
         return result
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Failed to reverse journal entry:", error)
         throw error
     }

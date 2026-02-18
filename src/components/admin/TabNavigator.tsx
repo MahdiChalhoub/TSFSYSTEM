@@ -131,7 +131,7 @@ export function TabNavigator() {
     );
 }
 
-const TabItem = React.memo(({ tab, isActive, onOpen, onClose }: any) => {
+const TabItem = React.memo(({ tab, isActive, onOpen, onClose }: Record<string, any>) => {
     return (
         <div
             onClick={() => onOpen(tab.title, tab.path)}

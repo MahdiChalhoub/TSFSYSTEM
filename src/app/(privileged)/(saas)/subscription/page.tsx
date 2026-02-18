@@ -47,8 +47,8 @@ export default function SubscriptionPage() {
             // Refresh
             const orgData = await getOrganizations()
             if (orgData && orgData.length > 0) setOrg(orgData[0])
-        } catch (e: any) {
-            toast.error(e.message || "Upgrade failed")
+        } catch (e: unknown) {
+            toast.error((e instanceof Error ? e.message : String(e)) || "Upgrade failed")
         } finally {
             setUpgrading(false)
         }

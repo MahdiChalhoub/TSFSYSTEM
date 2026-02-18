@@ -22,7 +22,7 @@ import {
     ArrowDownUp, History
 } from "lucide-react"
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
+const STATUS_CONFIG: Record<string, { label: string; color: string; icon: Record<string, any> }> = {
     OPEN: { label: 'Open', color: 'bg-blue-100 text-blue-700', icon: Clock },
     LOCKED: { label: 'Locked', color: 'bg-amber-100 text-amber-700', icon: Lock },
     VERIFIED: { label: 'Verified', color: 'bg-purple-100 text-purple-700', icon: ShieldCheck },
@@ -79,8 +79,8 @@ export default function AdjustmentOrdersPage() {
                 toast.success("Adjustment order created")
                 setDialogOpen(false)
                 loadData()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to create order")
+            } catch (err: unknown) {
+                toast.error((err instanceof Error ? err.message : String(err)) || "Failed to create order")
             }
         })
     }
@@ -101,8 +101,8 @@ export default function AdjustmentOrdersPage() {
                 toast.success("Line added")
                 setLineDialogOpen(false)
                 loadData()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to add line")
+            } catch (err: unknown) {
+                toast.error((err instanceof Error ? err.message : String(err)) || "Failed to add line")
             }
         })
     }
@@ -111,35 +111,35 @@ export default function AdjustmentOrdersPage() {
     async function handleLock(id: number) {
         startTransition(async () => {
             try { await lockAdjustmentOrder(id); toast.success("Order locked"); loadData() }
-            catch (err: any) { toast.error(err.message || "Failed to lock") }
+            catch (err: unknown) { toast.error((err instanceof Error ? err.message : String(err)) || "Failed to lock") }
         })
     }
 
     async function handleUnlock(id: number, comment: string) {
         startTransition(async () => {
             try { await unlockAdjustmentOrder(id, comment); toast.success("Order unlocked"); loadData(); setCommentDialog(null) }
-            catch (err: any) { toast.error(err.message || "Failed to unlock") }
+            catch (err: unknown) { toast.error((err instanceof Error ? err.message : String(err)) || "Failed to unlock") }
         })
     }
 
     async function handleVerify(id: number) {
         startTransition(async () => {
             try { await verifyAdjustmentOrder(id); toast.success("Verification advanced"); loadData() }
-            catch (err: any) { toast.error(err.message || "Failed to verify") }
+            catch (err: unknown) { toast.error((err instanceof Error ? err.message : String(err)) || "Failed to verify") }
         })
     }
 
     async function handlePost(id: number) {
         startTransition(async () => {
             try { await postAdjustmentOrder(id); toast.success("Order posted — stock adjusted"); loadData() }
-            catch (err: any) { toast.error(err.message || "Failed to post") }
+            catch (err: unknown) { toast.error((err instanceof Error ? err.message : String(err)) || "Failed to post") }
         })
     }
 
     async function handleRemoveLine(orderId: number, lineId: number) {
         startTransition(async () => {
             try { await removeAdjustmentLine(orderId, lineId); toast.success("Line removed"); loadData() }
-            catch (err: any) { toast.error(err.message || "Failed to remove line") }
+            catch (err: unknown) { toast.error((err instanceof Error ? err.message : String(err)) || "Failed to remove line") }
         })
     }
 
@@ -368,7 +368,7 @@ export default function AdjustmentOrdersPage() {
                                                                         </TableRow>
                                                                     </TableHeader>
                                                                     <TableBody>
-                                                                        {(order.lines ?? []).map((line: any) => (
+                                                                        {(order.lines ?? []).map((line: Record<string, any>) => (
                                                                             <TableRow key={line.id}>
                                                                                 <TableCell className="text-sm font-medium">
                                                                                     <div className="flex items-center gap-2">
@@ -430,7 +430,7 @@ export default function AdjustmentOrdersPage() {
                                 <label className="text-sm font-medium">Warehouse *</label>
                                 <select name="warehouse" required className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                                     <option value="">Select warehouse</option>
-                                    {warehouses.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}
+                                    {warehouses.map((w: Record<string, any>) => <option key={w.id} value={w.id}>{w.name}</option>)}
                                 </select>
                             </div>
                             <div className="col-span-2">
@@ -462,7 +462,7 @@ export default function AdjustmentOrdersPage() {
                             <label className="text-sm font-medium">Product *</label>
                             <select name="product" required className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                                 <option value="">Select product</option>
-                                {products.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                {products.map((p: Record<string, any>) => <option key={p.id} value={p.id}>{p.name}</option>)}
                             </select>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
@@ -517,7 +517,7 @@ export default function AdjustmentOrdersPage() {
                     </DialogHeader>
                     <div className="space-y-3 max-h-[400px] overflow-y-auto">
                         {historyDialog?.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No history yet</p>}
-                        {historyDialog?.map((entry: any, i: number) => (
+                        {historyDialog?.map((entry: Record<string, any>, i: number) => (
                             <div key={i} className="flex items-start gap-3 border-l-2 border-muted pl-4 py-2">
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2">

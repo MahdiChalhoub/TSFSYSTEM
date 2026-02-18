@@ -11,7 +11,7 @@ export default async function ConsignmentPage() {
         getContacts()
     ])
 
-    const suppliers = contacts.filter((c: any) => c.type === 'SUPPLIER')
+    const suppliers = contacts.filter((c: Record<string, any>) => c.type === 'SUPPLIER')
 
     return (
         <div className="p-6 space-y-6">

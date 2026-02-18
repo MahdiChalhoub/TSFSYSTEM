@@ -2,7 +2,7 @@
 
 import { createPriceList } from '@/app/actions/finance/pricing'
 
-export default function PriceListManager({ priceLists }: { priceLists: any[] }) {
+export default function PriceListManager({ priceLists }: { priceLists: Record<string, any>[] }) {
     async function handleCreate(formData: FormData) {
         const name = formData.get('name') as string
         await createPriceList(name)

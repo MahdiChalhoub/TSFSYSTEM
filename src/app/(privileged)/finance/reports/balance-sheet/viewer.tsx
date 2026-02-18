@@ -6,7 +6,7 @@ import { Printer, Calendar, ShieldCheck, Landmark, PieChart, ChevronRight, Chevr
 import { diagnoseFinancialDiscrepancy, healLedgerResidues } from '@/app/actions/finance/diagnostics'
 import { useRouter } from 'next/navigation'
 
-export default function BalanceSheetViewer({ initialData, fiscalYears }: { initialData: any, fiscalYears: any[] }) {
+export default function BalanceSheetViewer({ initialData, fiscalYears }: { initialData: Record<string, any>, fiscalYears: Record<string, any>[] }) {
     const [asOfDate, setAsOfDate] = useState(new Date().toISOString().split('T')[0])
     const [data, setData] = useState(initialData)
     const [isPending, startTransition] = useTransition()
@@ -38,7 +38,7 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
         }
     }, [showDiagnostics])
 
-    const handleAction = async (issue: any) => {
+    const handleAction = async (issue: Record<string, any>) => {
         if (issue.action === 'HEAL_RESIDUE') {
             setIsHealing(true)
             await healLedgerResidues()
@@ -306,7 +306,7 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
     )
 }
 
-function ReportRow({ account, level, allAccounts, formatAmount }: any) {
+function ReportRow({ account, level, allAccounts, formatAmount }: Record<string, any>) {
     const [expanded, setExpanded] = useState(level < 1)
     const isParent = account.children && account.children.length > 0
     const hasBalance = Math.abs(account.balance) > 0.001
@@ -331,8 +331,8 @@ function ReportRow({ account, level, allAccounts, formatAmount }: any) {
                     {formatAmount(account.balance)}
                 </td>
             </tr>
-            {isParent && expanded && account.children.map((childId: any) => {
-                const child = typeof childId === 'object' ? childId : allAccounts.find((a: any) => a.id === childId)
+            {isParent && expanded && account.children.map((childId: Record<string, any>) => {
+                const child = typeof childId === 'object' ? childId : allAccounts.find((a: Record<string, any>) => a.id === childId)
                 if (!child) return null
                 return <ReportRow key={child.id} account={child} level={level + 1} allAccounts={allAccounts} formatAmount={formatAmount} />
             })}

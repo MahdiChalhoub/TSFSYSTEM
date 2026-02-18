@@ -9,8 +9,8 @@ import { CategoryTreeSelector } from './CategoryTreeSelector';
 type AttributeFormModalProps = {
     isOpen: boolean;
     onClose: () => void;
-    attribute?: any; // If provided, edit mode
-    categories: any[]; // Categories for linking
+    attribute?: Record<string, any>; // If provided, edit mode
+    categories: Record<string, any>[]; // Categories for linking
 };
 
 type CategoryNode = {
@@ -22,7 +22,7 @@ type CategoryNode = {
 };
 
 // Helper to build tree from flat list
-function buildCategoryTree(flatCategories: any[]): CategoryNode[] {
+function buildCategoryTree(flatCategories: Record<string, any>[]): CategoryNode[] {
     const categoryMap = new Map<number, CategoryNode>();
     const roots: CategoryNode[] = [];
 
@@ -59,13 +59,13 @@ export function AttributeFormModal({ isOpen, onClose, attribute, categories }: A
     const [state, formAction] = useActionState(attribute ? updateAttribute.bind(null, attribute.id) : createAttribute, initialState);
     const [pending, setPending] = useState(false);
     const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>(
-        attribute?.categories?.map((c: any) => c.id) || []
+        attribute?.categories?.map((c: Record<string, any>) => c.id) || []
     );
 
     // Reset selected categories when attribute changes (for edit mode)
     useEffect(() => {
         if (isOpen) {
-            setSelectedCategoryIds(attribute?.categories?.map((c: any) => c.id) || []);
+            setSelectedCategoryIds(attribute?.categories?.map((c: Record<string, any>) => c.id) || []);
             setPending(false); // Reset pending state when opening
         }
     }, [isOpen, attribute]);

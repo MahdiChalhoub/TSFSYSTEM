@@ -121,7 +121,7 @@ export default async function SaasMasterDashboard() {
                     </CardHeader>
                     <CardContent className="px-4 pb-8">
                         <div className="space-y-2">
-                            {stats?.latestTenants?.map((ten: any) => (
+                            {stats?.latestTenants?.map((ten: Record<string, any>) => (
                                 <div key={ten.id} className="flex items-center justify-between p-6 rounded-3xl hover:bg-gray-50 transition-all border border-transparent hover:border-gray-100">
                                     <div className="flex items-center gap-5">
                                         <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center text-gray-700 font-bold border border-gray-200 shadow-inner">

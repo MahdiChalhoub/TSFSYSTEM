@@ -125,7 +125,7 @@ export default async function FinancialEventDetailPage(props: { params: Promise<
                                 <p><strong>JE ID:</strong> {event.journalEntry.id}</p>
                                 <Separator />
                                 <div className="space-y-2">
-                                    {event.journalEntry.lines.map((line: any) => (
+                                    {event.journalEntry.lines.map((line: Record<string, any>) => (
                                         <div key={line.id} className="flex justify-between items-start text-xs">
                                             <span>
                                                 <span className="font-semibold block">{line.account.code}</span>

@@ -31,7 +31,7 @@ export function NotificationBell() {
         try {
             const data = await getNotifications();
             setNotifications(data);
-            setUnreadCount(data.filter((n: any) => !n.read_at).length);
+            setUnreadCount(data.filter((n: AppNotification) => !n.read_at).length);
         } catch (error) {
             console.error('Failed to fetch notifications:', error);
         }
@@ -124,7 +124,7 @@ export function NotificationBell() {
                                 >
                                     <div className="flex gap-3">
                                         <div className="mt-0.5 shrink-0">
-                                            {getIcon(notif.type)}
+                                            {getIcon(notif.type ?? 'info')}
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center justify-between gap-2 mb-1">
@@ -135,7 +135,7 @@ export function NotificationBell() {
                                                     {notif.title}
                                                 </p>
                                                 <span className="text-[10px] font-bold text-gray-300 whitespace-nowrap">
-                                                    {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true })}
+                                                    {notif.created_at ? formatDistanceToNow(new Date(notif.created_at), { addSuffix: true }) : ''}
                                                 </span>
                                             </div>
                                             <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">

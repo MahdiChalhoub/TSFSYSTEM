@@ -6,7 +6,7 @@ import { erpFetch } from "@/lib/erp-api"
 export async function getSubscriptionPlans() {
     try {
         return await erpFetch('saas/plans/')
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Error fetching plans:", error);
         return []
     }
@@ -21,7 +21,7 @@ export async function subscribeToPlan(planId: string) {
         revalidatePath('/subscription')
         revalidatePath('/dashboard')
         return result
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Subscription failed:", error);
         throw error;
     }

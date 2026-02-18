@@ -36,7 +36,7 @@ export type PurchaseFormState = {
 
 export async function createPurchaseInvoice(prevState: PurchaseFormState, formData: FormData): Promise<PurchaseFormState> {
     // 1. Extract & Parse Complex FormData
-    const rawLines: any[] = [];
+    const rawLines: Record<string, any>[] = [];
 
     for (const [key, value] of Array.from(formData.entries())) {
         const match = key.match(/^lines\[(\d+)\]\[(\w+)\]$/);
@@ -77,9 +77,9 @@ export async function createPurchaseInvoice(prevState: PurchaseFormState, formDa
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Purchase Creation Error:", e);
-        return { message: e.message || "Critical Error: Could not process purchase replenishment." };
+        return { message: (e instanceof Error ? e.message : String(e)) || "Critical Error: Could not process purchase replenishment." };
     }
 
     revalidatePath('/purchases');
@@ -124,7 +124,7 @@ export async function invoicePurchaseOrder(id: string, formData: FormData) {
 }
 
 export async function createFormalPurchaseOrder(prevState: PurchaseFormState, formData: FormData): Promise<PurchaseFormState> {
-    const rawLines: any[] = [];
+    const rawLines: Record<string, any>[] = [];
     for (const [key, value] of Array.from(formData.entries())) {
         const match = key.match(/^lines\[(\d+)\]\[(\w+)\]$/);
         if (match) {
@@ -155,9 +155,9 @@ export async function createFormalPurchaseOrder(prevState: PurchaseFormState, fo
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(rawData)
         });
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Formal PO Error:", e);
-        return { message: e.message || "Failed to create Request for Quotation." };
+        return { message: (e instanceof Error ? e.message : String(e)) || "Failed to create Request for Quotation." };
     }
 
     revalidatePath('/purchases');

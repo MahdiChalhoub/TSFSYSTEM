@@ -19,12 +19,12 @@ function fmt(n: number, currency = 'XOF') {
 }
 
 interface WidgetData {
-    salesSummary: any
-    lowStock: any[]
-    employees: any[]
-    contacts: any[]
-    accounts: any[]
-    movements: any[]
+    salesSummary: Record<string, any>
+    lowStock: Record<string, any>[]
+    employees: Record<string, any>[]
+    contacts: Record<string, any>[]
+    accounts: Record<string, any>[]
+    movements: Record<string, any>[]
 }
 
 export default function CustomDashboard() {
@@ -87,12 +87,12 @@ export default function CustomDashboard() {
     const totalExpense = expenseAccounts.reduce((s, a) => s + Math.abs(parseFloat(a.balance || 0)), 0)
 
     const recentMovements = data.movements
-        .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .sort((a: Record<string, any>, b: Record<string, any>) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         .slice(0, 5)
 
     const paymentMethods = data.salesSummary?.payment_methods || {}
     const topSellers = Object.entries(data.salesSummary?.user_stats || {})
-        .sort(([, a]: any, [, b]: any) => b.total - a.total)
+        .sort(([, a]: Record<string, any>, [, b]: Record<string, any>) => b.total - a.total)
         .slice(0, 5)
 
     return (
@@ -219,7 +219,7 @@ export default function CustomDashboard() {
                     <CardContent className="space-y-2">
                         {recentMovements.length === 0 ? (
                             <p className="text-center py-4 text-gray-400 text-sm">No movements</p>
-                        ) : recentMovements.map((m: any, i: number) => (
+                        ) : recentMovements.map((m: Record<string, any>, i: number) => (
                             <div key={i} className="flex items-center gap-2 text-xs">
                                 <div className={`w-2 h-2 rounded-full ${m.type === 'IN' ? 'bg-green-400' : m.type === 'OUT' ? 'bg-red-400' : 'bg-amber-400'}`} />
                                 <span className="flex-1 truncate font-medium">{m.product_name || `Product #${m.product}`}</span>

@@ -17,8 +17,8 @@ export function LedgerEntryActions({ entryId, status, isLocked }: { entryId: num
             try {
                 await reverseJournalEntry(entryId)
                 router.refresh()
-            } catch (err: any) {
-                toast.error(err.message)
+            } catch (err: unknown) {
+                toast.error((err instanceof Error ? err.message : String(err)))
             }
         })
         setShowReverse(false)

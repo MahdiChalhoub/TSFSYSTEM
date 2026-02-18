@@ -39,7 +39,7 @@ export async function bulkUpdateProducts(updates: ProductUpdate[]) {
 // ─── Barcode Generation ──────────────────────────────────────────
 
 export async function generateBarcodes(productIds?: number[]) {
-    const body: any = {}
+    const body: Record<string, any> = {}
     if (productIds && productIds.length > 0) {
         body.product_ids = productIds
     } else {

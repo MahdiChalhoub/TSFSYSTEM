@@ -141,8 +141,8 @@ export default function MCPProvidersPage() {
             }
             setIsDialogOpen(false)
             await loadData()
-        } catch (e: any) {
-            toast.error(e.message)
+        } catch (e: unknown) {
+            toast.error((e instanceof Error ? e.message : String(e)))
         } finally {
             setSaving(false)
         }
@@ -159,8 +159,8 @@ export default function MCPProvidersPage() {
             if (!res.success) throw new Error(res.error)
             toast.success('Provider deleted')
             await loadData()
-        } catch (e: any) {
-            toast.error(e.message)
+        } catch (e: unknown) {
+            toast.error((e instanceof Error ? e.message : String(e)))
         }
         setDeleteProviderId(null)
     }
@@ -175,8 +175,8 @@ export default function MCPProvidersPage() {
                 toast.error(res.message || 'Connection failed')
             }
             await loadData()
-        } catch (e: any) {
-            toast.error(e.message)
+        } catch (e: unknown) {
+            toast.error((e instanceof Error ? e.message : String(e)))
         } finally {
             setTesting(null)
         }
@@ -188,8 +188,8 @@ export default function MCPProvidersPage() {
             if (!res.success) throw new Error(res.error)
             toast.success('Default provider updated')
             await loadData()
-        } catch (e: any) {
-            toast.error(e.message)
+        } catch (e: unknown) {
+            toast.error((e instanceof Error ? e.message : String(e)))
         }
     }
 

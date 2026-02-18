@@ -17,7 +17,7 @@ type CategoryNode = {
     short_name?: string;
 };
 
-export function CategoryTree({ categories, allCategories = [] }: { categories: CategoryNode[], allCategories?: any[] }) {
+export function CategoryTree({ categories, allCategories = [] }: { categories: CategoryNode[], allCategories?: Record<string, any>[] }) {
     const [activeModal, setActiveModal] = useState<{ type: 'edit' | 'add-child' | 'none', category?: CategoryNode, parentId?: number }>({ type: 'none' });
     const [deleteTarget, setDeleteTarget] = useState<CategoryNode | null>(null);
 
@@ -92,7 +92,7 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
 }: {
     category: CategoryNode;
     level: number;
-    allCategories: any[];
+    allCategories: Record<string, any>[];
     onEdit: (cat: CategoryNode) => void;
     onAddChild: (id: number) => void;
     onDelete: (cat: CategoryNode) => void;

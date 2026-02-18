@@ -385,7 +385,7 @@ export async function getTemplatePreview(templateKey: keyof typeof TEMPLATES) {
  * MAPPING TOOL (Advanced)
  * Moves all balances from old accounts to new ones and deactivates old ones.
  */
-export async function migrateBalances(data: { mappings: any[], description: string }) {
+export async function migrateBalances(data: { mappings: Record<string, any>[], description: string }) {
 
     try {
         const { erpFetch } = await import('@/lib/erp-api')
@@ -399,6 +399,6 @@ export async function migrateBalances(data: { mappings: any[], description: stri
     }
 }
 
-export async function sweepInactiveBalances(mapping: any) {
+export async function sweepInactiveBalances(mapping: Record<string, any>) {
     throw new Error("Sweep logic must be moved to Django Backend via erpFetch.")
 }

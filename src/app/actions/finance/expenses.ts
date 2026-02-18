@@ -43,7 +43,7 @@ export async function createExpense(data: ExpenseInput) {
         })
         revalidatePath('/finance/expenses')
         return { success: true, id: expense.id }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Create Expense Failed", e)
         throw e
     }
@@ -57,7 +57,7 @@ export async function updateExpense(id: number, data: ExpenseUpdateInput) {
         })
         revalidatePath('/finance/expenses')
         return { success: true, data: expense }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Update Expense Failed", e)
         throw e
     }
@@ -68,7 +68,7 @@ export async function deleteExpense(id: number) {
         await erpFetch(`expenses/${id}/`, { method: 'DELETE' })
         revalidatePath('/finance/expenses')
         return { success: true }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Delete Expense Failed", e)
         throw e
     }
@@ -81,7 +81,7 @@ export async function postExpense(id: number) {
         })
         revalidatePath('/finance/expenses')
         return { success: true, data: result }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Post Expense Failed", e)
         throw e
     }
@@ -94,7 +94,7 @@ export async function cancelExpense(id: number) {
         })
         revalidatePath('/finance/expenses')
         return { success: true, data: result }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Cancel Expense Failed", e)
         throw e
     }

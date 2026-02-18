@@ -35,7 +35,7 @@ interface Message {
     id: string
     role: 'user' | 'assistant' | 'tool' | 'chart' | 'insight' | 'strategy'
     content: string
-    data?: any
+    data?: Record<string, any>
     tool_calls?: ToolCall[]
     timestamp: Date
 }
@@ -239,8 +239,8 @@ Always be specific with numbers and actionable recommendations.`
             const convsData = await getMCPConversations()
             setConversations(convsData)
 
-        } catch (e: any) {
-            toast.error(e.message)
+        } catch (e: unknown) {
+            toast.error((e instanceof Error ? e.message : String(e)))
             setMessages(prev => prev.filter(m => m.id !== userMessage.id))
         } finally {
             setSending(false)

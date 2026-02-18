@@ -14,11 +14,11 @@ type CategoryNode = {
 };
 
 type Props = {
-    categories: any[];
+    categories: Record<string, any>[];
     activeCategoryId: number | null;
 };
 
-function buildCategoryTree(flatCategories: any[]): CategoryNode[] {
+function buildCategoryTree(flatCategories: Record<string, any>[]): CategoryNode[] {
     const categoryMap = new Map<number, CategoryNode>();
     const roots: CategoryNode[] = [];
 
@@ -42,7 +42,7 @@ function buildCategoryTree(flatCategories: any[]): CategoryNode[] {
 }
 
 // Find path of IDs from root to target
-function findPathToNode(categories: any[], targetId: number | null): number[] {
+function findPathToNode(categories: Record<string, any>[], targetId: number | null): number[] {
     if (!targetId) return [];
 
     // Build parent map for easy traversal up

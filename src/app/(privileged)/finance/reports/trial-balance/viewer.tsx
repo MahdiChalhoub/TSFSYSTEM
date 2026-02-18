@@ -4,7 +4,7 @@ import { useState, useTransition, useMemo, useEffect } from 'react'
 import { getTrialBalanceReport } from '@/app/actions/finance/accounts'
 import { FileText, Printer, Calendar, AlertCircle, CheckCircle2, ChevronRight, ChevronDown } from 'lucide-react'
 
-export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: { initialAccounts: any[], fiscalYears: any[] }) {
+export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: { initialAccounts: Record<string, any>[], fiscalYears: Record<string, any>[] }) {
     const [asOfDate, setAsOfDate] = useState(new Date().toISOString().split('T')[0])
     const [accounts, setAccounts] = useState(initialAccounts)
     const [isPending, startTransition] = useTransition()
@@ -147,7 +147,7 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: { i
     )
 }
 
-function GroupRows({ group, allAccounts, formatAmount, level = 0 }: { group: any, allAccounts: any[], formatAmount: any, level: number }) {
+function GroupRows({ group, allAccounts, formatAmount, level = 0 }: { group: Record<string, any>, allAccounts: Record<string, any>[], formatAmount: Record<string, any>, level: number }) {
     if (group.items.length === 0) return null
 
     return (
@@ -157,14 +157,14 @@ function GroupRows({ group, allAccounts, formatAmount, level = 0 }: { group: any
                     {group.type}s
                 </td>
             </tr>
-            {group.items.map((acc: any) => (
+            {group.items.map((acc: Record<string, any>) => (
                 <AccountRow key={acc.id} account={acc} level={level} allAccounts={allAccounts} formatAmount={formatAmount} />
             ))}
         </>
     )
 }
 
-function AccountRow({ account, level, allAccounts, formatAmount }: { account: any, level: number, allAccounts: any[], formatAmount: any }) {
+function AccountRow({ account, level, allAccounts, formatAmount }: { account: Record<string, any>, level: number, allAccounts: Record<string, any>[], formatAmount: Record<string, any> }) {
     const [expanded, setExpanded] = useState(level < 1) // Expand roots by default
     const isParent = account.children && account.children.length > 0
     const hasBalance = Math.abs(account.balance) > 0.001
@@ -194,7 +194,7 @@ function AccountRow({ account, level, allAccounts, formatAmount }: { account: an
                     {account.balance < 0 ? formatAmount(Math.abs(account.balance)) : '-'}
                 </td>
             </tr>
-            {isParent && expanded && account.children.map((childId: any) => {
+            {isParent && expanded && account.children.map((childId: Record<string, any>) => {
                 const child = typeof childId === 'object' ? childId : allAccounts.find(a => a.id === childId)
                 if (!child) return null
                 return <AccountRow key={child.id} account={child} level={level + 1} allAccounts={allAccounts} formatAmount={formatAmount} />

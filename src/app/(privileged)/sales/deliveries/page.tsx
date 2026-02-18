@@ -17,7 +17,7 @@ function fmt(n: number) {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
 }
 
-const STATUS_CONFIG: Record<string, { label: string; bg: string; icon: any }> = {
+const STATUS_CONFIG: Record<string, { label: string; bg: string; icon: Record<string, any> }> = {
     PENDING: { label: 'Pending', bg: 'bg-gray-100 text-gray-700', icon: Clock },
     PREPARING: { label: 'Preparing', bg: 'bg-blue-100 text-blue-700', icon: Package },
     IN_TRANSIT: { label: 'In Transit', bg: 'bg-amber-100 text-amber-700', icon: Truck },
@@ -48,7 +48,7 @@ export default function DeliveryOrdersPage() {
         }
     }
 
-    async function doAction(id: number, action: string, body?: any) {
+    async function doAction(id: number, action: string, body?: Record<string, any>) {
         setActionLoading(id)
         try {
             const { erpFetch } = await import("@/lib/erp-api")
@@ -213,7 +213,7 @@ export default function DeliveryOrdersPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filtered.map((d: any) => {
+                                {filtered.map((d: Record<string, any>) => {
                                     const cfg = STATUS_CONFIG[d.status] || STATUS_CONFIG.PENDING
                                     const Icon = cfg.icon
                                     const isLoading = actionLoading === d.id

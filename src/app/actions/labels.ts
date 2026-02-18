@@ -7,7 +7,7 @@ export async function getProductsForLabels(productIds?: number[]) {
     const products = await erpFetch('/products/')
     const all = Array.isArray(products) ? products : products.results || []
     if (productIds && productIds.length > 0) {
-        return all.filter((p: any) => productIds.includes(p.id))
+        return all.filter((p: Record<string, any>) => productIds.includes(p.id))
     }
     return all
 }
@@ -19,7 +19,7 @@ export async function searchProductsForLabels(query: string) {
     if (!query) return all.slice(0, 50)
     const q = query.toLowerCase()
     return all.filter(
-        (p: any) =>
+        (p: Record<string, any>) =>
             p.name?.toLowerCase().includes(q) ||
             p.sku?.toLowerCase().includes(q) ||
             p.barcode?.toLowerCase().includes(q),

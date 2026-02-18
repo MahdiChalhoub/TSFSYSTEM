@@ -21,7 +21,7 @@ async function getOrderDetails(id: string) {
 async function getWarehouses() {
     try {
         const sites = await erpFetch('sites/?include_warehouses=true');
-        return sites.flatMap((s: any) => s.warehouses || []);
+        return sites.flatMap((s: Record<string, any>) => s.warehouses || []);
     } catch (e) {
         return [];
     }
@@ -88,7 +88,7 @@ export default async function PurchaseDetailPage({ params }: { params: { id: str
                         <form action={receivePurchaseOrder.bind(null, id)} className="flex gap-2">
                             <select name="warehouseId" className="bg-white border border-gray-200 rounded-2xl px-4 py-3.5 text-sm font-bold shadow-sm" required>
                                 <option value="">Target WH...</option>
-                                {warehouses.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}
+                                {warehouses.map((w: Record<string, any>) => <option key={w.id} value={w.id}>{w.name}</option>)}
                             </select>
                             <button className="bg-emerald-600 text-white px-8 py-3.5 rounded-2xl font-black shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all flex items-center gap-2">
                                 <Truck size={20} />
@@ -170,7 +170,7 @@ export default async function PurchaseDetailPage({ params }: { params: { id: str
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-50">
-                                    {order.lines?.map((line: any) => (
+                                    {order.lines?.map((line: Record<string, any>) => (
                                         <tr key={line.id} className="text-sm">
                                             <td className="p-6">
                                                 <div className="font-bold text-gray-900">{line.product_name}</div>

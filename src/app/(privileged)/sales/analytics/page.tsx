@@ -149,8 +149,8 @@ export default function SalesAnalyticsPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="flex items-end gap-1 h-32">
-                            {daily_trend?.map((d: any, i: number) => {
-                                const max = Math.max(...(daily_trend?.map((t: any) => t.revenue) ?? [0]))
+                            {daily_trend?.map((d: Record<string, any>, i: number) => {
+                                const max = Math.max(...(daily_trend?.map((t: Record<string, any>) => t.revenue) ?? [0]))
                                 const pct = max ? (d.revenue / max * 100) : 0
                                 return (
                                     <div key={i} className="flex-1 flex flex-col items-center gap-1 group">
@@ -191,7 +191,7 @@ export default function SalesAnalyticsPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {top_products?.map((p: any, i: number) => (
+                                {top_products?.map((p: Record<string, any>, i: number) => (
                                     <TableRow key={i}>
                                         <TableCell className="font-bold text-gray-400">{i + 1}</TableCell>
                                         <TableCell className="font-medium">{p.name || 'Unknown'}</TableCell>
@@ -227,7 +227,7 @@ export default function SalesAnalyticsPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {top_customers?.map((c: any, i: number) => (
+                                {top_customers?.map((c: Record<string, any>, i: number) => (
                                     <TableRow key={i}>
                                         <TableCell className="font-bold text-gray-400">{i + 1}</TableCell>
                                         <TableCell className="font-medium">{c.name || 'Walk-in'}</TableCell>
@@ -256,7 +256,7 @@ export default function SalesAnalyticsPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-3">
-                            {payment_methods?.map((p: any, i: number) => {
+                            {payment_methods?.map((p: Record<string, any>, i: number) => {
                                 const totalRev = overall.revenue || 1
                                 const pct = (p.total / totalRev * 100)
                                 return (
@@ -291,7 +291,7 @@ export default function SalesAnalyticsPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-3">
-                            {site_performance?.map((s: any, i: number) => {
+                            {site_performance?.map((s: Record<string, any>, i: number) => {
                                 const totalRev = overall.revenue || 1
                                 const pct = (s.total / totalRev * 100)
                                 return (

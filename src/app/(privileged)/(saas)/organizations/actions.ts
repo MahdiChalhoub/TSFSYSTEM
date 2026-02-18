@@ -6,10 +6,10 @@ import { erpFetch } from "@/lib/erp-api"
 export async function getOrganizations() {
     try {
         return await erpFetch('organizations/')
-    } catch (error: any) {
-        if (error.message && (
-            error.message.includes('Authentication credentials') ||
-            error.message.includes('No organization context')
+    } catch (error: unknown) {
+        if ((error instanceof Error ? error.message : String(error)) && (
+            (error instanceof Error ? error.message : String(error)).includes('Authentication credentials') ||
+            (error instanceof Error ? error.message : String(error)).includes('No organization context')
         )) {
             return []
         }
@@ -37,7 +37,7 @@ export async function createOrganization(data: {
         revalidatePath('/organizations')
         revalidatePath('/dashboard')
         return result
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("CRITICAL: Organization Provisioning Failed", error);
         throw error;
     }

@@ -25,7 +25,7 @@ const RootLoginSchema = z.object({
     slug: z.string().optional() // Optional because tenant login doesn't need it
 })
 
-export async function loginAction(prevState: any, formData: FormData) {
+export async function loginAction(prevState: Record<string, any>, formData: FormData) {
     const data = Object.fromEntries(formData.entries())
 
     // Check if we are validating with slug or without
@@ -142,14 +142,14 @@ export async function loginAction(prevState: any, formData: FormData) {
                 maxAge: 60 * 60 * 24 * 7,
                 ...(cookieDomain && { domain: cookieDomain }),
             })
-        } catch (error: any) {
+        } catch (error: unknown) {
             let message = 'Verification failed'
             try {
-                const errData = JSON.parse(error.message)
+                const errData = JSON.parse((error instanceof Error ? error.message : String(error)))
                 if (errData.error) message = errData.error
                 else if (errData.detail) message = errData.detail
             } catch (e) {
-                message = error.message || 'Service unavailable'
+                message = (error instanceof Error ? error.message : String(error)) || 'Service unavailable'
             }
             return { error: { root: [message] } }
         }
@@ -226,16 +226,16 @@ export async function loginAction(prevState: any, formData: FormData) {
             ...(cookieDomain && { domain: cookieDomain }),
         })
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Login Tactical Error:', error)
         let message = `${PLATFORM_CONFIG.name} Login Failed`
         try {
-            const errData = JSON.parse(error.message)
+            const errData = JSON.parse((error instanceof Error ? error.message : String(error)))
             if (errData.non_field_errors) message = errData.non_field_errors[0]
             else if (errData.detail) message = errData.detail
             else if (errData.error) message = errData.error
         } catch (e) {
-            message = error.message || 'Service unavailable'
+            message = (error instanceof Error ? error.message : String(error)) || 'Service unavailable'
         }
         return { error: { root: [message] } }
     }
@@ -287,9 +287,9 @@ export const getUser = cache(async function getUser() {
     try {
         const user = await erpFetch('auth/me/')
         return user
-    } catch (error: any) {
+    } catch (error: unknown) {
         // Robust check for session expiry / invalid credentials
-        const msg = error.message?.toLowerCase() || '';
+        const msg = (error instanceof Error ? error.message : String(error))?.toLowerCase() || '';
         const isAuthError =
             (error instanceof ErpApiError && (error.status === 401 || error.status === 403)) ||
             msg.includes('invalid token') ||
@@ -346,7 +346,7 @@ const PasswordResetSchema = z.object({
     path: ['confirm_password'],
 })
 
-export async function confirmPasswordResetAction(data: any) {
+export async function confirmPasswordResetAction(data: Record<string, any>) {
     const validated = PasswordResetSchema.safeParse(data)
     if (!validated.success) {
         throw new Error(validated.error.issues[0]?.message || 'Invalid input')

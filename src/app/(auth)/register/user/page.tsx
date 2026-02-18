@@ -137,7 +137,7 @@ export default function UserRegisterPage() {
                                 </SelectTrigger>
                                 <SelectContent className="bg-slate-900 border-white/10 text-white">
                                     {roles.length > 0 ? (
-                                        roles.map((r: any) => (
+                                        roles.map((r: Record<string, any>) => (
                                             <SelectItem key={r.id} value={r.id.toString()}>
                                                 {r.name}
                                             </SelectItem>

@@ -12,9 +12,9 @@ export default function PurchaseForm({
     sites,
     financialSettings
 }: {
-    suppliers: any[],
-    sites: any[],
-    financialSettings: any
+    suppliers: Record<string, any>[],
+    sites: Record<string, any>[],
+    financialSettings: Record<string, any>
 }) {
     const initialState = { message: '', errors: {} };
     const [state, formAction, isPending] = useActionState(createPurchaseInvoice, initialState);
@@ -83,7 +83,7 @@ export default function PurchaseForm({
 
     // --- Handlers ---
 
-    const addProductToLines = (product: any) => {
+    const addProductToLines = (product: Record<string, any>) => {
         // Prevent duplicate products in same invoice? (Option-dependent, usually yes for simplicity)
         if (lines.find(l => l.productId === product.id)) return;
 
@@ -121,7 +121,7 @@ export default function PurchaseForm({
         }, ...lines]);
     };
 
-    const updateLine = (idx: number, updates: any) => {
+    const updateLine = (idx: number, updates: Record<string, any>) => {
         const newLines = [...lines];
         newLines[idx] = { ...newLines[idx], ...updates };
 
@@ -146,7 +146,7 @@ export default function PurchaseForm({
     };
 
     // --- Calculations ---
-    const getEffectiveCost = (line: any) => {
+    const getEffectiveCost = (line: Record<string, any>) => {
         if (pricingCostBasis === 'FORCE_HT') return line.unitCostHT;
         if (pricingCostBasis === 'FORCE_TTC') return line.unitCostTTC;
 
@@ -154,7 +154,7 @@ export default function PurchaseForm({
         return vatRecoverable ? line.unitCostHT : line.unitCostTTC;
     };
 
-    const getProfitAnalysis = (line: any) => {
+    const getProfitAnalysis = (line: Record<string, any>) => {
         const cost = getEffectiveCost(line);
         // Selling price basis: determined by the company's financial model (worksInTTC setting)
         const price = worksInTTC ? line.sellingPriceTTC : line.sellingPriceHT;
@@ -483,7 +483,7 @@ export default function PurchaseForm({
 
 // --- Sub-Components ---
 
-function ProductSearch({ callback, siteId }: { callback: (p: any) => void, siteId: number }) {
+function ProductSearch({ callback, siteId }: { callback: (p: Record<string, any>) => void, siteId: number }) {
     const [query, setQuery] = useState('');
     const [results, setResults] = useState<Record<string, unknown>[]>([]);
     const [open, setOpen] = useState(false);

@@ -57,7 +57,7 @@ export class OfflinePOSManager {
     /**
      * High-level Product Cache Refresh
      */
-    static async refreshProductCatalog(products: any[]) {
+    static async refreshProductCatalog(products: Record<string, any>[]) {
         try {
             const mapped = products.map(p => ({
                 id: p.id,
@@ -82,7 +82,7 @@ export class OfflinePOSManager {
     /**
      * Submit an order with offline fallback
      */
-    static async submitOrder(orderData: any, headers: Record<string, string>) {
+    static async submitOrder(orderData: Record<string, any>, headers: Record<string, string>) {
         if (isOnline()) {
             try {
                 // Try online first

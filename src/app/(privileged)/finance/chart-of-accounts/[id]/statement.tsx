@@ -6,9 +6,9 @@ import Link from 'next/link'
 
 interface StatementProps {
     data: {
-        account: any
+        account: Record<string, any>
         openingBalance: number
-        lines: any[]
+        lines: Record<string, any>[]
     }
     dateRange: { start: string, end: string }
 }

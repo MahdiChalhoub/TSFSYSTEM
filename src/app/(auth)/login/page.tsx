@@ -206,7 +206,7 @@ function LoginContent() {
                                                     <SelectValue placeholder="Select Base" />
                                                 </SelectTrigger>
                                                 <SelectContent className="bg-[#1e293b] border-slate-700 text-white">
-                                                    {sites.map((s: any) => (
+                                                    {sites.map((s: Record<string, any>) => (
                                                         <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>
                                                     ))}
                                                 </SelectContent>

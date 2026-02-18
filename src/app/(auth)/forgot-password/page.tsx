@@ -22,8 +22,8 @@ export default function ForgotPasswordPage() {
             await requestPasswordResetAction(email);
             setSubmitted(true);
             toast.success("Instructions sent!");
-        } catch (error: any) {
-            toast.error(error.message || "Failed to send reset instructions");
+        } catch (error: unknown) {
+            toast.error((error instanceof Error ? error.message : String(error)) || "Failed to send reset instructions");
         } finally {
             setLoading(false);
         }

@@ -23,13 +23,13 @@ type ActiveView = 'ALL' | 'SUPPLIER_PAYMENT' | 'CUSTOMER_RECEIPT' | 'AGED_AR' | 
 type SortKey = 'payment_date' | 'type' | 'amount' | 'status'
 type SortDir = 'asc' | 'desc'
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: Record<string, any> }> = {
     DRAFT: { label: 'Draft', color: 'text-stone-600', bg: 'bg-stone-50 border-stone-200', icon: Clock },
     POSTED: { label: 'Posted', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', icon: CheckCircle2 },
     CANCELLED: { label: 'Cancelled', color: 'text-red-700', bg: 'bg-red-50 border-red-200', icon: XCircle },
 }
 
-const TYPE_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
+const TYPE_CONFIG: Record<string, { label: string; color: string; bg: string; icon: Record<string, any> }> = {
     SUPPLIER_PAYMENT: { label: 'Supplier Payment', color: 'text-rose-700', bg: 'bg-rose-50 border-rose-200', icon: ArrowUpRight },
     CUSTOMER_RECEIPT: { label: 'Customer Receipt', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', icon: ArrowDownLeft },
     REFUND: { label: 'Refund', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', icon: CreditCard },
@@ -119,8 +119,8 @@ export default function PaymentsPage() {
                 }
                 setDialogOpen(false)
                 loadData()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to record payment")
+            } catch (err: unknown) {
+                toast.error((err instanceof Error ? err.message : String(err)) || "Failed to record payment")
             }
         })
     }
@@ -244,7 +244,7 @@ export default function PaymentsPage() {
                             <label className="text-xs font-bold text-stone-500 uppercase">Payment Account</label>
                             <select name="payment_account_id" className="w-full px-3 py-2 border rounded-xl bg-background text-sm">
                                 <option value="">Select account...</option>
-                                {accounts.map((a: any) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                                {accounts.map((a: Record<string, any>) => <option key={a.id} value={a.id}>{a.name}</option>)}
                             </select>
                         </div>
                         <div className="col-span-2 flex justify-end gap-2 pt-3 border-t">
@@ -363,7 +363,7 @@ export default function PaymentsPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filteredPayments.map((p: any) => {
+                                {filteredPayments.map((p: Record<string, any>) => {
                                     const tc = TYPE_CONFIG[p.type] || TYPE_CONFIG.SUPPLIER_PAYMENT
                                     const sc = STATUS_CONFIG[p.status] || STATUS_CONFIG.DRAFT
                                     const TypeIcon = tc.icon
@@ -412,7 +412,7 @@ export default function PaymentsPage() {
                             <div className="px-5 py-3 border-t bg-stone-50/30 flex items-center justify-between text-sm text-stone-500">
                                 <span>{filteredPayments.length} payment{filteredPayments.length !== 1 ? 's' : ''} shown</span>
                                 <span className="font-semibold text-stone-700">
-                                    Total: {filteredPayments.reduce((s: number, p: any) => s + Number(p.amount || 0), 0).toLocaleString()}
+                                    Total: {filteredPayments.reduce((s: number, p: Record<string, any>) => s + Number(p.amount || 0), 0).toLocaleString()}
                                 </span>
                             </div>
                         )}
@@ -438,7 +438,7 @@ export default function PaymentsPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {agedAR.map((r: any, i: number) => (
+                                    {agedAR.map((r: Record<string, any>, i: number) => (
                                         <TableRow key={i}>
                                             <TableCell className="font-medium text-stone-700">{r.customer_name || r.customer}</TableCell>
                                             <TableCell className="text-right">{Number(r.current || 0).toLocaleString()}</TableCell>
@@ -473,7 +473,7 @@ export default function PaymentsPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {agedAP.map((r: any, i: number) => (
+                                    {agedAP.map((r: Record<string, any>, i: number) => (
                                         <TableRow key={i}>
                                             <TableCell className="font-medium text-stone-700">{r.supplier_name || r.supplier}</TableCell>
                                             <TableCell className="text-right">{Number(r.current || 0).toLocaleString()}</TableCell>
@@ -506,7 +506,7 @@ export default function PaymentsPage() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {customerBalances.map((cb: any) => (
+                                        {customerBalances.map((cb: Record<string, any>) => (
                                             <TableRow key={cb.id}>
                                                 <TableCell className="font-medium text-stone-700">{cb.contact_name || `#${cb.contact}`}</TableCell>
                                                 <TableCell className={`text-right font-semibold ${Number(cb.current_balance) > 0 ? 'text-emerald-700' : 'text-stone-600'}`}>
@@ -532,7 +532,7 @@ export default function PaymentsPage() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {supplierBalances.map((sb: any) => (
+                                        {supplierBalances.map((sb: Record<string, any>) => (
                                             <TableRow key={sb.id}>
                                                 <TableCell className="font-medium text-stone-700">{sb.contact_name || `#${sb.contact}`}</TableCell>
                                                 <TableCell className={`text-right font-semibold ${Number(sb.current_balance) > 0 ? 'text-rose-700' : 'text-stone-600'}`}>

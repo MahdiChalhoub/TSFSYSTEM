@@ -21,13 +21,13 @@ import {
     FileQuestion, ArrowDownUp, ArrowLeftRight, ShoppingCart
 } from "lucide-react"
 
-const TYPE_CONFIG: Record<string, { label: string; icon: any; color: string }> = {
+const TYPE_CONFIG: Record<string, { label: string; icon: Record<string, any>; color: string }> = {
     STOCK_ADJUSTMENT: { label: 'Stock Adjustment', icon: ArrowDownUp, color: 'bg-blue-100 text-blue-700' },
     STOCK_TRANSFER: { label: 'Stock Transfer', icon: ArrowLeftRight, color: 'bg-indigo-100 text-indigo-700' },
     PURCHASE_ORDER: { label: 'Purchase Order', icon: ShoppingCart, color: 'bg-amber-100 text-amber-700' },
 }
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
+const STATUS_CONFIG: Record<string, { label: string; color: string; icon: Record<string, any> }> = {
     PENDING: { label: 'Pending', color: 'bg-amber-100 text-amber-700', icon: Clock },
     APPROVED: { label: 'Approved', color: 'bg-emerald-100 text-emerald-700', icon: CheckCircle2 },
     REJECTED: { label: 'Rejected', color: 'bg-red-100 text-red-700', icon: XCircle },
@@ -91,8 +91,8 @@ export default function OperationalRequestsPage() {
                 toast.success("Request submitted")
                 setDialogOpen(false)
                 loadData()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to create request")
+            } catch (err: unknown) {
+                toast.error((err instanceof Error ? err.message : String(err)) || "Failed to create request")
             }
         })
     }
@@ -112,8 +112,8 @@ export default function OperationalRequestsPage() {
                 toast.success("Line added")
                 setLineDialogOpen(false)
                 loadData()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to add line")
+            } catch (err: unknown) {
+                toast.error((err instanceof Error ? err.message : String(err)) || "Failed to add line")
             }
         })
     }
@@ -121,14 +121,14 @@ export default function OperationalRequestsPage() {
     async function handleApprove(id: number) {
         startTransition(async () => {
             try { await approveRequest(id); toast.success("Request approved"); loadData() }
-            catch (err: any) { toast.error(err.message || "Failed to approve") }
+            catch (err: unknown) { toast.error((err instanceof Error ? err.message : String(err)) || "Failed to approve") }
         })
     }
 
     async function handleReject(id: number, reason: string) {
         startTransition(async () => {
             try { await rejectRequest(id, reason); toast.success("Request rejected"); loadData(); setRejectDialog(null) }
-            catch (err: any) { toast.error(err.message || "Failed to reject") }
+            catch (err: unknown) { toast.error((err instanceof Error ? err.message : String(err)) || "Failed to reject") }
         })
     }
 
@@ -137,7 +137,7 @@ export default function OperationalRequestsPage() {
         const fd = new FormData(e.currentTarget)
         startTransition(async () => {
             try {
-                const data: any = {}
+                const data: Record<string, any> = {}
                 const wh = fd.get("warehouse")
                 const fwh = fd.get("from_warehouse")
                 const twh = fd.get("to_warehouse")
@@ -148,8 +148,8 @@ export default function OperationalRequestsPage() {
                 toast.success("Request converted to order")
                 setConvertDialog(null)
                 loadData()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to convert")
+            } catch (err: unknown) {
+                toast.error((err instanceof Error ? err.message : String(err)) || "Failed to convert")
             }
         })
     }
@@ -369,7 +369,7 @@ export default function OperationalRequestsPage() {
                                                                             </TableRow>
                                                                         </TableHeader>
                                                                         <TableBody>
-                                                                            {(req.lines ?? []).map((line: any) => (
+                                                                            {(req.lines ?? []).map((line: Record<string, any>) => (
                                                                                 <TableRow key={line.id}>
                                                                                     <TableCell className="text-sm font-medium">
                                                                                         <div className="flex items-center gap-2">
@@ -461,7 +461,7 @@ export default function OperationalRequestsPage() {
                             <label className="text-sm font-medium">Product *</label>
                             <select name="product" required className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                                 <option value="">Select product</option>
-                                {products.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                {products.map((p: Record<string, any>) => <option key={p.id} value={p.id}>{p.name}</option>)}
                             </select>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
@@ -473,7 +473,7 @@ export default function OperationalRequestsPage() {
                                 <label className="text-sm font-medium">Warehouse</label>
                                 <select name="warehouse" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                                     <option value="">Any</option>
-                                    {warehouses.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}
+                                    {warehouses.map((w: Record<string, any>) => <option key={w.id} value={w.id}>{w.name}</option>)}
                                 </select>
                             </div>
                         </div>
@@ -527,14 +527,14 @@ export default function OperationalRequestsPage() {
                                     <label className="text-sm font-medium">From Warehouse</label>
                                     <select name="from_warehouse" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                                         <option value="">Select</option>
-                                        {warehouses.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}
+                                        {warehouses.map((w: Record<string, any>) => <option key={w.id} value={w.id}>{w.name}</option>)}
                                     </select>
                                 </div>
                                 <div>
                                     <label className="text-sm font-medium">To Warehouse</label>
                                     <select name="to_warehouse" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                                         <option value="">Select</option>
-                                        {warehouses.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}
+                                        {warehouses.map((w: Record<string, any>) => <option key={w.id} value={w.id}>{w.name}</option>)}
                                     </select>
                                 </div>
                             </div>
@@ -543,7 +543,7 @@ export default function OperationalRequestsPage() {
                                 <label className="text-sm font-medium">Target Warehouse</label>
                                 <select name="warehouse" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                                     <option value="">Select warehouse</option>
-                                    {warehouses.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}
+                                    {warehouses.map((w: Record<string, any>) => <option key={w.id} value={w.id}>{w.name}</option>)}
                                 </select>
                             </div>
                         )}

@@ -7,7 +7,7 @@ export async function getPlans() {
     try {
         // Fetch URL matches backend endpoint
         return await erpFetch('saas/plans/')
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("[SaaS] Error fetching subscription plans:", error);
         return []
     }
@@ -16,13 +16,13 @@ export async function getPlans() {
 export async function getPlanCategories() {
     try {
         return await erpFetch('saas/plans/categories/')
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("[SaaS] Error fetching plan categories:", error);
         return []
     }
 }
 
-export async function createPlan(data: any) {
+export async function createPlan(data: Record<string, any>) {
     try {
         const result = await erpFetch('saas/plans/', {
             method: 'POST',
@@ -31,13 +31,13 @@ export async function createPlan(data: any) {
         })
         revalidatePath('/subscription-plans')
         return result
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("[SaaS] Created plan failed:", error);
         throw error;
     }
 }
 
-export async function createPlanCategory(data: any) {
+export async function createPlanCategory(data: Record<string, any>) {
     try {
         const result = await erpFetch('saas/plans/categories/', {
             method: 'POST',
@@ -46,7 +46,7 @@ export async function createPlanCategory(data: any) {
         })
         revalidatePath('/subscription-plans')
         return result
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("[SaaS] Created plan category failed:", error);
         throw error;
     }

@@ -257,7 +257,7 @@ function BusinessRegisterContent() {
                                                 <SelectValue placeholder="Select type" />
                                             </SelectTrigger>
                                             <SelectContent className="bg-slate-900 border-white/10 text-white">
-                                                {(config.business_types ?? []).map((t: any) => (
+                                                {(config.business_types ?? []).map((t: Record<string, any>) => (
                                                     <SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>
                                                 ))}
                                             </SelectContent>
@@ -270,7 +270,7 @@ function BusinessRegisterContent() {
                                                 <SelectValue placeholder="Select currency" />
                                             </SelectTrigger>
                                             <SelectContent className="bg-slate-900 border-white/10 text-white">
-                                                {(config.currencies ?? []).map((c: any) => (
+                                                {(config.currencies ?? []).map((c: Record<string, any>) => (
                                                     <SelectItem key={c.id} value={c.id.toString()}>{c.code}</SelectItem>
                                                 ))}
                                             </SelectContent>

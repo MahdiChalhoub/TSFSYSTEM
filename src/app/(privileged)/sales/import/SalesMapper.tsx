@@ -18,8 +18,8 @@ import Papa from 'papaparse';
 import { importSalesAction } from '@/app/actions/sales';
 
 interface SalesMapperProps {
-    warehouses: any[];
-    accounts: any[];
+    warehouses: Record<string, any>[];
+    accounts: Record<string, any>[];
 }
 
 export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
@@ -85,8 +85,8 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
             } else {
                 toast.warning(`Imported ${res.success_count} with ${res.error_count} errors.`);
             }
-        } catch (error: any) {
-            toast.error(error.message || "Import failed");
+        } catch (error: unknown) {
+            toast.error((error instanceof Error ? error.message : String(error)) || "Import failed");
         } finally {
             setLoading(false);
         }
@@ -219,7 +219,7 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
                                             <SelectValue placeholder="Select Account" />
                                         </SelectTrigger>
                                         <SelectContent className="rounded-xl border-gray-100 max-h-[300px]">
-                                            {accounts.map((a: any) => (
+                                            {accounts.map((a: Record<string, any>) => (
                                                 <SelectItem key={a.id} value={a.id.toString()}>
                                                     <div className="flex flex-col items-start leading-none py-1">
                                                         <span className="font-bold text-gray-900">{a.name}</span>
@@ -293,7 +293,7 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
                         <div className="space-y-4 max-h-[400px] overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-gray-200">
                             <h3 className="text-xs font-black uppercase text-red-500 tracking-tighter">Error Diagnostic Log</h3>
                             <div className="space-y-2">
-                                {results.errors.map((err: any, i: number) => (
+                                {results.errors.map((err: Record<string, any>, i: number) => (
                                     <div key={i} className="p-4 bg-red-50 border border-red-100 rounded-xl flex gap-3 items-start">
                                         <AlertCircle size={14} className="text-red-500 mt-0.5 shrink-0" />
                                         <div>

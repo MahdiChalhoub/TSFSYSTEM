@@ -245,8 +245,8 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
                 setSettingsAreSaved(true)
                 setIsUnlocked(false)
                 toast.success('Settings Saved!')
-            } catch (err: any) {
-                toast.error(err.message)
+            } catch (err: unknown) {
+                toast.error((err instanceof Error ? err.message : String(err)))
             }
         })
     }
@@ -699,8 +699,8 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
                             try {
                                 const res = await recalculateAccountBalances()
                                 toast(res.success ? 'Success! All account balances have been recalculated.' : 'Recalculation failed.', { icon: res.success ? '✅' : '❌' })
-                            } catch (e: any) {
-                                toast.error('Error: ' + e.message)
+                            } catch (e: unknown) {
+                                toast.error('Error: ' + (e instanceof Error ? e.message : String(e)))
                             }
                         })
                     } else if (settingsPendingAction.type === 'wipeAll') {
@@ -710,8 +710,8 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
                                 await wipeAllOperationalData()
                                 toast.success("System has been completely wiped to a Fresh Version.")
                                 router.refresh()
-                            } catch (e: any) {
-                                toast.error("Error: " + e.message)
+                            } catch (e: unknown) {
+                                toast.error("Error: " + (e instanceof Error ? e.message : String(e)))
                             }
                         })
                     } else if (settingsPendingAction.type === 'seedData') {
@@ -721,8 +721,8 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
                                 await seedTestData()
                                 toast.success("Test data has been successfully seeded!")
                                 router.refresh()
-                            } catch (e: any) {
-                                toast.error("Error: " + e.message)
+                            } catch (e: unknown) {
+                                toast.error("Error: " + (e instanceof Error ? e.message : String(e)))
                             }
                         })
                     }

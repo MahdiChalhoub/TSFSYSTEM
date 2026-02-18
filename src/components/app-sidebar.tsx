@@ -85,8 +85,8 @@ const defaultNav = [
 ]
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-    user?: any;
-    tenant?: any;
+    user?: Record<string, any>;
+    tenant?: Record<string, any>;
 }
 
 export function AppSidebar({ user, tenant, ...props }: AppSidebarProps) {

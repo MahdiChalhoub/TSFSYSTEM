@@ -40,8 +40,8 @@ export async function generateNewBarcodeAction() {
     try {
         const res = await erpFetch('settings/barcode/generate/', { method: 'POST' });
         return { success: true, code: res.barcode };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Generate failed:", error);
-        return { success: false, error: error.message };
+        return { success: false, error: (error instanceof Error ? error.message : String(error)) };
     }
 }

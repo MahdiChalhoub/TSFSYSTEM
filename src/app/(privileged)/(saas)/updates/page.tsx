@@ -69,8 +69,8 @@ export default function SystemUpdatesPage() {
             if (res.error) throw new Error(res.error)
             toast.success(res.message)
             await loadData()
-        } catch (e: any) {
-            toast.error(e.message)
+        } catch (e: unknown) {
+            toast.error((e instanceof Error ? e.message : String(e)))
         } finally {
             setSyncing(false)
             if (fileInputRef.current) fileInputRef.current.value = ''
@@ -84,8 +84,8 @@ export default function SystemUpdatesPage() {
             if (res.error) throw new Error(res.error)
             toast.success(res.message)
             await loadData()
-        } catch (e: any) {
-            toast.error(e.message)
+        } catch (e: unknown) {
+            toast.error((e instanceof Error ? e.message : String(e)))
         } finally {
             setApplying(null)
         }

@@ -8,8 +8,8 @@ export const dynamic = 'force-dynamic';
 export default async function CountryDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
 
-    let country: any;
-    let brands: any[] = [];
+    let country: Record<string, any>;
+    let brands: Record<string, any>[] = [];
 
     try {
         country = await erpFetch(`countries/${id}/`);
@@ -45,7 +45,7 @@ export default async function CountryDetailPage({ params }: { params: Promise<{ 
                         <p>No brands associated with this country.</p>
                     </div>
                 ) : (
-                    brands.map((brand: any) => {
+                    brands.map((brand: Record<string, any>) => {
                         const products = brand.products;
                         const hasProducts = products.length > 0;
                         const totalStock = brand.totalStock;
@@ -75,7 +75,7 @@ export default async function CountryDetailPage({ params }: { params: Promise<{ 
 
                                 {/* Products List */}
                                 <div className="bg-white">
-                                    {products.map((p: any, idx: number) => {
+                                    {products.map((p: Record<string, any>, idx: number) => {
                                         const isLast = idx === products.length - 1;
                                         const stock = p.stock;
 

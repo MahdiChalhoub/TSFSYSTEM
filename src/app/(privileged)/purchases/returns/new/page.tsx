@@ -41,7 +41,7 @@ function CreatePurchaseReturnForm() {
             const data = await erpFetch(`purchase/${orderId}/`)
             setOrder(data)
             const initialQtys: Record<number, number> = {}
-            data.lines.forEach((l: any) => {
+            data.lines.forEach((l: Record<string, any>) => {
                 initialQtys[l.id] = 0
             })
             setReturnItems(initialQtys)
@@ -60,7 +60,7 @@ function CreatePurchaseReturnForm() {
     const calculateTotals = () => {
         let total = 0
         if (!order) return 0
-        order.lines?.forEach((l: any) => {
+        order.lines?.forEach((l: Record<string, any>) => {
             const qty = returnItems[l.id] || 0
             total += qty * parseFloat(l.unit_price)
         })
@@ -71,7 +71,7 @@ function CreatePurchaseReturnForm() {
         const lines = Object.entries(returnItems)
             .filter(([_, qty]) => qty > 0)
             .map(([lineId, qty]) => {
-                const line = order?.lines?.find((l: any) => l.id === Number(lineId))
+                const line = order?.lines?.find((l: Record<string, any>) => l.id === Number(lineId))
                 return {
                     product_id: line?.product || line?.product_id,
                     quantity: qty,
@@ -97,8 +97,8 @@ function CreatePurchaseReturnForm() {
             })
             toast.success("Purchase return request created")
             router.push('/purchases/returns')
-        } catch (e: any) {
-            toast.error(e.message || "Failed to create return")
+        } catch (e: unknown) {
+            toast.error((e instanceof Error ? e.message : String(e)) || "Failed to create return")
         } finally {
             setSubmitting(false)
         }
@@ -137,7 +137,7 @@ function CreatePurchaseReturnForm() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {order?.lines?.map((line: any) => (
+                                {order?.lines?.map((line: Record<string, any>) => (
                                     <TableRow key={line.id}>
                                         <TableCell>
                                             <div className="font-bold text-gray-900">{line.product_name}</div>

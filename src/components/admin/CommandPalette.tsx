@@ -11,7 +11,7 @@ interface SearchItem {
 }
 
 // Flatten sidebar menu items into searchable list
-function flattenMenuItems(items: any[], section = ''): SearchItem[] {
+function flattenMenuItems(items: Record<string, any>[], section = ''): SearchItem[] {
     const results: SearchItem[] = []
     for (const item of items) {
         const currentSection = section || item.title

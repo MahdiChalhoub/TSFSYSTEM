@@ -28,7 +28,7 @@ export default function BudgetPlanningPage() {
             const data = await erpFetch('coa/')
             const accts = Array.isArray(data) ? data : data.results || []
             // Only show income and expense accounts for budget view
-            setAccounts(accts.filter((a: any) =>
+            setAccounts(accts.filter((a: Record<string, any>) =>
                 a.type === 'INCOME' || a.type === 'EXPENSE'
             ))
         } catch {
@@ -55,7 +55,7 @@ export default function BudgetPlanningPage() {
         )
     }
 
-    const renderAccountTable = (accts: any[], title: string, icon: React.ReactNode, color: string) => (
+    const renderAccountTable = (accts: Record<string, any>[], title: string, icon: React.ReactNode, color: string) => (
         <Card>
             <CardHeader className="py-3">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -79,7 +79,7 @@ export default function BudgetPlanningPage() {
                         <TableBody>
                             {accts
                                 .sort((a, b) => Math.abs(parseFloat(b.balance || 0)) - Math.abs(parseFloat(a.balance || 0)))
-                                .map((a: any) => {
+                                .map((a: Record<string, any>) => {
                                     const bal = parseFloat(a.balance || 0)
                                     const total = title.includes('Income') ? totalIncome : totalExpense
                                     const pct = total !== 0 ? (Math.abs(bal) / Math.abs(total) * 100) : 0

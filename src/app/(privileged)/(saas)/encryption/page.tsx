@@ -55,7 +55,7 @@ export default function EncryptionPage() {
             if (orgList.length > 0 && !selectedOrgId) {
                 setSelectedOrgId(orgList[0].id)
             }
-        } catch (e: any) {
+        } catch (e: unknown) {
             console.error('Failed to load orgs:', e)
         }
     }, [selectedOrgId])
@@ -66,7 +66,7 @@ export default function EncryptionPage() {
             const data = await erpFetch('saas/modules/encryption/status/')
             setStatus(data)
             setError(null)
-        } catch (e: any) {
+        } catch (e: unknown) {
             // If no org context, status shows as unknown
             setStatus(null)
         } finally {
@@ -97,8 +97,8 @@ export default function EncryptionPage() {
             } else {
                 setError(result.error || 'Failed to activate encryption')
             }
-        } catch (e: any) {
-            setError(e.message || 'Failed to activate encryption')
+        } catch (e: unknown) {
+            setError((e instanceof Error ? e.message : String(e)) || 'Failed to activate encryption')
         } finally {
             setActionLoading(null)
         }
@@ -119,8 +119,8 @@ export default function EncryptionPage() {
             } else {
                 setError(result.error || 'Failed to deactivate')
             }
-        } catch (e: any) {
-            setError(e.message || 'Failed to deactivate')
+        } catch (e: unknown) {
+            setError((e instanceof Error ? e.message : String(e)) || 'Failed to deactivate')
         } finally {
             setActionLoading(null)
         }
@@ -141,8 +141,8 @@ export default function EncryptionPage() {
             } else {
                 setError(result.error || 'Failed to rotate key')
             }
-        } catch (e: any) {
-            setError(e.message || 'Failed to rotate key')
+        } catch (e: unknown) {
+            setError((e instanceof Error ? e.message : String(e)) || 'Failed to rotate key')
         } finally {
             setActionLoading(null)
         }

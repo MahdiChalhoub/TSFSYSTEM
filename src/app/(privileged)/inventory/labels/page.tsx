@@ -259,7 +259,7 @@ export default function LabelPrintingPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filtered.slice(0, 100).map((p: any) => (
+                                {filtered.slice(0, 100).map((p: Record<string, any>) => (
                                     <TableRow
                                         key={p.id}
                                         className={`cursor-pointer transition-all ${selected.has(p.id) ? 'bg-orange-50' : 'hover:bg-gray-50/50'}`}

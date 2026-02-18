@@ -42,7 +42,7 @@ export default function StatementsPage() {
         }
     }
 
-    async function viewStatement(contact: any) {
+    async function viewStatement(contact: Record<string, any>) {
         setLoading(true)
         setSelectedContact(contact)
         try {
@@ -58,7 +58,7 @@ export default function StatementsPage() {
     const filteredContacts = useMemo(() => {
         if (!search) return contacts
         const s = search.toLowerCase()
-        return contacts.filter((c: any) =>
+        return contacts.filter((c: Record<string, any>) =>
             c.name?.toLowerCase().includes(s) ||
             c.phone?.toLowerCase().includes(s) ||
             c.email?.toLowerCase().includes(s)
@@ -156,7 +156,7 @@ export default function StatementsPage() {
                                 <TableBody>
                                     {(detail.orders || []).length === 0 ? (
                                         <TableRow><TableCell colSpan={5} className="text-center text-gray-400 py-8">No orders</TableCell></TableRow>
-                                    ) : (detail.orders || []).map((o: any) => (
+                                    ) : (detail.orders || []).map((o: Record<string, any>) => (
                                         <TableRow key={o.id}>
                                             <TableCell className="text-sm">{o.date || '—'}</TableCell>
                                             <TableCell className="font-mono text-xs">{o.ref_code || `#${o.id}`}</TableCell>
@@ -181,7 +181,7 @@ export default function StatementsPage() {
                                 <TableBody>
                                     {(detail.payments || []).length === 0 ? (
                                         <TableRow><TableCell colSpan={4} className="text-center text-gray-400 py-8">No payments</TableCell></TableRow>
-                                    ) : (detail.payments || []).map((p: any, i: number) => (
+                                    ) : (detail.payments || []).map((p: Record<string, any>, i: number) => (
                                         <TableRow key={i}>
                                             <TableCell className="text-sm">{p.date || '—'}</TableCell>
                                             <TableCell className="font-mono text-xs">{p.reference || '—'}</TableCell>
@@ -207,7 +207,7 @@ export default function StatementsPage() {
                                 <TableBody>
                                     {(detail.journal || []).length === 0 ? (
                                         <TableRow><TableCell colSpan={6} className="text-center text-gray-400 py-8">No journal entries</TableCell></TableRow>
-                                    ) : (detail.journal || []).map((j: any) => (
+                                    ) : (detail.journal || []).map((j: Record<string, any>) => (
                                         <TableRow key={j.id}>
                                             <TableCell className="text-sm">{j.date || '—'}</TableCell>
                                             <TableCell className="font-mono text-xs text-blue-600">{j.reference || '—'}</TableCell>
@@ -268,7 +268,7 @@ export default function StatementsPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filteredContacts.map((c: any) => (
+                                {filteredContacts.map((c: Record<string, any>) => (
                                     <TableRow key={c.id} className="hover:bg-gray-50/50">
                                         <TableCell className="font-medium">{c.name}</TableCell>
                                         <TableCell>

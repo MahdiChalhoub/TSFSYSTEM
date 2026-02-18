@@ -20,12 +20,12 @@ export default function AddProductForm({
     initialData,
     worksInTTC = true
 }: {
-    categories: any[],
-    units: any[],
-    brands: any[],
-    countries: any[],
+    categories: Record<string, any>[],
+    units: Record<string, any>[],
+    brands: Record<string, any>[],
+    countries: Record<string, any>[],
     namingRule: ProductNamingRule,
-    initialData?: any,
+    initialData?: Record<string, any>,
     worksInTTC?: boolean
 }) {
     const initialState = { message: '', errors: {} };
@@ -55,7 +55,7 @@ export default function AddProductForm({
     const filteredCountries = (() => {
         const selectedBrand = brands.find(b => String(b.id) === String(selectedBrandId));
         return (selectedBrand?.countries?.length)
-            ? countries.filter(c => selectedBrand.countries.some((bc: any) => bc.id === c.id))
+            ? countries.filter(c => selectedBrand.countries.some((bc: Record<string, any>) => bc.id === c.id))
             : countries;
     })();
 
@@ -198,7 +198,7 @@ export default function AddProductForm({
                                     autoComplete="off"
                                 />
                                 <datalist id="parfums-list">
-                                    {filteredAttributes.map((p: any) => (
+                                    {filteredAttributes.map((p: Record<string, any>) => (
                                         <option key={p.id} value={p.name} />
                                     ))}
                                 </datalist>
