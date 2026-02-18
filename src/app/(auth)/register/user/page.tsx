@@ -9,10 +9,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, AlertCircle, CheckCircle2, UserPlus, ShieldCheck, Sparkles, ArrowRight } from "lucide-react";
 import { PLATFORM_CONFIG } from "@/lib/saas_config";
+import { PasswordStrength } from "@/components/ui/password-strength";
 
 export default function UserRegisterPage() {
     const [state, action, isPending] = useActionState(registerUserAction, null);
     const [config, setConfig] = useState<any>({ tenant: { roles: [] } });
+    const [passwordValue, setPasswordValue] = useState('');
 
     useEffect(() => {
         getPublicConfig().then(setConfig);
@@ -121,7 +123,8 @@ export default function UserRegisterPage() {
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="password" title="password" className="text-[10px] uppercase tracking-widest font-black text-slate-500">Password</Label>
-                                <Input id="password" name="password" type="password" required className="bg-slate-900/50 border-white/5 h-14 rounded-xl text-white" />
+                                <Input id="password" name="password" type="password" required value={passwordValue} onChange={(e) => setPasswordValue(e.target.value)} className="bg-slate-900/50 border-white/5 h-14 rounded-xl text-white" />
+                                <PasswordStrength password={passwordValue} />
                             </div>
                         </div>
 
