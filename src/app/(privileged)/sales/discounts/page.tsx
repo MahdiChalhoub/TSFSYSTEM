@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from "react"
+import type { DiscountRule, UsageLog, Category, Brand } from '@/types/erp'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
@@ -32,18 +33,18 @@ const SCOPE_CONFIG: Record<string, { label: string; icon: any }> = {
 }
 
 export default function DiscountRulesPage() {
-    const [rules, setRules] = useState<any[]>([])
+    const [rules, setRules] = useState<DiscountRule[]>([])
     const [loading, setLoading] = useState(true)
     const [showForm, setShowForm] = useState(false)
     const [editId, setEditId] = useState<number | null>(null)
     const [usageRuleId, setUsageRuleId] = useState<number | null>(null)
-    const [usageLogs, setUsageLogs] = useState<any[]>([])
+    const [usageLogs, setUsageLogs] = useState<UsageLog[]>([])
     const [loadingLogs, setLoadingLogs] = useState(false)
 
     // Lookup data
-    const [products, setProducts] = useState<any[]>([])
-    const [categories, setCategories] = useState<any[]>([])
-    const [brands, setBrands] = useState<any[]>([])
+    const [products, setProducts] = useState<Record<string, unknown>[]>([])
+    const [categories, setCategories] = useState<Category[]>([])
+    const [brands, setBrands] = useState<Brand[]>([])
 
     const [form, setForm] = useState({
         name: '', code: '', discount_type: 'PERCENTAGE', scope: 'ORDER',

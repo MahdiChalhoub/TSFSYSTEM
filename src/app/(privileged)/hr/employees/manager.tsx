@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import type { Employee } from '@/types/erp';
 import { Search, Plus, User, Briefcase, Building2, CreditCard, ChevronRight, Phone, Mail, Filter, ShieldCheck, Fingerprint, Lock, AlertTriangle, Link2 } from "lucide-react";
 import EmployeeModal from './form';
 import ScopePasswordModal from '@/components/admin/ScopePasswordModal';
@@ -19,7 +20,7 @@ export default function EmployeeManager({
 }) {
     const [search, setSearch] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [scopeEmployee, setScopeEmployee] = useState<any | null>(null);
+    const [scopeEmployee, setScopeEmployee] = useState<Employee | null>(null);
     const [linkingGL, setLinkingGL] = useState<string | null>(null);
     const [glMessage, setGLMessage] = useState<{ id: string; type: 'success' | 'error'; text: string } | null>(null);
     const { scopeAccess } = useAdmin();

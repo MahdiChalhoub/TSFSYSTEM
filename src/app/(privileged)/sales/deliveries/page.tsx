@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from "react"
+import type { DeliveryOrder } from '@/types/erp'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
@@ -26,7 +27,7 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; icon: any }> = 
 }
 
 export default function DeliveryOrdersPage() {
-    const [deliveries, setDeliveries] = useState<any[]>([])
+    const [deliveries, setDeliveries] = useState<DeliveryOrder[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
     const [statusFilter, setStatusFilter] = useState<string | null>(null)

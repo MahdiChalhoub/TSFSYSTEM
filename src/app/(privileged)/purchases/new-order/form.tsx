@@ -1,6 +1,7 @@
 'use client';
 
 import { useActionState, useState, useEffect } from "react";
+import type { PurchaseLine } from '@/types/erp';
 import { createFormalPurchaseOrder } from "@/app/actions/commercial/purchases";
 import { searchProductsSimple } from "@/app/actions/inventory/product-actions";
 import { erpFetch } from "@/lib/erp-api";
@@ -20,8 +21,8 @@ export default function FormalOrderForm({
     const [selectedSiteId, setSelectedSiteId] = useState<number | ''>('');
     const [selectedSupplierId, setSelectedSupplierId] = useState<number | ''>('');
     const [supplierPriceHints, setSupplierPriceHints] = useState<Record<number, number>>({});
-    const [availableWarehouses, setAvailableWarehouses] = useState<any[]>([]);
-    const [lines, setLines] = useState<any[]>([]);
+    const [availableWarehouses, setAvailableWarehouses] = useState<Record<string, unknown>[]>([]);
+    const [lines, setLines] = useState<PurchaseLine[]>([]);
 
     useEffect(() => {
         if (selectedSiteId) {
@@ -248,7 +249,7 @@ export default function FormalOrderForm({
 
 function ProductSearch({ callback, siteId }: { callback: (p: any) => void, siteId: number }) {
     const [query, setQuery] = useState('');
-    const [results, setResults] = useState<any[]>([]);
+    const [results, setResults] = useState<Record<string, unknown>[]>([]);
     const [open, setOpen] = useState(false);
 
     useEffect(() => {

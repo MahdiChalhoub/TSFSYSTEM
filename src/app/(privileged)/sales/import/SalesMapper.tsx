@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
+import type { ImportResult } from '@/types/erp';
 import {
     Upload, FileText, CheckCircle2, AlertCircle,
     ArrowRight, Settings2, Database, Table as TableIcon,
@@ -34,7 +35,7 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
     const [warehouseId, setWarehouseId] = useState("");
     const [scope, setScope] = useState("INTERNAL");
     const [loading, setLoading] = useState(false);
-    const [results, setResults] = useState<any>(null);
+    const [results, setResults] = useState<ImportResult | null>(null);
 
     const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0];

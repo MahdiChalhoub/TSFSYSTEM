@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, Suspense } from "react"
+import type { PurchaseOrder } from '@/types/erp'
 import { useSearchParams, useRouter } from "next/navigation"
 import { erpFetch } from "@/lib/erp-api"
 import { Card, CardContent } from "@/components/ui/card"
@@ -21,7 +22,7 @@ function CreatePurchaseReturnForm() {
     const router = useRouter()
     const orderId = searchParams.get('order_id')
 
-    const [order, setOrder] = useState<any>(null)
+    const [order, setOrder] = useState<PurchaseOrder | null>(null)
     const [loading, setLoading] = useState(true)
     const [returnItems, setReturnItems] = useState<Record<number, number>>({})
     const [reason, setReason] = useState("")

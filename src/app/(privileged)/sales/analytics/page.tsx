@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from "react"
+import type { SalesAnalyticsData } from '@/types/erp'
 import { getSalesAnalytics } from "@/app/actions/pos/sales-analytics"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -21,7 +22,7 @@ const PAYMENT_ICONS: Record<string, string> = {
 }
 
 export default function SalesAnalyticsPage() {
-    const [data, setData] = useState<any>(null)
+    const [data, setData] = useState<SalesAnalyticsData | null>(null)
     const [loading, setLoading] = useState(true)
     const [period, setPeriod] = useState(30)
 

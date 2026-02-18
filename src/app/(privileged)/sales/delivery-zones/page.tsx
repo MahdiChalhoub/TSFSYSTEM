@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from "react"
+import type { DeliveryZone } from '@/types/erp'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
@@ -17,7 +18,7 @@ function fmt(n: number) {
 }
 
 export default function DeliveryZonesPage() {
-    const [zones, setZones] = useState<any[]>([])
+    const [zones, setZones] = useState<DeliveryZone[]>([])
     const [loading, setLoading] = useState(true)
     const [showForm, setShowForm] = useState(false)
     const [editId, setEditId] = useState<number | null>(null)

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from "react";
+import type { UserApproval } from '@/types/erp';
 import {
     fetchPendingUsers,
     approveUserAction,
@@ -29,10 +30,10 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 
 export default function ApprovalsPage() {
-    const [users, setUsers] = useState<any[]>([]);
+    const [users, setUsers] = useState<UserApproval[]>([]);
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState<number | null>(null);
-    const [correctionUser, setCorrectionUser] = useState<any | null>(null);
+    const [correctionUser, setCorrectionUser] = useState<UserApproval | null>(null);
     const [correctionNotes, setCorrectionNotes] = useState("");
 
     useEffect(() => {

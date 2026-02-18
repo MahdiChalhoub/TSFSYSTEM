@@ -511,13 +511,21 @@ export interface ExpiryItem {
 
 export interface SalesOrder {
     id: number
-    reference: string
-    date: string
+    reference?: string
+    ref_code?: string
+    invoice_number?: string
+    date?: string
     customer_id?: number
     customer_name?: string
-    status: string
-    total: number
+    contact_name?: string
+    type?: string
+    status?: string
+    total?: number
+    total_amount?: string | number
+    created_at?: string
     items?: SalesOrderLine[]
+    lines?: Record<string, unknown>[]
+    [key: string]: unknown
 }
 
 export interface SalesOrderLine {
@@ -531,15 +539,16 @@ export interface SalesOrderLine {
 
 export interface SalesReturn {
     id: number
-    reference: string
-    order_id: number
+    reference?: string
+    order_id?: number
     order_reference?: string
     original_order?: number
     original_order_ref?: string
-    date: string
+    date?: string
     return_date?: string
-    status: string
-    total: number
+    status?: string
+    total?: number
+    total_refund?: string | number
     reason?: string
     customer_name?: string
     lines?: SalesReturnLine[]
@@ -565,32 +574,63 @@ export interface CreditNote {
 
 export interface DeliveryOrder {
     id: number
-    reference: string
-    order_id: number
-    status: string
-    date: string
+    reference?: string
+    order_id?: number
+    order?: number
+    order_ref?: string
+    status?: string
+    date?: string
     address?: string
     driver?: string
+    recipient_name?: string
+    contact_name?: string
+    city?: string
+    phone?: string
+    zone_name?: string
+    driver_name?: string
+    tracking_code?: string
+    delivery_fee?: string | number
+    created_at?: string
+    dispatched_at?: string
+    delivered_at?: string
+    [key: string]: unknown
 }
 
 export interface DeliveryZone {
     id: number
     name: string
-    fee: number
+    description?: string
+    fee?: number
+    base_fee?: string | number
     estimated_time?: string
-    is_active: boolean
+    estimated_days?: number
+    is_active?: boolean
+    [key: string]: unknown
 }
 
 export interface DiscountRule {
     id: number
     name: string
-    type: string
-    value: number
+    code?: string
+    type?: string
+    discount_type?: string
+    scope?: string
+    value?: string | number
     min_amount?: number
+    min_order_amount?: string | number
+    max_discount?: string | number
+    min_quantity?: number
     start_date?: string
     end_date?: string
-    is_active: boolean
+    is_active?: boolean
+    auto_apply?: boolean
+    usage_limit?: number
     usage_count?: number
+    priority?: number
+    product?: number
+    category?: number
+    brand?: number
+    [key: string]: unknown
 }
 
 export interface DiscountUsageLog {
@@ -626,13 +666,19 @@ export interface TrendPoint {
 
 export interface PurchaseOrder {
     id: number
-    reference: string
-    supplier_id: number
+    reference?: string
+    ref_code?: string
+    supplier_id?: number
     supplier_name?: string
-    date: string
-    status: string
-    total: number
+    contact_name?: string
+    date?: string
+    created_at?: string
+    status?: string
+    total?: number
+    total_amount?: string | number
+    payment_method?: string
     lines?: PurchaseOrderLine[]
+    [key: string]: unknown
 }
 
 export interface PurchaseOrderLine {
@@ -646,15 +692,16 @@ export interface PurchaseOrderLine {
 
 export interface PurchaseReturn {
     id: number
-    reference: string
-    order_id: number
+    reference?: string
+    order_id?: number
     order_reference?: string
     original_order?: number
     original_order_ref?: string
-    date: string
+    date?: string
     return_date?: string
-    status: string
-    total: number
+    status?: string
+    total?: number
+    total_amount?: string | number
     reason?: string
     supplier_name?: string
     supplier?: number
@@ -678,23 +725,33 @@ export interface Contact {
 
 export interface Employee {
     id: number
-    name: string
+    name?: string
+    first_name?: string
+    last_name?: string
     email?: string
     role?: string
     department?: string
-    salary?: number
+    employee_id?: string
+    employee_type?: string
+    job_title?: string
+    salary?: string | number
     hire_date?: string
-    status: string
+    status?: string
     user_id?: number
+    is_active?: boolean
+    [key: string]: unknown
 }
 
 export interface UserApproval {
     id: number
-    username: string
-    email: string
-    requested_at: string
-    status: string
+    username?: string
+    email?: string
+    first_name?: string
+    last_name?: string
+    requested_at?: string
+    status?: string
     role?: string
+    [key: string]: unknown
 }
 
 export interface ContactStatement {
@@ -753,6 +810,78 @@ export interface ExpiryAlertResponse {
         total_quantity: number
     }
     alerts?: Record<string, unknown>[]
+    [key: string]: unknown
+}
+
+// ─── Additional Sales Types ─────────────────────────────────────
+
+export interface ImportResult {
+    success_count: number
+    error_count: number
+    errors: { row: number; error: string }[]
+    [key: string]: unknown
+}
+
+export interface UsageLog {
+    id: number
+    rule?: number
+    order?: number
+    applied_at?: string
+    discount_amount?: string | number
+    [key: string]: unknown
+}
+
+export interface SalesAnalyticsData {
+    period?: { start: string; end: string }
+    overall: {
+        revenue: number
+        orders: number
+        avg_order: number
+        tax: number
+        discount: number
+    }
+    top_products?: Record<string, unknown>[]
+    top_customers?: Record<string, unknown>[]
+    daily_trend?: Record<string, unknown>[]
+    payment_methods?: Record<string, unknown>[]
+    site_performance?: Record<string, unknown>[]
+    [key: string]: unknown
+}
+
+// ─── Additional Purchases Types ─────────────────────────────────
+
+export interface PurchaseLine {
+    productId: number
+    productName?: string
+    quantity: number
+    unitCostHT?: number
+    unitCostTTC?: number
+    sellingPriceHT?: number
+    sellingPriceTTC?: number
+    taxRate?: number
+    expiryDate?: string
+    [key: string]: unknown
+}
+
+// ─── Catalog ────────────────────────────────────────────────────
+
+export interface Category {
+    id: number
+    name: string
+    parent?: number | null
+    [key: string]: unknown
+}
+
+export interface Brand {
+    id: number
+    name: string
+    [key: string]: unknown
+}
+
+export interface ProductAttribute {
+    id: number
+    name: string
+    value?: string
     [key: string]: unknown
 }
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from "react"
+import type { PurchaseReturn } from '@/types/erp'
 import { Card, CardContent } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
@@ -24,7 +25,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
 }
 
 export default function PurchaseReturnsPage() {
-    const [returns, setReturns] = useState<any[]>([])
+    const [returns, setReturns] = useState<PurchaseReturn[]>([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => { loadReturns() }, [])
