@@ -1,5 +1,6 @@
 'use client';
 
+import { AdminEntity, AdminHierarchyBrandData } from "@/types/erp"
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Plus, Search, Globe, Award, Edit2, ChevronDown, ChevronRight, Layers, Package, Filter, X, LayoutGrid, LayoutList } from "lucide-react";
@@ -14,7 +15,7 @@ type BrandManagerProps = {
 
 export function BrandManager({ brands, countries, categories }: BrandManagerProps) {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingBrand, setEditingBrand] = useState<any>(null);
+    const [editingBrand, setEditingBrand] = useState<AdminEntity | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [selectedCountry, setSelectedCountry] = useState<string>('all');
@@ -244,7 +245,7 @@ function BrandCard({ brand, onEdit }: any) {
 
 function BrandRow({ brand, onEdit }: any) {
     const [isExpanded, setIsExpanded] = useState(false);
-    const [data, setData] = useState<any>(null);
+    const [data, setData] = useState<AdminHierarchyBrandData | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
     const toggleExpand = async (e: React.MouseEvent) => {

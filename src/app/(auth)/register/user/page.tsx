@@ -2,6 +2,7 @@
 
 import { useState, useActionState, useEffect } from "react";
 import { registerUserAction, getPublicConfig } from "@/app/actions/onboarding";
+import { PublicConfig } from "@/types/erp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
@@ -13,7 +14,7 @@ import { PasswordStrength } from "@/components/ui/password-strength";
 
 export default function UserRegisterPage() {
     const [state, action, isPending] = useActionState(registerUserAction, null);
-    const [config, setConfig] = useState<any>({ tenant: { roles: [] } });
+    const [config, setConfig] = useState<PublicConfig>({ tenant: { roles: [] } });
     const [passwordValue, setPasswordValue] = useState('');
 
     useEffect(() => {

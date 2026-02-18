@@ -896,3 +896,197 @@ export interface PaginatedResponse<T> {
     next?: string | null
     previous?: string | null
 }
+
+// ─── Auth / Public Config ───────────────────────────────────────
+
+export interface PublicConfigTenant {
+    name?: string
+    slug?: string
+    logo?: string
+    roles?: Array<{ id: number; name: string;[key: string]: unknown }>
+    sites?: Array<{ id: number; name: string;[key: string]: unknown }>
+    [key: string]: unknown
+}
+
+export interface PublicConfig {
+    tenant?: PublicConfigTenant | null
+    business_types?: Array<{ id: number; name: string;[key: string]: unknown }>
+    currencies?: Array<{ id: number; name: string; code?: string;[key: string]: unknown }>
+    [key: string]: unknown
+}
+
+// ─── CRM Contact Summary ────────────────────────────────────────
+
+export interface ContactSummaryData {
+    contact: {
+        name: string
+        type: string
+        email?: string
+        phone?: string
+        address?: string
+        credit_limit?: number
+        payment_terms_days?: number
+        loyalty_points?: number
+        supplier_category?: string
+        customer_tier?: string
+        vat_id?: string
+        [key: string]: unknown
+    }
+    orders: {
+        recent: Array<Record<string, unknown>>
+        stats: { total_count: number; total_amount: number; completed: number; draft: number;[key: string]: unknown }
+    }
+    payments: {
+        recent: Array<Record<string, unknown>>
+        stats: { payment_count: number; total_paid: number;[key: string]: unknown }
+    }
+    balance: { current_balance: number; last_payment_date?: string;[key: string]: unknown }
+    journal_entries: Array<Record<string, unknown>>
+    analytics?: { avg_order_value?: number; monthly_frequency?: number; total_revenue?: number; top_products?: Array<Record<string, unknown>>;[key: string]: unknown }
+    pricing_rules?: Array<Record<string, unknown>>
+    [key: string]: unknown
+}
+
+// ─── SaaS Entities ──────────────────────────────────────────────
+
+export interface SaasOrganization {
+    id: number
+    name: string
+    slug?: string
+    logo?: string
+    is_active?: boolean
+    status?: string
+    plan_name?: string
+    subscription_status?: string
+    created_at?: string
+    user_count?: number
+    modules?: Array<Record<string, unknown>>
+    sites?: Array<Record<string, unknown>>
+    subscription?: Record<string, unknown>
+    [key: string]: unknown
+}
+
+export interface SaasUsageData {
+    users?: number
+    products?: number
+    orders?: number
+    storage?: number
+    api_calls?: number
+    [key: string]: unknown
+}
+
+export interface SaasBillingData {
+    history: Array<Record<string, unknown>>
+    balance: { total_paid: string; total_credits: string; net_balance: string;[key: string]: unknown }
+    client: Record<string, unknown> | null
+    [key: string]: unknown
+}
+
+export interface SaasAddonData {
+    purchased: Array<Record<string, unknown>>
+    available: Array<Record<string, unknown>>
+    [key: string]: unknown
+}
+
+export interface SaasPlan {
+    id: number
+    name: string
+    description?: string
+    price?: string | number
+    max_users?: number
+    max_products?: number
+    max_sites?: number
+    features?: Record<string, unknown>
+    addons?: Array<Record<string, unknown>>
+    [key: string]: unknown
+}
+
+export interface SaasUpdateStatus {
+    current_version?: string
+    latest_version?: string
+    update_available?: boolean
+    [key: string]: unknown
+}
+
+// ─── Inventory Serial Tracker ───────────────────────────────────
+
+export interface SerialNumber {
+    id: number
+    serial_number: string
+    product_name?: string
+    status: string
+    warehouse_name?: string
+    created_at: string
+    [key: string]: unknown
+}
+
+export interface SerialHistoryLog {
+    id: number
+    action: string
+    reference?: string
+    warehouse_name?: string
+    user_name?: string
+    created_at: string
+    [key: string]: unknown
+}
+
+// ─── Admin Hierarchy Data ───────────────────────────────────────
+
+export interface AdminHierarchyProduct {
+    id: number
+    name: string
+    sku?: string
+    size?: string
+    stock: number
+    countryName?: string
+    unitName?: string
+    unit_name?: string
+    country_name?: string
+    unit?: { name: string }
+    [key: string]: unknown
+}
+
+export interface AdminHierarchyGroup {
+    id: number
+    name: string
+    totalStock: number
+    products: AdminHierarchyProduct[]
+    [key: string]: unknown
+}
+
+export interface AdminHierarchyBrandData {
+    groups: AdminHierarchyGroup[]
+    looseProducts: AdminHierarchyProduct[]
+    [key: string]: unknown
+}
+
+export interface AdminCountryHierarchyItem {
+    id: number
+    name: string
+    totalStock: number
+    products: AdminHierarchyProduct[]
+    [key: string]: unknown
+}
+
+export interface AdminEntity {
+    id: number
+    name: string
+    code?: string
+    short_name?: string
+    logo?: string
+    product_count?: number
+    countries?: Array<{ id: number; name: string; code: string;[key: string]: unknown }>
+    categories?: Array<{ id: number; name: string;[key: string]: unknown }>
+    products?: Array<Record<string, unknown>>
+    [key: string]: unknown
+}
+
+// ─── Packages ───────────────────────────────────────────────────
+
+export interface PackageStats {
+    total_packages?: number
+    total_size?: number
+    applied_count?: number
+    pending_count?: number
+    [key: string]: unknown
+}

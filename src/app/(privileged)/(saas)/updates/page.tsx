@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from "react"
+import { SaasUpdateStatus } from "@/types/erp"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import {
     getSystemStatus,
@@ -27,7 +28,7 @@ import { toast } from "sonner"
 import { format } from "date-fns"
 
 export default function SystemUpdatesPage() {
-    const [status, setStatus] = useState<any>(null)
+    const [status, setStatus] = useState<SaasUpdateStatus | null>(null)
     const [history, setHistory] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [syncing, setSyncing] = useState(false)

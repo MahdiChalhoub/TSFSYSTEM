@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { SerialNumber } from "@/types/erp";
 import {
     Search, Barcode, History, Package,
     Warehouse, Calendar, User, ArrowRight,
@@ -16,7 +17,7 @@ export function SerialTracker() {
     const [query, setQuery] = useState("");
     const [serials, setSerials] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
-    const [selectedSerial, setSelectedSerial] = useState<any>(null);
+    const [selectedSerial, setSelectedSerial] = useState<SerialNumber | null>(null);
     const [history, setHistory] = useState<any[]>([]);
     const [historyLoading, setHistoryLoading] = useState(false);
 
@@ -95,8 +96,8 @@ export function SerialTracker() {
                                     </p>
                                 </div>
                                 <div className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${s.status === 'AVAILABLE' ? 'bg-emerald-500 text-white' :
-                                        s.status === 'SOLD' ? 'bg-blue-500 text-white' :
-                                            'bg-amber-500 text-white'
+                                    s.status === 'SOLD' ? 'bg-blue-500 text-white' :
+                                        'bg-amber-500 text-white'
                                     }`}>
                                     {s.status}
                                 </div>

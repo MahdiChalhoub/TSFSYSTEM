@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from "react"
+import { SaasOrganization } from "@/types/erp"
 import { useRouter } from "next/navigation"
 import { getOrganizations, toggleOrganizationStatus, createOrganization, deleteOrganization, getBusinessTypes, getCurrencies } from "./actions"
 import { getOrgModules, toggleOrgModule, updateOrgModuleFeatures } from "@/app/actions/saas/modules"
@@ -21,7 +22,7 @@ export default function OrganizationsPage() {
     const [currencies, setCurrencies] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [mounted, setMounted] = useState(false)
-    const [pendingDeleteOrg, setPendingDeleteOrg] = useState<any>(null)
+    const [pendingDeleteOrg, setPendingDeleteOrg] = useState<SaasOrganization | null>(null)
     const branding = useDynamicBranding();
     const router = useRouter();
 
@@ -149,7 +150,7 @@ export default function OrganizationsPage() {
         }
     }
 
-    const [selectedOrg, setSelectedOrg] = useState<any>(null)
+    const [selectedOrg, setSelectedOrg] = useState<SaasOrganization | null>(null)
     const [orgModules, setOrgModules] = useState<any[]>([])
     const [loadingModules, setLoadingModules] = useState(false)
     const [modulesOpen, setModulesOpen] = useState(false)

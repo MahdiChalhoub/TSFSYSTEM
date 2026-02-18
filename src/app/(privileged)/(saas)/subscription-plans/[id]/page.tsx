@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from "react"
+import { SaasPlan } from "@/types/erp"
 import { useParams, useRouter } from "next/navigation"
 import { getPlanDetail, updatePlan, togglePlanPublic, getModuleFeatures } from "./actions"
 import { getSaaSModules } from "@/app/actions/saas/modules"
@@ -18,7 +19,7 @@ import { toast } from "sonner"
 export default function PlanDetailPage() {
     const { id } = useParams()
     const router = useRouter()
-    const [plan, setPlan] = useState<any>(null)
+    const [plan, setPlan] = useState<SaasPlan | null>(null)
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [tab, setTab] = useState<'overview' | 'modules' | 'limits' | 'orgs'>('overview')
@@ -385,8 +386,8 @@ export default function PlanDetailPage() {
                                                         <span className="text-[10px] font-mono text-gray-300">{code}</span>
                                                         {m.version && <Badge className="bg-gray-100 text-gray-500 text-[9px]">v{m.version}</Badge>}
                                                         <Badge className={`text-[9px] ${m.visibility === 'public' ? 'bg-emerald-50 text-emerald-600' :
-                                                                m.visibility === 'organization' ? 'bg-blue-50 text-blue-600' :
-                                                                    'bg-gray-100 text-gray-500'
+                                                            m.visibility === 'organization' ? 'bg-blue-50 text-blue-600' :
+                                                                'bg-gray-100 text-gray-500'
                                                             }`}>
                                                             {m.visibility === 'public' ? '🌐 Public' :
                                                                 m.visibility === 'organization' ? '🏢 Org Only' :

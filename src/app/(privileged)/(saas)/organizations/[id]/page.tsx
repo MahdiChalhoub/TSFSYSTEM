@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from "react"
+import { SaasOrganization, SaasUsageData, SaasBillingData, SaasAddonData, SaasPlan } from "@/types/erp"
 import { useParams, useRouter } from "next/navigation"
 import { getOrganization, getOrgUsage, getOrgBilling, getOrgModules, toggleOrgModule, updateModuleFeatures, changeOrgPlan, getOrgUsers, createOrgUser, resetOrgUserPassword, getOrgSites, createOrgSite, toggleOrgSite, listClients, createClient, setOrgClient, getOrgAddons, purchaseAddon, cancelAddon } from "./actions"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -142,15 +143,15 @@ export default function OrganizationDetailPage() {
     const router = useRouter()
     const orgId = params.id as string
 
-    const [org, setOrg] = useState<any>(null)
-    const [usage, setUsage] = useState<any>(null)
-    const [billing, setBilling] = useState<any>({ history: [], balance: { total_paid: '0.00', total_credits: '0.00', net_balance: '0.00' }, client: null })
+    const [org, setOrg] = useState<SaasOrganization | null>(null)
+    const [usage, setUsage] = useState<SaasUsageData | null>(null)
+    const [billing, setBilling] = useState<SaasBillingData>({ history: [], balance: { total_paid: '0.00', total_credits: '0.00', net_balance: '0.00' }, client: null })
     const [modules, setModules] = useState<any[]>([])
     const [users, setUsers] = useState<any[]>([])
     const [sites, setSites] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState<'overview' | 'modules' | 'usage' | 'billing' | 'users' | 'sites' | 'addons'>('overview')
-    const [addons, setAddons] = useState<any>({ purchased: [], available: [] })
+    const [addons, setAddons] = useState<SaasAddonData>({ purchased: [], available: [] })
     const [purchasingAddon, setPurchasingAddon] = useState<string | null>(null)
     const [cancellingAddon, setCancellingAddon] = useState<string | null>(null)
     const [toggling, setToggling] = useState<string | null>(null)
@@ -161,7 +162,7 @@ export default function OrganizationDetailPage() {
     const [creating, setCreating] = useState(false)
 
     // Reset password dialog
-    const [resetTarget, setResetTarget] = useState<any>(null)
+    const [resetTarget, setResetTarget] = useState<Record<string, unknown> | null>(null)
     const [newPassword, setNewPassword] = useState('')
     const [showPass, setShowPass] = useState(false)
     const [resetting, setResetting] = useState(false)
@@ -172,7 +173,7 @@ export default function OrganizationDetailPage() {
     const [creatingSite, setCreatingSite] = useState(false)
 
     // Plan switch confirmation dialog
-    const [planSwitchTarget, setPlanSwitchTarget] = useState<any>(null)
+    const [planSwitchTarget, setPlanSwitchTarget] = useState<SaasPlan | null>(null)
     const [switching, setSwitching] = useState(false)
 
     // Client assignment
