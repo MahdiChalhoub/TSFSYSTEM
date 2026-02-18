@@ -250,7 +250,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTHENTICATION_BACKENDS = [
     'erp.backends.TenantAuthBackend',
-    'django.contrib.auth.backends.ModelBackend', # Keep default for admin panel / fallback
+    # NOTE: Do NOT add ModelBackend here — it calls get_by_natural_key(username)
+    # without tenant scoping, which crashes with MultipleObjectsReturned when
+    # the same username exists in multiple organizations (valid multi-tenant data).
+    # TenantAuthBackend already handles admin panel logins.
 ]
 
 AUTH_USER_MODEL = 'erp.User'
