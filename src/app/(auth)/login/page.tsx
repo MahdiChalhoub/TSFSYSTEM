@@ -55,10 +55,11 @@ function LoginContent() {
     const tenantLogo = tenant?.logo;
     const sites = tenant?.sites || [];
 
-    // --- UNIFIED VIEW (SPLIT SCREEN) ---
-    // Calculate display values based on context
-    const isSaaS = subdomain === 'saas' || tenant?.slug === 'saas' || tenant?.name === 'SaaS Federation';
-    const isRoot = (!tenant || !tenant.name) && !isSaaS;
+    // --- Deterministic context detection based on hostname ---
+    // isRoot = on bare root domain (pos.tsf.ci, tsf.ci, localhost:3000) with no subdomain
+    // isSaaS = on saas.tsf.ci or saas.localhost:3000
+    const isSaaS = subdomain === 'saas' || tenant?.slug === 'saas';
+    const isRoot = !subdomain && !isSaaS;
 
     const displayTitle = isSaaS ? "SAAS CONTROL" : (isRoot ? PLATFORM_CONFIG.name.toUpperCase() : (tenant?.name || PLATFORM_CONFIG.name).toUpperCase());
     const displaySubtitle = isSaaS

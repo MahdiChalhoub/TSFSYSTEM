@@ -10,8 +10,12 @@ import {
     Clock, Banknote, Building2, BarChart3
 } from "lucide-react"
 
-function fmt(n: number) {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
+function fmt(n: number, currency = 'XOF') {
+    try {
+        return new Intl.NumberFormat('fr-FR', { style: 'currency', currency, maximumFractionDigits: 0 }).format(n)
+    } catch {
+        return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
+    }
 }
 
 interface WidgetData {
@@ -26,6 +30,7 @@ interface WidgetData {
 export default function CustomDashboard() {
     const [data, setData] = useState<WidgetData | null>(null)
     const [loading, setLoading] = useState(true)
+    const [currency, setCurrency] = useState('XOF')
 
     useEffect(() => { loadAll() }, [])
 
@@ -33,14 +38,16 @@ export default function CustomDashboard() {
         setLoading(true)
         try {
             const { erpFetch } = await import("@/lib/erp-api")
-            const [sales, stock, employees, contacts, accounts, movements] = await Promise.all([
+            const [sales, stock, employees, contacts, accounts, movements, orgSettings] = await Promise.all([
                 erpFetch('pos/pos/daily-summary/?days=30').catch(() => null),
                 erpFetch('inventory/low-stock/').catch(() => []),
                 erpFetch('hr/employees/').catch(() => []),
                 erpFetch('crm/contacts/').catch(() => []),
                 erpFetch('coa/').catch(() => []),
                 erpFetch('inventory/inventory-movements/').catch(() => []),
+                erpFetch('settings/global_financial/').catch(() => null),
             ])
+            if (orgSettings?.currency_code) setCurrency(orgSettings.currency_code)
             setData({
                 salesSummary: sales,
                 lowStock: Array.isArray(stock) ? stock : stock?.results || [],
@@ -108,8 +115,8 @@ export default function CustomDashboard() {
                             <DollarSign size={28} className="opacity-80" />
                             <div>
                                 <p className="text-xs uppercase opacity-80">30d Revenue</p>
-                                <p className="text-2xl font-bold">{fmt(totalRevenue)}</p>
-                                <p className="text-xs opacity-60">Net: {fmt(netRevenue)}</p>
+                                <p className="text-2xl font-bold">{fmt(totalRevenue, currency)}</p>
+                                <p className="text-xs opacity-60">Net: {fmt(netRevenue, currency)}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -121,7 +128,7 @@ export default function CustomDashboard() {
                             <div>
                                 <p className="text-xs uppercase opacity-80">Orders</p>
                                 <p className="text-2xl font-bold">{totalOrders}</p>
-                                <p className="text-xs opacity-60">Avg: {totalOrders > 0 ? fmt(totalRevenue / totalOrders) : '—'}</p>
+                                <p className="text-xs opacity-60">Avg: {totalOrders > 0 ? fmt(totalRevenue / totalOrders, currency) : '—'}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -160,7 +167,7 @@ export default function CustomDashboard() {
                             <TrendingUp size={20} className="text-emerald-500" />
                             <div>
                                 <p className="text-[10px] text-gray-500 uppercase">GL Income</p>
-                                <p className="text-lg font-bold text-emerald-700">{fmt(totalIncome)}</p>
+                                <p className="text-lg font-bold text-emerald-700">{fmt(totalIncome, currency)}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -171,7 +178,7 @@ export default function CustomDashboard() {
                             <ArrowUpCircle size={20} className="text-rose-500" />
                             <div>
                                 <p className="text-[10px] text-gray-500 uppercase">GL Expenses</p>
-                                <p className="text-lg font-bold text-rose-700">{fmt(totalExpense)}</p>
+                                <p className="text-lg font-bold text-rose-700">{fmt(totalExpense, currency)}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -182,7 +189,7 @@ export default function CustomDashboard() {
                             <Banknote size={20} className="text-blue-500" />
                             <div>
                                 <p className="text-[10px] text-gray-500 uppercase">Monthly Payroll</p>
-                                <p className="text-lg font-bold text-blue-700">{fmt(totalPayroll)}</p>
+                                <p className="text-lg font-bold text-blue-700">{fmt(totalPayroll, currency)}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -249,7 +256,7 @@ export default function CustomDashboard() {
                                         style={{ width: `${totalRevenue > 0 ? (stats.total / totalRevenue * 100) : 0}%` }}
                                     />
                                 </div>
-                                <p className="text-xs text-right font-bold">{fmt(stats.total)}</p>
+                                <p className="text-xs text-right font-bold">{fmt(stats.total, currency)}</p>
                             </div>
                         ))}
                     </CardContent>
@@ -272,7 +279,7 @@ export default function CustomDashboard() {
                                 </div>
                                 <span className="flex-1 truncate font-medium">{name}</span>
                                 <span className="text-gray-400">{stats.count} orders</span>
-                                <span className="font-bold w-20 text-right">{fmt(stats.total)}</span>
+                                <span className="font-bold w-20 text-right">{fmt(stats.total, currency)}</span>
                             </div>
                         ))}
                     </CardContent>
@@ -295,7 +302,7 @@ export default function CustomDashboard() {
                                 return (
                                     <div key={h} className="flex-1 flex flex-col items-center group">
                                         <div className="invisible group-hover:visible text-[8px] text-gray-500 whitespace-nowrap mb-0.5">
-                                            {fmt(val)}
+                                            {fmt(val, currency)}
                                         </div>
                                         <div
                                             className={`w-full rounded-t transition-all ${pct > 60 ? 'bg-violet-500' : pct > 20 ? 'bg-violet-300' : 'bg-violet-100'}`}

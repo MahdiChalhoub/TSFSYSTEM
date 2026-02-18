@@ -20,7 +20,7 @@ export default function PrivilegedError({
                 Platform Sync Interrupted
             </h2>
             <p className="text-gray-500 mt-4 font-medium max-w-sm mx-auto leading-relaxed">
-                An unexpected error occurred while communicating with the platform core. This usually happens during background upgrades.
+                An unexpected error occurred while loading this page. Please try again or return to the dashboard.
             </p>
 
             <div className="mt-8 bg-white border border-gray-200 p-4 rounded-2xl max-w-md w-full text-left">
@@ -40,10 +40,10 @@ export default function PrivilegedError({
                 </Button>
                 <Button
                     variant="outline"
-                    onClick={() => window.location.href = '/'}
+                    onClick={() => window.location.href = '/dashboard'}
                     className="border-gray-200 bg-white hover:bg-gray-50 text-gray-700 px-8 py-6 rounded-2xl font-black transition-all"
                 >
-                    Return Home
+                    Go to Dashboard
                 </Button>
             </div>
         </div>
