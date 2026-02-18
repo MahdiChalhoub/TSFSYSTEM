@@ -49,13 +49,15 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING(f'ℹ️  SaaS organization already exists: "{org.name}" (slug=saas)'))
 
         # ── 2. Ensure Superadmin User ────────────────────────────────
+        # Scope by BOTH username AND organization to avoid MultipleObjectsReturned
+        # when multiple tenants each have a user named 'admin'.
         admin, user_created = User.objects.get_or_create(
             username='admin',
+            organization=org,
             defaults={
                 'is_superuser': True,
                 'is_staff': True,
                 'is_active': True,
-                'organization': org,
             }
         )
 
