@@ -38,6 +38,7 @@ import {
     ArrowRight, Filter, X
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
     getConnectorPolicies,
     createConnectorPolicy,
@@ -115,6 +116,8 @@ export default function ConnectorPoliciesPage() {
     const [formData, setFormData] = useState(emptyPolicy)
     const [saving, setSaving] = useState(false)
     const [generating, setGenerating] = useState(false)
+    const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null)
+    const [showAutoGenConfirm, setShowAutoGenConfirm] = useState(false)
 
     // Filters
     const [filterSource, setFilterSource] = useState<string>('')
@@ -231,7 +234,6 @@ export default function ConnectorPoliciesPage() {
     }
 
     async function handleDelete(id: number) {
-        if (!confirm('Delete this policy?')) return
 
         try {
             const res = await deleteConnectorPolicy(id)
@@ -244,7 +246,6 @@ export default function ConnectorPoliciesPage() {
     }
 
     async function handleAutoGenerate() {
-        if (!confirm('This will create default policies for all modules that don\'t have one. Continue?')) return
 
         setGenerating(true)
         try {
@@ -309,7 +310,7 @@ export default function ConnectorPoliciesPage() {
                         Filters {hasActiveFilters && `(${[filterSource, filterTarget, filterAction].filter(Boolean).length})`}
                     </Button>
                     <Button
-                        onClick={handleAutoGenerate}
+                        onClick={() => setShowAutoGenConfirm(true)}
                         disabled={generating || loading}
                         variant="outline"
                         className="rounded-2xl px-6 py-5 font-bold text-amber-600 border-amber-200 hover:bg-amber-50"
@@ -655,7 +656,7 @@ export default function ConnectorPoliciesPage() {
                                 </p>
                                 {!hasActiveFilters && (
                                     <Button
-                                        onClick={handleAutoGenerate}
+                                        onClick={() => setShowAutoGenConfirm(true)}
                                         className="mt-4 bg-amber-500 hover:bg-amber-400"
                                     >
                                         <Wand2 size={16} />
@@ -753,7 +754,7 @@ export default function ConnectorPoliciesPage() {
                                             <Button
                                                 size="sm"
                                                 variant="ghost"
-                                                onClick={() => handleDelete(policy.id)}
+                                                onClick={() => setPendingDeleteId(policy.id)}
                                                 className="text-gray-500 hover:text-red-600"
                                             >
                                                 <Trash2 size={16} />
@@ -766,6 +767,32 @@ export default function ConnectorPoliciesPage() {
                     ))
                 )}
             </div>
+
+            <ConfirmDialog
+                open={pendingDeleteId !== null}
+                onOpenChange={(open) => { if (!open) setPendingDeleteId(null) }}
+                onConfirm={() => {
+                    if (pendingDeleteId) handleDelete(pendingDeleteId)
+                    setPendingDeleteId(null)
+                }}
+                title="Delete Policy"
+                description="Are you sure you want to delete this routing policy? This action cannot be undone."
+                confirmText="Delete"
+                variant="danger"
+            />
+
+            <ConfirmDialog
+                open={showAutoGenConfirm}
+                onOpenChange={(open) => { if (!open) setShowAutoGenConfirm(false) }}
+                onConfirm={() => {
+                    handleAutoGenerate()
+                    setShowAutoGenConfirm(false)
+                }}
+                title="Auto-Generate Policies"
+                description="This will create default policies for all modules that don't have one. Existing policies will not be modified."
+                confirmText="Generate"
+                variant="warning"
+            />
 
             {/* Legend */}
             <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { cn } from '@/lib/utils';
 import {
     Check, X, AlertCircle, Info, Building2,
     Mail, Calendar, ArrowRight, Loader2, MessageSquare
@@ -14,6 +15,7 @@ import {
     requestCorrectionAction
 } from '@/app/actions/auth';
 import { toast } from 'sonner';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { format } from 'date-fns';
 import {
     Dialog,
@@ -30,6 +32,7 @@ export function RegistrationQueue({ initialUsers }: { initialUsers: any[] }) {
     const [loadingMap, setLoadingMap] = useState<Record<number, boolean>>({});
     const [correctionModal, setCorrectionModal] = useState<{ open: boolean, userId: number | null }>({ open: false, userId: null });
     const [correctionNotes, setCorrectionNotes] = useState('');
+    const [pendingRejectId, setPendingRejectId] = useState<number | null>(null);
 
     const handleApprove = async (id: number) => {
         setLoadingMap(prev => ({ ...prev, [id]: true }));
@@ -45,7 +48,6 @@ export function RegistrationQueue({ initialUsers }: { initialUsers: any[] }) {
     };
 
     const handleReject = async (id: number) => {
-        if (!confirm("Are you sure you want to reject this registration?")) return;
         setLoadingMap(prev => ({ ...prev, [id]: true }));
         try {
             await rejectUserAction(id);
@@ -145,7 +147,7 @@ export function RegistrationQueue({ initialUsers }: { initialUsers: any[] }) {
                                 <div className="flex items-center gap-3">
                                     <Button
                                         variant="outline"
-                                        onClick={() => handleReject(user.id)}
+                                        onClick={() => setPendingRejectId(user.id)}
                                         disabled={loadingMap[user.id]}
                                         className="h-12 w-12 rounded-2xl border-gray-100 hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all p-0"
                                     >
@@ -210,6 +212,19 @@ export function RegistrationQueue({ initialUsers }: { initialUsers: any[] }) {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            <ConfirmDialog
+                open={pendingRejectId !== null}
+                onOpenChange={(open) => { if (!open) setPendingRejectId(null) }}
+                onConfirm={() => {
+                    if (pendingRejectId) handleReject(pendingRejectId)
+                    setPendingRejectId(null)
+                }}
+                title="Reject Registration"
+                description="Are you sure you want to reject this registration? The applicant will be notified."
+                confirmText="Reject"
+                variant="danger"
+            />
         </div>
     );
 }

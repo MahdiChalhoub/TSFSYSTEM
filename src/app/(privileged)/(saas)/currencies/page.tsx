@@ -4,6 +4,7 @@ import { useState, useEffect, useTransition } from 'react'
 import { getCurrencies, createCurrency, updateCurrency, deleteCurrency, type Currency } from '@/app/actions/currencies'
 import { Coins, Plus, Pencil, Trash2, X, Check, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 export default function CurrenciesPage() {
     const [currencies, setCurrencies] = useState<Currency[]>([])
@@ -15,6 +16,7 @@ export default function CurrenciesPage() {
     const [editingId, setEditingId] = useState<number | null>(null)
     const [formData, setFormData] = useState({ name: '', code: '', symbol: '' })
     const [error, setError] = useState('')
+    const [pendingDelete, setPendingDelete] = useState<{ id: number; code: string } | null>(null)
 
     const loadCurrencies = async () => {
         setLoading(true)
@@ -59,7 +61,6 @@ export default function CurrenciesPage() {
     }
 
     const handleDelete = (id: number, code: string) => {
-        if (!confirm(`Delete currency ${code}? This cannot be undone.`)) return
         startTransition(async () => {
             const res = await deleteCurrency(id)
             if (res.success) {
@@ -207,7 +208,7 @@ export default function CurrenciesPage() {
                                             <Pencil size={14} />
                                         </button>
                                         <button
-                                            onClick={() => handleDelete(c.id, c.code)}
+                                            onClick={() => setPendingDelete({ id: c.id, code: c.code })}
                                             className="p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                             title="Delete"
                                         >
@@ -227,6 +228,19 @@ export default function CurrenciesPage() {
                     {currencies.length} {currencies.length === 1 ? 'currency' : 'currencies'} configured
                 </div>
             )}
+
+            <ConfirmDialog
+                open={pendingDelete !== null}
+                onOpenChange={(open) => { if (!open) setPendingDelete(null) }}
+                onConfirm={() => {
+                    if (pendingDelete) handleDelete(pendingDelete.id, pendingDelete.code)
+                    setPendingDelete(null)
+                }}
+                title="Delete Currency"
+                description={`Delete currency ${pendingDelete?.code || ''}? This cannot be undone.`}
+                confirmText="Delete"
+                variant="danger"
+            />
         </div>
     )
 }

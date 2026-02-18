@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Plus, Tag, Layers, Loader2, Check, Globe, Lock, Trash2, Users, Building2, HardDrive, Package, FileText, UserCheck } from "lucide-react"
 import { toast } from "sonner"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -47,6 +48,7 @@ export default function SubscriptionPlansPage() {
     const [catOpen, setCatOpen] = useState(false)
     const [catForm, setCatForm] = useState({ name: '', slug: '', type: 'PUBLIC' })
     const [catSaving, setCatSaving] = useState(false)
+    const [pendingDeleteAddon, setPendingDeleteAddon] = useState<any>(null)
 
     useEffect(() => {
         loadData()
@@ -585,13 +587,7 @@ export default function SubscriptionPlansPage() {
                                                             <p className="text-[10px] text-gray-400 uppercase font-bold">{ADDON_TYPE_LABELS[addon.addon_type] || addon.addon_type}</p>
                                                         </div>
                                                     </div>
-                                                    <button onClick={async () => {
-                                                        if (confirm('Delete this add-on?')) {
-                                                            await deleteAddon(addon.id)
-                                                            toast.success('Add-on deleted')
-                                                            loadData()
-                                                        }
-                                                    }} className="text-gray-300 hover:text-red-500 transition-colors">
+                                                    <button onClick={() => setPendingDeleteAddon(addon)} className="text-gray-300 hover:text-red-500 transition-colors">
                                                         <Trash2 size={14} />
                                                     </button>
                                                 </div>
@@ -625,6 +621,23 @@ export default function SubscriptionPlansPage() {
                     </div>
                 </div>
             )}
+
+            <ConfirmDialog
+                open={pendingDeleteAddon !== null}
+                onOpenChange={(open) => { if (!open) setPendingDeleteAddon(null) }}
+                onConfirm={async () => {
+                    if (pendingDeleteAddon) {
+                        await deleteAddon(pendingDeleteAddon.id)
+                        toast.success('Add-on deleted')
+                        loadData()
+                    }
+                    setPendingDeleteAddon(null)
+                }}
+                title="Delete Add-on"
+                description={`Are you sure you want to delete the add-on "${pendingDeleteAddon?.name || ''}"? This cannot be undone.`}
+                confirmText="Delete"
+                variant="danger"
+            />
         </div>
     )
 }

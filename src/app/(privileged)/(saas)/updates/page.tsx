@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from "react"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import {
     getSystemStatus,
     getUpdateHistory,
@@ -31,6 +32,7 @@ export default function SystemUpdatesPage() {
     const [loading, setLoading] = useState(true)
     const [syncing, setSyncing] = useState(false)
     const [applying, setApplying] = useState<number | null>(null)
+    const [pendingUpdate, setPendingUpdate] = useState<{ id: number; version: string } | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
 
     useEffect(() => {
@@ -75,7 +77,6 @@ export default function SystemUpdatesPage() {
     }
 
     async function handleApply(id: number, version: string) {
-        if (!confirm(`Confirm system update to v${version}? The platform will be updated instantly.`)) return;
         setApplying(id)
         try {
             const res = await applyKernelUpdate(id)
@@ -212,7 +213,7 @@ export default function SystemUpdatesPage() {
                                             </div>
                                             {!update.is_applied && (
                                                 <Button
-                                                    onClick={() => handleApply(update.id, update.version)}
+                                                    onClick={() => setPendingUpdate({ id: update.id, version: update.version })}
                                                     disabled={!!applying}
                                                     className="w-full sm:w-auto bg-indigo-600 text-white hover:bg-indigo-500 rounded-xl px-4 md:px-6 font-black py-3 md:py-4 h-auto shadow-lg shadow-indigo-100 transition-transform active:scale-95 flex gap-2 text-xs md:text-sm"
                                                 >
@@ -255,6 +256,19 @@ export default function SystemUpdatesPage() {
                     </p>
                 </div>
             </div>
+
+            <ConfirmDialog
+                open={pendingUpdate !== null}
+                onOpenChange={(open) => { if (!open) setPendingUpdate(null) }}
+                onConfirm={() => {
+                    if (pendingUpdate) handleApply(pendingUpdate.id, pendingUpdate.version)
+                    setPendingUpdate(null)
+                }}
+                title="Confirm System Update"
+                description={`Apply update to v${pendingUpdate?.version || ''}? The platform will be updated instantly.`}
+                confirmText="Apply Update"
+                variant="warning"
+            />
         </div>
     )
 }

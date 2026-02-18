@@ -5,6 +5,7 @@ import { ChevronRight, ChevronDown, Plus, Folder, FolderOpen, FileText, RefreshC
 import { useRouter } from 'next/navigation'
 import { recalculateAccountBalances } from '@/app/actions/finance/ledger'
 import { toast } from 'sonner'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 // Recursive Tree Node Component
 const AccountNode = ({ node, level, accounts }: { node: any, level: number, accounts: any[] }) => {
@@ -185,17 +186,38 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: any[] }) {
         setIsAdding(true)
     }
 
+    const [pendingAction, setPendingAction] = useState<{ type: string; title: string; description: string; variant: 'danger' | 'warning' | 'info'; id?: number } | null>(null)
+
     const reactivateAccount = (id: number) => {
-        if (!confirm('Reactivate this account?')) return
-        startTransition(async () => {
-            const { reactivateChartOfAccount } = await import('@/app/actions/finance/accounts')
-            try {
-                await reactivateChartOfAccount(id)
-                router.refresh()
-            } catch (e: any) {
-                toast.error('Error: ' + e.message)
-            }
+        setPendingAction({
+            type: 'reactivate',
+            title: 'Reactivate Account?',
+            description: 'This will reactivate the deactivated account.',
+            variant: 'warning',
+            id,
         })
+    }
+
+    const handleConfirmAction = () => {
+        if (!pendingAction) return
+        if (pendingAction.type === 'reactivate' && pendingAction.id) {
+            startTransition(async () => {
+                const { reactivateChartOfAccount } = await import('@/app/actions/finance/accounts')
+                try {
+                    await reactivateChartOfAccount(pendingAction.id!)
+                    router.refresh()
+                } catch (e: any) {
+                    toast.error('Error: ' + e.message)
+                }
+            })
+        } else if (pendingAction.type === 'recalculate') {
+            startTransition(async () => {
+                await recalculateAccountBalances()
+                router.refresh()
+                toast.success('System balances recalculated successfully.')
+            })
+        }
+        setPendingAction(null)
     }
 
     const openEditModal = (account: any) => {
@@ -269,11 +291,11 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: any[] }) {
                     </button>
                     <button
                         onClick={() => {
-                            if (!confirm('This will rebuild all account balances from scratch using posted journal entries. Are you sure?')) return
-                            startTransition(async () => {
-                                await recalculateAccountBalances()
-                                router.refresh()
-                                toast.success('System balances recalculated successfully.')
+                            setPendingAction({
+                                type: 'recalculate',
+                                title: 'Recalculate Account Balances?',
+                                description: 'This will rebuild all account balances from scratch using posted journal entries.',
+                                variant: 'danger',
                             })
                         }}
                         disabled={isPending}
@@ -390,6 +412,16 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: any[] }) {
                     isPending={isPending}
                 />
             )}
+
+            <ConfirmDialog
+                open={pendingAction !== null}
+                onOpenChange={(open) => { if (!open) setPendingAction(null) }}
+                onConfirm={handleConfirmAction}
+                title={pendingAction?.title ?? ''}
+                description={pendingAction?.description ?? ''}
+                confirmText="Confirm"
+                variant={pendingAction?.variant ?? 'warning'}
+            />
         </div>
     )
 }

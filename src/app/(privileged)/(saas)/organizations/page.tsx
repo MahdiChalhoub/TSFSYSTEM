@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button"
 import { Building, Plus, Globe, ShieldCheck, Activity, Trash2, Zap, Settings2, Power, Lock, Users, Layers, Clock, Mail, Phone, MapPin, Search, Filter, X } from "lucide-react"
 import { toast } from "sonner"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -20,6 +21,7 @@ export default function OrganizationsPage() {
     const [currencies, setCurrencies] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [mounted, setMounted] = useState(false)
+    const [pendingDeleteOrg, setPendingDeleteOrg] = useState<any>(null)
     const branding = useDynamicBranding();
     const router = useRouter();
 
@@ -96,7 +98,6 @@ export default function OrganizationsPage() {
         if (org.slug === 'saas') {
             return toast.error("Cannot delete the master SaaS organization.")
         }
-        if (!confirm(`Are you sure you want to delete "${org.name}"?\n\nThis organization must be:\n• Suspended first\n• Inactive for 24+ hours\n• Have no business data\n\nThis action cannot be undone.`)) return
         try {
             const result = await deleteOrganization(org.id)
             if (result?.error) {
@@ -451,7 +452,7 @@ export default function OrganizationsPage() {
                                             ? 'text-gray-200 cursor-not-allowed'
                                             : 'text-gray-400 hover:text-red-500 hover:bg-red-50'
                                             }`}
-                                        onClick={() => handleDelete(org)}
+                                        onClick={() => setPendingDeleteOrg(org)}
                                         disabled={isSaasOrg}
                                     >
                                         <Trash2 size={18} />
@@ -558,6 +559,19 @@ export default function OrganizationsPage() {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            <ConfirmDialog
+                open={pendingDeleteOrg !== null}
+                onOpenChange={(open) => { if (!open) setPendingDeleteOrg(null) }}
+                onConfirm={() => {
+                    if (pendingDeleteOrg) handleDelete(pendingDeleteOrg)
+                    setPendingDeleteOrg(null)
+                }}
+                title="Delete Organization"
+                description={`Are you sure you want to delete "${pendingDeleteOrg?.name || ''}"? This organization must be suspended first, inactive for 24+ hours, and have no business data. This action cannot be undone.`}
+                confirmText="Delete Organization"
+                variant="danger"
+            />
         </div >
     )
 }

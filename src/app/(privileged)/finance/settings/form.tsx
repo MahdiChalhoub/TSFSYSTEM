@@ -8,6 +8,7 @@ import { type Currency } from '@/app/actions/currencies'
 import { ShieldAlert, Target, Lock, GitCompareArrows, X, Pencil, AlertTriangle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 interface Props {
     settings: FinancialSettingsState
@@ -250,15 +251,14 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
         })
     }
 
+    const [settingsPendingAction, setSettingsPendingAction] = useState<{ type: string; title: string; description: string; variant: 'danger' | 'warning' | 'info' } | null>(null)
+
     const handleRecalculate = () => {
-        if (!confirm('Are you sure? This will reset and recalculate all account balances based on the ledger history.')) return
-        startRecalc(async () => {
-            try {
-                const res = await recalculateAccountBalances()
-                toast(res.success ? 'Success! All account balances have been recalculated.' : 'Recalculation failed.', { icon: res.success ? '✅' : '❌' })
-            } catch (e: any) {
-                toast.error('Error: ' + e.message)
-            }
+        setSettingsPendingAction({
+            type: 'recalculate',
+            title: 'Recalculate Balances?',
+            description: 'This will reset and recalculate all account balances based on the ledger history.',
+            variant: 'warning',
         })
     }
 
@@ -580,18 +580,12 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
                             </div>
                             <button
                                 type="button"
-                                onClick={async () => {
-                                    if (!confirm("ULTIMATE DANGER: This will delete EVERYTHING (Products, Orders, Ledger, Contacts). This cannot be undone. Proceed?")) return
-                                    if (!confirm("TOTAL WIPE CONFIRMATION: Start with a Fresh Version?")) return
-                                    startTransition(async () => {
-                                        try {
-                                            const { wipeAllOperationalData } = await import('@/app/actions/finance/system')
-                                            await wipeAllOperationalData()
-                                            toast.success("System has been completely wiped to a Fresh Version.")
-                                            router.refresh()
-                                        } catch (e: any) {
-                                            toast.error("Error: " + e.message)
-                                        }
+                                onClick={() => {
+                                    setSettingsPendingAction({
+                                        type: 'wipeAll',
+                                        title: 'CRITICAL: Fresh Version',
+                                        description: 'This will delete EVERYTHING (Products, Orders, Ledger, Contacts). This cannot be undone. You will start with a completely fresh system.',
+                                        variant: 'danger',
                                     })
                                 }}
                                 disabled={isPending}
@@ -611,17 +605,12 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
                             </div>
                             <button
                                 type="button"
-                                onClick={async () => {
-                                    if (!confirm("Populate database with test records?")) return
-                                    startTransition(async () => {
-                                        try {
-                                            const { seedTestData } = await import('@/app/actions/finance/system')
-                                            await seedTestData()
-                                            toast.success("Test data has been successfully seeded!")
-                                            router.refresh()
-                                        } catch (e: any) {
-                                            toast.error("Error: " + e.message)
-                                        }
+                                onClick={() => {
+                                    setSettingsPendingAction({
+                                        type: 'seedData',
+                                        title: 'Seed Test Data?',
+                                        description: 'This will populate the database with test products, suppliers, and initial stock.',
+                                        variant: 'warning',
                                     })
                                 }}
                                 disabled={isPending}
@@ -699,6 +688,51 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
                     </div>
                 </div>
             )}
+
+            <ConfirmDialog
+                open={settingsPendingAction !== null}
+                onOpenChange={(open) => { if (!open) setSettingsPendingAction(null) }}
+                onConfirm={() => {
+                    if (!settingsPendingAction) return
+                    if (settingsPendingAction.type === 'recalculate') {
+                        startRecalc(async () => {
+                            try {
+                                const res = await recalculateAccountBalances()
+                                toast(res.success ? 'Success! All account balances have been recalculated.' : 'Recalculation failed.', { icon: res.success ? '✅' : '❌' })
+                            } catch (e: any) {
+                                toast.error('Error: ' + e.message)
+                            }
+                        })
+                    } else if (settingsPendingAction.type === 'wipeAll') {
+                        startTransition(async () => {
+                            try {
+                                const { wipeAllOperationalData } = await import('@/app/actions/finance/system')
+                                await wipeAllOperationalData()
+                                toast.success("System has been completely wiped to a Fresh Version.")
+                                router.refresh()
+                            } catch (e: any) {
+                                toast.error("Error: " + e.message)
+                            }
+                        })
+                    } else if (settingsPendingAction.type === 'seedData') {
+                        startTransition(async () => {
+                            try {
+                                const { seedTestData } = await import('@/app/actions/finance/system')
+                                await seedTestData()
+                                toast.success("Test data has been successfully seeded!")
+                                router.refresh()
+                            } catch (e: any) {
+                                toast.error("Error: " + e.message)
+                            }
+                        })
+                    }
+                    setSettingsPendingAction(null)
+                }}
+                title={settingsPendingAction?.title ?? ''}
+                description={settingsPendingAction?.description ?? ''}
+                confirmText="Confirm"
+                variant={settingsPendingAction?.variant ?? 'danger'}
+            />
         </div>
     )
 }

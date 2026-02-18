@@ -35,6 +35,7 @@ import {
     Wrench, Database, ShoppingCart, DollarSign, Users, Box
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
     getMCPTools, createMCPTool, updateMCPTool,
     deleteMCPTool, registerDefaultTools
@@ -86,6 +87,8 @@ export default function MCPToolsPage() {
     const [saving, setSaving] = useState(false)
     const [schemaText, setSchemaText] = useState('{}')
     const [generating, setGenerating] = useState(false)
+    const [deleteToolId, setDeleteToolId] = useState<number | null>(null)
+    const [showRegisterDefaults, setShowRegisterDefaults] = useState(false)
 
     useEffect(() => {
         loadData()
@@ -165,21 +168,28 @@ export default function MCPToolsPage() {
     }
 
     async function handleDelete(id: number) {
-        if (!confirm('Delete this tool?')) return
+        setDeleteToolId(id)
+    }
 
+    async function confirmDelete() {
+        if (deleteToolId === null) return
         try {
-            const res = await deleteMCPTool(id)
+            const res = await deleteMCPTool(deleteToolId)
             if (!res.success) throw new Error(res.error)
             toast.success('Tool deleted')
             await loadData()
         } catch (e: any) {
             toast.error(e.message)
         }
+        setDeleteToolId(null)
     }
 
     async function handleRegisterDefaults() {
-        if (!confirm('This will register default tools for your organization. Continue?')) return
+        setShowRegisterDefaults(true)
+    }
 
+    async function confirmRegisterDefaults() {
+        setShowRegisterDefaults(false)
         setGenerating(true)
         try {
             const res = await registerDefaultTools()
@@ -447,6 +457,25 @@ export default function MCPToolsPage() {
                     ))}
                 </div>
             )}
+
+            <ConfirmDialog
+                open={deleteToolId !== null}
+                onOpenChange={(open) => { if (!open) setDeleteToolId(null) }}
+                onConfirm={confirmDelete}
+                title="Delete Tool?"
+                description="This MCP tool will be permanently removed."
+                variant="danger"
+            />
+
+            <ConfirmDialog
+                open={showRegisterDefaults}
+                onOpenChange={setShowRegisterDefaults}
+                onConfirm={confirmRegisterDefaults}
+                title="Register Default Tools?"
+                description="This will register default tools for your organization."
+                confirmText="Register"
+                variant="warning"
+            />
         </div>
     )
 }

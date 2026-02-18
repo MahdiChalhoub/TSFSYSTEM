@@ -5,6 +5,7 @@ import { ChevronRight, ChevronDown, CheckCircle2, LayoutGrid, Columns, Undo2, Li
 import { useRouter } from 'next/navigation'
 import { importChartOfAccountsTemplate } from '@/app/actions/finance/coa-templates'
 import { toast } from 'sonner'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 export default function CoaTemplatesLibrary({ templates }: { templates: any }) {
     const [selectedTemplates, setSelectedTemplates] = useState<string[]>([])
@@ -20,10 +21,16 @@ export default function CoaTemplatesLibrary({ templates }: { templates: any }) {
         }
     }
 
-    const handleImport = async (key: string) => {
-        if (!confirm(`Import ${key}? Existing accounts will be kept unless you click "Clean Import" in the next prompt.`)) return
-        const reset = confirm("Perform a Clean Reset? (Deletes ALL existing accounts first - only works if zero transactions exist)")
+    const [importTarget, setImportTarget] = useState<{ key: string; step: 'confirm' | 'reset' } | null>(null)
 
+    const handleImport = async (key: string) => {
+        setImportTarget({ key, step: 'confirm' })
+    }
+
+    const handleConfirmImport = async (reset: boolean) => {
+        if (!importTarget) return
+        const key = importTarget.key
+        setImportTarget(null)
         setIsPending(true)
         try {
             await importChartOfAccountsTemplate(key as any, { reset })
@@ -165,6 +172,28 @@ export default function CoaTemplatesLibrary({ templates }: { templates: any }) {
                     </div>
                 )}
             </div>
+
+            <ConfirmDialog
+                open={importTarget?.step === 'confirm'}
+                onOpenChange={(open) => { if (!open) setImportTarget(null) }}
+                onConfirm={() => {
+                    if (importTarget) setImportTarget({ ...importTarget, step: 'reset' })
+                }}
+                title={`Import ${importTarget?.key ?? ''}?`}
+                description="Existing accounts will be kept. You'll be asked about a clean reset next."
+                confirmText="Import"
+                variant="warning"
+            />
+            <ConfirmDialog
+                open={importTarget?.step === 'reset'}
+                onOpenChange={(open) => { if (!open) { handleConfirmImport(false) } }}
+                onConfirm={() => handleConfirmImport(true)}
+                title="Clean Reset?"
+                description="Perform a Clean Reset? This deletes ALL existing accounts first — only works if zero transactions exist. Press Cancel to keep existing accounts."
+                confirmText="Clean Reset"
+                cancelText="Keep Existing"
+                variant="danger"
+            />
         </div>
     )
 }

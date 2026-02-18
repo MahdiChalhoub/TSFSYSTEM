@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Plus, Trash2, Wallet, User as UserIcon, Building, Smartphone, Link as LinkIcon, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Badge } from "@/components/ui/badge"
 import {
     Dialog,
@@ -36,15 +37,22 @@ export default function FinancialAccountsPage() {
 
     useEffect(() => { load() }, [])
 
+    const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
+
     const handleDelete = async (id: number) => {
-        if (!confirm("Are you sure? This cannot be undone if transactions exist.")) return
+        setDeleteTarget(id)
+    }
+
+    const confirmDelete = async () => {
+        if (deleteTarget === null) return
         try {
-            await deleteFinancialAccount(id)
+            await deleteFinancialAccount(deleteTarget)
             toast.success("Account deleted")
             load()
         } catch (e: any) {
             toast.error(e.message)
         }
+        setDeleteTarget(null)
     }
 
     return (
@@ -75,6 +83,15 @@ export default function FinancialAccountsPage() {
                     No financial accounts found. Create one to get started.
                 </div>
             )}
+
+            <ConfirmDialog
+                open={deleteTarget !== null}
+                onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
+                onConfirm={confirmDelete}
+                title="Delete Financial Account?"
+                description="This cannot be undone if transactions exist."
+                variant="danger"
+            />
         </div>
     )
 }
@@ -90,6 +107,7 @@ function AccountCard({ account, onDelete, onRefresh }: { account: any, onDelete:
     const isConfigured = !!account.ledgerAccount
 
     const Icon = icon[account.type] || Wallet
+    const [unassignTarget, setUnassignTarget] = useState<{ userId: number; name: string } | null>(null)
 
     return (
         <Card className="relative group">
@@ -145,12 +163,7 @@ function AccountCard({ account, onDelete, onRefresh }: { account: any, onDelete:
                                     {u.name}
                                     <button
                                         className="ml-1 hover:bg-slate-200 rounded-full p-0.5"
-                                        onClick={async () => {
-                                            if (confirm(`Unassign ${u.name}?`)) {
-                                                await unassignUser(u.id, account.id)
-                                                onRefresh()
-                                            }
-                                        }}
+                                        onClick={() => setUnassignTarget({ userId: u.id, name: u.name })}
                                     >
                                         &times;
                                     </button>
@@ -163,6 +176,21 @@ function AccountCard({ account, onDelete, onRefresh }: { account: any, onDelete:
                 </div>
 
             </CardContent>
+
+            <ConfirmDialog
+                open={unassignTarget !== null}
+                onOpenChange={(open) => { if (!open) setUnassignTarget(null) }}
+                onConfirm={async () => {
+                    if (unassignTarget) {
+                        await unassignUser(unassignTarget.userId, account.id)
+                        onRefresh()
+                    }
+                    setUnassignTarget(null)
+                }}
+                title={`Unassign ${unassignTarget?.name ?? ''}?`}
+                description="This user will no longer have access to this financial account."
+                variant="warning"
+            />
         </Card>
     )
 }
