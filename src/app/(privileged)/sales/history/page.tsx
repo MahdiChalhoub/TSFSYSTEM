@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from "react"
+import type { SalesOrder } from '@/types/erp'
 import { Card, CardContent } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
@@ -34,7 +35,7 @@ const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
 }
 
 export default function OrderHistoryPage() {
-    const [orders, setOrders] = useState<any[]>([])
+    const [orders, setOrders] = useState<SalesOrder[]>([])
     const [loading, setLoading] = useState(true)
     const [filters, setFilters] = useState({
         search: '',

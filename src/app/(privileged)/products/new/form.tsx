@@ -4,6 +4,7 @@ import { useActionState } from 'react';
 import { createProduct } from '../actions';
 import { useState, useEffect } from 'react';
 import type { ProductNamingRule } from '@/app/actions/settings';
+import type { ProductAttribute } from '@/types/erp';
 import { getBrandsByCategory } from '@/app/actions/brands';
 import { getAttributesByCategory } from '@/app/actions/attributes';
 
@@ -59,7 +60,7 @@ export default function AddProductForm({
     })();
 
     // Category & Parfum Logic
-    const [filteredAttributes, setFilteredAttributes] = useState<any[]>([]);
+    const [filteredAttributes, setFilteredAttributes] = useState<ProductAttribute[]>([]);
 
     // Filter brands and attributes when category changes
     useEffect(() => {

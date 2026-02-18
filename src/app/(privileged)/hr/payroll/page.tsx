@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from "react"
+import type { Employee } from '@/types/erp'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
@@ -22,7 +23,7 @@ const TYPE_BADGE: Record<string, string> = {
 }
 
 export default function PayrollSummaryPage() {
-    const [employees, setEmployees] = useState<any[]>([])
+    const [employees, setEmployees] = useState<Employee[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
     const [typeFilter, setTypeFilter] = useState<string | null>(null)

@@ -1,6 +1,7 @@
 'use client';
 
 import { useActionState, useState, useEffect, useCallback } from "react";
+import type { PurchaseLine } from '@/types/erp';
 import { createPurchaseInvoice } from "@/app/actions/commercial/purchases";
 import { searchProductsSimple } from "@/app/actions/inventory/product-actions";
 import { useDev } from "@/context/DevContext";
@@ -53,10 +54,10 @@ export default function PurchaseForm({
     const [invoicePriceType, setInvoicePriceType] = useState<'HT' | 'TTC'>('HT');
     const [vatRecoverable, setVatRecoverable] = useState<boolean>(true);
     const [selectedSiteId, setSelectedSiteId] = useState<number | ''>('');
-    const [availableWarehouses, setAvailableWarehouses] = useState<any[]>([]);
+    const [availableWarehouses, setAvailableWarehouses] = useState<Record<string, unknown>[]>([]);
 
     // --- Line Items State ---
-    const [lines, setLines] = useState<any[]>([]);
+    const [lines, setLines] = useState<PurchaseLine[]>([]);
 
     // --- Financial Rules ---
     const worksInTTC = financialSettings.worksInTTC; // Global policy
@@ -484,7 +485,7 @@ export default function PurchaseForm({
 
 function ProductSearch({ callback, siteId }: { callback: (p: any) => void, siteId: number }) {
     const [query, setQuery] = useState('');
-    const [results, setResults] = useState<any[]>([]);
+    const [results, setResults] = useState<Record<string, unknown>[]>([]);
     const [open, setOpen] = useState(false);
 
     useEffect(() => {
