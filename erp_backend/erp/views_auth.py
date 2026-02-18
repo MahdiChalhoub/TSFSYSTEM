@@ -60,9 +60,14 @@ def login_view(request):
             if not totp.verify(otp_token):
                 return Response({"error": "Invalid 2FA token"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Delete old token and create fresh one (ensures token rotation on each login)
+        # Token rotation: delete all old tokens then create fresh
+        # Use explicit delete + create to avoid DRF's get_or_create race condition
         Token.objects.filter(user=user).delete()
-        token = Token.objects.create(user=user)
+        try:
+            token = Token.objects.create(user=user)
+        except Exception:
+            # Handle race condition: if create fails, try get_or_create
+            token, _ = Token.objects.get_or_create(user=user)
         
         return Response({
             'token': token.key,
@@ -120,7 +125,10 @@ def _resolve_2fa_challenge(request, challenge_id):
     
     # Issue token (with rotation)
     Token.objects.filter(user=user).delete()
-    token = Token.objects.create(user=user)
+    try:
+        token = Token.objects.create(user=user)
+    except Exception:
+        token, _ = Token.objects.get_or_create(user=user)
     
     scope_access = challenge_data.get('scope_access', 'internal')
     

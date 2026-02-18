@@ -39,7 +39,7 @@ if not SECRET_KEY:
         warnings.warn('DJANGO_SECRET_KEY not set! Using insecure fallback. SET THIS IN PRODUCTION!', RuntimeWarning)
         SECRET_KEY = _INSECURE_KEY
 
-ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '.tsf.ci,localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '.tsf.ci,localhost,127.0.0.1,91.99.186.183').split(',')
 
 
 # Application definition
