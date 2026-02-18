@@ -238,14 +238,7 @@ function LoginContent() {
                             </div>
                         )}
 
-                        {isRoot && (
-                            <div className="text-center pt-4">
-                                <a href="/login" className="text-[10px] text-slate-600 hover:text-emerald-500 font-mono uppercase tracking-widest flex items-center justify-center gap-2">
-                                    <SquareTerminal size={12} />
-                                    Federation Admin Login
-                                </a>
-                            </div>
-                        )}
+
                     </form>
                 </div>
             </div>

@@ -2,9 +2,9 @@
 
 import { useActionState } from "react"
 import { loginAction } from "@/app/actions/auth"
-import { ArrowRight, Loader2, AlertCircle, Lock } from "lucide-react"
+import { ArrowRight, Loader2, AlertCircle, Lock, ShieldCheck } from "lucide-react"
 
-const initialState: { error: any; success?: boolean } = { error: {} }
+const initialState: any = { error: {} }
 
 export function TenantQuickLogin({ slug, suffix }: { slug: string; suffix: string }) {
     const [state, action, isPending] = useActionState(loginAction, initialState)
@@ -33,31 +33,83 @@ export function TenantQuickLogin({ slug, suffix }: { slug: string; suffix: strin
 
                 <input type="hidden" name="slug" value={slug} />
 
-                <input
-                    name="username"
-                    type="text"
-                    placeholder="Username"
-                    required
-                    className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-emerald-500 transition-all focus:ring-4 focus:ring-emerald-500/5 placeholder:text-slate-700"
-                />
-                <input
-                    name="password"
-                    type="password"
-                    placeholder="Access Key"
-                    required
-                    className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-emerald-500 transition-all focus:ring-4 focus:ring-emerald-500/5 placeholder:text-slate-700"
-                />
-                <button
-                    type="submit"
-                    disabled={isPending}
-                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-5 rounded-2xl font-black transition-all shadow-xl shadow-emerald-900/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-60 disabled:hover:scale-100"
-                >
-                    {isPending ? (
-                        <Loader2 className="animate-spin" size={20} />
-                    ) : (
-                        <>Initialize Session <ArrowRight size={20} /></>
-                    )}
-                </button>
+                {/* 2FA Step */}
+                {state?.two_factor_required ? (
+                    <div className="space-y-4 animate-in slide-in-from-right-4 duration-500">
+                        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-400 text-sm font-medium flex items-center gap-3">
+                            <ShieldCheck size={18} className="shrink-0" />
+                            {(state as any).message || "Enter your verification code"}
+                        </div>
+
+                        <input
+                            name="otp_token"
+                            type="text"
+                            placeholder="000 000"
+                            required
+                            autoFocus
+                            className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white text-center text-2xl font-mono tracking-[0.3em] outline-none focus:border-emerald-500 transition-all focus:ring-4 focus:ring-emerald-500/5 placeholder:text-slate-700"
+                        />
+
+                        {/* Persist credentials through 2FA step */}
+                        <input type="hidden" name="username" defaultValue={(state as any)._username} />
+                        <input type="hidden" name="password" defaultValue={(state as any)._password} />
+
+                        <button
+                            type="submit"
+                            disabled={isPending}
+                            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-5 rounded-2xl font-black transition-all shadow-xl shadow-emerald-900/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-60 disabled:hover:scale-100"
+                        >
+                            {isPending ? (
+                                <Loader2 className="animate-spin" size={20} />
+                            ) : (
+                                <>Verify Identity <ShieldCheck size={20} /></>
+                            )}
+                        </button>
+
+                        <div className="flex justify-center">
+                            <button
+                                type="button"
+                                onClick={() => window.location.reload()}
+                                className="text-[10px] text-slate-600 hover:text-white font-bold uppercase tracking-[0.2em] transition-colors"
+                            >
+                                Cancel &amp; Restart
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <>
+                        <input
+                            name="username"
+                            type="text"
+                            placeholder="Username"
+                            required
+                            className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-emerald-500 transition-all focus:ring-4 focus:ring-emerald-500/5 placeholder:text-slate-700"
+                        />
+                        <input
+                            name="password"
+                            type="password"
+                            placeholder="Access Key"
+                            required
+                            className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white outline-none focus:border-emerald-500 transition-all focus:ring-4 focus:ring-emerald-500/5 placeholder:text-slate-700"
+                        />
+                        <button
+                            type="submit"
+                            disabled={isPending}
+                            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-5 rounded-2xl font-black transition-all shadow-xl shadow-emerald-900/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-60 disabled:hover:scale-100"
+                        >
+                            {isPending ? (
+                                <Loader2 className="animate-spin" size={20} />
+                            ) : (
+                                <>Initialize Session <ArrowRight size={20} /></>
+                            )}
+                        </button>
+                        <div className="flex justify-center">
+                            <a href="/forgot-password" className="text-[10px] text-slate-500 hover:text-emerald-400 font-bold uppercase tracking-[0.2em] transition-colors">
+                                Forgot Password?
+                            </a>
+                        </div>
+                    </>
+                )}
             </form>
         </div>
     )
