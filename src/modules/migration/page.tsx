@@ -957,7 +957,6 @@ export default function MigrationPage() {
                     )}
                 </div>
             )}
-        </div>
 
             <ConfirmDialog
                 open={rollbackTarget !== null}
@@ -968,6 +967,6 @@ export default function MigrationPage() {
                 confirmText="Rollback"
                 variant="danger"
             />
-        </div >
+        </div>
     )
 }

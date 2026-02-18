@@ -1,49 +1,186 @@
-﻿
-> tsfci@0.1.0 build
-> next build
-
-Γû▓ Next.js 16.1.4 (Turbopack)
+﻿Γû▓ Next.js 16.1.4 (Turbopack)
 - Environments: .env.production, .env
 - Experiments (use with caution):
   ┬╖ serverActions
 
-node.exe : ΓÜá The "middleware" file convention is deprecated. Please use 
-"proxy" instead. Learn more: 
-https://nextjs.org/docs/messages/middleware-to-proxy
-At C:\Program Files\nodejs\npm.ps1:29 char:3
-+   & $NODE_EXE $NPM_CLI_JS $args
+node.exe : ΓÜá The "middleware" file 
+convention is deprecated. Please use 
+"proxy" instead. Learn more: https://nextjs.
+org/docs/messages/middleware-to-proxy
+At C:\Program Files\nodejs\npx.ps1:29 char:3
++   & $NODE_EXE $NPX_CLI_JS $args
 +   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    + CategoryInfo          : NotSpecified: (ΓÜá The "middle...leware-to-pro 
-   xy:String) [], RemoteException
-    + FullyQualifiedErrorId : NativeCommandError
+    + CategoryInfo          : NotSpecified: 
+    (ΓÜá The "middle...leware-to-proxy:Str  
+  ing) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommand 
+   Error
  
   Creating an optimized production build ...
-Γ£ô Compiled successfully in 6.7s
-  Running TypeScript ...
-Failed to compile.
+Γ£ô Compiled successfully in 21.2s
+  Skipping validation of types
+  Collecting page data using 11 workers ...
+  Generating static pages using 11 workers (0/10) ...
+  Generating static pages using 11 workers (2/10) 
+  Generating static pages using 11 workers (4/10) 
+  Generating static pages using 11 workers (7/10) 
+Γ£ô Generating static pages using 11 workers (10/10) in 636.1ms
+  Finalizing page optimization ...
 
-./src/app/(privileged)/saas/finance/fiscal-years/page.tsx:31:48
-Type error: Property 'days' does not exist on type 'never'.
+Route (app)
+Γöî ╞Æ /
+Γö£ Γùï /_not-found
+Γö£ ╞Æ /[...slug]
+Γö£ ╞Æ /[code]
+Γö£ ╞Æ /api/erp/proxy/[...path]
+Γö£ ╞Æ /apps/[code]
+Γö£ ╞Æ /connector
+Γö£ ╞Æ /connector/buffer
+Γö£ ╞Æ /connector/logs
+Γö£ ╞Æ /connector/policies
+Γö£ ╞Æ /crm/contacts
+Γö£ ╞Æ /crm/contacts/[id]
+Γö£ ╞Æ /crm/insights
+Γö£ ╞Æ /crm/pricing
+Γö£ ╞Æ /crm/supplier-performance
+Γö£ ╞Æ /currencies
+Γö£ ╞Æ /dashboard
+Γö£ ╞Æ /encryption
+Γö£ ╞Æ /finance/accounts
+Γö£ ╞Æ /finance/accounts/new
+Γö£ ╞Æ /finance/aging
+Γö£ ╞Æ /finance/assets
+Γö£ ╞Æ /finance/audit-trail
+Γö£ ╞Æ /finance/bank-reconciliation
+Γö£ ╞Æ /finance/budget
+Γö£ ╞Æ /finance/cash-register
+Γö£ ╞Æ /finance/chart-of-accounts
+Γö£ ╞Æ /finance/chart-of-accounts/[id]
+Γö£ ╞Æ /finance/chart-of-accounts/migrate
+Γö£ ╞Æ /finance/chart-of-accounts/templates
+Γö£ ╞Æ /finance/dashboard
+Γö£ ╞Æ /finance/deferred-expenses
+Γö£ ╞Æ /finance/events
+Γö£ ╞Æ /finance/events/[id]
+Γö£ ╞Æ /finance/events/new
+Γö£ ╞Æ /finance/expenses
+Γö£ ╞Æ /finance/fiscal-years
+Γö£ ╞Æ /finance/ledger
+Γö£ ╞Æ /finance/ledger/[id]
+Γö£ ╞Æ /finance/ledger/[id]/edit
+Γö£ ╞Æ /finance/ledger/new
+Γö£ ╞Æ /finance/ledger/opening
+Γö£ ╞Æ /finance/ledger/opening/list
+Γö£ ╞Æ /finance/loans
+Γö£ ╞Æ /finance/loans/[id]
+Γö£ ╞Æ /finance/loans/new
+Γö£ ╞Æ /finance/payments
+Γö£ ╞Æ /finance/pricing
+Γö£ ╞Æ /finance/profit-centers
+Γö£ ╞Æ /finance/profit-distribution
+Γö£ ╞Æ /finance/purchase-returns
+Γö£ ╞Æ /finance/reports/balance-sheet
+Γö£ ╞Æ /finance/reports/pnl
+Γö£ ╞Æ /finance/reports/statement
+Γö£ ╞Æ /finance/reports/trial-balance
+Γö£ ╞Æ /finance/revenue
+Γö£ ╞Æ /finance/sales-returns
+Γö£ ╞Æ /finance/settings
+Γö£ ╞Æ /finance/settings/posting-rules
+Γö£ ╞Æ /finance/statements
+Γö£ ╞Æ /finance/tax-reports
+Γö£ ╞Æ /finance/vouchers
+Γö£ Γùï /forgot-password
+Γö£ ╞Æ /health
+Γö£ ╞Æ /hr/employees
+Γö£ ╞Æ /hr/payroll
+Γö£ ╞Æ /inventory/adjustment-orders
+Γö£ ╞Æ /inventory/adjustments
+Γö£ ╞Æ /inventory/analytics
+Γö£ ╞Æ /inventory/attributes
+Γö£ ╞Æ /inventory/barcode
+Γö£ ╞Æ /inventory/brands
+Γö£ ╞Æ /inventory/brands/[id]
+Γö£ ╞Æ /inventory/categories
+Γö£ ╞Æ /inventory/categories/maintenance
+Γö£ ╞Æ /inventory/combo
+Γö£ ╞Æ /inventory/countries
+Γö£ ╞Æ /inventory/countries/[id]
+Γö£ ╞Æ /inventory/expiry-alerts
+Γö£ ╞Æ /inventory/global
+Γö£ ╞Æ /inventory/labels
+Γö£ ╞Æ /inventory/low-stock
+Γö£ ╞Æ /inventory/maintenance
+Γö£ ╞Æ /inventory/maintenance/data-quality
+Γö£ ╞Æ /inventory/movements
+Γö£ ╞Æ /inventory/requests
+Γö£ ╞Æ /inventory/serials
+Γö£ ╞Æ /inventory/stock-count
+Γö£ ╞Æ /inventory/stock-count/[id]/count
+Γö£ ╞Æ /inventory/stock-count/[id]/verify
+Γö£ ╞Æ /inventory/transfer-orders
+Γö£ ╞Æ /inventory/units
+Γö£ ╞Æ /inventory/valuation
+Γö£ ╞Æ /inventory/warehouses
+Γö£ ╞Æ /kernel
+Γö£ Γùï /landing
+Γö£ Γùï /login
+Γö£ ╞Æ /mcp
+Γö£ ╞Æ /mcp/chat
+Γö£ ╞Æ /mcp/conversations
+Γö£ ╞Æ /mcp/providers
+Γö£ ╞Æ /mcp/settings
+Γö£ ╞Æ /mcp/tools
+Γö£ ╞Æ /mcp/usage
+Γö£ ╞Æ /migration
+Γö£ ╞Æ /modules
+Γö£ ╞Æ /organizations
+Γö£ ╞Æ /organizations/[id]
+Γö£ ╞Æ /organizations/registrations
+Γö£ ╞Æ /products
+Γö£ ╞Æ /products/create-group
+Γö£ ╞Æ /products/groups/[id]/edit
+Γö£ ╞Æ /products/new
+Γö£ ╞Æ /purchases
+Γö£ ╞Æ /purchases/[id]
+Γö£ ╞Æ /purchases/dashboard
+Γö£ ╞Æ /purchases/new
+Γö£ ╞Æ /purchases/new-order
+Γö£ ╞Æ /purchases/returns
+Γö£ ╞Æ /purchases/returns/new
+Γö£ ╞Æ /purchases/sourcing
+Γö£ Γùï /register/business
+Γö£ Γùï /register/user
+Γö£ Γùï /reset-password
+Γö£ ╞Æ /saas-dashboard
+Γö£ Γùï /saas/login
+Γö£ ╞Æ /sales
+Γö£ ╞Æ /sales/[id]
+Γö£ ╞Æ /sales/analytics
+Γö£ ╞Æ /sales/consignment
+Γö£ ╞Æ /sales/deliveries
+Γö£ ╞Æ /sales/delivery-zones
+Γö£ ╞Æ /sales/discounts
+Γö£ ╞Æ /sales/history
+Γö£ ╞Æ /sales/import
+Γö£ ╞Æ /sales/quotations
+Γö£ ╞Æ /sales/returns
+Γö£ ╞Æ /sales/returns/new
+Γö£ ╞Æ /settings/roles
+Γö£ ╞Æ /settings/security
+Γö£ ╞Æ /settings/sites
+Γö£ ╞Æ /subscription
+Γö£ ╞Æ /subscription-plans
+Γö£ ╞Æ /subscription-plans/[id]
+Γö£ ╞Æ /switcher
+Γö£ ╞Æ /tenant/[slug]
+Γö£ ╞Æ /tenant/[slug]/dashboard
+Γö£ ╞Æ /updates
+Γöö ╞Æ /users/approvals
 
-[0m [90m 29 |[39m                             
-{gaps[33m.[39mmap((g[33m,[39m i) [33m=>[39m (
- [90m 30 |[39m                                 [33m<[39m[33mdiv[39m 
-key[33m=[39m{i} className[33m=[39m[32m"text-xs text-amber-800 
-bg-white/50 px-2 py-1 rounded inline-block mr-2 border 
-border-amber-100"[39m[33m>[39m
-[31m[1m>[22m[39m[90m 31 |[39m                                     
-[33m<[39m[33mstrong[39m[33m>[39m{g[33m.[39mdays} [33mDay[39m 
-[33mGap[39m[33m<[39m[33m/[39m[33mstrong[39m[33m>[39m after 
-{g[33m.[39mafter}[33m:[39m
- [90m    |[39m                                                
-[31m[1m^[22m[39m
- [90m 32 |[39m                                     
-[33m<[39m[33mspan[39m className[33m=[39m[32m"ml-1 
-opacity-70"[39m[33m>[39m
- [90m 33 |[39m                                         {[36mnew[39m 
-[33mDate[39m(g[33m.[39mstartDate)[33m.[39mtoLocaleDateString()} ΓÇö 
-{[36mnew[39m 
-[33mDate[39m(g[33m.[39mendDate)[33m.[39mtoLocaleDateString()}
- [90m 34 |[39m                                     
-[33m<[39m[33m/[39m[33mspan[39m[33m>[39m[0m
-Next.js build worker exited with code: 1 and signal: null
+
+╞Æ Proxy (Middleware)
+
+Γùï  (Static)   prerendered as static content
+╞Æ  (Dynamic)  server-rendered on demand
+
