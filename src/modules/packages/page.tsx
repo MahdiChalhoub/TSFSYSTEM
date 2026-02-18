@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import { PackageStats } from "@/types/erp"
 import { useDropzone } from "react-dropzone"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -54,7 +55,7 @@ export default function PackagesPage() {
     const [uploadProgress, setUploadProgress] = useState(0)
     const [isUploading, setIsUploading] = useState(false)
     const [selectedType, setSelectedType] = useState<string>("all")
-    const [stats, setStats] = useState<any>(null)
+    const [stats, setStats] = useState<PackageStats | null>(null)
     const [pendingAction, setPendingAction] = useState<{ type: 'apply' | 'rollback' | 'delete'; pkg: PackageUpload } | null>(null)
 
     const fetchPackages = async () => {

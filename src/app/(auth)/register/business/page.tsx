@@ -3,6 +3,7 @@
 import { useState, useActionState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { registerBusinessAction, getPublicConfig } from "@/app/actions/onboarding";
+import { PublicConfig } from "@/types/erp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
@@ -25,7 +26,7 @@ const slugify = (text: string) => {
 function BusinessRegisterContent() {
     const searchParams = useSearchParams();
     const [state, action, isPending] = useActionState(registerBusinessAction, null);
-    const [config, setConfig] = useState<any>({ business_types: [], currencies: [] });
+    const [config, setConfig] = useState<PublicConfig>({ business_types: [], currencies: [] });
     const [businessName, setBusinessName] = useState("");
     const [slug, setSlug] = useState("");
     const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
@@ -256,7 +257,7 @@ function BusinessRegisterContent() {
                                                 <SelectValue placeholder="Select type" />
                                             </SelectTrigger>
                                             <SelectContent className="bg-slate-900 border-white/10 text-white">
-                                                {config.business_types.map((t: any) => (
+                                                {(config.business_types ?? []).map((t: any) => (
                                                     <SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>
                                                 ))}
                                             </SelectContent>
@@ -269,7 +270,7 @@ function BusinessRegisterContent() {
                                                 <SelectValue placeholder="Select currency" />
                                             </SelectTrigger>
                                             <SelectContent className="bg-slate-900 border-white/10 text-white">
-                                                {config.currencies.map((c: any) => (
+                                                {(config.currencies ?? []).map((c: any) => (
                                                     <SelectItem key={c.id} value={c.id.toString()}>{c.code}</SelectItem>
                                                 ))}
                                             </SelectContent>

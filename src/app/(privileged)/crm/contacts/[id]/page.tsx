@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { getContactSummary } from "@/app/actions/crm/contacts"
+import { ContactSummaryData } from "@/types/erp"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
@@ -33,7 +34,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function ContactDetailPage() {
     const params = useParams()
     const router = useRouter()
-    const [data, setData] = useState<any>(null)
+    const [data, setData] = useState<ContactSummaryData | null>(null)
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState<'orders' | 'payments' | 'journal' | 'analytics' | 'pricing'>('orders')
 
@@ -143,19 +144,19 @@ export default function ContactDetailPage() {
                                 <span className="line-clamp-2">{contact.address}</span>
                             </div>
                         )}
-                        {contact.credit_limit > 0 && (
+                        {(contact.credit_limit ?? 0) > 0 && (
                             <div className="flex items-center gap-2 text-sm">
                                 <CreditCard size={14} className="text-gray-400" />
-                                <span>Credit Limit: {fmt(contact.credit_limit)}</span>
+                                <span>Credit Limit: {fmt(contact.credit_limit ?? 0)}</span>
                             </div>
                         )}
-                        {contact.payment_terms_days > 0 && (
+                        {(contact.payment_terms_days ?? 0) > 0 && (
                             <div className="flex items-center gap-2 text-sm">
                                 <Clock size={14} className="text-gray-400" />
                                 <span>Payment Terms: {contact.payment_terms_days} days</span>
                             </div>
                         )}
-                        {contact.loyalty_points > 0 && (
+                        {(contact.loyalty_points ?? 0) > 0 && (
                             <div className="flex items-center gap-2 text-sm">
                                 <Star size={14} className="text-yellow-500" />
                                 <span className="font-semibold text-yellow-600">{contact.loyalty_points} loyalty points</span>
@@ -394,7 +395,7 @@ export default function ContactDetailPage() {
                                     <p className="text-gray-400 text-sm">No product data available yet.</p>
                                 ) : (
                                     <div className="space-y-2">
-                                        {analytics.top_products.map((p: any, i: number) => (
+                                        {analytics?.top_products?.map((p: any, i: number) => (
                                             <div key={i} className="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
                                                 <span className="text-xs font-bold text-gray-400 w-6">#{i + 1}</span>
                                                 <span className="flex-1 font-medium text-sm text-gray-900">{p.product_name}</span>
@@ -419,10 +420,10 @@ export default function ContactDetailPage() {
                                 </div>
                             ) : (
                                 <div className="space-y-3">
-                                    {pricing_rules.map((rule: any) => (
+                                    {(pricing_rules ?? []).map((rule: any) => (
                                         <div key={rule.id} className="flex items-center gap-4 bg-gray-50 rounded-xl p-4">
                                             <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${rule.discount_type === 'FIXED_PRICE' ? 'bg-emerald-100 text-emerald-600' :
-                                                    rule.discount_type === 'PERCENTAGE' ? 'bg-blue-100 text-blue-600' : 'bg-amber-100 text-amber-600'
+                                                rule.discount_type === 'PERCENTAGE' ? 'bg-blue-100 text-blue-600' : 'bg-amber-100 text-amber-600'
                                                 }`}>
                                                 {rule.discount_type === 'PERCENTAGE' ? <Percent size={18} /> :
                                                     rule.discount_type === 'AMOUNT_OFF' ? <Hash size={18} /> : <DollarSign size={18} />}

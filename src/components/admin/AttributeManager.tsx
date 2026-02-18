@@ -1,5 +1,6 @@
 'use client';
 
+import { AdminEntity, AdminHierarchyGroup } from "@/types/erp"
 import { useState } from 'react';
 import { Plus, Search, Filter, X, Edit2, ChevronDown, ChevronRight, LayoutGrid, LayoutList, Factory, Sparkles, Globe } from "lucide-react";
 import { getAttributeHierarchy } from '@/app/actions/attributes';
@@ -12,7 +13,7 @@ type AttributeManagerProps = {
 
 export function AttributeManager({ attributes, categories }: AttributeManagerProps) {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingAttribute, setEditingAttribute] = useState<any>(null);
+    const [editingAttribute, setEditingAttribute] = useState<AdminEntity | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
@@ -135,7 +136,7 @@ function AttributeCard({ attribute, onEdit }: any) {
 
 function AttributeRow({ attribute, onEdit }: any) {
     const [isExpanded, setIsExpanded] = useState(false);
-    const [data, setData] = useState<any>(null);
+    const [data, setData] = useState<AdminHierarchyGroup[] | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
     const toggleExpand = async (e: React.MouseEvent) => {

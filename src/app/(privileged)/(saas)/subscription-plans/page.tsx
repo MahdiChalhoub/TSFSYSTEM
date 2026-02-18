@@ -48,7 +48,7 @@ export default function SubscriptionPlansPage() {
     const [catOpen, setCatOpen] = useState(false)
     const [catForm, setCatForm] = useState({ name: '', slug: '', type: 'PUBLIC' })
     const [catSaving, setCatSaving] = useState(false)
-    const [pendingDeleteAddon, setPendingDeleteAddon] = useState<any>(null)
+    const [pendingDeleteAddon, setPendingDeleteAddon] = useState<Record<string, unknown> | null>(null)
 
     useEffect(() => {
         loadData()

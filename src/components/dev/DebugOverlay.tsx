@@ -12,7 +12,7 @@ export default function DebugOverlay() {
     const pathname = usePathname();
     const { viewScope } = useAdmin();
     const [mounted, setMounted] = useState(false);
-    const [settings, setSettings] = useState<any>(null);
+    const [settings, setSettings] = useState<Record<string, unknown> | null>(null);
     const [recentLedger, setRecentLedger] = useState<any[]>([]);
 
     // Only show in development

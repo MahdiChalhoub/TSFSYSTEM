@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState, Suspense } from "react";
 import { useSearchParams } from 'next/navigation';
 import { loginAction } from "@/app/actions/auth";
 import { getPublicConfig } from "@/app/actions/onboarding";
+import { PublicConfig } from "@/types/erp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
@@ -12,13 +13,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, AlertCircle, ShieldCheck, SquareTerminal, Command, Building2, Globe } from "lucide-react";
 import { PLATFORM_CONFIG, useDynamicBranding } from "@/lib/saas_config";
 
-const initialState: { error: any; success?: boolean } = {
+const initialState: { error: Record<string, unknown>; success?: boolean } = {
     error: {},
 };
 
 function LoginContent() {
     const [state, action, isPending] = useActionState(loginAction, initialState);
-    const [config, setConfig] = useState<any>({ tenant: null });
+    const [config, setConfig] = useState<PublicConfig>({ tenant: null });
     const searchParams = useSearchParams();
     const branding = useDynamicBranding();
 

@@ -1,5 +1,6 @@
 'use client';
 
+import { AdminEntity, AdminCountryHierarchyItem } from "@/types/erp"
 import { useState } from 'react';
 import { Plus, Search, Filter, X, Edit2, ChevronDown, ChevronRight, LayoutGrid, LayoutList, Factory, Package, Save, Loader2 } from "lucide-react";
 import { getCountryHierarchy, createCountry, updateCountry, CountryState } from '@/app/actions/countries';
@@ -13,7 +14,7 @@ type CountryManagerProps = {
 
 export function CountryManager({ countries, categories = [] }: CountryManagerProps) {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingCountry, setEditingCountry] = useState<any>(null);
+    const [editingCountry, setEditingCountry] = useState<AdminEntity | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
@@ -133,7 +134,7 @@ function CountryCard({ country, onEdit }: any) {
 
 function CountryRow({ country, onEdit }: any) {
     const [isExpanded, setIsExpanded] = useState(false);
-    const [data, setData] = useState<any>(null);
+    const [data, setData] = useState<AdminCountryHierarchyItem[] | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
     const toggleExpand = async (e: React.MouseEvent) => {
