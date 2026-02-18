@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useTransition, useMemo } from "react"
+import type { Payment, FinancialAccount, AgingBucket, ContactBalance } from '@/types/erp'
 import { getPayments, recordSupplierPayment, recordCustomerReceipt, getAgedReceivables, getAgedPayables, getCustomerBalances, getSupplierBalances } from "@/app/actions/finance/payments"
 import { getFinancialAccounts } from "@/app/actions/finance/financial-accounts"
 import { Card, CardContent } from "@/components/ui/card"
@@ -42,12 +43,12 @@ const METHOD_ICONS: Record<string, any> = {
 }
 
 export default function PaymentsPage() {
-    const [payments, setPayments] = useState<any[]>([])
-    const [accounts, setAccounts] = useState<any[]>([])
-    const [agedAR, setAgedAR] = useState<any[]>([])
-    const [agedAP, setAgedAP] = useState<any[]>([])
-    const [customerBalances, setCustomerBalances] = useState<any[]>([])
-    const [supplierBalances, setSupplierBalances] = useState<any[]>([])
+    const [payments, setPayments] = useState<Payment[]>([])
+    const [accounts, setAccounts] = useState<FinancialAccount[]>([])
+    const [agedAR, setAgedAR] = useState<AgingBucket[]>([])
+    const [agedAP, setAgedAP] = useState<AgingBucket[]>([])
+    const [customerBalances, setCustomerBalances] = useState<ContactBalance[]>([])
+    const [supplierBalances, setSupplierBalances] = useState<ContactBalance[]>([])
     const [loading, setLoading] = useState(true)
     const [dialogOpen, setDialogOpen] = useState(false)
     const [paymentType, setPaymentType] = useState<'SUPPLIER_PAYMENT' | 'CUSTOMER_RECEIPT'>('SUPPLIER_PAYMENT')
