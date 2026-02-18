@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useTransition, useMemo } from "react"
+import type { PurchaseReturn } from '@/types/erp'
 import { getPurchaseReturns, completePurchaseReturn } from "@/app/actions/pos/returns"
 import { Card, CardContent } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -25,7 +26,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
 }
 
 export default function PurchaseReturnsPage() {
-    const [returns, setReturns] = useState<any[]>([])
+    const [returns, setReturns] = useState<PurchaseReturn[]>([])
     const [loading, setLoading] = useState(true)
     const [searchQuery, setSearchQuery] = useState("")
     const [sortKey, setSortKey] = useState<SortKey>('return_date')

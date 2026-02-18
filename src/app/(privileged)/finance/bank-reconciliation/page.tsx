@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from "react"
+import type { FinancialAccount } from '@/types/erp'
 import { getBankAccounts, getBankReconciliation } from "@/app/actions/finance/bank-reconciliation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -19,8 +20,8 @@ function fmt(n: number) {
 }
 
 export default function BankReconciliationPage() {
-    const [accounts, setAccounts] = useState<any[]>([])
-    const [detail, setDetail] = useState<any>(null)
+    const [accounts, setAccounts] = useState<FinancialAccount[]>([])
+    const [detail, setDetail] = useState<Record<string, unknown> | null>(null)
     const [loading, setLoading] = useState(true)
     const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null)
     const [search, setSearch] = useState('')

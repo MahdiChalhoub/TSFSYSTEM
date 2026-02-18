@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useTransition } from "react"
+import type { ProfitDistribution, FiscalYear } from '@/types/erp'
 import { getProfitDistributions, calculateDistribution, createDistribution, postDistribution } from "@/app/actions/finance/profit-distribution"
 import { getFiscalYears } from "@/app/actions/finance/fiscal-year"
 import { Card, CardContent } from "@/components/ui/card"
@@ -17,8 +18,8 @@ import {
 } from "lucide-react"
 
 export default function ProfitDistributionPage() {
-    const [distributions, setDistributions] = useState<any[]>([])
-    const [fiscalYears, setFiscalYears] = useState<any[]>([])
+    const [distributions, setDistributions] = useState<ProfitDistribution[]>([])
+    const [fiscalYears, setFiscalYears] = useState<FiscalYear[]>([])
     const [loading, setLoading] = useState(true)
     const [wizardOpen, setWizardOpen] = useState(false)
     const [wizardStep, setWizardStep] = useState(1)
@@ -28,7 +29,7 @@ export default function ProfitDistributionPage() {
         REINVESTMENT: 20,
         DISTRIBUTABLE: 70
     })
-    const [preview, setPreview] = useState<any>(null)
+    const [preview, setPreview] = useState<Record<string, unknown> | null>(null)
     const [isPending, startTransition] = useTransition()
 
     useEffect(() => { loadData() }, [])

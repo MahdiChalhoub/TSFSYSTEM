@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from "react"
+import type { AuditTrailResponse } from '@/types/erp'
 import { getAuditLogs } from "@/app/actions/finance/audit-trail"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -23,7 +24,7 @@ const ACTION_CONFIG: Record<string, { icon: any, color: string, bg: string }> = 
 }
 
 export default function AuditTrailPage() {
-    const [data, setData] = useState<any>({ results: [], count: 0 })
+    const [data, setData] = useState<AuditTrailResponse>({ results: [], count: 0 })
     const [loading, setLoading] = useState(true)
     const [page, setPage] = useState(1)
     const [search, setSearch] = useState('')

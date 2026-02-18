@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useTransition, useMemo } from "react"
+import type { SalesReturn } from '@/types/erp'
 import { getSalesReturns, approveSalesReturn, cancelSalesReturn, getCreditNotes } from "@/app/actions/pos/returns"
 import { Card, CardContent } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -28,8 +29,8 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
 }
 
 export default function SalesReturnsPage() {
-    const [returns, setReturns] = useState<any[]>([])
-    const [creditNotes, setCreditNotes] = useState<any[]>([])
+    const [returns, setReturns] = useState<SalesReturn[]>([])
+    const [creditNotes, setCreditNotes] = useState<Record<string, unknown>[]>([])
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState<ActiveTab>('RETURNS')
     const [searchQuery, setSearchQuery] = useState("")

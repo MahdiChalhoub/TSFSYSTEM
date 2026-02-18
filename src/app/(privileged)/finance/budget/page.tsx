@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from "react"
+import type { ChartOfAccount } from '@/types/erp'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
@@ -15,7 +16,7 @@ function fmt(n: number) {
 }
 
 export default function BudgetPlanningPage() {
-    const [accounts, setAccounts] = useState<any[]>([])
+    const [accounts, setAccounts] = useState<ChartOfAccount[]>([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => { loadData() }, [])

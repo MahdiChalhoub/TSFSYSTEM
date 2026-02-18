@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useTransition } from 'react'
+import type { ChartOfAccount } from '@/types/erp'
 import { ChevronRight, ChevronDown, Plus, Folder, FolderOpen, FileText, RefreshCcw, Library, Zap, Eye, EyeOff, Power, Pencil, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { recalculateAccountBalances } from '@/app/actions/finance/ledger'
@@ -134,7 +135,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: any[] }) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [isAdding, setIsAdding] = useState(false)
-    const [editingAccount, setEditingAccount] = useState<any | null>(null)
+    const [editingAccount, setEditingAccount] = useState<ChartOfAccount | null>(null)
     const [preselectedParentId, setPreselectedParentId] = useState<number | undefined>(undefined)
     const [showInactive, setShowInactive] = useState(false)
 
