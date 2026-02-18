@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from "react"
+import type { FinancialEvent } from '@/types/erp'
 import { getFinancialEvents } from "@/app/actions/finance/financial-events"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -42,7 +43,7 @@ const STATUS_COLOR: Record<string, string> = {
 }
 
 export default function FinancialEventsPage() {
-    const [events, setEvents] = useState<any[]>([])
+    const [events, setEvents] = useState<FinancialEvent[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
     const [typeFilter, setTypeFilter] = useState<string | null>(null)

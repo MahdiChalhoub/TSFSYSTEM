@@ -49,6 +49,7 @@ export interface JournalEntry {
     lines: JournalLine[]
     created_at?: string
     created_by?: string
+    [key: string]: unknown
 }
 
 export interface JournalLine {
@@ -159,7 +160,10 @@ export interface FinancialEvent {
     amount: number
     date: string
     status?: string
+    reference?: string
+    notes?: string
     metadata?: Record<string, unknown>
+    [key: string]: unknown
 }
 
 export interface Asset {
@@ -198,29 +202,49 @@ export interface DepreciationScheduleItem {
 export interface DeferredExpense {
     id: number
     name: string
+    description?: string
+    category?: string
     total_amount: number
+    monthly_amount?: number
+    remaining_amount?: number
+    months_recognized?: number
     start_date: string
-    end_date: string
+    end_date?: string
+    duration_months?: number
     periods: number
     account_id?: number
     account_name?: string
+    source_account_id?: number
     status: string
+    [key: string]: unknown
 }
 
 export interface TaxGroup {
     id: number
     name: string
     rate: number
+    description?: string
+    is_active?: boolean
+    is_default?: boolean
     total_collected: number
     total_paid: number
     net: number
+    [key: string]: unknown
 }
 
 export interface TaxSummary {
     total_collected: number
     total_paid: number
     net_liability: number
+    net_revenue?: number
     period: string
+    sales?: {
+        total?: number
+        tax?: number
+        count?: number
+        discount?: number
+    }
+    [key: string]: unknown
 }
 
 export interface ProfitDistribution {

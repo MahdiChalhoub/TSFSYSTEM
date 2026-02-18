@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from "react"
+import type { ChartOfAccount, JournalEntry } from '@/types/erp'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
@@ -15,8 +16,8 @@ function fmt(n: number) {
 }
 
 export default function RevenueBreakdownPage() {
-    const [accounts, setAccounts] = useState<any[]>([])
-    const [journals, setJournals] = useState<any[]>([])
+    const [accounts, setAccounts] = useState<ChartOfAccount[]>([])
+    const [journals, setJournals] = useState<JournalEntry[]>([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => { loadData() }, [])
