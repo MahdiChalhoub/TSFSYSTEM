@@ -17,14 +17,14 @@ At C:\Program Files\nodejs\npx.ps1:29 char:3
    Error
  
   Creating an optimized production build ...
-Γ£ô Compiled successfully in 19.1s
+Γ£ô Compiled successfully in 19.5s
   Skipping validation of types
   Collecting page data using 11 workers ...
   Generating static pages using 11 workers (0/10) ...
   Generating static pages using 11 workers (2/10) 
   Generating static pages using 11 workers (4/10) 
   Generating static pages using 11 workers (7/10) 
-Γ£ô Generating static pages using 11 workers (10/10) in 569.9ms
+Γ£ô Generating static pages using 11 workers (10/10) in 550.5ms
   Finalizing page optimization ...
 
 Route (app)

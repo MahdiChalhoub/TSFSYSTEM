@@ -325,7 +325,7 @@ export const MENU_ITEMS = [
         icon: Settings,
         module: 'core',
         children: [
-            { title: 'Sites & Branches', path: '/settings/sites' },
+            { title: 'Sites & Branches', path: '/settings/sites', visibility: 'saas' },
             { title: 'Roles & Permissions', path: '/settings/roles' },
             { title: 'Security Settings', path: '/settings/security', icon: Shield },
             { title: 'Billing & Subscription', path: '/subscription', icon: CreditCard },
