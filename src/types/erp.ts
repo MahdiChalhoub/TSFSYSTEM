@@ -1199,3 +1199,23 @@ export interface AppUser {
     role?: string
     [key: string]: unknown
 }
+
+// ─── Auth Action State ──────────────────────────────────────────
+
+export interface AuthActionState {
+    error?: {
+        root?: string | string[]
+        username?: string | string[]
+        email?: string | string[]
+        password?: string | string[]
+        role_id?: string | string[]
+        [key: string]: unknown
+    }
+    success?: boolean
+    message?: string
+    challenge_id?: string
+    two_factor_required?: boolean
+    _username?: string
+    _slug?: string
+    [key: string]: unknown
+}
