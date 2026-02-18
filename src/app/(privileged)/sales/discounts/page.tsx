@@ -219,7 +219,7 @@ export default function DiscountRulesPage() {
                 <Card className="border-l-4 border-l-green-500">
                     <CardContent className="py-4">
                         <p className="text-xs text-gray-500 uppercase">Total Redemptions</p>
-                        <p className="text-2xl font-bold">{rules.reduce((s, r) => s + (r.times_used || 0), 0)}</p>
+                        <p className="text-2xl font-bold">{rules.reduce((s, r) => s + (Number(r.times_used) || 0), 0)}</p>
                     </CardContent>
                 </Card>
                 <Card className="border-l-4 border-l-blue-500">
@@ -300,7 +300,7 @@ export default function DiscountRulesPage() {
                                         <Select value={form.product} onValueChange={v => setForm({ ...form, product: v })}>
                                             <SelectTrigger><SelectValue placeholder="Select product..." /></SelectTrigger>
                                             <SelectContent>
-                                                {products.map(p => <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>)}
+                                                {products.map(p => <SelectItem key={String(p.id)} value={String(p.id)}>{String(p.name)}</SelectItem>)}
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -382,8 +382,8 @@ export default function DiscountRulesPage() {
             {/* List */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {rules.map(rule => {
-                    const cfg = TYPE_CONFIG[rule.discount_type] || TYPE_CONFIG.PERCENTAGE
-                    const scope = SCOPE_CONFIG[rule.scope] || SCOPE_CONFIG.ORDER
+                    const cfg = TYPE_CONFIG[rule.discount_type ?? ''] || TYPE_CONFIG.PERCENTAGE
+                    const scope = SCOPE_CONFIG[rule.scope ?? ''] || SCOPE_CONFIG.ORDER
                     const Icon = cfg.icon
                     const ScopeIcon = scope.icon
                     const isValid = rule.is_active // Simplified checking on client
@@ -419,7 +419,7 @@ export default function DiscountRulesPage() {
                                         <span className="text-gray-400">Value</span>
                                         <span className="font-bold">
                                             {rule.discount_type === 'PERCENTAGE' ? `${rule.value}%` :
-                                                rule.discount_type === 'FIXED' ? fmt(parseFloat(rule.value)) :
+                                                rule.discount_type === 'FIXED' ? fmt(parseFloat(String(rule.value ?? 0))) :
                                                     `Buy ${rule.value} Get 1 Free`}
                                         </span>
                                     </div>
@@ -434,7 +434,7 @@ export default function DiscountRulesPage() {
                                     </div>
                                     <div className="flex justify-between text-xs">
                                         <span className="text-gray-400">Usage</span>
-                                        <span className="font-medium text-indigo-600">{rule.times_used} / {rule.usage_limit || '\u221E'}</span>
+                                        <span className="font-medium text-indigo-600">{String(rule.times_used ?? 0)} / {rule.usage_limit ? String(rule.usage_limit) : '\u221E'}</span>
                                     </div>
                                 </div>
 
@@ -483,12 +483,12 @@ export default function DiscountRulesPage() {
                                 {usageLogs.map(log => (
                                     <div key={log.id} className="p-3 border rounded-lg hover:bg-gray-50 flex items-center justify-between group">
                                         <div className="space-y-1">
-                                            <p className="text-sm font-bold">Order #{log.order_ref || log.order}</p>
-                                            <p className="text-[10px] text-gray-400">{new Date(log.applied_at).toLocaleString('fr-FR')}</p>
+                                            <p className="text-sm font-bold">Order #{String(log.order_ref || log.order)}</p>
+                                            <p className="text-[10px] text-gray-400">{new Date(String(log.applied_at || '')).toLocaleString('fr-FR')}</p>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-sm font-bold text-red-600">-{fmt(parseFloat(log.discount_amount))}</p>
-                                            <p className="text-[9px] text-gray-400">Applied by: {log.applied_by_name || 'System'}</p>
+                                            <p className="text-sm font-bold text-red-600">-{fmt(parseFloat(String(log.discount_amount ?? 0)))}</p>
+                                            <p className="text-[9px] text-gray-400">Applied by: {String(log.applied_by_name || 'System')}</p>
                                         </div>
                                     </div>
                                 ))}

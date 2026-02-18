@@ -59,14 +59,14 @@ export default function PurchaseDashboardPage() {
         return items.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     }, [orders, statusFilter, search])
 
-    const totalValue = orders.reduce((s, o) => s + parseFloat(o.total_amount || 0), 0)
+    const totalValue = orders.reduce((s, o) => s + parseFloat(String(o.total_amount || 0)), 0)
     const completedOrders = orders.filter(o => o.status === 'COMPLETED')
-    const completedValue = completedOrders.reduce((s, o) => s + parseFloat(o.total_amount || 0), 0)
+    const completedValue = completedOrders.reduce((s, o) => s + parseFloat(String(o.total_amount || 0)), 0)
     const pendingOrders = orders.filter(o => o.status === 'PENDING' || o.status === 'CONFIRMED')
-    const pendingValue = pendingOrders.reduce((s, o) => s + parseFloat(o.total_amount || 0), 0)
+    const pendingValue = pendingOrders.reduce((s, o) => s + parseFloat(String(o.total_amount || 0)), 0)
 
     const statusCounts: Record<string, number> = {}
-    orders.forEach(o => { statusCounts[o.status] = (statusCounts[o.status] || 0) + 1 })
+    orders.forEach(o => { statusCounts[o.status ?? ''] = (statusCounts[o.status ?? ''] || 0) + 1 })
 
     if (loading && orders.length === 0) {
         return (

@@ -684,10 +684,13 @@ export interface PurchaseOrder {
 export interface PurchaseOrderLine {
     id?: number
     product_id: number
+    product?: number
     product_name?: string
     quantity: number
     unit_price: number
     total: number
+    qty_received?: number
+    [key: string]: unknown
 }
 
 export interface PurchaseReturn {

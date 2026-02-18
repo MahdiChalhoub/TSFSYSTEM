@@ -96,10 +96,10 @@ export default function SalesReturnsPage() {
                                         </Link>
                                     </TableCell>
                                     <TableCell className="text-sm font-semibold text-gray-700">{ret.customer_name || 'N/A'}</TableCell>
-                                    <TableCell className="text-right font-black text-gray-900">{fmt(parseFloat(ret.total_refund || 0))}</TableCell>
+                                    <TableCell className="text-right font-black text-gray-900">{fmt(parseFloat(String(ret.total_refund || 0)))}</TableCell>
                                     <TableCell>
-                                        <Badge className={`text-[10px] font-bold uppercase tracking-tighter ${STATUS_CONFIG[ret.status]?.color}`}>
-                                            {STATUS_CONFIG[ret.status]?.label || ret.status}
+                                        <Badge className={`text-[10px] font-bold uppercase tracking-tighter ${STATUS_CONFIG[ret.status ?? '']?.color}`}>
+                                            {STATUS_CONFIG[ret.status ?? '']?.label || ret.status}
                                         </Badge>
                                     </TableCell>
                                     <TableCell className="text-right">
