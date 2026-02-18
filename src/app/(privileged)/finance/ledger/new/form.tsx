@@ -4,6 +4,7 @@ import { useState, useTransition, useMemo } from 'react'
 import { createJournalEntry, updateJournalEntry } from '@/app/actions/finance/ledger'
 import { useRouter } from 'next/navigation'
 import { Plus, Trash2, Save, FileText, Send, CheckCircle2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 // Helper to find the correct Fiscal Year/Period for a date
 function findFiscalContext(date: string, years: any[]) {
@@ -121,13 +122,13 @@ export default function JournalEntryForm({ accounts, fiscalYears, initialEntry }
 
     const handleAction = async (status: 'DRAFT' | 'POSTED') => {
         if (status === 'POSTED' && !isBalanced) {
-            alert('Cannot post an unbalanced entry.')
+            toast.error('Cannot post an unbalanced entry.')
             return
         }
 
         const { yearId, periodId } = findFiscalContext(header.transactionDate, fiscalYears)
         if (!yearId) {
-            alert('No active Fiscal Year found for this date.')
+            toast.error('No active Fiscal Year found for this date.')
             return
         }
 
@@ -157,7 +158,7 @@ export default function JournalEntryForm({ accounts, fiscalYears, initialEntry }
                 router.push('/finance/ledger')
                 router.refresh()
             } catch (err: any) {
-                alert(err.message)
+                toast.error(err.message)
             }
         })
     }

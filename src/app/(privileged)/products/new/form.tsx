@@ -8,6 +8,7 @@ import { getBrandsByCategory } from '@/app/actions/brands';
 import { getAttributesByCategory } from '@/app/actions/attributes';
 
 import { CategorySelector } from '@/components/admin/CategorySelector';
+import { toast } from 'sonner';
 
 export default function AddProductForm({
     categories,
@@ -338,7 +339,7 @@ export default function AddProductForm({
                                             const input = document.getElementsByName('barcode')[0] as HTMLInputElement;
                                             input.value = res.code;
                                         } else {
-                                            alert('Failed to generate: ' + res.error);
+                                            toast.error('Failed to generate: ' + res.error);
                                         }
                                         if (btn) btn.innerText = 'Generate';
                                     }}

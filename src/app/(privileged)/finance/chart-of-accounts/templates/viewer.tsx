@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { ChevronRight, ChevronDown, CheckCircle2, LayoutGrid, Columns, Undo2, Library, Zap, FileText, ShieldCheck } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { importChartOfAccountsTemplate } from '@/app/actions/finance/coa-templates'
+import { toast } from 'sonner'
 
 export default function CoaTemplatesLibrary({ templates }: { templates: any }) {
     const [selectedTemplates, setSelectedTemplates] = useState<string[]>([])
@@ -26,10 +27,10 @@ export default function CoaTemplatesLibrary({ templates }: { templates: any }) {
         setIsPending(true)
         try {
             await importChartOfAccountsTemplate(key as any, { reset })
-            alert(`Successfully imported ${key}`)
+            toast.success(`Successfully imported ${key}`)
             router.push('/finance/chart-of-accounts')
         } catch (e: any) {
-            alert('Error: ' + e.message)
+            toast.error('Error: ' + e.message)
         } finally {
             setIsPending(false)
         }

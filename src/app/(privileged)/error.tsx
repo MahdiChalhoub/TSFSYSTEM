@@ -36,7 +36,7 @@ export default function PrivilegedError({
                     className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-6 rounded-2xl font-black shadow-lg shadow-emerald-200 transition-all flex gap-3"
                 >
                     <RotateCcw size={18} />
-                    Retry Uplink
+                    Try Again
                 </Button>
                 <Button
                     variant="outline"

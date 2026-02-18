@@ -5,6 +5,7 @@ import { ArrowRight, AlertCircle, RefreshCcw, CheckCircle2, ChevronRight, Zap, L
 import { migrateBalances, importChartOfAccountsTemplate } from '@/app/actions/finance/coa-templates'
 import { getChartOfAccounts } from '@/app/actions/finance/accounts'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
 export default function CoaMigrationTool({
     currentAccounts,
@@ -38,7 +39,7 @@ export default function CoaMigrationTool({
                 setTargetAccounts(allAccounts)
                 setStep(2)
             } catch (err: any) {
-                alert('Error preparing target: ' + err.message)
+                toast.error('Error preparing target: ' + err.message)
             }
         })
     }
@@ -67,7 +68,7 @@ export default function CoaMigrationTool({
         }))
 
         if (mappingArray.length === 0 && accountsWithBalance.length > 0) {
-            alert("No mappings defined.")
+            toast.error("No mappings defined.")
             return
         }
 
@@ -79,11 +80,11 @@ export default function CoaMigrationTool({
                         description: `COA Migration to ${selectedTemplate} - ${new Date().toLocaleDateString()}`
                     })
                 }
-                alert('Success! System switched to the new standard.')
+                toast.success('Success! System switched to the new standard.')
                 router.push('/finance/chart-of-accounts')
                 router.refresh()
             } catch (err: any) {
-                alert('Migration Error: ' + err.message)
+                toast.error('Migration Error: ' + err.message)
             }
         })
     }

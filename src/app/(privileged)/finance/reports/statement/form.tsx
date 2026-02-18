@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { FileText, Calendar, Search } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface Props {
     accounts: any[]
@@ -29,7 +30,7 @@ export default function StatementGenerator({ accounts, fiscalYears }: Props) {
         e.preventDefault()
 
         if (!selectedAccountId) {
-            alert("Please select an account")
+            toast.error("Please select an account")
             return
         }
 

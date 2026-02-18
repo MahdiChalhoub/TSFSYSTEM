@@ -16,6 +16,7 @@ import {
     ArrowLeft, Search, CheckCircle2, AlertTriangle, ShieldCheck,
     Loader2, Sparkles, XCircle, Package
 } from "lucide-react"
+import { toast } from 'sonner'
 
 // ─── Types ───────────────────────────────────────────────────────
 interface Line {
@@ -133,7 +134,7 @@ export default function VerifyPage() {
         startTransition(async () => {
             const result = await adjustSession(sessionId)
             if (result?.adjustment_order_id) {
-                alert(`Adjustment order created (${result.adjustments_created} lines). You can review it in Adjustment Orders.`)
+                toast.success(`Adjustment order created (${result.adjustments_created} lines). You can review it in Adjustment Orders.`)
             }
             reload()
         })

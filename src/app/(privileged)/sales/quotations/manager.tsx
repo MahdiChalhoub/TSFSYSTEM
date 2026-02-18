@@ -13,6 +13,7 @@ import {
     sendQuotation, acceptQuotation, rejectQuotation,
     convertQuotationToOrder,
 } from '@/app/actions/quotations'
+import { toast } from 'sonner'
 
 interface Contact { id: number; name: string }
 interface Product { id: number; sku: string; name: string; selling_price_ttc: number; tva_rate: number }
@@ -139,7 +140,7 @@ export default function QuotationManager({
             if (action === 'convert' && res.quotation) {
                 setQuotations(prev => prev.map(q => q.id === selected.id ? res.quotation : q))
                 setSelected(res.quotation)
-                alert(`Order created: ${res.ref_code}`)
+                toast.success(`Order created: ${res.ref_code}`)
             } else {
                 await refreshQuotation(selected.id)
             }

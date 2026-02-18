@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input"
 import { ContactPicker } from "@/components/finance/contact-picker"
 import { ArrowLeft } from "lucide-react"
+import { toast } from 'sonner'
 import Link from "next/link"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
@@ -27,7 +28,7 @@ export default function NewLoanPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!formData.contactId || !formData.principal) {
-            alert("Partner and Principal Amount are required")
+            toast.error("Partner and Principal Amount are required")
             return
         }
 
@@ -48,7 +49,7 @@ export default function NewLoanPage() {
             }
         } catch (error: any) {
             console.error(error)
-            alert("Failed to create contract: " + (error.message || "Unknown error"))
+            toast.error("Failed to create contract: " + (error.message || "Unknown error"))
         } finally {
             setLoading(false)
         }

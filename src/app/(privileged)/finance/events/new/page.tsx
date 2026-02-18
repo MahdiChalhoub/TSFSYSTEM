@@ -73,7 +73,7 @@ export default function NewFinancialEventPage() {
         e.preventDefault()
         if (!selectedType) return
         if (!formData.contactId || !formData.amount || !formData.targetAccountId) {
-            alert("Please fill in all required fields (including Account)")
+            toast.error("Please fill in all required fields (including Account)")
             return
         }
 
@@ -100,7 +100,7 @@ export default function NewFinancialEventPage() {
             }
         } catch (error) {
             console.error(error)
-            alert("Failed to create event")
+            toast.error("Failed to create event")
         } finally {
             setLoading(false)
         }

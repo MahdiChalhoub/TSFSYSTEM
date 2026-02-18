@@ -227,7 +227,7 @@ export async function loginAction(prevState: any, formData: FormData) {
 
     } catch (error: any) {
         console.error('Login Tactical Error:', error)
-        let message = `${PLATFORM_CONFIG.name} Uplink Failure`
+        let message = `${PLATFORM_CONFIG.name} Login Failed`
         try {
             const errData = JSON.parse(error.message)
             if (errData.non_field_errors) message = errData.non_field_errors[0]

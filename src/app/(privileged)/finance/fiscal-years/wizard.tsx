@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createFiscalYear } from '@/app/actions/finance/fiscal-year'
+import { toast } from 'sonner'
 
 export default function FiscalYearWizard({ lastCreatedYear }: { lastCreatedYear?: any }) {
     const [isOpen, setIsOpen] = useState(false)
@@ -70,7 +71,7 @@ export default function FiscalYearWizard({ lastCreatedYear }: { lastCreatedYear?
             })
             setIsOpen(false)
         } catch (err: any) {
-            alert(err.message)
+            toast.error(err.message)
         } finally {
             setIsPending(false)
         }

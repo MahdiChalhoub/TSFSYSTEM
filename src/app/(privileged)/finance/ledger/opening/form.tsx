@@ -3,6 +3,7 @@
 import { useState, useTransition, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, Trash2, Calculator, Save, AlertTriangle } from 'lucide-react'
+import { toast } from 'sonner'
 import { createOpeningBalanceEntry } from '@/app/actions/finance/ledger'
 
 interface Props {
@@ -117,7 +118,7 @@ export default function OpeningBalanceForm({ accounts }: Props) {
         })
 
         if (linesToPost.length === 0) {
-            alert('Please enter at least one balance.')
+            toast.error('Please enter at least one balance.')
             return
         }
 
@@ -129,10 +130,10 @@ export default function OpeningBalanceForm({ accounts }: Props) {
                     description: "Initial Opening Balance Import",
                     autoBalance: true // Use new auto-balance feature
                 })
-                alert('Success! Opening balances updated.')
+                toast.success('Opening balances updated.')
                 router.push('/finance/chart-of-accounts')
             } catch (e: any) {
-                alert('Error: ' + e.message)
+                toast.error('Error: ' + e.message)
             }
         })
     }

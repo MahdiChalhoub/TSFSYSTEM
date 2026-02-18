@@ -5,6 +5,7 @@ import { createProductGroupWithVariants, updateProductGroup, VariantInput } from
 import { getBrandsByCategory } from '@/app/actions/brands';
 import { Plus, Trash2, Save, Loader2, Globe, Box, Copy } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 type Props = {
     brands: any[];
@@ -117,7 +118,7 @@ export function GroupedProductForm({ brands, categories, units, countries, initi
     const handleSubmit = async () => {
         setPending(true);
         if (!master.name || !master.brandId || !master.baseUnitId) {
-            alert("Please fill master fields (Name, Brand, Unit)");
+            toast.error("Please fill master fields (Name, Brand, Unit)");
             setPending(false);
             return;
         }
@@ -160,7 +161,7 @@ export function GroupedProductForm({ brands, categories, units, countries, initi
         if (result.message === 'success') {
             router.push(initialGroup ? `/inventory/brands/${master.brandId}` : '/inventory');
         } else {
-            alert(result.message);
+            toast.error(result.message);
         }
         setPending(false);
     };

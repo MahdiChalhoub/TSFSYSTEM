@@ -277,7 +277,7 @@ const MENU_ITEMS = [
         children: [
             { title: 'Employee Manager', path: '/hr/employees' },
             { title: 'Payroll Summary', path: '/hr/payroll' },
-            { title: 'Enlistment Approvals', path: '/users/approvals' },
+            { title: 'Pending Approvals', path: '/users/approvals' },
         ]
     },
     {
@@ -420,7 +420,7 @@ export function Sidebar({
                     </div>
                     <div>
                         <h1 className="text-xl font-bold text-white tracking-tight leading-none">{PLATFORM_CONFIG.name}</h1>
-                        <p className="text-xs text-emerald-400 font-medium mt-1.5">{isSaas ? 'Federation Admin' : 'Workspace Admin'}</p>
+                        <p className="text-xs text-emerald-400 font-medium mt-1.5">{isSaas ? 'Platform Admin' : 'Workspace Admin'}</p>
                     </div>
                 </div>
 

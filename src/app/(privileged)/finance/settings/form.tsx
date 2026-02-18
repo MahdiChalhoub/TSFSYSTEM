@@ -7,6 +7,7 @@ import { FinancialSettingsState, updateFinancialSettings } from '@/app/actions/f
 import { type Currency } from '@/app/actions/currencies'
 import { ShieldAlert, Target, Lock, GitCompareArrows, X, Pencil, AlertTriangle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
 interface Props {
     settings: FinancialSettingsState
@@ -242,9 +243,9 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
                 await updateFinancialSettings(data)
                 setSettingsAreSaved(true)
                 setIsUnlocked(false)
-                alert('Settings Saved!')
+                toast.success('Settings Saved!')
             } catch (err: any) {
-                alert(err.message)
+                toast.error(err.message)
             }
         })
     }
@@ -254,9 +255,9 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
         startRecalc(async () => {
             try {
                 const res = await recalculateAccountBalances()
-                alert(res.success ? 'Success! All account balances have been recalculated.' : 'Recalculation failed.')
+                toast(res.success ? 'Success! All account balances have been recalculated.' : 'Recalculation failed.', { icon: res.success ? '✅' : '❌' })
             } catch (e: any) {
-                alert('Error: ' + e.message)
+                toast.error('Error: ' + e.message)
             }
         })
     }
@@ -586,10 +587,10 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
                                         try {
                                             const { wipeAllOperationalData } = await import('@/app/actions/finance/system')
                                             await wipeAllOperationalData()
-                                            alert("System has been completely wiped to a Fresh Version.")
+                                            toast.success("System has been completely wiped to a Fresh Version.")
                                             router.refresh()
                                         } catch (e: any) {
-                                            alert("Error: " + e.message)
+                                            toast.error("Error: " + e.message)
                                         }
                                     })
                                 }}
@@ -616,10 +617,10 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
                                         try {
                                             const { seedTestData } = await import('@/app/actions/finance/system')
                                             await seedTestData()
-                                            alert("Test data has been successfully seeded!")
+                                            toast.success("Test data has been successfully seeded!")
                                             router.refresh()
                                         } catch (e: any) {
-                                            alert("Error: " + e.message)
+                                            toast.error("Error: " + e.message)
                                         }
                                     })
                                 }}

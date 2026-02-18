@@ -23,6 +23,7 @@ import { getFinancialDashboardStats } from '@/app/actions/finance/dashboard'
 import { useAdmin } from '@/context/AdminContext'
 import { useTransition, useEffect } from 'react'
 import clsx from 'clsx'
+import { toast } from 'sonner'
 
 export default function FinanceDashboardViewer({ initialStats }: { initialStats: any }) {
     const { viewScope } = useAdmin()
@@ -258,11 +259,11 @@ function InventoryIntegrityCard({ status }: { status: any }) {
         try {
             const res = await syncInventoryValueToLedger()
             if (res.success) {
-                alert(res.message)
+                toast.success(res.message)
                 window.location.reload()
             }
         } catch (e: any) {
-            alert(e.message)
+            toast.error(e.message)
         } finally {
             setIsSyncing(false)
         }

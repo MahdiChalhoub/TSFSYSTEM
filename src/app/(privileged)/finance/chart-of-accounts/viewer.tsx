@@ -4,6 +4,7 @@ import { useState, useMemo, useTransition } from 'react'
 import { ChevronRight, ChevronDown, Plus, Folder, FolderOpen, FileText, RefreshCcw, Library, Zap, Eye, EyeOff, Power, Pencil, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { recalculateAccountBalances } from '@/app/actions/finance/ledger'
+import { toast } from 'sonner'
 
 // Recursive Tree Node Component
 const AccountNode = ({ node, level, accounts }: { node: any, level: number, accounts: any[] }) => {
@@ -174,7 +175,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: any[] }) {
                 setPreselectedParentId(undefined)
                 router.refresh()
             } catch (e: any) {
-                alert('Error: ' + e.message)
+                toast.error('Error: ' + e.message)
             }
         })
     }
@@ -192,7 +193,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: any[] }) {
                 await reactivateChartOfAccount(id)
                 router.refresh()
             } catch (e: any) {
-                alert('Error: ' + e.message)
+                toast.error('Error: ' + e.message)
             }
         })
     }
@@ -227,7 +228,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: any[] }) {
                 setEditingAccount(null)
                 router.refresh()
             } catch (err: any) {
-                alert('Update Error: ' + err.message)
+                toast.error('Update Error: ' + err.message)
             }
         })
     }
@@ -272,7 +273,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: any[] }) {
                             startTransition(async () => {
                                 await recalculateAccountBalances()
                                 router.refresh()
-                                alert('System balances recalculated successfully.')
+                                toast.success('System balances recalculated successfully.')
                             })
                         }}
                         disabled={isPending}

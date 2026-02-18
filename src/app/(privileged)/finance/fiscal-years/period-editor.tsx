@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { X } from 'lucide-react'
+import { toast } from 'sonner'
 import { updatePeriod } from '@/app/actions/finance/fiscal-year'
 
 interface Props {
@@ -28,7 +29,7 @@ export default function PeriodEditor({ period, onClose }: Props) {
             })
             onClose()
         } catch (err: any) {
-            alert(err.message)
+            toast.error(err.message)
         } finally {
             setIsPending(false)
         }
