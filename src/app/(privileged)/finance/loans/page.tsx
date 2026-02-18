@@ -38,7 +38,7 @@ export default async function LoansPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {loans.map((loan: any) => (
+                            {loans.map((loan: Record<string, any>) => (
                                 <TableRow key={loan.id}>
                                     <TableCell>{format(loan.startDate, "PPP")}</TableCell>
                                     <TableCell className="font-medium">{loan.contact.name}</TableCell>

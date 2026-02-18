@@ -53,7 +53,7 @@ interface FieldMeta {
     required: boolean;
     sortable: boolean;
     filterable: boolean;
-    choices?: { value: any; label: string }[];
+    choices?: { value: Record<string, any>; label: string }[];
 }
 
 interface UDLEMeta {
@@ -68,8 +68,8 @@ interface UniversalDataTableProps {
     endpoint: string;
     fetcher: (params: string) => Promise<any>;
     metaFetcher: () => Promise<UDLEMeta>;
-    onRowClick?: (row: any) => void;
-    actions?: (row: any) => React.ReactNode;
+    onRowClick?: (row: Record<string, any>) => void;
+    actions?: (row: Record<string, any>) => React.ReactNode;
 }
 
 export function UniversalDataTable({
@@ -103,7 +103,7 @@ export function UniversalDataTable({
                 setSavedViews(views);
 
                 // Apply default view if exists
-                const defaultView = views.find((v: any) => v.is_default);
+                const defaultView = views.find((v: Record<string, any>) => v.is_default);
                 if (defaultView) {
                     applyView(defaultView);
                 } else {
@@ -221,7 +221,7 @@ export function UniversalDataTable({
         );
     };
 
-    const renderCell = (row: any, field: FieldMeta) => {
+    const renderCell = (row: Record<string, any>, field: FieldMeta) => {
         const val = row[field.name];
         if (val === null || val === undefined) return <span className="text-gray-300">-</span>;
 

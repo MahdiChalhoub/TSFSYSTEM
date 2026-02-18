@@ -33,7 +33,7 @@ export default function CustomerInsightsPage() {
                 erpFetch('pos/pos/'),
             ])
             setContacts((Array.isArray(contactsData) ? contactsData : contactsData.results || [])
-                .filter((c: any) => c.type === 'CLIENT' || c.type === 'CUSTOMER' || c.type === 'BOTH'))
+                .filter((c: Record<string, any>) => c.type === 'CLIENT' || c.type === 'CUSTOMER' || c.type === 'BOTH'))
             setOrders(Array.isArray(ordersData) ? ordersData : ordersData.results || [])
         } catch {
             toast.error("Failed to load customer data")
@@ -49,7 +49,7 @@ export default function CustomerInsightsPage() {
             )
             const totalSpent = cOrders.reduce((s, o) => s + parseFloat(o.total_amount || 0), 0)
             const completedOrders = cOrders.filter(o => o.status === 'COMPLETED')
-            const lastOrder = cOrders.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
+            const lastOrder = cOrders.sort((a: Record<string, any>, b: Record<string, any>) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
 
             // Calculate recency in days
             const lastDate = lastOrder?.created_at ? new Date(lastOrder.created_at) : null
@@ -216,7 +216,7 @@ export default function CustomerInsightsPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filtered.map((c: any, i: number) => (
+                                {filtered.map((c: Record<string, any>, i: number) => (
                                     <TableRow key={c.id} className="hover:bg-gray-50/50">
                                         <TableCell className="font-bold text-gray-400">{i + 1}</TableCell>
                                         <TableCell>

@@ -50,8 +50,8 @@ export default function ScopePasswordModal({
             } else {
                 setMessage({ type: 'error', text: result.message });
             }
-        } catch (e: any) {
-            setMessage({ type: 'error', text: e.message || 'Failed' });
+        } catch (e: unknown) {
+            setMessage({ type: 'error', text: (e instanceof Error ? e.message : String(e)) || 'Failed' });
         } finally {
             setSaving(null);
         }

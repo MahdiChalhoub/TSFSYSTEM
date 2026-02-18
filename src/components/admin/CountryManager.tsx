@@ -7,9 +7,9 @@ import { getCountryHierarchy, createCountry, updateCountry, CountryState } from 
 import { useActionState, useEffect } from 'react';
 
 type CountryManagerProps = {
-    countries: any[];
+    countries: Record<string, any>[];
     // Make categories optional in case parent doesn't provide it yet, but we updated parent.
-    categories?: any[];
+    categories?: Record<string, any>[];
 };
 
 export function CountryManager({ countries, categories = [] }: CountryManagerProps) {
@@ -24,12 +24,12 @@ export function CountryManager({ countries, categories = [] }: CountryManagerPro
             c.code.toLowerCase().includes(searchTerm.toLowerCase());
 
         const matchesCategory = selectedCategory === 'all' ||
-            (c.products && c.products.some((p: any) => p.category === Number(selectedCategory)));
+            (c.products && c.products.some((p: Record<string, any>) => p.category === Number(selectedCategory)));
 
         return matchesSearch && matchesCategory;
     });
 
-    const handleEdit = (country: any) => {
+    const handleEdit = (country: Record<string, any>) => {
         setEditingCountry(country);
         setIsModalOpen(true);
     };
@@ -81,7 +81,7 @@ export function CountryManager({ countries, categories = [] }: CountryManagerPro
                                 className="appearance-none pl-9 pr-8 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:border-emerald-500 cursor-pointer min-w-[150px]"
                             >
                                 <option value="all">All Categories</option>
-                                {categories?.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                {categories?.map((c: Record<string, any>) => <option key={c.id} value={c.id}>{c.name}</option>)}
                             </select>
                             <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
                         </div>
@@ -100,7 +100,7 @@ export function CountryManager({ countries, categories = [] }: CountryManagerPro
                 </div>
 
                 <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
-                    {filteredCountries.map((country: any) => (
+                    {filteredCountries.map((country: Record<string, any>) => (
                         viewMode === 'list' ? (
                             <CountryRow key={country.id} country={country} onEdit={handleEdit} />
                         ) : (
@@ -115,7 +115,7 @@ export function CountryManager({ countries, categories = [] }: CountryManagerPro
     );
 }
 
-function CountryCard({ country, onEdit }: any) {
+function CountryCard({ country, onEdit }: Record<string, any>) {
     return (
         <div className="group border border-gray-100 rounded-2xl p-6 hover:shadow-lg transition-all bg-white relative overflow-hidden flex flex-col cursor-pointer hover:border-emerald-200" onClick={() => onEdit(country)}>
             <div className="flex justify-between items-start mb-4">
@@ -132,7 +132,7 @@ function CountryCard({ country, onEdit }: any) {
     );
 }
 
-function CountryRow({ country, onEdit }: any) {
+function CountryRow({ country, onEdit }: Record<string, any>) {
     const [isExpanded, setIsExpanded] = useState(false);
     const [data, setData] = useState<AdminCountryHierarchyItem[] | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -170,7 +170,7 @@ function CountryRow({ country, onEdit }: any) {
                     {isLoading && <div className="text-center py-4 text-emerald-600"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-current inline-block"></div></div>}
                     {!isLoading && data && (
                         <div className="space-y-4 pl-0 md:pl-12">
-                            {data.map((brand: any) => (
+                            {data.map((brand: Record<string, any>) => (
                                 <div key={brand.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
                                     <div className="px-4 py-2 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100 flex justify-between items-center">
                                         <div className="flex items-center gap-2">
@@ -180,7 +180,7 @@ function CountryRow({ country, onEdit }: any) {
                                         <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Stock: {brand.totalStock}</span>
                                     </div>
                                     <div className="divide-y divide-gray-50">
-                                        {brand.products.map((p: any) => (
+                                        {brand.products.map((p: Record<string, any>) => (
                                             <div key={p.id} className="px-4 py-2 flex justify-between items-center text-sm hover:bg-gray-50">
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-1.5 h-1.5 rounded-full bg-gray-200"></div>
@@ -204,7 +204,7 @@ function CountryRow({ country, onEdit }: any) {
     );
 }
 
-function CountryFormModal({ isOpen, onClose, country }: { isOpen: boolean, onClose: () => void, country?: any }) {
+function CountryFormModal({ isOpen, onClose, country }: { isOpen: boolean, onClose: () => void, country?: Record<string, any> }) {
     const initialState: CountryState = { message: '', errors: {} };
     const [state, formAction] = useActionState(country ? updateCountry.bind(null, country.id) : createCountry, initialState);
     const [pending, setPending] = useState(false);

@@ -91,9 +91,9 @@ export async function createProduct(prevState: ProductFormState, formData: FormD
             headers: { 'Content-Type': 'application/json' }
         });
 
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Backend Create Error:", e);
-        return { message: e.message || 'System Error: Failed to Create Product.' };
+        return { message: (e instanceof Error ? e.message : String(e)) || 'System Error: Failed to Create Product.' };
     }
 
     // 4. Revalidate & Redirect

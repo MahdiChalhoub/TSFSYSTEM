@@ -9,9 +9,9 @@ import { CategoryCascader } from './CategoryCascader';
 type CategoryFormModalProps = {
     isOpen: boolean;
     onClose: () => void;
-    category?: any; // If provided, it's edit mode
+    category?: Record<string, any>; // If provided, it's edit mode
     parentId?: number | null; // For adding children directly
-    potentialParents?: any[]; // For generic creation
+    potentialParents?: Record<string, any>[]; // For generic creation
 };
 
 const initialState: CategoryState = { message: '', errors: {} };
@@ -23,7 +23,7 @@ export function CategoryFormModal({ isOpen, onClose, category, parentId, potenti
     // Filter available parents to avoid loops
     // 1. Cannot be itself
     // 2. Cannot be one of its own descendants
-    const getDescendants = (id: number, allCats: any[]) => {
+    const getDescendants = (id: number, allCats: Record<string, any>[]) => {
         const descendants = new Set<number>();
         const stack = [id];
         while (stack.length > 0) {

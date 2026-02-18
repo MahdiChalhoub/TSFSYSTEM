@@ -356,7 +356,7 @@ export function Sidebar({
                 ]);
 
                 if (Array.isArray(modules)) {
-                    setInstalledModules(new Set(modules.map((m: any) => m.code)));
+                    setInstalledModules(new Set(modules.map((m: Record<string, unknown>) => m.code as string)));
                 }
 
                 if (Array.isArray(sidebarData)) {
@@ -369,7 +369,7 @@ export function Sidebar({
                             ...item,
                             icon: getIcon(item.icon),
                             path: item.path && !item.path.startsWith('/saas') ? `/saas${prefix}${item.path}` : item.path,
-                            children: item.children?.map((c: any) => ({
+                            children: item.children?.map((c: SidebarDynamicItem) => ({
                                 ...c,
                                 icon: c.icon ? getIcon(c.icon) : undefined,
                                 path: c.path && !c.path.startsWith('/saas') ? `/saas${prefix}${c.path}` : c.path,
@@ -393,7 +393,7 @@ export function Sidebar({
         if (!isSaas && item.visibility === 'saas') return false;
 
         // 2. Filter by Installed Module
-        if (item.module && item.module !== 'core' && !installedModules.has(item.module)) {
+        if (item.module && item.module !== 'core' && !installedModules.has(String(item.module))) {
             return false;
         }
         return true;
@@ -496,8 +496,8 @@ function MenuItem({
     installedModules,
     level = 0
 }: {
-    item: any,
-    openTab: any,
+    item: Record<string, any>,
+    openTab: Record<string, any>,
     activeTab: string,
     installedModules: Set<string>,
     level?: number
@@ -511,13 +511,13 @@ function MenuItem({
     const hasChildren = item.children && item.children.length > 0;
 
     // 2. Recursive Active State Detection
-    const checkActive = (it: any): boolean => {
+    const checkActive = (it: SidebarDynamicItem): boolean => {
         if (it.path === activeTab) return true;
-        if (it.children) return it.children.some((c: any) => checkActive(c));
+        if (it.children) return it.children.some((c: SidebarDynamicItem) => checkActive(c));
         return false;
     };
 
-    const isChildActive = hasChildren && item.children.some((child: any) => checkActive(child));
+    const isChildActive = hasChildren && item.children.some((child: SidebarDynamicItem) => checkActive(child));
     const isActive = activeTab === item.path;
 
     // 3. Expansion Logic
@@ -568,7 +568,7 @@ function MenuItem({
 
             {hasChildren && expanded && (
                 <div className="ml-6 pl-4 border-l border-gray-800/50 my-1.5 space-y-1">
-                    {item.children.map((child: any, idx: number) => (
+                    {item.children.map((child: Record<string, any>, idx: number) => (
                         <MenuItem
                             key={idx}
                             item={child}

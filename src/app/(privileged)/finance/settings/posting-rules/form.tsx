@@ -11,7 +11,7 @@ export default function PostingRulesForm({
     accounts
 }: {
     initialConfig: PostingRulesConfig,
-    accounts: any[]
+    accounts: Record<string, any>[]
 }) {
     const [config, setConfig] = useState<PostingRulesConfig>(() => {
         // Ensure all sections exist to prevent "Cannot read properties of undefined"

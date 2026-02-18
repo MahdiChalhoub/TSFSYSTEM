@@ -6,7 +6,7 @@
  * This replaces direct DOM event usage and enables decoupled module communication.
  */
 
-type EventHandler = (...args: any[]) => void;
+type EventHandler = (...args: Record<string, any>[]) => void;
 
 const listeners = new Map<string, Set<EventHandler>>();
 
@@ -21,7 +21,7 @@ export const events = {
         listeners.get(event)?.delete(handler);
     },
 
-    emit(event: string, ...args: any[]): void {
+    emit(event: string, ...args: Record<string, any>[]): void {
         listeners.get(event)?.forEach(handler => {
             try { handler(...args); }
             catch (e) { console.error(`[Engine.events] Error in handler for "${event}":`, e); }
@@ -29,7 +29,7 @@ export const events = {
     },
 
     once(event: string, handler: EventHandler): () => void {
-        const wrappedHandler: EventHandler = (...args: any[]) => {
+        const wrappedHandler: EventHandler = (...args: Record<string, any>[]) => {
             handler(...args);
             events.off(event, wrappedHandler);
         };

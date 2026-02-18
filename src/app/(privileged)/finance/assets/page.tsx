@@ -63,13 +63,13 @@ export default function AssetsPage() {
                 setDialogOpen(false)
                 toast.success("Asset acquired successfully")
                 loadData()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to create asset")
+            } catch (err: unknown) {
+                toast.error((err instanceof Error ? err.message : String(err)) || "Failed to create asset")
             }
         })
     }
 
-    async function viewSchedule(asset: any) {
+    async function viewSchedule(asset: Record<string, any>) {
         setSelectedAsset(asset)
         try {
             const s = await getAssetSchedule(asset.id)
@@ -87,8 +87,8 @@ export default function AssetsPage() {
                 toast.success("Depreciation posted")
                 viewSchedule(selectedAsset)
                 loadData()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to post depreciation")
+            } catch (err: unknown) {
+                toast.error((err instanceof Error ? err.message : String(err)) || "Failed to post depreciation")
             }
         })
     }
@@ -105,7 +105,7 @@ export default function AssetsPage() {
     const totalBook = assets.reduce((s, a) => s + Number(a.book_value || 0), 0)
     const fullyDepreciated = assets.filter(a => a.status === "FULLY_DEPRECIATED").length
 
-    const statusConfig: Record<string, { icon: any; color: string; bg: string }> = {
+    const statusConfig: Record<string, { icon: Record<string, any>; color: string; bg: string }> = {
         ACTIVE: { icon: CheckCircle2, color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
         FULLY_DEPRECIATED: { icon: AlertTriangle, color: "text-stone-600", bg: "bg-stone-100 border-stone-200" },
         DISPOSED: { icon: XCircle, color: "text-rose-700", bg: "bg-rose-50 border-rose-200" },
@@ -183,7 +183,7 @@ export default function AssetsPage() {
                                 <label className="text-xs font-bold text-stone-500 uppercase">Source Account</label>
                                 <select name="source_account_id" className="w-full px-3 py-2 border rounded-xl bg-background text-sm">
                                     <option value="">Select account...</option>
-                                    {accounts.map((a: any) => <option key={a.id} value={a.id}>{a.name} ({a.type})</option>)}
+                                    {accounts.map((a: Record<string, any>) => <option key={a.id} value={a.id}>{a.name} ({a.type})</option>)}
                                 </select>
                             </div>
                             <div className="col-span-2 space-y-1.5">
@@ -285,7 +285,7 @@ export default function AssetsPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {filteredAssets.map((asset: any) => {
+                        {filteredAssets.map((asset: Record<string, any>) => {
                             const depTotal = Number(asset.purchase_value) - Number(asset.residual_value || 0)
                             const depPct = depTotal > 0 ? Math.round((Number(asset.accumulated_depreciation) / depTotal) * 100) : 100
                             const sc = statusConfig[asset.status] || statusConfig.ACTIVE
@@ -379,7 +379,7 @@ export default function AssetsPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {schedule.map((line: any) => (
+                                {schedule.map((line: Record<string, any>) => (
                                     <TableRow key={line.id} className="hover:bg-stone-50/50 transition-colors">
                                         <TableCell className="text-sm text-stone-600">{line.period_date}</TableCell>
                                         <TableCell className="text-right text-sm font-semibold">{Number(line.amount).toLocaleString()}</TableCell>

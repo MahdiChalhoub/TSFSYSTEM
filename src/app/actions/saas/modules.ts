@@ -26,7 +26,7 @@ export async function getActiveModules() {
     try {
         const modules = await erpFetch('modules/')
         if (Array.isArray(modules)) {
-            return modules.filter((m: any) => m.status === 'INSTALLED').map((m: any) => m.code)
+            return modules.filter((m: Record<string, any>) => m.status === 'INSTALLED').map((m: Record<string, any>) => m.code)
         }
         return []
     } catch (e) {
@@ -42,8 +42,8 @@ export async function syncModulesGlobal() {
         })
         revalidatePath('/modules')
         return data
-    } catch (e: any) {
-        return { error: e.message }
+    } catch (e: unknown) {
+        return { error: (e instanceof Error ? e.message : String(e)) }
     }
 }
 
@@ -54,8 +54,8 @@ export async function installModuleGlobal(code: string) {
         })
         revalidatePath('/modules')
         return data
-    } catch (e: any) {
-        return { error: e.message }
+    } catch (e: unknown) {
+        return { error: (e instanceof Error ? e.message : String(e)) }
     }
 }
 
@@ -66,8 +66,8 @@ export async function uninstallModuleGlobal(code: string) {
         })
         revalidatePath('/modules')
         return data
-    } catch (e: any) {
-        return { error: e.message }
+    } catch (e: unknown) {
+        return { error: (e instanceof Error ? e.message : String(e)) }
     }
 }
 
@@ -80,9 +80,9 @@ export async function deleteModule(code: string) {
 
         revalidatePath('/modules')
         return data
-    } catch (e: any) {
-        console.error(`[deleteModule] Error:`, e.message)
-        return { error: e.message }
+    } catch (e: unknown) {
+        console.error(`[deleteModule] Error:`, (e instanceof Error ? e.message : String(e)))
+        return { error: (e instanceof Error ? e.message : String(e)) }
     }
 }
 
@@ -105,8 +105,8 @@ export async function rollbackModule(code: string, targetVersion: string) {
         })
         revalidatePath('/modules')
         return data
-    } catch (e: any) {
-        return { error: e.message }
+    } catch (e: unknown) {
+        return { error: (e instanceof Error ? e.message : String(e)) }
     }
 }
 
@@ -123,9 +123,9 @@ export async function uploadModule(formData: FormData) {
 
         revalidatePath('/modules')
         return res
-    } catch (e: any) {
-        console.error(`[uploadModule] Error:`, e.message)
-        return { error: e.message }
+    } catch (e: unknown) {
+        console.error(`[uploadModule] Error:`, (e instanceof Error ? e.message : String(e)))
+        return { error: (e instanceof Error ? e.message : String(e)) }
     }
 }
 
@@ -146,8 +146,8 @@ export async function toggleOrgModule(orgId: string, moduleCode: string, action:
         })
         revalidatePath('/organizations')
         return data
-    } catch (e: any) {
-        return { error: e.message }
+    } catch (e: unknown) {
+        return { error: (e instanceof Error ? e.message : String(e)) }
     }
 }
 
@@ -159,7 +159,7 @@ export async function updateOrgModuleFeatures(orgId: string, moduleCode: string,
         })
         revalidatePath('/organizations')
         return data
-    } catch (e: any) {
-        return { error: e.message }
+    } catch (e: unknown) {
+        return { error: (e instanceof Error ? e.message : String(e)) }
     }
 }

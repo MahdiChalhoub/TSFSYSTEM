@@ -14,7 +14,7 @@ export async function getRoles() {
     }
 }
 
-export async function createContact(prevState: any, formData: FormData) {
+export async function createContact(prevState: Record<string, any>, formData: FormData) {
     try {
         const type = formData.get('type') as string || 'CUSTOMER';
         const data: Record<string, any> = {
@@ -37,12 +37,12 @@ export async function createContact(prevState: any, formData: FormData) {
         }
         await erpFetch('contacts/', { method: 'POST', body: JSON.stringify(data) });
         return { success: true, message: 'Contact created successfully' };
-    } catch (e: any) {
-        return { success: false, message: e.message || 'Failed to create contact' };
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to create contact' };
     }
 }
 
-export async function createEmployee(prevState: any, formData: FormData) {
+export async function createEmployee(prevState: Record<string, any>, formData: FormData) {
     try {
         const data = {
             first_name: formData.get('firstName'),
@@ -57,8 +57,8 @@ export async function createEmployee(prevState: any, formData: FormData) {
         };
         await erpFetch('employees/', { method: 'POST', body: JSON.stringify(data) });
         return { success: true, message: 'Employee created successfully' };
-    } catch (e: any) {
-        return { success: false, message: e.message || 'Failed to create employee' };
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to create employee' };
     }
 }
 
@@ -73,8 +73,8 @@ export async function setScopePassword(userId: string, scope: 'official' | 'inte
             body: JSON.stringify({ scope, pin }),
         });
         return { success: true, message: result.message || `${scope} password ${pin ? 'set' : 'cleared'}` };
-    } catch (e: any) {
-        return { success: false, message: e.message || 'Failed to update scope password' };
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to update scope password' };
     }
 }
 
@@ -100,7 +100,7 @@ export async function linkGLAccount(employeeId: string, employeeType?: 'EMPLOYEE
                 name: result.linked_account_name
             }
         };
-    } catch (e: any) {
-        return { success: false, message: e.message || 'Failed to link GL account' };
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to link GL account' };
     }
 }

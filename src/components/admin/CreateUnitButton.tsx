@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { UnitFormModal } from './UnitFormModal';
 
-export function CreateUnitButton({ potentialParents = [] }: { potentialParents?: any[] }) {
+export function CreateUnitButton({ potentialParents = [] }: { potentialParents?: Record<string, any>[] }) {
     const [isOpen, setIsOpen] = useState(false);
 
     return (

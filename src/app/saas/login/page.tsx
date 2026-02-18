@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Command } from "lucide-react";
 import { PLATFORM_CONFIG } from "@/lib/branding";
 
-const initialState: { error: any; success?: boolean } = {
+const initialState: { error: Record<string, any>; success?: boolean } = {
     error: {},
 };
 

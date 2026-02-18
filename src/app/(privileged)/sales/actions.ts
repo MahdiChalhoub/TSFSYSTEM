@@ -4,7 +4,7 @@ import { erpFetch } from "@/lib/erp-api";
 import { revalidatePath } from "next/cache";
 
 // Cache for frequently accessed data (server-side)
-let productsCache: any[] | null = null;
+let productsCache: Record<string, any>[] | null = null;
 let cacheTimestamp: number = 0;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache
 
@@ -50,7 +50,7 @@ export async function getCategories() {
 }
 
 export async function processSale(data: {
-    cart: any[],
+    cart: Record<string, any>[],
     paymentMethod: string,
     totalAmount: number,
     scope?: string,
@@ -76,8 +76,8 @@ export async function processSale(data: {
         });
 
         return { success: true, orderId: response.order_id, ref: response.ref || "POS-WEB" };
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("POS Checkout Error:", e);
-        throw new Error(e.message || "Checkout Failed");
+        throw new Error((e instanceof Error ? e.message : String(e)) || "Checkout Failed");
     }
 }

@@ -7,7 +7,7 @@ import { importChartOfAccountsTemplate } from '@/app/actions/finance/coa-templat
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
-export default function CoaTemplatesLibrary({ templates }: { templates: any }) {
+export default function CoaTemplatesLibrary({ templates }: { templates: Record<string, any> }) {
     const [selectedTemplates, setSelectedTemplates] = useState<string[]>([])
     const [isPending, setIsPending] = useState(false)
     const router = useRouter()
@@ -36,8 +36,8 @@ export default function CoaTemplatesLibrary({ templates }: { templates: any }) {
             await importChartOfAccountsTemplate(key as any, { reset })
             toast.success(`Successfully imported ${key}`)
             router.push('/finance/chart-of-accounts')
-        } catch (e: any) {
-            toast.error('Error: ' + e.message)
+        } catch (e: unknown) {
+            toast.error('Error: ' + (e instanceof Error ? e.message : String(e)))
         } finally {
             setIsPending(false)
         }
@@ -157,7 +157,7 @@ export default function CoaTemplatesLibrary({ templates }: { templates: any }) {
                                 </div>
                                 <div className="flex-1 overflow-y-auto p-6 max-h-[600px] custom-scrollbar">
                                     <div className="space-y-1">
-                                        {templates[key].map((item: any, i: number) => (
+                                        {templates[key].map((item: Record<string, any>, i: number) => (
                                             <TemplateComparisonNode key={i} item={item} />
                                         ))}
                                     </div>
@@ -198,7 +198,7 @@ export default function CoaTemplatesLibrary({ templates }: { templates: any }) {
     )
 }
 
-function TemplateComparisonNode({ item, level = 0 }: any) {
+function TemplateComparisonNode({ item, level = 0 }: Record<string, any>) {
     const [open, setOpen] = useState(level < 1) // Open top level by default
     const hasChildren = item.children && item.children.length > 0
 
@@ -243,7 +243,7 @@ function TemplateComparisonNode({ item, level = 0 }: any) {
             </button>
             {hasChildren && open && (
                 <div className="flex flex-col">
-                    {item.children.map((child: any, i: number) => (
+                    {item.children.map((child: Record<string, any>, i: number) => (
                         <TemplateComparisonNode key={i} item={child} level={level + 1} />
                     ))}
                 </div>

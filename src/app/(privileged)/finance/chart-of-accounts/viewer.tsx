@@ -9,7 +9,7 @@ import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 // Recursive Tree Node Component
-const AccountNode = ({ node, level, accounts }: { node: any, level: number, accounts: any[] }) => {
+const AccountNode = ({ node, level, accounts }: { node: Record<string, any>, level: number, accounts: Record<string, any>[] }) => {
     const isParent = node.children && node.children.length > 0
     const [isOpen, setIsOpen] = useState(level < 1) // Only open first level by default
 
@@ -122,7 +122,7 @@ const AccountNode = ({ node, level, accounts }: { node: any, level: number, acco
             {/* Render Children */}
             {isParent && isOpen && (
                 <div className="animate-in fade-in slide-in-from-top-1 duration-200">
-                    {node.children.map((child: any) => (
+                    {node.children.map((child: Record<string, any>) => (
                         <AccountNode key={child.id} node={child} level={level + 1} accounts={accounts} />
                     ))}
                 </div>
@@ -131,7 +131,7 @@ const AccountNode = ({ node, level, accounts }: { node: any, level: number, acco
     )
 }
 
-export function ChartOfAccountsViewer({ accounts }: { accounts: any[] }) {
+export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, any>[] }) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [isAdding, setIsAdding] = useState(false)
@@ -143,12 +143,12 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: any[] }) {
     const tree = useMemo(() => {
         const filtered = showInactive ? accounts : accounts.filter(a => a.isActive)
 
-        const dataMap: any = {}
+        const dataMap: Record<string, any> = {}
         filtered.forEach(acc => {
             dataMap[acc.id] = { ...acc, children: [] }
         })
 
-        const rootNodes: any[] = []
+        const rootNodes: Record<string, any>[] = []
         filtered.forEach(acc => {
             if (acc.parentId && dataMap[acc.parentId]) {
                 dataMap[acc.parentId].children.push(dataMap[acc.id])
@@ -176,8 +176,8 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: any[] }) {
                 setIsAdding(false)
                 setPreselectedParentId(undefined)
                 router.refresh()
-            } catch (e: any) {
-                toast.error('Error: ' + e.message)
+            } catch (e: unknown) {
+                toast.error('Error: ' + (e instanceof Error ? e.message : String(e)))
             }
         })
     }
@@ -207,8 +207,8 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: any[] }) {
                 try {
                     await reactivateChartOfAccount(pendingAction.id!)
                     router.refresh()
-                } catch (e: any) {
-                    toast.error('Error: ' + e.message)
+                } catch (e: unknown) {
+                    toast.error('Error: ' + (e instanceof Error ? e.message : String(e)))
                 }
             })
         } else if (pendingAction.type === 'recalculate') {
@@ -221,7 +221,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: any[] }) {
         setPendingAction(null)
     }
 
-    const openEditModal = (account: any) => {
+    const openEditModal = (account: Record<string, any>) => {
         setEditingAccount(account)
     }
 
@@ -250,8 +250,8 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: any[] }) {
                 })
                 setEditingAccount(null)
                 router.refresh()
-            } catch (err: any) {
-                toast.error('Update Error: ' + err.message)
+            } catch (err: unknown) {
+                toast.error('Update Error: ' + (err instanceof Error ? err.message : String(err)))
             }
         })
     }
@@ -392,7 +392,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: any[] }) {
                     <div className="w-16"></div>
                 </div>
 
-                {tree.map((node: any) => (
+                {tree.map((node: Record<string, any>) => (
                     <AccountNode key={node.id} node={node} level={0} accounts={accounts} />
                 ))}
 
@@ -427,7 +427,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: any[] }) {
     )
 }
 
-const EditModal = ({ account, accounts, onUpdate, onClose, isPending }: any) => {
+const EditModal = ({ account, accounts, onUpdate, onClose, isPending }: Record<string, any>) => {
     return (
         <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
@@ -474,7 +474,7 @@ const EditModal = ({ account, accounts, onUpdate, onClose, isPending }: any) => 
                             <label className="text-[10px] font-black uppercase text-stone-400 tracking-widest">Parent Node (Hierarchy Position)</label>
                             <select name="parentId" defaultValue={account.parentId || ''} className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-4 focus:ring-black/5 outline-none transition-all font-mono text-sm">
                                 <option value="">[TOP LEVEL ROOT]</option>
-                                {accounts.filter((a: any) => a.id !== account.id).map((a: any) => (
+                                {accounts.filter((a: Record<string, any>) => a.id !== account.id).map((a: Record<string, any>) => (
                                     <option key={a.id} value={a.id}>{a.code} - {a.name}</option>
                                 ))}
                             </select>

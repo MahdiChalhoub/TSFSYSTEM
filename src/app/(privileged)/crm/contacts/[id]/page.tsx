@@ -253,7 +253,7 @@ export default function ContactDetailPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {orders.recent.map((o: any) => (
+                                    {orders.recent.map((o: Record<string, any>) => (
                                         <TableRow key={o.id} className="hover:bg-gray-50/50">
                                             <TableCell className="font-mono text-sm">
                                                 {o.ref_code || `ORD-${o.id}`}
@@ -302,7 +302,7 @@ export default function ContactDetailPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {payments.recent.map((p: any) => (
+                                    {payments.recent.map((p: Record<string, any>) => (
                                         <TableRow key={p.id} className="hover:bg-gray-50/50">
                                             <TableCell className="font-mono text-sm">
                                                 {p.reference || `PAY-${p.id}`}
@@ -348,7 +348,7 @@ export default function ContactDetailPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {journal_entries.map((j: any, idx: number) => (
+                                    {journal_entries.map((j: Record<string, any>, idx: number) => (
                                         <TableRow key={idx} className="hover:bg-gray-50/50">
                                             <TableCell className="font-mono text-sm">
                                                 {j.reference || `JE-${j.id}`}
@@ -395,7 +395,7 @@ export default function ContactDetailPage() {
                                     <p className="text-gray-400 text-sm">No product data available yet.</p>
                                 ) : (
                                     <div className="space-y-2">
-                                        {analytics?.top_products?.map((p: any, i: number) => (
+                                        {analytics?.top_products?.map((p: Record<string, any>, i: number) => (
                                             <div key={i} className="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
                                                 <span className="text-xs font-bold text-gray-400 w-6">#{i + 1}</span>
                                                 <span className="flex-1 font-medium text-sm text-gray-900">{p.product_name}</span>
@@ -420,7 +420,7 @@ export default function ContactDetailPage() {
                                 </div>
                             ) : (
                                 <div className="space-y-3">
-                                    {(pricing_rules ?? []).map((rule: any) => (
+                                    {(pricing_rules ?? []).map((rule: Record<string, any>) => (
                                         <div key={rule.id} className="flex items-center gap-4 bg-gray-50 rounded-xl p-4">
                                             <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${rule.discount_type === 'FIXED_PRICE' ? 'bg-emerald-100 text-emerald-600' :
                                                 rule.discount_type === 'PERCENTAGE' ? 'bg-blue-100 text-blue-600' : 'bg-amber-100 text-amber-600'

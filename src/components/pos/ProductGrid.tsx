@@ -11,7 +11,7 @@ import { useOnlineStatus } from '@/lib/offline/hooks';
 const ITEMS_PER_LOAD = 50; // Load 50 products at a time
 const SEARCH_DEBOUNCE_MS = 300; // Wait 300ms after user stops typing
 
-export function ProductGrid({ searchQuery, onAddToCart }: { searchQuery: string, onAddToCart: (p: any) => void }) {
+export function ProductGrid({ searchQuery, onAddToCart }: { searchQuery: string, onAddToCart: (p: Record<string, any>) => void }) {
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -24,7 +24,7 @@ export function ProductGrid({ searchQuery, onAddToCart }: { searchQuery: string,
     const searchTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
     // Cache products to IndexedDB after successful fetch
-    const cacheToOffline = useCallback(async (data: any[]) => {
+    const cacheToOffline = useCallback(async (data: Record<string, any>[]) => {
         try {
             const offlineData: OfflineProduct[] = data.map(p => ({
                 id: p.id,

@@ -106,8 +106,8 @@ export default function SubscriptionPlansPage() {
                 features: ''
             })
             loadData()
-        } catch (e: any) {
-            toast.error(e.message || "Failed to create plan")
+        } catch (e: unknown) {
+            toast.error((e instanceof Error ? e.message : String(e)) || "Failed to create plan")
         } finally {
             setPlanSaving(false)
         }
@@ -133,8 +133,8 @@ export default function SubscriptionPlansPage() {
             setCatOpen(false)
             setCatForm({ name: '', slug: '', type: 'PUBLIC' })
             loadData()
-        } catch (e: any) {
-            toast.error(e.message || "Failed to create category")
+        } catch (e: unknown) {
+            toast.error((e instanceof Error ? e.message : String(e)) || "Failed to create category")
         } finally {
             setCatSaving(false)
         }
@@ -297,7 +297,7 @@ export default function SubscriptionPlansPage() {
                                 <div className="border-t pt-4">
                                     <Label className="text-sm font-bold text-gray-700 mb-3 block">Enabled Modules</Label>
                                     <div className="grid grid-cols-2 gap-2">
-                                        {availableModules.map((m: any) => (
+                                        {availableModules.map((m: Record<string, any>) => (
                                             <div key={m.code} className="flex items-center gap-2">
                                                 <Checkbox
                                                     id={m.code}
@@ -530,7 +530,7 @@ export default function SubscriptionPlansPage() {
                                             <Label className="text-sm font-bold text-gray-700 mb-3 block">Available for Plans</Label>
                                             <p className="text-xs text-gray-400 mb-2">Leave all unchecked = available to all plans</p>
                                             <div className="grid grid-cols-2 gap-2">
-                                                {plans.map((p: any) => (
+                                                {plans.map((p: Record<string, any>) => (
                                                     <div key={p.id} className="flex items-center gap-2">
                                                         <Checkbox id={`addon-plan-${p.id}`}
                                                             checked={addonForm.plan_ids.includes(p.id)}
@@ -573,7 +573,7 @@ export default function SubscriptionPlansPage() {
 
                         {addons.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                                {addons.map((addon: any) => {
+                                {addons.map((addon: Record<string, any>) => {
                                     const Icon = ADDON_TYPE_ICONS[addon.addon_type] || Package
                                     return (
                                         <Card key={addon.id} className="bg-white shadow-sm hover:shadow-md transition-all border-indigo-100 hover:border-indigo-300">

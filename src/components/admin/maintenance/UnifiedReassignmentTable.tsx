@@ -8,8 +8,8 @@ import { CategoryTreeSelector } from '../CategoryTreeSelector';
 import { toast } from 'sonner';
 
 type Props = {
-    products: any[];
-    targetEntities: any[];
+    products: Record<string, any>[];
+    targetEntities: Record<string, any>[];
     type: 'category' | 'brand' | 'unit' | 'country' | 'attribute';
     currentEntityId: number;
 };
@@ -204,7 +204,7 @@ export function UnifiedReassignmentTable({ products, targetEntities, type, curre
     );
 }
 
-function GroupModal({ isOpen, onClose, productIds, onSuccess }: any) {
+function GroupModal({ isOpen, onClose, productIds, onSuccess }: Record<string, any>) {
     const [groupName, setGroupName] = useState('');
     const [isPending, startTransition] = useTransition();
 
@@ -262,12 +262,12 @@ function GroupModal({ isOpen, onClose, productIds, onSuccess }: any) {
 }
 
 // Sub-component for Grouped List
-function ProductList({ products, selectedProductIds, toggleProduct }: any) {
+function ProductList({ products, selectedProductIds, toggleProduct }: Record<string, any>) {
     const grouped = useMemo(() => {
-        const groups: any = {};
-        const loose: any[] = [];
+        const groups: Record<string, any> = {};
+        const loose: Record<string, any>[] = [];
 
-        products.forEach((p: any) => {
+        products.forEach((p: Record<string, any>) => {
             if (p.productGroup) {
                 const gName = p.productGroup.name;
                 if (!groups[gName]) groups[gName] = { id: p.productGroup.id, name: gName, items: [] };
@@ -281,12 +281,12 @@ function ProductList({ products, selectedProductIds, toggleProduct }: any) {
     }, [products]);
 
     // Calculate totals helper
-    const getStock = (p: any) => p.inventory?.reduce((sum: number, i: any) => sum + Number(i.quantity), 0) || 0;
+    const getStock = (p: Record<string, any>) => p.inventory?.reduce((sum: number, i: Record<string, any>) => sum + Number(i.quantity), 0) || 0;
 
     return (
         <div className="space-y-4">
             {/* Render Groups */}
-            {Object.values(grouped.groups).map((group: any) => (
+            {Object.values(grouped.groups).map((group: Record<string, any>) => (
                 <div key={group.name} className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
                     <div className="bg-gray-50 px-4 py-2 border-b border-gray-100 flex justify-between items-center group-header">
                         <div className="flex items-center gap-2">
@@ -296,7 +296,7 @@ function ProductList({ products, selectedProductIds, toggleProduct }: any) {
                         </div>
                     </div>
                     <div className="divide-y divide-gray-50">
-                        {group.items.map((product: any) => (
+                        {group.items.map((product: Record<string, any>) => (
                             <ProductRow
                                 key={product.id}
                                 product={product}
@@ -314,7 +314,7 @@ function ProductList({ products, selectedProductIds, toggleProduct }: any) {
                     {Object.keys(grouped.groups).length > 0 && (
                         <div className="px-2 py-1 text-xs font-bold text-gray-400 uppercase tracking-widest mt-4">Ungrouped Products</div>
                     )}
-                    {grouped.loose.map((product: any) => (
+                    {grouped.loose.map((product: Record<string, any>) => (
                         <div key={product.id} className="bg-white border border-gray-100 rounded-xl shadow-sm">
                             <ProductRow
                                 product={product}
@@ -329,8 +329,8 @@ function ProductList({ products, selectedProductIds, toggleProduct }: any) {
     );
 }
 
-function ProductRow({ product, isSelected, toggle }: any) {
-    const stock = product.inventory?.reduce((acc: number, item: any) => acc + Number(item.quantity), 0) || 0;
+function ProductRow({ product, isSelected, toggle }: Record<string, any>) {
+    const stock = product.inventory?.reduce((acc: number, item: Record<string, any>) => acc + Number(item.quantity), 0) || 0;
 
     return (
         <div

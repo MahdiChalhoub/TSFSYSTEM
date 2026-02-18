@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 async function getEmployees() {
     try {
         const data = await erpFetch('employees/');
-        return data.map((e: any) => ({
+        return data.map((e: Record<string, any>) => ({
             ...e,
             firstName: e.first_name,
             lastName: e.last_name,
@@ -36,8 +36,8 @@ async function getStandaloneUsers(employeeUserIds: string[]) {
         const users = await erpFetch('users/');
         // Filter users that don't have an Employee record
         return users
-            .filter((u: any) => !employeeUserIds.includes(u.id))
-            .map((u: any) => ({
+            .filter((u: Record<string, any>) => !employeeUserIds.includes(u.id))
+            .map((u: Record<string, any>) => ({
                 id: `user-${u.id}`,
                 firstName: u.first_name || u.username,
                 lastName: u.last_name || '',
@@ -92,7 +92,7 @@ export default async function EmployeesPage() {
     ]);
 
     // Fetch users that don't have Employee records (e.g. superusers)
-    const employeeUserIds = employees.filter((e: any) => e.user).map((e: any) => e.user.id);
+    const employeeUserIds = employees.filter((e: Record<string, any>) => e.user).map((e: Record<string, any>) => e.user.id);
     const standaloneUsers = await getStandaloneUsers(employeeUserIds);
     const allPeople = [...employees, ...standaloneUsers];
 
@@ -121,7 +121,7 @@ export default async function EmployeesPage() {
                         <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Staff</div>
                     </div>
                     <div className="text-center px-8 border-r border-gray-100">
-                        <div className="text-5xl font-black text-indigo-600 tracking-tighter mb-1">{allPeople.filter((e: any) => e.user).length}</div>
+                        <div className="text-5xl font-black text-indigo-600 tracking-tighter mb-1">{allPeople.filter((e: Record<string, any>) => e.user).length}</div>
                         <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">System Access</div>
                     </div>
                     <div className="text-center px-8">

@@ -37,7 +37,7 @@ function healthBg(score: number) {
 
 function statusBadge(status: string | null) {
     if (!status) return { label: 'Available', cls: 'bg-slate-100 text-slate-600 ring-slate-200', icon: CheckCircle2 }
-    const map: Record<string, { label: string; cls: string; icon: any }> = {
+    const map: Record<string, { label: string; cls: string; icon: Record<string, any> }> = {
         PENDING: { label: 'Requested', cls: 'bg-blue-50 text-blue-700 ring-blue-200', icon: Clock },
         APPROVED: { label: 'Approved', cls: 'bg-indigo-50 text-indigo-700 ring-indigo-200', icon: CheckCircle2 },
         CONVERTED: { label: 'Order Created', cls: 'bg-emerald-50 text-emerald-700 ring-emerald-200', icon: FileText },
@@ -49,7 +49,7 @@ function statusBadge(status: string | null) {
 
 function orderTypeBadge(type: string | null) {
     if (!type) return null
-    const map: Record<string, { label: string; cls: string; icon: any }> = {
+    const map: Record<string, { label: string; cls: string; icon: Record<string, any> }> = {
         stock_adjustment: { label: 'Adjustment', cls: 'bg-purple-50 text-purple-700', icon: BarChart3 },
         stock_transfer: { label: 'Transfer', cls: 'bg-cyan-50 text-cyan-700', icon: Truck },
         purchase_order: { label: 'Purchase', cls: 'bg-amber-50 text-amber-700', icon: ShoppingCart },
@@ -150,8 +150,8 @@ export default function ProductAnalyticsPage() {
     // ── Sort ──
     const sorted = useMemo(() => {
         return [...products].sort((a, b) => {
-            let av: any = (a as any)[sortField]
-            let bv: any = (b as any)[sortField]
+            let av: Record<string, any> = (a as any)[sortField]
+            let bv: Record<string, any> = (b as any)[sortField]
             if (typeof av === 'string') av = av.toLowerCase()
             if (typeof bv === 'string') bv = bv.toLowerCase()
             if (av == null) return 1

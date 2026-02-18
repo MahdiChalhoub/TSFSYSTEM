@@ -67,9 +67,9 @@ export async function createProductGroupWithVariants(
 
         revalidatePath('/products');
         return { message: 'success' };
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error(e);
-        return { message: e.message || 'Failed to create product group.' };
+        return { message: (e instanceof Error ? e.message : String(e)) || 'Failed to create product group.' };
     }
 }
 
@@ -119,9 +119,9 @@ export async function updateProductGroup(
         revalidatePath('/products');
         revalidatePath(`/inventory/brands/${brandId}`);
         return { message: 'success' };
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error(e);
-        return { message: e.message || 'Failed to update product group.' };
+        return { message: (e instanceof Error ? e.message : String(e)) || 'Failed to update product group.' };
     }
 }
 
@@ -136,9 +136,9 @@ export async function linkProductsToGroup(productIds: number[], groupId: number)
         revalidatePath('/products');
         revalidatePath('/inventory/maintenance');
         return { success: true, message: 'Successfully linked products to group.' };
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error(e);
-        return { success: false, message: e.message || 'Failed to link products.' };
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to link products.' };
     }
 }
 
@@ -156,8 +156,8 @@ export async function createGroupFromProducts(
         revalidatePath('/products');
         revalidatePath('/inventory/maintenance');
         return { success: true, message: 'Successfully created group from products.' };
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error(e);
-        return { success: false, message: e.message || 'Failed to create group.' };
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to create group.' };
     }
 }

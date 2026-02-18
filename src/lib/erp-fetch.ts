@@ -61,7 +61,7 @@ export async function erpFetch(
     const method = (rest.method || 'GET').toUpperCase();
     const isReadRequest = method === 'GET' || method === 'HEAD';
 
-    const fetchOpts: any = {
+    const fetchOpts: Record<string, any> = {
         ...rest,
         headers,
     };

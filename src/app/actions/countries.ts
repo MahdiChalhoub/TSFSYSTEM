@@ -24,9 +24,9 @@ export async function createCountry(prevState: CountryState, formData: FormData)
 
         revalidatePath('/inventory/countries');
         return { message: 'success' };
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error(e);
-        return { message: e.message || 'Database Error: Failed to create country.' };
+        return { message: (e instanceof Error ? e.message : String(e)) || 'Database Error: Failed to create country.' };
     }
 }
 
@@ -42,9 +42,9 @@ export async function updateCountry(id: number, prevState: CountryState, formDat
         });
         revalidatePath('/inventory/countries');
         return { message: 'success' };
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error(e);
-        return { message: e.message || 'Failed to update country' };
+        return { message: (e instanceof Error ? e.message : String(e)) || 'Failed to update country' };
     }
 }
 

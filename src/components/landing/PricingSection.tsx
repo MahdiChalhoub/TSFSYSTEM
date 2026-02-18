@@ -16,7 +16,7 @@ export default function PricingSection() {
         async function load() {
             try {
                 const data = await getPublicPlans()
-                setPlans(data.filter((p: any) => p.is_active))
+                setPlans(data.filter((p: Record<string, any>) => p.is_active))
             } catch (e) {
                 console.error(e)
             } finally {

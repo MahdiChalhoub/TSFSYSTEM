@@ -4,7 +4,7 @@ import clsx from 'clsx';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 
-export const SalesStatsWidget = ({ data }: { data: any }) => {
+export const SalesStatsWidget = ({ data }: { data: Record<string, any> }) => {
     const value = data?.totalSales || 0;
     return (
         <div className="card-premium p-6 flex flex-col justify-between group cursor-default min-h-[160px] relative overflow-hidden bg-white rounded-2xl border border-gray-100 shadow-sm">
@@ -26,7 +26,7 @@ export const SalesStatsWidget = ({ data }: { data: any }) => {
     );
 };
 
-export const SalesActiveOrdersWidget = ({ data }: { data: any }) => {
+export const SalesActiveOrdersWidget = ({ data }: { data: Record<string, any> }) => {
     const value = data?.activeOrders || 0;
     return (
         <div className="card-premium p-6 flex flex-col justify-between group cursor-default min-h-[160px] relative overflow-hidden bg-white rounded-2xl border border-gray-100 shadow-sm">
@@ -48,7 +48,7 @@ export const SalesActiveOrdersWidget = ({ data }: { data: any }) => {
     );
 };
 
-export const SalesRecentActivity = ({ data }: { data: any }) => {
+export const SalesRecentActivity = ({ data }: { data: Record<string, any> }) => {
     // Expects activeOrders or latestSales
     const validSales = Array.isArray(data?.latestSales) ? data.latestSales : [];
 
@@ -62,7 +62,7 @@ export const SalesRecentActivity = ({ data }: { data: any }) => {
             </div>
 
             <div className="overflow-y-auto p-2 space-y-1">
-                {validSales.map((sale: any, i: number) => (
+                {validSales.map((sale: Record<string, any>, i: number) => (
                     <div key={i} className="flex items-center justify-between p-3 hovering rounded-xl group cursor-pointer hover:bg-gray-50 transition-colors">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-xs group-hover:scale-110 transition-transform">

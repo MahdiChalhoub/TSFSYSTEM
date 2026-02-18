@@ -6,7 +6,7 @@ export async function diagnoseFinancialDiscrepancy() {
     // TODO: Implement diagnostic logic in Django backend
     // For now return empty issues list to unblock build
     console.warn("diagnoseFinancialDiscrepancy: Backend implementation pending.")
-    const issues: any[] = []
+    const issues: Record<string, any>[] = []
 
     // Example Mock Issue (Commented out)
     /*

@@ -39,7 +39,7 @@ export default function DeliveryZonesPage() {
         }
     }
 
-    function startEdit(zone: any) {
+    function startEdit(zone: Record<string, any>) {
         setEditId(zone.id)
         setForm({
             name: zone.name || '',

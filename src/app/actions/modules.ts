@@ -29,11 +29,11 @@ export async function enableModule(code: string) {
         })
         revalidatePath('/settings/modules')
         return data as { message: string, error?: string }
-    } catch (e: any) {
+    } catch (e: unknown) {
         try {
-            return JSON.parse(e.message)
+            return JSON.parse((e instanceof Error ? e.message : String(e)))
         } catch {
-            return { error: e.message }
+            return { error: (e instanceof Error ? e.message : String(e)) }
         }
     }
 }
@@ -45,11 +45,11 @@ export async function disableModule(code: string) {
         })
         revalidatePath('/settings/modules')
         return data as { message: string, error?: string }
-    } catch (e: any) {
+    } catch (e: unknown) {
         try {
-            return JSON.parse(e.message)
+            return JSON.parse((e instanceof Error ? e.message : String(e)))
         } catch {
-            return { error: e.message }
+            return { error: (e instanceof Error ? e.message : String(e)) }
         }
     }
 }

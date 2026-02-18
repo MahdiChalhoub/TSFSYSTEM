@@ -41,7 +41,7 @@ export default function BarcodeSettingsPage() {
         load();
     }, [setValue]);
 
-    const onSubmit = async (data: any) => {
+    const onSubmit = async (data: Record<string, any>) => {
         setSaving(true);
         setMessage(null);
 

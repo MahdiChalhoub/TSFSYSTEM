@@ -74,7 +74,7 @@ export default function FiscalYearsPage() {
             )}
 
             <div className="space-y-6">
-                {years.map((y: any, idx: number) => (
+                {years.map((y: Record<string, any>, idx: number) => (
                     <FiscalYearCard
                         key={y.id}
                         year={y}

@@ -7,7 +7,7 @@ type OperationResult = {
     module: string;
     details: string;
     timestamp: Date;
-    data?: any;
+    data?: Record<string, any>;
     status?: 'SUCCESS' | 'FAILURE' | 'PENDING';
 };
 

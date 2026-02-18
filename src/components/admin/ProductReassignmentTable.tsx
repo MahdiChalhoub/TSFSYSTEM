@@ -7,8 +7,8 @@ import { moveProducts } from '@/app/actions/categories';
 import { toast } from 'sonner';
 
 type Props = {
-    products: any[];
-    categories: any[]; // For the target selector
+    products: Record<string, any>[];
+    categories: Record<string, any>[]; // For the target selector
     currentCategoryId: number; // To disable current category in target selector (optional)
 };
 
@@ -21,7 +21,7 @@ type CategoryNode = {
 };
 
 // Helper (duplicated for client simplicity, could export shared)
-function buildCategoryTree(flatCategories: any[]): CategoryNode[] {
+function buildCategoryTree(flatCategories: Record<string, any>[]): CategoryNode[] {
     const categoryMap = new Map<number, CategoryNode>();
     const roots: CategoryNode[] = [];
 

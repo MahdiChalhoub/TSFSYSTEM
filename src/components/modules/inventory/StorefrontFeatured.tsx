@@ -28,7 +28,7 @@ export default async function StorefrontFeatured() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                     {products.length === 0 && <p>No products featured at this time.</p>}
 
-                    {products.map((product: any) => (
+                    {products.map((product: Record<string, any>) => (
                         <div key={product.id} className="card" style={{ padding: '0', overflow: 'hidden', border: 'none' }}>
                             <div style={{ height: '220px', background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '6rem', position: 'relative' }}>
                                 <span style={{ filter: 'drop-shadow(0 10px 10px rgba(0,0,0,0.1))', transition: 'transform 0.3s' }} className="product-emoji">

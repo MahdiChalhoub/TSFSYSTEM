@@ -25,7 +25,7 @@ export default async function MaintenancePage(props: {
     const entities = await getMaintenanceEntities(tab as any);
 
     // 2. Fetch Products (if active)
-    let products: any[] = [];
+    let products: Record<string, any>[] = [];
     let currentEntityName = `Select ${tab.charAt(0).toUpperCase() + tab.slice(1)}`;
 
     if (activeId) {
@@ -47,7 +47,7 @@ export default async function MaintenancePage(props: {
     }
 
     // Helper to find entity in flat list OR tree
-    function findEntityRecursive(list: any[], id: number): any {
+    function findEntityRecursive(list: Record<string, any>[], id: number): Record<string, any> {
         for (const item of list) {
             if (item.id === id) return item;
             if (item.children) {
@@ -138,7 +138,7 @@ export default async function MaintenancePage(props: {
     );
 }
 
-function TabLink({ currentTab, targetTab, icon: Icon, label }: any) {
+function TabLink({ currentTab, targetTab, icon: Icon, label }: Record<string, any>) {
     const isActive = currentTab === targetTab;
     return (
         <Link

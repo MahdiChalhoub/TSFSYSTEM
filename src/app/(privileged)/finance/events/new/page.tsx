@@ -15,7 +15,7 @@ import { toast } from "sonner" // Assuming sonner or similar toast exists, other
 
 type EventType = 'PARTNER_CAPITAL_INJECTION' | 'PARTNER_LOAN' | 'PARTNER_WITHDRAWAL' | 'REFUND_RECEIVED'
 
-const EVENT_TYPES: { id: EventType; label: string; icon: any; description: string }[] = [
+const EVENT_TYPES: { id: EventType; label: string; icon: Record<string, any>; description: string }[] = [
     {
         id: 'PARTNER_CAPITAL_INJECTION',
         label: "Capital Injection",

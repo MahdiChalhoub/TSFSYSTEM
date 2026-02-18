@@ -19,7 +19,7 @@ type UnitNode = {
     needs_balance?: boolean;
 };
 
-export function UnitTree({ units, potentialParents = [] }: { units: UnitNode[], potentialParents?: any[] }) {
+export function UnitTree({ units, potentialParents = [] }: { units: UnitNode[], potentialParents?: Record<string, any>[] }) {
     return (
         <div className="space-y-4">
             {units.map((unit) => (
@@ -29,7 +29,7 @@ export function UnitTree({ units, potentialParents = [] }: { units: UnitNode[], 
     );
 }
 
-function UnitTreeNode({ unit, level, potentialParents }: { unit: UnitNode; level: number; potentialParents: any[] }) {
+function UnitTreeNode({ unit, level, potentialParents }: { unit: UnitNode; level: number; potentialParents: Record<string, any>[] }) {
     const [isExpanded, setIsExpanded] = useState(true);
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [isAddChildOpen, setIsAddChildOpen] = useState(false);

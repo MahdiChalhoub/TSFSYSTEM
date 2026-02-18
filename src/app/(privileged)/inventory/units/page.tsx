@@ -12,22 +12,22 @@ async function getUnitsData() {
         const units = await erpFetch('units/');
 
         // Map backend response if needed (UnitSerializer has product_count)
-        const mappedUnits = units.map((u: any) => ({
+        const mappedUnits = units.map((u: Record<string, any>) => ({
             ...u,
             _count: { products: u.product_count || 0 }
         }));
 
         // Build Tree
         const unitMap = new Map();
-        const roots: any[] = [];
+        const roots: Record<string, any>[] = [];
 
         // Initialize Map with empty children array
-        mappedUnits.forEach((u: any) => {
+        mappedUnits.forEach((u: Record<string, any>) => {
             unitMap.set(u.id, { ...u, children: [] });
         });
 
         // Link Children to Parents
-        mappedUnits.forEach((u: any) => {
+        mappedUnits.forEach((u: Record<string, any>) => {
             const node = unitMap.get(u.id);
             if (u.baseUnitId) {
                 const parent = unitMap.get(u.baseUnitId);

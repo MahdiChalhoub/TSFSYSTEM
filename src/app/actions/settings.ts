@@ -48,9 +48,9 @@ export async function saveProductNamingRule(rule: ProductNamingRule) {
         revalidatePath('/products/new');
 
         return { success: true };
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Failed to save naming rule:", e);
-        return { success: false, message: e.message };
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) };
     }
 }
 

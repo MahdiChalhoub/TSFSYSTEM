@@ -39,7 +39,7 @@ export async function createAsset(data: AssetInput) {
         })
         revalidatePath('/finance/assets')
         return { success: true, id: asset.id }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Create Asset Failed", e)
         throw e
     }
@@ -52,7 +52,7 @@ export async function postDepreciation(assetId: number, scheduleId: number) {
         })
         revalidatePath('/finance/assets')
         return { success: true, data: result }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Post Depreciation Failed", e)
         throw e
     }

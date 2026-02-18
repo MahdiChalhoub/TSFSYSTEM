@@ -38,7 +38,7 @@ export async function createLoanContract(data: CreateLoanInput) {
 
         revalidatePath('/finance/loans')
         return { success: true, loanId: loan.id }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Create Loan Failed", e)
         throw e
     }
@@ -54,7 +54,7 @@ export async function disburseLoan(loanId: number, targetAccountId: number) {
         })
         revalidatePath(`/finance/loans/${loanId}`)
         return { success: true }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Disburse Loan Failed", e)
         throw e
     }

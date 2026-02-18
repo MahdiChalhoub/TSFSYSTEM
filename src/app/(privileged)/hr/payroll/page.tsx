@@ -54,7 +54,7 @@ export default function PayrollSummaryPage() {
                 (e.employee_id || '').toLowerCase().includes(s)
             )
         }
-        return items.sort((a: any, b: any) => parseFloat(b.salary || 0) - parseFloat(a.salary || 0))
+        return items.sort((a: Record<string, any>, b: Record<string, any>) => parseFloat(b.salary || 0) - parseFloat(a.salary || 0))
     }, [employees, typeFilter, search])
 
     const totalPayroll = employees.reduce((s, e) => s + parseFloat(e.salary || 0), 0)
@@ -167,7 +167,7 @@ export default function PayrollSummaryPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-2">
-                        {filtered.slice(0, 15).map((e: any) => {
+                        {filtered.slice(0, 15).map((e: Record<string, any>) => {
                             const salary = parseFloat(e.salary || 0)
                             const pct = maxSalary > 0 ? (salary / maxSalary * 100) : 0
                             return (
@@ -204,7 +204,7 @@ export default function PayrollSummaryPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {filtered.map((e: any, i: number) => {
+                            {filtered.map((e: Record<string, any>, i: number) => {
                                 const salary = parseFloat(e.salary || 0)
                                 const pct = totalPayroll > 0 ? (salary / totalPayroll * 100) : 0
                                 return (

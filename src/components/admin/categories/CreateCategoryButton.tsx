@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { CategoryFormModal } from './CategoryFormModal';
 
-export function CreateCategoryButton({ potentialParents = [] }: { potentialParents?: any[] }) {
+export function CreateCategoryButton({ potentialParents = [] }: { potentialParents?: Record<string, any>[] }) {
     const [isOpen, setIsOpen] = useState(false);
 
     return (

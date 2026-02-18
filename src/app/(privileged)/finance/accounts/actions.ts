@@ -32,7 +32,7 @@ export async function createFinancialAccount(data: FinancialAccountInput) {
 
         revalidatePath('/finance/accounts')
         return { success: true, id: result.id, ledgerCode: result.ledger_code }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Failed to create financial account:", error)
         throw error
     }
@@ -47,7 +47,7 @@ export async function assignUserToAccount(userId: number, accountId: number) {
         })
         revalidatePath('/finance/accounts')
         return { success: true }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Failed to assign user:", e);
         throw e;
     }
@@ -62,7 +62,7 @@ export async function unassignUser(userId: number, accountId: number) {
         })
         revalidatePath('/finance/accounts')
         return { success: true }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Failed to unassign user:", e);
         throw e;
     }
@@ -73,9 +73,9 @@ export async function deleteFinancialAccount(id: number) {
         await erpFetch(`accounts/${id}/`, { method: 'DELETE' })
         revalidatePath('/finance/accounts')
         return { success: true }
-    } catch (e: any) {
+    } catch (e: unknown) {
         // Backend should handle "cannot delete if transactions exist" logic and return 400
         console.error("Failed to delete account:", e);
-        throw new Error(e.message || "Failed to delete account");
+        throw new Error((e instanceof Error ? e.message : String(e)) || "Failed to delete account");
     }
 }

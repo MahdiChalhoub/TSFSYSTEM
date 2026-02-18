@@ -23,7 +23,7 @@ interface DiscountRule {
     created_by_name: string | null; created_at: string
 }
 
-const TYPE_CONFIG: Record<string, { label: string; icon: any; color: string }> = {
+const TYPE_CONFIG: Record<string, { label: string; icon: Record<string, any>; color: string }> = {
     PERCENTAGE: { label: 'Percentage', icon: Percent, color: 'bg-blue-100 text-blue-700' },
     FIXED: { label: 'Fixed Amount', icon: Tag, color: 'bg-emerald-100 text-emerald-700' },
     BUY_X_GET_Y: { label: 'Buy X Get Y', icon: Gift, color: 'bg-purple-100 text-purple-700' },
@@ -43,13 +43,13 @@ export default function DiscountManager({
     initialRules, products, categories,
 }: {
     initialRules: DiscountRule[]
-    products: any[]
-    categories: any[]
+    products: Record<string, any>[]
+    categories: Record<string, any>[]
 }) {
     const [rules, setRules] = useState<DiscountRule[]>(initialRules)
     const [showCreate, setShowCreate] = useState(false)
     const [loading, setLoading] = useState(false)
-    const [selectedLog, setSelectedLog] = useState<{ ruleId: number; logs: any[] } | null>(null)
+    const [selectedLog, setSelectedLog] = useState<{ ruleId: number; logs: Record<string, any>[] } | null>(null)
 
     // Create form
     const [form, setForm] = useState({
@@ -252,7 +252,7 @@ export default function DiscountManager({
                                     <select className="w-full px-3 py-2 border rounded-lg text-sm outline-none"
                                         value={form.product} onChange={e => setForm(f => ({ ...f, product: e.target.value }))}>
                                         <option value="">Select product</option>
-                                        {products.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                        {products.map((p: Record<string, any>) => <option key={p.id} value={p.id}>{p.name}</option>)}
                                     </select>
                                 </div>
                             )}
@@ -262,7 +262,7 @@ export default function DiscountManager({
                                     <select className="w-full px-3 py-2 border rounded-lg text-sm outline-none"
                                         value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>
                                         <option value="">Select category</option>
-                                        {categories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                        {categories.map((c: Record<string, any>) => <option key={c.id} value={c.id}>{c.name}</option>)}
                                     </select>
                                 </div>
                             )}
@@ -322,7 +322,7 @@ export default function DiscountManager({
                             <p className="text-center text-gray-400 py-6">No uses recorded yet</p>
                         ) : (
                             <div className="space-y-2 max-h-80 overflow-y-auto">
-                                {selectedLog.logs.map((log: any) => (
+                                {selectedLog.logs.map((log: Record<string, any>) => (
                                     <div key={log.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                                         <div>
                                             <p className="text-sm font-medium">{log.order_ref || `Order #${log.order}`}</p>

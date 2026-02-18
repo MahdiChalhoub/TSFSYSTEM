@@ -141,7 +141,7 @@ export default function TaxReportsPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {taxGroups.map((g: any) => (
+                                {taxGroups.map((g: Record<string, any>) => (
                                     <TableRow key={g.id} className="hover:bg-gray-50/50">
                                         <TableCell className="font-medium">{g.name}</TableCell>
                                         <TableCell className="text-right">

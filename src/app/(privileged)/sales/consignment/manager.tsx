@@ -22,10 +22,10 @@ import { generateConsignmentSettlement } from '@/app/actions/consignment'
 import { toast } from 'sonner'
 
 interface ConsignmentManagerProps {
-    availableStock: any[]
-    pendingItems: any[]
-    settlements: any[]
-    suppliers: any[]
+    availableStock: Record<string, any>[]
+    pendingItems: Record<string, any>[]
+    settlements: Record<string, any>[]
+    suppliers: Record<string, any>[]
 }
 
 export default function ConsignmentManager({
@@ -81,7 +81,7 @@ export default function ConsignmentManager({
     }
 
     // Group items by supplier for the Payout Desk
-    const pendingBySupplier = pendingItems.reduce((acc: any, item) => {
+    const pendingBySupplier = pendingItems.reduce((acc: Record<string, any>, item) => {
         const sId = item.supplier_id || 0
         if (!acc[sId]) {
             acc[sId] = {
@@ -242,7 +242,7 @@ export default function ConsignmentManager({
                                 </CardContent>
                             </Card>
                         )}
-                        {Object.values(pendingBySupplier).map((supplier: any) => (
+                        {Object.values(pendingBySupplier).map((supplier: Record<string, any>) => (
                             <Card key={supplier.id} className="border-none shadow-xl overflow-hidden group">
                                 <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-6 flex justify-between items-center text-white">
                                     <div>
@@ -254,7 +254,7 @@ export default function ConsignmentManager({
                                     </div>
                                     <button
                                         onClick={() => handleGenerateSettlement(supplier.id)}
-                                        disabled={isGenerating || !supplier.items.some((i: any) => selectedItems.includes(i.id))}
+                                        disabled={isGenerating || !supplier.items.some((i: Record<string, any>) => selectedItems.includes(i.id))}
                                         className="bg-white text-gray-900 px-6 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-amber-400 transition-colors disabled:opacity-50"
                                     >
                                         {isGenerating ? "Processing..." : "Generate Settlement"}
@@ -274,7 +274,7 @@ export default function ConsignmentManager({
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-50">
-                                            {supplier.items.map((line: any) => (
+                                            {supplier.items.map((line: Record<string, any>) => (
                                                 <tr key={line.id} className="hover:bg-gray-50/20">
                                                     <td className="px-6 py-4">
                                                         <input

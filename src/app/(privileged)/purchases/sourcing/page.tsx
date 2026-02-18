@@ -21,9 +21,9 @@ export default async function SourcingDashboardPage() {
 
     const stats = {
         totalProducts: data.length,
-        multiVendor: data.filter((d: any) => d.supplier_count > 1).length,
-        avgLeadTime: data.length > 0 ? (data.reduce((acc: number, curr: any) => acc + curr.best_lead_time, 0) / data.length).toFixed(1) : 0,
-        avgSavingsPotential: data.reduce((acc: number, curr: any) => acc + (curr.max_price - curr.min_price), 0)
+        multiVendor: data.filter((d: Record<string, any>) => d.supplier_count > 1).length,
+        avgLeadTime: data.length > 0 ? (data.reduce((acc: number, curr: Record<string, any>) => acc + curr.best_lead_time, 0) / data.length).toFixed(1) : 0,
+        avgSavingsPotential: data.reduce((acc: number, curr: Record<string, any>) => acc + (curr.max_price - curr.min_price), 0)
     };
 
     return (
@@ -80,7 +80,7 @@ export default async function SourcingDashboardPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
-                            {data.map((item: any) => {
+                            {data.map((item: Record<string, any>) => {
                                 const delta = item.max_price - item.min_price;
                                 const pct = item.max_price > 0 ? ((delta / item.max_price) * 100).toFixed(0) : 0;
 

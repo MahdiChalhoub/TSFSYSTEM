@@ -71,8 +71,8 @@ export default function SaaSModulesPage() {
             if (res.error) throw new Error(res.error)
             toast.success(res.message)
             await loadModules()
-        } catch (e: any) {
-            toast.error(e.message)
+        } catch (e: unknown) {
+            toast.error((e instanceof Error ? e.message : String(e)))
         } finally {
             setSyncing(false)
         }
@@ -85,8 +85,8 @@ export default function SaaSModulesPage() {
             if (res.error) throw new Error(res.error)
             toast.success(res.message)
             await loadModules()
-        } catch (e: any) {
-            toast.error(e.message)
+        } catch (e: unknown) {
+            toast.error((e instanceof Error ? e.message : String(e)))
         } finally {
             setSyncing(false)
         }
@@ -99,8 +99,8 @@ export default function SaaSModulesPage() {
             if (res.error) throw new Error(res.error)
             toast.success(res.message)
             await loadModules()
-        } catch (e: any) {
-            toast.error(e.message)
+        } catch (e: unknown) {
+            toast.error((e instanceof Error ? e.message : String(e)))
         } finally {
             setProcessing(null)
         }
@@ -113,8 +113,8 @@ export default function SaaSModulesPage() {
             if (res.error) throw new Error(res.error)
             toast.success(res.message)
             await loadModules()
-        } catch (e: any) {
-            toast.error(e.message)
+        } catch (e: unknown) {
+            toast.error((e instanceof Error ? e.message : String(e)))
         } finally {
             setProcessing(null)
         }
@@ -127,8 +127,8 @@ export default function SaaSModulesPage() {
             if (res.error) throw new Error(res.error)
             toast.success(res.message)
             await loadModules()
-        } catch (e: any) {
-            toast.error(e.message)
+        } catch (e: unknown) {
+            toast.error((e instanceof Error ? e.message : String(e)))
         } finally {
             setProcessing(null)
         }
@@ -147,8 +147,8 @@ export default function SaaSModulesPage() {
             if (res.error) throw new Error(res.error)
             toast.success(res.message)
             await loadModules()
-        } catch (e: any) {
-            toast.error(e.message)
+        } catch (e: unknown) {
+            toast.error((e instanceof Error ? e.message : String(e)))
         } finally {
             setSyncing(false)
             if (fileInputRef.current) fileInputRef.current.value = ''
@@ -162,8 +162,8 @@ export default function SaaSModulesPage() {
             if (res.error) throw new Error(res.error)
             toast.success(res.message)
             await loadModules()
-        } catch (e: any) {
-            toast.error(e.message)
+        } catch (e: unknown) {
+            toast.error((e instanceof Error ? e.message : String(e)))
         } finally {
             setProcessing(null)
         }
@@ -440,7 +440,7 @@ function BackupList({ moduleCode, onRollback, currentVersion }: { moduleCode: st
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        getModuleBackups(moduleCode).then((data: any[]) => {
+        getModuleBackups(moduleCode).then((data: Record<string, any>[]) => {
             setBackups(data)
             setLoading(false)
         }).catch(() => setLoading(false))

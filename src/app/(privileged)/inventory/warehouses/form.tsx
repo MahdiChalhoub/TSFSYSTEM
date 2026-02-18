@@ -8,7 +8,7 @@ export default function WarehouseModal({
     warehouse,
     onClose
 }: {
-    warehouse?: any,
+    warehouse?: Record<string, any>,
     onClose: () => void
 }) {
     const [state, action, isPending] = useActionState(

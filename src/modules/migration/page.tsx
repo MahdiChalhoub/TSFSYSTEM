@@ -64,7 +64,7 @@ type WizardStep = "LIST" | "SOURCE" | "UPLOAD" | "BUSINESSES" | "PREVIEW" | "RUN
 // STATUS VISUALS
 // ─────────────────────────────────────────────────────────────────────────────
 
-const statusConfig: Record<string, { color: string; icon: any; label: string }> = {
+const statusConfig: Record<string, { color: string; icon: Record<string, any>; label: string }> = {
     PENDING: { color: "bg-slate-500/20 text-slate-400 border-slate-500/30", icon: FileUp, label: "Pending" },
     PARSING: { color: "bg-blue-500/20 text-blue-400 border-blue-500/30", icon: Database, label: "Parsing" },
     RUNNING: { color: "bg-amber-500/20 text-amber-400 border-amber-500/30", icon: Loader2, label: "Running" },
@@ -218,8 +218,8 @@ export default function MigrationPage() {
             } finally {
                 setLoadingBusinesses(false)
             }
-        } catch (e: any) {
-            setError(e.message || "Upload failed")
+        } catch (e: unknown) {
+            setError((e instanceof Error ? e.message : String(e)) || "Upload failed")
         } finally {
             setUploading(false)
         }
@@ -234,8 +234,8 @@ export default function MigrationPage() {
             const previewData = await erpFetch(`migration/jobs/${activeJob.id}/preview/?business_id=${biz.id}`)
             setPreview(previewData)
             setStep("PREVIEW")
-        } catch (e: any) {
-            setError(e.message || "Preview failed")
+        } catch (e: unknown) {
+            setError((e instanceof Error ? e.message : String(e)) || "Preview failed")
         }
     }
 
@@ -263,8 +263,8 @@ export default function MigrationPage() {
                 setPreview(data)
                 setStep("PREVIEW")
             }
-        } catch (e: any) {
-            setError(e.message || "Preview failed")
+        } catch (e: unknown) {
+            setError((e instanceof Error ? e.message : String(e)) || "Preview failed")
             setLoadingBusinesses(false)
         }
     }
@@ -274,7 +274,7 @@ export default function MigrationPage() {
         if (!activeJob) return
         setError(null)
         try {
-            const body: any = {
+            const body: Record<string, any> = {
                 migration_mode: syncMode ? "SYNC" : "FULL",
             }
             if (selectedBusiness) {
@@ -287,8 +287,8 @@ export default function MigrationPage() {
             })
             setActiveJob(data)
             setStep("RUNNING")
-        } catch (e: any) {
-            setError(e.message || "Failed to start migration")
+        } catch (e: unknown) {
+            setError((e instanceof Error ? e.message : String(e)) || "Failed to start migration")
         }
     }
 
@@ -304,8 +304,8 @@ export default function MigrationPage() {
             fetchJobs()
             setActiveJob(null)
             setStep("LIST")
-        } catch (e: any) {
-            setError(e.message || "Rollback failed")
+        } catch (e: unknown) {
+            setError((e instanceof Error ? e.message : String(e)) || "Rollback failed")
         }
         setRollbackTarget(null)
     }

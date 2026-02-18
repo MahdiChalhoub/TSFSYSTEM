@@ -32,7 +32,7 @@ export async function createDeferredExpense(data: DeferredExpenseInput) {
         })
         revalidatePath('/finance/deferred-expenses')
         return { success: true, id: expense.id }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Create Deferred Expense Failed", e)
         throw e
     }
@@ -46,7 +46,7 @@ export async function recognizeDeferredExpense(id: number, periodDate: string) {
         })
         revalidatePath('/finance/deferred-expenses')
         return { success: true, data: result }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Recognize Deferred Expense Failed", e)
         throw e
     }

@@ -56,7 +56,7 @@ export default function PurchaseDashboardPage() {
                 (o.supplier_name || o.contact_name || '').toLowerCase().includes(s)
             )
         }
-        return items.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        return items.sort((a: Record<string, any>, b: Record<string, any>) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     }, [orders, statusFilter, search])
 
     const totalValue = orders.reduce((s, o) => s + parseFloat(String(o.total_amount || 0)), 0)
@@ -191,7 +191,7 @@ export default function PurchaseDashboardPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filtered.map((o: any) => (
+                                {filtered.map((o: Record<string, any>) => (
                                     <TableRow key={o.id} className="hover:bg-gray-50/50">
                                         <TableCell className="font-mono text-xs text-blue-600">
                                             {o.ref_code || `PO-${o.id}`}

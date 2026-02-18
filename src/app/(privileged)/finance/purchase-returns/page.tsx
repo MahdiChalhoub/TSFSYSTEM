@@ -19,7 +19,7 @@ import {
 type SortKey = 'return_date' | 'status'
 type SortDir = 'asc' | 'desc'
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: Record<string, any> }> = {
     PENDING: { label: 'Pending', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', icon: Clock },
     COMPLETED: { label: 'Completed', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', icon: CheckCircle2 },
     CANCELLED: { label: 'Cancelled', color: 'text-red-700', bg: 'bg-red-50 border-red-200', icon: XCircle },
@@ -53,8 +53,8 @@ export default function PurchaseReturnsPage() {
                 toast.success("Purchase return completed — stock removed & GL posted")
                 setConfirmId(null)
                 loadData()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to complete return")
+            } catch (err: unknown) {
+                toast.error((err instanceof Error ? err.message : String(err)) || "Failed to complete return")
             }
         })
     }
@@ -192,7 +192,7 @@ export default function PurchaseReturnsPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {filtered.map((r: any) => {
+                        {filtered.map((r: Record<string, any>) => {
                             const sc = STATUS_CONFIG[r.status] || STATUS_CONFIG.PENDING
                             const StatusIcon = sc.icon
                             return (

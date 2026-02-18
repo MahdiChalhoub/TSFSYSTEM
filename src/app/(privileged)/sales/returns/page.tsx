@@ -49,9 +49,9 @@ export default function SalesReturnsPage() {
             toast.dismiss()
             toast.success("Return approved. Inventory updated.")
             loadReturns()
-        } catch (e: any) {
+        } catch (e: unknown) {
             toast.dismiss()
-            toast.error(e.message || "Approval failed")
+            toast.error((e instanceof Error ? e.message : String(e)) || "Approval failed")
         }
     }
 

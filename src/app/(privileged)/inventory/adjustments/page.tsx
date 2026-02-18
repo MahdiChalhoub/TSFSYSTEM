@@ -8,7 +8,7 @@ async function getWarehouses() {
     try {
         const warehouses = await erpFetch('warehouses/');
         // Filter active directly here since backend returns all
-        return warehouses.filter((w: any) => w.is_active);
+        return warehouses.filter((w: Record<string, any>) => w.is_active);
     } catch (e) {
         console.error("Failed to fetch warehouses", e);
         return [];
@@ -18,7 +18,7 @@ async function getWarehouses() {
 export default async function AdjustmentPage() {
     // Transform data to match the component's expected type if necessary
     const rawWarehouses = await getWarehouses();
-    const warehouses = rawWarehouses.map((w: any) => ({
+    const warehouses = rawWarehouses.map((w: Record<string, any>) => ({
         id: w.id,
         name: w.name,
         type: w.type,

@@ -8,7 +8,7 @@ import PeriodEditor from './period-editor'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
-export default function FiscalYearCard({ year, nextYear }: { year: any, nextYear?: any }) {
+export default function FiscalYearCard({ year, nextYear }: { year: Record<string, any>, nextYear?: Record<string, any> }) {
     const [isPending, startTransition] = useTransition()
     const [editingPeriod, setEditingPeriod] = useState<FiscalPeriod | null>(null)
 
@@ -20,8 +20,8 @@ export default function FiscalYearCard({ year, nextYear }: { year: any, nextYear
                 try {
                     await transferBalancesToNextYear(year.id, nextYear.id)
                     toast.success("Balances transferred successfully!")
-                } catch (err: any) {
-                    toast.error(err.message)
+                } catch (err: unknown) {
+                    toast.error((err instanceof Error ? err.message : String(err)))
                 }
             })
         },
@@ -29,8 +29,8 @@ export default function FiscalYearCard({ year, nextYear }: { year: any, nextYear
             startTransition(async () => {
                 try {
                     await deleteFiscalYear(year.id)
-                } catch (err: any) {
-                    toast.error(err.message)
+                } catch (err: unknown) {
+                    toast.error((err instanceof Error ? err.message : String(err)))
                 }
             })
         },
@@ -94,8 +94,8 @@ export default function FiscalYearCard({ year, nextYear }: { year: any, nextYear
         startTransition(async () => {
             try {
                 await updatePeriodStatus(periodId, status)
-            } catch (err: any) {
-                toast.error(err.message)
+            } catch (err: unknown) {
+                toast.error((err instanceof Error ? err.message : String(err)))
             }
         })
     }
@@ -171,7 +171,7 @@ export default function FiscalYearCard({ year, nextYear }: { year: any, nextYear
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7 gap-3">
-                {[...(year.periods || [])].sort((a: any, b: any) => (a.start_date || '').localeCompare(b.start_date || '')).map((p: any, idx: number) => {
+                {[...(year.periods || [])].sort((a: Record<string, any>, b: Record<string, any>) => (a.start_date || '').localeCompare(b.start_date || '')).map((p: Record<string, any>, idx: number) => {
                     const periodStatus = p.status || (p.is_closed ? 'CLOSED' : 'OPEN')
                     const periodLabel = p.name || `P${String(idx + 1).padStart(2, '0')}`
                     return (

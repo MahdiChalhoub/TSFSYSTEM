@@ -59,8 +59,8 @@ export async function createMCPProvider(data: {
             body: JSON.stringify(data)
         })
         return { success: true, data: result }
-    } catch (e: any) {
-        return { success: false, error: e.message }
+    } catch (e: unknown) {
+        return { success: false, error: (e instanceof Error ? e.message : String(e)) }
     }
 }
 
@@ -72,8 +72,8 @@ export async function updateMCPProvider(id: number, data: unknown) {
             body: JSON.stringify(parsed)
         })
         return { success: true, data: result }
-    } catch (e: any) {
-        return { success: false, error: e.message }
+    } catch (e: unknown) {
+        return { success: false, error: (e instanceof Error ? e.message : String(e)) }
     }
 }
 
@@ -81,8 +81,8 @@ export async function deleteMCPProvider(id: number) {
     try {
         await erpFetch(`/mcp/providers/${id}/`, { method: 'DELETE' })
         return { success: true }
-    } catch (e: any) {
-        return { success: false, error: e.message }
+    } catch (e: unknown) {
+        return { success: false, error: (e instanceof Error ? e.message : String(e)) }
     }
 }
 
@@ -90,8 +90,8 @@ export async function testMCPProvider(id: number) {
     try {
         const result = await erpFetch(`/mcp/providers/${id}/test/`, { method: 'POST' })
         return result
-    } catch (e: any) {
-        return { success: false, message: e.message }
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) }
     }
 }
 
@@ -99,8 +99,8 @@ export async function setDefaultProvider(id: number) {
     try {
         await erpFetch(`/mcp/providers/${id}/set_default/`, { method: 'POST' })
         return { success: true }
-    } catch (e: any) {
-        return { success: false, error: e.message }
+    } catch (e: unknown) {
+        return { success: false, error: (e instanceof Error ? e.message : String(e)) }
     }
 }
 
@@ -125,8 +125,8 @@ export async function createMCPTool(data: unknown) {
             body: JSON.stringify(parsed)
         })
         return { success: true, data: result }
-    } catch (e: any) {
-        return { success: false, error: e.message }
+    } catch (e: unknown) {
+        return { success: false, error: (e instanceof Error ? e.message : String(e)) }
     }
 }
 
@@ -138,8 +138,8 @@ export async function updateMCPTool(id: number, data: unknown) {
             body: JSON.stringify(parsed)
         })
         return { success: true, data: result }
-    } catch (e: any) {
-        return { success: false, error: e.message }
+    } catch (e: unknown) {
+        return { success: false, error: (e instanceof Error ? e.message : String(e)) }
     }
 }
 
@@ -147,8 +147,8 @@ export async function deleteMCPTool(id: number) {
     try {
         await erpFetch(`/mcp/tools/${id}/`, { method: 'DELETE' })
         return { success: true }
-    } catch (e: any) {
-        return { success: false, error: e.message }
+    } catch (e: unknown) {
+        return { success: false, error: (e instanceof Error ? e.message : String(e)) }
     }
 }
 
@@ -156,8 +156,8 @@ export async function registerDefaultTools() {
     try {
         const result = await erpFetch('/mcp/tools/register_defaults/', { method: 'POST' })
         return result
-    } catch (e: any) {
-        return { success: false, error: e.message }
+    } catch (e: unknown) {
+        return { success: false, error: (e instanceof Error ? e.message : String(e)) }
     }
 }
 
@@ -177,8 +177,8 @@ export async function sendMCPChat(data: {
             body: JSON.stringify(data)
         })
         return { success: true, ...result }
-    } catch (e: any) {
-        return { success: false, error: e.message }
+    } catch (e: unknown) {
+        return { success: false, error: (e instanceof Error ? e.message : String(e)) }
     }
 }
 
@@ -192,8 +192,8 @@ export async function executeMCPTool(data: {
             body: JSON.stringify(data)
         })
         return result
-    } catch (e: any) {
-        return { success: false, error: e.message }
+    } catch (e: unknown) {
+        return { success: false, error: (e instanceof Error ? e.message : String(e)) }
     }
 }
 
@@ -218,8 +218,8 @@ export async function deleteMCPConversation(id: number) {
     try {
         await erpFetch(`/mcp/conversations/${id}/`, { method: 'DELETE' })
         return { success: true }
-    } catch (e: any) {
-        return { success: false, error: e.message }
+    } catch (e: unknown) {
+        return { success: false, error: (e instanceof Error ? e.message : String(e)) }
     }
 }
 

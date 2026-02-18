@@ -20,7 +20,7 @@ export interface AuditLogParams {
  */
 export async function logAuditAction(
     params: AuditLogParams,
-    tx?: any // was Prisma.TransactionClient
+    tx?: Record<string, any> // was Prisma.TransactionClient
 ) {
     // Audit logging is being migrated to Django Middleware.
     // Client-side calls are ignored for now.
@@ -34,10 +34,10 @@ export async function logEntityUpdate(
     userId: number,
     entity: string,
     entityId: string,
-    oldData: any,
-    newData: any,
+    oldData: Record<string, any>,
+    newData: Record<string, any>,
     organizationId: string,
-    tx?: any // was Prisma.TransactionClient
+    tx?: Record<string, any> // was Prisma.TransactionClient
 ) {
     // No-op
 }

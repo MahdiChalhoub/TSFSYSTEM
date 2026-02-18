@@ -74,12 +74,12 @@ export default function InventoryValuationPage() {
         let items = [...data.products]
         if (search) {
             const s = search.toLowerCase()
-            items = items.filter((p: any) =>
+            items = items.filter((p: Record<string, any>) =>
                 p.product_name?.toLowerCase().includes(s) ||
                 p.product_sku?.toLowerCase().includes(s)
             )
         }
-        items.sort((a: any, b: any) => {
+        items.sort((a: Record<string, any>, b: Record<string, any>) => {
             const av = a[sortKey] ?? 0
             const bv = b[sortKey] ?? 0
             if (typeof av === 'string') return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av)
@@ -92,10 +92,10 @@ export default function InventoryValuationPage() {
     const topProducts = useMemo(() => {
         if (!data?.products) return []
         return [...data.products]
-            .sort((a: any, b: any) => b.total_value - a.total_value)
+            .sort((a: Record<string, any>, b: Record<string, any>) => b.total_value - a.total_value)
             .slice(0, 8)
     }, [data])
-    const maxValue = topProducts.length ? Math.max(...topProducts.map((p: any) => p.total_value)) : 1
+    const maxValue = topProducts.length ? Math.max(...topProducts.map((p: Record<string, any>) => p.total_value)) : 1
 
     if (loading) {
         return (
@@ -126,7 +126,7 @@ export default function InventoryValuationPage() {
                             className="border rounded-lg px-3 py-2 text-sm bg-white"
                         >
                             <option value="all">All Warehouses</option>
-                            {warehouses.map((wh: any) => (
+                            {warehouses.map((wh: Record<string, any>) => (
                                 <option key={wh.id} value={wh.id}>{wh.name}</option>
                             ))}
                         </select>
@@ -188,7 +188,7 @@ export default function InventoryValuationPage() {
                     </CardHeader>
                     <CardContent className="pb-4">
                         <div className="space-y-2">
-                            {topProducts.map((p: any, i: number) => {
+                            {topProducts.map((p: Record<string, any>, i: number) => {
                                 const pct = (p.total_value / maxValue * 100)
                                 return (
                                     <div key={p.product_id} className="flex items-center gap-3">
@@ -255,11 +255,11 @@ export default function InventoryValuationPage() {
                                         Total Value {sortKey === 'total_value' && <ArrowUpDown size={12} className="inline ml-1" />}
                                     </TableHead>
                                     <TableHead>Method</TableHead>
-                                    {products.some((p: any) => p.warehouse) && <TableHead>Warehouse</TableHead>}
+                                    {products.some((p: Record<string, any>) => p.warehouse) && <TableHead>Warehouse</TableHead>}
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {products.map((p: any) => (
+                                {products.map((p: Record<string, any>) => (
                                     <TableRow key={`${p.product_id}-${p.warehouse || ''}`} className="hover:bg-gray-50/50">
                                         <TableCell className="font-medium">{p.product_name}</TableCell>
                                         <TableCell className="text-sm text-gray-500 font-mono">
@@ -273,7 +273,7 @@ export default function InventoryValuationPage() {
                                                 {p.method?.replace('_', ' ')}
                                             </Badge>
                                         </TableCell>
-                                        {products.some((pr: any) => pr.warehouse) && (
+                                        {products.some((pr: Record<string, any>) => pr.warehouse) && (
                                             <TableCell className="text-sm text-gray-500">{p.warehouse || '—'}</TableCell>
                                         )}
                                     </TableRow>

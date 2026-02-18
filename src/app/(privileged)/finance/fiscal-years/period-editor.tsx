@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 import { updatePeriod } from '@/app/actions/finance/fiscal-year'
 
 interface Props {
-    period: any
+    period: Record<string, any>
     onClose: () => void
 }
 
@@ -28,8 +28,8 @@ export default function PeriodEditor({ period, onClose }: Props) {
                 end_date: formData.endDate
             })
             onClose()
-        } catch (err: any) {
-            toast.error(err.message)
+        } catch (err: unknown) {
+            toast.error((err instanceof Error ? err.message : String(err)))
         } finally {
             setIsPending(false)
         }

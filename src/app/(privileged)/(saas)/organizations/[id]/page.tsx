@@ -21,7 +21,7 @@ import {
 
 // ─── Usage Meter ─────────────────────────────────────────────────────────────
 function UsageMeter({ label, icon: Icon, current, limit, percent, unit = '' }: {
-    label: string; icon: any; current: number; limit: number; percent: number; unit?: string
+    label: string; icon: Record<string, any>; current: number; limit: number; percent: number; unit?: string
 }) {
     const isWarning = percent >= 80
     const isDanger = percent >= 95
@@ -53,7 +53,7 @@ function UsageMeter({ label, icon: Icon, current, limit, percent, unit = '' }: {
 
 // ─── Module Card ─────────────────────────────────────────────────────────────
 function ModuleCard({ module, onToggle, toggling, onFeatureToggle }: {
-    module: any; onToggle: (code: string, status: string) => void; toggling: string | null
+    module: Record<string, any>; onToggle: (code: string, status: string) => void; toggling: string | null
     onFeatureToggle: (code: string, featureCode: string, enabled: boolean) => void
 }) {
     const isInstalled = module.status === 'INSTALLED'
@@ -112,7 +112,7 @@ function ModuleCard({ module, onToggle, toggling, onFeatureToggle }: {
                 <div className="mt-4 pt-3 border-t border-gray-100">
                     <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-2">Capabilities</p>
                     <div className="flex flex-wrap gap-1.5">
-                        {module.available_features.map((f: any) => {
+                        {module.available_features.map((f: Record<string, any>) => {
                             const fCode = f.code || f
                             const fName = f.name || f
                             const isActive = module.active_features?.includes(fCode)
@@ -248,8 +248,8 @@ export default function OrganizationDetailPage() {
             setNewUser({ username: '', email: '', password: '', first_name: '', last_name: '', is_superuser: false })
             const usersData = await getOrgUsers(orgId)
             setUsers(Array.isArray(usersData) ? usersData : [])
-        } catch (e: any) {
-            const msg = e.message ? JSON.parse(e.message)?.error : 'Failed to create user'
+        } catch (e: unknown) {
+            const msg = (e instanceof Error ? e.message : String(e)) ? JSON.parse((e instanceof Error ? e.message : String(e)))?.error : 'Failed to create user'
             toast.error(msg)
         } finally { setCreating(false) }
     }
@@ -262,8 +262,8 @@ export default function OrganizationDetailPage() {
             toast.success(result.message || 'Password reset')
             setResetTarget(null)
             setNewPassword('')
-        } catch (e: any) {
-            const msg = e.message ? JSON.parse(e.message)?.error : 'Failed to reset password'
+        } catch (e: unknown) {
+            const msg = (e instanceof Error ? e.message : String(e)) ? JSON.parse((e instanceof Error ? e.message : String(e)))?.error : 'Failed to reset password'
             toast.error(msg)
         } finally { setResetting(false) }
     }
@@ -278,8 +278,8 @@ export default function OrganizationDetailPage() {
             setNewSite({ name: '', code: '', address: '', city: '', phone: '', vat_number: '' })
             const sitesData = await getOrgSites(orgId)
             setSites(Array.isArray(sitesData) ? sitesData : [])
-        } catch (e: any) {
-            const msg = e.message ? JSON.parse(e.message)?.error : 'Failed to create site'
+        } catch (e: unknown) {
+            const msg = (e instanceof Error ? e.message : String(e)) ? JSON.parse((e instanceof Error ? e.message : String(e)))?.error : 'Failed to create site'
             toast.error(msg)
         } finally { setCreatingSite(false) }
     }
@@ -312,7 +312,7 @@ export default function OrganizationDetailPage() {
     const tabs = [
         { key: 'overview', label: 'Overview', icon: Activity },
         { key: 'modules', label: 'Modules', icon: Layers },
-        { key: 'addons', label: `Add-ons (${addons.purchased?.filter((a: any) => a.status === 'active').length || 0})`, icon: Puzzle },
+        { key: 'addons', label: `Add-ons (${addons.purchased?.filter((a: Record<string, any>) => a.status === 'active').length || 0})`, icon: Puzzle },
         { key: 'users', label: `Users (${users.length})`, icon: Users },
         { key: 'sites', label: `Sites (${sites.length})`, icon: Building2 },
         { key: 'usage', label: 'Usage', icon: TrendingUp },
@@ -364,7 +364,7 @@ export default function OrganizationDetailPage() {
                     {/* Integrity Warnings */}
                     {usage?.warnings?.length > 0 && (
                         <div className="space-y-2">
-                            {usage.warnings.map((w: any) => {
+                            {usage.warnings.map((w: Record<string, any>) => {
                                 const styles: Record<string, string> = {
                                     critical: 'bg-red-50 border-red-200 text-red-800',
                                     warning: 'bg-amber-50 border-amber-200 text-amber-800',
@@ -786,7 +786,7 @@ export default function OrganizationDetailPage() {
                             </CardHeader>
                             <CardContent>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {usage.available_plans.map((p: any) => {
+                                    {usage.available_plans.map((p: Record<string, any>) => {
                                         const isCurrent = usage.plan?.id === p.id
                                         const isCustom = parseFloat(p.monthly_price) < 0
                                         const isFree = parseFloat(p.monthly_price) === 0
@@ -880,7 +880,7 @@ export default function OrganizationDetailPage() {
                                 <div className="text-center py-12 text-gray-400 text-sm italic">No billing records found for this organization.</div>
                             ) : (
                                 <div className="space-y-2">
-                                    {billing.history.map((p: any) => (
+                                    {billing.history.map((p: Record<string, any>) => (
                                         <div key={p.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-gray-200 transition-all">
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2 mb-1">
@@ -928,9 +928,9 @@ export default function OrganizationDetailPage() {
                             <CardDescription>Add-ons currently purchased for this organization</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            {addons.purchased?.filter((p: any) => p.status === 'active').length > 0 ? (
+                            {addons.purchased?.filter((p: Record<string, any>) => p.status === 'active').length > 0 ? (
                                 <div className="space-y-3">
-                                    {addons.purchased.filter((p: any) => p.status === 'active').map((p: any) => (
+                                    {addons.purchased.filter((p: Record<string, any>) => p.status === 'active').map((p: Record<string, any>) => (
                                         <div key={p.id} className="flex items-center justify-between p-4 bg-emerald-50/50 rounded-xl border border-emerald-100 hover:border-emerald-200 transition-all">
                                             <div className="flex items-center gap-4">
                                                 <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
@@ -984,14 +984,14 @@ export default function OrganizationDetailPage() {
                     </Card>
 
                     {/* Cancelled / Expired History */}
-                    {addons.purchased?.filter((p: any) => p.status !== 'active').length > 0 && (
+                    {addons.purchased?.filter((p: Record<string, any>) => p.status !== 'active').length > 0 && (
                         <Card className="border-gray-100 shadow-sm">
                             <CardHeader>
                                 <CardTitle className="text-sm font-bold text-gray-500">History</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-2">
-                                    {addons.purchased.filter((p: any) => p.status !== 'active').map((p: any) => (
+                                    {addons.purchased.filter((p: Record<string, any>) => p.status !== 'active').map((p: Record<string, any>) => (
                                         <div key={p.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 opacity-60">
                                             <div>
                                                 <p className="font-medium text-gray-600 text-sm">{p.addon_name}</p>
@@ -1018,7 +1018,7 @@ export default function OrganizationDetailPage() {
                         <CardContent>
                             {addons.available?.length > 0 ? (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    {addons.available.map((a: any) => (
+                                    {addons.available.map((a: Record<string, any>) => (
                                         <div key={a.id} className={`p-4 rounded-xl border transition-all ${a.already_purchased
                                             ? 'bg-gray-50 border-gray-100 opacity-50'
                                             : 'bg-white border-gray-100 hover:border-indigo-200 hover:shadow-sm'
@@ -1290,8 +1290,8 @@ export default function OrganizationDetailPage() {
                                     setUsage(newUsage)
                                     setBilling(newBilling?.history ? newBilling : { history: Array.isArray(newBilling) ? newBilling : [], balance: { total_paid: '0.00', total_credits: '0.00', net_balance: '0.00' }, client: null })
                                     setPlanSwitchTarget(null)
-                                } catch (err: any) {
-                                    toast.error(err.message || 'Failed to change plan')
+                                } catch (err: unknown) {
+                                    toast.error((err instanceof Error ? err.message : String(err)) || 'Failed to change plan')
                                 } finally {
                                     setSwitching(false)
                                 }
@@ -1323,7 +1323,7 @@ export default function OrganizationDetailPage() {
                                 className="rounded-xl"
                             />
                             <div className="max-h-[300px] overflow-y-auto space-y-1">
-                                {allClients.map((c: any) => (
+                                {allClients.map((c: Record<string, any>) => (
                                     <button key={c.id}
                                         className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all text-left hover:border-emerald-200 hover:bg-emerald-50/30 ${usage?.client?.id === c.id ? 'border-emerald-300 bg-emerald-50' : 'border-gray-100'}`}
                                         onClick={async () => {
@@ -1419,7 +1419,7 @@ export default function OrganizationDetailPage() {
                                             } else {
                                                 toast.error(result.error || 'Failed to create client')
                                             }
-                                        } catch (err: any) { toast.error(err.message || 'Failed to create client') }
+                                        } catch (err: unknown) { toast.error((err instanceof Error ? err.message : String(err)) || 'Failed to create client') }
                                         finally { setSavingClient(false) }
                                     }}>
                                     {savingClient ? <Loader2 size={14} className="animate-spin mr-1" /> : null}

@@ -226,8 +226,8 @@ export default function ConnectorPoliciesPage() {
             }
             setIsDialogOpen(false)
             await loadData()
-        } catch (e: any) {
-            toast.error(e.message)
+        } catch (e: unknown) {
+            toast.error((e instanceof Error ? e.message : String(e)))
         } finally {
             setSaving(false)
         }
@@ -240,8 +240,8 @@ export default function ConnectorPoliciesPage() {
             if (!res.success) throw new Error(res.error)
             toast.success('Policy deleted')
             await loadData()
-        } catch (e: any) {
-            toast.error(e.message)
+        } catch (e: unknown) {
+            toast.error((e instanceof Error ? e.message : String(e)))
         }
     }
 
@@ -253,8 +253,8 @@ export default function ConnectorPoliciesPage() {
             if (!res.success) throw new Error(res.error)
             toast.success(res.message)
             await loadData()
-        } catch (e: any) {
-            toast.error(e.message)
+        } catch (e: unknown) {
+            toast.error((e instanceof Error ? e.message : String(e)))
         } finally {
             setGenerating(false)
         }

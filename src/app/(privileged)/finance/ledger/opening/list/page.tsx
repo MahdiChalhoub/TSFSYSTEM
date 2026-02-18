@@ -24,8 +24,8 @@ export default async function OpeningBalancesListPage() {
             </div>
 
             <div className="space-y-4">
-                {entries.map((entry: any) => {
-                    const totalValue = entry.lines.reduce((sum: number, l: any) => sum + Number(l.debit), 0)
+                {entries.map((entry: Record<string, any>) => {
+                    const totalValue = entry.lines.reduce((sum: number, l: Record<string, any>) => sum + Number(l.debit), 0)
 
                     return (
                         <div key={entry.id} className="bg-white border border-stone-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all group">

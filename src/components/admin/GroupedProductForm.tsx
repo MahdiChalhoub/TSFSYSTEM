@@ -8,11 +8,11 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 type Props = {
-    brands: any[];
-    categories: any[];
-    units: any[];
-    countries: any[];
-    initialGroup?: any; // For Edit Mode
+    brands: Record<string, any>[];
+    categories: Record<string, any>[];
+    units: Record<string, any>[];
+    countries: Record<string, any>[];
+    initialGroup?: Record<string, any>; // For Edit Mode
 };
 
 type VariantRow = {
@@ -76,7 +76,7 @@ export function GroupedProductForm({ brands, categories, units, countries, initi
 
     // Init Variants
     const [variants, setVariants] = useState<VariantRow[]>(
-        initialGroup?.products?.map((p: any) => ({
+        initialGroup?.products?.map((p: Record<string, any>) => ({
             id: p.id,
             realId: p.id,
             countryId: p.country,
@@ -111,7 +111,7 @@ export function GroupedProductForm({ brands, categories, units, countries, initi
         setVariants(variants.filter(v => v.id !== id));
     };
 
-    const updateVariant = (id: number, field: keyof VariantRow, value: any) => {
+    const updateVariant = (id: number, field: keyof VariantRow, value: Record<string, any>) => {
         setVariants(variants.map(v => v.id === id ? { ...v, [field]: value } : v));
     };
 
@@ -282,7 +282,7 @@ export function GroupedProductForm({ brands, categories, units, countries, initi
                                         {(() => {
                                             const selectedBrand = brands.find(b => String(b.id) === String(master.brandId));
                                             const filteredCountries = (selectedBrand?.countries?.length)
-                                                ? countries.filter(c => selectedBrand.countries.some((bc: any) => bc.id === c.id))
+                                                ? countries.filter(c => selectedBrand.countries.some((bc: Record<string, any>) => bc.id === c.id))
                                                 : countries;
                                             return filteredCountries.map(c => <option key={c.id} value={c.id}>{c.name}</option>);
                                         })()}

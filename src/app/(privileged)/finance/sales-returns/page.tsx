@@ -21,7 +21,7 @@ type ActiveTab = 'RETURNS' | 'CREDIT_NOTES'
 type SortKey = 'return_date' | 'status' | 'reason'
 type SortDir = 'asc' | 'desc'
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: Record<string, any> }> = {
     PENDING: { label: 'Pending', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', icon: Clock },
     APPROVED: { label: 'Approved', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', icon: CheckCircle2 },
     COMPLETED: { label: 'Completed', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', icon: ShieldCheck },
@@ -64,8 +64,8 @@ export default function SalesReturnsPage() {
                 }
                 setConfirmDialog(null)
                 loadData()
-            } catch (err: any) {
-                toast.error(err.message || `Failed to ${action} return`)
+            } catch (err: unknown) {
+                toast.error((err instanceof Error ? err.message : String(err)) || `Failed to ${action} return`)
             }
         })
     }
@@ -238,7 +238,7 @@ export default function SalesReturnsPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {filtered.map((r: any) => {
+                            {filtered.map((r: Record<string, any>) => {
                                 const sc = STATUS_CONFIG[r.status] || STATUS_CONFIG.PENDING
                                 const StatusIcon = sc.icon
                                 return (
@@ -298,7 +298,7 @@ export default function SalesReturnsPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {creditNotes.filter(cn => !searchQuery || (cn.credit_number || "").toLowerCase().includes(searchQuery.toLowerCase())).map((cn: any) => (
+                            {creditNotes.filter(cn => !searchQuery || (cn.credit_number || "").toLowerCase().includes(searchQuery.toLowerCase())).map((cn: Record<string, any>) => (
                                 <TableRow key={cn.id} className="hover:bg-stone-50/50 transition-colors">
                                     <TableCell className="font-mono text-sm font-semibold text-stone-700">{cn.credit_number}</TableCell>
                                     <TableCell className="text-sm text-stone-600">{cn.date}</TableCell>

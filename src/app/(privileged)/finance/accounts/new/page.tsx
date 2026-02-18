@@ -25,14 +25,14 @@ export default function NewFinancialAccountPage() {
     const [loading, setLoading] = useState(false)
     const type = watch('type')
 
-    const onSubmit = async (data: any) => {
+    const onSubmit = async (data: Record<string, any>) => {
         setLoading(true)
         try {
             await createFinancialAccount(data)
             toast.success("Account created successfully")
             router.push('/finance/accounts')
-        } catch (error: any) {
-            toast.error(error.message)
+        } catch (error: unknown) {
+            toast.error((error instanceof Error ? error.message : String(error)))
         } finally {
             setLoading(false)
         }

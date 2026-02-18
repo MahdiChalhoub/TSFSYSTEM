@@ -2,7 +2,7 @@ import React from 'react';
 import { Package, TrendingUp } from 'lucide-react';
 import clsx from 'clsx';
 
-export const InventoryStatsWidget = ({ data }: { data: any }) => {
+export const InventoryStatsWidget = ({ data }: { data: Record<string, any> }) => {
     // Determine grid columns - this widget takes 1/4 width usually
     // We assume data passed contains 'totalProducts'
     const value = data?.totalProducts || 0;

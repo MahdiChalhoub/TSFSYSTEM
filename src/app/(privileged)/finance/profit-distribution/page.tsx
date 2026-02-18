@@ -47,7 +47,7 @@ export default function ProfitDistributionPage() {
         }
     }
 
-    const closedYears = fiscalYears.filter((fy: any) => fy.is_closed || fy.isClosed)
+    const closedYears = fiscalYears.filter((fy: Record<string, any>) => fy.is_closed || fy.isClosed)
 
     function updateAllocation(key: string, value: number) {
         setAllocations(prev => ({ ...prev, [key]: value }))
@@ -80,8 +80,8 @@ export default function ProfitDistributionPage() {
                 const result = await calculateDistribution(selectedFY, allocations)
                 setPreview(result.data)
                 setWizardStep(2)
-            } catch (err: any) {
-                toast.error(err.message || "Failed to calculate")
+            } catch (err: unknown) {
+                toast.error((err instanceof Error ? err.message : String(err)) || "Failed to calculate")
             }
         })
     }
@@ -103,8 +103,8 @@ export default function ProfitDistributionPage() {
                 setPreview(null)
                 toast.success("Distribution draft created!")
                 loadData()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to create distribution")
+            } catch (err: unknown) {
+                toast.error((err instanceof Error ? err.message : String(err)) || "Failed to create distribution")
             }
         })
     }
@@ -115,7 +115,7 @@ export default function ProfitDistributionPage() {
 
     const walletColors = ["from-blue-500 to-blue-600", "from-emerald-500 to-emerald-600", "from-violet-500 to-violet-600", "from-amber-500 to-amber-600", "from-rose-500 to-rose-600", "from-cyan-500 to-cyan-600"]
 
-    const statusConfig: Record<string, { icon: any; color: string; bg: string }> = {
+    const statusConfig: Record<string, { icon: Record<string, any>; color: string; bg: string }> = {
         POSTED: { icon: CheckCircle2, color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
         APPROVED: { icon: CheckCircle2, color: "text-blue-700", bg: "bg-blue-50 border-blue-200" },
         DRAFT: { icon: Clock, color: "text-amber-700", bg: "bg-amber-50 border-amber-200" },
@@ -180,7 +180,7 @@ export default function ProfitDistributionPage() {
                                         className="w-full px-3 py-2 border rounded-xl bg-background text-sm"
                                     >
                                         <option value="">Select closed fiscal year...</option>
-                                        {closedYears.map((fy: any) => (
+                                        {closedYears.map((fy: Record<string, any>) => (
                                             <option key={fy.id} value={fy.id}>{fy.name} ({fy.start_date || fy.startDate} → {fy.end_date || fy.endDate})</option>
                                         ))}
                                     </select>
@@ -252,7 +252,7 @@ export default function ProfitDistributionPage() {
 
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-stone-500 uppercase">Allocation Breakdown</label>
-                                    {Object.entries(preview.allocations).map(([wallet, amount]: any, idx: number) => (
+                                    {Object.entries(preview.allocations).map(([wallet, amount]: Record<string, any>, idx: number) => (
                                         <div key={wallet} className="flex justify-between items-center p-3 bg-white border rounded-xl">
                                             <div className="flex items-center gap-2">
                                                 <div className={`w-3 h-3 rounded-full bg-gradient-to-br ${walletColors[idx % walletColors.length]}`} />
@@ -335,7 +335,7 @@ export default function ProfitDistributionPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {distributions.map((d: any) => {
+                        {distributions.map((d: Record<string, any>) => {
                             const sc = statusConfig[d.status] || statusConfig.DRAFT
                             const StatusIcon = sc.icon
                             return (
@@ -345,7 +345,7 @@ export default function ProfitDistributionPage() {
                                     <TableCell className="text-right font-semibold text-stone-800">{Number(d.net_profit).toLocaleString()}</TableCell>
                                     <TableCell>
                                         <div className="flex flex-wrap gap-1.5">
-                                            {d.allocations && Object.entries(d.allocations).map(([k, v]: any, idx: number) => (
+                                            {d.allocations && Object.entries(d.allocations).map(([k, v]: Record<string, any>, idx: number) => (
                                                 <Badge key={k} variant="outline" className="rounded-lg text-[11px] border-stone-200 text-stone-600 gap-1">
                                                     <div className={`w-2 h-2 rounded-full bg-gradient-to-br ${walletColors[idx % walletColors.length]}`} />
                                                     {k}: {Number(v).toLocaleString()}

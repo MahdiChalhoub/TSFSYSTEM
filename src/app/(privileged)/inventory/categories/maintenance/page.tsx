@@ -14,7 +14,7 @@ export default async function CategoryMaintenancePage(props: {
     const categories = await getCategoryWithCounts();
     const activeCategoryId = searchParams.categoryId ? Number(searchParams.categoryId) : null;
 
-    let products: any[] = [];
+    let products: Record<string, any>[] = [];
     let currentCategoryName = "Select a Category";
 
     if (activeCategoryId) {
@@ -24,7 +24,7 @@ export default async function CategoryMaintenancePage(props: {
             console.error("Failed to fetch products for category maintenance:", e);
         }
 
-        const activeCat = categories.find((c: any) => c.id === activeCategoryId);
+        const activeCat = categories.find((c: Record<string, any>) => c.id === activeCategoryId);
         if (activeCat) currentCategoryName = activeCat.name;
     }
 

@@ -37,8 +37,8 @@ export async function createWarehouse(prevState: WarehouseState, formData: FormD
         })
         revalidatePath('/inventory/warehouses')
         return { message: 'success' }
-    } catch (e: any) {
-        return { message: 'Database Error: ' + e.message }
+    } catch (e: unknown) {
+        return { message: 'Database Error: ' + (e instanceof Error ? e.message : String(e)) }
     }
 }
 
@@ -59,8 +59,8 @@ export async function updateWarehouse(id: number, prevState: WarehouseState, for
         })
         revalidatePath('/inventory/warehouses')
         return { message: 'success' }
-    } catch (e: any) {
-        return { message: 'Database Error: ' + e.message }
+    } catch (e: unknown) {
+        return { message: 'Database Error: ' + (e instanceof Error ? e.message : String(e)) }
     }
 }
 
@@ -71,7 +71,7 @@ export async function deleteWarehouse(id: number) {
         })
         revalidatePath('/inventory/warehouses')
         return { success: true }
-    } catch (e: any) {
-        return { success: false, message: e.message }
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) }
     }
 }

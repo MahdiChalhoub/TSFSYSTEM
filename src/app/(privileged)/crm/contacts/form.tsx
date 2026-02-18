@@ -9,12 +9,12 @@ export default function ContactModal({
     type = 'CUSTOMER',
     onClose
 }: {
-    sites: any[],
+    sites: Record<string, any>[],
     type?: string,
     onClose: () => void
 }) {
     const [state, action, isPending] = useActionState(
-        createContact as (prevState: any, formData: FormData) => Promise<{ success: boolean; message: string }>,
+        createContact as (prevState: Record<string, any>, formData: FormData) => Promise<{ success: boolean; message: string }>,
         { success: false, message: '' }
     );
 

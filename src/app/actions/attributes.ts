@@ -102,7 +102,7 @@ export async function getAttributeHierarchy(parfumId: number) {
         // The frontend expects the array of brands
         const brands = data.brands || [];
 
-        return brands.map((item: any) => ({
+        return brands.map((item: Record<string, any>) => ({
             ...item,
             id: item.brand?.id,
             name: item.brand?.name,

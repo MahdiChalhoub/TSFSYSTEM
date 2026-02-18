@@ -22,8 +22,8 @@ export function TwoFactorSettings({ initialEnabled }: { initialEnabled: boolean 
             setSetupData(res);
             setStep('SETUP');
             toast.info("Authenticator setup initiated");
-        } catch (error: any) {
-            toast.error(error.message || "Failed to start 2FA setup");
+        } catch (error: unknown) {
+            toast.error((error instanceof Error ? error.message : String(error)) || "Failed to start 2FA setup");
         } finally {
             setLoading(false);
         }
@@ -38,8 +38,8 @@ export function TwoFactorSettings({ initialEnabled }: { initialEnabled: boolean 
             setStep('IDLE');
             setToken("");
             toast.success("Two-factor authentication enabled!");
-        } catch (error: any) {
-            toast.error(error.message || "Invalid token");
+        } catch (error: unknown) {
+            toast.error((error instanceof Error ? error.message : String(error)) || "Invalid token");
         } finally {
             setLoading(false);
         }
@@ -54,8 +54,8 @@ export function TwoFactorSettings({ initialEnabled }: { initialEnabled: boolean 
             await disable2FAAction(confirmToken);
             setEnabled(false);
             toast.success("Two-factor authentication disabled");
-        } catch (error: any) {
-            toast.error(error.message || "Failed to disable 2FA. Token might be incorrect.");
+        } catch (error: unknown) {
+            toast.error((error instanceof Error ? error.message : String(error)) || "Failed to disable 2FA. Token might be incorrect.");
         } finally {
             setLoading(false);
         }

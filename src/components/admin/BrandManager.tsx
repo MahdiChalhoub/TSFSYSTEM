@@ -8,9 +8,9 @@ import { BrandFormModal } from './BrandFormModal';
 import { getBrandHierarchy } from '@/app/actions/brands';
 
 type BrandManagerProps = {
-    brands: any[]; // using any for speed, ideally typed
-    countries: any[];
-    categories: any[]; // NEW: Categories for linking
+    brands: Record<string, any>[]; // using any for speed, ideally typed
+    countries: Record<string, any>[];
+    categories: Record<string, any>[]; // NEW: Categories for linking
 };
 
 export function BrandManager({ brands, countries, categories }: BrandManagerProps) {
@@ -23,18 +23,18 @@ export function BrandManager({ brands, countries, categories }: BrandManagerProp
 
     const filteredBrands = brands.filter(b => {
         const matchesSearch = b.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (b.countries && b.countries.some((c: any) => c.name.toLowerCase().includes(searchTerm.toLowerCase())));
+            (b.countries && b.countries.some((c: Record<string, any>) => c.name.toLowerCase().includes(searchTerm.toLowerCase())));
 
         const matchesCategory = selectedCategory === 'all' ||
-            (b.categories && (b.categories.length === 0 || b.categories.some((c: any) => c.id === Number(selectedCategory))));
+            (b.categories && (b.categories.length === 0 || b.categories.some((c: Record<string, any>) => c.id === Number(selectedCategory))));
 
         const matchesCountry = selectedCountry === 'all' ||
-            (b.countries && b.countries.some((c: any) => c.id === Number(selectedCountry)));
+            (b.countries && b.countries.some((c: Record<string, any>) => c.id === Number(selectedCountry)));
 
         return matchesSearch && matchesCategory && matchesCountry;
     });
 
-    const handleEdit = (brand: any) => {
+    const handleEdit = (brand: Record<string, any>) => {
         setEditingBrand(brand);
         setIsModalOpen(true);
     };
@@ -99,7 +99,7 @@ export function BrandManager({ brands, countries, categories }: BrandManagerProp
                                     className="appearance-none pl-9 pr-8 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:border-emerald-500 cursor-pointer min-w-[150px]"
                                 >
                                     <option value="all">All Categories</option>
-                                    {categories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                    {categories.map((c: Record<string, any>) => <option key={c.id} value={c.id}>{c.name}</option>)}
                                 </select>
                                 <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
                             </div>
@@ -111,7 +111,7 @@ export function BrandManager({ brands, countries, categories }: BrandManagerProp
                                     className="appearance-none pl-9 pr-8 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:border-emerald-500 cursor-pointer min-w-[150px]"
                                 >
                                     <option value="all">All Origins</option>
-                                    {countries.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                    {countries.map((c: Record<string, any>) => <option key={c.id} value={c.id}>{c.name}</option>)}
                                 </select>
                                 <Globe className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
                             </div>
@@ -174,7 +174,7 @@ export function BrandManager({ brands, countries, categories }: BrandManagerProp
     );
 }
 
-function BrandCard({ brand, onEdit }: any) {
+function BrandCard({ brand, onEdit }: Record<string, any>) {
     return (
         <div className="group border border-gray-100 rounded-2xl p-6 hover:shadow-lg transition-all bg-white relative overflow-hidden h-full flex flex-col justify-between cursor-pointer hover:border-emerald-200">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
@@ -212,7 +212,7 @@ function BrandCard({ brand, onEdit }: any) {
                 {/* Countries */}
                 <div className="flex flex-wrap gap-1 mt-2">
                     {(brand.countries && brand.countries.length > 0) ? (
-                        brand.countries.map((c: any) => (
+                        brand.countries.map((c: Record<string, any>) => (
                             <div key={c.id} className="flex items-center gap-1 text-xs bg-gray-50 border border-gray-100 px-1.5 py-0.5 rounded text-gray-600">
                                 <Globe size={10} className="text-gray-400" />
                                 <span>{c.code}</span>
@@ -228,7 +228,7 @@ function BrandCard({ brand, onEdit }: any) {
             <div className="mt-4 pt-3 border-t border-gray-50">
                 <div className="flex flex-wrap gap-1">
                     {(brand.categories && brand.categories.length > 0) ? (
-                        brand.categories.slice(0, 3).map((cat: any) => (
+                        brand.categories.slice(0, 3).map((cat: Record<string, any>) => (
                             <span key={cat.id} className="text-[10px] bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded font-medium border border-purple-100">
                                 {cat.name}
                             </span>
@@ -243,7 +243,7 @@ function BrandCard({ brand, onEdit }: any) {
     );
 }
 
-function BrandRow({ brand, onEdit }: any) {
+function BrandRow({ brand, onEdit }: Record<string, any>) {
     const [isExpanded, setIsExpanded] = useState(false);
     const [data, setData] = useState<AdminHierarchyBrandData | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -279,7 +279,7 @@ function BrandRow({ brand, onEdit }: any) {
                             <span className="text-xs font-mono text-gray-400">({brand.product_count || 0})</span>
                         </div>
                         <div className="flex gap-2">
-                            {brand.countries?.map((c: any) => <span key={c.id} className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">{c.code}</span>)}
+                            {brand.countries?.map((c: Record<string, any>) => <span key={c.id} className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">{c.code}</span>)}
                         </div>
                     </div>
                 </div>
@@ -298,7 +298,7 @@ function BrandRow({ brand, onEdit }: any) {
                     ) : (data ? (
                         <div className="space-y-4">
                             {/* Groups */}
-                            {data.groups.map((group: any) => (
+                            {data.groups.map((group: Record<string, any>) => (
                                 <div key={group.id} className="relative">
                                     <div className="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden group-card hover:border-emerald-200 transition-colors">
                                         {/* Group Header */}
@@ -324,7 +324,7 @@ function BrandRow({ brand, onEdit }: any) {
 
                                         {/* Variants List */}
                                         <div className="bg-white">
-                                            {group.products.map((p: any, idx: number) => {
+                                            {group.products.map((p: Record<string, any>, idx: number) => {
                                                 const isLast = idx === group.products.length - 1;
                                                 return (
                                                     <div key={p.id} className="relative pl-6 hover:bg-slate-50 transition-colors group/item">
@@ -365,7 +365,7 @@ function BrandRow({ brand, onEdit }: any) {
                                         <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Ungrouped Items</span>
                                     </div>
                                     <div className="divide-y divide-gray-50">
-                                        {data.looseProducts.map((p: any) => (
+                                        {data.looseProducts.map((p: Record<string, any>) => (
                                             <div key={p.id} className="px-4 py-3 flex justify-between items-center hover:bg-slate-50 transition-colors">
                                                 <div className="flex items-center gap-3">
                                                     <Globe size={14} className="text-gray-300" />

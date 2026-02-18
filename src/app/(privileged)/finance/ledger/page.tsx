@@ -33,7 +33,7 @@ export default async function GeneralLedgerPage() {
             </div>
 
             <div className="space-y-4">
-                {entries.map((entry: any) => {
+                {entries.map((entry: Record<string, any>) => {
                     const isLocked = entry.fiscalYear.status === 'LOCKED' || entry.fiscalYear.isLocked
 
                     return (
@@ -78,7 +78,7 @@ export default async function GeneralLedgerPage() {
                             {/* Lines */}
                             <div className="p-4 pb-2">
                                 <div className="space-y-1">
-                                    {entry.lines.map((line: any) => (
+                                    {entry.lines.map((line: Record<string, any>) => (
                                         <div key={line.id} className="grid grid-cols-12 gap-3 py-1 items-center border-b border-stone-50 last:border-0 group">
                                             <div className="col-span-1 font-mono text-[10px] text-stone-400">
                                                 {line.account.code}

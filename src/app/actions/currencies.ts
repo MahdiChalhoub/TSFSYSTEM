@@ -29,9 +29,9 @@ export async function createCurrency(data: { name: string; code: string; symbol:
         })
         revalidatePath('/saas/currencies')
         return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Failed to create currency:", error)
-        return { success: false, error: error.message || 'Failed to create currency' }
+        return { success: false, error: (error instanceof Error ? error.message : String(error)) || 'Failed to create currency' }
     }
 }
 
@@ -44,9 +44,9 @@ export async function updateCurrency(id: number, data: { name: string; code: str
         })
         revalidatePath('/saas/currencies')
         return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Failed to update currency:", error)
-        return { success: false, error: error.message || 'Failed to update currency' }
+        return { success: false, error: (error instanceof Error ? error.message : String(error)) || 'Failed to update currency' }
     }
 }
 
@@ -57,8 +57,8 @@ export async function deleteCurrency(id: number) {
         })
         revalidatePath('/saas/currencies')
         return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Failed to delete currency:", error)
-        return { success: false, error: error.message || 'Failed to delete currency' }
+        return { success: false, error: (error instanceof Error ? error.message : String(error)) || 'Failed to delete currency' }
     }
 }

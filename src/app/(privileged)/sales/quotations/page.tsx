@@ -21,13 +21,13 @@ interface Quotation {
     line_count: number
     converted_order: number | null
     created_at: string
-    lines: any[]
+    lines: Record<string, any>[]
 }
 
 export default async function QuotationsPage() {
     let quotations: Quotation[] = []
     let contacts: Contact[] = []
-    let products: any[] = []
+    let products: Record<string, any>[] = []
 
     try {
         const [qRes, cRes, pRes] = await Promise.all([

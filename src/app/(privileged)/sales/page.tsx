@@ -12,7 +12,7 @@ export default function POSPage() {
     const [searchQuery, setSearchQuery] = useState('');
 
     // Add Item to Cart Logic
-    const addToCart = (product: any) => {
+    const addToCart = (product: Record<string, any>) => {
         setCart(prev => {
             const existing = prev.find(p => p.productId === product.id);
             if (existing) {

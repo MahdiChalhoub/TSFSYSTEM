@@ -27,7 +27,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 
-export function RegistrationQueue({ initialUsers }: { initialUsers: any[] }) {
+export function RegistrationQueue({ initialUsers }: { initialUsers: Record<string, any>[] }) {
     const [users, setUsers] = useState(initialUsers);
     const [loadingMap, setLoadingMap] = useState<Record<number, boolean>>({});
     const [correctionModal, setCorrectionModal] = useState<{ open: boolean, userId: number | null }>({ open: false, userId: null });
@@ -40,8 +40,8 @@ export function RegistrationQueue({ initialUsers }: { initialUsers: any[] }) {
             await approveUserAction(id);
             setUsers(prev => prev.filter(u => u.id !== id));
             toast.success("Registration approved");
-        } catch (error: any) {
-            toast.error(error.message || "Failed to approve");
+        } catch (error: unknown) {
+            toast.error((error instanceof Error ? error.message : String(error)) || "Failed to approve");
         } finally {
             setLoadingMap(prev => ({ ...prev, [id]: false }));
         }
@@ -53,8 +53,8 @@ export function RegistrationQueue({ initialUsers }: { initialUsers: any[] }) {
             await rejectUserAction(id);
             setUsers(prev => prev.filter(u => u.id !== id));
             toast.success("Registration rejected");
-        } catch (error: any) {
-            toast.error(error.message || "Failed to reject");
+        } catch (error: unknown) {
+            toast.error((error instanceof Error ? error.message : String(error)) || "Failed to reject");
         } finally {
             setLoadingMap(prev => ({ ...prev, [id]: false }));
         }
@@ -69,8 +69,8 @@ export function RegistrationQueue({ initialUsers }: { initialUsers: any[] }) {
             setCorrectionModal({ open: false, userId: null });
             setCorrectionNotes('');
             toast.success("Correction requested");
-        } catch (error: any) {
-            toast.error(error.message || "Failed to request correction");
+        } catch (error: unknown) {
+            toast.error((error instanceof Error ? error.message : String(error)) || "Failed to request correction");
         } finally {
             setLoadingMap(prev => ({ ...prev, [correctionModal.userId!]: false }));
         }

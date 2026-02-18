@@ -103,7 +103,7 @@ export default function PlanDetailPage() {
             const result = await togglePlanPublic(id as string)
             toast.success(result.message)
             setForm(f => ({ ...f, is_public: result.is_public }))
-            setPlan((p: any) => ({ ...p, is_public: result.is_public }))
+            setPlan((p: Record<string, any>) => ({ ...p, is_public: result.is_public }))
         } catch {
             toast.error("Failed to toggle visibility")
         }
@@ -357,8 +357,8 @@ export default function PlanDetailPage() {
                         </CardHeader>
                         <CardContent className="space-y-3">
                             {availableModules
-                                .filter((m: any) => !['core', 'coreplatform'].includes(m.manifest?.code || m.code || ''))
-                                .map((m: any) => {
+                                .filter((m: Record<string, any>) => !['core', 'coreplatform'].includes(m.manifest?.code || m.code || ''))
+                                .map((m: Record<string, any>) => {
                                     const code = m.manifest?.code || m.code || m.name.toLowerCase()
                                     const isIncluded = form.modules.includes(code)
                                     const modFeats = moduleFeatures[code]
@@ -501,7 +501,7 @@ export default function PlanDetailPage() {
                     <CardContent>
                         {plan.organizations?.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {plan.organizations.map((org: any) => (
+                                {plan.organizations.map((org: Record<string, any>) => (
                                     <div key={org.id}
                                         className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 border border-gray-100 hover:border-emerald-200 hover:shadow-sm transition-all cursor-pointer"
                                         onClick={() => router.push(`/organizations/${org.id}`)}

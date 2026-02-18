@@ -18,7 +18,7 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
     const loan = serialize(rawLoan)
 
     // Check if disbursed: Does it have a PARTNER_LOAN event?
-    const disbursementEvent = loan.financialEvents.find((e: any) => e.eventType === 'PARTNER_LOAN')
+    const disbursementEvent = loan.financialEvents.find((e: Record<string, any>) => e.eventType === 'PARTNER_LOAN')
     const isDisbursed = !!disbursementEvent
 
     return (
@@ -91,7 +91,7 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {loan.installments.map((inst: any) => (
+                                {loan.installments.map((inst: Record<string, any>) => (
                                     <TableRow key={inst.id}>
                                         <TableCell>{format(inst.dueDate, "PPP")}</TableCell>
                                         <TableCell className="text-right text-muted-foreground">{Number(inst.principalAmount).toLocaleString()}</TableCell>

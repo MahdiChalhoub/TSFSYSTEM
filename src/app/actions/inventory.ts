@@ -57,8 +57,8 @@ export async function createUnit(prevState: UnitState, formData: FormData): Prom
 
         revalidatePath('/inventory/units');
         return { message: 'success' };
-    } catch (e: any) {
-        return { message: 'Database Error: ' + (e.message || 'Failed to create unit.') };
+    } catch (e: unknown) {
+        return { message: 'Database Error: ' + ((e instanceof Error ? e.message : String(e)) || 'Failed to create unit.') };
     }
 }
 

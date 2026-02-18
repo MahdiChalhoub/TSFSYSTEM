@@ -26,7 +26,7 @@ export async function getContacts() {
 export async function getContactsByType(type: 'PARTNER' | 'SUPPLIER' | 'CUSTOMER') {
     try {
         const all = await erpFetch('contacts/')
-        return Array.isArray(all) ? all.filter((c: any) => c.type === type) : []
+        return Array.isArray(all) ? all.filter((c: Record<string, any>) => c.type === type) : []
     } catch {
         return []
     }

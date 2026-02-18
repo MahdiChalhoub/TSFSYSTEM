@@ -89,13 +89,13 @@ export default function OrganizationsPage() {
                 toast.success(currentActive ? "Organization suspended" : "Organization activated")
             }
             loadData()
-        } catch (e: any) {
+        } catch (e: unknown) {
             const msg = tryParseError(e)
             toast.error(msg || "Failed to update status")
         }
     }
 
-    async function handleDelete(org: any) {
+    async function handleDelete(org: Record<string, any>) {
         if (org.slug === 'saas') {
             return toast.error("Cannot delete the master SaaS organization.")
         }
@@ -107,18 +107,18 @@ export default function OrganizationsPage() {
                 toast.success(result?.message || "Organization deleted")
             }
             loadData()
-        } catch (e: any) {
+        } catch (e: unknown) {
             const msg = tryParseError(e)
             toast.error(msg || "Failed to delete organization.")
         }
     }
 
     // Parse error messages from backend JSON responses
-    function tryParseError(e: any): string {
+    function tryParseError(e: Record<string, any>): string {
         try {
             if (e?.message) {
-                const parsed = JSON.parse(e.message)
-                return parsed?.error || e.message
+                const parsed = JSON.parse((e instanceof Error ? e.message : String(e)))
+                return parsed?.error || (e instanceof Error ? e.message : String(e))
             }
         } catch { }
         return e?.message || "Unknown error"
@@ -142,7 +142,7 @@ export default function OrganizationsPage() {
                 setNewOrg({ name: '', slug: '', business_email: '', phone: '', country: '', business_type: '', base_currency: '' })
                 loadData()
             }
-        } catch (e: any) {
+        } catch (e: unknown) {
             const msg = tryParseError(e)
             toast.error(msg || "Provisioning failed")
         } finally {
@@ -155,7 +155,7 @@ export default function OrganizationsPage() {
     const [loadingModules, setLoadingModules] = useState(false)
     const [modulesOpen, setModulesOpen] = useState(false)
 
-    async function handleOpenModules(org: any) {
+    async function handleOpenModules(org: Record<string, any>) {
         setSelectedOrg(org)
         setModulesOpen(true)
         setLoadingModules(true)
@@ -185,8 +185,8 @@ export default function OrganizationsPage() {
             }
             const data = await getOrgModules(selectedOrg.id)
             setOrgModules(data)
-        } catch (e: any) {
-            toast.error(e.message || "Failed to toggle module")
+        } catch (e: unknown) {
+            toast.error((e instanceof Error ? e.message : String(e)) || "Failed to toggle module")
         }
     }
 
@@ -520,7 +520,7 @@ export default function OrganizationsPage() {
                                     <div className="mt-4 pt-4 border-t border-gray-100 pl-2">
                                         <p className="text-[10px] text-gray-500 font-bold uppercase mb-3">Extended Capabilities</p>
                                         <div className="grid grid-cols-2 gap-2">
-                                            {m.available_features.map((f: any) => (
+                                            {m.available_features.map((f: Record<string, any>) => (
                                                 <label key={f.code} className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 cursor-pointer select-none p-2 rounded-lg hover:bg-gray-50 transition-colors">
                                                     <input
                                                         type="checkbox"
