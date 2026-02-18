@@ -195,7 +195,7 @@ export default function OrderHistoryPage() {
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        <div className={`text-xs font-black uppercase tracking-widest ${TYPE_CONFIG[order.type]?.color || ''}`}>
+                                        <div className={`text-xs font-black uppercase tracking-widest ${TYPE_CONFIG[order.type ?? '']?.color || ''}`}>
                                             {order.type}
                                         </div>
                                     </TableCell>
@@ -208,17 +208,17 @@ export default function OrderHistoryPage() {
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        <Badge variant="outline" className={`text-[10px] font-bold uppercase tracking-tighter ${STATUS_CONFIG[order.status]?.color || ''}`}>
-                                            {STATUS_CONFIG[order.status]?.label || order.status}
+                                        <Badge variant="outline" className={`text-[10px] font-bold uppercase tracking-tighter ${STATUS_CONFIG[order.status ?? '']?.color || ''}`}>
+                                            {STATUS_CONFIG[order.status ?? '']?.label || order.status}
                                         </Badge>
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <div className="font-black text-gray-900">{fmt(parseFloat(order.total_amount))}</div>
+                                        <div className="font-black text-gray-900">{fmt(parseFloat(String(order.total_amount ?? 0)))}</div>
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex items-center justify-end gap-2 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button
-                                                onClick={() => downloadInvoice(order.id, order.ref_code || order.id)}
+                                                onClick={() => downloadInvoice(order.id, String(order.ref_code || order.id))}
                                                 className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
                                                 title="Download Invoice PDF"
                                             >

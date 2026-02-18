@@ -98,7 +98,7 @@ export default function DeliveryZonesPage() {
     }
 
     const activeZones = zones.filter(z => z.is_active !== false).length
-    const avgFee = zones.length > 0 ? zones.reduce((s, z) => s + parseFloat(z.base_fee || 0), 0) / zones.length : 0
+    const avgFee = zones.length > 0 ? zones.reduce((s, z) => s + parseFloat(String(z.base_fee || 0)), 0) / zones.length : 0
 
     if (loading) {
         return (
@@ -251,7 +251,7 @@ export default function DeliveryZonesPage() {
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="bg-gray-50 rounded-lg p-2 text-center">
                                         <p className="text-xs text-gray-400">Base Fee</p>
-                                        <p className="font-bold text-sm text-emerald-600">{fmt(parseFloat(z.base_fee || 0))}</p>
+                                        <p className="font-bold text-sm text-emerald-600">{fmt(parseFloat(String(z.base_fee || 0)))}</p>
                                     </div>
                                     <div className="bg-gray-50 rounded-lg p-2 text-center">
                                         <p className="text-xs text-gray-400">Est. Transit</p>

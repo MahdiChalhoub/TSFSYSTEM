@@ -140,7 +140,7 @@ export default function SalesAnalyticsPage() {
             </div>
 
             {/* Daily Trend (simplified bar chart) */}
-            {daily_trend?.length > 0 && (
+            {(daily_trend?.length ?? 0) > 0 && (
                 <Card>
                     <CardHeader className="py-3">
                         <CardTitle className="text-base flex items-center gap-2">
@@ -149,8 +149,8 @@ export default function SalesAnalyticsPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="flex items-end gap-1 h-32">
-                            {daily_trend.map((d: any, i: number) => {
-                                const max = Math.max(...daily_trend.map((t: any) => t.revenue))
+                            {daily_trend?.map((d: any, i: number) => {
+                                const max = Math.max(...(daily_trend?.map((t: any) => t.revenue) ?? [0]))
                                 const pct = max ? (d.revenue / max * 100) : 0
                                 return (
                                     <div key={i} className="flex-1 flex flex-col items-center gap-1 group">

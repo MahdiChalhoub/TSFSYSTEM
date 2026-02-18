@@ -82,7 +82,7 @@ export default function DeliveryOrdersPage() {
     const pending = deliveries.filter(d => d.status === 'PENDING' || d.status === 'PREPARING').length
     const inTransit = deliveries.filter(d => d.status === 'IN_TRANSIT').length
     const delivered = deliveries.filter(d => d.status === 'DELIVERED').length
-    const totalFees = deliveries.reduce((s, d) => s + parseFloat(d.delivery_fee || 0), 0)
+    const totalFees = deliveries.reduce((s, d) => s + parseFloat(String(d.delivery_fee || 0)), 0)
 
     if (loading) {
         return (
@@ -303,7 +303,7 @@ export default function DeliveryOrdersPage() {
                         <div className="space-y-3">
                             {deliveries
                                 .filter(d => d.delivered_at || d.dispatched_at)
-                                .sort((a, b) => new Date(b.delivered_at || b.dispatched_at).getTime() - new Date(a.delivered_at || a.dispatched_at).getTime())
+                                .sort((a, b) => new Date(b.delivered_at || b.dispatched_at || '').getTime() - new Date(a.delivered_at || a.dispatched_at || '').getTime())
                                 .slice(0, 10)
                                 .map(d => (
                                     <div key={`timeline-${d.id}`} className="flex items-center gap-3 text-sm">
@@ -311,9 +311,9 @@ export default function DeliveryOrdersPage() {
                                         <span className="font-mono text-xs text-gray-400 w-14">DEL-{d.id}</span>
                                         <span className="font-medium">{d.recipient_name || d.contact_name || 'Unknown'}</span>
                                         <span className="text-gray-400">{'\u2192'}</span>
-                                        <Badge className={STATUS_CONFIG[d.status]?.bg || 'bg-gray-100'}>{STATUS_CONFIG[d.status]?.label || d.status}</Badge>
+                                        <Badge className={STATUS_CONFIG[d.status ?? '']?.bg || 'bg-gray-100'}>{STATUS_CONFIG[d.status ?? '']?.label || d.status}</Badge>
                                         <span className="ml-auto text-xs text-gray-400">
-                                            {new Date(d.delivered_at || d.dispatched_at).toLocaleString('fr-FR')}
+                                            {new Date(d.delivered_at || d.dispatched_at || '').toLocaleString('fr-FR')}
                                         </span>
                                     </div>
                                 ))}
