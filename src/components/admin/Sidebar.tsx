@@ -115,6 +115,8 @@ const MENU_ITEMS = [
                     { title: 'Discount Rules', path: '/sales/discounts' },
                     { title: 'Consignment', path: '/sales/consignment' },
                     { title: 'Delivery Zones', path: '/sales/delivery-zones' },
+                    { title: 'Sales Returns', path: '/sales/returns' },
+                    { title: 'Import Sales', path: '/sales/import' },
                 ]
             },
             {
@@ -124,6 +126,8 @@ const MENU_ITEMS = [
                     { title: 'Procurement Center', path: '/purchases' },
                     { title: 'New RFQ / Order', path: '/purchases/new-order' },
                     { title: 'Quick Purchase', path: '/purchases/new' },
+                    { title: 'Purchase Returns', path: '/purchases/returns' },
+                    { title: 'Supplier Sourcing', path: '/purchases/sourcing' },
                 ]
             },
         ]
@@ -156,6 +160,8 @@ const MENU_ITEMS = [
                     { title: 'Expiry Alerts', path: '/inventory/expiry-alerts' },
                     { title: 'Low Stock Alerts', path: '/inventory/low-stock' },
                     { title: 'Stock Movements', path: '/inventory/movements' },
+                    { title: 'Serial Numbers', path: '/inventory/serials' },
+                    { title: 'Stock Count', path: '/inventory/stock-count' },
                 ]
             },
             {
@@ -320,6 +326,8 @@ const MENU_ITEMS = [
         module: 'core',
         children: [
             { title: 'Sites & Branches', path: '/settings/sites' },
+            { title: 'Roles & Permissions', path: '/settings/roles' },
+            { title: 'Security Settings', path: '/settings/security', icon: Shield },
             { title: 'Billing & Subscription', path: '/subscription', icon: CreditCard },
         ]
     },
