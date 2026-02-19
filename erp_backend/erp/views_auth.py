@@ -3,7 +3,7 @@ import logging
 from django.db import transaction
 from django.conf import settings
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes, throttle_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes, authentication_classes
 from .throttles import LoginRateThrottle, RegisterRateThrottle
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -24,6 +24,7 @@ logger = logging.getLogger('erp')
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@authentication_classes([])  # No CSRF for public login endpoint
 @throttle_classes([LoginRateThrottle])
 def login_view(request):
     try:
@@ -182,6 +183,7 @@ class PublicConfigView(APIView):
 # ── Business Registration (Public) ──────────────────────────────────────────
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@authentication_classes([])  # No CSRF for public registration
 @throttle_classes([RegisterRateThrottle])
 def register_business_view(request):
     """
@@ -301,6 +303,7 @@ def register_business_view(request):
 # ── Password Reset (Forgot Password) ────────────────────────────────────────
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@authentication_classes([])  # No CSRF for public password reset
 @throttle_classes([LoginRateThrottle])
 def password_reset_request_view(request):
     """
@@ -328,6 +331,7 @@ def password_reset_request_view(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@authentication_classes([])  # No CSRF for public password reset confirm
 def password_reset_confirm_view(request):
     """
     Step 2: User submits uid, token, and new password.
