@@ -212,6 +212,8 @@ export const MENU_ITEMS = [
                 title: 'Operations',
                 icon: ClipboardList,
                 children: [
+                    { title: 'Invoices', path: '/finance/invoices' },
+                    { title: 'Payments', path: '/finance/payments' },
                     { title: 'Vouchers', path: '/finance/vouchers' },
                     { title: 'Expenses', path: '/finance/expenses' },
                     { title: 'Deferred Expenses', path: '/finance/deferred-expenses' },
