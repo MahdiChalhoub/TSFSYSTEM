@@ -117,7 +117,7 @@ export default function InvoicesPage() {
         const fd = new FormData(e.currentTarget)
         startTransition(async () => {
             try {
-                await recordInvoicePayment(selectedInvoice.id, Number(fd.get('amount')))
+                await recordInvoicePayment(selectedInvoice.id, { amount: Number(fd.get('amount')) })
                 toast.success("Payment recorded")
                 setPaymentOpen(false)
                 setSelectedInvoice(null)
