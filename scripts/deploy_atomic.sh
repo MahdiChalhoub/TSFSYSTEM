@@ -22,7 +22,6 @@
 set -euo pipefail
 
 # ── Load Configuration ────────────────────────────────────────────────────────
-# Allow overriding configuration via environment variables or a .env file
 CONF_FILE="${DEPLOY_CONF:-.deploy.env}"
 if [[ -f "$CONF_FILE" ]]; then
     echo "📜 Loading config from $CONF_FILE"
@@ -61,8 +60,8 @@ gate() {
         err "  DEPLOY ABORTED — $ERRORS error(s) in pre-validation"
         err "  Nothing was deployed. Production is unchanged."
         err "═══════════════════════════════════════════════════"
-        # Cleanup failed release directory
-        rm -rf "$NEW_RELEASE" 2>/dev/null || true
+        # Cleanup failed release directory (DISABLED FOR DEBUGGING)
+        # rm -rf "$NEW_RELEASE" 2>/dev/null || true
         exit 1
     fi
 }
@@ -72,7 +71,6 @@ gate() {
 # ══════════════════════════════════════════════════════════════════════════════
 if [[ "${1:-}" == "--rollback" ]]; then
     log "🔄 ROLLBACK requested..."
-    # ls -1t sorts by time, head -2 gets current and previous, tail -1 gets previous
     PREVIOUS=$(ls -1t "$RELEASES_DIR" | sed -n '2p')
     if [[ -z "$PREVIOUS" ]]; then
         err "No previous release found to rollback to!"
@@ -125,29 +123,29 @@ source venv/bin/activate
 
 # 2a. Install dependencies
 log "  📦 Installing Python dependencies..."
-if pip install -r requirements.txt -q 2>&1 | tail -n 3; then
+if pip install -r requirements.txt -q >> "$LOG_FILE" 2>&1; then
     ok "  Python dependencies installed"
 else
-    err "  pip install failed! Check requirements.txt"
+    err "  pip install failed! Check $LOG_FILE"
 fi
 
 # 2b. Django system check
 log "  🔍 Running Django system check..."
-if python manage.py check 2>&1 | tail -n 5; then
+if python manage.py check >> "$LOG_FILE" 2>&1; then
     ok "  Django system check passed"
 else
-    err "  Django system check FAILED! Fix model/config errors before deploying."
+    err "  Django system check FAILED! Check $LOG_FILE"
 fi
 
 # 2c. Migrations dry-run
 log "  🗃️  Checking migrations..."
-if python manage.py showmigrations 2>&1 | grep -q "\[ \]"; then
+if python manage.py showmigrations | grep -q '\[ \]'; then
     log "  📋 Pending migrations found:"
-    python manage.py showmigrations 2>&1 | grep "\[ \]" | head -10
-    if python manage.py migrate --plan 2>&1 | tail -n 5; then
+    python manage.py showmigrations | grep '\[ \]' | head -10
+    if python manage.py migrate --plan >> "$LOG_FILE" 2>&1; then
         ok "  Migration plan validated"
     else
-        err "  Migration plan has errors! Fix before deploying."
+        err "  Migration plan has errors! Check $LOG_FILE"
     fi
 else
     ok "  No pending migrations"
@@ -155,7 +153,7 @@ fi
 
 # 2d. Ensure platform command check
 log "  👤 Verifying ensure_platform..."
-if python manage.py ensure_platform 2>&1 | tail -n 5; then
+if python manage.py ensure_platform >> "$LOG_FILE" 2>&1; then
     ok "  Platform integrity verified"
 else
     warn "  ensure_platform had issues (non-fatal)"
@@ -175,15 +173,10 @@ fi
 
 # 3a. Build Next.js
 log "  🔨 Building Next.js application..."
-BUILD_OUTPUT=$(npm run build 2>&1) || {
-    err "  Frontend build FAILED!"
-    echo "$BUILD_OUTPUT" | tail -30
-    echo "$BUILD_OUTPUT" | tail -30 >> "$LOG_FILE"
-}
-
-if [[ $ERRORS -eq 0 ]]; then
+if npm run build >> "$LOG_FILE" 2>&1; then
     ok "  Frontend build succeeded"
-    echo "$BUILD_OUTPUT" | tail -5
+else
+    err "  Frontend build FAILED! Check $LOG_FILE"
 fi
 
 gate
@@ -216,8 +209,8 @@ log ""
 log "🗃️  [4/6] Applying migrations..."
 cd "$NEW_RELEASE/erp_backend"
 source venv/bin/activate
-python manage.py migrate --no-input 2>&1 | tail -n 5
-python manage.py collectstatic --noinput -q 2>&1 | tail -n 2
+python manage.py migrate --no-input >> "$LOG_FILE" 2>&1
+python manage.py collectstatic --noinput -q >> "$LOG_FILE" 2>&1
 ok "Migrations applied"
 
 # ── Step 5: Atomic Symlink Swap ───────────────────────────────────────────────
@@ -233,7 +226,7 @@ ok "Symlink swapped: $CURRENT_LINK → $NEW_RELEASE"
 # ── Step 6: Graceful Service Restart ──────────────────────────────────────────
 log "♻️  [6/6] Graceful service restart..."
 
-# Gunicorn graceful reload (if used)
+# Gunicorn graceful reload
 WSGI_PROCESS=$(pgrep -f 'gunicorn.*core.wsgi' | head -1 || true)
 if [[ -n "$WSGI_PROCESS" ]]; then
     log "  Sending SIGHUP to Gunicorn (PID: $WSGI_PROCESS)..."
@@ -255,23 +248,19 @@ fi
 # ── Post-Deploy Health Check with Auto-Rollback ───────────────────────────────
 log ""
 log "🩺 Running post-deploy health check..."
-sleep 5  # Give services time to start
+sleep 5
 
 BACKEND_OK=false
 FRONTEND_OK=false
 
 for i in $(seq 1 "$HEALTH_TIMEOUT"); do
-    # Check backend
     if ! $BACKEND_OK; then
-        # Use -L to follow redirects if necessary
         BE_CODE=$(curl -s -L -o /dev/null -w '%{http_code}' "$HEALTH_URL_BACKEND" 2>/dev/null || echo "000")
         if [[ "$BE_CODE" == "200" ]]; then
             BACKEND_OK=true
             ok "  Backend health: HTTP $BE_CODE"
         fi
     fi
-
-    # Check frontend
     if ! $FRONTEND_OK; then
         FE_CODE=$(curl -s -L -o /dev/null -w '%{http_code}' "$HEALTH_URL_FRONTEND" 2>/dev/null || echo "000")
         if [[ "$FE_CODE" == "200" ]]; then
@@ -279,10 +268,7 @@ for i in $(seq 1 "$HEALTH_TIMEOUT"); do
             ok "  Frontend health: HTTP $FE_CODE"
         fi
     fi
-
-    if $BACKEND_OK && $FRONTEND_OK; then
-        break
-    fi
+    if $BACKEND_OK && $FRONTEND_OK; then break; fi
     sleep 1
 done
 
@@ -290,17 +276,12 @@ if $BACKEND_OK && $FRONTEND_OK; then
     ok "Both services healthy!"
 else
     err "Health check FAILED after ${HEALTH_TIMEOUT}s"
-    [[ "$BACKEND_OK" == false ]] && err "  Backend: NOT RESPONDING ($HEALTH_URL_BACKEND)"
-    [[ "$FRONTEND_OK" == false ]] && err "  Frontend: NOT RESPONDING ($HEALTH_URL_FRONTEND)"
-
     log "🔄 AUTO-ROLLBACK triggered..."
     if [[ "$OLD_RELEASE" != "none" && -d "$OLD_RELEASE" ]]; then
         ln -sfn "$OLD_RELEASE" "${CURRENT_LINK}.tmp"
         mv -Tf "${CURRENT_LINK}.tmp" "$CURRENT_LINK"
         pm2 restart all
         ok "Rolled back to: $OLD_RELEASE"
-    else
-        err "No previous release to rollback to! Manual intervention required."
     fi
     exit 1
 fi
@@ -309,7 +290,6 @@ fi
 log ""
 log "🧹 Cleaning old releases (keeping last $MAX_RELEASES)..."
 cd "$RELEASES_DIR"
-# shellcheck disable=SC2012
 ls -1t | tail -n +$((MAX_RELEASES + 1)) | xargs -r rm -rf
 ok "Cleanup complete"
 
@@ -317,8 +297,4 @@ ok "Cleanup complete"
 log ""
 log "═══════════════════════════════════════════════════"
 log "  ✅ DEPLOYMENT SUCCESSFUL"
-log "  Release:  $TIMESTAMP"
-log "  Symlink:  $CURRENT_LINK → $NEW_RELEASE"
-log "  Backend:  ✅ Healthy"
-log "  Frontend: ✅ Healthy"
 log "═══════════════════════════════════════════════════"
