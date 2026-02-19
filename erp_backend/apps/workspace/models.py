@@ -102,6 +102,14 @@ class WorkspaceConfig(TenantModel):
 # TASK MANAGEMENT
 # =============================================================================
 
+SOURCE_CHOICES = (
+    ('MANUAL', 'Manual'),
+    ('SYSTEM', 'System Generated'),
+    ('RECURRING', 'Recurring Instance'),
+    ('REPLY', 'Task Response'),
+)
+
+
 class TaskCategory(TenantModel):
     """Categories for organizing tasks (e.g. Inventory, Finance, HR)."""
     name = models.CharField(max_length=100)
@@ -198,6 +206,8 @@ class Task(TenantModel):
     Supports hierarchy (higher→lower), bidirectional flow (replies go back up),
     and recurring instances.
     """
+    title = models.CharField(max_length=255)
+    description = models.TextField(null=True, blank=True)
     status = models.CharField(max_length=20, default='PENDING', help_text='Internal status code')
     priority = models.CharField(max_length=20, default='MEDIUM', help_text='Internal priority code')
     source = models.CharField(max_length=15, choices=SOURCE_CHOICES, default='MANUAL')
@@ -541,9 +551,17 @@ class QuestionnaireAnswer(TenantModel):
         return f"Q: {self.question.question_text[:50]} → {self.score}"
 
 
-# =============================================================================
-# KPI & PERFORMANCE SCORING
-# =============================================================================
+class EmployeePerformance(TenantModel):
+    """Monthly performance score for an employee."""
+    employee = models.ForeignKey(User, on_delete=models.CASCADE, related_name='performance_records')
+    period_label = models.CharField(max_length=50) # e.g. "2026-02"
+    
+    overall_score = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'))
+    tier = models.CharField(max_length=20, null=True, blank=True) # BRONZE, SILVER, GOLD, PLATINUM
+    
+    class Meta:
+        db_table = 'workspace_employee_performance'
+        unique_together = ('organization', 'employee', 'period_label')
 
     def calculate_tier(self, config=None):
         """Determine performance tier from overall_score using WorkspaceConfig thresholds."""
