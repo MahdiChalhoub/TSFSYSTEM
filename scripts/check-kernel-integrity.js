@@ -14,7 +14,7 @@ const APPROVED_DIRS = [
     'mcp',          // MCP AI Connector (SaaS-integrated AI module)
     'modules',
     'organizations',
-    'saas-dashboard', // SaaS admin overview dashboard
+    'saas-home',      // SaaS admin entry point (replaces saas-dashboard)
     'settings',
     'subscription',
     'subscription-plans',

@@ -4,8 +4,19 @@ Supplier Portal — Serializers
 from rest_framework import serializers
 from .models import (
     SupplierPortalAccess, SupplierProforma, ProformaLine,
-    PriceChangeRequest, SupplierNotification,
+    PriceChangeRequest, SupplierNotification, SupplierPortalConfig,
 )
+
+
+# =============================================================================
+# SUPPLIER PORTAL CONFIGURATION
+# =============================================================================
+
+class SupplierPortalConfigSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SupplierPortalConfig
+        fields = '__all__'
+        read_only_fields = ('organization',)
 
 
 # =============================================================================

@@ -9,6 +9,96 @@ from erp.models import TenantModel, User
 
 
 # =============================================================================
+# WORKSPACE CONFIGURATION
+# =============================================================================
+
+class WorkspaceConfig(TenantModel):
+    """
+    Per-organization configuration for the Workspace module.
+    Allows customizing task labels, colors, and performance scoring.
+    """
+    # Task Statuses: CODE -> { label, color, icon }
+    task_statuses = models.JSONField(
+        default=dict, blank=True,
+        help_text='JSON: {"PENDING": {"label": "Pending", "color": "#94a3b8"}, ...}'
+    )
+    # Task Priorities: CODE -> { label, color, multiplier }
+    task_priorities = models.JSONField(
+        default=dict, blank=True,
+        help_text='JSON: {"URGENT": {"label": "Urgent", "color": "#ef4444", "multiplier": 2.0}, ...}'
+    )
+    # KPI Weights (Replaces old KPIConfig)
+    task_completion_weight = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('30.00'))
+    on_time_weight = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('25.00'))
+    checklist_weight = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('20.00'))
+    evaluation_weight = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('25.00'))
+    
+    # Tier thresholds (percentage-based)
+    bronze_threshold = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('40.00'))
+    silver_threshold = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('60.00'))
+    gold_threshold = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('80.00'))
+    platinum_threshold = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('90.00'))
+
+    # Checklist Triggers: CODE -> label
+    checklist_triggers = models.JSONField(
+        default=dict, blank=True,
+        help_text='JSON: {"SHIFT_START": "Start of Shift", ...}'
+    )
+    # Employee Request Types: CODE -> label
+    request_types = models.JSONField(
+        default=dict, blank=True,
+        help_text='JSON: {"EXPENSE": "Expense Claim", ...}'
+    )
+
+    # Feature Toggles
+    enable_auto_tasks = models.BooleanField(default=True)
+    enable_checklists = models.BooleanField(default=True)
+    enable_performance_scoring = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'workspace_config'
+        verbose_name = 'Workspace Configuration'
+        verbose_name_plural = 'Workspace Configurations'
+
+    @classmethod
+    def get_config(cls, organization):
+        config, created = cls.objects.get_or_create(organization=organization)
+        if created:
+            # Seed with default values
+            config.task_statuses = {
+                'PENDING': {'label': 'Pending', 'color': '#94a3b8', 'icon': 'Clock'},
+                'IN_PROGRESS': {'label': 'In Progress', 'color': '#6366f1', 'icon': 'Play'},
+                'AWAITING_RESPONSE': {'label': 'Awaiting Response', 'color': '#f59e0b', 'icon': 'HelpCircle'},
+                'COMPLETED': {'label': 'Completed', 'color': '#22c55e', 'icon': 'CheckCircle'},
+                'CANCELLED': {'label': 'Cancelled', 'color': '#ef4444', 'icon': 'XCircle'},
+                'OVERDUE': {'label': 'Overdue', 'color': '#f43f5e', 'icon': 'AlertTriangle'},
+            }
+            config.task_priorities = {
+                'LOW': {'label': 'Low', 'color': '#94a3b8', 'multiplier': 0.5},
+                'MEDIUM': {'label': 'Medium', 'color': '#6366f1', 'multiplier': 1.0},
+                'HIGH': {'label': 'High', 'color': '#f59e0b', 'multiplier': 1.5},
+                'URGENT': {'label': 'Urgent', 'color': '#ef4444', 'multiplier': 2.0},
+            }
+            config.checklist_triggers = {
+                'SHIFT_START': 'Start of Shift',
+                'SHIFT_MID': 'Mid-Shift',
+                'SHIFT_END': 'End of Shift',
+                'DAILY': 'Daily',
+                'WEEKLY': 'Weekly',
+                'CUSTOM': 'Custom / On Demand',
+            }
+            config.request_types = {
+                'SUGGESTION': 'General Suggestion',
+                'MAINTENANCE': 'Maintenance Issue',
+                'COMPLAINT': 'Workplace Complaint',
+                'ABSENCE': 'Planned Absence',
+                'OVERTIME': 'Overtime Claim',
+            }
+            config.save()
+        return config
+
+
+# =============================================================================
 # TASK MANAGEMENT
 # =============================================================================
 
@@ -33,16 +123,7 @@ class TaskTemplate(TenantModel):
     Reusable task blueprints for recurring or auto-generated tasks.
     Defines default values for task creation.
     """
-    PRIORITY_CHOICES = (
-        ('LOW', 'Low'),
-        ('MEDIUM', 'Medium'),
-        ('HIGH', 'High'),
-        ('URGENT', 'Urgent'),
-    )
-    name = models.CharField(max_length=200)
-    description = models.TextField(null=True, blank=True)
-    category = models.ForeignKey(TaskCategory, on_delete=models.SET_NULL, null=True, blank=True)
-    default_priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='MEDIUM')
+    default_priority = models.CharField(max_length=20, default='MEDIUM', help_text='Internal priority code')
     default_points = models.IntegerField(default=1, help_text='Points earned on completion')
     estimated_minutes = models.IntegerField(default=30, help_text='Estimated time in minutes')
     # Recurrence
@@ -117,35 +198,8 @@ class Task(TenantModel):
     Supports hierarchy (higher→lower), bidirectional flow (replies go back up),
     and recurring instances.
     """
-    STATUS_CHOICES = (
-        ('PENDING', 'Pending'),
-        ('IN_PROGRESS', 'In Progress'),
-        ('AWAITING_RESPONSE', 'Awaiting Response'),
-        ('COMPLETED', 'Completed'),
-        ('CANCELLED', 'Cancelled'),
-        ('OVERDUE', 'Overdue'),
-    )
-    PRIORITY_CHOICES = (
-        ('LOW', 'Low'),
-        ('MEDIUM', 'Medium'),
-        ('HIGH', 'High'),
-        ('URGENT', 'Urgent'),
-    )
-    SOURCE_CHOICES = (
-        ('MANUAL', 'Manual'),
-        ('AUTO', 'Auto-Generated'),
-        ('RECURRING', 'Recurring Schedule'),
-        ('REQUEST', 'Employee Request'),
-    )
-
-    title = models.CharField(max_length=300)
-    description = models.TextField(null=True, blank=True)
-    category = models.ForeignKey(TaskCategory, on_delete=models.SET_NULL, null=True, blank=True)
-    template = models.ForeignKey(TaskTemplate, on_delete=models.SET_NULL, null=True, blank=True)
-    auto_rule = models.ForeignKey(AutoTaskRule, on_delete=models.SET_NULL, null=True, blank=True)
-
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
-    priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='MEDIUM')
+    status = models.CharField(max_length=20, default='PENDING', help_text='Internal status code')
+    priority = models.CharField(max_length=20, default='MEDIUM', help_text='Internal priority code')
     source = models.CharField(max_length=15, choices=SOURCE_CHOICES, default='MANUAL')
 
     # Assignment (Higher → Lower)
@@ -259,22 +313,10 @@ class EmployeeRequest(TenantModel):
     Requests/suggestions from lower to higher in the hierarchy.
     These are NOT direct tasks — they require approval to become tasks.
     """
-    TYPE_CHOICES = (
-        ('MATERIAL', 'Material Request'),
-        ('SUGGESTION', 'Suggestion'),
-        ('ESCALATION', 'Escalation'),
-        ('SCHEDULE', 'Schedule Change'),
-        ('OTHER', 'Other'),
-    )
-    STATUS_CHOICES = (
-        ('PENDING', 'Pending'),
-        ('APPROVED', 'Approved'),
-        ('REJECTED', 'Rejected'),
-    )
     title = models.CharField(max_length=300)
     description = models.TextField(null=True, blank=True)
-    request_type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='SUGGESTION')
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
+    request_type = models.CharField(max_length=30, default='SUGGESTION', help_text='Internal request type code')
+    status = models.CharField(max_length=20, default='PENDING', help_text='Internal status code')
     requested_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True,
         related_name='employee_requests'
@@ -318,17 +360,7 @@ class ChecklistTemplate(TenantModel):
     """
     Reusable checklist blueprints (e.g. Start of Shift, End of Shift).
     """
-    TRIGGER_CHOICES = (
-        ('SHIFT_START', 'Start of Shift'),
-        ('SHIFT_MID', 'Mid-Shift'),
-        ('SHIFT_END', 'End of Shift'),
-        ('DAILY', 'Daily'),
-        ('WEEKLY', 'Weekly'),
-        ('CUSTOM', 'Custom / On Demand'),
-    )
-    name = models.CharField(max_length=200)
-    description = models.TextField(null=True, blank=True)
-    trigger = models.CharField(max_length=20, choices=TRIGGER_CHOICES, default='CUSTOM')
+    trigger = models.CharField(max_length=30, default='CUSTOM', help_text='Internal trigger code')
     assign_to_role = models.ForeignKey(
         'erp.Role', on_delete=models.SET_NULL, null=True, blank=True,
         help_text='Auto-assign to users with this role'
@@ -364,16 +396,7 @@ class ChecklistTemplateItem(TenantModel):
 
 class ChecklistInstance(TenantModel):
     """An assigned checklist to a specific employee for a specific date/shift."""
-    STATUS_CHOICES = (
-        ('PENDING', 'Pending'),
-        ('IN_PROGRESS', 'In Progress'),
-        ('COMPLETED', 'Completed'),
-        ('MISSED', 'Missed'),
-    )
-    template = models.ForeignKey(ChecklistTemplate, on_delete=models.CASCADE)
-    assigned_to = models.ForeignKey(User, on_delete=models.CASCADE, related_name='checklists')
-    date = models.DateField()
-    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='PENDING')
+    status = models.CharField(max_length=20, default='PENDING', help_text='Internal status code')
     completed_at = models.DateTimeField(null=True, blank=True)
     points_earned = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
@@ -522,67 +545,10 @@ class QuestionnaireAnswer(TenantModel):
 # KPI & PERFORMANCE SCORING
 # =============================================================================
 
-class KPIConfig(TenantModel):
-    """Organization-level KPI weights and thresholds."""
-    task_completion_weight = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('30.00'))
-    on_time_weight = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('25.00'))
-    checklist_weight = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('20.00'))
-    evaluation_weight = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('25.00'))
-    # Tier thresholds (percentage-based)
-    bronze_threshold = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('40.00'))
-    silver_threshold = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('60.00'))
-    gold_threshold = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('80.00'))
-    platinum_threshold = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('90.00'))
-
-    class Meta:
-        db_table = 'workspace_kpi_config'
-
-    def __str__(self):
-        return f"KPI Config ({self.organization})"
-
-
-class EmployeeScore(TenantModel):
-    """
-    Monthly/periodic score summary for each employee.
-    Combines task points, checklist compliance, and evaluation scores.
-    """
-    TIER_CHOICES = (
-        ('BRONZE', 'Bronze'),
-        ('SILVER', 'Silver'),
-        ('GOLD', 'Gold'),
-        ('PLATINUM', 'Platinum'),
-    )
-    employee = models.ForeignKey(User, on_delete=models.CASCADE, related_name='performance_scores')
-    period_label = models.CharField(max_length=50, help_text='e.g. "2026-02", "2026-Q1"')
-    # Individual metrics
-    tasks_assigned = models.IntegerField(default=0)
-    tasks_completed = models.IntegerField(default=0)
-    tasks_on_time = models.IntegerField(default=0)
-    tasks_overdue = models.IntegerField(default=0)
-    task_points = models.IntegerField(default=0)
-    checklist_total = models.IntegerField(default=0)
-    checklist_completed = models.IntegerField(default=0)
-    evaluation_score = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'))
-    # Computed
-    overall_score = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'))
-    tier = models.CharField(max_length=10, choices=TIER_CHOICES, null=True, blank=True)
-    # Timesheet link
-    hours_worked = models.DecimalField(max_digits=7, decimal_places=2, default=Decimal('0.00'))
-    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
-    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
-
-    class Meta:
-        db_table = 'workspace_employee_score'
-        unique_together = ('organization', 'employee', 'period_label')
-        ordering = ['-period_label']
-
-    def __str__(self):
-        return f"{self.employee} — {self.period_label} ({self.tier or 'N/A'})"
-
     def calculate_tier(self, config=None):
-        """Determine performance tier from overall_score using KPIConfig thresholds."""
+        """Determine performance tier from overall_score using WorkspaceConfig thresholds."""
         if not config:
-            config = KPIConfig.objects.filter(organization=self.organization).first()
+            config = WorkspaceConfig.get_config(self.organization)
         if not config:
             return
         score = float(self.overall_score)

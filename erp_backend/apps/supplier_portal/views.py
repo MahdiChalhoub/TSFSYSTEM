@@ -15,7 +15,7 @@ from django.db.models import Q, Count, Sum
 from erp.views import TenantModelViewSet
 from .models import (
     SupplierPortalAccess, SupplierProforma, ProformaLine,
-    PriceChangeRequest, SupplierNotification,
+    PriceChangeRequest, SupplierNotification, SupplierPortalConfig,
 )
 from .serializers import (
     SupplierPortalAccessSerializer,
@@ -26,10 +26,26 @@ from .serializers import (
     SupplierDashboardSerializer,
     SupplierPOReadSerializer,
     SupplierStockReadSerializer,
+    SupplierPortalConfigSerializer,
 )
 from .permissions import IsSupplierUser, HasSupplierPermission
 
 logger = logging.getLogger(__name__)
+
+
+# =============================================================================
+# ADMIN-SIDE: Module Configuration
+# =============================================================================
+
+class SupplierPortalConfigViewSet(TenantModelViewSet):
+    """Admin management of supplier portal configuration."""
+    queryset = SupplierPortalConfig.objects.all()
+    serializer_class = SupplierPortalConfigSerializer
+
+    @action(detail=False, methods=['get'])
+    def current(self, request):
+        config = SupplierPortalConfig.get_config(request.user.organization)
+        return Response(SupplierPortalConfigSerializer(config).data)
 
 
 # =============================================================================

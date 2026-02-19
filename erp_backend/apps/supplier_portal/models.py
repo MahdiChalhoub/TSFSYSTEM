@@ -17,6 +17,58 @@ from erp.models import TenantModel
 
 
 # =============================================================================
+# SUPPLIER PORTAL CONFIGURATION
+# =============================================================================
+
+class SupplierPortalConfig(TenantModel):
+    """
+    Per-organization configuration for the Supplier Portal module.
+    Allows customizing proforma workflows, currencies, and status labels.
+    """
+    # Proforma Workflow
+    proforma_auto_approve_threshold = models.DecimalField(
+        max_digits=15, decimal_places=2, default=Decimal('0.00'),
+        help_text='Auto-approve proformas below this amount (0 = manual only)'
+    )
+    require_negotiation_notes = models.BooleanField(default=True)
+    default_currency = models.CharField(max_length=3, default='USD')
+
+    # Portal Feature Toggles
+    enable_price_requests = models.BooleanField(default=True)
+    enable_stock_visibility = models.BooleanField(default=True)
+    enable_statement_view = models.BooleanField(default=True)
+
+    # Status labels: CODE -> { label, color }
+    proforma_status_config = models.JSONField(
+        default=dict, blank=True,
+        help_text='JSON: {"DRAFT": {"label": "Draft", "color": "#94a3b8"}, ...}'
+    )
+
+    class Meta:
+        db_table = 'supplier_portal_config'
+        verbose_name = 'Supplier Portal Configuration'
+        verbose_name_plural = 'Supplier Portal Configurations'
+
+    @classmethod
+    def get_config(cls, organization):
+        config, created = cls.objects.get_or_create(organization=organization)
+        if created:
+            # Seed with default proforma status config
+            config.proforma_status_config = {
+                'DRAFT': {'label': 'Draft', 'color': '#94a3b8'},
+                'SUBMITTED': {'label': 'Submitted', 'color': '#6366f1'},
+                'UNDER_REVIEW': {'label': 'Under Review', 'color': '#f59e0b'},
+                'NEGOTIATING': {'label': 'Negotiating', 'color': '#8b5cf6'},
+                'APPROVED': {'label': 'Approved', 'color': '#22c55e'},
+                'REJECTED': {'label': 'Rejected', 'color': '#ef4444'},
+                'CONVERTED': {'label': 'Converted to PO', 'color': '#10b981'},
+                'CANCELLED': {'label': 'Cancelled', 'color': '#64748b'},
+            }
+            config.save()
+        return config
+
+
+# =============================================================================
 # SUPPLIER PORTAL ACCESS
 # =============================================================================
 
@@ -94,10 +146,6 @@ class SupplierPortalAccess(TenantModel):
             self.save(update_fields=['permissions'])
 
 
-# =============================================================================
-# SUPPLIER PROFORMA
-# =============================================================================
-
 class SupplierProforma(TenantModel):
     """
     A proforma invoice created by a supplier and submitted for approval.
@@ -107,17 +155,6 @@ class SupplierProforma(TenantModel):
         APPROVED → auto-creates PurchaseOrder
         NEGOTIATING → SUBMITTED (resubmit with changes)
     """
-    STATUS_CHOICES = (
-        ('DRAFT', 'Draft'),
-        ('SUBMITTED', 'Submitted'),
-        ('UNDER_REVIEW', 'Under Review'),
-        ('NEGOTIATING', 'Negotiating'),
-        ('APPROVED', 'Approved'),
-        ('REJECTED', 'Rejected'),
-        ('CONVERTED', 'Converted to PO'),
-        ('CANCELLED', 'Cancelled'),
-    )
-
     VALID_TRANSITIONS = {
         'DRAFT': {'SUBMITTED', 'CANCELLED'},
         'SUBMITTED': {'UNDER_REVIEW', 'APPROVED', 'REJECTED', 'NEGOTIATING', 'CANCELLED'},
@@ -131,7 +168,7 @@ class SupplierProforma(TenantModel):
 
     # Reference
     proforma_number = models.CharField(max_length=50, null=True, blank=True, db_index=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
+    status = models.CharField(max_length=20, default='DRAFT', help_text='Internal status code')
 
     # Supplier
     supplier = models.ForeignKey(
@@ -213,7 +250,15 @@ class SupplierProforma(TenantModel):
 
         if new_status == 'SUBMITTED':
             self.submitted_at = timezone.now()
-        elif new_status in ('APPROVED', 'REJECTED', 'NEGOTIATING'):
+            # Check for auto-approval threshold
+            config = SupplierPortalConfig.get_config(self.organization)
+            threshold = config.proforma_auto_approve_threshold
+            if threshold > 0 and self.total_amount <= threshold:
+                new_status = 'APPROVED'
+                self.reviewed_at = timezone.now()
+                self.internal_notes = f"Auto-approved (Total {self.total_amount} <= Threshold {threshold})"
+
+        if new_status in ('APPROVED', 'REJECTED', 'NEGOTIATING'):
             self.reviewed_by = user
             self.reviewed_at = timezone.now()
             if new_status == 'REJECTED':
@@ -226,12 +271,17 @@ class SupplierProforma(TenantModel):
 
     def recalculate_totals(self):
         """Recalculate proforma totals from line items."""
+        # Use default currency from config if not set
+        if not self.currency:
+            config = SupplierPortalConfig.get_config(self.organization)
+            self.currency = config.default_currency
+
         lines = self.lines.all()
         self.subtotal = sum(l.line_total for l in lines)
         self.tax_amount = sum(l.tax_amount for l in lines)
         total = self.subtotal + self.tax_amount - self.discount_amount
         self.total_amount = max(total, Decimal('0.00'))
-        self.save(update_fields=['subtotal', 'tax_amount', 'total_amount'])
+        self.save(update_fields=['subtotal', 'tax_amount', 'total_amount', 'currency'])
 
 
 class ProformaLine(TenantModel):

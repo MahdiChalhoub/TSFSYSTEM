@@ -7,7 +7,7 @@ from .models import (
     TaskAttachment, EmployeeRequest,
     ChecklistTemplate, ChecklistTemplateItem, ChecklistInstance, ChecklistItemResponse,
     Questionnaire, QuestionnaireQuestion, QuestionnaireResponse, QuestionnaireAnswer,
-    KPIConfig, EmployeeScore,
+    WorkspaceConfig, EmployeeScore,
 )
 
 
@@ -234,9 +234,9 @@ class QuestionnaireResponseSerializer(serializers.ModelSerializer):
 # KPI & SCORING
 # =============================================================================
 
-class KPIConfigSerializer(serializers.ModelSerializer):
+class WorkspaceConfigSerializer(serializers.ModelSerializer):
     class Meta:
-        model = KPIConfig
+        model = WorkspaceConfig
         fields = '__all__'
         read_only_fields = ('organization',)
 

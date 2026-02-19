@@ -15,7 +15,7 @@ from .models import (
     TaskAttachment, EmployeeRequest,
     ChecklistTemplate, ChecklistTemplateItem, ChecklistInstance, ChecklistItemResponse,
     Questionnaire, QuestionnaireQuestion, QuestionnaireResponse, QuestionnaireAnswer,
-    KPIConfig, EmployeeScore,
+    WorkspaceConfig, EmployeeScore,
 )
 from .serializers import (
     TaskCategorySerializer, TaskTemplateSerializer, AutoTaskRuleSerializer,
@@ -25,7 +25,7 @@ from .serializers import (
     ChecklistInstanceSerializer, ChecklistItemResponseSerializer,
     QuestionnaireSerializer, QuestionnaireQuestionSerializer,
     QuestionnaireResponseSerializer, QuestionnaireAnswerSerializer,
-    KPIConfigSerializer, EmployeeScoreSerializer,
+    WorkspaceConfigSerializer, EmployeeScoreSerializer,
 )
 
 logger = logging.getLogger(__name__)
@@ -327,10 +327,15 @@ class QuestionnaireResponseViewSet(TenantFilterMixin, AuditLogMixin, viewsets.Mo
 # KPI & SCORING
 # =============================================================================
 
-class KPIConfigViewSet(TenantFilterMixin, AuditLogMixin, viewsets.ModelViewSet):
-    queryset = KPIConfig.objects.all()
-    serializer_class = KPIConfigSerializer
+class WorkspaceConfigViewSet(TenantFilterMixin, AuditLogMixin, viewsets.ModelViewSet):
+    queryset = WorkspaceConfig.objects.all()
+    serializer_class = WorkspaceConfigSerializer
     permission_classes = [IsAuthenticated]
+
+    @action(detail=False, methods=['get'])
+    def current(self, request):
+        config = WorkspaceConfig.get_config(request.user.organization)
+        return Response(WorkspaceConfigSerializer(config).data)
 
 
 class EmployeeScoreViewSet(TenantFilterMixin, AuditLogMixin, viewsets.ModelViewSet):
