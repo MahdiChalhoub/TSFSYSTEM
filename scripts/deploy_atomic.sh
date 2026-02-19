@@ -21,16 +21,28 @@
 
 set -euo pipefail
 
-# ── Configuration ─────────────────────────────────────────────────────────────
-APP_ROOT="/root/TSFSYSTEM"
-RELEASES_DIR="/root/releases"
-CURRENT_LINK="/root/current"           # Symlink → active release
-BRANCH="main"
-MAX_RELEASES=5                          # Keep last N releases for rollback
-HEALTH_URL_FRONTEND="https://tsf.ci"
-HEALTH_URL_BACKEND="https://api.tsf.ci/api/auth/config/"
-HEALTH_TIMEOUT=30                       # Seconds to wait for health check
-LOG_FILE="/var/log/tsf-deploy.log"
+# ── Load Configuration ────────────────────────────────────────────────────────
+# Allow overriding configuration via environment variables or a .env file
+CONF_FILE="${DEPLOY_CONF:-.deploy.env}"
+if [[ -f "$CONF_FILE" ]]; then
+    echo "📜 Loading config from $CONF_FILE"
+    # shellcheck disable=SC1090
+    source "$CONF_FILE"
+fi
+
+APP_ROOT="${APP_ROOT:-/root/TSFSYSTEM}"
+RELEASES_DIR="${RELEASES_DIR:-/root/releases}"
+CURRENT_LINK="${CURRENT_LINK:-/root/current}"
+BRANCH="${APP_BRANCH:-main}"
+MAX_RELEASES="${MAX_RELEASES:-5}"
+HEALTH_URL_FRONTEND="${HEALTH_URL_FRONTEND:-https://tsf.ci}"
+HEALTH_URL_BACKEND="${HEALTH_URL_BACKEND:-https://api.tsf.ci/api/auth/config/}"
+HEALTH_TIMEOUT="${HEALTH_TIMEOUT:-30}"
+LOG_FILE="${LOG_FILE:-/var/log/tsf-deploy.log}"
+
+# Services
+BACKEND_SERVICE="${BACKEND_SERVICE:-django}"
+FRONTEND_SERVICE="${FRONTEND_SERVICE:-nextjs}"
 
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 NEW_RELEASE="$RELEASES_DIR/$TIMESTAMP"
@@ -60,6 +72,7 @@ gate() {
 # ══════════════════════════════════════════════════════════════════════════════
 if [[ "${1:-}" == "--rollback" ]]; then
     log "🔄 ROLLBACK requested..."
+    # ls -1t sorts by time, head -2 gets current and previous, tail -1 gets previous
     PREVIOUS=$(ls -1t "$RELEASES_DIR" | sed -n '2p')
     if [[ -z "$PREVIOUS" ]]; then
         err "No previous release found to rollback to!"
@@ -118,7 +131,7 @@ else
     err "  pip install failed! Check requirements.txt"
 fi
 
-# 2b. Django system check (catches model errors, missing fields, etc.)
+# 2b. Django system check
 log "  🔍 Running Django system check..."
 if python manage.py check 2>&1 | tail -n 5; then
     ok "  Django system check passed"
@@ -126,12 +139,11 @@ else
     err "  Django system check FAILED! Fix model/config errors before deploying."
 fi
 
-# 2c. Migrations dry-run (check if migrations are valid without applying)
+# 2c. Migrations dry-run
 log "  🗃️  Checking migrations..."
 if python manage.py showmigrations 2>&1 | grep -q "\[ \]"; then
     log "  📋 Pending migrations found:"
     python manage.py showmigrations 2>&1 | grep "\[ \]" | head -10
-    # Try a dry-run migrate to catch schema errors
     if python manage.py migrate --plan 2>&1 | tail -n 5; then
         ok "  Migration plan validated"
     else
@@ -149,7 +161,7 @@ else
     warn "  ensure_platform had issues (non-fatal)"
 fi
 
-gate  # ← ABORT if any backend errors
+gate
 
 # ── Step 3: Frontend Validation ───────────────────────────────────────────────
 log ""
@@ -161,12 +173,12 @@ if [ ! -L "$NEW_RELEASE/node_modules" ]; then
     ln -s "$APP_ROOT/node_modules" "$NEW_RELEASE/node_modules"
 fi
 
-# 3a. Build Next.js (this catches TypeScript errors, import errors, etc.)
+# 3a. Build Next.js
 log "  🔨 Building Next.js application..."
 BUILD_OUTPUT=$(npm run build 2>&1) || {
     err "  Frontend build FAILED!"
-    echo "$BUILD_OUTPUT" | tail -20
-    echo "$BUILD_OUTPUT" | tail -20 >> "$LOG_FILE"
+    echo "$BUILD_OUTPUT" | tail -30
+    echo "$BUILD_OUTPUT" | tail -30 >> "$LOG_FILE"
 }
 
 if [[ $ERRORS -eq 0 ]]; then
@@ -174,7 +186,7 @@ if [[ $ERRORS -eq 0 ]]; then
     echo "$BUILD_OUTPUT" | tail -5
 fi
 
-gate  # ← ABORT if any frontend errors
+gate
 
 # ══════════════════════════════════════════════════════════════════════════════
 # VALIDATION COMPLETE
@@ -193,14 +205,14 @@ if [[ "$VALIDATE_ONLY" == true ]]; then
 fi
 
 # ══════════════════════════════════════════════════════════════════════════════
-# PHASE 2: GO LIVE (only reached if all validations pass)
+# PHASE 2: GO LIVE
 # ══════════════════════════════════════════════════════════════════════════════
 log "═══════════════════════════════════════════════════"
 log "  PHASE 2: GOING LIVE"
 log "═══════════════════════════════════════════════════"
 log ""
 
-# ── Step 4: Apply Migrations (for real) ───────────────────────────────────────
+# ── Step 4: Apply Migrations ──────────────────────────────────────────────────
 log "🗃️  [4/6] Applying migrations..."
 cd "$NEW_RELEASE/erp_backend"
 source venv/bin/activate
@@ -214,7 +226,6 @@ OLD_RELEASE=$(readlink -f "$CURRENT_LINK" 2>/dev/null || echo "none")
 log "  Old release: $OLD_RELEASE"
 log "  New release: $NEW_RELEASE"
 
-# Atomic swap: create temp link then rename (atomic on Linux)
 ln -sfn "$NEW_RELEASE" "${CURRENT_LINK}.tmp"
 mv -Tf "${CURRENT_LINK}.tmp" "$CURRENT_LINK"
 ok "Symlink swapped: $CURRENT_LINK → $NEW_RELEASE"
@@ -222,33 +233,38 @@ ok "Symlink swapped: $CURRENT_LINK → $NEW_RELEASE"
 # ── Step 6: Graceful Service Restart ──────────────────────────────────────────
 log "♻️  [6/6] Graceful service restart..."
 
-# Gunicorn graceful reload
-GUNICORN_PID=$(pgrep -f 'gunicorn.*core.wsgi' | head -1 || true)
-if [[ -n "$GUNICORN_PID" ]]; then
-    log "  Sending SIGHUP to Gunicorn (PID: $GUNICORN_PID)..."
-    kill -HUP "$GUNICORN_PID"
+# Gunicorn graceful reload (if used)
+WSGI_PROCESS=$(pgrep -f 'gunicorn.*core.wsgi' | head -1 || true)
+if [[ -n "$WSGI_PROCESS" ]]; then
+    log "  Sending SIGHUP to Gunicorn (PID: $WSGI_PROCESS)..."
+    kill -HUP "$WSGI_PROCESS"
     ok "  Gunicorn workers reloading gracefully"
-else
-    log "  Gunicorn not found via pgrep, using PM2 restart..."
-    pm2 restart django 2>/dev/null || true
 fi
 
-# Restart Next.js
-pm2 restart nextjs 2>/dev/null || true
-ok "  Frontend restarted"
+# PM2 Restarts
+if pm2 show "$BACKEND_SERVICE" > /dev/null 2>&1; then
+    pm2 restart "$BACKEND_SERVICE" 2>/dev/null
+    ok "  Backend ($BACKEND_SERVICE) restarted"
+fi
+
+if pm2 show "$FRONTEND_SERVICE" > /dev/null 2>&1; then
+    pm2 restart "$FRONTEND_SERVICE" 2>/dev/null
+    ok "  Frontend ($FRONTEND_SERVICE) restarted"
+fi
 
 # ── Post-Deploy Health Check with Auto-Rollback ───────────────────────────────
 log ""
 log "🩺 Running post-deploy health check..."
-sleep 3  # Give services time to start
+sleep 5  # Give services time to start
 
 BACKEND_OK=false
 FRONTEND_OK=false
 
-for i in $(seq 1 $HEALTH_TIMEOUT); do
+for i in $(seq 1 "$HEALTH_TIMEOUT"); do
     # Check backend
     if ! $BACKEND_OK; then
-        BE_CODE=$(curl -s -o /dev/null -w '%{http_code}' "$HEALTH_URL_BACKEND" 2>/dev/null || echo "000")
+        # Use -L to follow redirects if necessary
+        BE_CODE=$(curl -s -L -o /dev/null -w '%{http_code}' "$HEALTH_URL_BACKEND" 2>/dev/null || echo "000")
         if [[ "$BE_CODE" == "200" ]]; then
             BACKEND_OK=true
             ok "  Backend health: HTTP $BE_CODE"
@@ -257,7 +273,7 @@ for i in $(seq 1 $HEALTH_TIMEOUT); do
 
     # Check frontend
     if ! $FRONTEND_OK; then
-        FE_CODE=$(curl -s -o /dev/null -w '%{http_code}' "$HEALTH_URL_FRONTEND" 2>/dev/null || echo "000")
+        FE_CODE=$(curl -s -L -o /dev/null -w '%{http_code}' "$HEALTH_URL_FRONTEND" 2>/dev/null || echo "000")
         if [[ "$FE_CODE" == "200" ]]; then
             FRONTEND_OK=true
             ok "  Frontend health: HTTP $FE_CODE"
@@ -274,8 +290,8 @@ if $BACKEND_OK && $FRONTEND_OK; then
     ok "Both services healthy!"
 else
     err "Health check FAILED after ${HEALTH_TIMEOUT}s"
-    [[ "$BACKEND_OK" == false ]] && err "  Backend: NOT RESPONDING"
-    [[ "$FRONTEND_OK" == false ]] && err "  Frontend: NOT RESPONDING"
+    [[ "$BACKEND_OK" == false ]] && err "  Backend: NOT RESPONDING ($HEALTH_URL_BACKEND)"
+    [[ "$FRONTEND_OK" == false ]] && err "  Frontend: NOT RESPONDING ($HEALTH_URL_FRONTEND)"
 
     log "🔄 AUTO-ROLLBACK triggered..."
     if [[ "$OLD_RELEASE" != "none" && -d "$OLD_RELEASE" ]]; then
@@ -293,6 +309,7 @@ fi
 log ""
 log "🧹 Cleaning old releases (keeping last $MAX_RELEASES)..."
 cd "$RELEASES_DIR"
+# shellcheck disable=SC2012
 ls -1t | tail -n +$((MAX_RELEASES + 1)) | xargs -r rm -rf
 ok "Cleanup complete"
 
