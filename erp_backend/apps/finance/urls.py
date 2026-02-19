@@ -1,6 +1,6 @@
 """
 Finance Module URL Configuration
-Routes for all accounting, ledger, tax, and financial management endpoints.
+Routes for all accounting, ledger, tax, financial management, payment gateways, and reports.
 """
 from django.urls import path, include
 from rest_framework.routers import SimpleRouter
@@ -13,7 +13,8 @@ from apps.finance.views import (
     TransactionSequenceViewSet, ForensicAuditLogViewSet, AuditVerificationViewSet,
     DeferredExpenseViewSet, DirectExpenseViewSet, AssetViewSet, VoucherViewSet, ProfitDistributionViewSet,
     TaxGroupViewSet, PaymentViewSet, CustomerBalanceViewSet, SupplierBalanceViewSet,
-    InvoiceViewSet, InvoiceLineViewSet, PaymentAllocationViewSet
+    InvoiceViewSet, InvoiceLineViewSet, PaymentAllocationViewSet,
+    GatewayConfigViewSet, ReportViewSet,
 )
 
 router = SimpleRouter()
@@ -40,8 +41,9 @@ router.register(r'supplier-balances', SupplierBalanceViewSet)
 router.register(r'invoices', InvoiceViewSet)
 router.register(r'invoice-lines', InvoiceLineViewSet, basename='invoice-line')
 router.register(r'payment-allocations', PaymentAllocationViewSet, basename='payment-allocation')
+router.register(r'gateway-configs', GatewayConfigViewSet, basename='gateway-config')
+router.register(r'reports', ReportViewSet, basename='report')
 
 urlpatterns = [
     path('', include(router.urls)),
 ]
-
