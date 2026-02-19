@@ -209,11 +209,23 @@ class Task(TenantModel):
     """
     title = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
-    category = models.ForeignKey(TaskCategory, on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks')
-    template = models.ForeignKey(TaskTemplate, on_delete=models.SET_NULL, null=True, blank=True, related_name='instances')
     status = models.CharField(max_length=20, default='PENDING', help_text='Internal status code')
     priority = models.CharField(max_length=20, default='MEDIUM', help_text='Internal priority code')
     source = models.CharField(max_length=15, choices=SOURCE_CHOICES, default='MANUAL')
+
+    # Link to category & template
+    category = models.ForeignKey(
+        TaskCategory, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='tasks'
+    )
+    template = models.ForeignKey(
+        TaskTemplate, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='instances'
+    )
+    auto_rule = models.ForeignKey(
+        AutoTaskRule, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='generated_tasks'
+    )
 
     # Assignment (Higher → Lower)
     assigned_by = models.ForeignKey(
