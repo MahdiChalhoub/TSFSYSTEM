@@ -142,4 +142,5 @@ from apps.pos.delivery_models import DeliveryZone, DeliveryOrder  # noqa: E402, 
 from apps.pos.discount_models import DiscountRule, DiscountUsageLog  # noqa: E402, F401
 from apps.pos.consignment_models import ConsignmentSettlement, ConsignmentSettlementLine  # noqa: E402, F401
 from apps.pos.sourcing_models import ProductSupplier, SupplierPriceHistory  # noqa: E402, F401
+from apps.pos.purchase_order_models import PurchaseOrder, PurchaseOrderLine  # noqa: E402, F401
 

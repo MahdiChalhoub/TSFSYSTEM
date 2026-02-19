@@ -175,7 +175,8 @@ class ProductSerializer(serializers.ModelSerializer):
             'parfum_name', 'size_unit_name',
             'cost_price', 'cost_price_ht', 'cost_price_ttc',
             'selling_price_ht', 'selling_price_ttc', 'tva_rate',
-            'min_stock_level', 'is_expiry_tracked', 'tracks_serials',
+            'min_stock_level', 'max_stock_level', 'reorder_point', 'reorder_quantity',
+            'is_expiry_tracked', 'tracks_serials',
             'status', 'is_active', 'created_at', 'updated_at',
             'organization',
         ]
@@ -484,3 +485,31 @@ class ProductAnalyticsSerializer(serializers.Serializer):
     order_type = serializers.CharField(allow_null=True)
     order_id = serializers.IntegerField(allow_null=True)
     rejection_reason = serializers.CharField(allow_null=True)
+
+
+# =============================================================================
+# STOCK ALERT SERIALIZER
+# =============================================================================
+
+from .alert_models import StockAlert
+
+
+class StockAlertSerializer(serializers.ModelSerializer):
+    product_name = serializers.ReadOnlyField(source='product.name')
+    product_sku = serializers.ReadOnlyField(source='product.sku')
+    warehouse_name = serializers.ReadOnlyField(source='warehouse.name')
+    acknowledged_by_name = serializers.SerializerMethodField()
+    purchase_order_number = serializers.ReadOnlyField(source='purchase_order.po_number')
+
+    class Meta:
+        model = StockAlert
+        fields = '__all__'
+        read_only_fields = ['organization', 'acknowledged_by', 'acknowledged_at',
+                            'resolved_at']
+
+    def get_acknowledged_by_name(self, obj):
+        if obj.acknowledged_by:
+            name = f"{obj.acknowledged_by.first_name} {obj.acknowledged_by.last_name}".strip()
+            return name or obj.acknowledged_by.username
+        return None
+
