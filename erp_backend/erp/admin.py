@@ -12,8 +12,13 @@ try:
 except ImportError:
     _has_transaction_sequence = False
 
-# User
-admin.site.register(User, UserAdmin)
+# User — show organization for tenant isolation visibility
+class TenantUserAdmin(UserAdmin):
+    list_display = ('username', 'email', 'first_name', 'last_name', 'organization', 'is_staff', 'is_superuser', 'is_active')
+    list_filter = ('organization', 'is_staff', 'is_superuser', 'is_active')
+    search_fields = ('username', 'email', 'first_name', 'last_name')
+
+admin.site.register(User, TenantUserAdmin)
 
 # Core / Tenants
 @admin.register(Organization)
