@@ -218,10 +218,24 @@ class PaymentSerializer(serializers.ModelSerializer):
     organization = serializers.PrimaryKeyRelatedField(read_only=True)
     contact_name = serializers.ReadOnlyField(source='contact.name')
     payment_account_name = serializers.ReadOnlyField(source='payment_account.name')
+    invoice_number = serializers.ReadOnlyField(source='invoice.invoice_number')
+    type_display = serializers.CharField(source='get_type_display', read_only=True)
+    method_display = serializers.CharField(source='get_method_display', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    allocation_count = serializers.SerializerMethodField()
+    unallocated_amount = serializers.SerializerMethodField()
 
     class Meta:
         model = Payment
         fields = '__all__'
+        read_only_fields = ['organization', 'reference']
+
+    def get_allocation_count(self, obj):
+        return obj.allocations.count() if hasattr(obj, 'allocations') else 0
+
+    def get_unallocated_amount(self, obj):
+        allocated = sum(a.allocated_amount for a in obj.allocations.all()) if hasattr(obj, 'allocations') else 0
+        return float(obj.amount - allocated)
 
 
 class CustomerBalanceSerializer(serializers.ModelSerializer):
