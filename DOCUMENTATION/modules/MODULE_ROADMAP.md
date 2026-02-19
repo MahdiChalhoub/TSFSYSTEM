@@ -69,6 +69,7 @@ Supplier creates Proforma → Sends to you → You review →
 - Account balance and statement
 - Loyalty points + Coin wallet balance
 - Wallet barcode for POS redemption
+- **Account barcode**: Client scans at POS → purchases auto-assigned to their account (no manual lookup needed) 
 
 #### 2.2 Full eCommerce
 - Product catalog with search/filters
@@ -81,6 +82,8 @@ Supplier creates Proforma → Sends to you → You review →
 - Order status timeline
 - Estimated delivery time
 - Driver info and contact
+- **Driver & delivery rating**: Client rates delivery experience after completion
+- **Problem reporting**: Client can report issues (damaged, wrong item, late) with photos
 
 #### 2.4 Loyalty & Wallet
 - Earn points per purchase, redeem for discounts
@@ -110,12 +113,14 @@ Supplier creates Proforma → Sends to you → You review →
 
 ### Features
 
-#### 3.1 Organization Hierarchy
+#### 3.1 Organization Hierarchy & Task Flow
 - Visual org chart tree
-- Higher → Lower task assignment
+- **Higher → Lower**: Task assignment direction
+- **Lower → Higher**: Task replies/responses flow back up as notifications
+- **Lower → Higher requests**: Suggestions, material requests, escalations (not direct tasks, requires approval)
 - Group or individual assignment
 
-#### 3.2 Automatic Task Generation
+C
 | Trigger | Auto-Task |
 |---------|----------|
 | Price change | Update shelf label |
@@ -130,6 +135,7 @@ Supplier creates Proforma → Sends to you → You review →
 - Rich task creation (title, assignee, priority, due date)
 - Reminders, overdue alerts, escalation
 - Subtasks, dependencies, attachments, comments
+- **Recurring tasks**: Daily, weekly, monthly, or custom schedule (not just one-time)
 
 #### 3.4 Checklists
 | Type | Example |
@@ -177,9 +183,9 @@ Auto-generated per employee:
 
 ---
 
-## Suggested Additions
-1. Supplier product catalog upload (propose new products)
-2. Client referral program (invite friends → earn points)
-3. Recurring/subscription orders for regular clients
-4. AI task priority suggestions from historical patterns
-5. PWA support for mobile-first before native app
+## Confirmed Future Additions
+1. ✅ Supplier product catalog upload (propose new products)
+2. ✅ Client referral program (invite friends → earn points)
+3. ✅ Recurring/subscription orders for regular clients
+4. ✅ AI task priority suggestions from historical patterns
+5. ✅ PWA support for mobile-first before native app
