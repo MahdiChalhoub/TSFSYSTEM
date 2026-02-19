@@ -131,6 +131,7 @@ class TaskTemplate(TenantModel):
     Reusable task blueprints for recurring or auto-generated tasks.
     Defines default values for task creation.
     """
+    name = models.CharField(max_length=200)
     default_priority = models.CharField(max_length=20, default='MEDIUM', help_text='Internal priority code')
     default_points = models.IntegerField(default=1, help_text='Points earned on completion')
     estimated_minutes = models.IntegerField(default=30, help_text='Estimated time in minutes')
@@ -370,6 +371,7 @@ class ChecklistTemplate(TenantModel):
     """
     Reusable checklist blueprints (e.g. Start of Shift, End of Shift).
     """
+    name = models.CharField(max_length=200)
     trigger = models.CharField(max_length=30, default='CUSTOM', help_text='Internal trigger code')
     assign_to_role = models.ForeignKey(
         'erp.Role', on_delete=models.SET_NULL, null=True, blank=True,
