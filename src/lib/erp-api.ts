@@ -9,7 +9,7 @@ const DJANGO_URL = isClient
 
 // Performance: Only log in development to avoid I/O overhead in production
 const isDev = process.env.NODE_ENV === 'development';
-const debug = (...args: Record<string, any>[]) => isDev && console.log(...args);
+const debug = (...args: unknown[]) => isDev && console.log(...args);
 
 /** Custom error class for ERP API errors — used for type-safe catch blocks */
 export class ErpApiError extends Error {
@@ -142,7 +142,7 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
         // [SMART CACHE]
         // GET requests: allow Next.js to revalidate (stale-while-revalidate pattern, 30s)
         // Mutating requests (POST/PUT/PATCH/DELETE): always no-store
-        const fetchOptions: Record<string, any> = {
+        const fetchOptions: Record<string, unknown> = {
             ...options,
             headers: headersRaw,
         };
