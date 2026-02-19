@@ -73,3 +73,44 @@ export async function getCustomerBalances() {
 export async function getSupplierBalances() {
     return await erpFetch('supplier-balances/')
 }
+
+
+// ── Payment Allocation ──────────────────────────────────
+
+export async function allocatePaymentToInvoice(paymentId: number | string, invoiceId: number | string, amount: number) {
+    const result = await erpFetch(`payments/${paymentId}/allocate-to-invoice/`, {
+        method: 'POST',
+        body: JSON.stringify({ invoice_id: invoiceId, amount })
+    })
+    revalidatePath('/finance/payments')
+    revalidatePath('/finance/invoices')
+    return result
+}
+
+export async function getPaymentSummary(paymentId: number | string) {
+    return await erpFetch(`payments/${paymentId}/payment-summary/`)
+}
+
+export async function checkOverdueInvoices() {
+    const result = await erpFetch('payments/check-overdue/', { method: 'POST' })
+    revalidatePath('/finance/invoices')
+    return result
+}
+
+// ── Record Payment for Invoice ──────────────────────────
+
+export async function recordPaymentForInvoice(invoiceId: number | string, data: {
+    amount: number
+    method: string
+    payment_account_id: number | string
+    description?: string
+    reference?: string
+}) {
+    const result = await erpFetch(`invoices/${invoiceId}/record_payment/`, {
+        method: 'POST',
+        body: JSON.stringify(data)
+    })
+    revalidatePath('/finance/invoices')
+    revalidatePath('/finance/payments')
+    return result
+}

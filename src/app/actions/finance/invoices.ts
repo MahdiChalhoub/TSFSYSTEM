@@ -77,10 +77,16 @@ export async function sendInvoice(id: number | string) {
     return result
 }
 
-export async function recordInvoicePayment(id: number | string, amount: number) {
+export async function recordInvoicePayment(id: number | string, data: {
+    amount: number
+    method?: string
+    payment_account_id?: number | string
+    description?: string
+    reference?: string
+}) {
     const result = await erpFetch(`invoices/${id}/record_payment/`, {
         method: 'POST',
-        body: JSON.stringify({ amount })
+        body: JSON.stringify(data)
     })
     revalidatePath('/finance/invoices')
     revalidatePath('/finance/payments')
