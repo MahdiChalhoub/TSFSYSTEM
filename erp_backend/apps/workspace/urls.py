@@ -27,7 +27,7 @@ router.register(r'evaluations', views.QuestionnaireResponseViewSet, basename='qu
 
 # Dashboard & Config
 router.register(r'config', views.WorkspaceConfigViewSet, basename='workspace-config')
-router.register(r'scores', views.EmployeeScoreViewSet, basename='employee-score')
+router.register(r'performance', views.EmployeePerformanceViewSet, basename='employee-performance')
 
 urlpatterns = [
     path('', include(router.urls)),

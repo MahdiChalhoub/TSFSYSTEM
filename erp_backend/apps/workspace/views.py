@@ -15,7 +15,7 @@ from .models import (
     TaskAttachment, EmployeeRequest,
     ChecklistTemplate, ChecklistTemplateItem, ChecklistInstance, ChecklistItemResponse,
     Questionnaire, QuestionnaireQuestion, QuestionnaireResponse, QuestionnaireAnswer,
-    WorkspaceConfig, EmployeeScore,
+    WorkspaceConfig, EmployeePerformance,
 )
 from .serializers import (
     TaskCategorySerializer, TaskTemplateSerializer, AutoTaskRuleSerializer,
@@ -25,7 +25,7 @@ from .serializers import (
     ChecklistInstanceSerializer, ChecklistItemResponseSerializer,
     QuestionnaireSerializer, QuestionnaireQuestionSerializer,
     QuestionnaireResponseSerializer, QuestionnaireAnswerSerializer,
-    WorkspaceConfigSerializer, EmployeeScoreSerializer,
+    WorkspaceConfigSerializer, EmployeePerformanceSerializer,
 )
 
 logger = logging.getLogger(__name__)
@@ -338,9 +338,9 @@ class WorkspaceConfigViewSet(TenantFilterMixin, AuditLogMixin, viewsets.ModelVie
         return Response(WorkspaceConfigSerializer(config).data)
 
 
-class EmployeeScoreViewSet(TenantFilterMixin, AuditLogMixin, viewsets.ModelViewSet):
-    queryset = EmployeeScore.objects.select_related('employee').all()
-    serializer_class = EmployeeScoreSerializer
+class EmployeePerformanceViewSet(TenantFilterMixin, AuditLogMixin, viewsets.ReadOnlyModelViewSet):
+    queryset = EmployeePerformance.objects.select_related('employee').all()
+    serializer_class = EmployeePerformanceSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
@@ -361,10 +361,10 @@ class EmployeeScoreViewSet(TenantFilterMixin, AuditLogMixin, viewsets.ModelViewS
         if period:
             qs = qs.filter(period_label=period)
         top = qs.order_by('-overall_score')[:20]
-        return Response(EmployeeScoreSerializer(top, many=True).data)
+        return Response(EmployeePerformanceSerializer(top, many=True).data)
 
     @action(detail=False, methods=['get'])
     def my_performance(self, request):
         """Current user's performance history."""
         qs = self.get_queryset().filter(employee=request.user).order_by('-period_label')[:12]
-        return Response(EmployeeScoreSerializer(qs, many=True).data)
+        return Response(EmployeePerformanceSerializer(qs, many=True).data)

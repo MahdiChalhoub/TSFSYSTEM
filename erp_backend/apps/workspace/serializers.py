@@ -3,11 +3,11 @@ Workspace Module — Serializers
 """
 from rest_framework import serializers
 from .models import (
-    TaskCategory, TaskTemplate, AutoTaskRule, Task, TaskComment,
+    WorkspaceConfig, TaskCategory, TaskTemplate, AutoTaskRule, Task, TaskComment,
     TaskAttachment, EmployeeRequest,
     ChecklistTemplate, ChecklistTemplateItem, ChecklistInstance, ChecklistItemResponse,
     Questionnaire, QuestionnaireQuestion, QuestionnaireResponse, QuestionnaireAnswer,
-    WorkspaceConfig, EmployeeScore,
+    EmployeePerformance,
 )
 
 
@@ -241,13 +241,11 @@ class WorkspaceConfigSerializer(serializers.ModelSerializer):
         read_only_fields = ('organization',)
 
 
-class EmployeeScoreSerializer(serializers.ModelSerializer):
+class EmployeePerformanceSerializer(serializers.ModelSerializer):
     employee_name = serializers.SerializerMethodField()
-    completion_rate = serializers.SerializerMethodField()
-    on_time_rate = serializers.SerializerMethodField()
 
     class Meta:
-        model = EmployeeScore
+        model = EmployeePerformance
         fields = '__all__'
         read_only_fields = ('organization',)
 
@@ -255,13 +253,3 @@ class EmployeeScoreSerializer(serializers.ModelSerializer):
         if obj.employee:
             return obj.employee.email or obj.employee.username
         return None
-
-    def get_completion_rate(self, obj):
-        if obj.tasks_assigned:
-            return round(obj.tasks_completed / obj.tasks_assigned * 100, 1)
-        return 0
-
-    def get_on_time_rate(self, obj):
-        if obj.tasks_completed:
-            return round(obj.tasks_on_time / obj.tasks_completed * 100, 1)
-        return 0

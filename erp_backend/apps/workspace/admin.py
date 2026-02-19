@@ -3,11 +3,11 @@ Workspace Module — Django Admin
 """
 from django.contrib import admin
 from .models import (
-    TaskCategory, TaskTemplate, AutoTaskRule, Task, TaskComment,
+    WorkspaceConfig, TaskCategory, TaskTemplate, AutoTaskRule, Task, TaskComment,
     TaskAttachment, EmployeeRequest,
     ChecklistTemplate, ChecklistTemplateItem, ChecklistInstance, ChecklistItemResponse,
     Questionnaire, QuestionnaireQuestion, QuestionnaireResponse, QuestionnaireAnswer,
-    KPIConfig, EmployeeScore,
+    EmployeePerformance,
 )
 
 
@@ -83,12 +83,12 @@ class QuestionnaireResponseAdmin(admin.ModelAdmin):
     list_display = ('questionnaire', 'employee', 'evaluator', 'score_percentage', 'submitted_at')
 
 
-@admin.register(KPIConfig)
-class KPIConfigAdmin(admin.ModelAdmin):
+@admin.register(WorkspaceConfig)
+class WorkspaceConfigAdmin(admin.ModelAdmin):
     list_display = ('organization', 'task_completion_weight', 'on_time_weight', 'checklist_weight', 'evaluation_weight')
 
 
-@admin.register(EmployeeScore)
-class EmployeeScoreAdmin(admin.ModelAdmin):
-    list_display = ('employee', 'period_label', 'overall_score', 'tier', 'tasks_completed')
+@admin.register(EmployeePerformance)
+class EmployeePerformanceAdmin(admin.ModelAdmin):
+    list_display = ('employee', 'period_label', 'overall_score', 'tier')
     list_filter = ('tier',)
