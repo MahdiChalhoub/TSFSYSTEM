@@ -1,6 +1,6 @@
 """
 Inventory Module URL Configuration
-Routes for product catalog, stock management, warehouse operations, and stock counting.
+Routes for product catalog, stock management, warehouse operations, stock counting, and warehouse locations.
 """
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
@@ -14,6 +14,10 @@ from apps.inventory.views import (
 )
 from apps.inventory.counting_views import (
     InventorySessionViewSet, InventorySessionLineViewSet,
+)
+from apps.inventory.location_views import (
+    WarehouseZoneViewSet, WarehouseAisleViewSet, WarehouseRackViewSet,
+    WarehouseShelfViewSet, WarehouseBinViewSet, ProductLocationViewSet,
 )
 
 router = DefaultRouter()
@@ -34,6 +38,14 @@ router.register(r'counting-lines', InventorySessionLineViewSet, basename='counti
 router.register(r'serials', ProductSerialViewSet)
 router.register(r'serial-logs', SerialLogViewSet)
 router.register(r'stock-alerts', StockAlertViewSet, basename='stock-alerts')
+
+# Warehouse Location System
+router.register(r'zones', WarehouseZoneViewSet, basename='warehouse-zones')
+router.register(r'aisles', WarehouseAisleViewSet, basename='warehouse-aisles')
+router.register(r'racks', WarehouseRackViewSet, basename='warehouse-racks')
+router.register(r'shelves', WarehouseShelfViewSet, basename='warehouse-shelves')
+router.register(r'bins', WarehouseBinViewSet, basename='warehouse-bins')
+router.register(r'product-locations', ProductLocationViewSet, basename='product-locations')
 
 urlpatterns = [
     path('', include(router.urls)),
