@@ -61,27 +61,18 @@ class Command(BaseCommand):
             }
         )
 
+        # Always ensure password is set (handles credential changes)
+        admin.set_password(password)
+        admin.organization = org
+        admin.is_superuser = True
+        admin.is_staff = True
+        admin.is_active = True
+        admin.save()
+
         if user_created:
-            admin.set_password(password)
-            admin.save()
             self.stdout.write(self.style.SUCCESS(f'✅ Created superadmin user: "admin" (linked to org: {org.slug})'))
         else:
-            # Ensure admin is linked to org even if already exists
-            changed = False
-            if admin.organization != org:
-                admin.organization = org
-                changed = True
-            if not admin.is_superuser:
-                admin.is_superuser = True
-                changed = True
-            if not admin.is_staff:
-                admin.is_staff = True
-                changed = True
-            if changed:
-                admin.save()
-                self.stdout.write(self.style.SUCCESS(f'✅ Updated superadmin: linked to org "{org.slug}", superuser=True'))
-            else:
-                self.stdout.write(self.style.WARNING(f'ℹ️  Superadmin already exists and linked to org "{org.slug}"'))
+            self.stdout.write(self.style.SUCCESS(f'✅ Superadmin credentials refreshed (org: {org.slug})'))
 
         # ── 3. Summary ──────────────────────────────────────────────
         self.stdout.write('')
