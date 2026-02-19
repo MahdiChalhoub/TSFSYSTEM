@@ -115,10 +115,9 @@ log ""
 log "🐍 [2/6] Validating Backend..."
 cd "$NEW_RELEASE/erp_backend"
 
-# Link shared venv
-if [ ! -L "$NEW_RELEASE/erp_backend/venv" ]; then
-    ln -s "$APP_ROOT/erp_backend/venv" "$NEW_RELEASE/erp_backend/venv"
-fi
+# Link shared node_modules and venv (using relative symlinks for host compatibility)
+ln -sr "$APP_ROOT/node_modules" "$NEW_RELEASE/node_modules"
+ln -sr "$APP_ROOT/erp_backend/venv" "$NEW_RELEASE/erp_backend/venv"
 source venv/bin/activate
 
 # 2a. Install dependencies
