@@ -242,3 +242,56 @@ class SupplierBalanceSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+# ── Invoices ─────────────────────────────────────────────────────
+
+from .invoice_models import Invoice, InvoiceLine, PaymentAllocation
+
+
+class InvoiceLineSerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+    product_name = serializers.ReadOnlyField(source='product.name')
+    product_sku = serializers.ReadOnlyField(source='product.sku')
+
+    class Meta:
+        model = InvoiceLine
+        fields = '__all__'
+        read_only_fields = ['organization', 'line_total_ht', 'tax_amount', 'line_total_ttc']
+
+
+class InvoiceSerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+    lines = InvoiceLineSerializer(many=True, read_only=True)
+    contact_display = serializers.ReadOnlyField(source='contact.name')
+    created_by_name = serializers.ReadOnlyField(source='created_by.username')
+    site_name = serializers.ReadOnlyField(source='site.name')
+    line_count = serializers.SerializerMethodField()
+    is_overdue = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Invoice
+        fields = '__all__'
+        read_only_fields = [
+            'organization', 'invoice_number', 'paid_amount', 'balance_due',
+            'total_in_functional_currency', 'paid_at'
+        ]
+
+    def get_line_count(self, obj):
+        return obj.lines.count()
+
+    def get_is_overdue(self, obj):
+        if obj.status in ('SENT', 'PARTIAL_PAID') and obj.due_date:
+            from django.utils import timezone
+            return obj.due_date < timezone.now().date()
+        return False
+
+
+class PaymentAllocationSerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(read_only=True)
+    invoice_number = serializers.ReadOnlyField(source='invoice.invoice_number')
+    payment_reference = serializers.ReadOnlyField(source='payment.reference')
+
+    class Meta:
+        model = PaymentAllocation
+        fields = '__all__'
+
+
