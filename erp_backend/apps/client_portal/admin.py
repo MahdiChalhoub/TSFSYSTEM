@@ -3,7 +3,7 @@ Client Portal — Django Admin
 """
 from django.contrib import admin
 from .models import (
-    ClientPortalAccess, ClientWallet, WalletTransaction,
+    ClientPortalConfig, ClientPortalAccess, ClientWallet, WalletTransaction,
     ClientOrder, ClientOrderLine, ClientTicket,
 )
 
@@ -20,6 +20,31 @@ class WalletTransactionInline(admin.TabularInline):
     extra = 0
     readonly_fields = ('transaction_type', 'amount', 'balance_after', 'reason', 'created_at')
     can_delete = False
+
+
+@admin.register(ClientPortalConfig)
+class ClientPortalConfigAdmin(admin.ModelAdmin):
+    list_display = ('organization', 'loyalty_enabled', 'loyalty_earn_rate',
+                    'loyalty_redemption_ratio', 'wallet_currency', 'ecommerce_enabled')
+    fieldsets = (
+        ('Loyalty', {
+            'fields': ('loyalty_enabled', 'loyalty_earn_rate', 'loyalty_redemption_ratio',
+                       'loyalty_min_redeem', 'loyalty_max_redeem_percent'),
+        }),
+        ('Wallet', {
+            'fields': ('wallet_enabled', 'wallet_currency', 'wallet_auto_create', 'wallet_max_balance'),
+        }),
+        ('Delivery', {
+            'fields': ('default_delivery_fee', 'free_delivery_threshold'),
+        }),
+        ('Tickets', {
+            'fields': ('tickets_enabled', 'enabled_ticket_types',
+                       'auto_assign_tickets', 'default_ticket_assignee'),
+        }),
+        ('eCommerce', {
+            'fields': ('ecommerce_enabled', 'min_order_amount', 'allow_wallet_payment'),
+        }),
+    )
 
 
 @admin.register(ClientPortalAccess)
