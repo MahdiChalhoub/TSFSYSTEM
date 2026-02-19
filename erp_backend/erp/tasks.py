@@ -231,3 +231,44 @@ def send_daily_digest():
     logger.info(f"[Task] send_daily_digest: sent to {sent_count} users")
     return {'sent_count': sent_count}
 
+
+# ── Scheduled Report Execution ────────────────────────────────
+
+@shared_task(name='erp.tasks.run_scheduled_reports')
+def run_scheduled_reports():
+    """
+    Check for scheduled reports whose cron matches current time and execute them.
+    Runs every hour via Celery Beat.
+    """
+    from erp.models import Organization
+
+    executed = 0
+    try:
+        from apps.finance.report_models import ReportDefinition
+        from apps.finance.report_service import ReportService
+
+        for report_def in ReportDefinition.objects.filter(is_scheduled=True, is_active=True):
+            org_id = str(report_def.organization_id)
+            service = ReportService(org_id)
+            result = service.run_and_export(report_def)
+
+            if result.get('file_path') and report_def.email_recipients:
+                # Send report via email
+                from django.core.mail import EmailMessage
+                email = EmailMessage(
+                    subject=f"Scheduled Report: {report_def.name}",
+                    body=f"Report '{report_def.name}' generated with {result.get('row_count', 0)} rows.",
+                    to=report_def.email_recipients,
+                )
+                email.attach_file(result['file_path'])
+                try:
+                    email.send()
+                except Exception as e:
+                    logger.warning(f"[Task] Failed to email report {report_def.name}: {e}")
+
+            executed += 1
+    except ImportError:
+        logger.warning("[Task] Report models not available — skipping scheduled reports")
+
+    logger.info(f"[Task] run_scheduled_reports: {executed} reports executed")
+    return {'executed': executed}
