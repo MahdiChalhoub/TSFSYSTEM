@@ -117,7 +117,7 @@ class PurchaseOrder(TenantModel):
 
     # Invoice & Payment
     invoice = models.ForeignKey('finance.Invoice', on_delete=models.SET_NULL, null=True, blank=True,
-                                 related_name='purchase_orders')
+                                 related_name='linked_purchase_orders')
 
     # Notes
     notes = models.TextField(null=True, blank=True)
