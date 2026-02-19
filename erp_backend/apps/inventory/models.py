@@ -40,6 +40,21 @@ class Category(TenantModel):
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
+    # ── Auto-Computed Fields ───────────────────────────────────
+    level = models.IntegerField(
+        default=0, help_text='Depth in category tree (0 = root)'
+    )
+    full_path = models.CharField(
+        max_length=1000, null=True, blank=True,
+        help_text='Full breadcrumb path: "Electronics > Phones > Smartphones"'
+    )
+    products_count = models.IntegerField(
+        default=0, help_text='Cached count of active products'
+    )
+    barcode_sequence = models.IntegerField(
+        default=0, help_text='Next barcode sequence number for auto-SKU'
+    )
+
     class Meta:
         db_table = 'category'
         constraints = [
@@ -47,7 +62,47 @@ class Category(TenantModel):
         ]
 
     def __str__(self):
-        return self.name
+        return self.full_path or self.name
+
+    def save(self, *args, **kwargs):
+        """Auto-compute level and full_path on every save."""
+        self._compute_level_and_path()
+        super().save(*args, **kwargs)
+        # Update children paths if this category's name changed
+        for child in self.children.all():
+            child.save()
+
+    def _compute_level_and_path(self):
+        """Walk up parent chain to compute level and full breadcrumb path."""
+        parts = [self.name]
+        current = self.parent
+        depth = 0
+        seen = set()  # Prevent infinite loop on circular reference
+        while current and current.pk not in seen:
+            seen.add(current.pk)
+            parts.insert(0, current.name)
+            current = current.parent
+            depth += 1
+        self.level = depth
+        self.full_path = ' > '.join(parts)
+
+    def refresh_products_count(self):
+        """Refresh cached product count from the database."""
+        try:
+            from apps.inventory.models import Product
+            self.products_count = Product.objects.filter(
+                category=self, is_active=True
+            ).count()
+            self.save(update_fields=['products_count'])
+        except Exception:
+            pass
+
+    def next_barcode(self):
+        """Generate next auto-barcode for this category."""
+        self.barcode_sequence += 1
+        self.save(update_fields=['barcode_sequence'])
+        prefix = (self.code or self.name[:3]).upper()
+        return f"{prefix}-{self.barcode_sequence:05d}"
 
 
 class Brand(TenantModel):

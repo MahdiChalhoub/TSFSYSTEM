@@ -239,3 +239,70 @@ class ContactViewSet(TenantModelViewSet):
             return ClientPriceRuleSerializer(all_rules, many=True).data
         except Exception:
             return []
+
+    # ── Loyalty Program Endpoints ──────────────────────────────
+
+    @action(detail=True, methods=['get'], url_path='loyalty')
+    def loyalty_analytics(self, request, pk=None):
+        """Get customer loyalty analytics (points, tier, lifetime value)."""
+        from apps.crm.loyalty_service import LoyaltyService
+        contact = self.get_object()
+        return Response(LoyaltyService.get_customer_analytics(contact))
+
+    @action(detail=True, methods=['post'], url_path='earn-points')
+    def earn_points(self, request, pk=None):
+        """Award loyalty points. Body: { "order_total": 150.00 }"""
+        from apps.crm.loyalty_service import LoyaltyService
+        from decimal import Decimal
+        contact = self.get_object()
+        order_total = Decimal(str(request.data.get('order_total', '0')))
+        if order_total <= 0:
+            return Response({"error": "order_total must be positive"}, status=400)
+        result = LoyaltyService.earn_points(contact, order_total)
+        return Response(result)
+
+    @action(detail=True, methods=['post'], url_path='burn-points')
+    def burn_points(self, request, pk=None):
+        """Redeem loyalty points. Body: { "points": 500 }"""
+        from apps.crm.loyalty_service import LoyaltyService
+        contact = self.get_object()
+        points = int(request.data.get('points', 0))
+        if points <= 0:
+            return Response({"error": "points must be positive"}, status=400)
+        result = LoyaltyService.burn_points(contact, points)
+        if 'error' in result:
+            return Response(result, status=400)
+        return Response(result)
+
+    # ── Supplier Scorecard Endpoints ───────────────────────────
+
+    @action(detail=True, methods=['get'], url_path='scorecard')
+    def supplier_scorecard(self, request, pk=None):
+        """Get supplier performance scorecard."""
+        from apps.crm.loyalty_service import LoyaltyService
+        contact = self.get_object()
+        return Response(LoyaltyService.get_supplier_scorecard(contact))
+
+    @action(detail=True, methods=['post'], url_path='rate')
+    def rate_supplier(self, request, pk=None):
+        """Rate a supplier. Body: { "quality": 4, "delivery": 5, "pricing": 3, "service": 4 }"""
+        from apps.crm.loyalty_service import LoyaltyService
+        contact = self.get_object()
+        result = LoyaltyService.rate_supplier(
+            contact,
+            quality=request.data.get('quality'),
+            delivery=request.data.get('delivery'),
+            pricing=request.data.get('pricing'),
+            service=request.data.get('service'),
+        )
+        return Response(result)
+
+    @action(detail=True, methods=['post'], url_path='record-delivery')
+    def record_delivery(self, request, pk=None):
+        """Record a delivery for supplier performance. Body: { "on_time": true, "lead_time_days": 5 }"""
+        from apps.crm.loyalty_service import LoyaltyService
+        contact = self.get_object()
+        on_time = request.data.get('on_time', True)
+        lead_time = request.data.get('lead_time_days')
+        LoyaltyService.record_delivery(contact, on_time=on_time, lead_time_days=lead_time)
+        return Response({"message": "Delivery recorded"})
