@@ -69,6 +69,10 @@ class Payment(TenantModel):
         'finance.JournalEntry', on_delete=models.SET_NULL, null=True, blank=True,
         related_name='payments'
     )
+    invoice = models.ForeignKey(
+        'finance.Invoice', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='direct_payments', help_text='Primary invoice this payment applies to'
+    )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
     scope = models.CharField(max_length=20, default='OFFICIAL')
 

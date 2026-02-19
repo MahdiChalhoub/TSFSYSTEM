@@ -11,6 +11,7 @@ from apps.pos.views import (
     DiscountRuleViewSet, OrderViewSet,
     ConsignmentSettlementViewSet,
     ProductSupplierViewSet, SupplierPriceHistoryViewSet,
+    PurchaseOrderViewSet, PurchaseOrderLineViewSet,
 )
 
 router = DefaultRouter()
@@ -27,6 +28,8 @@ router.register(r'consignment-settlements', ConsignmentSettlementViewSet)
 router.register(r'orders', OrderViewSet)
 router.register(r'sourcing', ProductSupplierViewSet, basename='sourcing')
 router.register(r'supplier-pricing', SupplierPriceHistoryViewSet, basename='supplier-pricing')
+router.register(r'purchase-orders', PurchaseOrderViewSet, basename='purchase-orders')
+router.register(r'po-lines', PurchaseOrderLineViewSet, basename='po-lines')
 
 urlpatterns = [
     path('', include(router.urls)),

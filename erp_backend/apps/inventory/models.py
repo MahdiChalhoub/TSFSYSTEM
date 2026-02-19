@@ -133,6 +133,11 @@ class Product(TenantModel):
     selling_price_ttc = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     tva_rate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'))
     min_stock_level = models.IntegerField(default=10)
+    max_stock_level = models.IntegerField(null=True, blank=True, help_text='Maximum stock level before overstock alert')
+    reorder_point = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True,
+                                         help_text='Stock level at which to trigger reorder alert')
+    reorder_quantity = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True,
+                                            help_text='Suggested quantity to reorder')
     is_expiry_tracked = models.BooleanField(default=False)
     tracks_serials = models.BooleanField(default=False, help_text='Requires Serial/IMEI per unit')
 
@@ -425,4 +430,5 @@ class OperationalRequestLine(models.Model):
 # Import models from sub-files so Django discovers them for migrations
 from apps.inventory.advanced_models import ProductBatch, ProductSerial, SerialLog, ExpiryAlert, StockValuationEntry  # noqa: E402, F401
 from apps.inventory.counting_models import InventorySession, InventorySessionLine  # noqa: E402, F401
+from apps.inventory.alert_models import StockAlert  # noqa: E402, F401
 

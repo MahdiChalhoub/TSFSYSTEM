@@ -10,6 +10,7 @@ from apps.inventory.views import (
     InventoryMovementViewSet,
     StockAdjustmentOrderViewSet, StockTransferOrderViewSet,
     OperationalRequestViewSet, ProductSerialViewSet, SerialLogViewSet,
+    StockAlertViewSet,
 )
 from apps.inventory.counting_views import (
     InventorySessionViewSet, InventorySessionLineViewSet,
@@ -32,6 +33,7 @@ router.register(r'counting-sessions', InventorySessionViewSet, basename='countin
 router.register(r'counting-lines', InventorySessionLineViewSet, basename='counting-lines')
 router.register(r'serials', ProductSerialViewSet)
 router.register(r'serial-logs', SerialLogViewSet)
+router.register(r'stock-alerts', StockAlertViewSet, basename='stock-alerts')
 
 urlpatterns = [
     path('', include(router.urls)),

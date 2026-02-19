@@ -919,9 +919,200 @@ class SupplierPriceHistoryViewSet(TenantModelViewSet):
     queryset = SupplierPriceHistory.objects.all()
     serializer_class = SupplierPriceHistorySerializer
 
-    @action(detail=False, methods=['get'], url_path='trends/(?P<product_id>\d+)')
+    @action(detail=False, methods=['get'], url_path='trends/(?P<product_id>\\d+)')
     def trends(self, request, product_id=None):
         organization_id = get_current_tenant_id()
         history = self.queryset.filter(product_id=product_id, organization_id=organization_id).order_by('effective_date')
         serializer = self.get_serializer(history, many=True)
         return Response(serializer.data)
+
+
+# =============================================================================
+# PURCHASE ORDERS (Dedicated PO model with 10-state lifecycle)
+# =============================================================================
+
+from apps.pos.purchase_order_models import PurchaseOrder, PurchaseOrderLine
+from apps.pos.serializers import PurchaseOrderSerializer, PurchaseOrderLineSerializer
+
+
+class PurchaseOrderViewSet(TenantModelViewSet):
+    """ViewSet for the dedicated PurchaseOrder model with 10-state lifecycle."""
+    queryset = PurchaseOrder.objects.select_related(
+        'supplier', 'site', 'warehouse', 'submitted_by', 'approved_by', 'created_by', 'invoice'
+    ).prefetch_related('lines__product', 'lines__warehouse').all()
+    serializer_class = PurchaseOrderSerializer
+    filterset_fields = ['status', 'priority', 'supplier']
+    search_fields = ['po_number', 'supplier_name', 'notes']
+    ordering_fields = ['created_at', 'total_amount', 'order_date', 'expected_date']
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        po_status = self.request.query_params.get('status')
+        priority = self.request.query_params.get('priority')
+        supplier_id = self.request.query_params.get('supplier')
+        if po_status:
+            qs = qs.filter(status=po_status)
+        if priority:
+            qs = qs.filter(priority=priority)
+        if supplier_id:
+            qs = qs.filter(supplier_id=supplier_id)
+        return qs
+
+    def perform_create(self, serializer):
+        org_id = get_current_tenant_id()
+        org = Organization.objects.get(id=org_id)
+        serializer.save(
+            organization=org,
+            created_by=self.request.user,
+        )
+
+    @action(detail=True, methods=['post'])
+    def submit(self, request, pk=None):
+        """Submit PO for approval."""
+        po = self.get_object()
+        try:
+            po.transition_to('SUBMITTED', user=request.user)
+            return Response(PurchaseOrderSerializer(po).data)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+
+    @action(detail=True, methods=['post'])
+    def approve(self, request, pk=None):
+        """Approve a submitted PO."""
+        po = self.get_object()
+        try:
+            po.transition_to('APPROVED', user=request.user)
+            return Response(PurchaseOrderSerializer(po).data)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+
+    @action(detail=True, methods=['post'])
+    def reject(self, request, pk=None):
+        """Reject a submitted PO."""
+        po = self.get_object()
+        try:
+            po.transition_to('REJECTED', user=request.user,
+                             reason=request.data.get('reason', ''))
+            return Response(PurchaseOrderSerializer(po).data)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+
+    @action(detail=True, methods=['post'], url_path='send-to-supplier')
+    def send_to_supplier(self, request, pk=None):
+        """Mark PO as ordered / sent to supplier."""
+        po = self.get_object()
+        try:
+            po.transition_to('ORDERED', user=request.user)
+            return Response(PurchaseOrderSerializer(po).data)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+
+    @action(detail=True, methods=['post'], url_path='receive-line')
+    def receive_line(self, request, pk=None):
+        """Receive goods for a specific line."""
+        po = self.get_object()
+        line_id = request.data.get('line_id')
+        qty = request.data.get('quantity')
+        if not line_id or not qty:
+            return Response({'error': 'line_id and quantity required'}, status=400)
+        try:
+            line = po.lines.get(id=line_id)
+            from decimal import Decimal
+            line.receive(Decimal(str(qty)))
+            return Response(PurchaseOrderSerializer(po).data)
+        except PurchaseOrderLine.DoesNotExist:
+            return Response({'error': 'Line not found'}, status=404)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+
+    @action(detail=True, methods=['post'])
+    def cancel(self, request, pk=None):
+        """Cancel a PO."""
+        po = self.get_object()
+        try:
+            po.transition_to('CANCELLED', user=request.user)
+            return Response(PurchaseOrderSerializer(po).data)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+
+    @action(detail=True, methods=['post'], url_path='mark-invoiced')
+    def mark_invoiced(self, request, pk=None):
+        """Mark PO as invoiced."""
+        po = self.get_object()
+        try:
+            po.transition_to('INVOICED', user=request.user)
+            return Response(PurchaseOrderSerializer(po).data)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+
+    @action(detail=True, methods=['post'])
+    def complete(self, request, pk=None):
+        """Mark PO as completed."""
+        po = self.get_object()
+        try:
+            po.transition_to('COMPLETED', user=request.user)
+            return Response(PurchaseOrderSerializer(po).data)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+
+    @action(detail=True, methods=['post'], url_path='add-line')
+    def add_line(self, request, pk=None):
+        """Add a line item to a DRAFT PO."""
+        po = self.get_object()
+        if po.status != 'DRAFT':
+            return Response({'error': 'Lines can only be added to DRAFT POs'}, status=400)
+        try:
+            line = PurchaseOrderLine.objects.create(
+                order=po,
+                organization=po.organization,
+                product_id=request.data['product_id'],
+                quantity=request.data.get('quantity', 1),
+                unit_price=request.data.get('unit_price', 0),
+                tax_rate=request.data.get('tax_rate', 0),
+                discount_percent=request.data.get('discount_percent', 0),
+                description=request.data.get('description', ''),
+                warehouse_id=request.data.get('warehouse_id', po.warehouse_id),
+                expected_date=request.data.get('expected_date'),
+            )
+            po.recalculate_totals()
+            return Response(PurchaseOrderLineSerializer(line).data, status=201)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+
+    @action(detail=True, methods=['delete'], url_path='remove-line/(?P<line_id>[0-9]+)')
+    def remove_line(self, request, pk=None, line_id=None):
+        """Remove a line from a DRAFT PO."""
+        po = self.get_object()
+        if po.status != 'DRAFT':
+            return Response({'error': 'Lines can only be removed from DRAFT POs'}, status=400)
+        deleted, _ = PurchaseOrderLine.objects.filter(order=po, id=line_id).delete()
+        if deleted:
+            po.recalculate_totals()
+            return Response({'success': True})
+        return Response({'error': 'Line not found'}, status=404)
+
+    @action(detail=False, methods=['get'])
+    def dashboard(self, request):
+        """PO dashboard stats."""
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({'error': 'No organization context'}, status=400)
+
+        from django.db.models import Count, Sum
+        qs = PurchaseOrder.objects.filter(organization_id=organization_id)
+
+        stats = {
+            'total': qs.count(),
+            'by_status': dict(qs.values_list('status').annotate(c=Count('id')).values_list('status', 'c')),
+            'by_priority': dict(qs.values_list('priority').annotate(c=Count('id')).values_list('priority', 'c')),
+            'total_value': float(qs.aggregate(t=Sum('total_amount'))['t'] or 0),
+            'pending_approval': qs.filter(status='SUBMITTED').count(),
+            'awaiting_receipt': qs.filter(status__in=['ORDERED', 'PARTIALLY_RECEIVED']).count(),
+        }
+        return Response(stats)
+
+
+class PurchaseOrderLineViewSet(TenantModelViewSet):
+    """Direct CRUD for PO lines (typically managed via PurchaseOrderViewSet)."""
+    queryset = PurchaseOrderLine.objects.select_related('product', 'warehouse', 'order').all()
+    serializer_class = PurchaseOrderLineSerializer
