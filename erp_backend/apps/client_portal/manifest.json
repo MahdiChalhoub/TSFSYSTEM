@@ -1,0 +1,11 @@
+{
+    "code": "client_portal",
+    "name": "Client Portal",
+    "version": "1.0.0",
+    "description": "Client-facing portal for orders, tickets, and loyalty wallet.",
+    "dependencies": [
+        "core",
+        "workspace"
+    ],
+    "required": false
+}

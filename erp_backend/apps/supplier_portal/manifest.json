@@ -1,0 +1,11 @@
+{
+    "code": "supplier_portal",
+    "name": "Supplier Portal",
+    "version": "1.0.0",
+    "description": "Supplier-facing portal for proformas, price requests, and access management.",
+    "dependencies": [
+        "core",
+        "workspace"
+    ],
+    "required": false
+}
