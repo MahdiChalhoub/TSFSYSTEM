@@ -22,5 +22,10 @@ router.register(r'my-wallet', views.ClientWalletViewSet, basename='client-wallet
 router.register(r'my-tickets', views.ClientMyTicketsViewSet, basename='client-tickets')
 
 urlpatterns = [
+    # Portal auth (public)
+    path('auth/login/', views.ClientPortalLoginView.as_view(), name='client-portal-login'),
+    path('storefront/config/', views.StorefrontPublicConfigView.as_view(), name='storefront-config'),
+
+    # Router URLs
     path('', include(router.urls)),
 ]

@@ -18,9 +18,39 @@ from erp.models import TenantModel
 class ClientPortalConfig(TenantModel):
     """
     Per-organization settings for the Client Portal.
-    Controls loyalty rates, wallet behavior, delivery fees, and ticket types.
+    Controls store mode, loyalty rates, wallet behavior, delivery fees, and ticket types.
     Each organization can customize their own portal experience.
     """
+
+    STORE_MODES = (
+        ('B2C', 'B2C eCommerce — standard retail prices'),
+        ('B2B', 'B2B Order Portal — tier/negotiated prices'),
+        ('CATALOG_QUOTE', 'Catalog + Quote — browse and request quotes'),
+        ('HYBRID', 'Hybrid — B2C interface, B2B pricing for wholesale/retail clients'),
+    )
+
+    # ── Store Mode ────────────────────────────────────────────────────────────
+    store_mode = models.CharField(
+        max_length=20, choices=STORE_MODES, default='HYBRID',
+        help_text='Controls pricing logic and checkout behavior'
+    )
+    show_stock_levels = models.BooleanField(
+        default=False, help_text='Show exact stock quantities (vs just In Stock / Out of Stock)'
+    )
+    allow_guest_browsing = models.BooleanField(
+        default=True, help_text='Allow unauthenticated users to browse the catalog'
+    )
+    require_approval_for_orders = models.BooleanField(
+        default=False, help_text='Orders require admin approval before processing (B2B mode)'
+    )
+    storefront_title = models.CharField(
+        max_length=255, blank=True, default='',
+        help_text='Custom title for the storefront (blank = org name)'
+    )
+    storefront_tagline = models.CharField(
+        max_length=500, blank=True, default='',
+        help_text='Tagline shown on the storefront landing page'
+    )
 
     # ── Loyalty Settings ──────────────────────────────────────────────────────
     loyalty_enabled = models.BooleanField(default=True, help_text='Enable loyalty points system')

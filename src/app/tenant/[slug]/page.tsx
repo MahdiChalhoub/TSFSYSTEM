@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { StorefrontCatalog } from "@/components/tenant/StorefrontCatalog"
 import { TenantQuickLogin } from "@/components/tenant/TenantQuickLogin"
+import { ClientPortalLogin } from "@/components/tenant/ClientPortalLogin"
 import { PLATFORM_CONFIG, getDynamicBranding } from "@/lib/branding"
 
 export default async function TenantWelcomePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -79,6 +80,7 @@ export default async function TenantWelcomePage({ params }: { params: Promise<{ 
                         </div>
 
                         <TenantQuickLogin slug={slug} suffix={branding.suffix} />
+                        <ClientPortalLogin slug={slug} />
 
                         <div className="flex items-center gap-6 pt-4">
                             <span className="text-[10px] text-slate-700 font-bold uppercase tracking-widest whitespace-nowrap">ID: {org.id.split('-')[0]}</span>

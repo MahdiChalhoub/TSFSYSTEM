@@ -23,5 +23,9 @@ router.register(r'my-price-requests', views.SupplierPriceChangeViewSet, basename
 router.register(r'my-notifications', views.SupplierNotificationViewSet, basename='supplier-notifications')
 
 urlpatterns = [
+    # Portal auth (public)
+    path('auth/login/', views.SupplierPortalLoginView.as_view(), name='supplier-portal-login'),
+
+    # Router URLs
     path('', include(router.urls)),
 ]
