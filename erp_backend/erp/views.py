@@ -354,6 +354,46 @@ class NotificationViewSet(viewsets.ModelViewSet):
         notif.mark_as_read()
         return Response({"message": "Notification marked as read."})
 
+    @action(detail=False, methods=['get'], url_path='preferences')
+    def get_preferences(self, request):
+        """Get notification preferences for the current user."""
+        from erp.notification_service import NotificationService
+        prefs = NotificationService.get_user_preferences(request.user)
+        return Response(prefs)
+
+    @action(detail=False, methods=['post'], url_path='update-preference')
+    def update_preference(self, request):
+        """Update a single notification preference.
+        Body: { "notification_type": "invoice_overdue", "channel": "EMAIL", "is_enabled": true }
+        """
+        from erp.notification_service import NotificationService
+        ntype = request.data.get('notification_type')
+        channel = request.data.get('channel')
+        is_enabled = request.data.get('is_enabled', True)
+        if not ntype or not channel:
+            return Response({"error": "notification_type and channel are required"}, status=400)
+        pref = NotificationService.update_preference(request.user, ntype, channel, is_enabled)
+        return Response({
+            "notification_type": pref.notification_type,
+            "channel": pref.channel,
+            "is_enabled": pref.is_enabled,
+        })
+
+    @action(detail=False, methods=['get'], url_path='delivery-log')
+    def delivery_log(self, request):
+        """Get notification delivery log for the current user."""
+        from erp.notification_models import NotificationLog
+        logs = NotificationLog.objects.filter(user=request.user)[:50]
+        data = [{
+            'id': log.id,
+            'channel': log.channel,
+            'subject': log.subject,
+            'status': log.status,
+            'sent_at': log.sent_at.isoformat() if log.sent_at else None,
+            'created_at': log.created_at.isoformat() if log.created_at else None,
+        } for log in logs]
+        return Response(data)
+
 
 class TenantResolutionView(viewsets.ViewSet):
     """
