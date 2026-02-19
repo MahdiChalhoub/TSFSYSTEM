@@ -29,10 +29,10 @@ def reset():
     print(f"🏢 SaaS Organization created: {saas_org.name}")
     
     # 2. Create Superuser (Commander)
-    admin_email = 'commander@tsf.saas'
-    admin_username = 'commander'
-    admin_password = os.environ.get('COMMANDER_PASSWORD', 'password123')
-    if admin_password == 'password123':
+    admin_email = 'admin@tsf.saas'
+    admin_username = 'admin'
+    admin_password = os.environ.get('COMMANDER_PASSWORD', 'admin')
+    if admin_password == 'admin':
         print("⚠️  WARNING: Using default password. Set COMMANDER_PASSWORD env var in production.")
     
     user = User.objects.filter(username=admin_username).first()
