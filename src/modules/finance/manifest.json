@@ -19,7 +19,9 @@
         "read:loans",
         "write:loans",
         "read:reports",
-        "manage:fiscal-years"
+        "manage:fiscal-years",
+        "read:invoices",
+        "write:invoices"
     ],
     "dependencies": [],
     "backendApp": "apps.finance"
