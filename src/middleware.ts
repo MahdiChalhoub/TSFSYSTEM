@@ -74,6 +74,11 @@ export default async function middleware(req: NextRequest) {
                 return NextResponse.redirect(new URL(`/dashboard${searchParams ? '?' + searchParams : ''}`, req.url));
             }
 
+            // 3. Rewrite /dashboard to SaaS-specific dashboard on SaaS subdomain
+            if (url.pathname === '/dashboard') {
+                return NextResponse.rewrite(new URL(`/saas-home${searchParams ? '?' + searchParams : ''}`, req.url));
+            }
+
             return NextResponse.next();
         }
 
