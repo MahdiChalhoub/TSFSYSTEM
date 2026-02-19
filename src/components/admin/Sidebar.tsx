@@ -285,6 +285,10 @@ export const MENU_ITEMS = [
         module: 'hr',
         children: [
             { title: 'Employee Manager', path: '/hr/employees' },
+            { title: 'Departments', path: '/hr/departments' },
+            { title: 'Shifts', path: '/hr/shifts' },
+            { title: 'Attendance', path: '/hr/attendance' },
+            { title: 'Leave Requests', path: '/hr/leaves' },
             { title: 'Payroll Summary', path: '/hr/payroll' },
             { title: 'Pending Approvals', path: '/users/approvals' },
         ]
