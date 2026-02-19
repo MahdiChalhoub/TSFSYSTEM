@@ -25,8 +25,8 @@ router.register(r'questionnaires', views.QuestionnaireViewSet, basename='questio
 router.register(r'questions', views.QuestionnaireQuestionViewSet, basename='questionnaire-question')
 router.register(r'evaluations', views.QuestionnaireResponseViewSet, basename='questionnaire-response')
 
-# KPI & Scoring
-router.register(r'kpi-config', views.KPIConfigViewSet, basename='kpi-config')
+# Dashboard & Config
+router.register(r'config', views.WorkspaceConfigViewSet, basename='workspace-config')
 router.register(r'scores', views.EmployeeScoreViewSet, basename='employee-score')
 
 urlpatterns = [

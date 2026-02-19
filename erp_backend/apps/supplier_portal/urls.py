@@ -8,6 +8,7 @@ from . import views
 router = DefaultRouter()
 
 # Admin-side endpoints
+router.register(r'config', views.SupplierPortalConfigViewSet, basename='supplier-portal-config')
 router.register(r'portal-access', views.SupplierPortalAccessViewSet)
 router.register(r'admin-proformas', views.SupplierProformaAdminViewSet, basename='admin-proformas')
 router.register(r'admin-price-requests', views.PriceChangeRequestAdminViewSet, basename='admin-price-requests')
