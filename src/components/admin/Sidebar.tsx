@@ -305,6 +305,15 @@ export const MENU_ITEMS = [
             { title: 'TaskBoard', path: '/workspace/tasks', icon: ClipboardList },
             { title: 'Checklists', path: '/workspace/checklists', icon: ListChecks },
             { title: 'Performance', path: '/workspace/performance', icon: Trophy },
+            {
+                title: 'Supplier Gate',
+                icon: Briefcase,
+                children: [
+                    { title: 'Supplier Access', path: '/workspace/supplier-access' },
+                    { title: 'Proforma Review', path: '/workspace/proformas' },
+                    { title: 'Price Requests', path: '/workspace/price-requests' },
+                ]
+            },
         ]
     },
     {
@@ -317,7 +326,7 @@ export const MENU_ITEMS = [
         icon: ShieldCheck,
         visibility: 'saas',
         children: [
-            { title: 'SaaS Dashboard', path: '/saas-dashboard', icon: Globe },
+            { title: 'SaaS Dashboard', path: '/dashboard', icon: Globe },
             {
                 title: 'Organizations',
                 icon: Building2,
