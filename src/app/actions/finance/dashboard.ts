@@ -62,7 +62,7 @@ export async function getAdminDashboardStats() {
                 latestSales: []
             });
         }
-        console.warn("Failed to fetch dashboard stats from Django:", e);
+        console.debug("Failed to fetch dashboard stats from Django:", e);
         return serializeDecimals({
             totalSales: 0,
             activeOrders: 0,
