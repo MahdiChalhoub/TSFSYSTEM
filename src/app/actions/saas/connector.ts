@@ -74,7 +74,7 @@ export async function createConnectorPolicy(data: {
         })
         return { success: true, data: res }
     } catch (e: unknown) {
-        return { success: false, error: (e instanceof Error ? e.message : String(e)) || 'Failed to create policy' }
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to create policy' }
     }
 }
 
@@ -86,7 +86,7 @@ export async function updateConnectorPolicy(id: number, data: Record<string, unk
         })
         return { success: true, data: res }
     } catch (e: unknown) {
-        return { success: false, error: (e instanceof Error ? e.message : String(e)) || 'Failed to update policy' }
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to update policy' }
     }
 }
 
@@ -95,7 +95,7 @@ export async function deleteConnectorPolicy(id: number) {
         await erpFetch(`connector/policies/${id}/`, { method: 'DELETE' })
         return { success: true }
     } catch (e: unknown) {
-        return { success: false, error: (e instanceof Error ? e.message : String(e)) || 'Failed to delete policy' }
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to delete policy' }
     }
 }
 
@@ -129,7 +129,7 @@ export async function retryBufferedRequest(id: number) {
         })
         return { success: true, data: res }
     } catch (e: unknown) {
-        return { success: false, error: (e instanceof Error ? e.message : String(e)) || 'Failed to retry request' }
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to retry request' }
     }
 }
 
@@ -141,7 +141,7 @@ export async function replayAllBuffered(module: string, organizationId: number) 
         })
         return { success: true, data: res }
     } catch (e: unknown) {
-        return { success: false, error: (e instanceof Error ? e.message : String(e)) || 'Failed to replay buffers' }
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to replay buffers' }
     }
 }
 
@@ -152,7 +152,7 @@ export async function cleanupExpiredBuffers() {
         })
         return { success: true, data: res }
     } catch (e: unknown) {
-        return { success: false, error: (e instanceof Error ? e.message : String(e)) || 'Failed to cleanup' }
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to cleanup' }
     }
 }
 
@@ -268,6 +268,6 @@ export async function autoGeneratePolicies() {
             message: `Created ${created.length} policies, skipped ${skipped.length} (already exist)`
         }
     } catch (e: unknown) {
-        return { success: false, error: (e instanceof Error ? e.message : String(e)) || 'Failed to auto-generate policies' }
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to auto-generate policies' }
     }
 }

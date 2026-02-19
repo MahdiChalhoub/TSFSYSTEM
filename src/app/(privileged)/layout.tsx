@@ -69,7 +69,7 @@ export default async function AdminLayout({
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '0.2s' }} />
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '0.4s' }} />
                 </div>
-                <script dangerouslySetInnerHTML={{ __html: 'setTimeout(() => window.location.reload(), 10000)' }} />
+                <meta httpEquiv="refresh" content="10" />
             </div>
         );
     }

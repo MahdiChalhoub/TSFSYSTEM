@@ -43,6 +43,6 @@ export async function updateTransactionSequence(data: {
         return { success: true }
     } catch (error) {
         console.error("Failed to update sequence", error)
-        return { success: false, error: "Failed to update sequence" }
+        return { success: false, message: "Failed to update sequence" }
     }
 }
