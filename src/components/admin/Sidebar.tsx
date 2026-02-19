@@ -314,6 +314,15 @@ export const MENU_ITEMS = [
                     { title: 'Price Requests', path: '/workspace/price-requests' },
                 ]
             },
+            {
+                title: 'Client Gate',
+                icon: Users,
+                children: [
+                    { title: 'Client Access', path: '/workspace/client-access' },
+                    { title: 'Client Orders', path: '/workspace/client-orders' },
+                    { title: 'Client Tickets', path: '/workspace/client-tickets' },
+                ]
+            },
         ]
     },
     {
