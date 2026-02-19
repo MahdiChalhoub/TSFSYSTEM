@@ -16,7 +16,7 @@ export async function getAttendanceRecord(id: string) {
     return await erpFetch(`hr/attendance/${id}/`)
 }
 
-export async function createAttendanceRecord(data: Record<string, unknown>) {
+export async function createAttendance(data: Record<string, unknown>) {
     return await erpFetch('hr/attendance/', {
         method: 'POST',
         body: JSON.stringify(data),
