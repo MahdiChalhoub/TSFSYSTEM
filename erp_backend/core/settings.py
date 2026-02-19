@@ -247,6 +247,58 @@ STATICFILES_DIRS = [BASE_DIR / 'static'] if (BASE_DIR / 'static').exists() else 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# ── Celery / Redis Configuration ──────────────────────────────
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://127.0.0.1:6379/0')
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://127.0.0.1:6379/1')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_ENABLE_UTC = True
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 300       # 5 min hard limit
+CELERY_TASK_SOFT_TIME_LIMIT = 240  # 4 min soft limit
+
+# ── Celery Beat Schedule ──────────────────────────────────────
+from celery.schedules import crontab
+
+CELERY_BEAT_SCHEDULE = {
+    'check-overdue-invoices': {
+        'task': 'erp.tasks.check_overdue_invoices',
+        'schedule': crontab(minute=0),           # Every hour
+    },
+    'check-low-stock': {
+        'task': 'erp.tasks.check_low_stock',
+        'schedule': crontab(minute=0, hour='*/6'),  # Every 6 hours
+    },
+    'warm-analytics-cache': {
+        'task': 'erp.tasks.warm_analytics_cache',
+        'schedule': crontab(minute=0, hour=2),      # Daily 02:00
+    },
+    'cleanup-old-audit-logs': {
+        'task': 'erp.tasks.cleanup_old_audit_logs',
+        'schedule': crontab(minute=0, hour=3, day_of_week='sunday'),  # Weekly
+    },
+    'generate-daily-backup': {
+        'task': 'erp.tasks.generate_daily_backup',
+        'schedule': crontab(minute=0, hour=1),      # Daily 01:00
+    },
+    'send-daily-digest': {
+        'task': 'erp.tasks.send_daily_digest',
+        'schedule': crontab(minute=0, hour=8),       # Daily 08:00
+    },
+}
+
+# ── Email Configuration (for notifications) ──────────────────
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() in ('true', '1')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'ERP System <noreply@tsf.ci>')
+
+
 
 AUTHENTICATION_BACKENDS = [
     'erp.backends.TenantAuthBackend',

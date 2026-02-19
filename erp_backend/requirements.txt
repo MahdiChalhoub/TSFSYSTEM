@@ -10,3 +10,5 @@ Pillow
 httpx
 cryptography
 pyotp
+celery[redis]>=5.3
+redis>=5.0
