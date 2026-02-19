@@ -246,7 +246,7 @@ class PriceChangeWorkflowMixin:
         Returns:
             Tuple of (requires_hold: bool, approval_id: UUID or None)
         """
-        from decimal import Decimal
+        from decimal import Decimal, InvalidOperation
         
         # Detect if any price field is changing
         price_changes = {}
@@ -262,7 +262,7 @@ class PriceChangeWorkflowMixin:
             try:
                 old_decimal = Decimal(str(old_val)) if old_val else Decimal('0')
                 new_decimal = Decimal(str(new_val)) if new_val else Decimal('0')
-            except:
+            except (TypeError, ValueError, InvalidOperation):
                 continue
                 
             if old_decimal != new_decimal:

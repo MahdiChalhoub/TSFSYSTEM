@@ -69,11 +69,11 @@ class SalesImportService:
                     if date_str:
                         try:
                             tx_date = timezone.make_aware(datetime.strptime(date_str, "%Y-%m-%d"))
-                        except:
+                        except (ValueError, TypeError):
                             try:
                                 tx_date = timezone.make_aware(datetime.strptime(date_str, "%d/%m/%Y"))
-                            except:
-                                pass # Keep now() if fails
+                            except (ValueError, TypeError):
+                                pass # Keep now() if all date formats fail
 
                     # 2. Use POS logic to create the sale
                     # Note: We need a slight variation of checkout() that accepts a custom date

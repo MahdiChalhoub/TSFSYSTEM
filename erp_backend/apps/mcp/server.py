@@ -377,7 +377,7 @@ async def handle_tool_call(client: DajingoClient, name: str, arguments: dict) ->
             try:
                 details = await client.get(f"organizations/{client.org_id}/")
                 result.update(details)
-            except:
+            except Exception:
                 pass
         
         # === ANALYTICS ===
