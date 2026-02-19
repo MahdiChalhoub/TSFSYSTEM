@@ -39,7 +39,9 @@ import {
     ClipboardList,
     ScrollText,
     Wallet,
-    Globe
+    Globe,
+    ListChecks,
+    Trophy
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
@@ -83,7 +85,9 @@ const ICON_MAP: Record<string, any> = {
     ClipboardList,
     ScrollText,
     Wallet,
-    Globe
+    Globe,
+    ListChecks,
+    Trophy
 };
 
 function getIcon(name: string) {
@@ -291,6 +295,16 @@ export const MENU_ITEMS = [
             { title: 'Leave Requests', path: '/hr/leaves' },
             { title: 'Payroll Summary', path: '/hr/payroll' },
             { title: 'Pending Approvals', path: '/users/approvals' },
+        ]
+    },
+    {
+        title: 'Workspace',
+        icon: ClipboardList,
+        module: 'workspace',
+        children: [
+            { title: 'TaskBoard', path: '/workspace/tasks', icon: ClipboardList },
+            { title: 'Checklists', path: '/workspace/checklists', icon: ListChecks },
+            { title: 'Performance', path: '/workspace/performance', icon: Trophy },
         ]
     },
     {
