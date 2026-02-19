@@ -1,6 +1,3 @@
-// import { prisma } from "./db";
-// import { Prisma } from "../generated/client";
-
 export type AuditAction = 'CREATE' | 'UPDATE' | 'DELETE' | 'VERIFY' | 'POST' | 'REVERSE';
 
 export interface AuditLogParams {
@@ -16,28 +13,26 @@ export interface AuditLogParams {
 
 /**
  * Logs an action to the AuditLog table.
- * Can be used within an existing transaction.
+ * Audit logging is handled by Django Middleware — this is a no-op stub.
  */
 export async function logAuditAction(
-    params: AuditLogParams,
-    tx?: Record<string, any> // was Prisma.TransactionClient
-) {
-    // Audit logging is being migrated to Django Middleware.
-    // Client-side calls are ignored for now.
-    // console.log("Audit Action:", params); 
+    _params: AuditLogParams,
+): Promise<void> {
+    // Audit logging is handled by Django Middleware.
+    // This function exists for interface compatibility only.
 }
 
 /**
  * Captures changes between two objects and logs each changed field.
+ * Audit logging is handled by Django Middleware — this is a no-op stub.
  */
 export async function logEntityUpdate(
-    userId: number,
-    entity: string,
-    entityId: string,
-    oldData: Record<string, any>,
-    newData: Record<string, any>,
-    organizationId: string,
-    tx?: Record<string, any> // was Prisma.TransactionClient
-) {
-    // No-op
+    _userId: number,
+    _entity: string,
+    _entityId: string,
+    _oldData: Record<string, unknown>,
+    _newData: Record<string, unknown>,
+    _organizationId: string,
+): Promise<void> {
+    // No-op — handled by Django Middleware
 }

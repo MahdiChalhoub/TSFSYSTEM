@@ -1219,3 +1219,13 @@ export interface AuthActionState {
     _slug?: string
     [key: string]: unknown
 }
+
+// ─── Standard Server Action Result ──────────────────────────────
+
+/** Standard result type for mutation server actions (create/update/delete) */
+export interface ActionResult<T = Record<string, unknown>> {
+    success: boolean
+    message?: string
+    error?: string
+    result?: T
+}
