@@ -281,6 +281,25 @@ export const MENU_ITEMS = [
             { title: 'Client Pricing', path: '/crm/pricing', icon: Tag },
             { title: 'Supplier Performance', path: '/crm/supplier-performance' },
             { title: 'Customer Insights', path: '/crm/insights' },
+            {
+                title: 'Supplier Gate',
+                icon: Briefcase,
+                children: [
+                    { title: 'Supplier Access', path: '/workspace/supplier-access' },
+                    { title: 'Proforma Review', path: '/workspace/proformas' },
+                    { title: 'Price Requests', path: '/workspace/price-requests' },
+                ]
+            },
+            {
+                title: 'Client Gate',
+                icon: Users,
+                children: [
+                    { title: 'Portal Config', path: '/workspace/portal-config' },
+                    { title: 'Client Access', path: '/workspace/client-access' },
+                    { title: 'Client Orders', path: '/workspace/client-orders' },
+                    { title: 'Client Tickets', path: '/workspace/client-tickets' },
+                ]
+            },
         ]
     },
     {
@@ -305,25 +324,6 @@ export const MENU_ITEMS = [
             { title: 'TaskBoard', path: '/workspace/tasks', icon: ClipboardList },
             { title: 'Checklists', path: '/workspace/checklists', icon: ListChecks },
             { title: 'Performance', path: '/workspace/performance', icon: Trophy },
-            {
-                title: 'Supplier Gate',
-                icon: Briefcase,
-                children: [
-                    { title: 'Supplier Access', path: '/workspace/supplier-access' },
-                    { title: 'Proforma Review', path: '/workspace/proformas' },
-                    { title: 'Price Requests', path: '/workspace/price-requests' },
-                ]
-            },
-            {
-                title: 'Client Gate',
-                icon: Users,
-                children: [
-                    { title: 'Portal Config', path: '/workspace/portal-config' },
-                    { title: 'Client Access', path: '/workspace/client-access' },
-                    { title: 'Client Orders', path: '/workspace/client-orders' },
-                    { title: 'Client Tickets', path: '/workspace/client-tickets' },
-                ]
-            },
         ]
     },
     {
