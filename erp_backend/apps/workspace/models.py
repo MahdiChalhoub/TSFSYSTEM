@@ -209,6 +209,8 @@ class Task(TenantModel):
     """
     title = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
+    category = models.ForeignKey(TaskCategory, on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks')
+    template = models.ForeignKey(TaskTemplate, on_delete=models.SET_NULL, null=True, blank=True, related_name='instances')
     status = models.CharField(max_length=20, default='PENDING', help_text='Internal status code')
     priority = models.CharField(max_length=20, default='MEDIUM', help_text='Internal priority code')
     source = models.CharField(max_length=15, choices=SOURCE_CHOICES, default='MANUAL')
@@ -408,6 +410,9 @@ class ChecklistTemplateItem(TenantModel):
 
 class ChecklistInstance(TenantModel):
     """An assigned checklist to a specific employee for a specific date/shift."""
+    template = models.ForeignKey(ChecklistTemplate, on_delete=models.CASCADE, related_name='instances')
+    assigned_to = models.ForeignKey(User, on_delete=models.CASCADE, related_name='checklists')
+    date = models.DateField()
     status = models.CharField(max_length=20, default='PENDING', help_text='Internal status code')
     completed_at = models.DateTimeField(null=True, blank=True)
     points_earned = models.IntegerField(default=0)
