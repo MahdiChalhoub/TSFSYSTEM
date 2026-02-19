@@ -15,7 +15,7 @@ from django.db.models import Sum, Count
 
 from erp.views import TenantModelViewSet
 from .models import (
-    ClientPortalAccess, ClientWallet, WalletTransaction,
+    ClientPortalConfig, ClientPortalAccess, ClientWallet, WalletTransaction,
     ClientOrder, ClientOrderLine, ClientTicket,
 )
 from .serializers import (
@@ -282,6 +282,9 @@ class ClientDashboardViewSet(viewsets.ViewSet):
             status__in=['OPEN', 'IN_PROGRESS']
         ).count()
 
+        # Include org config for client-side display
+        config = ClientPortalConfig.get_config(org)
+
         data = {
             'total_orders': total_orders,
             'active_orders': active_orders,
@@ -291,6 +294,14 @@ class ClientDashboardViewSet(viewsets.ViewSet):
             'loyalty_tier': tier,
             'open_tickets': open_tickets,
             'barcode': barcode,
+            # Per-org config for client UI
+            'loyalty_enabled': config.loyalty_enabled,
+            'loyalty_earn_rate': str(config.loyalty_earn_rate),
+            'loyalty_redemption_ratio': str(config.loyalty_redemption_ratio),
+            'loyalty_min_redeem': config.loyalty_min_redeem,
+            'wallet_enabled': config.wallet_enabled,
+            'ecommerce_enabled': config.ecommerce_enabled,
+            'tickets_enabled': config.tickets_enabled,
         }
 
         serializer = ClientDashboardSerializer(data)
@@ -358,11 +369,28 @@ class ClientMyOrdersViewSet(viewsets.ModelViewSet):
         if not order.lines.exists():
             return Response({'error': 'Cart is empty'}, status=400)
 
+        # Use org config for delivery fee and minimum order
+        config = ClientPortalConfig.get_config(order.organization)
+
+        if not config.ecommerce_enabled:
+            return Response({'error': 'eCommerce is disabled for this organization'}, status=403)
+
+        order.recalculate_totals()
+
+        if config.min_order_amount > 0 and order.subtotal < config.min_order_amount:
+            return Response({
+                'error': f'Minimum order amount is {config.min_order_amount}'
+            }, status=400)
+
+        # Apply org delivery fee
+        order.delivery_fee = config.get_delivery_fee(order.subtotal)
         order.recalculate_totals()
 
         # Handle wallet payment
         wallet_amount = Decimal(str(request.data.get('wallet_amount', 0)))
         if wallet_amount > 0:
+            if not config.allow_wallet_payment:
+                return Response({'error': 'Wallet payment is disabled'}, status=400)
             try:
                 wallet = order.contact.wallet
                 wallet.debit(wallet_amount, reason=f'Payment for {order.order_number}',
@@ -424,16 +452,29 @@ class ClientWalletViewSet(viewsets.ViewSet):
         if not request.user.client_access.has_permission('REDEEM_LOYALTY'):
             return Response({'error': 'No REDEEM_LOYALTY permission'}, status=403)
         access = request.user.client_access
+        org = access.contact.organization
+        config = ClientPortalConfig.get_config(org)
+
+        if not config.loyalty_enabled:
+            return Response({'error': 'Loyalty system is disabled for this organization'}, status=403)
+
         points = int(request.data.get('points', 0))
+
+        if points < config.loyalty_min_redeem:
+            return Response({
+                'error': f'Minimum redemption is {config.loyalty_min_redeem} points'
+            }, status=400)
+
         try:
             wallet = access.contact.wallet
-            # 100 points = 1 currency unit
-            discount = Decimal(str(points)) / 100
+            # Use org-configured redemption ratio
+            discount = config.get_loyalty_value(points)
             txn = wallet.redeem_loyalty_points(points, discount)
             return Response({
                 'status': 'redeemed',
                 'points_used': points,
                 'discount': str(discount),
+                'redemption_ratio': str(config.loyalty_redemption_ratio),
                 'new_balance': str(wallet.balance),
                 'remaining_points': wallet.loyalty_points,
             })
@@ -485,3 +526,25 @@ class ClientOrderLineViewSet(TenantModelViewSet):
     """Admin management of client order lines."""
     queryset = ClientOrderLine.objects.select_related('product').all()
     serializer_class = ClientOrderLineSerializer
+
+
+# =============================================================================
+# ADMIN: Portal Configuration
+# =============================================================================
+
+class ClientPortalConfigViewSet(TenantModelViewSet):
+    """Admin management of per-org Client Portal configuration."""
+    queryset = ClientPortalConfig.objects.all()
+    serializer_class = None  # will use generic serializer below
+
+    def get_serializer_class(self):
+        from .serializers import ClientPortalConfigSerializer
+        return ClientPortalConfigSerializer
+
+    @action(detail=False, methods=['get'])
+    def current(self, request):
+        """Get the current org's config (auto-creates with defaults if none exists)."""
+        org = request.user.organization
+        config = ClientPortalConfig.get_config(org)
+        from .serializers import ClientPortalConfigSerializer
+        return Response(ClientPortalConfigSerializer(config).data)

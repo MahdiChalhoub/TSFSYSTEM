@@ -13,6 +13,7 @@ router.register(r'admin-orders', views.ClientOrderAdminViewSet, basename='admin-
 router.register(r'admin-tickets', views.ClientTicketAdminViewSet, basename='admin-client-tickets')
 router.register(r'admin-wallets', views.ClientWalletAdminViewSet, basename='admin-client-wallets')
 router.register(r'order-lines', views.ClientOrderLineViewSet)
+router.register(r'config', views.ClientPortalConfigViewSet, basename='client-portal-config')
 
 # Client-side endpoints
 router.register(r'dashboard', views.ClientDashboardViewSet, basename='client-dashboard')

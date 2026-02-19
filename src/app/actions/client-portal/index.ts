@@ -104,6 +104,20 @@ export async function manualWalletDebit(id: number, amount: number, reason: stri
 }
 
 // =============================================================================
+// ADMIN: PORTAL CONFIGURATION (Per-Organization)
+// =============================================================================
+
+export async function getPortalConfig() {
+    try { return await erpFetch('client-portal/config/'); } catch { return []; }
+}
+export async function getCurrentPortalConfig() {
+    try { return await erpFetch('client-portal/config/current/'); } catch { return null; }
+}
+export async function updatePortalConfig(id: number, data: any) {
+    return erpFetch(`client-portal/config/${id}/`, { method: 'PATCH', body: JSON.stringify(data) });
+}
+
+// =============================================================================
 // CLIENT-SIDE: DASHBOARD
 // =============================================================================
 

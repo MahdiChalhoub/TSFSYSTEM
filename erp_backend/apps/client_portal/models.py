@@ -12,6 +12,112 @@ from erp.models import TenantModel
 
 
 # =============================================================================
+# PER-ORGANIZATION CONFIGURATION
+# =============================================================================
+
+class ClientPortalConfig(TenantModel):
+    """
+    Per-organization settings for the Client Portal.
+    Controls loyalty rates, wallet behavior, delivery fees, and ticket types.
+    Each organization can customize their own portal experience.
+    """
+
+    # ── Loyalty Settings ──────────────────────────────────────────────────────
+    loyalty_enabled = models.BooleanField(default=True, help_text='Enable loyalty points system')
+    loyalty_earn_rate = models.DecimalField(
+        max_digits=10, decimal_places=4, default=Decimal('1.0000'),
+        help_text='Points earned per 1 currency unit spent (e.g. 1.0 = 1 pt/$1, 2.5 = 2.5 pt/$1)'
+    )
+    loyalty_redemption_ratio = models.DecimalField(
+        max_digits=10, decimal_places=4, default=Decimal('100.0000'),
+        help_text='Points needed for 1 currency unit (e.g. 100 = 100 pts = $1, 50 = 50 pts = $1)'
+    )
+    loyalty_min_redeem = models.IntegerField(
+        default=100, help_text='Minimum points required before redemption is allowed'
+    )
+    loyalty_max_redeem_percent = models.DecimalField(
+        max_digits=5, decimal_places=2, default=Decimal('50.00'),
+        help_text='Max % of order total payable with loyalty (e.g. 50 = up to 50%)'
+    )
+
+    # ── Wallet Settings ───────────────────────────────────────────────────────
+    wallet_enabled = models.BooleanField(default=True, help_text='Enable digital wallet')
+    wallet_currency = models.CharField(max_length=10, default='USD', help_text='Wallet currency code')
+    wallet_auto_create = models.BooleanField(
+        default=True, help_text='Auto-create wallet when client access is activated'
+    )
+    wallet_max_balance = models.DecimalField(
+        max_digits=15, decimal_places=2, default=Decimal('999999.00'),
+        help_text='Maximum wallet balance (0 = unlimited)'
+    )
+
+    # ── Delivery Settings ─────────────────────────────────────────────────────
+    default_delivery_fee = models.DecimalField(
+        max_digits=15, decimal_places=2, default=Decimal('0.00'),
+        help_text='Default delivery fee for eCommerce orders'
+    )
+    free_delivery_threshold = models.DecimalField(
+        max_digits=15, decimal_places=2, default=Decimal('0.00'),
+        help_text='Order amount above which delivery is free (0 = never free)'
+    )
+
+    # ── Ticket Settings ───────────────────────────────────────────────────────
+    tickets_enabled = models.BooleanField(default=True, help_text='Enable support ticket system')
+    enabled_ticket_types = models.JSONField(
+        default=list, blank=True,
+        help_text='List of enabled ticket type codes. Empty = all enabled.'
+    )
+    auto_assign_tickets = models.BooleanField(
+        default=False, help_text='Auto-assign new tickets to a default agent'
+    )
+    default_ticket_assignee = models.ForeignKey(
+        'erp.User', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='+', help_text='Default agent for auto-assigned tickets'
+    )
+
+    # ── eCommerce Settings ────────────────────────────────────────────────────
+    ecommerce_enabled = models.BooleanField(default=True, help_text='Allow clients to place orders')
+    min_order_amount = models.DecimalField(
+        max_digits=15, decimal_places=2, default=Decimal('0.00'),
+        help_text='Minimum order subtotal'
+    )
+    allow_wallet_payment = models.BooleanField(default=True, help_text='Allow paying with wallet balance')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'client_portal_config'
+        verbose_name = 'Client Portal Configuration'
+        verbose_name_plural = 'Client Portal Configurations'
+
+    def __str__(self):
+        return f"ClientPortalConfig: {self.organization}"
+
+    @classmethod
+    def get_config(cls, organization):
+        """Get or create config for organization with sensible defaults."""
+        config, _ = cls.objects.get_or_create(organization=organization)
+        return config
+
+    def get_loyalty_value(self, points):
+        """Convert points to currency value using this org's ratio."""
+        if self.loyalty_redemption_ratio <= 0:
+            return Decimal('0.00')
+        return Decimal(str(points)) / self.loyalty_redemption_ratio
+
+    def get_points_for_amount(self, currency_amount):
+        """Calculate points earned for a given spend amount."""
+        return int(Decimal(str(currency_amount)) * self.loyalty_earn_rate)
+
+    def get_delivery_fee(self, order_subtotal):
+        """Calculate delivery fee (may be waived above threshold)."""
+        if self.free_delivery_threshold > 0 and order_subtotal >= self.free_delivery_threshold:
+            return Decimal('0.00')
+        return self.default_delivery_fee
+
+
+# =============================================================================
 # CLIENT PORTAL ACCESS
 # =============================================================================
 

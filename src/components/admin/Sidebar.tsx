@@ -318,6 +318,7 @@ export const MENU_ITEMS = [
                 title: 'Client Gate',
                 icon: Users,
                 children: [
+                    { title: 'Portal Config', path: '/workspace/portal-config' },
                     { title: 'Client Access', path: '/workspace/client-access' },
                     { title: 'Client Orders', path: '/workspace/client-orders' },
                     { title: 'Client Tickets', path: '/workspace/client-tickets' },
