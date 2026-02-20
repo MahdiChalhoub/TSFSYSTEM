@@ -42,7 +42,8 @@ export default async function middleware(req: NextRequest) {
     // Redirect unauthenticated users away from privileged routes.
     // This prevents layout shells from rendering for unauthenticated visitors.
     const isAuthRoute = url.pathname.startsWith('/login') || url.pathname.startsWith('/register');
-    const isPublicRoute = url.pathname === '/' || url.pathname.startsWith('/landing') || isAuthRoute;
+    const isPortalRoute = url.pathname.startsWith('/tenant') || url.pathname.startsWith('/supplier-portal');
+    const isPublicRoute = url.pathname === '/' || url.pathname.startsWith('/landing') || isAuthRoute || isPortalRoute;
     const hasAuthToken = req.cookies.has('auth_token');
 
     if (!hasAuthToken && !isPublicRoute && !url.pathname.startsWith('/saas/login')) {
