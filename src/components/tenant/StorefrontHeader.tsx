@@ -47,6 +47,10 @@ export function StorefrontHeader() {
                         className="text-sm text-slate-400 hover:text-white font-medium transition-colors">
                         Products
                     </Link>
+                    <Link href={`/tenant/${slug}/categories`}
+                        className="text-sm text-slate-400 hover:text-white font-medium transition-colors">
+                        Categories
+                    </Link>
                     {storeMode === 'CATALOG_QUOTE' && (
                         <Link href={`/tenant/${slug}/quote`}
                             className="text-sm text-slate-400 hover:text-white font-medium transition-colors flex items-center gap-1.5">
@@ -97,6 +101,10 @@ export function StorefrontHeader() {
                     <Link href={`/tenant/${slug}`} onClick={() => setMenuOpen(false)}
                         className="block px-4 py-3 text-white font-medium rounded-xl hover:bg-white/5 transition-all">
                         Products
+                    </Link>
+                    <Link href={`/tenant/${slug}/categories`} onClick={() => setMenuOpen(false)}
+                        className="block px-4 py-3 text-white font-medium rounded-xl hover:bg-white/5 transition-all">
+                        Categories
                     </Link>
                     {storeMode === 'CATALOG_QUOTE' && (
                         <Link href={`/tenant/${slug}/quote`} onClick={() => setMenuOpen(false)}
