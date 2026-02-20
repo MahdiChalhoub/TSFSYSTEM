@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { usePortal } from '@/context/PortalContext'
 import {
     ArrowLeft, ShoppingCart, FileQuestion, Loader2, CheckCircle2,
-    Package, Star, Minus, Plus, Tag, Layers, AlertCircle
+    Package, Star, Minus, Plus, Tag, Layers, AlertCircle, Heart
 } from 'lucide-react'
 
 interface ProductDetail {
@@ -28,7 +28,7 @@ interface ProductDetail {
 export default function ProductDetailPage() {
     const { slug, id } = useParams<{ slug: string; id: string }>()
     const router = useRouter()
-    const { isAuthenticated, token, config, addToCart, cart } = usePortal()
+    const { isAuthenticated, token, config, addToCart, cart, toggleWishlist, isInWishlist } = usePortal()
     const [product, setProduct] = useState<ProductDetail | null>(null)
     const [loading, setLoading] = useState(true)
     const [qty, setQty] = useState(1)
@@ -99,7 +99,7 @@ export default function ProductDetailPage() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
                     {/* Image */}
-                    <div className="aspect-square bg-slate-900/40 border border-white/5 rounded-3xl overflow-hidden">
+                    <div className="aspect-square bg-slate-900/40 border border-white/5 rounded-3xl overflow-hidden relative">
                         {product.image_url ? (
                             <img src={product.image_url} alt={product.name}
                                 className="w-full h-full object-cover" />
@@ -108,6 +108,15 @@ export default function ProductDetailPage() {
                                 <Package size={80} className="text-slate-800" />
                             </div>
                         )}
+                        {/* Wishlist Heart */}
+                        <button onClick={() => toggleWishlist(product.id)}
+                            className={`absolute top-4 right-4 w-12 h-12 rounded-2xl flex items-center justify-center transition-all border shadow-lg backdrop-blur-md
+                                ${isInWishlist(product.id)
+                                    ? 'bg-rose-500/80 text-white border-rose-500/50'
+                                    : 'bg-black/40 text-white/70 hover:text-rose-400 border-white/10 hover:border-rose-500/30'
+                                }`}>
+                            <Heart size={22} fill={isInWishlist(product.id) ? 'currentColor' : 'none'} />
+                        </button>
                     </div>
 
                     {/* Info */}
