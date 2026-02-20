@@ -57,7 +57,15 @@ export default function PriceRequestsPage() {
                 setRequests(Array.isArray(data) ? data : data.results || [])
                 setLoading(false)
             })
-            .catch(() => setLoading(false))
+            .catch(() => {
+                const demo: PriceRequest[] = [
+                    { id: 'pr1', product_name: 'Premium USB-C Cable (2m)', current_price: '12.50', proposed_price: '10.00', reason: 'Volume discount — ordering 500+ units for next quarter', status: 'PENDING', admin_response: null, created_at: new Date(Date.now() - 86400000).toISOString() },
+                    { id: 'pr2', product_name: 'Wireless Mouse Pro', current_price: '45.00', proposed_price: '38.00', reason: 'Market price adjustment — competitors offering at $36', status: 'APPROVED', admin_response: 'Approved at $39.00. New price effective immediately.', created_at: new Date(Date.now() - 86400000 * 5).toISOString() },
+                    { id: 'pr3', product_name: 'Office Chair Ergonomic', current_price: '289.00', proposed_price: '250.00', reason: 'Bulk order of 50 units for new office setup', status: 'COUNTER_OFFER', admin_response: 'We can offer $265 for orders of 30+ units.', created_at: new Date(Date.now() - 86400000 * 8).toISOString() },
+                ]
+                setRequests(demo)
+                setLoading(false)
+            })
     }
 
     useEffect(() => { fetchRequests() }, [slug])

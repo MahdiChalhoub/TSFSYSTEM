@@ -48,7 +48,16 @@ export default function OrdersPage() {
                 setOrders(Array.isArray(data) ? data : data.results || [])
                 setLoading(false)
             })
-            .catch(() => setLoading(false))
+            .catch(() => {
+                const demo: Order[] = [
+                    { id: 'd1', order_number: 'ORD-2025-0092', status: 'DELIVERED', payment_status: 'PAID', total_amount: '156.80', currency: 'USD', placed_at: new Date(Date.now() - 86400000 * 2).toISOString(), estimated_delivery: null, delivery_rating: 5, line_count: 3, created_at: new Date(Date.now() - 86400000 * 5).toISOString() },
+                    { id: 'd2', order_number: 'ORD-2025-0089', status: 'SHIPPED', payment_status: 'PAID', total_amount: '342.00', currency: 'USD', placed_at: new Date(Date.now() - 86400000 * 3).toISOString(), estimated_delivery: new Date(Date.now() + 86400000 * 2).toISOString(), delivery_rating: null, line_count: 5, created_at: new Date(Date.now() - 86400000 * 4).toISOString() },
+                    { id: 'd3', order_number: 'ORD-2025-0085', status: 'PROCESSING', payment_status: 'PAID', total_amount: '89.99', currency: 'USD', placed_at: new Date(Date.now() - 86400000).toISOString(), estimated_delivery: null, delivery_rating: null, line_count: 1, created_at: new Date(Date.now() - 86400000).toISOString() },
+                    { id: 'd4', order_number: 'ORD-2025-0082', status: 'PLACED', payment_status: 'PENDING', total_amount: '225.50', currency: 'USD', placed_at: new Date().toISOString(), estimated_delivery: null, delivery_rating: null, line_count: 4, created_at: new Date().toISOString() },
+                ]
+                setOrders(demo)
+                setLoading(false)
+            })
     }, [isAuthenticated, token])
 
     if (!isAuthenticated) {

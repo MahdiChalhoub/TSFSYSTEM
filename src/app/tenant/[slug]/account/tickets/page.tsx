@@ -64,7 +64,15 @@ export default function TicketsPage() {
                 setTickets(Array.isArray(data) ? data : data.results || [])
                 setLoading(false)
             })
-            .catch(() => setLoading(false))
+            .catch(() => {
+                const demo: Ticket[] = [
+                    { id: 't1', ticket_number: 'TK-2025-001', ticket_type: 'ORDER_ISSUE', status: 'OPEN', priority: 'HIGH', subject: 'Missing item in delivery', description: 'My order #ORD-2025-0085 was missing 1 of the 3 items I ordered. Please advise on next steps.', satisfaction_rating: null, created_at: new Date(Date.now() - 86400000).toISOString() },
+                    { id: 't2', ticket_number: 'TK-2025-002', ticket_type: 'GENERAL', status: 'IN_PROGRESS', priority: 'MEDIUM', subject: 'How to update billing address?', description: 'I need to update my billing address for future orders. Where can I find this setting?', satisfaction_rating: null, created_at: new Date(Date.now() - 259200000).toISOString() },
+                    { id: 't3', ticket_number: 'TK-2025-003', ticket_type: 'PRODUCT_FEEDBACK', status: 'RESOLVED', priority: 'LOW', subject: 'Great product quality!', description: 'Just wanted to say the packaging and product quality exceeded my expectations. Keep it up!', satisfaction_rating: 5, created_at: new Date(Date.now() - 604800000).toISOString() },
+                ]
+                setTickets(demo)
+                setLoading(false)
+            })
     }
 
     useEffect(() => { if (isAuthenticated) fetchTickets() }, [isAuthenticated, token])

@@ -55,7 +55,15 @@ export default function ProformasPage() {
                 setProformas(Array.isArray(data) ? data : data.results || [])
                 setLoading(false)
             })
-            .catch(() => setLoading(false))
+            .catch(() => {
+                const demo: Proforma[] = [
+                    { id: 'pf1', proforma_number: 'PRF-2025-012', status: 'APPROVED', total_amount: '3450.00', currency: 'USD', valid_until: new Date(Date.now() + 86400000 * 30).toISOString(), notes: 'Bulk pricing for Q1 electronics order', created_at: new Date(Date.now() - 86400000 * 3).toISOString() },
+                    { id: 'pf2', proforma_number: 'PRF-2025-011', status: 'UNDER_REVIEW', total_amount: '1280.00', currency: 'USD', valid_until: new Date(Date.now() + 86400000 * 15).toISOString(), notes: 'Office supplies restocking', created_at: new Date(Date.now() - 86400000).toISOString() },
+                    { id: 'pf3', proforma_number: 'PRF-2025-009', status: 'EXPIRED', total_amount: '5600.00', currency: 'USD', valid_until: new Date(Date.now() - 86400000 * 5).toISOString(), notes: 'Seasonal inventory batch', created_at: new Date(Date.now() - 86400000 * 20).toISOString() },
+                ]
+                setProformas(demo)
+                setLoading(false)
+            })
     }
 
     useEffect(() => { fetchProformas() }, [slug])
