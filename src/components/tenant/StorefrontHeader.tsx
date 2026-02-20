@@ -131,7 +131,7 @@ export function StorefrontHeader() {
 
             {/* Mobile Menu */}
             {menuOpen && (
-                <div className="md:hidden border-t border-white/5 bg-slate-950/95 backdrop-blur-xl p-4 space-y-3">
+                <div className="md:hidden border-t border-white/5 bg-slate-950/95 backdrop-blur-xl p-4 space-y-1">
                     <Link href={`/tenant/${slug}`} onClick={() => setMenuOpen(false)}
                         className="block px-4 py-3 text-white font-medium rounded-xl hover:bg-white/5 transition-all">
                         Products
@@ -139,6 +139,10 @@ export function StorefrontHeader() {
                     <Link href={`/tenant/${slug}/categories`} onClick={() => setMenuOpen(false)}
                         className="block px-4 py-3 text-white font-medium rounded-xl hover:bg-white/5 transition-all">
                         Categories
+                    </Link>
+                    <Link href={`/tenant/${slug}/search`} onClick={() => setMenuOpen(false)}
+                        className="block px-4 py-3 text-white font-medium rounded-xl hover:bg-white/5 transition-all">
+                        Search
                     </Link>
                     {storeMode === 'CATALOG_QUOTE' && (
                         <Link href={`/tenant/${slug}/quote`} onClick={() => setMenuOpen(false)}
@@ -154,18 +158,28 @@ export function StorefrontHeader() {
                     )}
                     {isAuthenticated && (
                         <>
-                            <Link href={`/tenant/${slug}/dashboard`} onClick={() => setMenuOpen(false)}
-                                className="block px-4 py-3 text-white font-medium rounded-xl hover:bg-white/5 transition-all">
-                                Dashboard
-                            </Link>
+                            <div className="border-t border-white/5 my-2" />
                             <Link href={`/tenant/${slug}/account`} onClick={() => setMenuOpen(false)}
                                 className="block px-4 py-3 text-white font-medium rounded-xl hover:bg-white/5 transition-all">
                                 My Account
+                            </Link>
+                            <Link href={`/tenant/${slug}/account/orders`} onClick={() => setMenuOpen(false)}
+                                className="block px-4 py-3 text-white font-medium rounded-xl hover:bg-white/5 transition-all">
+                                Orders
+                            </Link>
+                            <Link href={`/tenant/${slug}/account/wishlist`} onClick={() => setMenuOpen(false)}
+                                className="block px-4 py-3 text-white font-medium rounded-xl hover:bg-white/5 transition-all">
+                                Wishlist {wishlistCount > 0 && `(${wishlistCount})`}
+                            </Link>
+                            <Link href={`/tenant/${slug}/account/wallet`} onClick={() => setMenuOpen(false)}
+                                className="block px-4 py-3 text-white font-medium rounded-xl hover:bg-white/5 transition-all">
+                                Wallet & Loyalty
                             </Link>
                             <Link href={`/tenant/${slug}/account/notifications`} onClick={() => setMenuOpen(false)}
                                 className="block px-4 py-3 text-white font-medium rounded-xl hover:bg-white/5 transition-all">
                                 Notifications
                             </Link>
+                            <div className="border-t border-white/5 my-2" />
                             <button onClick={() => { logout(); setMenuOpen(false) }}
                                 className="w-full text-left px-4 py-3 text-red-400 font-medium rounded-xl hover:bg-red-500/10 transition-all flex items-center gap-2">
                                 <LogOut size={16} /> Sign Out
