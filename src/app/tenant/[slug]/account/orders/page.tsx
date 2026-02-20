@@ -95,14 +95,14 @@ export default function OrdersPage() {
                             const st = STATUS_MAP[order.status] || STATUS_MAP.PLACED
                             const Icon = st.icon
                             return (
-                                <div key={order.id}
-                                    className="p-6 bg-slate-900/60 border border-white/5 rounded-2xl flex items-center gap-6 hover:border-white/10 transition-all">
+                                <Link key={order.id} href={`/tenant/${slug}/account/orders/${order.id}`}
+                                    className="p-6 bg-slate-900/60 border border-white/5 rounded-2xl flex items-center gap-6 hover:border-emerald-500/30 transition-all cursor-pointer group">
                                     <div className={`w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center ${st.color}`}>
                                         <Icon size={22} />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-3">
-                                            <p className="text-white font-bold">{order.order_number}</p>
+                                            <p className="text-white font-bold group-hover:text-emerald-400 transition-colors">{order.order_number}</p>
                                             <span className={`text-[10px] font-black uppercase tracking-widest ${st.color}`}>{st.label}</span>
                                         </div>
                                         <p className="text-slate-500 text-sm mt-1">
@@ -117,7 +117,7 @@ export default function OrdersPage() {
                                             </div>
                                         )}
                                     </div>
-                                </div>
+                                </Link>
                             )
                         })}
                     </div>
