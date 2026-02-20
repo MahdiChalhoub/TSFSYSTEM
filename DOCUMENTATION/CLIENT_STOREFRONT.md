@@ -111,7 +111,8 @@ The `ClientPortalConfig` model stores per-org settings:
 - `src/app/tenant/[slug]/account/page.tsx` — Account dashboard
 - `src/app/tenant/[slug]/account/orders/page.tsx` — Order history (clickable rows)
 - `src/app/tenant/[slug]/account/orders/[id]/page.tsx` — Order detail (lines, totals, status)
-- `src/app/tenant/[slug]/account/wallet/page.tsx` — Wallet & loyalty
+- `src/app/tenant/[slug]/account/wallet/page.tsx` — Wallet with loyalty tier progress (Bronze→Diamond), top-up request
+- `src/app/tenant/[slug]/categories/page.tsx` — Category browse grid with search and product counts
 - `src/app/tenant/[slug]/account/tickets/page.tsx` — Support tickets
 - `src/app/tenant/[slug]/actions.ts` — Server actions (10+ storefront API helpers)
 
