@@ -20,6 +20,29 @@ Track active work to prevent conflicts between agents/developers.
 
 ---
 
+## Session-69208a6a - 2026-02-20 23:12
+- Working on: Storefront Engine Phase 5 — eCommerce Module (v1.8.0-b009→b010)
+- Features delivered:
+  - Independent eCommerce backend app (apps/ecommerce/) with proxy models
+  - API endpoints: catalog, themes, orders/stats, storefront-config
+  - Auto-discovered by Django (INSTALLED_APPS + URLs)
+  - Sidebar entry (eCommerce section with 4 links, module-gated)
+  - Frontend module manifest (src/modules/ecommerce/manifest.json)
+  - Documentation: DOCUMENTATION/ecommerce-module.md
+- Files: apps/ecommerce/*, src/modules/ecommerce/manifest.json, Sidebar.tsx
+- Status: DONE
+
+## Session-69208a6a - 2026-02-20 22:50
+- Working on: Storefront Engine Phase 4 — Admin Theme Selector (v1.8.0-b007→b008)
+- Features delivered:
+  - storefront_theme field on ClientPortalConfig + migration
+  - Exposed in StorefrontPublicConfigView API
+  - ThemeLayout reads config.storefront_theme → passes to ThemeProvider
+  - ThemeSelector visual card component on portal-config page
+  - Documentation: DOCUMENTATION/storefront-theme-selector.md
+- Files: models.py, views.py, ThemeLayout.tsx, ThemeSelector.tsx, page.tsx
+- Status: DONE
+
 ## Session-69208a6a - 2026-02-20 22:34
 - Working on: Storefront Engine Phase 3 — Boutique Theme (v1.8.0-b004→b005)
 - Features delivered:
