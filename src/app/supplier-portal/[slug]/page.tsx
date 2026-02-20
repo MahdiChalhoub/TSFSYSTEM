@@ -174,6 +174,7 @@ function SupplierDashboard({ session, slug, onLogout }: { session: SupplierSessi
         { href: `/supplier-portal/${slug}/orders`, icon: ShoppingCart, label: 'My Purchase Orders', color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20 hover:border-blue-500/40' },
         { href: `/supplier-portal/${slug}/proformas`, icon: FileText, label: 'Proformas', color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20 hover:border-emerald-500/40' },
         { href: `/supplier-portal/${slug}/price-requests`, icon: TrendingDown, label: 'Price Change Requests', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20 hover:border-amber-500/40' },
+        { href: `/supplier-portal/${slug}/statement`, icon: BarChart3, label: 'Financial Statement', color: 'text-sky-400', bg: 'bg-sky-500/10 border-sky-500/20 hover:border-sky-500/40' },
     ]
 
     return (
@@ -239,7 +240,7 @@ function SupplierDashboard({ session, slug, onLogout }: { session: SupplierSessi
                 )}
 
                 {/* Nav Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {navItems.map(item => (
                         <Link key={item.href} href={item.href}
                             className={`group p-8 ${item.bg} border rounded-3xl flex flex-col gap-4 transition-all`}>
