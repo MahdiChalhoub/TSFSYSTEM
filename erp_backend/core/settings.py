@@ -242,6 +242,18 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'  # Production: collectstatic output
 STATICFILES_DIRS = [BASE_DIR / 'static'] if (BASE_DIR / 'static').exists() else []
 
+# Media files (user uploads — local fallback)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# ── Cloud Storage (Cloudflare R2 / S3-compatible) ─────────────
+STORAGE_DEFAULT_PROVIDER = os.getenv('STORAGE_PROVIDER', 'LOCAL')
+STORAGE_R2_ENDPOINT = os.getenv('STORAGE_R2_ENDPOINT', '')
+STORAGE_R2_ACCESS_KEY = os.getenv('STORAGE_R2_ACCESS_KEY', '')
+STORAGE_R2_SECRET_KEY = os.getenv('STORAGE_R2_SECRET_KEY', '')
+STORAGE_R2_BUCKET = os.getenv('STORAGE_R2_BUCKET', 'tsf-files')
+STORAGE_MAX_FILE_SIZE_MB = int(os.getenv('STORAGE_MAX_FILE_SIZE_MB', '50'))
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
