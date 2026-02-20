@@ -100,9 +100,11 @@ The `ClientPortalConfig` model stores per-org settings:
 ## Frontend Files
 - `src/app/tenant/[slug]/product/[id]/page.tsx` — Product detail w/ store-mode pricing
 - `src/app/tenant/[slug]/quote/page.tsx` — Quote request form
+- `src/components/tenant/StorefrontHeader.tsx` — Persistent header with org logo, cart badge, account link
 - `src/components/tenant/StorefrontCatalog.tsx` — Enhanced catalog with search, filter, quick-add
 - `src/components/tenant/ClientPortalLogin.tsx` — Login CTA / form / user card
-- `src/app/tenant/[slug]/layout.tsx` — PortalProvider wrapper
+- `src/app/tenant/[slug]/layout.tsx` — PortalProvider + StorefrontHeader wrapper
+- `src/app/tenant/[slug]/account/layout.tsx` — Account sidebar (Dashboard, Orders, Wallet, Support)
 - `src/app/tenant/[slug]/cart/page.tsx` — Shopping cart
 - `src/app/tenant/[slug]/checkout/page.tsx` — Multi-step checkout
 - `src/app/tenant/[slug]/account/page.tsx` — Account dashboard
