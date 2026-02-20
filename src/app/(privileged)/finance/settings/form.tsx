@@ -5,10 +5,11 @@ import { useForm } from 'react-hook-form'
 import { recalculateAccountBalances } from '@/app/actions/finance/ledger'
 import { FinancialSettingsState, updateFinancialSettings } from '@/app/actions/finance/settings'
 import { type Currency } from '@/app/actions/currencies'
-import { ShieldAlert, Target, Lock, GitCompareArrows, X, Pencil, AlertTriangle } from 'lucide-react'
+import { ShieldAlert, Target, Lock, GitCompareArrows, X, Pencil, AlertTriangle, Layers } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { getTradeSubTypeSettings, updateTradeSubTypeSettings } from '@/app/actions/settings/trade-settings'
 
 interface Props {
     settings: FinancialSettingsState
@@ -212,6 +213,13 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
     const [showCompare, setShowCompare] = useState(false)
     const [compareType, setCompareType] = useState<string>('')
     const [showEditConfirm, setShowEditConfirm] = useState(false)
+    const [tradeSubTypesEnabled, setTradeSubTypesEnabled] = useState(false)
+    const [tradeTogglePending, setTradeTogglePending] = useState(false)
+
+    // Load trade sub-type setting on mount
+    useEffect(() => {
+        getTradeSubTypeSettings().then(s => setTradeSubTypesEnabled(s?.enabled ?? false)).catch(() => { })
+    }, [])
 
     // Settings lock: after save, core fields are locked until user explicitly unlocks
     const [settingsAreSaved, setSettingsAreSaved] = useState(() => {
@@ -531,6 +539,43 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
                             className="bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-100 px-4 py-2 rounded text-xs font-bold shadow-sm"
                         >
                             Configure Auto-Mapping
+                        </button>
+                    </div>
+
+                    {/* ─── TRADE SUB-TYPES TOGGLE ─── */}
+                    <div className="p-4 bg-indigo-50 rounded-md border border-indigo-100 flex items-center justify-between">
+                        <div className="flex gap-3 items-center">
+                            <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600">
+                                <Layers size={20} />
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-bold text-indigo-900">Sales & Purchase Sub-Types</h3>
+                                <p className="text-xs text-indigo-700 mt-0.5">
+                                    Decompose invoices and POs into Retail / Wholesale / Consignee.
+                                    Enables filter pills, badges, and sub-type columns across pages.
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            disabled={tradeTogglePending}
+                            onClick={async () => {
+                                setTradeTogglePending(true)
+                                try {
+                                    await updateTradeSubTypeSettings(!tradeSubTypesEnabled)
+                                    setTradeSubTypesEnabled(!tradeSubTypesEnabled)
+                                    toast.success(tradeSubTypesEnabled ? 'Trade sub-types disabled' : 'Trade sub-types enabled')
+                                } catch {
+                                    toast.error('Failed to update setting')
+                                } finally {
+                                    setTradeTogglePending(false)
+                                }
+                            }}
+                            className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none ${tradeSubTypesEnabled ? 'bg-indigo-600' : 'bg-stone-300'
+                                }`}
+                        >
+                            <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${tradeSubTypesEnabled ? 'translate-x-6' : 'translate-x-1'
+                                }`} />
                         </button>
                     </div>
 
