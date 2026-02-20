@@ -1,4 +1,5 @@
 import { PortalProvider } from '@/context/PortalContext'
+import { StorefrontHeader } from '@/components/tenant/StorefrontHeader'
 
 export default async function TenantLayout({
     children,
@@ -11,6 +12,7 @@ export default async function TenantLayout({
 
     return (
         <PortalProvider slug={slug}>
+            <StorefrontHeader />
             {children}
         </PortalProvider>
     )

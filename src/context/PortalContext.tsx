@@ -23,6 +23,7 @@ export interface PortalOrg {
     id: string
     name: string
     slug: string
+    logo?: string
 }
 
 export interface StorefrontConfig {
