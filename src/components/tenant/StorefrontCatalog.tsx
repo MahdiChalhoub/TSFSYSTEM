@@ -1,7 +1,9 @@
 'use client';
 
-import { ShoppingBag, ArrowRight, Star } from 'lucide-react';
-import { Button } from "@/components/ui/button";
+import { useState, useMemo } from 'react';
+import Link from 'next/link';
+import { ShoppingBag, ArrowRight, Star, Search, FileQuestion, ShoppingCart, X } from 'lucide-react';
+import { usePortal } from '@/context/PortalContext';
 
 interface Product {
     id: string;
@@ -10,9 +12,55 @@ interface Product {
     selling_price_ttc: number;
     image_url?: string;
     category_name?: string;
+    stock_quantity?: number;
+    tax_rate?: number;
 }
 
-export function StorefrontCatalog({ products }: { products: Product[] }) {
+interface StorefrontCatalogProps {
+    products: Product[];
+    slug: string;
+}
+
+export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
+    const { config, addToCart } = usePortal();
+    const [search, setSearch] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
+
+    const storeMode = config?.store_mode || 'HYBRID';
+    const showPrice = storeMode !== 'CATALOG_QUOTE';
+
+    // Unique categories
+    const categories = useMemo(() => {
+        const cats = new Set<string>();
+        products.forEach(p => { if (p.category_name) cats.add(p.category_name); });
+        return Array.from(cats).sort();
+    }, [products]);
+
+    // Filtered products
+    const filtered = useMemo(() => {
+        return products.filter(p => {
+            const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase());
+            const matchCat = !selectedCategory || p.category_name === selectedCategory;
+            return matchSearch && matchCat;
+        });
+    }, [products, search, selectedCategory]);
+
+    const handleQuickAdd = (p: Product, e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        addToCart({
+            product_id: p.id,
+            product_name: p.name,
+            unit_price: p.selling_price_ttc,
+            quantity: 1,
+            image_url: p.image_url,
+            tax_rate: p.tax_rate || 0,
+        });
+        setAddedIds(prev => new Set(prev).add(p.id));
+        setTimeout(() => setAddedIds(prev => { const next = new Set(prev); next.delete(p.id); return next; }), 1500);
+    };
+
     if (!products || products.length === 0) {
         return (
             <div className="p-12 text-center bg-white/5 rounded-[3rem] border border-white/10 backdrop-blur-xl">
@@ -24,71 +72,163 @@ export function StorefrontCatalog({ products }: { products: Product[] }) {
     }
 
     return (
-        <div className="space-y-12">
-            <div className="flex items-center justify-between px-4">
-                <h2 className="text-3xl font-black text-white tracking-tighter">Featured Collection</h2>
-                <div className="flex gap-2">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Live Inventory</span>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {products.map((p, idx) => (
-                    <div
-                        key={p.id}
-                        className="group relative bg-slate-900/40 backdrop-blur-3xl border border-white/5 rounded-[2.5rem] overflow-hidden hover:border-emerald-500/50 transition-all duration-500 hover:shadow-2xl hover:shadow-emerald-500/10 cursor-pointer"
-                        style={{ animationDelay: `${idx * 100}ms` }}
-                    >
-                        <div className="aspect-[4/3] bg-slate-950 overflow-hidden relative">
-                            {p.image_url ? (
-                                <img
-                                    src={p.image_url}
-                                    alt={p.name}
-                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-80 group-hover:opacity-100"
-                                />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-950">
-                                    <ShoppingBag size={40} className="text-slate-800" />
-                                </div>
-                            )}
-                            <div className="absolute top-6 left-6 px-3 py-1 bg-black/50 backdrop-blur-md rounded-full text-[10px] font-bold text-white uppercase tracking-wider border border-white/10">
-                                {p.category_name || 'Premium'}
-                            </div>
-                            <div className="absolute top-6 right-6 w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 shadow-lg shadow-emerald-900/40">
-                                <ArrowRight size={20} />
-                            </div>
-                        </div>
-
-                        <div className="p-8 space-y-4">
-                            <div className="space-y-1">
-                                <div className="flex justify-between items-start">
-                                    <h3 className="text-xl font-black text-white group-hover:text-emerald-400 transition-colors uppercase tracking-tight">{p.name}</h3>
-                                    <div className="flex items-center gap-1 text-emerald-500">
-                                        <Star size={12} fill="currentColor" />
-                                        <span className="text-[10px] font-black">4.9</span>
-                                    </div>
-                                </div>
-                                <p className="text-[10px] text-slate-500 font-mono tracking-widest">{p.sku}</p>
-                            </div>
-
-                            <div className="flex items-center justify-between pt-2">
-                                <div className="text-2xl font-black text-white">
-                                    <span className="text-emerald-500 mr-1">$</span>
-                                    {p.selling_price_ttc}
-                                </div>
-                                <button className="px-6 py-2 bg-white/5 hover:bg-emerald-500 text-white border border-white/10 hover:border-emerald-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
-                                    Details
-                                </button>
-                            </div>
-                        </div>
+        <div className="space-y-8">
+            {/* Header + Search */}
+            <div className="space-y-4">
+                <div className="flex items-center justify-between px-1">
+                    <h2 className="text-3xl font-black text-white tracking-tighter">Featured Collection</h2>
+                    <div className="flex gap-2">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Live Inventory</span>
                     </div>
-                ))}
+                </div>
+
+                {/* Search Bar */}
+                <div className="relative">
+                    <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <input
+                        type="text"
+                        placeholder="Search products..."
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        className="w-full bg-slate-900/60 border border-white/5 pl-12 pr-10 py-4 rounded-2xl text-white outline-none focus:border-emerald-500/30 transition-all placeholder:text-slate-700"
+                    />
+                    {search && (
+                        <button onClick={() => setSearch('')}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white">
+                            <X size={16} />
+                        </button>
+                    )}
+                </div>
+
+                {/* Category Pills */}
+                {categories.length > 1 && (
+                    <div className="flex flex-wrap gap-2">
+                        <button
+                            onClick={() => setSelectedCategory(null)}
+                            className={`px-4 py-2 rounded-full text-xs font-bold transition-all border
+                                ${!selectedCategory
+                                    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                                    : 'bg-white/5 text-slate-400 border-white/10 hover:border-white/20'
+                                }`}>
+                            All ({products.length})
+                        </button>
+                        {categories.map(cat => (
+                            <button
+                                key={cat}
+                                onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
+                                className={`px-4 py-2 rounded-full text-xs font-bold transition-all border
+                                    ${selectedCategory === cat
+                                        ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                                        : 'bg-white/5 text-slate-400 border-white/10 hover:border-white/20'
+                                    }`}>
+                                {cat}
+                            </button>
+                        ))}
+                    </div>
+                )}
             </div>
 
-            <Button className="w-full py-8 bg-white/5 border border-white/10 text-white hover:bg-white/10 rounded-[2rem] text-xs font-black uppercase tracking-widest transition-all">
-                Explore Full Catalog <ArrowRight className="ml-2" size={16} />
-            </Button>
+            {/* Results Count */}
+            {(search || selectedCategory) && (
+                <p className="text-xs text-slate-500 px-1">
+                    Showing {filtered.length} of {products.length} products
+                    {search && <> matching &quot;<span className="text-white">{search}</span>&quot;</>}
+                    {selectedCategory && <> in <span className="text-emerald-400">{selectedCategory}</span></>}
+                </p>
+            )}
+
+            {/* Product Grid */}
+            {filtered.length === 0 ? (
+                <div className="py-16 text-center space-y-3">
+                    <Search size={36} className="mx-auto text-slate-600" />
+                    <p className="text-white font-bold">No products found</p>
+                    <p className="text-slate-500 text-sm">Try adjusting your search or filter</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {filtered.map((p, idx) => (
+                        <Link
+                            key={p.id}
+                            href={`/tenant/${slug}/product/${p.id}`}
+                            className="group relative bg-slate-900/40 backdrop-blur-3xl border border-white/5 rounded-[2.5rem] overflow-hidden hover:border-emerald-500/50 transition-all duration-500 hover:shadow-2xl hover:shadow-emerald-500/10"
+                            style={{ animationDelay: `${idx * 100}ms` }}
+                        >
+                            <div className="aspect-[4/3] bg-slate-950 overflow-hidden relative">
+                                {p.image_url ? (
+                                    <img
+                                        src={p.image_url}
+                                        alt={p.name}
+                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-80 group-hover:opacity-100"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-950">
+                                        <ShoppingBag size={40} className="text-slate-800" />
+                                    </div>
+                                )}
+                                <div className="absolute top-6 left-6 px-3 py-1 bg-black/50 backdrop-blur-md rounded-full text-[10px] font-bold text-white uppercase tracking-wider border border-white/10">
+                                    {p.category_name || 'Premium'}
+                                </div>
+                                <div className="absolute top-6 right-6 w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 shadow-lg shadow-emerald-900/40">
+                                    <ArrowRight size={20} />
+                                </div>
+                            </div>
+
+                            <div className="p-8 space-y-4">
+                                <div className="space-y-1">
+                                    <div className="flex justify-between items-start">
+                                        <h3 className="text-xl font-black text-white group-hover:text-emerald-400 transition-colors uppercase tracking-tight">{p.name}</h3>
+                                        <div className="flex items-center gap-1 text-emerald-500">
+                                            <Star size={12} fill="currentColor" />
+                                            <span className="text-[10px] font-black">4.9</span>
+                                        </div>
+                                    </div>
+                                    <p className="text-[10px] text-slate-500 font-mono tracking-widest">{p.sku}</p>
+                                </div>
+
+                                <div className="flex items-center justify-between pt-2">
+                                    {showPrice ? (
+                                        <div className="text-2xl font-black text-white">
+                                            <span className="text-emerald-500 mr-1">$</span>
+                                            {p.selling_price_ttc}
+                                        </div>
+                                    ) : (
+                                        <div className="text-sm text-amber-400 flex items-center gap-2">
+                                            <FileQuestion size={14} /> Request Quote
+                                        </div>
+                                    )}
+
+                                    {/* Quick Action */}
+                                    {storeMode === 'CATALOG_QUOTE' ? (
+                                        <span className="px-6 py-2 bg-teal-500/10 text-teal-400 border border-teal-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest">
+                                            Get Quote
+                                        </span>
+                                    ) : (
+                                        <button
+                                            onClick={(e) => handleQuickAdd(p, e)}
+                                            className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2
+                                                ${addedIds.has(p.id)
+                                                    ? 'bg-emerald-500 text-white border border-emerald-500'
+                                                    : 'bg-white/5 hover:bg-emerald-500 text-white border border-white/10 hover:border-emerald-500'
+                                                }`}>
+                                            <ShoppingCart size={12} />
+                                            {addedIds.has(p.id) ? 'Added!' : 'Add'}
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </Link>
+                    ))}
+                </div>
+            )}
+
+            {filtered.length > 0 && filtered.length < products.length && (
+                <button
+                    onClick={() => { setSearch(''); setSelectedCategory(null); }}
+                    className="w-full py-8 bg-white/5 border border-white/10 text-white hover:bg-white/10 rounded-[2rem] text-xs font-black uppercase tracking-widest transition-all">
+                    Show All Products <ArrowRight className="ml-2 inline" size={16} />
+                </button>
+            )}
         </div>
     );
 }

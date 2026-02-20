@@ -90,7 +90,7 @@ export default async function TenantWelcomePage({ params }: { params: Promise<{ 
 
                 {/* Right Section: Product Catalog (Scrolls) */}
                 <div className="lg:col-span-7 animate-in fade-in slide-in-from-right-8 duration-1000 delay-300">
-                    <StorefrontCatalog products={products} />
+                    <StorefrontCatalog products={products} slug={slug} />
 
                     {/* Footer Info */}
                     <div className="mt-20 pt-12 border-t border-white/5 space-y-4">
