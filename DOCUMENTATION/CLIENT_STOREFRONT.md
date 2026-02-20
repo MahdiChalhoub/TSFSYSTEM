@@ -37,11 +37,15 @@ The `ClientPortalConfig` model stores per-org settings:
 | Action | Endpoint | Method |
 |--------|----------|--------|
 | Login | `POST /api/client-portal/auth/login/` | POST |
+| Register | `POST /api/client-portal/register/` | POST |
 | Create order | `POST /api/client-portal/my-orders/` | POST |
 | Add to cart | `POST /api/client-portal/my-orders/{id}/add_to_cart/` | POST |
 | Place order | `POST /api/client-portal/my-orders/{id}/place_order/` | POST |
 | Create ticket | `POST /api/client-portal/my-tickets/` | POST |
 | Submit quote | `POST /api/client-portal/quote-request/` | POST |
+| Update profile | `POST /api/client-portal/profile/update/` | POST |
+| Change password | `POST /api/client-portal/profile/change-password/` | POST |
+| Mark notification read | `POST /api/client-portal/notifications/{id}/read/` | POST |
 
 ## User Variables
 - **Email** — Client login credential
@@ -51,9 +55,14 @@ The `ClientPortalConfig` model stores per-org settings:
 - **Delivery notes** — Optional checkout notes
 - **Payment method** — WALLET / CASH / CARD
 - **Cart items** — Products added to cart (localStorage)
+- **Wishlist items** — Saved products (localStorage via PortalContext)
 - **Ticket type** — GENERAL / ORDER_ISSUE / DELIVERY_PROBLEM / etc.
 - **Ticket subject** — Support ticket subject
 - **Ticket description** — Support ticket description
+- **Registration name** — New account full name
+- **Registration email** — New account email
+- **Registration company** — Optional company name
+- **Registration password** — Min 8 characters + confirmation
 
 ## Workflow
 
@@ -92,10 +101,17 @@ The `ClientPortalConfig` model stores per-org settings:
 - Store-mode determines button behavior
 
 ### Account Management
-- `/tenant/[slug]/account` — Dashboard with stats, POS barcode
+- `/tenant/[slug]/account` — Dashboard with stats, POS barcode, 6-card nav grid
 - `/tenant/[slug]/account/orders` — Order history with status tracking
-- `/tenant/[slug]/account/wallet` — Balance, loyalty points, transactions
+- `/tenant/[slug]/account/orders/[id]` — Order detail with 5-step tracking timeline
+- `/tenant/[slug]/account/wallet` — Balance, loyalty tier progress (Bronze→Diamond), top-up request
+- `/tenant/[slug]/account/wishlist` — Saved products with Add to Cart and Remove
+- `/tenant/[slug]/account/notifications` — Notification inbox (All/Unread filter, mark-read)
+- `/tenant/[slug]/account/profile` — Profile settings, password change
 - `/tenant/[slug]/account/tickets` — Support tickets, create new tickets
+
+### Registration
+- `/tenant/[slug]/register` — Self-service client registration with name, email, company, password
 
 ## Frontend Files
 - `src/app/tenant/[slug]/product/[id]/page.tsx` — Product detail w/ store-mode pricing
@@ -117,8 +133,10 @@ The `ClientPortalConfig` model stores per-org settings:
 - `src/app/tenant/[slug]/account/wishlist/page.tsx` — Wishlist with Add to Cart and Remove
 - `src/app/tenant/[slug]/account/notifications/page.tsx` — Notifications inbox with read/unread filter
 - `src/app/tenant/[slug]/search/page.tsx` — Search results page with real-time filtering
+- `src/app/tenant/[slug]/register/page.tsx` — Client self-registration page
 - `src/app/tenant/[slug]/account/profile/page.tsx` — Profile settings, password change
 - `src/app/tenant/[slug]/actions.ts` — Server actions (10+ storefront API helpers)
+- `src/context/PortalContext.tsx` — Client state management (cart, wishlist, auth, config)
 
 ## Backend Files
 - `erp_backend/apps/client_portal/models.py` — ClientPortalConfig with store_mode

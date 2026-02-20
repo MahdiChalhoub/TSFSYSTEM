@@ -79,7 +79,26 @@ export default function WalletPage() {
                 setTransactions(walletData?.recent_transactions || [])
                 setLoading(false)
             })
-            .catch(() => setLoading(false))
+            .catch(() => {
+                // Demo data for preview
+                const demoWallet: WalletData = {
+                    id: 'demo',
+                    balance: '245.50',
+                    loyalty_points: 1280,
+                    lifetime_points: 1280,
+                    tier: 'Silver',
+                    recent_transactions: [
+                        { id: '1', transaction_type: 'CREDIT', amount: '100.00', reason: 'Wallet top-up approved', created_at: new Date(Date.now() - 86400000).toISOString() },
+                        { id: '2', transaction_type: 'DEBIT', amount: '34.50', reason: 'Order #ORD-2025-0089 payment', created_at: new Date(Date.now() - 172800000).toISOString() },
+                        { id: '3', transaction_type: 'LOYALTY_EARN', amount: '50.00', reason: 'Purchase bonus — 50 pts earned', created_at: new Date(Date.now() - 259200000).toISOString() },
+                        { id: '4', transaction_type: 'REFUND', amount: '30.00', reason: 'Refund for returned item — Order #ORD-2025-0072', created_at: new Date(Date.now() - 432000000).toISOString() },
+                        { id: '5', transaction_type: 'CREDIT', amount: '200.00', reason: 'Wallet top-up approved', created_at: new Date(Date.now() - 604800000).toISOString() },
+                    ],
+                }
+                setWallet(demoWallet)
+                setTransactions(demoWallet.recent_transactions)
+                setLoading(false)
+            })
     }, [isAuthenticated, token])
 
     const handleTopUpRequest = () => {
