@@ -1,0 +1,239 @@
+'use client'
+
+import { useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { ArrowLeft, CheckCircle2, Loader2, MapPin, CreditCard, Wallet, Package, ArrowRight } from 'lucide-react'
+import { useCart, useAuth, useConfig } from '../../engine/hooks'
+import { createOrder } from '@/app/tenant/[slug]/actions'
+
+export default function MidnightCheckoutPage() {
+    const { slug } = useParams<{ slug: string }>()
+    const router = useRouter()
+    const { cart, cartTotal, clearCart } = useCart()
+    const { user, isAuthenticated } = useAuth()
+    const { config } = useConfig()
+
+    const [step, setStep] = useState<'details' | 'review' | 'complete'>('details')
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState('')
+    const [orderId, setOrderId] = useState('')
+
+    // Form
+    const [form, setForm] = useState({
+        name: user?.name || '',
+        email: user?.email || '',
+        phone: '',
+        address: '',
+        city: '',
+        notes: '',
+        paymentMethod: 'cash',
+    })
+
+    const formatPrice = (n: number) => `$${n.toFixed(2)}`
+
+    if (!isAuthenticated) {
+        return (
+            <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
+                <div className="w-20 h-20 bg-white/5 border border-white/10 rounded-3xl flex items-center justify-center mb-6">
+                    <CreditCard size={32} className="text-slate-600" />
+                </div>
+                <h2 className="text-2xl font-black text-white mb-2">Sign in to checkout</h2>
+                <p className="text-sm text-slate-500 mb-8">You need to be signed in to place an order</p>
+                <Link href={`/tenant/${slug}/register`}
+                    className="px-8 py-3 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-900/30">
+                    Sign In
+                </Link>
+            </div>
+        )
+    }
+
+    if (cart.length === 0 && step !== 'complete') {
+        return (
+            <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
+                <Package size={48} className="text-slate-700 mb-4" />
+                <h2 className="text-xl font-black text-white mb-2">Your cart is empty</h2>
+                <Link href={`/tenant/${slug}`} className="text-emerald-400 text-sm hover:underline">Browse products</Link>
+            </div>
+        )
+    }
+
+    const handlePlaceOrder = async () => {
+        setLoading(true)
+        setError('')
+        try {
+            const token = localStorage.getItem('portal_session')
+            const parsed = token ? JSON.parse(token) : null
+            const authToken = parsed?.token
+
+            if (!authToken) {
+                setError('Session expired. Please sign in again.')
+                setLoading(false)
+                return
+            }
+
+            const result = await createOrder(authToken, {
+                lines: cart.map(item => ({
+                    product_id: item.product_id,
+                    quantity: item.quantity,
+                    unit_price: item.unit_price,
+                })),
+                delivery_address: form.address ? `${form.address}, ${form.city}` : undefined,
+                notes: form.notes || undefined,
+                payment_method: form.paymentMethod,
+                contact_phone: form.phone || undefined,
+            })
+
+            if (result.success) {
+                setOrderId(result.data?.id || result.data?.order_number || 'NEW')
+                clearCart()
+                setStep('complete')
+            } else {
+                setError(result.error || 'Failed to place order')
+            }
+        } catch (err: any) {
+            setError(err.message || 'Something went wrong')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    if (step === 'complete') {
+        return (
+            <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
+                <div className="w-20 h-20 bg-emerald-500/20 border border-emerald-500/30 rounded-3xl flex items-center justify-center mb-6 animate-pulse">
+                    <CheckCircle2 size={36} className="text-emerald-400" />
+                </div>
+                <h2 className="text-3xl font-black text-white mb-2">Order Placed!</h2>
+                <p className="text-slate-400 mb-1">Thank you for your order</p>
+                {orderId && <p className="text-xs text-slate-600 font-mono">Order #{orderId}</p>}
+                <div className="flex gap-4 mt-8">
+                    <Link href={`/tenant/${slug}/account/orders`}
+                        className="px-6 py-3 bg-white/5 border border-white/10 text-white rounded-xl font-bold text-sm hover:bg-white/10 transition-all">
+                        View Orders
+                    </Link>
+                    <Link href={`/tenant/${slug}`}
+                        className="px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-500 transition-all">
+                        Continue Shopping
+                    </Link>
+                </div>
+            </div>
+        )
+    }
+
+    return (
+        <div className="max-w-4xl mx-auto px-4 py-8">
+            <button onClick={() => router.back()} className="flex items-center gap-2 text-xs text-slate-500 hover:text-white mb-4 transition-colors">
+                <ArrowLeft size={14} /> Back to Cart
+            </button>
+            <h1 className="text-3xl font-black text-white tracking-tight mb-8">Checkout</h1>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Form Column */}
+                <div className="lg:col-span-2 space-y-6">
+                    {/* Delivery Info */}
+                    <div className="bg-slate-900/40 border border-white/5 rounded-2xl p-6 space-y-4">
+                        <div className="flex items-center gap-2 mb-2">
+                            <MapPin size={16} className="text-emerald-400" />
+                            <h3 className="text-sm font-bold text-white">Delivery Information</h3>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Full Name</label>
+                                <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
+                                    className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald-500/30" />
+                            </div>
+                            <div>
+                                <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Email</label>
+                                <input value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}
+                                    className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald-500/30" />
+                            </div>
+                            <div>
+                                <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Phone</label>
+                                <input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="Optional"
+                                    className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald-500/30 placeholder:text-slate-800" />
+                            </div>
+                            <div>
+                                <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">City</label>
+                                <input value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} placeholder="Optional"
+                                    className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald-500/30 placeholder:text-slate-800" />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Address</label>
+                            <input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} placeholder="Delivery address (optional)"
+                                className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald-500/30 placeholder:text-slate-800" />
+                        </div>
+                        <div>
+                            <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Order Notes</label>
+                            <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Special instructions..."
+                                rows={2}
+                                className="w-full bg-slate-950/60 border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald-500/30 placeholder:text-slate-800 resize-none" />
+                        </div>
+                    </div>
+
+                    {/* Payment Method */}
+                    <div className="bg-slate-900/40 border border-white/5 rounded-2xl p-6 space-y-4">
+                        <div className="flex items-center gap-2 mb-2">
+                            <CreditCard size={16} className="text-indigo-400" />
+                            <h3 className="text-sm font-bold text-white">Payment Method</h3>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            {[
+                                { id: 'cash', label: 'Cash on Delivery', icon: Wallet },
+                                { id: 'card', label: 'Credit Card', icon: CreditCard },
+                            ].map(method => (
+                                <button key={method.id}
+                                    onClick={() => setForm({ ...form, paymentMethod: method.id })}
+                                    className={`p-4 rounded-xl border text-left transition-all flex items-center gap-3
+                                        ${form.paymentMethod === method.id
+                                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                                            : 'bg-white/5 border-white/5 text-slate-400 hover:border-white/10'
+                                        }`}>
+                                    <method.icon size={18} />
+                                    <span className="text-xs font-bold">{method.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Summary */}
+                <div className="space-y-4">
+                    <div className="bg-slate-900/60 border border-white/5 rounded-2xl p-6 space-y-4 sticky top-24">
+                        <h3 className="text-sm font-bold text-white">Order Summary</h3>
+                        <div className="space-y-3 max-h-48 overflow-y-auto">
+                            {cart.map(item => (
+                                <div key={item.product_id} className="flex justify-between text-xs">
+                                    <span className="text-slate-400 truncate mr-2">{item.product_name} × {item.quantity}</span>
+                                    <span className="text-white font-bold shrink-0">{formatPrice(item.unit_price * item.quantity)}</span>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="border-t border-white/5 pt-4 flex justify-between">
+                            <span className="text-white font-bold text-sm">Total</span>
+                            <span className="text-xl font-black text-white">
+                                <span className="text-emerald-500 mr-1">$</span>{cartTotal.toFixed(2)}
+                            </span>
+                        </div>
+
+                        {error && (
+                            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-xs text-red-400">{error}</div>
+                        )}
+
+                        <button
+                            onClick={handlePlaceOrder}
+                            disabled={loading}
+                            className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-bold text-sm uppercase tracking-wider hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-900/30 disabled:opacity-50 flex items-center justify-center gap-2">
+                            {loading ? (
+                                <><Loader2 size={18} className="animate-spin" /> Processing...</>
+                            ) : (
+                                <>Place Order <ArrowRight size={16} /></>
+                            )}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}

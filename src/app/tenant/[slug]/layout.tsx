@@ -1,6 +1,5 @@
 import { PortalProvider } from '@/context/PortalContext'
-import { StorefrontHeader } from '@/components/tenant/StorefrontHeader'
-import { StorefrontFooter } from '@/components/tenant/StorefrontFooter'
+import { ThemeLayout } from './ThemeLayout'
 
 export default async function TenantLayout({
     children,
@@ -13,9 +12,9 @@ export default async function TenantLayout({
 
     return (
         <PortalProvider slug={slug}>
-            <StorefrontHeader />
-            {children}
-            <StorefrontFooter />
+            <ThemeLayout>
+                {children}
+            </ThemeLayout>
         </PortalProvider>
     )
 }
