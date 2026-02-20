@@ -317,6 +317,17 @@ export const MENU_ITEMS = [
         ]
     },
     {
+        title: 'eCommerce',
+        icon: Globe,
+        module: 'ecommerce',
+        children: [
+            { title: 'Storefront Dashboard', path: '/workspace/portal-config', icon: Settings },
+            { title: 'eCommerce Orders', path: '/workspace/client-orders', icon: ShoppingCart },
+            { title: 'Client Access', path: '/workspace/client-access', icon: Users },
+            { title: 'Client Tickets', path: '/workspace/client-tickets', icon: ClipboardList },
+        ]
+    },
+    {
         title: 'HR & Teams',
         icon: ShieldCheck,
         module: 'hr',

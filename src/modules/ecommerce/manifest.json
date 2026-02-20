@@ -1,0 +1,25 @@
+{
+    "code": "ecommerce",
+    "name": "eCommerce",
+    "version": "1.0.0",
+    "description": "Online storefront, themes, product catalog, and eCommerce order management.",
+    "category": "first-party",
+    "isolation": "shared",
+    "icon": "Globe",
+    "routes": [
+        "/workspace/portal-config",
+        "/workspace/client-orders",
+        "/workspace/client-access",
+        "/workspace/client-tickets"
+    ],
+    "permissions": [
+        "read:ecommerce",
+        "write:ecommerce",
+        "manage:storefront"
+    ],
+    "dependencies": [
+        "client_portal",
+        "inventory"
+    ],
+    "backendApp": "apps.ecommerce"
+}
