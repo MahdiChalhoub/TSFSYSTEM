@@ -1,7 +1,7 @@
 import { getOrganizationBySlug, getPublicProducts } from "./actions"
 import { notFound } from "next/navigation"
 import { headers } from "next/headers"
-import { ShieldCheck, Building2, Globe, Sparkles } from "lucide-react"
+import { ShieldCheck, Building2, Globe, Sparkles, Search, Grid3X3 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { StorefrontCatalog } from "@/components/tenant/StorefrontCatalog"
@@ -77,6 +77,17 @@ export default async function TenantWelcomePage({ params }: { params: Promise<{ 
                                     {org._count?.sites || 0}
                                 </div>
                             </div>
+                        </div>
+                        {/* Quick Actions */}
+                        <div className="flex flex-wrap gap-3">
+                            <Link href={`/tenant/${slug}/search`}
+                                className="inline-flex items-center gap-2 px-5 py-3 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 rounded-2xl text-slate-300 text-sm font-medium transition-all">
+                                <Search size={16} className="text-slate-500" /> Search Products
+                            </Link>
+                            <Link href={`/tenant/${slug}/categories`}
+                                className="inline-flex items-center gap-2 px-5 py-3 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 rounded-2xl text-slate-300 text-sm font-medium transition-all">
+                                <Grid3X3 size={16} className="text-slate-500" /> Categories
+                            </Link>
                         </div>
 
                         <TenantQuickLogin slug={slug} suffix={branding.suffix} />
