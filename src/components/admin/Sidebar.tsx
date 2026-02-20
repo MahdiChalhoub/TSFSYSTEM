@@ -41,7 +41,8 @@ import {
     Wallet,
     Globe,
     ListChecks,
-    Trophy
+    Trophy,
+    Eye
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
@@ -299,6 +300,7 @@ export const MENU_ITEMS = [
                     { title: 'Supplier Access', path: '/workspace/supplier-access' },
                     { title: 'Proforma Review', path: '/workspace/proformas' },
                     { title: 'Price Requests', path: '/workspace/price-requests' },
+                    { title: 'Gate Preview', path: '/workspace/supplier-gate-preview', icon: Eye },
                 ]
             },
             {
@@ -309,6 +311,7 @@ export const MENU_ITEMS = [
                     { title: 'Client Access', path: '/workspace/client-access' },
                     { title: 'Client Orders', path: '/workspace/client-orders' },
                     { title: 'Client Tickets', path: '/workspace/client-tickets' },
+                    { title: 'Gate Preview', path: '/workspace/client-gate-preview', icon: Eye },
                 ]
             },
         ]
