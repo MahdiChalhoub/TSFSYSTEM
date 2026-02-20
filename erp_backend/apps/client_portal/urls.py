@@ -23,7 +23,7 @@ router.register(r'my-tickets', views.ClientMyTicketsViewSet, basename='client-ti
 
 urlpatterns = [
     # Portal auth (public)
-    path('auth/login/', views.ClientPortalLoginView.as_view(), name='client-portal-login'),
+    path('portal-auth/login/', views.ClientPortalLoginView.as_view(), name='client-portal-login'),
     path('storefront/config/', views.StorefrontPublicConfigView.as_view(), name='storefront-config'),
 
     # Router URLs

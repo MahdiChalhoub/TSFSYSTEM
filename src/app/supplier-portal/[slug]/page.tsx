@@ -51,7 +51,7 @@ export default function SupplierPortalPage() {
 
         const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://127.0.0.1:8000'
         try {
-            const res = await fetch(`${djangoUrl}/api/supplier-portal/auth/login/`, {
+            const res = await fetch(`${djangoUrl}/api/supplier-portal/portal-auth/login/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password, slug }),

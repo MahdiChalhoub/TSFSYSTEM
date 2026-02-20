@@ -199,8 +199,8 @@ export function PortalProvider({ children, slug }: { children: React.ReactNode; 
     const login = useCallback(async (email: string, password: string, loginSlug: string, type: 'client' | 'supplier') => {
         const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://127.0.0.1:8000'
         const endpoint = type === 'client'
-            ? `${djangoUrl}/api/client-portal/auth/login/`
-            : `${djangoUrl}/api/supplier-portal/auth/login/`
+            ? `${djangoUrl}/api/client-portal/portal-auth/login/`
+            : `${djangoUrl}/api/supplier-portal/portal-auth/login/`
 
         try {
             const res = await fetch(endpoint, {

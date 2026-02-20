@@ -24,7 +24,7 @@ router.register(r'my-notifications', views.SupplierNotificationViewSet, basename
 
 urlpatterns = [
     # Portal auth (public)
-    path('auth/login/', views.SupplierPortalLoginView.as_view(), name='supplier-portal-login'),
+    path('portal-auth/login/', views.SupplierPortalLoginView.as_view(), name='supplier-portal-login'),
 
     # Router URLs
     path('', include(router.urls)),
