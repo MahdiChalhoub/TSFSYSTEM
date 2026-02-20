@@ -402,6 +402,7 @@ export const MENU_ITEMS = [
         icon: Settings,
         module: 'core',
         children: [
+            { title: 'Cloud Storage', path: '/storage', icon: Cloud },
             { title: 'Sites & Branches', path: '/settings/sites', visibility: 'saas' },
             { title: 'Roles & Permissions', path: '/settings/roles' },
             { title: 'Security Settings', path: '/settings/security', icon: Shield },
