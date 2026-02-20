@@ -138,6 +138,10 @@ export function ClientPortalLogin({ slug }: { slug: string }) {
             >
                 <LogIn size={20} /> Client Portal Login
             </button>
+            <a href={`/tenant/${slug}/register`}
+                className="block text-center text-sm text-slate-500 hover:text-emerald-400 transition-colors font-medium">
+                New here? <span className="underline">Create an account</span>
+            </a>
         </div>
     )
 }
