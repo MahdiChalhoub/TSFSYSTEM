@@ -219,7 +219,7 @@ class Command(BaseCommand):
             OrganizationModule.objects.get_or_create(
                 organization=saas_org,
                 module_name=sm.name,
-                defaults={'is_enabled': True, 'module_version': sm.version}
+                defaults={'is_enabled': True}
             )
         self.stdout.write(f"🔧 SaaS Org: {SystemModule.objects.count()} modules granted")
 
