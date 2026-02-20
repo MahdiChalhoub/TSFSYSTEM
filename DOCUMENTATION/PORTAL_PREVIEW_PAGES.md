@@ -1,40 +1,39 @@
 # Portal Preview Pages
 
 ## Goal
-Allow organization admins to preview exactly what their clients and suppliers see when visiting their portal, directly from the admin panel.
+Allow organization admins to preview exactly what their clients and suppliers see, without leaving the admin panel or needing portal access.
 
 ## Pages
 
 ### Client Gate Preview
-- **URL**: `/workspace/client-gate-preview`
-- **Embeds**: `/tenant/{org-slug}` (the client storefront)
+- **URL**: `/crm/client-gate-preview`
 - **Sidebar**: CRM → Client Gate → Gate Preview
+- **Features**: 
+  - Type selector (Retail / Wholesale / Consignee)
+  - Product catalog with simulated pricing per type
+  - Search products
+  - No login/access required — pure preview
 
 ### Supplier Gate Preview
-- **URL**: `/workspace/supplier-gate-preview`
-- **Embeds**: `/supplier-portal/{org-slug}` (the supplier portal)
+- **URL**: `/crm/supplier-gate-preview`
 - **Sidebar**: CRM → Supplier Gate → Gate Preview
-
-## Features
-- **Device Picker**: Desktop (full width) / Tablet (768px) / Mobile (375px)
-- **Browser Chrome**: Traffic lights, URL bar, size indicator
-- **Refresh**: Reload the iframe preview
-- **Open Portal**: Opens the actual portal in a new tab
-- **Live Preview**: Reflects real-time portal configuration changes
+- **Features**:
+  - Supplier picker (searchable dropdown)
+  - PO dashboard for selected supplier (status badges, stats)
+  - Shows real purchase order data
 
 ## Data Flow
-- **Read**: `GET /api/organizations/` to determine the org slug
-- **Display**: iframe embeds the actual portal route
+- **Client Preview**: Reads products from `GET /api/products/?is_active=true`, org from `GET /api/organizations/`
+- **Supplier Preview**: Reads suppliers from `GET /api/contacts/?type=SUPPLIER`, POs from `GET /api/purchase-orders/?supplier={id}`
 
 ## Files
-- `src/components/workspace/PortalPreview.tsx` — Shared preview component
-- `src/app/(privileged)/workspace/client-gate-preview/page.tsx` — Client preview page
-- `src/app/(privileged)/workspace/supplier-gate-preview/page.tsx` — Supplier preview page
+- `src/app/(privileged)/crm/client-gate-preview/client.tsx` — Client preview component
+- `src/app/(privileged)/crm/client-gate-preview/page.tsx` — Client preview page
+- `src/app/(privileged)/crm/supplier-gate-preview/client.tsx` — Supplier preview component
+- `src/app/(privileged)/crm/supplier-gate-preview/page.tsx` — Supplier preview page
 - `src/components/admin/Sidebar.tsx` — Gate Preview links (Eye icon)
 
 ## Workflow
-1. Admin navigates to CRM → Client Gate → Gate Preview (or Supplier Gate → Gate Preview)
-2. Page fetches org slug from the API
-3. Iframe loads the portal at `/tenant/{slug}` or `/supplier-portal/{slug}`
-4. Admin can switch between Desktop/Tablet/Mobile views
-5. Admin can open the full portal in a new tab
+1. Admin navigates to CRM → Client Gate → Gate Preview (or Supplier Gate)
+2. **Client**: Selects client type (Retail/Wholesale/Consignee) — sees pricing differences
+3. **Supplier**: Selects a supplier — sees their PO dashboard
