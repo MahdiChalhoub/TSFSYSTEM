@@ -61,6 +61,12 @@ export function StorefrontHeader() {
 
                 {/* Right Items */}
                 <div className="flex items-center gap-2">
+                    {/* Search */}
+                    <Link href={`/tenant/${slug}/search`}
+                        className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
+                        <Search size={20} />
+                    </Link>
+
                     {/* Wishlist */}
                     {isAuthenticated && (
                         <Link href={`/tenant/${slug}/account/wishlist`}

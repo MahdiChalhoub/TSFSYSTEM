@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { ShoppingBag, ArrowRight, Star, Search, FileQuestion, ShoppingCart, X } from 'lucide-react';
+import { ShoppingBag, ArrowRight, Star, Search, FileQuestion, ShoppingCart, X, Heart } from 'lucide-react';
 import { usePortal } from '@/context/PortalContext';
 
 interface Product {
@@ -22,7 +22,7 @@ interface StorefrontCatalogProps {
 }
 
 export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
-    const { config, addToCart } = usePortal();
+    const { config, addToCart, toggleWishlist, isInWishlist } = usePortal();
     const [search, setSearch] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
@@ -169,8 +169,19 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
                                 <div className="absolute top-6 left-6 px-3 py-1 bg-black/50 backdrop-blur-md rounded-full text-[10px] font-bold text-white uppercase tracking-wider border border-white/10">
                                     {p.category_name || 'Premium'}
                                 </div>
-                                <div className="absolute top-6 right-6 w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 shadow-lg shadow-emerald-900/40">
-                                    <ArrowRight size={20} />
+                                <div className="absolute top-6 right-6 flex items-center gap-2">
+                                    <button
+                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleWishlist(p.id); }}
+                                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg backdrop-blur-md border
+                                            ${isInWishlist(p.id)
+                                                ? 'bg-rose-500/80 text-white border-rose-500/50'
+                                                : 'bg-black/40 text-white/70 hover:text-rose-400 border-white/10'
+                                            }`}>
+                                        <Heart size={18} fill={isInWishlist(p.id) ? 'currentColor' : 'none'} />
+                                    </button>
+                                    <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 shadow-lg shadow-emerald-900/40">
+                                        <ArrowRight size={20} />
+                                    </div>
                                 </div>
                             </div>
 
