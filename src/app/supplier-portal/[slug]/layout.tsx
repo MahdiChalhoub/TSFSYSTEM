@@ -5,7 +5,7 @@ import { useParams, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import {
     LayoutDashboard, ShoppingCart, FileText, TrendingDown, Receipt,
-    LogOut, ChevronRight, Menu, X, Building2
+    LogOut, ChevronRight, Menu, X, Building2, Bell, User
 } from 'lucide-react'
 
 interface SupplierSession {
@@ -75,6 +75,8 @@ export default function SupplierPortalLayout({ children }: { children: React.Rea
         { href: `/supplier-portal/${slug}/proformas`, icon: FileText, label: 'Proformas' },
         { href: `/supplier-portal/${slug}/price-requests`, icon: TrendingDown, label: 'Price Requests' },
         { href: `/supplier-portal/${slug}/statement`, icon: Receipt, label: 'Statement' },
+        { href: `/supplier-portal/${slug}/notifications`, icon: Bell, label: 'Notifications' },
+        { href: `/supplier-portal/${slug}/profile`, icon: User, label: 'Profile' },
     ]
 
     const isActive = (href: string) => pathname === href
