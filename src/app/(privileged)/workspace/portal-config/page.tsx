@@ -2,6 +2,7 @@
 import { erpFetch } from "@/lib/erp-api";
 import { Settings, Star, Wallet, Truck, TicketCheck } from "lucide-react";
 import PortalConfigClient from "./client";
+import ThemeSelector from "./ThemeSelector";
 
 export const dynamic = 'force-dynamic';
 
@@ -44,6 +45,11 @@ export default async function PortalConfigPage() {
                     </div>
                 ))}
             </div>
+            {config?.id && (
+                <div style={{ marginBottom: '1.5rem' }}>
+                    <ThemeSelector configId={config.id} currentTheme={config.storefront_theme || 'midnight'} />
+                </div>
+            )}
             <PortalConfigClient config={config} />
         </div>
     );
