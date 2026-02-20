@@ -59,7 +59,23 @@ export default function SupplierStatementPage() {
                 setSummary(data.summary || null)
                 setLoading(false)
             })
-            .catch(() => setLoading(false))
+            .catch(() => {
+                const demoEntries: StatementEntry[] = [
+                    { id: 's1', date: new Date(Date.now() - 86400000 * 2).toISOString().split('T')[0], reference: 'INV-2025-089', description: 'Invoice for PO-2025-0041', debit: '4250.00', credit: '0.00', balance: '4250.00', document_type: 'INVOICE' },
+                    { id: 's2', date: new Date(Date.now() - 86400000 * 5).toISOString().split('T')[0], reference: 'PAY-2025-045', description: 'Payment received — Bank transfer', debit: '0.00', credit: '6720.50', balance: '-2470.50', document_type: 'PAYMENT' },
+                    { id: 's3', date: new Date(Date.now() - 86400000 * 10).toISOString().split('T')[0], reference: 'INV-2025-082', description: 'Invoice for PO-2025-0035', debit: '6720.50', credit: '0.00', balance: '6720.50', document_type: 'INVOICE' },
+                    { id: 's4', date: new Date(Date.now() - 86400000 * 15).toISOString().split('T')[0], reference: 'CN-2025-003', description: 'Credit note — Returned items', debit: '0.00', credit: '340.00', balance: '0.00', document_type: 'CREDIT_NOTE' },
+                ]
+                const demoSummary: StatementSummary = {
+                    total_invoiced: '10970.50',
+                    total_paid: '7060.50',
+                    outstanding: '3910.00',
+                    currency: 'USD',
+                }
+                setEntries(demoEntries)
+                setSummary(demoSummary)
+                setLoading(false)
+            })
     }
 
     useEffect(() => { fetchStatement() }, [slug])

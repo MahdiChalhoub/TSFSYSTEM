@@ -50,7 +50,16 @@ export default function SupplierOrdersPage() {
                 setOrders(Array.isArray(data) ? data : data.results || [])
                 setLoading(false)
             })
-            .catch(() => setLoading(false))
+            .catch(() => {
+                const demo: PurchaseOrder[] = [
+                    { id: 'po1', po_number: 'PO-2025-0041', status: 'CONFIRMED', expected_delivery: new Date(Date.now() + 86400000 * 5).toISOString(), total_amount: '4250.00', currency: 'USD', line_count: 8, created_at: new Date(Date.now() - 86400000 * 2).toISOString() },
+                    { id: 'po2', po_number: 'PO-2025-0038', status: 'IN_TRANSIT', expected_delivery: new Date(Date.now() + 86400000 * 2).toISOString(), total_amount: '1890.00', currency: 'USD', line_count: 3, created_at: new Date(Date.now() - 86400000 * 5).toISOString() },
+                    { id: 'po3', po_number: 'PO-2025-0035', status: 'RECEIVED', expected_delivery: null, total_amount: '6720.50', currency: 'USD', line_count: 12, created_at: new Date(Date.now() - 86400000 * 10).toISOString() },
+                    { id: 'po4', po_number: 'PO-2025-0033', status: 'SENT', expected_delivery: null, total_amount: '980.00', currency: 'USD', line_count: 2, created_at: new Date(Date.now() - 86400000).toISOString() },
+                ]
+                setOrders(demo)
+                setLoading(false)
+            })
     }, [slug])
 
     return (

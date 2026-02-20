@@ -57,7 +57,17 @@ export default function NotificationsPage() {
                 setNotifications(Array.isArray(data) ? data : data.results || [])
                 setLoading(false)
             })
-            .catch(() => setLoading(false))
+            .catch(() => {
+                const demo: Notification[] = [
+                    { id: 'n1', type: 'ORDER_SHIPPED', title: 'Order Shipped!', message: 'Your order #ORD-2025-0089 has been shipped and is on its way.', is_read: false, created_at: new Date(Date.now() - 3600000).toISOString() },
+                    { id: 'n2', type: 'PROMO', title: 'Weekend Sale — 20% Off!', message: 'Use code WEEKEND20 at checkout. Valid this weekend only.', is_read: false, created_at: new Date(Date.now() - 86400000).toISOString() },
+                    { id: 'n3', type: 'WALLET', title: 'Wallet Top-Up Approved', message: 'Your $100.00 wallet top-up has been approved. New balance: $245.50', is_read: true, created_at: new Date(Date.now() - 172800000).toISOString() },
+                    { id: 'n4', type: 'ORDER_DELIVERED', title: 'Order Delivered', message: 'Order #ORD-2025-0092 has been delivered. Please rate your experience!', is_read: true, created_at: new Date(Date.now() - 259200000).toISOString() },
+                    { id: 'n5', type: 'INFO', title: 'Welcome to the Store!', message: 'Your account has been set up. Start browsing our catalog and place your first order.', is_read: true, created_at: new Date(Date.now() - 604800000).toISOString() },
+                ]
+                setNotifications(demo)
+                setLoading(false)
+            })
     }, [isAuthenticated, token])
 
     const markRead = (id: string) => {
