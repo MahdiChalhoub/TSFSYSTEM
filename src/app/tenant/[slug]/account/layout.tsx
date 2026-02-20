@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePortal } from '@/context/PortalContext'
 import {
     LayoutDashboard, ShoppingBag, Wallet, LifeBuoy, ArrowLeft,
-    ChevronRight, LogOut, Store, Heart, Bell
+    ChevronRight, LogOut, Store, Heart, Bell, User
 } from 'lucide-react'
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
@@ -20,6 +20,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
         { href: `/tenant/${slug}/account/wallet`, icon: Wallet, label: 'Wallet & Loyalty' },
         { href: `/tenant/${slug}/account/notifications`, icon: Bell, label: 'Notifications' },
         { href: `/tenant/${slug}/account/tickets`, icon: LifeBuoy, label: 'Support' },
+        { href: `/tenant/${slug}/account/profile`, icon: User, label: 'Profile' },
     ]
 
     const isActive = (href: string) => pathname === href
