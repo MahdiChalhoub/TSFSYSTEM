@@ -123,6 +123,11 @@ export function ClientPortalLogin({ slug }: { slug: string }) {
                         >
                             {loading ? <Loader2 className="animate-spin" size={20} /> : <><LogIn size={20} /> Sign In</>}
                         </button>
+                        <p className="text-center">
+                            <button type="button" className="text-sm text-slate-500 hover:text-blue-400 transition-colors font-medium">
+                                Forgot password?
+                            </button>
+                        </p>
                     </form>
                 </div>
             </div>
