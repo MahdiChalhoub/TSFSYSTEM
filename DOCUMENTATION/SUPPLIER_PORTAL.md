@@ -79,6 +79,7 @@ The supplier portal lives at `/supplier-portal/[slug]/` and uses its own localSt
 - `src/app/supplier-portal/[slug]/proformas/page.tsx` — Proformas
 - `src/app/supplier-portal/[slug]/price-requests/page.tsx` — Price Requests
 - `src/app/supplier-portal/[slug]/statement/page.tsx` — Financial Statement
+- `src/app/supplier-portal/[slug]/actions.ts` — Server actions (10+ API helpers)
 
 ## Backend Files
 - `erp_backend/apps/supplier_portal/models.py` — SupplierPortalAccess, SupplierProforma, PriceChangeRequest

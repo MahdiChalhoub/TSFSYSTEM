@@ -101,6 +101,7 @@ The `ClientPortalConfig` model stores per-org settings:
 - `src/app/tenant/[slug]/product/[id]/page.tsx` — Product detail w/ store-mode pricing
 - `src/app/tenant/[slug]/quote/page.tsx` — Quote request form
 - `src/components/tenant/StorefrontHeader.tsx` — Persistent header with org logo, cart badge, account link
+- `src/components/tenant/StorefrontFooter.tsx` — Footer with org branding, nav links, legal
 - `src/components/tenant/StorefrontCatalog.tsx` — Enhanced catalog with search, filter, quick-add
 - `src/components/tenant/ClientPortalLogin.tsx` — Login CTA / form / user card
 - `src/app/tenant/[slug]/layout.tsx` — PortalProvider + StorefrontHeader wrapper
@@ -108,7 +109,8 @@ The `ClientPortalConfig` model stores per-org settings:
 - `src/app/tenant/[slug]/cart/page.tsx` — Shopping cart
 - `src/app/tenant/[slug]/checkout/page.tsx` — Multi-step checkout
 - `src/app/tenant/[slug]/account/page.tsx` — Account dashboard
-- `src/app/tenant/[slug]/account/orders/page.tsx` — Order history
+- `src/app/tenant/[slug]/account/orders/page.tsx` — Order history (clickable rows)
+- `src/app/tenant/[slug]/account/orders/[id]/page.tsx` — Order detail (lines, totals, status)
 - `src/app/tenant/[slug]/account/wallet/page.tsx` — Wallet & loyalty
 - `src/app/tenant/[slug]/account/tickets/page.tsx` — Support tickets
 - `src/app/tenant/[slug]/actions.ts` — Server actions (10+ storefront API helpers)
