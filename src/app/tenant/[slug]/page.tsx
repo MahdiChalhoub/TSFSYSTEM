@@ -5,8 +5,7 @@ import { ShieldCheck, Building2, Globe, Sparkles, Search, Grid3X3 } from "lucide
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { StorefrontCatalog } from "@/components/tenant/StorefrontCatalog"
-import { TenantQuickLogin } from "@/components/tenant/TenantQuickLogin"
-import { ClientPortalLogin } from "@/components/tenant/ClientPortalLogin"
+
 import { PLATFORM_CONFIG, getDynamicBranding } from "@/lib/branding"
 
 export default async function TenantWelcomePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -57,7 +56,7 @@ export default async function TenantWelcomePage({ params }: { params: Promise<{ 
                                 {org.name} <span className="text-emerald-500">.</span>
                             </h1>
                             <p className="text-lg text-slate-400 font-medium max-w-sm leading-relaxed">
-                                Welcome to the official digital gateway for {org.name}. Explore our catalog or authenticate to manage your operations.
+                                Welcome to the official digital gateway for {org.name}. Browse our catalog, explore our products, and place your orders.
                             </p>
                         </div>
 
@@ -90,8 +89,7 @@ export default async function TenantWelcomePage({ params }: { params: Promise<{ 
                             </Link>
                         </div>
 
-                        <TenantQuickLogin slug={slug} suffix={branding.suffix} />
-                        <ClientPortalLogin slug={slug} />
+
 
                         <div className="flex items-center gap-6 pt-4">
                             <span className="text-[10px] text-slate-700 font-bold uppercase tracking-widest whitespace-nowrap">ID: {org.id.split('-')[0]}</span>
