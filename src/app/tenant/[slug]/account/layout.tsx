@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePortal } from '@/context/PortalContext'
 import {
     LayoutDashboard, ShoppingBag, Wallet, LifeBuoy, ArrowLeft,
-    ChevronRight, LogOut, Store
+    ChevronRight, LogOut, Store, Heart, Bell
 } from 'lucide-react'
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
@@ -16,7 +16,9 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
     const navItems = [
         { href: `/tenant/${slug}/account`, icon: LayoutDashboard, label: 'Dashboard' },
         { href: `/tenant/${slug}/account/orders`, icon: ShoppingBag, label: 'Orders' },
+        { href: `/tenant/${slug}/account/wishlist`, icon: Heart, label: 'Wishlist' },
         { href: `/tenant/${slug}/account/wallet`, icon: Wallet, label: 'Wallet & Loyalty' },
+        { href: `/tenant/${slug}/account/notifications`, icon: Bell, label: 'Notifications' },
         { href: `/tenant/${slug}/account/tickets`, icon: LifeBuoy, label: 'Support' },
     ]
 
