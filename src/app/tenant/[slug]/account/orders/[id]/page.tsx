@@ -182,6 +182,53 @@ export default function OrderDetailPage() {
                     </div>
                 )}
 
+                {/* ─── Order Tracking Timeline ───────────────────────────── */}
+                {order.status !== 'CART' && order.status !== 'CANCELLED' && (
+                    <div className="p-6 bg-slate-900/60 border border-white/5 rounded-2xl">
+                        <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-6">Order Tracking</h3>
+                        <div className="flex items-start justify-between relative">
+                            {/* Connector line */}
+                            <div className="absolute top-5 left-[10%] right-[10%] h-0.5 bg-slate-800" />
+                            <div className="absolute top-5 left-[10%] h-0.5 bg-emerald-500 transition-all duration-500"
+                                style={{
+                                    width: (() => {
+                                        const steps = ['PLACED', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED']
+                                        const idx = steps.indexOf(order.status)
+                                        if (idx <= 0) return '0%'
+                                        return `${(idx / (steps.length - 1)) * 80}%`
+                                    })()
+                                }} />
+
+                            {['PLACED', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED'].map((step, i) => {
+                                const steps = ['PLACED', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED']
+                                const currentIdx = steps.indexOf(order.status)
+                                const isCompleted = i < currentIdx
+                                const isCurrent = i === currentIdx
+                                const stepIcons = [Clock, CheckCircle2, Package, Truck, CheckCircle2]
+                                const StepIcon = stepIcons[i]
+
+                                return (
+                                    <div key={step} className="flex flex-col items-center relative z-10" style={{ width: '20%' }}>
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all
+                                            ${isCurrent
+                                                ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400 scale-110'
+                                                : isCompleted
+                                                    ? 'bg-emerald-500 border-emerald-500 text-white'
+                                                    : 'bg-slate-900 border-slate-700 text-slate-600'
+                                            }`}>
+                                            <StepIcon size={18} />
+                                        </div>
+                                        <span className={`mt-2 text-[10px] font-bold uppercase tracking-widest text-center
+                                            ${isCurrent ? 'text-emerald-400' : isCompleted ? 'text-slate-400' : 'text-slate-700'}`}>
+                                            {step.charAt(0) + step.slice(1).toLowerCase()}
+                                        </span>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </div>
+                )}
+
                 {/* Order Lines */}
                 <div className="space-y-4">
                     <h2 className="text-xl font-black text-white flex items-center gap-2">
