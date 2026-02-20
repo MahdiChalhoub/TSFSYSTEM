@@ -15,6 +15,7 @@ The supplier portal lives at `/supplier-portal/[slug]/` and uses its own localSt
 | Purchase Orders | `GET /api/supplier-portal/my-orders/` | Auth required |
 | Proformas | `GET /api/supplier-portal/my-proformas/` | Auth required |
 | Price Requests | `GET /api/supplier-portal/my-price-requests/` | Auth required |
+| Statement | `GET /api/supplier-portal/my-statement/` | Auth required |
 | Notifications | `GET /api/supplier-portal/my-notifications/` | Auth required |
 
 ### SAVE to
@@ -65,11 +66,18 @@ The supplier portal lives at `/supplier-portal/[slug]/` and uses its own localSt
 3. Buyer reviews and responds (approve/reject/counter-offer)
 4. Status flow: PENDING → APPROVED/REJECTED/COUNTER_OFFER
 
+### Financial Statement
+1. Supplier views ledger at `/supplier-portal/[slug]/statement`
+2. Summary cards show total invoiced, total paid, outstanding
+3. Date range filter narrows the view
+4. Debit/credit/balance table shows all transactions
+
 ## Frontend Files
 - `src/app/supplier-portal/[slug]/page.tsx` — Login + Dashboard
 - `src/app/supplier-portal/[slug]/orders/page.tsx` — Purchase Orders
 - `src/app/supplier-portal/[slug]/proformas/page.tsx` — Proformas
 - `src/app/supplier-portal/[slug]/price-requests/page.tsx` — Price Requests
+- `src/app/supplier-portal/[slug]/statement/page.tsx` — Financial Statement
 
 ## Backend Files
 - `erp_backend/apps/supplier_portal/models.py` — SupplierPortalAccess, SupplierProforma, PriceChangeRequest

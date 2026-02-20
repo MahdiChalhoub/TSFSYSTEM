@@ -31,6 +31,7 @@ The `ClientPortalConfig` model stores per-org settings:
 | Orders | `GET /api/client-portal/my-orders/` | Auth required |
 | Wallet | `GET /api/client-portal/my-wallet/` | Auth required |
 | Tickets | `GET /api/client-portal/my-tickets/` | Auth required |
+| Quote Request | `POST /api/client-portal/quote-request/` | Optional auth |
 
 ### SAVE to
 | Action | Endpoint | Method |
@@ -40,6 +41,7 @@ The `ClientPortalConfig` model stores per-org settings:
 | Add to cart | `POST /api/client-portal/my-orders/{id}/add_to_cart/` | POST |
 | Place order | `POST /api/client-portal/my-orders/{id}/place_order/` | POST |
 | Create ticket | `POST /api/client-portal/my-tickets/` | POST |
+| Submit quote | `POST /api/client-portal/quote-request/` | POST |
 
 ## User Variables
 - **Email** — Client login credential
@@ -70,6 +72,13 @@ The `ClientPortalConfig` model stores per-org settings:
    - Step 4: Place order → success confirmation
 9. Order created via backend API, cart cleared
 
+### Quote Request (CATALOG_QUOTE mode)
+1. Client navigates to `/tenant/[slug]/quote`
+2. Enters contact info (name, email, phone, company)
+3. Adds line items manually or imports from cart
+4. Submits message with additional requirements
+5. System sends quote request to organization
+
 ### Account Management
 - `/tenant/[slug]/account` — Dashboard with stats, POS barcode
 - `/tenant/[slug]/account/orders` — Order history with status tracking
@@ -77,6 +86,7 @@ The `ClientPortalConfig` model stores per-org settings:
 - `/tenant/[slug]/account/tickets` — Support tickets, create new tickets
 
 ## Frontend Files
+- `src/app/tenant/[slug]/quote/page.tsx` — Quote request form
 - `src/context/PortalContext.tsx` — Auth state, cart, config management
 - `src/components/tenant/ClientPortalLogin.tsx` — Login CTA / form / user card
 - `src/app/tenant/[slug]/layout.tsx` — PortalProvider wrapper
@@ -86,6 +96,7 @@ The `ClientPortalConfig` model stores per-org settings:
 - `src/app/tenant/[slug]/account/orders/page.tsx` — Order history
 - `src/app/tenant/[slug]/account/wallet/page.tsx` — Wallet & loyalty
 - `src/app/tenant/[slug]/account/tickets/page.tsx` — Support tickets
+- `src/app/tenant/[slug]/actions.ts` — Server actions (10+ storefront API helpers)
 
 ## Backend Files
 - `erp_backend/apps/client_portal/models.py` — ClientPortalConfig with store_mode
