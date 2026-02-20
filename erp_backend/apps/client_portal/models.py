@@ -51,6 +51,10 @@ class ClientPortalConfig(TenantModel):
         max_length=500, blank=True, default='',
         help_text='Tagline shown on the storefront landing page'
     )
+    storefront_theme = models.CharField(
+        max_length=50, default='midnight',
+        help_text='Active theme ID for the storefront (e.g. midnight, boutique)'
+    )
 
     # ── Loyalty Settings ──────────────────────────────────────────────────────
     loyalty_enabled = models.BooleanField(default=True, help_text='Enable loyalty points system')
