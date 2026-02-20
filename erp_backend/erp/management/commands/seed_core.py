@@ -173,10 +173,55 @@ class Command(BaseCommand):
             )
         self.stdout.write(f"📋 Plans: {len(plans)} seeded")
 
+        # ─── 5b. Super Ultimate Plan (private, unlimited — SaaS only) ────
+        super_plan, sp_created = SubscriptionPlan.objects.get_or_create(
+            category=cat,
+            name='Super Ultimate',
+            defaults={
+                'description': 'Private unlimited plan for the SaaS platform owner. All modules, no limits.',
+                'monthly_price': Decimal('0.00'),
+                'annual_price': Decimal('0.00'),
+                'modules': [],  # Will be filled dynamically below
+                'features': {},
+                'limits': {
+                    'max_users': -1,
+                    'max_sites': -1,
+                    'max_products': -1,
+                    'max_storage_mb': -1,
+                    'max_invoices': -1,
+                },
+                'sort_order': 0,
+                'trial_days': 0,
+                'is_active': True,
+                'is_public': False,  # Private — not shown on pricing page
+            }
+        )
+        self.stdout.write(f"👑 Super Ultimate Plan: {'Created' if sp_created else 'Exists'}")
+
         # ─── 6. Synchronize Module Registry ───────────────────────────────
         self.stdout.write("📦 Synchronizing Global Module Registry...")
         modules = ModuleManager.sync()
         self.stdout.write(f"✅ Registered {len(modules)} modules from filesystem")
+
+        # ─── 6b. Update Super Ultimate plan with ALL module codes ─────────
+        all_module_codes = list(SystemModule.objects.values_list('name', flat=True))
+        super_plan.modules = all_module_codes
+        super_plan.save(update_fields=['modules'])
+
+        # ─── 6c. Assign Super Ultimate plan to SaaS org ──────────────────
+        if not saas_org.current_plan or saas_org.current_plan.name != 'Super Ultimate':
+            saas_org.current_plan = super_plan
+            saas_org.save(update_fields=['current_plan'])
+            self.stdout.write("👑 SaaS Org: assigned Super Ultimate plan")
+
+        # ─── 6d. Grant ALL modules to SaaS org ───────────────────────────
+        for sm in SystemModule.objects.all():
+            OrganizationModule.objects.get_or_create(
+                organization=saas_org,
+                module_name=sm.name,
+                defaults={'is_enabled': True, 'module_version': sm.version}
+            )
+        self.stdout.write(f"🔧 SaaS Org: {SystemModule.objects.count()} modules granted")
 
         # ─── 7. Auto-Link Orphan Superusers ───────────────────────────────
         User = get_user_model()

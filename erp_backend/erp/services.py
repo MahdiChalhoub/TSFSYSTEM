@@ -86,6 +86,17 @@ class ProvisioningService:
             logger.info(
                 f"📦 Auto-granted {installed_modules.count()} modules to '{slug}'"
             )
+
+            # 5. Auto-assign the Starter plan (free tier) if no plan is set
+            from .models import SubscriptionPlan
+            if not org.current_plan:
+                starter = SubscriptionPlan.objects.filter(
+                    name='Starter', is_active=True
+                ).first()
+                if starter:
+                    org.current_plan = starter
+                    org.save(update_fields=['current_plan'])
+                    logger.info(f"📋 Auto-assigned Starter plan to '{slug}'")
         
         # ── MODULE EVENTS (outside transaction — each module handles its own) ──
         event_payload = {
