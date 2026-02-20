@@ -117,6 +117,7 @@ The `ClientPortalConfig` model stores per-org settings:
 - `src/app/tenant/[slug]/account/wishlist/page.tsx` — Wishlist with Add to Cart and Remove
 - `src/app/tenant/[slug]/account/notifications/page.tsx` — Notifications inbox with read/unread filter
 - `src/app/tenant/[slug]/search/page.tsx` — Search results page with real-time filtering
+- `src/app/tenant/[slug]/account/profile/page.tsx` — Profile settings, password change
 - `src/app/tenant/[slug]/actions.ts` — Server actions (10+ storefront API helpers)
 
 ## Backend Files

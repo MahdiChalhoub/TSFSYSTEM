@@ -129,6 +129,7 @@ export const MENU_ITEMS = [
                 icon: Wallet,
                 children: [
                     { title: 'Procurement Center', path: '/purchases' },
+                    { title: 'Purchase Dashboard', path: '/purchases/dashboard' },
                     { title: 'New RFQ / Order', path: '/purchases/new-order' },
                     { title: 'Quick Purchase', path: '/purchases/new' },
                     { title: 'Purchase Returns', path: '/purchases/returns' },
@@ -165,6 +166,7 @@ export const MENU_ITEMS = [
                     { title: 'Expiry Alerts', path: '/inventory/expiry-alerts' },
                     { title: 'Low Stock Alerts', path: '/inventory/low-stock' },
                     { title: 'Stock Movements', path: '/inventory/movements' },
+                    { title: 'Inventory Alerts', path: '/inventory/alerts' },
                     { title: 'Serial Numbers', path: '/inventory/serials' },
                     { title: 'Stock Count', path: '/inventory/stock-count' },
                 ]
@@ -191,7 +193,14 @@ export const MENU_ITEMS = [
                     { title: 'Attributes', path: '/inventory/attributes' },
                 ]
             },
-            { title: 'System Maintenance', path: '/inventory/maintenance', icon: Wrench },
+            {
+                title: 'System Maintenance',
+                icon: Wrench,
+                children: [
+                    { title: 'Maintenance Dashboard', path: '/inventory/maintenance' },
+                    { title: 'Data Quality', path: '/inventory/maintenance/data-quality' },
+                ]
+            },
         ]
     },
     {
@@ -222,6 +231,8 @@ export const MENU_ITEMS = [
                     { title: 'Expenses', path: '/finance/expenses' },
                     { title: 'Deferred Expenses', path: '/finance/deferred-expenses' },
                     { title: 'Assets & Depreciation', path: '/finance/assets' },
+                    { title: 'Purchase Returns', path: '/finance/purchase-returns' },
+                    { title: 'Sales Returns', path: '/finance/sales-returns' },
                 ]
             },
             {
@@ -342,6 +353,7 @@ export const MENU_ITEMS = [
                 icon: Building2,
                 children: [
                     { title: 'Organizations', path: '/organizations' },
+                    { title: 'Registrations', path: '/organizations/registrations' },
                     { title: 'Instance Switcher', path: '/switcher' },
                     { title: 'Subscription Plans', path: '/subscription-plans' },
                 ]
@@ -353,8 +365,30 @@ export const MENU_ITEMS = [
                     { title: 'Platform Health', path: '/health' },
                     { title: 'Kernel Updates', path: '/updates' },
                     { title: 'Global Registry', path: '/modules' },
-                    { title: 'Connector Control', path: '/connector' },
-                    { title: 'MCP AI Connector', path: '/mcp' },
+                    { title: 'Currencies', path: '/currencies' },
+                    {
+                        title: 'Connector',
+                        icon: ServerCog,
+                        children: [
+                            { title: 'Connector Control', path: '/connector' },
+                            { title: 'Connector Buffer', path: '/connector/buffer' },
+                            { title: 'Connector Logs', path: '/connector/logs' },
+                            { title: 'Connector Policies', path: '/connector/policies' },
+                        ]
+                    },
+                    {
+                        title: 'MCP AI',
+                        icon: Bot,
+                        children: [
+                            { title: 'MCP Dashboard', path: '/mcp' },
+                            { title: 'MCP Chat', path: '/mcp/chat' },
+                            { title: 'Conversations', path: '/mcp/conversations' },
+                            { title: 'Providers', path: '/mcp/providers' },
+                            { title: 'Tools', path: '/mcp/tools' },
+                            { title: 'Usage', path: '/mcp/usage' },
+                            { title: 'MCP Settings', path: '/mcp/settings' },
+                        ]
+                    },
                     { title: 'AES-256 Encryption', path: '/encryption' },
                 ]
             },
@@ -368,6 +402,7 @@ export const MENU_ITEMS = [
             { title: 'Sites & Branches', path: '/settings/sites', visibility: 'saas' },
             { title: 'Roles & Permissions', path: '/settings/roles' },
             { title: 'Security Settings', path: '/settings/security', icon: Shield },
+            { title: 'Notifications', path: '/settings/notifications', icon: Bell },
             { title: 'Billing & Subscription', path: '/subscription', icon: CreditCard },
         ]
     },
