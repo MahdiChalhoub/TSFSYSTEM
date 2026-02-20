@@ -65,6 +65,12 @@ export interface PortalState {
     cart: CartItem[]
     cartTotal: number
 
+    // Wishlist
+    wishlist: string[]
+    wishlistCount: number
+    toggleWishlist: (productId: string) => void
+    isInWishlist: (productId: string) => boolean
+
     // Actions
     login: (email: string, password: string, slug: string, portalType: 'client' | 'supplier') => Promise<{ success: boolean; error?: string }>
     logout: () => void
@@ -86,6 +92,10 @@ const initialState: PortalState = {
     config: null,
     cart: [],
     cartTotal: 0,
+    wishlist: [],
+    wishlistCount: 0,
+    toggleWishlist: () => { },
+    isInWishlist: () => false,
     login: async () => ({ success: false }),
     logout: () => { },
     addToCart: () => { },
@@ -103,6 +113,7 @@ export const usePortal = () => useContext(PortalContext)
 
 const STORAGE_KEY = 'portal_session'
 const CART_KEY = 'portal_cart'
+const WISHLIST_KEY = 'portal_wishlist'
 
 function getStoredSession() {
     if (typeof window === 'undefined') return null
@@ -120,6 +131,14 @@ function getStoredCart(): CartItem[] {
     } catch { return [] }
 }
 
+function getStoredWishlist(): string[] {
+    if (typeof window === 'undefined') return []
+    try {
+        const raw = localStorage.getItem(WISHLIST_KEY)
+        return raw ? JSON.parse(raw) : []
+    } catch { return [] }
+}
+
 // ─── Provider ───────────────────────────────────────────────────────────────
 
 export function PortalProvider({ children, slug }: { children: React.ReactNode; slug: string }) {
@@ -131,6 +150,7 @@ export function PortalProvider({ children, slug }: { children: React.ReactNode; 
     const [permissions, setPermissions] = useState<string[]>([])
     const [config, setConfig] = useState<StorefrontConfig | null>(null)
     const [cart, setCart] = useState<CartItem[]>([])
+    const [wishlist, setWishlist] = useState<string[]>([])
 
     // Hydrate from localStorage
     useEffect(() => {
@@ -144,6 +164,7 @@ export function PortalProvider({ children, slug }: { children: React.ReactNode; 
             setPermissions(session.permissions || [])
         }
         setCart(getStoredCart())
+        setWishlist(getStoredWishlist())
     }, [slug])
 
     // Persist cart
@@ -153,7 +174,27 @@ export function PortalProvider({ children, slug }: { children: React.ReactNode; 
         }
     }, [cart])
 
+    // Persist wishlist
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem(WISHLIST_KEY, JSON.stringify(wishlist))
+        }
+    }, [wishlist])
+
     const cartTotal = cart.reduce((sum, item) => sum + item.unit_price * item.quantity, 0)
+    const wishlistCount = wishlist.length
+
+    const toggleWishlist = useCallback((productId: string) => {
+        setWishlist(prev =>
+            prev.includes(productId)
+                ? prev.filter(id => id !== productId)
+                : [...prev, productId]
+        )
+    }, [])
+
+    const isInWishlist = useCallback((productId: string) => {
+        return wishlist.includes(productId)
+    }, [wishlist])
 
     const login = useCallback(async (email: string, password: string, loginSlug: string, type: 'client' | 'supplier') => {
         const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://127.0.0.1:8000'
@@ -265,6 +306,10 @@ export function PortalProvider({ children, slug }: { children: React.ReactNode; 
             config,
             cart,
             cartTotal,
+            wishlist,
+            wishlistCount,
+            toggleWishlist,
+            isInWishlist,
             login,
             logout,
             addToCart,

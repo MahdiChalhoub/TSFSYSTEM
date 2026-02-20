@@ -4,14 +4,14 @@ import Link from 'next/link'
 import { useParams, usePathname } from 'next/navigation'
 import { usePortal } from '@/context/PortalContext'
 import {
-    ShoppingCart, User, Store, Search, Menu, X, LogOut, FileQuestion
+    ShoppingCart, User, Store, Search, Menu, X, LogOut, FileQuestion, Heart, Bell
 } from 'lucide-react'
 import { useState } from 'react'
 
 export function StorefrontHeader() {
     const { slug } = useParams<{ slug: string }>()
     const pathname = usePathname()
-    const { isAuthenticated, user, organization, cart, config, logout } = usePortal()
+    const { isAuthenticated, user, organization, cart, config, wishlistCount, logout } = usePortal()
     const [menuOpen, setMenuOpen] = useState(false)
 
     const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0)
@@ -60,7 +60,20 @@ export function StorefrontHeader() {
                 </nav>
 
                 {/* Right Items */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                    {/* Wishlist */}
+                    {isAuthenticated && (
+                        <Link href={`/tenant/${slug}/account/wishlist`}
+                            className="relative w-10 h-10 flex items-center justify-center text-slate-400 hover:text-rose-400 transition-colors">
+                            <Heart size={20} />
+                            {wishlistCount > 0 && (
+                                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-rose-500 text-[10px] font-black text-white rounded-full flex items-center justify-center px-1">
+                                    {wishlistCount}
+                                </span>
+                            )}
+                        </Link>
+                    )}
+
                     {/* Cart */}
                     {storeMode !== 'CATALOG_QUOTE' && (
                         <Link href={`/tenant/${slug}/cart`}
