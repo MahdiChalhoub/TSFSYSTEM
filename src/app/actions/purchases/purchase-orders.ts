@@ -6,11 +6,12 @@ import { revalidatePath } from "next/cache"
 
 // ── Purchase Order CRUD ──────────────────────────────────────
 
-export async function getPurchaseOrders(status?: string, priority?: string, supplierId?: string) {
+export async function getPurchaseOrders(status?: string, priority?: string, supplierId?: string, purchaseSubType?: string) {
     const params = new URLSearchParams()
     if (status) params.append('status', status)
     if (priority) params.append('priority', priority)
     if (supplierId) params.append('supplier', supplierId)
+    if (purchaseSubType) params.append('purchase_sub_type', purchaseSubType)
     const qs = params.toString()
     return await erpFetch(`purchase-orders/${qs ? `?${qs}` : ''}`)
 }
@@ -24,6 +25,7 @@ export async function createPurchaseOrder(data: {
     warehouse?: number | string
     site?: number | string
     priority?: string
+    purchase_sub_type?: string
     currency?: string
     expected_date?: string
     notes?: string

@@ -38,6 +38,17 @@ class Invoice(TenantModel):
         ('DEBIT_NOTE', 'Debit Note'),
         ('PROFORMA', 'Pro Forma Invoice'),
     )
+    SALES_SUB_TYPES = (
+        ('RETAIL', 'Retail'),
+        ('WHOLESALE', 'Wholesale'),
+        ('CONSIGNEE', 'Consignee'),
+    )
+    PURCHASE_SUB_TYPES = (
+        ('STANDARD', 'Standard'),
+        ('WHOLESALE', 'Wholesale'),
+        ('CONSIGNEE', 'Consignee'),
+    )
+    SUB_TYPE_CHOICES = SALES_SUB_TYPES + PURCHASE_SUB_TYPES
     STATUS_CHOICES = (
         ('DRAFT', 'Draft'),
         ('SENT', 'Sent'),
@@ -68,6 +79,10 @@ class Invoice(TenantModel):
         help_text='Auto-generated via TransactionSequence'
     )
     type = models.CharField(max_length=20, choices=INVOICE_TYPES, default='SALES')
+    sub_type = models.CharField(
+        max_length=20, choices=SUB_TYPE_CHOICES, default='RETAIL', blank=True,
+        help_text='Sub-classification: Retail/Wholesale/Consignee (sales) or Standard/Wholesale/Consignee (purchase)'
+    )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
 
     # ── Contact & Site ───────────────────────────────────────────────────────

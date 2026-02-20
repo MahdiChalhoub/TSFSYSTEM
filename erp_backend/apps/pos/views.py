@@ -941,7 +941,7 @@ class PurchaseOrderViewSet(TenantModelViewSet):
         'supplier', 'site', 'warehouse', 'submitted_by', 'approved_by', 'created_by', 'invoice'
     ).prefetch_related('lines__product', 'lines__warehouse').all()
     serializer_class = PurchaseOrderSerializer
-    filterset_fields = ['status', 'priority', 'supplier']
+    filterset_fields = ['status', 'priority', 'supplier', 'purchase_sub_type']
     search_fields = ['po_number', 'supplier_name', 'notes']
     ordering_fields = ['created_at', 'total_amount', 'order_date', 'expected_date']
 
@@ -950,12 +950,15 @@ class PurchaseOrderViewSet(TenantModelViewSet):
         po_status = self.request.query_params.get('status')
         priority = self.request.query_params.get('priority')
         supplier_id = self.request.query_params.get('supplier')
+        sub_type = self.request.query_params.get('purchase_sub_type')
         if po_status:
             qs = qs.filter(status=po_status)
         if priority:
             qs = qs.filter(priority=priority)
         if supplier_id:
             qs = qs.filter(supplier_id=supplier_id)
+        if sub_type:
+            qs = qs.filter(purchase_sub_type=sub_type)
         return qs
 
     def perform_create(self, serializer):

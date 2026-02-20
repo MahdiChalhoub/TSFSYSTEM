@@ -44,11 +44,29 @@ const PRIORITY_MAP: Record<string, { label: string; color: string }> = {
     URGENT: { label: 'Urgent', color: 'text-red-600 font-black' },
 };
 
+const PO_SUB_TYPE_CONFIG: Record<string, { label: string; color: string }> = {
+    STANDARD: { label: 'Standard', color: 'bg-slate-100 text-slate-600' },
+    WHOLESALE: { label: 'Wholesale', color: 'bg-amber-100 text-amber-700' },
+    CONSIGNEE: { label: 'Consignee', color: 'bg-purple-100 text-purple-700' },
+};
+
+async function getOrgSettings() {
+    try {
+        const orgs = await erpFetch('organizations/');
+        if (Array.isArray(orgs) && orgs.length > 0) {
+            return { tradeSubTypesEnabled: orgs[0]?.settings?.enable_trade_sub_types ?? false };
+        }
+    } catch { }
+    return { tradeSubTypesEnabled: false };
+}
+
 export default async function PurchaseRegistryPage() {
-    const [orders, dashboard] = await Promise.all([
+    const [orders, dashboard, orgSettings] = await Promise.all([
         getPurchaseOrders(),
         getPODashboard(),
+        getOrgSettings(),
     ]);
+    const tradeSubTypesEnabled = orgSettings.tradeSubTypesEnabled;
 
     const rfqCount = dashboard?.by_status?.DRAFT || 0;
     const pendingApproval = dashboard?.pending_approval || 0;
@@ -115,6 +133,7 @@ export default async function PurchaseRegistryPage() {
                             <th className="p-6">PO Number</th>
                             <th className="p-6">Supplier</th>
                             <th className="p-6">Status</th>
+                            {tradeSubTypesEnabled && <th className="p-6">Type</th>}
                             <th className="p-6">Priority</th>
                             <th className="p-6 text-right">Amount</th>
                             <th className="p-6">Expected</th>
@@ -124,7 +143,7 @@ export default async function PurchaseRegistryPage() {
                     <tbody className="divide-y divide-gray-50">
                         {(!orders || orders.length === 0) ? (
                             <tr>
-                                <td colSpan={7} className="p-20 text-center text-gray-400 font-medium italic">
+                                <td colSpan={tradeSubTypesEnabled ? 8 : 7} className="p-20 text-center text-gray-400 font-medium italic">
                                     No purchase orders found. Create your first PO to get started.
                                 </td>
                             </tr>
@@ -155,6 +174,17 @@ export default async function PurchaseRegistryPage() {
                                                 {statusInfo.label}
                                             </span>
                                         </td>
+                                        {tradeSubTypesEnabled && (
+                                            <td className="p-6">
+                                                {po.purchase_sub_type && PO_SUB_TYPE_CONFIG[po.purchase_sub_type] ? (
+                                                    <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${PO_SUB_TYPE_CONFIG[po.purchase_sub_type].color}`}>
+                                                        {PO_SUB_TYPE_CONFIG[po.purchase_sub_type].label}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-xs text-gray-300">—</span>
+                                                )}
+                                            </td>
+                                        )}
                                         <td className="p-6">
                                             <span className={`text-xs font-bold ${priorityInfo.color}`}>
                                                 {po.priority === 'URGENT' && <AlertTriangle size={12} className="inline mr-1" />}

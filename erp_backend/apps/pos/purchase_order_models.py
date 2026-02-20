@@ -57,6 +57,12 @@ class PurchaseOrder(TenantModel):
         ('URGENT', 'Urgent'),
     )
 
+    PURCHASE_SUB_TYPE_CHOICES = (
+        ('STANDARD', 'Standard Purchase'),
+        ('WHOLESALE', 'Wholesale Purchase'),
+        ('CONSIGNEE', 'Consignee Purchase'),
+    )
+
     # Valid transitions: current_status → set of allowed next statuses
     VALID_TRANSITIONS = {
         'DRAFT': {'SUBMITTED', 'CANCELLED'},
@@ -76,6 +82,10 @@ class PurchaseOrder(TenantModel):
                                   help_text='Auto-generated PO reference (e.g., PO-000001)')
     status = models.CharField(max_length=25, choices=STATUS_CHOICES, default='DRAFT')
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='NORMAL')
+    purchase_sub_type = models.CharField(
+        max_length=20, choices=PURCHASE_SUB_TYPE_CHOICES, default='STANDARD',
+        help_text='Sub-classification: Standard/Wholesale (better unit cost)/Consignee (pay on sale)'
+    )
 
     # Supplier
     supplier = models.ForeignKey('crm.Contact', on_delete=models.PROTECT, related_name='purchase_orders',
