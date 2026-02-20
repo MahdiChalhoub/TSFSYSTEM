@@ -1,0 +1,11 @@
+{
+    "code": "ecommerce",
+    "name": "eCommerce",
+    "version": "1.0.0",
+    "description": "Online storefront, product catalog, themes, and order management for B2C/B2B commerce.",
+    "dependencies": [
+        "client_portal",
+        "inventory"
+    ],
+    "required": false
+}
