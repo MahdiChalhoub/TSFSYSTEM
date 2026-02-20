@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useTransition, useMemo } from "react"
 import { getInvoices, getInvoiceDashboard, createInvoice, sendInvoice, cancelInvoice, recordInvoicePayment, deleteInvoice } from "@/app/actions/finance/invoices"
+import { getTradeSubTypeSettings } from "@/app/actions/settings/trade-settings"
 import { Card, CardContent } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
@@ -35,6 +36,13 @@ const TYPE_LABELS: Record<string, string> = {
     DEBIT_NOTE: 'Debit Note', PROFORMA: 'Pro Forma',
 }
 
+const SUB_TYPE_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+    RETAIL: { label: 'Retail', color: 'text-stone-600', bg: 'bg-stone-50 border-stone-200' },
+    WHOLESALE: { label: 'Wholesale', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200' },
+    CONSIGNEE: { label: 'Consignee', color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200' },
+    STANDARD: { label: 'Standard', color: 'text-stone-600', bg: 'bg-stone-50 border-stone-200' },
+}
+
 export default function InvoicesPage() {
     const [invoices, setInvoices] = useState<any[]>([])
     const [dashboard, setDashboard] = useState<any>(null)
@@ -43,6 +51,8 @@ export default function InvoicesPage() {
     const [paymentOpen, setPaymentOpen] = useState(false)
     const [selectedInvoice, setSelectedInvoice] = useState<any>(null)
     const [activeTab, setActiveTab] = useState<ActiveTab>('ALL')
+    const [subTypeFilter, setSubTypeFilter] = useState('')
+    const [tradeSubTypesEnabled, setTradeSubTypesEnabled] = useState(false)
     const [searchQuery, setSearchQuery] = useState("")
     const [sortKey, setSortKey] = useState<SortKey>('issue_date')
     const [sortDir, setSortDir] = useState<SortDir>('desc')
@@ -52,9 +62,10 @@ export default function InvoicesPage() {
 
     async function loadData() {
         try {
-            const [inv, dash] = await Promise.all([getInvoices(), getInvoiceDashboard()])
+            const [inv, dash, settings] = await Promise.all([getInvoices(), getInvoiceDashboard(), getTradeSubTypeSettings()])
             setInvoices(Array.isArray(inv) ? inv : [])
             setDashboard(dash)
+            setTradeSubTypesEnabled(settings?.enabled ?? false)
         } catch {
             setInvoices([])
             toast.error("Failed to load invoices")
@@ -76,6 +87,7 @@ export default function InvoicesPage() {
     const filtered = useMemo(() => {
         let list = invoices
             .filter(i => activeTab === 'ALL' || i.status === activeTab)
+            .filter(i => !subTypeFilter || i.sub_type === subTypeFilter)
             .filter(i =>
                 !searchQuery ||
                 (i.invoice_number || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -88,7 +100,7 @@ export default function InvoicesPage() {
             return sortDir === 'asc' ? cmp : -cmp
         })
         return list
-    }, [invoices, activeTab, searchQuery, sortKey, sortDir])
+    }, [invoices, activeTab, subTypeFilter, searchQuery, sortKey, sortDir])
 
     // ── Actions ──────────────────────────────────────────────────
     async function handleSend(inv: any) {
@@ -133,6 +145,7 @@ export default function InvoicesPage() {
             try {
                 await createInvoice({
                     type: fd.get('type') as string,
+                    sub_type: fd.get('sub_type') as string || undefined,
                     contact: Number(fd.get('contact')),
                     issue_date: fd.get('issue_date') as string,
                     payment_terms: fd.get('payment_terms') as string,
@@ -262,6 +275,17 @@ export default function InvoicesPage() {
                                 <option value="PROFORMA">Pro Forma</option>
                             </select>
                         </div>
+                        {tradeSubTypesEnabled && (
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-stone-500 uppercase">Sub-Type</label>
+                                <select name="sub_type" className="w-full px-3 py-2 border rounded-xl bg-background text-sm">
+                                    <option value="RETAIL">Retail</option>
+                                    <option value="WHOLESALE">Wholesale</option>
+                                    <option value="CONSIGNEE">Consignee</option>
+                                    <option value="STANDARD">Standard (Purchase)</option>
+                                </select>
+                            </div>
+                        )}
                         <div className="space-y-1.5">
                             <label className="text-xs font-bold text-stone-500 uppercase">Contact ID *</label>
                             <Input name="contact" type="number" required placeholder="Customer/Supplier ID" className="rounded-xl" />
@@ -349,6 +373,17 @@ export default function InvoicesPage() {
                             </button>
                         ))}
                     </div>
+                    {tradeSubTypesEnabled && (
+                        <div className="flex gap-1 flex-wrap">
+                            {[{ key: '', label: 'All Types' }, { key: 'RETAIL', label: 'Retail' }, { key: 'WHOLESALE', label: 'Wholesale' }, { key: 'CONSIGNEE', label: 'Consignee' }, { key: 'STANDARD', label: 'Standard' }].map(st => (
+                                <button key={st.key} onClick={() => setSubTypeFilter(st.key)}
+                                    className={`px-3 py-1.5 text-xs rounded-lg transition-all font-medium ${subTypeFilter === st.key
+                                        ? 'bg-indigo-100 text-indigo-700 shadow-sm' : 'text-stone-400 hover:text-stone-600'}`}>
+                                    {st.label}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                     <div className="relative w-full sm:w-64">
                         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
                         <Input placeholder="Search invoices..." value={searchQuery}
@@ -361,6 +396,7 @@ export default function InvoicesPage() {
                         <TableRow className="bg-stone-50/30">
                             <TableHead className="text-xs font-bold uppercase text-stone-400">Invoice #</TableHead>
                             <TableHead className="text-xs font-bold uppercase text-stone-400">Type</TableHead>
+                            {tradeSubTypesEnabled && <TableHead className="text-xs font-bold uppercase text-stone-400">Sub-Type</TableHead>}
                             <TableHead className="text-xs font-bold uppercase text-stone-400">Contact</TableHead>
                             <TableHead className="text-xs font-bold uppercase text-stone-400 cursor-pointer select-none" onClick={() => toggleSort('issue_date')}>
                                 Issue Date <SortIcon col="issue_date" />
@@ -390,6 +426,17 @@ export default function InvoicesPage() {
                                     <TableCell>
                                         <span className="text-xs font-medium text-stone-500">{TYPE_LABELS[inv.type] || inv.type}</span>
                                     </TableCell>
+                                    {tradeSubTypesEnabled && (
+                                        <TableCell>
+                                            {inv.sub_type && SUB_TYPE_CONFIG[inv.sub_type] ? (
+                                                <Badge variant="outline" className={`rounded-md text-[10px] font-semibold border ${SUB_TYPE_CONFIG[inv.sub_type].bg} ${SUB_TYPE_CONFIG[inv.sub_type].color}`}>
+                                                    {SUB_TYPE_CONFIG[inv.sub_type].label}
+                                                </Badge>
+                                            ) : (
+                                                <span className="text-xs text-stone-300">—</span>
+                                            )}
+                                        </TableCell>
+                                    )}
                                     <TableCell className="text-sm font-medium text-stone-700">
                                         {inv.contact_display || inv.contact_name || `#${inv.contact}`}
                                     </TableCell>

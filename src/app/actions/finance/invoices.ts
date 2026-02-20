@@ -6,11 +6,12 @@ import { revalidatePath } from "next/cache"
 
 // ── Invoice CRUD ─────────────────────────────────────────────
 
-export async function getInvoices(type?: string, invoiceStatus?: string, contactId?: string) {
+export async function getInvoices(type?: string, invoiceStatus?: string, contactId?: string, subType?: string) {
     const params = new URLSearchParams()
     if (type) params.append('type', type)
     if (invoiceStatus) params.append('status', invoiceStatus)
     if (contactId) params.append('contact_id', contactId)
+    if (subType) params.append('sub_type', subType)
     const qs = params.toString()
     return await erpFetch(`invoices/${qs ? `?${qs}` : ''}`)
 }
@@ -21,6 +22,7 @@ export async function getInvoice(id: number | string) {
 
 export async function createInvoice(data: {
     type: string
+    sub_type?: string
     contact: number | string
     issue_date: string
     payment_terms: string

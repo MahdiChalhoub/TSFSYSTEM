@@ -1264,12 +1264,15 @@ class InvoiceViewSet(TenantModelViewSet):
         inv_type = self.request.query_params.get('type')
         inv_status = self.request.query_params.get('status')
         contact_id = self.request.query_params.get('contact_id')
+        sub_type = self.request.query_params.get('sub_type')
         if inv_type:
             qs = qs.filter(type=inv_type)
         if inv_status:
             qs = qs.filter(status=inv_status)
         if contact_id:
             qs = qs.filter(contact_id=contact_id)
+        if sub_type:
+            qs = qs.filter(sub_type=sub_type)
         return qs
 
     def create(self, request, *args, **kwargs):
