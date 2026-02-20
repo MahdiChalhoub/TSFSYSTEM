@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { useParams, usePathname } from 'next/navigation'
 import { usePortal } from '@/context/PortalContext'
 import {
-    ShoppingCart, User, Store, Search, Menu, X, LogOut, FileQuestion, Heart, Bell
+    ShoppingCart, User, Store, Search, Menu, X, LogOut, FileQuestion, Heart, Bell,
+    LayoutDashboard
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -57,6 +58,12 @@ export function StorefrontHeader() {
                             <FileQuestion size={14} /> Quote
                         </Link>
                     )}
+                    {isAuthenticated && (
+                        <Link href={`/tenant/${slug}/dashboard`}
+                            className="text-sm text-slate-400 hover:text-white font-medium transition-colors flex items-center gap-1.5">
+                            <LayoutDashboard size={14} /> Dashboard
+                        </Link>
+                    )}
                 </nav>
 
                 {/* Right Items */}
@@ -77,6 +84,14 @@ export function StorefrontHeader() {
                                     {wishlistCount}
                                 </span>
                             )}
+                        </Link>
+                    )}
+
+                    {/* Notifications */}
+                    {isAuthenticated && (
+                        <Link href={`/tenant/${slug}/account/notifications`}
+                            className="relative w-10 h-10 flex items-center justify-center text-slate-400 hover:text-cyan-400 transition-colors">
+                            <Bell size={20} />
                         </Link>
                     )}
 
@@ -139,9 +154,17 @@ export function StorefrontHeader() {
                     )}
                     {isAuthenticated && (
                         <>
+                            <Link href={`/tenant/${slug}/dashboard`} onClick={() => setMenuOpen(false)}
+                                className="block px-4 py-3 text-white font-medium rounded-xl hover:bg-white/5 transition-all">
+                                Dashboard
+                            </Link>
                             <Link href={`/tenant/${slug}/account`} onClick={() => setMenuOpen(false)}
                                 className="block px-4 py-3 text-white font-medium rounded-xl hover:bg-white/5 transition-all">
                                 My Account
+                            </Link>
+                            <Link href={`/tenant/${slug}/account/notifications`} onClick={() => setMenuOpen(false)}
+                                className="block px-4 py-3 text-white font-medium rounded-xl hover:bg-white/5 transition-all">
+                                Notifications
                             </Link>
                             <button onClick={() => { logout(); setMenuOpen(false) }}
                                 className="w-full text-left px-4 py-3 text-red-400 font-medium rounded-xl hover:bg-red-500/10 transition-all flex items-center gap-2">

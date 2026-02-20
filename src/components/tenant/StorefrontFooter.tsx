@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { usePortal } from '@/context/PortalContext'
 import { PLATFORM_CONFIG } from '@/lib/branding'
-import { Store, ShoppingCart, User, FileQuestion, Shield } from 'lucide-react'
+import { Store, ShoppingCart, User, FileQuestion, Shield, Heart, Search, Grid3X3, Bell, LifeBuoy, Wallet, Package } from 'lucide-react'
 
 export function StorefrontFooter() {
     const { slug } = useParams<{ slug: string }>()
@@ -43,6 +43,18 @@ export function StorefrontFooter() {
                                     <Store size={14} /> Products
                                 </Link>
                             </li>
+                            <li>
+                                <Link href={`/tenant/${slug}/categories`}
+                                    className="text-slate-400 hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
+                                    <Grid3X3 size={14} /> Categories
+                                </Link>
+                            </li>
+                            <li>
+                                <Link href={`/tenant/${slug}/search`}
+                                    className="text-slate-400 hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
+                                    <Search size={14} /> Search
+                                </Link>
+                            </li>
                             {storeMode !== 'CATALOG_QUOTE' && (
                                 <li>
                                     <Link href={`/tenant/${slug}/cart`}
@@ -69,13 +81,37 @@ export function StorefrontFooter() {
                             <li>
                                 <Link href={`/tenant/${slug}/account`}
                                     className="text-slate-400 hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
-                                    <User size={14} /> My Account
+                                    <User size={14} /> Dashboard
                                 </Link>
                             </li>
                             <li>
                                 <Link href={`/tenant/${slug}/account/orders`}
                                     className="text-slate-400 hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
-                                    <ShoppingCart size={14} /> Order History
+                                    <Package size={14} /> Orders
+                                </Link>
+                            </li>
+                            <li>
+                                <Link href={`/tenant/${slug}/account/wishlist`}
+                                    className="text-slate-400 hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
+                                    <Heart size={14} /> Wishlist
+                                </Link>
+                            </li>
+                            <li>
+                                <Link href={`/tenant/${slug}/account/wallet`}
+                                    className="text-slate-400 hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
+                                    <Wallet size={14} /> Wallet
+                                </Link>
+                            </li>
+                            <li>
+                                <Link href={`/tenant/${slug}/account/notifications`}
+                                    className="text-slate-400 hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
+                                    <Bell size={14} /> Notifications
+                                </Link>
+                            </li>
+                            <li>
+                                <Link href={`/tenant/${slug}/account/tickets`}
+                                    className="text-slate-400 hover:text-white text-sm font-medium transition-colors flex items-center gap-2">
+                                    <LifeBuoy size={14} /> Support
                                 </Link>
                             </li>
                         </ul>
