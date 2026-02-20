@@ -35,7 +35,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'X-Frame-Options',
-            value: 'DENY',
+            value: 'SAMEORIGIN',
           },
           {
             key: 'X-Content-Type-Options',
@@ -58,7 +58,7 @@ const nextConfig: NextConfig = {
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: blob: https:",
               "connect-src 'self' https://*.tsf.ci https://tsf.ci",
-              "frame-ancestors 'none'",
+              "frame-ancestors 'self'",
             ].join('; '),
           },
         ],
