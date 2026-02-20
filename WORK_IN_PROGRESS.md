@@ -22,6 +22,20 @@ Track active work to prevent conflicts between agents/developers.
 
 ## Completed Work History
 
+## Session-69208a6a - 2026-02-20 12:15
+- Working on: Trade Sub-Type Decomposition (v1.7.0-b001→b002)
+- Features delivered:
+  - Sales sub-types: Retail / Wholesale / Consignee on Invoice model
+  - Purchase sub-types: Standard / Wholesale / Consignee on PurchaseOrder model
+  - Per-org feature toggle via Organization.settings.enable_trade_sub_types
+  - Invoice page: filter pills, table column with color badges, create form dropdown
+  - PO page: table column with color badges
+  - Finance settings: toggle switch for enabling/disabling trade sub-types
+  - Server actions: trade-settings (read/write), invoice sub_type, PO purchase_sub_type
+  - Documentation: TRADE_SUB_TYPES.md
+- Files: invoice_models.py, purchase_order_models.py, finance/views.py, pos/views.py, invoices.ts, purchase-orders.ts, trade-settings.ts, invoices/page.tsx, purchases/page.tsx, settings/form.tsx, TRADE_SUB_TYPES.md
+- Status: DONE
+
 ## Session-69208a6a - 2026-02-20 11:40
 - Working on: Client & Supplier Portal Enhancement Sprint (v1.6.0-b001→b020)
 - Features delivered:
