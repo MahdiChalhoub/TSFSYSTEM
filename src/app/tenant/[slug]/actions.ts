@@ -70,7 +70,7 @@ export async function getStorefrontConfig(slug: string) {
 export async function clientLogin(slug: string, email: string, password: string) {
     try {
         const djangoUrl = process.env.DJANGO_URL || 'http://127.0.0.1:8000';
-        const res = await fetch(`${djangoUrl}/api/client-portal/auth/login/`, {
+        const res = await fetch(`${djangoUrl}/api/client-portal/portal-auth/login/`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password, slug }),
