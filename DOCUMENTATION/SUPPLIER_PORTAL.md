@@ -73,6 +73,7 @@ The supplier portal lives at `/supplier-portal/[slug]/` and uses its own localSt
 4. Debit/credit/balance table shows all transactions
 
 ## Frontend Files
+- `src/app/supplier-portal/[slug]/layout.tsx` — Sidebar layout with session check
 - `src/app/supplier-portal/[slug]/page.tsx` — Login + Dashboard
 - `src/app/supplier-portal/[slug]/orders/page.tsx` — Purchase Orders
 - `src/app/supplier-portal/[slug]/proformas/page.tsx` — Proformas

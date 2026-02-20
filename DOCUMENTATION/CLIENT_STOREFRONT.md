@@ -79,6 +79,18 @@ The `ClientPortalConfig` model stores per-org settings:
 4. Submits message with additional requirements
 5. System sends quote request to organization
 
+### Product Detail
+1. Client clicks product card → `/tenant/[slug]/product/[id]`
+2. Full product view: image, name, SKU, description, stock
+3. Store-mode pricing: B2C/B2B shows price, CATALOG_QUOTE hides price
+4. Add to Cart (w/ quantity selector) or Request Quote button
+
+### Catalog Search & Filter
+- Text search bar filters by name or SKU
+- Category filter pills
+- Quick Add to Cart or Get Quote per card
+- Store-mode determines button behavior
+
 ### Account Management
 - `/tenant/[slug]/account` — Dashboard with stats, POS barcode
 - `/tenant/[slug]/account/orders` — Order history with status tracking
@@ -86,8 +98,9 @@ The `ClientPortalConfig` model stores per-org settings:
 - `/tenant/[slug]/account/tickets` — Support tickets, create new tickets
 
 ## Frontend Files
+- `src/app/tenant/[slug]/product/[id]/page.tsx` — Product detail w/ store-mode pricing
 - `src/app/tenant/[slug]/quote/page.tsx` — Quote request form
-- `src/context/PortalContext.tsx` — Auth state, cart, config management
+- `src/components/tenant/StorefrontCatalog.tsx` — Enhanced catalog with search, filter, quick-add
 - `src/components/tenant/ClientPortalLogin.tsx` — Login CTA / form / user card
 - `src/app/tenant/[slug]/layout.tsx` — PortalProvider wrapper
 - `src/app/tenant/[slug]/cart/page.tsx` — Shopping cart
