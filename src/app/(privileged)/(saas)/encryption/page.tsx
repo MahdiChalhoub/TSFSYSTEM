@@ -9,7 +9,7 @@ import {
     CheckCircle2, XCircle, RotateCcw, Building2, Zap,
     ShieldCheck, ShieldOff, Eye, EyeOff, Info
 } from "lucide-react"
-import { erpFetch } from '@/lib/erp-api'
+import { getOrganizations, getEncryptionStatus, activateEncryption, deactivateEncryption, rotateEncryptionKey } from './actions'
 
 interface EncryptionStatus {
     organization: string
@@ -49,8 +49,7 @@ export default function EncryptionPage() {
     // Load organizations
     const fetchOrgs = useCallback(async () => {
         try {
-            const data = await erpFetch('organizations/')
-            const orgList = Array.isArray(data) ? data : (data?.results || [])
+            const orgList = await getOrganizations()
             setOrgs(orgList)
             if (orgList.length > 0 && !selectedOrgId) {
                 setSelectedOrgId(orgList[0].id)
@@ -63,7 +62,7 @@ export default function EncryptionPage() {
     // Load encryption status
     const fetchStatus = useCallback(async () => {
         try {
-            const data = await erpFetch('saas/modules/encryption/status/')
+            const data = await getEncryptionStatus()
             setStatus(data)
             setError(null)
         } catch (e: unknown) {
@@ -84,13 +83,7 @@ export default function EncryptionPage() {
         setError(null)
         setSuccess(null)
         try {
-            const result = await erpFetch('saas/modules/encryption/activate/', {
-                method: 'POST',
-                body: JSON.stringify({
-                    organization_id: selectedOrgId,
-                    force: true
-                }),
-            })
+            const result = await activateEncryption(selectedOrgId)
             if (result.success) {
                 setSuccess(result.message || 'Encryption activated!')
                 fetchStatus()
@@ -109,10 +102,7 @@ export default function EncryptionPage() {
         setError(null)
         setSuccess(null)
         try {
-            const result = await erpFetch('saas/modules/encryption/deactivate/', {
-                method: 'POST',
-                body: JSON.stringify({ organization_id: selectedOrgId }),
-            })
+            const result = await deactivateEncryption(selectedOrgId)
             if (result.success) {
                 setSuccess(result.message || 'Encryption deactivated')
                 fetchStatus()
@@ -131,10 +121,7 @@ export default function EncryptionPage() {
         setError(null)
         setSuccess(null)
         try {
-            const result = await erpFetch('saas/modules/encryption/rotate-key/', {
-                method: 'POST',
-                body: JSON.stringify({ organization_id: selectedOrgId }),
-            })
+            const result = await rotateEncryptionKey(selectedOrgId)
             if (result.success) {
                 setSuccess(result.message || 'Key rotated successfully')
                 fetchStatus()
