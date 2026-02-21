@@ -40,10 +40,22 @@ class ChartOfAccount(TenantModel):
 
 
 class FinancialAccount(TenantModel):
+    ACCOUNT_TYPES = (
+        ('CASH', 'Cash Drawer'),
+        ('BANK', 'Bank Account'),
+        ('MOBILE', 'Mobile Wallet'),
+        ('PETTY_CASH', 'Petty Cash'),
+        ('SAVINGS', 'Savings Account'),
+        ('FOREIGN', 'Foreign Currency Account'),
+        ('ESCROW', 'Escrow Account'),
+        ('INVESTMENT', 'Investment Account'),
+    )
     name = models.CharField(max_length=255)
-    type = models.CharField(max_length=50, null=True, blank=True)
+    type = models.CharField(max_length=50, choices=ACCOUNT_TYPES, null=True, blank=True)
     currency = models.CharField(max_length=10, default='USD')
     balance = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+    description = models.TextField(null=True, blank=True)
+    is_pos_enabled = models.BooleanField(default=False, help_text='Whether this account is available for POS transactions')
     site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True)
     linked_coa = models.ForeignKey(ChartOfAccount, on_delete=models.SET_NULL, null=True, blank=True, db_column='ledger_account_id')
 

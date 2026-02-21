@@ -4,8 +4,9 @@ import { revalidatePath } from "next/cache"
 
 export type FinancialAccountInput = {
     name: string
-    type: 'CASH' | 'BANK' | 'MOBILE'
+    type: 'CASH' | 'BANK' | 'MOBILE' | 'PETTY_CASH' | 'SAVINGS' | 'FOREIGN' | 'ESCROW' | 'INVESTMENT'
     currency: string
+    description?: string
     siteId?: number | null
 }
 
@@ -99,5 +100,20 @@ export async function getAccountBalance(accountId: number) {
         }
     } catch {
         return { balance: 0, entries: 0 }
+    }
+}
+
+export async function togglePosAccess(accountId: number, enabled: boolean) {
+    try {
+        await erpFetch(`accounts/${accountId}/`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ is_pos_enabled: enabled })
+        })
+        revalidatePath('/finance/accounts')
+        return { success: true }
+    } catch (e: unknown) {
+        console.error("Failed to toggle POS access:", e);
+        throw e;
     }
 }
