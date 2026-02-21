@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { ArrowLeft, CheckCircle2, Loader2, MapPin, CreditCard, Wallet, Package, ArrowRight } from 'lucide-react'
 import { useCart, useAuth, useConfig } from '../../engine/hooks'
 import { createOrder } from '@/app/tenant/[slug]/actions'
+import { StripePayment } from '../../engine/components/StripePayment'
 
 export default function MidnightCheckoutPage() {
     const { slug } = useParams<{ slug: string }>()
@@ -18,6 +19,7 @@ export default function MidnightCheckoutPage() {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
     const [orderId, setOrderId] = useState('')
+    const [stripeClientSecret, setStripeClientSecret] = useState('')
 
     // Form
     const [form, setForm] = useState({
@@ -48,7 +50,7 @@ export default function MidnightCheckoutPage() {
         )
     }
 
-    if (cart.length === 0 && step !== 'complete') {
+    if (cart.length === 0 && step !== 'complete' && !stripeClientSecret) {
         return (
             <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
                 <Package size={48} className="text-slate-700 mb-4" />
@@ -80,14 +82,18 @@ export default function MidnightCheckoutPage() {
                 })),
                 delivery_address: form.address ? `${form.address}, ${form.city}` : undefined,
                 notes: form.notes || undefined,
-                payment_method: form.paymentMethod,
+                payment_method: form.paymentMethod.toUpperCase(),
                 contact_phone: form.phone || undefined,
             })
 
             if (result.success) {
-                setOrderId(result.data?.id || result.data?.order_number || 'NEW')
-                clearCart()
-                setStep('complete')
+                setOrderId(result.data?.order_number || result.data?.id || 'NEW')
+                if (result.data?.stripe_client_secret) {
+                    setStripeClientSecret(result.data.stripe_client_secret)
+                } else {
+                    clearCart()
+                    setStep('complete')
+                }
             } else {
                 setError(result.error || 'Failed to place order')
             }
@@ -96,6 +102,12 @@ export default function MidnightCheckoutPage() {
         } finally {
             setLoading(false)
         }
+    }
+
+    const handleStripeSuccess = () => {
+        clearCart()
+        setStripeClientSecret('')
+        setStep('complete')
     }
 
     if (step === 'complete') {
@@ -116,6 +128,41 @@ export default function MidnightCheckoutPage() {
                         className="px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-500 transition-all">
                         Continue Shopping
                     </Link>
+                </div>
+            </div>
+        )
+    }
+
+    if (stripeClientSecret) {
+        return (
+            <div className="max-w-xl mx-auto px-4 py-8">
+                <div className="bg-slate-900/60 border border-white/5 rounded-3xl p-8 space-y-6">
+                    <div className="text-center space-y-2 mb-4">
+                        <CreditCard size={40} className="text-emerald-500 mx-auto" />
+                        <h2 className="text-2xl font-black text-white">Secure Payment</h2>
+                        <p className="text-slate-400 text-sm">Order #{orderId}</p>
+                    </div>
+
+                    <div className="flex justify-between items-center py-4 border-y border-white/5 mb-6">
+                        <span className="text-slate-400 text-sm">Amount to Pay</span>
+                        <span className="text-2xl font-black text-white">${cartTotal.toFixed(2)}</span>
+                    </div>
+
+                    <div className="p-1">
+                        <StripePayment
+                            clientSecret={stripeClientSecret}
+                            publishableKey={config?.stripe_publishable_key || ''}
+                            onSuccess={handleStripeSuccess}
+                            onError={(e) => setError(e)}
+                        />
+                    </div>
+
+                    <button
+                        onClick={() => setStripeClientSecret('')}
+                        className="w-full text-slate-500 text-xs font-bold hover:text-white transition-colors py-2"
+                    >
+                        Back to Billing Details
+                    </button>
                 </div>
             </div>
         )

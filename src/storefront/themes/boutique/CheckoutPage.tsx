@@ -5,14 +5,16 @@ import { useRouter, useParams } from 'next/navigation'
 import { useCart, useAuth, useConfig } from '../../engine'
 import { CreditCard, Truck, Wallet, Lock, ArrowLeft, CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
+import { createOrder } from '@/app/tenant/[slug]/actions'
+import { StripePayment } from '../../engine/components/StripePayment'
 
 export default function BoutiqueCheckoutPage() {
     const router = useRouter()
     const params = useParams<{ slug: string }>()
     const { cart, cartTotal, clearCart } = useCart()
     const { user, isAuthenticated } = useAuth()
-    const { slug } = useConfig()
-    const base = `/tenant/${slug}`
+    const { config } = useConfig()
+    const base = `/tenant/${params?.slug}`
 
     const [form, setForm] = useState({
         name: user?.name || '',
@@ -25,6 +27,9 @@ export default function BoutiqueCheckoutPage() {
     })
     const [submitting, setSubmitting] = useState(false)
     const [orderPlaced, setOrderPlaced] = useState(false)
+    const [orderId, setOrderId] = useState('')
+    const [stripeClientSecret, setStripeClientSecret] = useState('')
+    const [error, setError] = useState('')
 
     const update = (k: string, v: string) => setForm(p => ({ ...p, [k]: v }))
 
@@ -32,38 +37,54 @@ export default function BoutiqueCheckoutPage() {
         e.preventDefault()
         if (cart.length === 0) return
         setSubmitting(true)
+        setError('')
 
         try {
-            const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://127.0.0.1:8000'
-            const res = await fetch(`${djangoUrl}/api/client-portal/orders/create/`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    organization_slug: params?.slug,
-                    customer_email: form.email,
-                    customer_name: form.name,
-                    phone: form.phone,
-                    delivery_address: form.address,
-                    city: form.city,
-                    notes: form.notes,
-                    payment_method: form.paymentMethod,
-                    items: cart.map(i => ({
-                        product_id: i.product_id,
-                        quantity: i.quantity,
-                        unit_price: i.unit_price,
-                    })),
-                }),
+            const token = localStorage.getItem('portal_session')
+            const parsed = token ? JSON.parse(token) : null
+            const authToken = parsed?.token
+
+            if (!authToken) {
+                setError('Session expired. Please sign in again.')
+                setSubmitting(false)
+                return
+            }
+
+            const result = await createOrder(authToken, {
+                lines: cart.map(i => ({
+                    product_id: i.product_id,
+                    quantity: i.quantity,
+                    unit_price: i.unit_price,
+                })),
+                delivery_address: form.address ? `${form.address}, ${form.city}` : undefined,
+                notes: form.notes || undefined,
+                payment_method: form.paymentMethod.toUpperCase(),
+                contact_phone: form.phone || undefined,
+                status: 'PLACED'
             })
 
-            if (res.ok) {
-                clearCart()
-                setOrderPlaced(true)
+            if (result.success) {
+                setOrderId(result.data?.order_number || result.data?.id || 'NEW')
+                if (result.data?.stripe_client_secret) {
+                    setStripeClientSecret(result.data.stripe_client_secret)
+                } else {
+                    clearCart()
+                    setOrderPlaced(true)
+                }
+            } else {
+                setError(result.error || 'Failed to place order')
             }
-        } catch (err) {
-            console.error(err)
+        } catch (err: any) {
+            setError(err.message || 'Something went wrong')
         } finally {
             setSubmitting(false)
         }
+    }
+
+    const handleStripeSuccess = () => {
+        clearCart()
+        setStripeClientSecret('')
+        setOrderPlaced(true)
     }
 
     if (orderPlaced) {
@@ -77,13 +98,51 @@ export default function BoutiqueCheckoutPage() {
                     style={{ fontFamily: "'Playfair Display', serif" }}>
                     Thank You!
                 </h2>
-                <p className="text-gray-500 text-sm mb-6 max-w-sm">
+                <p className="text-gray-500 text-sm mb-1 max-w-sm">
                     Your order has been placed successfully. We&apos;ll send you a confirmation soon.
                 </p>
+                {orderId && <p className="text-xs text-gray-400 font-mono mb-6">Order #{orderId}</p>}
                 <Link href={base}
                     className="px-6 py-3 bg-violet-600 text-white rounded-xl text-sm font-bold hover:bg-violet-700 transition">
                     Continue Shopping
                 </Link>
+            </div>
+        )
+    }
+
+    if (stripeClientSecret) {
+        return (
+            <div className="max-w-xl mx-auto px-6 py-10" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                <div className="bg-white rounded-3xl border border-violet-100 p-8 shadow-xl space-y-6">
+                    <div className="text-center space-y-2 mb-4">
+                        <CreditCard size={40} className="text-violet-600 mx-auto" />
+                        <h2 className="text-2xl font-bold text-indigo-950" style={{ fontFamily: "'Playfair Display', serif" }}>
+                            Secure Payment
+                        </h2>
+                        <p className="text-gray-400 text-sm">Order #{orderId}</p>
+                    </div>
+
+                    <div className="flex justify-between items-center py-4 border-y border-violet-50 mb-6">
+                        <span className="text-gray-500 text-sm">Amount to Pay</span>
+                        <span className="text-2xl font-bold text-violet-600">${cartTotal.toFixed(2)}</span>
+                    </div>
+
+                    <div className="p-1">
+                        <StripePayment
+                            clientSecret={stripeClientSecret}
+                            publishableKey={config?.stripe_publishable_key || ''}
+                            onSuccess={handleStripeSuccess}
+                            onError={(e) => setError(e)}
+                        />
+                    </div>
+
+                    <button
+                        onClick={() => setStripeClientSecret('')}
+                        className="w-full text-gray-400 text-xs font-bold hover:text-indigo-950 transition-colors py-2"
+                    >
+                        Back to Billing Details
+                    </button>
+                </div>
             </div>
         )
     }
@@ -153,6 +212,11 @@ export default function BoutiqueCheckoutPage() {
                         <h3 className="font-bold text-indigo-950 mb-4 flex items-center gap-2">
                             <CreditCard size={18} className="text-violet-500" /> Payment Method
                         </h3>
+                        {error && (
+                            <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl text-red-600 text-xs font-medium">
+                                {error}
+                            </div>
+                        )}
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             {[
                                 { id: 'cash', label: 'Cash', icon: Wallet },
@@ -162,8 +226,8 @@ export default function BoutiqueCheckoutPage() {
                                 <button key={m.id} type="button"
                                     onClick={() => update('paymentMethod', m.id)}
                                     className={`p-4 rounded-xl border-2 text-sm font-semibold transition flex items-center gap-2 justify-center ${form.paymentMethod === m.id
-                                            ? 'border-violet-500 bg-violet-50 text-violet-600'
-                                            : 'border-violet-100 text-gray-500 hover:border-violet-300'
+                                        ? 'border-violet-500 bg-violet-50 text-violet-600'
+                                        : 'border-violet-100 text-gray-500 hover:border-violet-300'
                                         }`}>
                                     <m.icon size={18} /> {m.label}
                                 </button>

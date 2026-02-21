@@ -86,6 +86,7 @@ export interface StorefrontConfig {
     require_approval_for_orders: boolean
     currency_symbol?: string
     currency_code?: string
+    stripe_publishable_key?: string
 }
 
 // ─── Theme Component Interfaces ─────────────────────────────────────────────

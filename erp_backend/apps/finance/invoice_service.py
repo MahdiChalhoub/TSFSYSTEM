@@ -21,6 +21,39 @@ class InvoiceService:
 
     @staticmethod
     @transaction.atomic
+    def record_payment(invoice_id, amount, method, reference=None, organization_id=None, user=None):
+        """
+        Public API to record a payment for an invoice by ID.
+        Used by external gateways (Stripe, etc.)
+        """
+        from apps.finance.invoice_models import Invoice
+        from apps.finance.models import FinancialAccount
+
+        qs = Invoice.objects.filter(id=invoice_id)
+        if organization_id:
+            qs = qs.filter(organization_id=organization_id)
+        
+        invoice = qs.first()
+        if not invoice:
+            raise ValidationError(f"Invoice {invoice_id} not found.")
+
+        # Find a default payment account if not provided (e.g. 'Stripe Clearing')
+        payment_account = FinancialAccount.objects.filter(
+            organization_id=invoice.organization_id,
+            account_type='BANK'
+        ).first()
+
+        return InvoiceService.record_payment_for_invoice(
+            invoice=invoice,
+            amount=amount,
+            method=method,
+            payment_account_id=payment_account.id if payment_account else None,
+            reference=reference,
+            user=user
+        )
+
+    @staticmethod
+    @transaction.atomic
     def allocate_payment(payment, invoice, amount, user=None):
         """
         Allocate a (partial) payment to an invoice.

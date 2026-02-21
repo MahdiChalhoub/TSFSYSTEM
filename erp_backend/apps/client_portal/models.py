@@ -68,6 +68,18 @@ class ClientPortalConfig(TenantModel):
         help_text='Type of storefront layout (product store, catalogue, subscription, landing page, portfolio)'
     )
 
+    # ── SEO Settings ──────────────────────────────────────────────────────────
+    seo_title = models.CharField(max_length=255, blank=True, default='', help_text='SEO Meta Title')
+    seo_description = models.TextField(blank=True, default='', help_text='SEO Meta Description')
+    seo_keywords = models.CharField(max_length=500, blank=True, default='', help_text='SEO Keywords')
+    og_image_url = models.URLField(blank=True, default='', help_text='Social Share Image (OG Image) URL')
+
+    # ── Theme Settings ────────────────────────────────────────────────────────
+    logo_url = models.URLField(blank=True, default='', help_text='Organization Logo URL')
+    primary_color = models.CharField(max_length=20, default='#10b981', help_text='Primary Brand Color')
+    secondary_color = models.CharField(max_length=20, default='#0f172a', help_text='Secondary Brand Color')
+    custom_css = models.TextField(blank=True, default='', help_text='Custom CSS for the storefront')
+
     # ── Loyalty Settings ──────────────────────────────────────────────────────
     loyalty_enabled = models.BooleanField(default=True, help_text='Enable loyalty points system')
     loyalty_earn_rate = models.DecimalField(
@@ -538,11 +550,6 @@ class QuoteRequest(TenantModel):
     phone = models.CharField(max_length=50, blank=True, default='')
     company_name = models.CharField(max_length=255, blank=True, default='')
 
-    # Product details
-    product = models.ForeignKey('inventory.Product', on_delete=models.SET_NULL, null=True, blank=True)
-    product_name = models.CharField(max_length=255, help_text='Snapshot of product name')
-    quantity = models.DecimalField(max_digits=15, decimal_places=2, default=1)
-
     # Message / Requirements
     message = models.TextField(help_text='Customer requirements or questions')
     internal_notes = models.TextField(blank=True, default='')
@@ -566,3 +573,20 @@ class QuoteRequest(TenantModel):
         if not self.quote_number:
             self.quote_number = f"QT-{timezone.now().strftime('%y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
         super().save(*args, **kwargs)
+
+
+class QuoteItem(TenantModel):
+    """
+    Individual items within a quote request.
+    """
+    quote_request = models.ForeignKey(QuoteRequest, on_delete=models.CASCADE, related_name='items')
+    product = models.ForeignKey('inventory.Product', on_delete=models.SET_NULL, null=True, blank=True)
+    product_name = models.CharField(max_length=255, help_text='Snapshot of product name')
+    quantity = models.DecimalField(max_digits=15, decimal_places=2, default=1)
+    notes = models.TextField(blank=True, default='')
+
+    class Meta:
+        db_table = 'client_quote_item'
+
+    def __str__(self):
+        return f"{self.product_name} x {self.quantity}"

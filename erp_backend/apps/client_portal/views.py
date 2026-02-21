@@ -155,7 +155,15 @@ class StorefrontPublicConfigView(APIView):
             'wallet_enabled': config.wallet_enabled,
             'tickets_enabled': config.tickets_enabled,
             'require_approval_for_orders': config.require_approval_for_orders,
+            'stripe_publishable_key': self._get_stripe_key(org),
         })
+
+    def _get_stripe_key(self, org):
+        from apps.finance.gateway_models import GatewayConfig
+        stripe_cfg = GatewayConfig.objects.filter(
+            organization=org, gateway_type='STRIPE', is_active=True
+        ).first()
+        return stripe_cfg.publishable_key if stripe_cfg else None
 
 
 # =============================================================================
@@ -461,10 +469,37 @@ class ClientMyOrdersViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         access = self.request.user.client_access
-        serializer.save(
+        order = serializer.save(
             organization=access.contact.organization,
             contact=access.contact,
         )
+
+        # If order is created as PLACED with CARD payment, trigger Stripe
+        if order.status == 'PLACED' and order.payment_method == 'CARD':
+            try:
+                from apps.finance.stripe_gateway import StripeGatewayService
+                service = StripeGatewayService(order.organization_id)
+                
+                amount_to_charge = order.total_amount - order.wallet_amount
+                if amount_to_charge > 0:
+                    intent = service.create_payment_intent(
+                        amount=amount_to_charge,
+                        currency=order.currency.lower(),
+                        metadata={
+                            'order_id': order.id,
+                            'order_number': order.order_number,
+                            'contact_id': order.contact_id,
+                            'type': 'CLIENT_ORDER'
+                        },
+                        customer_email=self.request.user.email
+                    )
+                    if 'error' not in intent:
+                        # Attach as temporary attribute so serializer can access it
+                        order.stripe_client_secret = intent['client_secret']
+                        order.stripe_payment_intent_id = intent['payment_intent_id']
+            except Exception as e:
+                logger.error(f"Stripe error in perform_create: {e}")
+
 
     @action(detail=True, methods=['post'])
     def add_to_cart(self, request, pk=None):
@@ -529,11 +564,42 @@ class ClientMyOrdersViewSet(viewsets.ModelViewSet):
 
         order.status = 'PLACED'
         order.placed_at = timezone.now()
+        order.payment_method = request.data.get('payment_method', order.payment_method)
         order.delivery_address = request.data.get('delivery_address', order.delivery_address)
         order.delivery_phone = request.data.get('delivery_phone', order.delivery_phone)
         order.delivery_notes = request.data.get('delivery_notes', order.delivery_notes)
         order.save()
-        return Response({'status': 'placed', 'order_number': order.order_number})
+
+        response_data = {'status': 'placed', 'order_number': order.order_number}
+
+        # Handle Stripe Card Payment
+        if order.payment_method == 'CARD':
+            try:
+                from apps.finance.stripe_gateway import StripeGatewayService
+                service = StripeGatewayService(order.organization_id)
+                
+                amount_to_charge = order.total_amount - order.wallet_amount
+                if amount_to_charge > 0:
+                    intent = service.create_payment_intent(
+                        amount=amount_to_charge,
+                        currency=order.currency.lower(),
+                        metadata={
+                            'order_id': order.id,
+                            'order_number': order.order_number,
+                            'contact_id': order.contact_id,
+                            'type': 'CLIENT_ORDER'
+                        },
+                        customer_email=self.request.user.email
+                    )
+                    if 'error' in intent:
+                        return Response({'error': intent['error']}, status=400)
+                    
+                    response_data['stripe_client_secret'] = intent['client_secret']
+                    response_data['stripe_payment_intent_id'] = intent['payment_intent_id']
+            except Exception as e:
+                return Response({'error': f"Stripe integration error: {str(e)}"}, status=400)
+
+        return Response(response_data)
 
     @action(detail=True, methods=['post'])
     def rate_delivery(self, request, pk=None):
@@ -676,6 +742,54 @@ class ClientPortalConfigViewSet(TenantModelViewSet):
         config = ClientPortalConfig.get_config(org)
         from .serializers import ClientPortalConfigSerializer
         return Response(ClientPortalConfigSerializer(config).data)
+
+    @action(detail=False, methods=['get'])
+    def stats(self, request):
+        """Returns e-commerce analytics for the current organization."""
+        org = request.user.organization
+        # Real stats from ClientOrder
+        total_orders = ClientOrder.objects.filter(organization=org).exclude(status='CART').count()
+        total_revenue = ClientOrder.objects.filter(organization=org, payment_status='PAID').aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0.00')
+        pending_orders = ClientOrder.objects.filter(organization=org, status='PENDING').count()
+        
+        last_month = timezone.now() - timezone.timedelta(days=30)
+        monthly_orders = ClientOrder.objects.filter(organization=org, created_at__gte=last_month).exclude(status='CART').count()
+        monthly_revenue = ClientOrder.objects.filter(
+            organization=org, payment_status='PAID', created_at__gte=last_month
+        ).aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0.00')
+        
+        # Breakdown by status
+        status_counts = ClientOrder.objects.filter(organization=org).values('status').annotate(count=Count('id'))
+        status_map = {s['status']: s['count'] for s in status_counts}
+
+        return Response({
+            'total_orders': total_orders,
+            'monthly_orders': monthly_orders,
+            'monthly_revenue': str(monthly_revenue),
+            'total_revenue': str(total_revenue),
+            'pending': status_map.get('PENDING', 0),
+            'processing': status_map.get('PROCESSING', 0),
+            'shipped': status_map.get('SHIPPED', 0),
+            'delivered': status_map.get('DELIVERED', 0),
+        })
+
+    @action(detail=False, methods=['get'])
+    def abandoned_carts(self, request):
+        """List orders stuck in 'CART' status for more than 24 hours."""
+        org = request.user.organization
+        cutoff = timezone.now() - timezone.timedelta(hours=24)
+        carts = ClientOrder.objects.filter(
+            organization=org, status='CART', created_at__lt=cutoff
+        ).select_related('contact').order_by('-created_at')
+        
+        return Response([{
+            'id': c.id,
+            'order_number': c.order_number,
+            'contact_name': c.contact.name if c.contact else 'Guest',
+            'email': c.contact.email if c.contact else 'Unknown',
+            'amount': str(c.total_amount),
+            'created_at': c.created_at,
+        } for c in carts])
 # =============================================================================
 # QUOTE REQUESTS (CATALOGUE MODE)
 # =============================================================================
