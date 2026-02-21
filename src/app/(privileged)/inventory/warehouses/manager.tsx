@@ -156,7 +156,11 @@ export default function WarehouseManager({ warehouses }: { warehouses: Record<st
 
             <ConfirmDialog
                 open={deleteTarget !== null}
+<<<<<<< HEAD
                 onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
+=======
+                onOpenChange={(open: boolean) => { if (!open) setDeleteTarget(null) }}
+>>>>>>> update-modules
                 onConfirm={handleDelete}
                 title="Delete Warehouse?"
                 description="This will permanently remove this warehouse and its configuration. Inventory data may be affected."

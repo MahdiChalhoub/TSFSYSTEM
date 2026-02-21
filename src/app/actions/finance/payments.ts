@@ -114,3 +114,48 @@ export async function recordPaymentForInvoice(invoiceId: number | string, data: 
     revalidatePath('/finance/payments')
     return result
 }
+<<<<<<< HEAD
+=======
+
+// ─── Lifecycle Actions ──────────────────────────────────────────
+
+export async function lockPayment(id: number | string, comment?: string) {
+    const result = await erpFetch(`payments/${id}/lock/`, {
+        method: 'POST',
+        body: JSON.stringify({ comment: comment || '' })
+    })
+    revalidatePath('/finance/payments')
+    return result
+}
+
+export async function unlockPayment(id: number | string, comment: string) {
+    const result = await erpFetch(`payments/${id}/unlock/`, {
+        method: 'POST',
+        body: JSON.stringify({ comment })
+    })
+    revalidatePath('/finance/payments')
+    return result
+}
+
+export async function verifyPayment(id: number | string, comment?: string) {
+    const result = await erpFetch(`payments/${id}/verify/`, {
+        method: 'POST',
+        body: JSON.stringify({ comment: comment || '' })
+    })
+    revalidatePath('/finance/payments')
+    return result
+}
+
+export async function confirmPayment(id: number | string, comment?: string) {
+    const result = await erpFetch(`payments/${id}/confirm/`, {
+        method: 'POST',
+        body: JSON.stringify({ comment: comment || '' })
+    })
+    revalidatePath('/finance/payments')
+    return result
+}
+
+export async function getPaymentHistory(id: number | string) {
+    return await erpFetch(`payments/${id}/lifecycle_history/`)
+}
+>>>>>>> update-modules

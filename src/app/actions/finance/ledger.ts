@@ -119,6 +119,8 @@ export async function getLedgerEntries(
         date_from?: string
         date_to?: string
         entry_type?: string
+        source_type?: string
+        is_auto?: string
     }
 ) {
     try {
@@ -131,6 +133,8 @@ export async function getLedgerEntries(
         if (filters?.date_from) params.append('date_from', filters.date_from)
         if (filters?.date_to) params.append('date_to', filters.date_to)
         if (filters?.entry_type) params.append('entry_type', filters.entry_type)
+        if (filters?.source_type) params.append('source_type', filters.source_type)
+        if (filters?.is_auto) params.append('is_auto', filters.is_auto)
 
         const queryString = params.toString()
         if (queryString) path += `?${queryString}`
@@ -213,4 +217,46 @@ export async function createOpeningBalanceEntry(data: unknown) {
         ...parsed,
         entry_type: 'OPENING_BALANCE'
     })
+}
+
+// ─── Lifecycle Actions ──────────────────────────────────────────
+
+export async function lockJournalEntry(id: number, comment?: string) {
+    const result = await erpFetch(`journal/${id}/lock/`, {
+        method: 'POST',
+        body: JSON.stringify({ comment: comment || '' })
+    })
+    revalidatePath('/finance/ledger')
+    return result
+}
+
+export async function unlockJournalEntry(id: number, comment: string) {
+    const result = await erpFetch(`journal/${id}/unlock/`, {
+        method: 'POST',
+        body: JSON.stringify({ comment })
+    })
+    revalidatePath('/finance/ledger')
+    return result
+}
+
+export async function verifyJournalEntry(id: number, comment?: string) {
+    const result = await erpFetch(`journal/${id}/verify/`, {
+        method: 'POST',
+        body: JSON.stringify({ comment: comment || '' })
+    })
+    revalidatePath('/finance/ledger')
+    return result
+}
+
+export async function confirmJournalEntry(id: number, comment?: string) {
+    const result = await erpFetch(`journal/${id}/confirm/`, {
+        method: 'POST',
+        body: JSON.stringify({ comment: comment || '' })
+    })
+    revalidatePath('/finance/ledger')
+    return result
+}
+
+export async function getJournalEntryHistory(id: number) {
+    return await erpFetch(`journal/${id}/lifecycle_history/`)
 }

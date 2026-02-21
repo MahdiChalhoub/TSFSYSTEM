@@ -18,7 +18,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
-import { getChartOfAccountsList } from '@/app/(privileged)/finance/accounts/picker-actions';
+import { getChartOfAccountsList } from '@/app/(privileged)/finance/(definitions)/accounts/picker-actions';
 
 export function ChartOfAccountPicker({ value, onChange, disabled = false, filterType }: {
     value?: number,

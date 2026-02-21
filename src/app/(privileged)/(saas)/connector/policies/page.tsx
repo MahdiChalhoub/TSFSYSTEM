@@ -770,7 +770,11 @@ export default function ConnectorPoliciesPage() {
 
             <ConfirmDialog
                 open={pendingDeleteId !== null}
+<<<<<<< HEAD
                 onOpenChange={(open) => { if (!open) setPendingDeleteId(null) }}
+=======
+                onOpenChange={(open: boolean) => { if (!open) setPendingDeleteId(null) }}
+>>>>>>> update-modules
                 onConfirm={() => {
                     if (pendingDeleteId) handleDelete(pendingDeleteId)
                     setPendingDeleteId(null)
@@ -783,7 +787,11 @@ export default function ConnectorPoliciesPage() {
 
             <ConfirmDialog
                 open={showAutoGenConfirm}
+<<<<<<< HEAD
                 onOpenChange={(open) => { if (!open) setShowAutoGenConfirm(false) }}
+=======
+                onOpenChange={(open: boolean) => { if (!open) setShowAutoGenConfirm(false) }}
+>>>>>>> update-modules
                 onConfirm={() => {
                     handleAutoGenerate()
                     setShowAutoGenConfirm(false)

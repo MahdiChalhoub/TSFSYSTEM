@@ -9,14 +9,6 @@ type Tab = {
     path: string;
 };
 
-/**
- * Scope access levels (determined at LOGIN by which password was used):
- *  - null: not yet loaded / no dual view
- *  - 'official': user logged in with Official password → sees ONLY Official data, no toggle
- *  - 'internal': user logged in with main or Internal password → sees BOTH scopes with toggle
- */
-type ScopeAccess = 'official' | 'internal' | null;
-
 type AdminContextType = {
     sidebarOpen: boolean;
     toggleSidebar: () => void;
@@ -27,29 +19,34 @@ type AdminContextType = {
     clearTabs: () => void;
     viewScope: 'OFFICIAL' | 'INTERNAL';
     setViewScope: (scope: 'OFFICIAL' | 'INTERNAL') => void;
-    /** Which access level the user was granted at login */
-    scopeAccess: ScopeAccess;
-    /** Whether the scope toggle should be visible (only in 'internal' access mode) */
     canToggleScope: boolean;
+    scopeAccess: 'OFFICIAL' | 'INTERNAL';
 };
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
-export function AdminProvider({ children, contextKey = 'default', initialScopeAccess }: { children: React.ReactNode, contextKey?: string, initialScopeAccess?: 'official' | 'internal' | null }) {
+export function AdminProvider({
+    children,
+    contextKey = 'default',
+    initialScopeAccess = 'INTERNAL'
+}: {
+    children: React.ReactNode,
+    contextKey?: string,
+    initialScopeAccess?: 'OFFICIAL' | 'INTERNAL'
+}) {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [openTabs, setOpenTabs] = useState<Tab[]>([]);
     const [viewScope, setViewScope] = useState<'OFFICIAL' | 'INTERNAL'>('INTERNAL');
     const [isLoaded, setIsLoaded] = useState(false);
-    const [scopeAccess, setScopeAccess] = useState<ScopeAccess>(null);
     const pathname = usePathname();
     const router = useRouter();
 
     const TABS_KEY = `tsf_tabs_${contextKey}`;
     const SCOPE_KEY = `tsf_view_scope_${contextKey}`;
 
-    // Load tabs, viewScope, and scopeAccess from localStorage/cookies on mount
+    // Load tabs and viewScope from localStorage on contextKey change or mount
     useEffect(() => {
-        setIsLoaded(false);
+        setIsLoaded(false); // Reset load state while switching
         const savedTabs = localStorage.getItem(TABS_KEY);
         if (savedTabs) {
             try {
@@ -66,7 +63,8 @@ export function AdminProvider({ children, contextKey = 'default', initialScopeAc
                 setOpenTabs([{ id: 'dashboard', title: 'Dashboard', path: '/admin' }]);
             }
         } else {
-            const defaultPath = contextKey === 'saas' ? '/dashboard' : '/admin';
+            // Default tabs per context
+            const defaultPath = contextKey === 'saas' ? '/saas/dashboard' : '/admin';
             setOpenTabs([{ id: 'dashboard', title: 'Dashboard', path: defaultPath }]);
         }
 
@@ -74,16 +72,6 @@ export function AdminProvider({ children, contextKey = 'default', initialScopeAc
         if (savedScope === 'OFFICIAL' || savedScope === 'INTERNAL') {
             setViewScope(savedScope);
         }
-
-        // scope_access is now httpOnly — read from server-side prop
-        if (initialScopeAccess === 'official') {
-            setScopeAccess('official');
-            setViewScope('OFFICIAL');
-        } else {
-            // Default to full access if not specified or 'internal'
-            setScopeAccess('internal');
-        }
-
         setIsLoaded(true);
     }, [contextKey, TABS_KEY, SCOPE_KEY]);
 
@@ -91,18 +79,15 @@ export function AdminProvider({ children, contextKey = 'default', initialScopeAc
     useEffect(() => {
         if (!isLoaded) return;
         localStorage.setItem(SCOPE_KEY, viewScope);
+        // Set cookie for server-side awareness (valid for 1 year)
         document.cookie = `tsf_view_scope=${viewScope}; path=/; max-age=31536000; SameSite=Lax`;
     }, [viewScope, isLoaded, SCOPE_KEY]);
 
     const handleSetViewScope = (scope: 'OFFICIAL' | 'INTERNAL') => {
-        // If official-only access, cannot switch to internal
-        if (scopeAccess === 'official' && scope === 'INTERNAL') return;
         setViewScope(scope);
+        // Trigger server components refresh
         router.refresh();
     };
-
-    // Toggle is visible only if user has internal (full) access
-    const canToggleScope = scopeAccess === 'internal';
 
     // Save tabs to localStorage
     useEffect(() => {
@@ -116,34 +101,30 @@ export function AdminProvider({ children, contextKey = 'default', initialScopeAc
 
     const openTab = (title: string, path: string) => {
         const id = path;
+
         setOpenTabs(prev => {
-            // Already open with same path — just navigate
             if (prev.find(t => t.id === id)) return prev;
-            // Deduplicate by title: if a tab with same title exists, replace its path
-            const existingByTitle = prev.findIndex(t => t.title === title);
-            if (existingByTitle !== -1) {
-                const updated = [...prev];
-                updated[existingByTitle] = { id, title, path };
-                return updated;
-            }
             return [...prev, { id, title, path }];
         });
+
         router.push(path);
     };
 
     const closeTab = (id: string) => {
         const newTabs = openTabs.filter(t => t.id !== id);
         setOpenTabs(newTabs);
+
+        // If we closed the active tab, navigate to the last one
         if (pathname === id && newTabs.length > 0) {
             router.push(newTabs[newTabs.length - 1].path);
         } else if (newTabs.length === 0) {
-            const defaultPath = contextKey === 'saas' ? '/dashboard' : '/admin';
-            router.push(defaultPath);
+            const defaultPath = contextKey === 'saas' ? '/saas/dashboard' : '/admin';
+            router.push(defaultPath); // Fallback
         }
     };
 
     const clearTabs = () => {
-        const defaultPath = contextKey === 'saas' ? '/dashboard' : '/admin';
+        const defaultPath = contextKey === 'saas' ? '/saas/dashboard' : '/admin';
         setOpenTabs([{ id: 'dashboard', title: 'Dashboard', path: defaultPath }]);
         router.push(defaultPath);
     };
@@ -159,8 +140,8 @@ export function AdminProvider({ children, contextKey = 'default', initialScopeAc
             clearTabs,
             viewScope,
             setViewScope: handleSetViewScope,
-            scopeAccess,
-            canToggleScope,
+            canToggleScope: true, // For local dev, allow toggle
+            scopeAccess: initialScopeAccess
         }}>
             {children}
         </AdminContext.Provider>

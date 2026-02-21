@@ -13,8 +13,15 @@ import Link from "next/link"
 import {
     ShoppingCart, Download, Printer, FileText, Search,
     Filter, Calendar, ChevronRight, User, Hash, MoreVertical,
+<<<<<<< HEAD
     History as HistoryIcon
 } from "lucide-react"
+=======
+    History as HistoryIcon, Lock, Unlock, ShieldCheck, CheckCircle2, Clock
+} from "lucide-react"
+import { lockOrder, unlockOrder, verifyOrder, confirmOrder, getOrderHistory } from "@/app/actions/pos/orders"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+>>>>>>> update-modules
 
 function fmt(n: number) {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
@@ -34,9 +41,34 @@ const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
     RETURN: { label: 'Return', color: 'text-rose-600' },
 }
 
+<<<<<<< HEAD
 export default function OrderHistoryPage() {
     const [orders, setOrders] = useState<SalesOrder[]>([])
     const [loading, setLoading] = useState(true)
+=======
+interface TransactionHistory {
+    action: string;
+    comment?: string;
+    performed_by: string;
+    performed_at: string;
+}
+
+const LIFECYCLE_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
+    OPEN: { label: 'Open', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', icon: Clock },
+    LOCKED: { label: 'Locked', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', icon: Lock },
+    VERIFIED: { label: 'Verified', color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200', icon: ShieldCheck },
+    CONFIRMED: { label: 'Confirmed', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', icon: CheckCircle2 },
+}
+
+export default function OrderHistoryPage() {
+    const [orders, setOrders] = useState<SalesOrder[]>([])
+    const [loading, setLoading] = useState(true)
+    const [isPending, setIsPending] = useState(false)
+    const [commentOpen, setCommentOpen] = useState(false)
+    const [historyOpen, setHistoryOpen] = useState(false)
+    const [historyData, setHistoryData] = useState<TransactionHistory[]>([])
+    const [selectedOrder, setSelectedOrder] = useState<any>(null)
+>>>>>>> update-modules
     const [filters, setFilters] = useState({
         search: '',
         type: 'ALL',
@@ -83,6 +115,42 @@ export default function OrderHistoryPage() {
         }
     }
 
+<<<<<<< HEAD
+=======
+    // ── Lifecycle Handlers ──────────────────────
+    async function handleLock(id: number) {
+        setIsPending(true)
+        try { await lockOrder(id); toast.success("Order locked"); loadOrders() }
+        catch (err: any) { toast.error(err.message || "Failed to lock") }
+        finally { setIsPending(false) }
+    }
+    async function handleUnlock(id: number, comment: string) {
+        setIsPending(true)
+        try { await unlockOrder(id, comment); toast.success("Order unlocked"); setCommentOpen(false); loadOrders() }
+        catch (err: any) { toast.error(err.message || "Failed to unlock") }
+        finally { setIsPending(false) }
+    }
+    async function handleVerify(id: number) {
+        setIsPending(true)
+        try { await verifyOrder(id); toast.success("Order verified"); loadOrders() }
+        catch (err: any) { toast.error(err.message || "Failed to verify") }
+        finally { setIsPending(false) }
+    }
+    async function handleConfirm(id: number) {
+        setIsPending(true)
+        try { await confirmOrder(id); toast.success("Order confirmed"); loadOrders() }
+        catch (err: any) { toast.error(err.message || "Failed to confirm") }
+        finally { setIsPending(false) }
+    }
+    async function showHistory(id: number) {
+        try {
+            const history = await getOrderHistory(id)
+            setHistoryData(history)
+            setHistoryOpen(true)
+        } catch { toast.error("Failed to load history") }
+    }
+
+>>>>>>> update-modules
     const filtered = orders.filter(o => {
         const matchesSearch = !filters.search ||
             o.ref_code?.toLowerCase().includes(filters.search.toLowerCase()) ||
@@ -178,7 +246,11 @@ export default function OrderHistoryPage() {
                                 <TableCell colSpan={7} className="text-center py-20 text-gray-400 italic">No transactions found matching filters</TableCell>
                             </TableRow>
                         ) : (
+<<<<<<< HEAD
                             filtered.map(order => (
+=======
+                            filtered.map((order: SalesOrder) => (
+>>>>>>> update-modules
                                 <TableRow key={order.id} className="group hover:bg-gray-50/50 transition-colors">
                                     <TableCell>
                                         <div className="font-bold text-gray-900">#{order.ref_code || order.id}</div>
@@ -195,7 +267,11 @@ export default function OrderHistoryPage() {
                                         </div>
                                     </TableCell>
                                     <TableCell>
+<<<<<<< HEAD
                                         <div className={`text-xs font-black uppercase tracking-widest ${TYPE_CONFIG[order.type ?? '']?.color || ''}`}>
+=======
+                                        <div className={`text-xs font-black uppercase tracking-widest ${TYPE_CONFIG[order.type || '']?.color || ''}`}>
+>>>>>>> update-modules
                                             {order.type}
                                         </div>
                                     </TableCell>
@@ -208,14 +284,28 @@ export default function OrderHistoryPage() {
                                         </div>
                                     </TableCell>
                                     <TableCell>
+<<<<<<< HEAD
                                         <Badge variant="outline" className={`text-[10px] font-bold uppercase tracking-tighter ${STATUS_CONFIG[order.status ?? '']?.color || ''}`}>
                                             {STATUS_CONFIG[order.status ?? '']?.label || order.status}
                                         </Badge>
+=======
+                                        <div className="flex flex-col gap-1">
+                                            <Badge variant="outline" className={`text-[10px] font-bold uppercase tracking-tighter ${STATUS_CONFIG[order.status || '']?.color || ''}`}>
+                                                {STATUS_CONFIG[order.status || '']?.label || order.status}
+                                            </Badge>
+                                            {order.lifecycle_status && order.lifecycle_status !== 'OPEN' && (
+                                                <Badge variant="outline" className={`gap-1 rounded-lg border ${LIFECYCLE_CONFIG[order.lifecycle_status]?.bg || 'bg-gray-50'} ${LIFECYCLE_CONFIG[order.lifecycle_status]?.color || 'text-gray-500'} font-bold text-[9px] uppercase`}>
+                                                    {order.lifecycle_status as string}
+                                                </Badge>
+                                            )}
+                                        </div>
+>>>>>>> update-modules
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className="font-black text-gray-900">{fmt(parseFloat(String(order.total_amount ?? 0)))}</div>
                                     </TableCell>
                                     <TableCell className="text-right">
+<<<<<<< HEAD
                                         <div className="flex items-center justify-end gap-2 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button
                                                 onClick={() => downloadInvoice(order.id, String(order.ref_code || order.id))}
@@ -232,6 +322,73 @@ export default function OrderHistoryPage() {
                                                 className="p-2 bg-gray-50 text-gray-400 rounded-lg hover:bg-gray-200 transition-all"
                                             >
                                                 <ChevronRight size={18} />
+=======
+                                        <div className="flex items-center justify-end gap-1 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
+                                            {/* Standard Actions */}
+                                            <button
+                                                onClick={() => downloadInvoice(order.id, String(order.ref_code || order.id))}
+                                                className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
+                                                title="Download Invoice PDF"
+                                            >
+                                                <FileText size={16} />
+                                            </button>
+
+                                            {/* Lifecycle Actions */}
+                                            {order.lifecycle_status === 'OPEN' && (
+                                                <button
+                                                    onClick={() => handleLock(order.id)}
+                                                    disabled={isPending}
+                                                    className="p-1.5 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-600 hover:text-white transition-all shadow-sm"
+                                                    title="Lock"
+                                                >
+                                                    <Lock size={16} />
+                                                </button>
+                                            )}
+                                            {order.lifecycle_status === 'LOCKED' && (
+                                                <>
+                                                    <button
+                                                        onClick={() => { setSelectedOrder(order); setCommentOpen(true) }}
+                                                        disabled={isPending}
+                                                        className="p-1.5 bg-gray-50 text-gray-500 rounded-lg hover:bg-gray-600 hover:text-white transition-all shadow-sm"
+                                                        title="Unlock"
+                                                    >
+                                                        <Unlock size={16} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleVerify(order.id)}
+                                                        disabled={isPending}
+                                                        className="p-1.5 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-600 hover:text-white transition-all shadow-sm"
+                                                        title="Verify"
+                                                    >
+                                                        <ShieldCheck size={16} />
+                                                    </button>
+                                                </>
+                                            )}
+                                            {order.lifecycle_status === 'VERIFIED' && (
+                                                <button
+                                                    onClick={() => handleConfirm(order.id)}
+                                                    disabled={isPending}
+                                                    className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+                                                    title="Confirm"
+                                                >
+                                                    <CheckCircle2 size={16} />
+                                                </button>
+                                            )}
+
+                                            <button
+                                                onClick={() => showHistory(order.id)}
+                                                className="p-1.5 bg-gray-50 text-gray-400 rounded-lg hover:bg-gray-200 transition-all"
+                                                title="Lifecycle History"
+                                            >
+                                                <HistoryIcon size={16} />
+                                            </button>
+
+                                            <Link
+                                                href={`/sales/${order.id}`}
+                                                className="p-1.5 bg-gray-50 text-gray-400 rounded-lg hover:bg-gray-200 transition-all"
+                                            >
+                                                <ChevronRight size={16} />
+>>>>>>> update-modules
                                             </Link>
                                         </div>
                                     </TableCell>
@@ -241,6 +398,47 @@ export default function OrderHistoryPage() {
                     </TableBody>
                 </Table>
             </Card>
+<<<<<<< HEAD
+=======
+
+            {/* ─── Unlock Comment Dialog ────────────────────────── */}
+            <Dialog open={commentOpen} onOpenChange={setCommentOpen}>
+                <DialogContent className="sm:max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2"><Unlock size={18} /> Unlock Order</DialogTitle>
+                        <DialogDescription>Provide a reason for unlocking this order.</DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={(e) => { e.preventDefault(); const fd = new FormData(e.currentTarget); handleUnlock(selectedOrder.id, fd.get('comment') as string) }} className="space-y-4">
+                        <Input name="comment" required placeholder="Reason for unlocking..." className="rounded-xl h-11" />
+                        <div className="flex justify-end gap-2">
+                            <button type="button" onClick={() => setCommentOpen(false)} className="h-10 px-4 border rounded-lg text-sm font-bold">Cancel</button>
+                            <button type="submit" disabled={isPending} className="h-10 px-4 bg-indigo-600 text-white rounded-lg text-sm font-bold disabled:opacity-50">Unlock</button>
+                        </div>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* ─── History Dialog ───────────────────────────────── */}
+            <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2"><HistoryIcon size={18} /> Lifecycle History</DialogTitle>
+                    </DialogHeader>
+                    <div className="max-h-80 overflow-y-auto space-y-2 mt-4">
+                        {historyData.length === 0 && <p className="text-center text-gray-400 py-4">No history records.</p>}
+                        {historyData.map((h, i) => (
+                            <div key={i} className="p-3 bg-gray-50 rounded-xl border border-gray-100">
+                                <p className="text-sm font-bold text-gray-800">{h.action}</p>
+                                {h.comment && <p className="text-xs text-gray-500 mt-1 italic">"{h.comment}"</p>}
+                                <p className="text-[10px] text-gray-400 mt-2 font-medium">
+                                    By {h.performed_by || 'Unknown'} on {new Date(h.performed_at).toLocaleString('fr-FR')}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                </DialogContent>
+            </Dialog>
+>>>>>>> update-modules
         </div>
     )
 }

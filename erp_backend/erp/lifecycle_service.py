@@ -20,13 +20,24 @@ class TransactionLifecycleService:
     DEFAULT_CONFIG = {
         'JOURNAL_ENTRY':    {'required_levels': 1, 'amount_threshold': 10000, 'threshold_levels': 2},
         'VOUCHER':          {'required_levels': 1, 'amount_threshold': 50000, 'threshold_levels': 3},
+<<<<<<< HEAD
         'SALES_INVOICE':    {'required_levels': 1, 'amount_threshold': None, 'threshold_levels': None},
         'PURCHASE_INVOICE': {'required_levels': 1, 'amount_threshold': None, 'threshold_levels': None},
+=======
+        'INVOICE':          {'required_levels': 1, 'amount_threshold': 25000, 'threshold_levels': 2},
+        'SALES_INVOICE':    {'required_levels': 1, 'amount_threshold': None, 'threshold_levels': None},
+        'PURCHASE_INVOICE': {'required_levels': 1, 'amount_threshold': None, 'threshold_levels': None},
+        'PAYMENT':          {'required_levels': 1, 'amount_threshold': 10000, 'threshold_levels': 2},
+>>>>>>> update-modules
         'PAYMENT_IN':       {'required_levels': 1, 'amount_threshold': None, 'threshold_levels': None},
         'PAYMENT_OUT':      {'required_levels': 1, 'amount_threshold': None, 'threshold_levels': None},
         'REFUND':           {'required_levels': 1, 'amount_threshold': None, 'threshold_levels': None},
         'STOCK_ADJUSTMENT': {'required_levels': 2, 'amount_threshold': None, 'threshold_levels': None},
         'STOCK_TRANSFER':   {'required_levels': 1, 'amount_threshold': None, 'threshold_levels': None},
+<<<<<<< HEAD
+=======
+        'POS_ORDER':        {'required_levels': 1, 'amount_threshold': None, 'threshold_levels': None},
+>>>>>>> update-modules
         'REGISTER_SESSION': {'required_levels': 1, 'amount_threshold': None, 'threshold_levels': None},
     }
 

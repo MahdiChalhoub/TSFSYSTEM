@@ -304,7 +304,11 @@ export default function ApprovalsPage() {
 
             <ConfirmDialog
                 open={rejectTarget !== null}
+<<<<<<< HEAD
                 onOpenChange={(open) => { if (!open) setRejectTarget(null) }}
+=======
+                onOpenChange={(open: boolean) => { if (!open) setRejectTarget(null) }}
+>>>>>>> update-modules
                 onConfirm={confirmReject}
                 title="Reject Registration?"
                 description="This will permanently reject this user registration. This action cannot be undone."

@@ -140,3 +140,48 @@ export async function deleteInvoiceLine(lineId: number | string) {
     revalidatePath('/finance/invoices')
     return result
 }
+<<<<<<< HEAD
+=======
+
+// ─── Lifecycle Actions ──────────────────────────────────────────
+
+export async function lockInvoice(id: number | string, comment?: string) {
+    const result = await erpFetch(`invoices/${id}/lock/`, {
+        method: 'POST',
+        body: JSON.stringify({ comment: comment || '' })
+    })
+    revalidatePath('/finance/invoices')
+    return result
+}
+
+export async function unlockInvoice(id: number | string, comment: string) {
+    const result = await erpFetch(`invoices/${id}/unlock/`, {
+        method: 'POST',
+        body: JSON.stringify({ comment })
+    })
+    revalidatePath('/finance/invoices')
+    return result
+}
+
+export async function verifyInvoice(id: number | string, comment?: string) {
+    const result = await erpFetch(`invoices/${id}/verify/`, {
+        method: 'POST',
+        body: JSON.stringify({ comment: comment || '' })
+    })
+    revalidatePath('/finance/invoices')
+    return result
+}
+
+export async function confirmInvoice(id: number | string, comment?: string) {
+    const result = await erpFetch(`invoices/${id}/confirm/`, {
+        method: 'POST',
+        body: JSON.stringify({ comment: comment || '' })
+    })
+    revalidatePath('/finance/invoices')
+    return result
+}
+
+export async function getInvoiceHistory(id: number | string) {
+    return await erpFetch(`invoices/${id}/lifecycle_history/`)
+}
+>>>>>>> update-modules

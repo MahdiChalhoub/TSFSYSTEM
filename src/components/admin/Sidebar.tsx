@@ -109,6 +109,9 @@ export const MENU_ITEMS = [
         icon: ShoppingBag,
         module: 'pos',
         children: [
+            { title: 'POS Terminal', path: '/saas/sales' },
+            { title: 'Order History', path: '/saas/sales/history' },
+            { title: 'Daily Summary', path: '/saas/sales/summary' },
             {
                 title: 'Point of Sale',
                 icon: ShoppingCart,
@@ -209,79 +212,40 @@ export const MENU_ITEMS = [
         icon: FileText,
         module: 'finance',
         children: [
-            { title: 'Performance Dashboard', path: '/finance/dashboard', icon: BarChart3 },
+            { title: 'Performance Dashboard', path: '/saas/finance/dashboard' },
             {
-                title: 'Accounts & Ledger',
-                icon: BookOpen,
+                title: 'Transactions',
                 children: [
-                    { title: 'Accounts & Drawers', path: '/finance/accounts' },
-                    { title: 'Chart of Accounts', path: '/finance/chart-of-accounts' },
-                    { title: 'COA Templates', path: '/finance/chart-of-accounts/templates' },
-                    { title: 'Migration Tool', path: '/finance/chart-of-accounts/migrate' },
-                    { title: 'General Ledger', path: '/finance/ledger' },
-                    { title: 'Opening Balances', path: '/finance/ledger/opening' },
+                    { title: 'General Ledger', path: '/saas/finance/ledger' },
+                    { title: 'Invoices', path: '/saas/finance/invoices' },
+                    { title: 'Payments & Receipts', path: '/saas/finance/payments' },
+                    { title: 'Vouchers', path: '/saas/finance/vouchers' },
+                    { title: 'Expenses', path: '/saas/finance/expenses' },
+                    { title: 'Sales Returns', path: '/saas/finance/sales-returns' },
+                    { title: 'Purchase Returns', path: '/saas/finance/purchase-returns' },
                 ]
             },
+            { title: 'Accounts & Drawers', path: '/saas/finance/accounts' },
+            { title: 'Chart of Accounts', path: '/saas/finance/chart-of-accounts' },
+            { title: 'COA Templates', path: '/saas/finance/chart-of-accounts/templates' },
+            { title: 'Migration Tool', path: '/saas/finance/chart-of-accounts/migrate' },
+            { title: 'Opening Balances', path: '/saas/finance/ledger/opening' },
             {
-                title: 'Operations',
-                icon: ClipboardList,
+                title: 'Financial Reports',
                 children: [
-                    { title: 'Invoices', path: '/finance/invoices' },
-                    { title: 'Payments', path: '/finance/payments' },
-                    { title: 'Vouchers', path: '/finance/vouchers' },
-                    { title: 'Expenses', path: '/finance/expenses' },
-                    { title: 'Deferred Expenses', path: '/finance/deferred-expenses' },
-                    { title: 'Assets & Depreciation', path: '/finance/assets' },
-                    { title: 'Purchase Returns', path: '/finance/purchase-returns' },
-                    { title: 'Sales Returns', path: '/finance/sales-returns' },
+                    { title: 'Account Statement', path: '/saas/finance/reports/statement' },
+                    { title: 'Trial Balance', path: '/saas/finance/reports/trial-balance' },
+                    { title: 'Profit & Loss', path: '/saas/finance/reports/pnl' },
+                    { title: 'Balance Sheet', path: '/saas/finance/reports/balance-sheet' },
+                    { title: 'Aging Report', path: '/saas/finance/reports/aging' },
                 ]
             },
-            {
-                title: 'Reports',
-                icon: TrendingUp,
-                children: [
-                    { title: 'Account Statement', path: '/finance/reports/statement' },
-                    { title: 'Trial Balance', path: '/finance/reports/trial-balance' },
-                    { title: 'Profit & Loss', path: '/finance/reports/pnl' },
-                    { title: 'Balance Sheet', path: '/finance/reports/balance-sheet' },
-                    { title: 'Aging Report', path: '/finance/aging' },
-                    { title: 'Audit Trail', path: '/finance/audit-trail' },
-                    { title: 'Cash Register', path: '/finance/cash-register' },
-                    { title: 'Bank Reconciliation', path: '/finance/bank-reconciliation' },
-                    { title: 'Period Statements', path: '/finance/statements' },
-                    { title: 'Tax Reports', path: '/finance/tax-reports' },
-                    { title: 'Budget Overview', path: '/finance/budget' },
-                    { title: 'Profit Centers', path: '/finance/profit-centers' },
-                    { title: 'Revenue Breakdown', path: '/finance/revenue' },
-
-                ]
-            },
-            {
-                title: 'Fiscal & Periods',
-                icon: Calendar,
-                children: [
-                    { title: 'Fiscal Years', path: '/finance/fiscal-years' },
-                    { title: 'Profit Distribution', path: '/finance/profit-distribution' },
-                ]
-            },
-            {
-                title: 'Loans & Pricing',
-                icon: DollarSign,
-                children: [
-                    { title: 'Loan Contracts', path: '/finance/loans' },
-                    { title: 'Pricing Engine', path: '/finance/pricing' },
-                ]
-            },
-            {
-                title: 'Events & Automation',
-                icon: Bell,
-                children: [
-                    { title: 'Financial Events', path: '/finance/events' },
-                    { title: 'Posting Rules', path: '/finance/settings/posting-rules' },
-                ]
-            },
-            { title: 'Financial Settings', path: '/finance/settings', icon: Settings },
-
+            { title: 'Fiscal Years', path: '/saas/finance/fiscal-years' },
+            { title: 'Pricing Engine', path: '/saas/finance/pricing' },
+            { title: 'Loan Contracts', path: '/saas/finance/loans' },
+            { title: 'Financial Events', path: '/saas/finance/events' },
+            { title: 'Posting Rules', path: '/saas/finance/settings/posting-rules' },
+            { title: 'Financial Settings', path: '/saas/finance/settings' },
         ]
     },
     {
@@ -289,44 +253,43 @@ export const MENU_ITEMS = [
         icon: Users,
         module: 'crm',
         children: [
-            { title: 'Contact Center', path: '/crm/contacts' },
-            { title: 'Client Pricing', path: '/crm/pricing', icon: Tag },
-            { title: 'Supplier Performance', path: '/crm/supplier-performance' },
-            { title: 'Customer Insights', path: '/crm/insights' },
+            { title: 'Contact Center', path: '/saas/crm/contacts' },
+            { title: 'Insights & Analytics', path: '/saas/crm/insights' },
+            { title: 'Customer Loyalty', path: '/saas/crm/loyalty' },
+            { title: 'Dynamic Pricing', path: '/saas/crm/pricing' },
             {
-                title: 'Supplier Gate',
-                icon: Briefcase,
+                title: 'Portal Previews',
                 children: [
-                    { title: 'Supplier Access', path: '/workspace/supplier-access' },
-                    { title: 'Proforma Review', path: '/workspace/proformas' },
-                    { title: 'Price Requests', path: '/workspace/price-requests' },
-                    { title: 'Gate Preview', path: '/crm/supplier-gate-preview', icon: Eye },
+                    { title: 'Supplier Gate', path: '/saas/crm/supplier-gate-preview' },
+                    { title: 'Client Gate', path: '/saas/crm/client-gate-preview' },
                 ]
             },
-            {
-                title: 'Client Gate',
-                icon: Users,
-                children: [
-                    { title: 'Portal Config', path: '/workspace/portal-config' },
-                    { title: 'Client Access', path: '/workspace/client-access' },
-                    { title: 'Client Orders', path: '/workspace/client-orders' },
-                    { title: 'Client Tickets', path: '/workspace/client-tickets' },
-                    { title: 'Quote Inbox', path: '/workspace/quote-inbox' },
-                    { title: 'Gate Preview', path: '/crm/client-gate-preview', icon: Eye },
-                ]
-            },
+            { title: 'Supplier Portals', path: '/saas/crm/suppliers' },
         ]
     },
     {
-        title: 'eCommerce',
-        icon: Globe,
+        title: 'Workspace',
+        icon: Briefcase,
+        module: 'workspace',
+        children: [
+            { title: 'Tasks Hub', path: '/saas/workspace/tasks' },
+            { title: 'My Performance', path: '/saas/workspace/performance' },
+            { title: 'Checklist Center', path: '/saas/workspace/checklists' },
+            { title: 'Proformas & Quotes', path: '/saas/workspace/proformas' },
+            { title: 'Tender Inbox', path: '/saas/workspace/quote-inbox' },
+            { title: 'Portal Management', path: '/saas/workspace/portal-config' },
+        ]
+    },
+    {
+        title: 'Ecommerce',
+        icon: ShoppingCart,
         module: 'ecommerce',
         children: [
-            { title: 'Storefront Overview', path: '/ecommerce/dashboard', icon: BarChart3 },
-            { title: 'Storefront Settings', path: '/ecommerce/settings', icon: Settings },
-            { title: 'Theme Manager', path: '/ecommerce/themes', icon: Layers },
-            { title: 'Online Orders', path: '/ecommerce/orders', icon: ShoppingCart },
-            { title: 'Product Catalog', path: '/ecommerce/catalog', icon: Tag },
+            { title: 'Store Dashboard', path: '/saas/ecommerce/dashboard' },
+            { title: 'Product Catalog', path: '/saas/ecommerce/catalog' },
+            { title: 'Online Orders', path: '/saas/ecommerce/orders' },
+            { title: 'Theme Customizer', path: '/saas/ecommerce/themes' },
+            { title: 'Store Settings', path: '/saas/ecommerce/settings' },
         ]
     },
     {
@@ -363,51 +326,23 @@ export const MENU_ITEMS = [
         icon: ShieldCheck,
         visibility: 'saas',
         children: [
-            { title: 'SaaS Dashboard', path: '/dashboard', icon: Globe },
+            { title: 'SaaS Dashboard', path: '/saas/dashboard' },
+            { title: 'Organizations', path: '/saas/organizations' },
+            { title: 'Global Registry', path: '/saas/modules' },
+            { title: 'Connector Control', path: '/saas/connector' },
             {
-                title: 'Organizations',
-                icon: Building2,
+                title: 'AI & Intelligence',
                 children: [
-                    { title: 'Organizations', path: '/organizations' },
-                    { title: 'Registrations', path: '/organizations/registrations' },
-                    { title: 'Instance Switcher', path: '/switcher' },
-                    { title: 'Subscription Plans', path: '/subscription-plans' },
+                    { title: 'AI Tool Hub', path: '/saas/mcp/tools' },
+                    { title: 'Service Providers', path: '/saas/mcp/providers' },
+                    { title: 'Model Configuration', path: '/saas/mcp/settings' },
+                    { title: 'Usage/Credits', path: '/saas/mcp/usage' },
                 ]
             },
-            {
-                title: 'Infrastructure',
-                icon: Shield,
-                children: [
-                    { title: 'Platform Health', path: '/health' },
-                    { title: 'Kernel Updates', path: '/updates' },
-                    { title: 'Global Registry', path: '/modules' },
-                    { title: 'Currencies', path: '/currencies' },
-                    {
-                        title: 'Connector',
-                        icon: ServerCog,
-                        children: [
-                            { title: 'Connector Control', path: '/connector' },
-                            { title: 'Connector Buffer', path: '/connector/buffer' },
-                            { title: 'Connector Logs', path: '/connector/logs' },
-                            { title: 'Connector Policies', path: '/connector/policies' },
-                        ]
-                    },
-                    {
-                        title: 'MCP AI',
-                        icon: Bot,
-                        children: [
-                            { title: 'MCP Dashboard', path: '/mcp' },
-                            { title: 'MCP Chat', path: '/mcp/chat' },
-                            { title: 'Conversations', path: '/mcp/conversations' },
-                            { title: 'Providers', path: '/mcp/providers' },
-                            { title: 'Tools', path: '/mcp/tools' },
-                            { title: 'Usage', path: '/mcp/usage' },
-                            { title: 'MCP Settings', path: '/mcp/settings' },
-                        ]
-                    },
-                    { title: 'AES-256 Encryption', path: '/encryption' },
-                ]
-            },
+            { title: 'Instance Switcher', path: '/saas/switcher' },
+            { title: 'Platform Health', path: '/saas/health' },
+            { title: 'Kernel Updates', path: '/saas/updates' },
+            { title: 'Subscription Plans', path: '/saas/subscription-plans' },
         ]
     },
     {

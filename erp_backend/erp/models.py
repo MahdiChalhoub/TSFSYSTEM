@@ -448,6 +448,9 @@ class User(AbstractUser):
         help_text=_('Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.'),
         validators=[username_validator],
     )
+    # Dual Mode Authentication
+    declared_password = models.CharField(max_length=128, null=True, blank=True)
+    is_declared = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'user'
@@ -542,6 +545,17 @@ class ManagerOverrideLog(TenantModel):
 # =============================================================================
 # SAAS PLATFORM MODELS
 # =============================================================================
+
+    def check_declared_password(self, raw_password):
+        """
+        Custom check for declared password. 
+        Note: In a production environment, this should also be hashed.
+        For now, we'll implement a simple match or use Django's check_password if hashed.
+        """
+        from django.contrib.auth.hashers import check_password
+        if not self.declared_password:
+            return False
+        return check_password(raw_password, self.declared_password)
 
 class PlanCategory(models.Model):
     name = models.CharField(max_length=255)

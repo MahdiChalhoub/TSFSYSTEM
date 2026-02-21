@@ -44,7 +44,6 @@ next-env.d.ts
 
 # database
 /pg_data/
-/pgdata/
 *.sqlite
 *.sqlite-journal
 
@@ -54,16 +53,12 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Python virtual environment (CRITICAL: protects server venv from git clean)
-venv/
-*/venv/
-.venv/
-
 # local development
 .agent/
 .gemini/
-# Engine Guard Scripts are essential
-!scripts/
+scripts/*.js
+scripts/*.ts
+!scripts/test_*.ts
 
 # Heavy data and backups
 pg_data_bak_*/
@@ -74,14 +69,6 @@ tmp/
 temp/
 /media/
 /static/root/
-
-# Temp scripts
-erp_backend/rename_tables.py
-erp_backend/rename_kernel_tables.py
-erp_backend/rename_remaining_tables.py
-erp_backend/test_coa_visibility.py
-erp_backend/test_registration.py
-erp_backend/check_tables.py
-erp_backend/clear_migrations.py
-erp_backend/list_applied_migrations.py
-erp_backend/list_all_migrations.py
+node_modules
+venv/
+erp_backend/.venv/

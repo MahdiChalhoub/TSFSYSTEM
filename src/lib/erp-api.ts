@@ -21,6 +21,16 @@ export class ErpApiError extends Error {
     }
 }
 
+export class ErpApiError extends Error {
+    status: number;
+    data: any;
+    constructor(status: number, data: any) {
+        super(`ERP API Error ${status}`);
+        this.status = status;
+        this.data = data;
+    }
+}
+
 export async function getTenantContext() {
     let host = '';
 

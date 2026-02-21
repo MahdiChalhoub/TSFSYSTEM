@@ -271,7 +271,11 @@ export default function DeliveryZonesPage() {
 
             <ConfirmDialog
                 open={deleteTarget !== null}
+<<<<<<< HEAD
                 onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
+=======
+                onOpenChange={(open: boolean) => { if (!open) setDeleteTarget(null) }}
+>>>>>>> update-modules
                 onConfirm={handleDelete}
                 title="Delete Delivery Zone?"
                 description="This will permanently remove this delivery zone."

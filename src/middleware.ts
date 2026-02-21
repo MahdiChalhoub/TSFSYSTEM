@@ -24,95 +24,23 @@ export default async function middleware(req: NextRequest) {
         return NextResponse.next();
     }
 
-    // ─── HTTPS ENFORCEMENT (Security) ───
-    // Force HTTPS on ALL non-static routes in production.
-    // Cloudflare sets x-forwarded-proto; if it's "http", redirect to https.
-    // Skip for localhost/dev environments.
-    const proto = req.headers.get('x-forwarded-proto') || 'https';
-    const host = req.headers.get('host') || '';
-    const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
-
-    if (proto === 'http' && !isLocal) {
-        const httpsUrl = new URL(req.url);
-        httpsUrl.protocol = 'https:';
-        return NextResponse.redirect(httpsUrl, 301);
-    }
-
-    // ─── AUTH REDIRECT (Security) ───
-    // Redirect unauthenticated users away from privileged routes.
-    // This prevents layout shells from rendering for unauthenticated visitors.
-    const isAuthRoute = url.pathname.startsWith('/login') || url.pathname.startsWith('/register');
-    const isPortalRoute = url.pathname.startsWith('/tenant') || url.pathname.startsWith('/supplier-portal');
-    const isStorefrontAlias = url.pathname === '/store' || url.pathname === '/home';
-    const isPublicRoute = url.pathname === '/' || url.pathname.startsWith('/landing') || isAuthRoute || isPortalRoute || isStorefrontAlias;
-    const authToken = req.cookies.get('auth_token')?.value;
-    const hasAuthToken = !!authToken && authToken !== '';
-
-    if (!hasAuthToken && !isPublicRoute && !url.pathname.startsWith('/saas/login')) {
-        const loginUrl = new URL('/login', req.url);
-        loginUrl.searchParams.set('error', 'session_expired');
-        return NextResponse.redirect(loginUrl);
-    }
-
-    // ─── TOKEN VALIDATION (Security Hardening) ───
-    // For privileged SaaS admin routes, validate the token against the backend.
-    // If the token is expired/invalid, redirect to login immediately instead of
-    // rendering pages with empty data (which hides auth failures from users).
-    const isSaaSAdminRoute = url.pathname.startsWith('/modules')
-        || url.pathname.startsWith('/organizations')
-        || url.pathname.startsWith('/saas-home')
-        || url.pathname.startsWith('/saas/')
-        || url.pathname === '/saas';
-
-    if (hasAuthToken && isSaaSAdminRoute) {
-        try {
-            const djangoUrl = process.env.DJANGO_URL || 'http://127.0.0.1:8000';
-            const validateRes = await fetch(`${djangoUrl}/api/auth/me/`, {
-                headers: { 'Authorization': `Token ${authToken}` },
-                signal: AbortSignal.timeout(3000), // 3s timeout to avoid blocking
-            });
-            if (validateRes.status === 401 || validateRes.status === 403) {
-                // Token is expired or invalid — clear it and redirect
-                const loginUrl = new URL('/saas/login', req.url);
-                loginUrl.searchParams.set('error', 'session_expired');
-                const response = NextResponse.redirect(loginUrl);
-                response.cookies.delete('auth_token');
-                return response;
-            }
-        } catch {
-            // Backend unreachable — let the layout handle it with "Reconnecting" screen
-        }
-    }
-
     // IP Address or Localhost handling for Root
-    const isLocalhost = hostname.endsWith("localhost") || hostname.includes("127.0.0.1") || hostname.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/);
+    const isLocalhost = hostname.includes("localhost") || hostname.includes("127.0.0.1") || hostname.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/);
     const isVercel = hostname.includes("vercel.app"); // Fallback for previews
-    const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost";
+    const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "";
     const isRootDomain = hostname === rootDomain || hostname === `www.${rootDomain}`;
-    // Enhanced Localhost Subdomain detection
-    const isSaaSSubdomain = hostname === `saas.${rootDomain}` || (hostname.startsWith("saas.") && hostname.includes("localhost"));
+    const isSaaSSubdomain = hostname === `saas.${rootDomain}`;
 
     // ROOT / SAAS PLATFORM LOGIC
     if (isLocalhost || isVercel || isRootDomain || isSaaSSubdomain) {
 
+        // If on saas. domain, everything is an admin/saas route
+        // If on saas. domain, everything is an admin/saas route
         if (isSaaSSubdomain) {
-            // 1. Redirect legacy /saas/xxx to /xxx (Clean URL enforcement)
-            if (url.pathname.startsWith('/saas')) {
-                const cleanPath = url.pathname.replace('/saas', '') || '/';
-                return NextResponse.redirect(new URL(`${cleanPath}${searchParams ? '?' + searchParams : ''}`, req.url));
+            // Standard paths go to /saas/...
+            if (!url.pathname.startsWith('/admin') && !url.pathname.startsWith('/saas') && !url.pathname.startsWith('/login')) {
+                return NextResponse.rewrite(new URL(`/saas${path}`, req.url));
             }
-
-            // 2. Redirect root / to /dashboard for SaaS subdomain
-            if (url.pathname === '/') {
-                return NextResponse.redirect(new URL(`/dashboard${searchParams ? '?' + searchParams : ''}`, req.url));
-            }
-
-            // 3. Rewrite /dashboard to SaaS-specific dashboard on SaaS subdomain
-            if (url.pathname === '/dashboard') {
-                return NextResponse.rewrite(new URL(`/saas-home${searchParams ? '?' + searchParams : ''}`, req.url));
-            }
-
-            return NextResponse.next();
         }
 
         // Special case: /saas is the Master Panel on root/IP
@@ -125,20 +53,7 @@ export default async function middleware(req: NextRequest) {
         const isAppRoute = url.pathname.startsWith('/login')
             || url.pathname.startsWith('/register')
             || url.pathname.startsWith('/admin')
-            || url.pathname.startsWith('/dashboard')
-            || url.pathname.startsWith('/organizations')
-            || url.pathname.startsWith('/modules')
-            || url.pathname.startsWith('/sales')
-            || url.pathname.startsWith('/products')
-            || url.pathname.startsWith('/inventory')
-            || url.pathname.startsWith('/finance')
-            || url.pathname.startsWith('/purchases')
-            || url.pathname.startsWith('/hr')
-            || url.pathname.startsWith('/settings')
-            || url.pathname.startsWith('/pos')
-            || url.pathname.startsWith('/crm')
-            || url.pathname.startsWith('/saas')
-            || url.pathname.startsWith('/tsf-system-kernel-7788');
+            || url.pathname.startsWith('/saas');
 
         if (isAppRoute) {
             return NextResponse.next();
@@ -147,7 +62,8 @@ export default async function middleware(req: NextRequest) {
         return NextResponse.rewrite(new URL(`/landing${path === "/" ? "" : path}`, req.url));
     }
 
-    // TENANT SUBDOMAIN (e.g. pos.tsf.ci)
+    // TENANT SUBDOMAIN (e.g. demo.tsfcloud.com)
+    // Rewrite to /tenant/[slug]
     const currentHost = hostname.replace(`.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}`, "");
 
     // Check for reserved subdomains just in case
@@ -155,18 +71,9 @@ export default async function middleware(req: NextRequest) {
         return NextResponse.rewrite(new URL(`/landing${path === "/" ? "" : path}`, req.url));
     }
 
-    // On tenant subdomains, rewrite storefront routes to the tenant page.
-    // "/", "/store", "/home" all map to the storefront.
-    // All other routes (sales, dashboard, finance, etc.) pass through to the
-    // regular app routes — the tenant context is established via cookies/headers.
-    if (url.pathname === '/' || url.pathname === '/store' || url.pathname === '/home') {
-        return NextResponse.rewrite(
-            new URL(`/tenant/${currentHost}${searchParams.length > 0 ? '?' + searchParams : ''}`, req.url)
-        );
-    }
-
-    // Let all app routes work normally on tenant subdomains
-    return NextResponse.next();
+    return NextResponse.rewrite(
+        new URL(`/tenant/${currentHost}${path}`, req.url)
+    );
 }
 
 export const config = {

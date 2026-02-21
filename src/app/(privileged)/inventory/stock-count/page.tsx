@@ -260,7 +260,11 @@ export default function StockCountPage() {
 
             <ConfirmDialog
                 open={deleteTarget !== null}
+<<<<<<< HEAD
                 onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
+=======
+                onOpenChange={(open: boolean) => { if (!open) setDeleteTarget(null) }}
+>>>>>>> update-modules
                 onConfirm={handleDelete}
                 title="Delete Session?"
                 description="This will permanently delete this counting session. This cannot be undone."

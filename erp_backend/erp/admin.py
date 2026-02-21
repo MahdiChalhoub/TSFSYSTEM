@@ -2,23 +2,12 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import (
     User, Organization, Site, Role, Permission,
+    TransactionSequence, 
     PlanCategory, SubscriptionPlan, SubscriptionPayment
 )
 
-# TransactionSequence lives in the finance module which may not be installed
-try:
-    from .models import TransactionSequence
-    _has_transaction_sequence = True
-except ImportError:
-    _has_transaction_sequence = False
-
-# User — show organization for tenant isolation visibility
-class TenantUserAdmin(UserAdmin):
-    list_display = ('username', 'email', 'first_name', 'last_name', 'organization', 'is_staff', 'is_superuser', 'is_active')
-    list_filter = ('organization', 'is_staff', 'is_superuser', 'is_active')
-    search_fields = ('username', 'email', 'first_name', 'last_name')
-
-admin.site.register(User, TenantUserAdmin)
+# User
+admin.site.register(User, UserAdmin)
 
 # Core / Tenants
 @admin.register(Organization)
@@ -41,11 +30,10 @@ class PermissionAdmin(admin.ModelAdmin):
     list_display = ('code', 'name')
     search_fields = ('code', 'name')
 
-if _has_transaction_sequence:
-    @admin.register(TransactionSequence)
-    class TransactionSequenceAdmin(admin.ModelAdmin):
-        list_display = ('type', 'prefix', 'next_number', 'organization')
-        list_filter = ('organization', 'type')
+@admin.register(TransactionSequence)
+class TransactionSequenceAdmin(admin.ModelAdmin):
+    list_display = ('type', 'prefix', 'next_number', 'organization')
+    list_filter = ('organization', 'type')
 
 # Subscription
 @admin.register(PlanCategory)
