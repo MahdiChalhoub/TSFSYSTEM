@@ -45,7 +45,7 @@ export default async function middleware(req: NextRequest) {
     const isPortalRoute = url.pathname.startsWith('/tenant') || url.pathname.startsWith('/supplier-portal');
     const isStorefrontAlias = url.pathname === '/store' || url.pathname === '/home';
     const isPublicRoute = url.pathname === '/' || url.pathname.startsWith('/landing') || isAuthRoute || isPortalRoute || isStorefrontAlias;
-    const hasAuthToken = req.cookies.has('auth_token');
+    const hasAuthToken = req.cookies.get('auth_token')?.value && req.cookies.get('auth_token')?.value !== '';
 
     if (!hasAuthToken && !isPublicRoute && !url.pathname.startsWith('/saas/login')) {
         const loginUrl = new URL('/login', req.url);

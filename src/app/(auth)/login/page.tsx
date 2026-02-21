@@ -37,6 +37,17 @@ function LoginContent() {
             } else {
                 if (parts.length > 2) setSubdomain(parts[0]);
             }
+
+            // --- Already logged in check ---
+            // If the user has a valid session, send them straight to the dashboard.
+            // This prevents the "I see the login form but I'm actually logged in" state.
+            import("@/app/actions/auth").then(({ meAction }) => {
+                meAction().then((user: any) => {
+                    if (user && user.id) {
+                        window.location.href = "/dashboard";
+                    }
+                }).catch(() => { /* No session, stay on login */ });
+            });
         }
     }, []);
 

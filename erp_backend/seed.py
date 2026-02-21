@@ -293,6 +293,24 @@ def run_seed():
         )
     print(f"📦 Seeded {len(core_modules)} core modules to Global Registry")
 
+    # ── Finance Account Type Permissions ──────────────────────────────
+    Permission = get_model('Permission')
+    account_perms = [
+        ('finance.account.cash', 'Access Cash Drawers'),
+        ('finance.account.bank', 'Access Bank Accounts'),
+        ('finance.account.mobile', 'Access Mobile Wallets'),
+        ('finance.account.petty_cash', 'Access Petty Cash'),
+        ('finance.account.savings', 'Access Savings Accounts'),
+        ('finance.account.foreign', 'Access Foreign Currency'),
+        ('finance.account.escrow', 'Access Escrow Accounts'),
+        ('finance.account.investment', 'Access Investment Accounts'),
+        ('finance.account.all', 'Access All Account Types'),
+        ('finance.account.manage', 'Create/Delete Accounts'),
+    ]
+    for code, name in account_perms:
+        Permission.objects.get_or_create(code=code, defaults={'name': name})
+    print(f"🔐 Seeded {len(account_perms)} finance account permissions")
+
     print("✅ Seed Complete!")
 
 if __name__ == '__main__':
