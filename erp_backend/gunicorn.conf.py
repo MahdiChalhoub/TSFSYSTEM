@@ -42,8 +42,8 @@ max_requests_jitter = 50  # Stagger restarts to avoid thundering herd
 preload_app = True
 
 # ── Logging ───────────────────────────────────────────────────────────────────
-accesslog = "/var/log/tsf-backend-access.log"
-errorlog = "/var/log/tsf-backend-error.log"
+accesslog = "-"
+errorlog = "-"
 loglevel = "info"
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(D)s'
 

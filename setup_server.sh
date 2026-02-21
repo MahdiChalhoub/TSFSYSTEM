@@ -8,13 +8,14 @@ echo "==========================================="
 echo "   TSF ERP - Server Setup & Deployment"
 echo "==========================================="
 
-# 1. Update Codebase (With Auto-Auth)
+# 1. Update Codebase
 echo ""
-echo "⬇️  Pulling latest code from engine-stable..."
+echo "⬇️  Pulling latest code..."
 
-# Configure Git to use the token for this session (locally scoped)
-# We embed the token in the origin URL just for this operation to guarantee access
-git remote set-url origin https://Chalhoub1995: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@github.com/MahdiChalhoub/TSFSYSTEM.git
+# In production, set GITHUB_TOKEN environment variable
+if [ -n "$GITHUB_TOKEN" ]; then
+    git remote set-url origin "https://${GITHUB_TOKEN}@github.com/MahdiChalhoub/TSFSYSTEM.git"
+fi
 
 git fetch origin engine-stable
 git reset --hard origin/engine-stable
@@ -83,4 +84,5 @@ echo ""
 echo "==========================================="
 echo "   DEPLOYMENT FINISHED"
 echo "==========================================="
-echo "Access your panel: http://91.99.186.183:3000/saas/login"
+SERVER_IP=$(hostname -I | awk '{print $1}')
+echo "Access your panel: http://${SERVER_IP}:3000/saas/login"

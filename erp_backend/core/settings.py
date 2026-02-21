@@ -25,21 +25,14 @@ load_dotenv(BASE_DIR / '.env')
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-_INSECURE_KEY = 'django-insecure-)0h!pr&=2%m5q1__kj=t)7z=r8q3v(&c8+^ctx3o!!s#(1fkx)'
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY') or os.getenv('SECRET_KEY', '')
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DJANGO_DEBUG', 'False').lower() in ('true', '1')
-
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 if not SECRET_KEY:
     if DEBUG:
-        SECRET_KEY = _INSECURE_KEY  # Only in dev
+        SECRET_KEY = 'django-insecure-dev-only-fallback'
     else:
-        import warnings
-        warnings.warn('DJANGO_SECRET_KEY not set! Using insecure fallback. SET THIS IN PRODUCTION!', RuntimeWarning)
-        SECRET_KEY = _INSECURE_KEY
+        raise ValueError("DJANGO_SECRET_KEY environment variable is required in production!")
 
-ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '.tsf.ci,localhost,127.0.0.1,91.99.186.183').split(',')
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 
 # Application definition
@@ -120,9 +113,8 @@ TOKEN_TTL_HOURS = int(os.getenv('TOKEN_TTL_HOURS', '24'))
 
 # SaaS Admin IP Whitelisting
 # Empty list = allow all IPs (open mode)
-# Add IPs to restrict /api/saas/ endpoints:
-# SAAS_ADMIN_IP_WHITELIST = ['127.0.0.1', '91.99.186.183']
-SAAS_ADMIN_IP_WHITELIST = []
+# Add IPs to restrict /api/saas/ endpoints via SAAS_IP_WHITELIST env
+SAAS_ADMIN_IP_WHITELIST = os.getenv('SAAS_IP_WHITELIST', '').split(',') if os.getenv('SAAS_IP_WHITELIST') else []
 
 ROOT_URLCONF = 'core.urls'
 
@@ -152,8 +144,8 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.getenv('DB_NAME', 'tsf_db'),
         'USER': os.getenv('DB_USER', 'postgres'),
-        'PASSWORD': os.getenv('DB_PASSWORD', 'password'),
-        'HOST': os.getenv('DB_HOST', '127.0.0.1'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST', 'db'),
         'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
@@ -260,8 +252,8 @@ STORAGE_MAX_FILE_SIZE_MB = int(os.getenv('STORAGE_MAX_FILE_SIZE_MB', '50'))
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ── Celery / Redis Configuration ──────────────────────────────
-CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://127.0.0.1:6379/0')
-CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://127.0.0.1:6379/1')
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://redis:6379/0')
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://redis:6379/1')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
