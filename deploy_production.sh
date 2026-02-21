@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # deploy_production.sh
-# The everything-in-one automation script for TSF ERP.
+# One-command deployment for TSF ERP.
 
 set -e
 
-echo "🚀 Starting Ultra-Automation Deployment..."
+echo "🚀 Starting Production Deployment..."
 
 # 1. Environment Generation
 if [ ! -f ".env" ]; then
@@ -20,21 +20,34 @@ fi
 echo "📦 Building architecture and initializing database..."
 chmod +x setup_server.sh
 ./setup_server.sh <<EOF
-y
+n
 EOF
 
 # 3. Health Check
 echo "🔍 Running final health check..."
-# Give it a moment to finish starting
-sleep 15
+sleep 10
 
-if docker ps | grep -q "tsf_backend" && docker ps | grep -q "tsf_frontend"; then
+SERVICES=("tsf_backend" "tsf_frontend" "tsf_db" "tsf_redis" "tsf_gateway")
+FAILED=0
+
+for svc in "${SERVICES[@]}"; do
+    if docker ps --format '{{.Names}}' | grep -q "$svc"; then
+        echo "  ✅ $svc is running"
+    else
+        echo "  ❌ $svc is NOT running"
+        FAILED=1
+    fi
+done
+
+if [ $FAILED -eq 0 ]; then
+    echo ""
     echo "✅ DEPLOYMENT SUCCESSFUL!"
     SERVER_IP=$(hostname -I | awk '{print $1}')
     echo "==========================================="
-    echo "Access your system: http://${SERVER_IP}:80"
+    echo "Access your system: http://${SERVER_IP}"
     echo "==========================================="
 else
-    echo "❌ Deployment failed. Check 'docker ps' for running containers."
+    echo ""
+    echo "⚠️  Some services failed to start. Check: docker ps -a"
     exit 1
 fi
