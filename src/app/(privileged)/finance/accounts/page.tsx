@@ -5,7 +5,7 @@ import type { ChartOfAccount } from '@/types/erp'
 import { getFinancialAccounts, deleteFinancialAccount, assignUserToAccount, unassignUser } from "./actions"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Plus, Trash2, Wallet, User as UserIcon, Building, Smartphone, Link as LinkIcon, AlertCircle } from "lucide-react"
+import { Plus, Trash2, Wallet, User as UserIcon, Building, Smartphone, Link as LinkIcon, AlertCircle, BookOpen, BarChart3 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
@@ -110,6 +110,14 @@ function AccountCard({ account, onDelete, onRefresh }: { account: Record<string,
     const Icon = icon[account.type] || Wallet
     const [unassignTarget, setUnassignTarget] = useState<{ userId: number; name: string } | null>(null)
 
+    // Format balance
+    const balance = parseFloat(account.balance || 0)
+    const formattedBalance = new Intl.NumberFormat('en-US', {
+        style: 'decimal',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    }).format(balance)
+
     return (
         <Card className="relative group">
             <CardHeader className="pb-2">
@@ -120,7 +128,7 @@ function AccountCard({ account, onDelete, onRefresh }: { account: Record<string,
                         </div>
                         <div>
                             <CardTitle className="text-lg">{account.name}</CardTitle>
-                            <CardDescription>{account.currency}</CardDescription>
+                            <CardDescription>{account.type} · {account.currency}</CardDescription>
                         </div>
                     </div>
                     <Button variant="ghost" size="icon" className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" onClick={onDelete}>
@@ -130,13 +138,21 @@ function AccountCard({ account, onDelete, onRefresh }: { account: Record<string,
             </CardHeader>
             <CardContent className="space-y-4">
 
+                {/* Balance Display */}
+                <div className="p-3 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 border">
+                    <p className="text-xs text-muted-foreground uppercase font-semibold mb-1">Balance</p>
+                    <p className={`text-xl font-bold tabular-nums ${balance >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+                        {account.currency} {formattedBalance}
+                    </p>
+                </div>
+
                 {/* Ledger Link Status */}
                 <div className={`text-xs p-2 rounded-xl border flex items-center justify-between ${isConfigured ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-red-50 border-red-100 text-red-700'}`}>
                     <div className="flex items-center gap-2 truncate">
                         {isConfigured ? (
                             <>
                                 <LinkIcon className="h-3 w-3" />
-                                <span className="truncate">Ledger: {account.ledgerAccount.code}</span>
+                                <span className="truncate">Ledger: {account.ledgerAccount.code} — {account.ledgerAccount.name}</span>
                             </>
                         ) : (
                             <>
@@ -146,9 +162,27 @@ function AccountCard({ account, onDelete, onRefresh }: { account: Record<string,
                         )}
                     </div>
                     {isConfigured && (
-                        <Badge variant="outline" className="text-[10px] bg-white text-emerald-600 border-emerald-200">System Managed</Badge>
+                        <Badge variant="outline" className="text-[10px] bg-white text-emerald-600 border-emerald-200 shrink-0">System Managed</Badge>
                     )}
                 </div>
+
+                {/* Action Buttons */}
+                {isConfigured && (
+                    <div className="flex gap-2">
+                        <Link href={`/finance/ledger?account=${account.ledgerAccount.id}`} className="flex-1">
+                            <Button variant="outline" size="sm" className="w-full text-xs">
+                                <BookOpen className="h-3 w-3 mr-1" />
+                                View Ledger
+                            </Button>
+                        </Link>
+                        <Link href={`/finance/bank-reconciliation?account_id=${account.ledgerAccount.id}`} className="flex-1">
+                            <Button variant="outline" size="sm" className="w-full text-xs">
+                                <BarChart3 className="h-3 w-3 mr-1" />
+                                Statement
+                            </Button>
+                        </Link>
+                    </div>
+                )}
 
                 {/* Assigned Users */}
                 <div>

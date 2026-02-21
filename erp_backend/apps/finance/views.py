@@ -37,7 +37,7 @@ from apps.inventory.services import InventoryService
 
 
 class FinancialAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):
-    queryset = FinancialAccount.objects.all()
+    queryset = FinancialAccount.objects.select_related('linked_coa').all()
     serializer_class = FinancialAccountSerializer
 
     def create(self, request, *args, **kwargs):

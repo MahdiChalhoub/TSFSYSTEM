@@ -42,6 +42,6 @@ class StorefrontConfigSerializer(serializers.ModelSerializer):
         model = StorefrontConfig
         fields = [
             'id', 'store_mode', 'storefront_title', 'storefront_tagline',
-            'storefront_theme', 'show_stock_levels', 'allow_guest_browsing',
-            'ecommerce_enabled', 'require_approval_for_orders',
+            'storefront_theme', 'storefront_type', 'show_stock_levels',
+            'allow_guest_browsing', 'ecommerce_enabled', 'require_approval_for_orders',
         ]

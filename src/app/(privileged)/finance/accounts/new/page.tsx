@@ -1,15 +1,15 @@
 'use client'
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { createFinancialAccount } from "../actions"
+import { createFinancialAccount, getOrgCurrency } from "../actions"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { ArrowLeft, Info, Link as LinkIcon } from "lucide-react"
+import { ArrowLeft, Info, Link as LinkIcon, Loader2 } from "lucide-react"
 import Link from "next/link"
 
 export default function NewFinancialAccountPage() {
@@ -23,12 +23,22 @@ export default function NewFinancialAccountPage() {
     })
 
     const [loading, setLoading] = useState(false)
+    const [currencyLoading, setCurrencyLoading] = useState(true)
     const type = watch('type')
+    const currency = watch('currency')
+
+    // Fetch org's base currency on mount
+    useEffect(() => {
+        getOrgCurrency().then(code => {
+            setValue('currency', code)
+            setCurrencyLoading(false)
+        }).catch(() => setCurrencyLoading(false))
+    }, [setValue])
 
     const onSubmit = async (data: Record<string, any>) => {
         setLoading(true)
         try {
-            await createFinancialAccount(data)
+            await createFinancialAccount(data as { name: string; type: 'CASH' | 'BANK' | 'MOBILE'; currency: string })
             toast.success("Account created successfully")
             router.push('/finance/accounts')
         } catch (error: unknown) {
@@ -80,7 +90,15 @@ export default function NewFinancialAccountPage() {
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Currency</label>
-                                <Input {...register('currency')} readOnly className="bg-muted" />
+                                <div className="relative">
+                                    <Input value={currency} readOnly className="bg-muted pr-8" />
+                                    {currencyLoading && (
+                                        <Loader2 className="absolute right-2 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+                                    )}
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    Auto-set from organization&apos;s base currency
+                                </p>
                             </div>
                         </div>
 
@@ -95,7 +113,7 @@ export default function NewFinancialAccountPage() {
                             </div>
                         </div>
 
-                        <Button type="submit" className="w-full" disabled={loading}>
+                        <Button type="submit" className="w-full" disabled={loading || currencyLoading}>
                             {loading ? "Initializing..." : "Create Account"}
                         </Button>
                     </form>

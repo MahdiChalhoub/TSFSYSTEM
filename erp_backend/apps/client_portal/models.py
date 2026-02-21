@@ -29,6 +29,14 @@ class ClientPortalConfig(TenantModel):
         ('HYBRID', 'Hybrid — B2C interface, B2B pricing for wholesale/retail clients'),
     )
 
+    STOREFRONT_TYPES = (
+        ('PRODUCT_STORE', 'Product Store — full e-commerce with cart and checkout'),
+        ('CATALOGUE', 'Catalogue — browse products, request quotes, no direct checkout'),
+        ('SUBSCRIPTION', 'Subscription Store — recurring plans and pricing tiers'),
+        ('LANDING_PAGE', 'Landing Page — company website with hero, about, and contact'),
+        ('PORTFOLIO', 'Portfolio — showcase projects, case studies, and inquiries'),
+    )
+
     # ── Store Mode ────────────────────────────────────────────────────────────
     store_mode = models.CharField(
         max_length=20, choices=STORE_MODES, default='HYBRID',
@@ -54,6 +62,10 @@ class ClientPortalConfig(TenantModel):
     storefront_theme = models.CharField(
         max_length=50, default='midnight',
         help_text='Active theme ID for the storefront (e.g. midnight, boutique)'
+    )
+    storefront_type = models.CharField(
+        max_length=30, choices=STOREFRONT_TYPES, default='PRODUCT_STORE',
+        help_text='Type of storefront layout (product store, catalogue, subscription, landing page, portfolio)'
     )
 
     # ── Loyalty Settings ──────────────────────────────────────────────────────

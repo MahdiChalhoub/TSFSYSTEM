@@ -147,6 +147,7 @@ class StorefrontPublicConfigView(APIView):
             'storefront_title': config.storefront_title or org.name,
             'storefront_tagline': config.storefront_tagline,
             'storefront_theme': config.storefront_theme or 'midnight',
+            'storefront_type': config.storefront_type or 'PRODUCT_STORE',
             'show_stock_levels': config.show_stock_levels,
             'allow_guest_browsing': config.allow_guest_browsing,
             'ecommerce_enabled': config.ecommerce_enabled,

@@ -79,3 +79,25 @@ export async function deleteFinancialAccount(id: number) {
         throw new Error((e instanceof Error ? e.message : String(e)) || "Failed to delete account");
     }
 }
+
+export async function getOrgCurrency(): Promise<string> {
+    try {
+        const me = await erpFetch('auth/me/')
+        // Organization base_currency is a FK, returned as object with code
+        return me?.organization?.base_currency_code || me?.organization?.currency || 'USD'
+    } catch {
+        return 'USD'
+    }
+}
+
+export async function getAccountBalance(accountId: number) {
+    try {
+        const coa = await erpFetch(`coa/${accountId}/statement/`)
+        return {
+            balance: coa?.opening_balance ?? 0,
+            entries: coa?.lines?.length ?? 0
+        }
+    } catch {
+        return { balance: 0, entries: 0 }
+    }
+}
