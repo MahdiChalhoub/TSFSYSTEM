@@ -1,24 +1,58 @@
 'use client'
 
-import { useConfig, useStore } from '@/storefront/engine/hooks'
-import { FileText, Search, Filter, Mail } from 'lucide-react'
+import { useConfig } from '@/storefront/engine/hooks'
+import { FileText, Search, Mail, X, Send, CheckCircle, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import type { Product } from '@/storefront/engine/types'
+import { submitQuoteRequest } from '@/app/tenant/[slug]/actions'
 
 /**
  * Catalogue homepage — browse products with no prices displayed.
- * "Request Quote" replaces "Add to Cart". Used when storefront_type = CATALOGUE.
+ * "Request Quote" opens a modal form. Used when storefront_type = CATALOGUE.
  */
 export default function CatalogueHomePage({ products, categories }: { products: Product[]; categories: any[] }) {
-    const { orgName, config } = useConfig()
+    const { orgName, config, slug } = useConfig()
     const [search, setSearch] = useState('')
     const [activeCat, setActiveCat] = useState<string | null>(null)
+    const [quoteProduct, setQuoteProduct] = useState<Product | null>(null)
+    const [formData, setFormData] = useState({ full_name: '', email: '', phone: '', company_name: '', quantity: '1', message: '' })
+    const [submitting, setSubmitting] = useState(false)
+    const [submitted, setSubmitted] = useState(false)
+    const [error, setError] = useState('')
 
     const filtered = products.filter(p => {
         const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase())
         const matchCat = !activeCat || p.category_id === activeCat || p.category_name === activeCat
         return matchSearch && matchCat
     })
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!quoteProduct || !slug) return
+        setSubmitting(true)
+        setError('')
+        const result = await submitQuoteRequest(slug, {
+            product: quoteProduct.id,
+            product_name: quoteProduct.name,
+            quantity: parseFloat(formData.quantity) || 1,
+            full_name: formData.full_name,
+            email: formData.email,
+            phone: formData.phone,
+            company_name: formData.company_name,
+            message: formData.message,
+        })
+        setSubmitting(false)
+        if (result.success) {
+            setSubmitted(true)
+            setTimeout(() => {
+                setQuoteProduct(null)
+                setSubmitted(false)
+                setFormData({ full_name: '', email: '', phone: '', company_name: '', quantity: '1', message: '' })
+            }, 2500)
+        } else {
+            setError(result.error || 'Something went wrong')
+        }
+    }
 
     return (
         <div style={{ fontFamily: 'system-ui, sans-serif' }}>
@@ -102,13 +136,16 @@ export default function CatalogueHomePage({ products, categories }: { products: 
                                 <p style={{ color: '#64748b', fontSize: '0.8rem', margin: '0 0 0.75rem' }}>
                                     {p.category_name || 'Uncategorized'} • {p.sku}
                                 </p>
-                                <button style={{
-                                    width: '100%', padding: '0.625rem', borderRadius: '8px',
-                                    border: '2px solid var(--theme-primary, #6366f1)',
-                                    background: 'transparent', color: 'var(--theme-primary, #6366f1)',
-                                    fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-                                }}>
+                                <button
+                                    onClick={() => setQuoteProduct(p)}
+                                    style={{
+                                        width: '100%', padding: '0.625rem', borderRadius: '8px',
+                                        border: '2px solid var(--theme-primary, #6366f1)',
+                                        background: 'transparent', color: 'var(--theme-primary, #6366f1)',
+                                        fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                                    }}
+                                >
                                     <Mail size={14} /> Request Quote
                                 </button>
                             </div>
@@ -123,6 +160,90 @@ export default function CatalogueHomePage({ products, categories }: { products: 
                     </div>
                 )}
             </div>
+
+            {/* ── Quote Request Modal ─────────────────────────────────────── */}
+            {quoteProduct && (
+                <div style={{
+                    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    zIndex: 9999, padding: '1rem',
+                }} onClick={() => !submitting && setQuoteProduct(null)}>
+                    <div
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                            background: '#fff', borderRadius: '16px', width: '100%', maxWidth: '480px',
+                            boxShadow: '0 25px 60px rgba(0,0,0,0.15)', overflow: 'hidden',
+                        }}
+                    >
+                        {/* Modal Header */}
+                        <div style={{
+                            padding: '1.25rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                            borderBottom: '1px solid #f1f5f9',
+                            background: 'linear-gradient(135deg, var(--theme-primary, #6366f1), var(--theme-secondary, #8b5cf6))',
+                            color: '#fff',
+                        }}>
+                            <div>
+                                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>Request a Quote</h3>
+                                <p style={{ margin: '0.25rem 0 0', fontSize: '0.85rem', opacity: 0.85 }}>{quoteProduct.name}</p>
+                            </div>
+                            <button onClick={() => setQuoteProduct(null)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {submitted ? (
+                            <div style={{ padding: '3rem', textAlign: 'center' }}>
+                                <CheckCircle size={48} color="#22c55e" style={{ margin: '0 auto 1rem' }} />
+                                <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#16a34a' }}>Quote Request Sent!</h3>
+                                <p style={{ color: '#64748b', marginTop: '0.5rem' }}>We&apos;ll get back to you shortly.</p>
+                            </div>
+                        ) : (
+                            <form onSubmit={handleSubmit} style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                                    <input required placeholder="Full Name *" value={formData.full_name}
+                                        onChange={e => setFormData(p => ({ ...p, full_name: e.target.value }))}
+                                        style={inputStyle} />
+                                    <input required type="email" placeholder="Email *" value={formData.email}
+                                        onChange={e => setFormData(p => ({ ...p, email: e.target.value }))}
+                                        style={inputStyle} />
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                                    <input placeholder="Phone" value={formData.phone}
+                                        onChange={e => setFormData(p => ({ ...p, phone: e.target.value }))}
+                                        style={inputStyle} />
+                                    <input placeholder="Company Name" value={formData.company_name}
+                                        onChange={e => setFormData(p => ({ ...p, company_name: e.target.value }))}
+                                        style={inputStyle} />
+                                </div>
+                                <input type="number" min="1" placeholder="Quantity" value={formData.quantity}
+                                    onChange={e => setFormData(p => ({ ...p, quantity: e.target.value }))}
+                                    style={inputStyle} />
+                                <textarea required placeholder="Tell us about your requirements... *" rows={3}
+                                    value={formData.message}
+                                    onChange={e => setFormData(p => ({ ...p, message: e.target.value }))}
+                                    style={{ ...inputStyle, resize: 'vertical' }} />
+                                {error && <p style={{ color: '#ef4444', fontSize: '0.8rem', margin: 0 }}>{error}</p>}
+                                <button type="submit" disabled={submitting} style={{
+                                    padding: '0.75rem', borderRadius: '10px', border: 'none',
+                                    background: 'var(--theme-primary, #6366f1)', color: '#fff',
+                                    fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                                    opacity: submitting ? 0.7 : 1,
+                                }}>
+                                    {submitting ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                                    {submitting ? 'Sending...' : 'Submit Quote Request'}
+                                </button>
+                            </form>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     )
+}
+
+const inputStyle: React.CSSProperties = {
+    padding: '0.625rem 0.875rem', borderRadius: '8px',
+    border: '1px solid #e2e8f0', fontSize: '0.875rem',
+    outline: 'none', width: '100%',
 }

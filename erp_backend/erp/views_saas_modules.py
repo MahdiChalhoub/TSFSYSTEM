@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework import permissions
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.conf import settings
+from django.db import models as models
 from .models import SystemModule, Organization, OrganizationModule, SystemUpdate
 from .module_manager import ModuleManager
 from .kernel_manager import KernelManager
@@ -420,9 +421,15 @@ class SaaSPlansViewSet(viewsets.ViewSet):
         }
 
     def list(self, request):
-        """List all subscription plans"""
+        """List all subscription plans, optionally filtered by business_type"""
         from erp.models import SubscriptionPlan
-        plans = SubscriptionPlan.objects.select_related('category').all()
+        plans = SubscriptionPlan.objects.select_related('category').prefetch_related('business_types').all()
+        # Filter by business type if specified
+        bt_id = request.query_params.get('business_type')
+        if bt_id:
+            plans = plans.filter(
+                models.Q(business_types__id=bt_id) | models.Q(business_types__isnull=True)
+            ).distinct()
         return Response([self._serialize_plan(p) for p in plans])
 
     def retrieve(self, request, pk=None):
@@ -883,7 +890,12 @@ class OrgModuleViewSet(viewsets.ViewSet):
             }
 
         # Also fetch all available plans for display (only active ones)
-        all_plans = SubscriptionPlan.objects.filter(is_active=True).select_related('category').order_by('sort_order', 'monthly_price')
+        # Filter by org's business type if set — plans with no business_types = universal
+        all_plans = SubscriptionPlan.objects.filter(is_active=True).select_related('category').prefetch_related('business_types').order_by('sort_order', 'monthly_price')
+        if org.business_type_id:
+            all_plans = all_plans.filter(
+                models.Q(business_types__id=org.business_type_id) | models.Q(business_types__isnull=True)
+            ).distinct()
         available_plans = [{
             'id': str(p.id),
             'name': p.name,

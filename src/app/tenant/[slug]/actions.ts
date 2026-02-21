@@ -185,16 +185,19 @@ export async function createOrder(token: string, payload: Record<string, any>) {
 export async function submitQuoteRequest(slug: string, payload: Record<string, any>, token?: string) {
     try {
         const djangoUrl = process.env.DJANGO_URL || 'http://127.0.0.1:8000';
-        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+            'X-Tenant-Id': slug,
+        };
         if (token) headers['Authorization'] = `Token ${token}`;
-        const res = await fetch(`${djangoUrl}/api/client-portal/quote-request/`, {
+        const res = await fetch(`${djangoUrl}/api/client-portal/quote-requests/`, {
             method: 'POST',
             headers,
-            body: JSON.stringify({ ...payload, slug }),
+            body: JSON.stringify(payload),
         });
         if (!res.ok) {
             const data = await res.json();
-            return { success: false, error: data.error || 'Failed to submit quote request' };
+            return { success: false, error: data.error || data.detail || JSON.stringify(data) };
         }
         return { success: true, data: await res.json() };
     } catch (err: any) {

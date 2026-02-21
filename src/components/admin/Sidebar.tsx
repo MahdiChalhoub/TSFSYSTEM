@@ -311,6 +311,7 @@ export const MENU_ITEMS = [
                     { title: 'Client Access', path: '/workspace/client-access' },
                     { title: 'Client Orders', path: '/workspace/client-orders' },
                     { title: 'Client Tickets', path: '/workspace/client-tickets' },
+                    { title: 'Quote Inbox', path: '/workspace/quote-inbox' },
                     { title: 'Gate Preview', path: '/crm/client-gate-preview', icon: Eye },
                 ]
             },
