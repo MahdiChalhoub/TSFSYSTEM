@@ -45,12 +45,43 @@ export default async function middleware(req: NextRequest) {
     const isPortalRoute = url.pathname.startsWith('/tenant') || url.pathname.startsWith('/supplier-portal');
     const isStorefrontAlias = url.pathname === '/store' || url.pathname === '/home';
     const isPublicRoute = url.pathname === '/' || url.pathname.startsWith('/landing') || isAuthRoute || isPortalRoute || isStorefrontAlias;
-    const hasAuthToken = req.cookies.get('auth_token')?.value && req.cookies.get('auth_token')?.value !== '';
+    const authToken = req.cookies.get('auth_token')?.value;
+    const hasAuthToken = !!authToken && authToken !== '';
 
     if (!hasAuthToken && !isPublicRoute && !url.pathname.startsWith('/saas/login')) {
         const loginUrl = new URL('/login', req.url);
         loginUrl.searchParams.set('error', 'session_expired');
         return NextResponse.redirect(loginUrl);
+    }
+
+    // ─── TOKEN VALIDATION (Security Hardening) ───
+    // For privileged SaaS admin routes, validate the token against the backend.
+    // If the token is expired/invalid, redirect to login immediately instead of
+    // rendering pages with empty data (which hides auth failures from users).
+    const isSaaSAdminRoute = url.pathname.startsWith('/modules')
+        || url.pathname.startsWith('/organizations')
+        || url.pathname.startsWith('/saas-home')
+        || url.pathname.startsWith('/saas/')
+        || url.pathname === '/saas';
+
+    if (hasAuthToken && isSaaSAdminRoute) {
+        try {
+            const djangoUrl = process.env.DJANGO_URL || 'http://127.0.0.1:8000';
+            const validateRes = await fetch(`${djangoUrl}/api/auth/me/`, {
+                headers: { 'Authorization': `Token ${authToken}` },
+                signal: AbortSignal.timeout(3000), // 3s timeout to avoid blocking
+            });
+            if (validateRes.status === 401 || validateRes.status === 403) {
+                // Token is expired or invalid — clear it and redirect
+                const loginUrl = new URL('/saas/login', req.url);
+                loginUrl.searchParams.set('error', 'session_expired');
+                const response = NextResponse.redirect(loginUrl);
+                response.cookies.delete('auth_token');
+                return response;
+            }
+        } catch {
+            // Backend unreachable — let the layout handle it with "Reconnecting" screen
+        }
     }
 
     // IP Address or Localhost handling for Root

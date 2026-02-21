@@ -1,6 +1,6 @@
 'use server'
 
-import { erpFetch } from '@/lib/erp-api'
+import { erpFetch, ErpApiError } from '@/lib/erp-api'
 import { revalidatePath } from 'next/cache'
 
 export async function getSaaSModules() {
@@ -8,6 +8,11 @@ export async function getSaaSModules() {
         // Force bypass any caching
         return await erpFetch(`saas/modules/?_t=${Date.now()}`)
     } catch (e) {
+        // [SECURITY] Re-throw auth errors so the UI can redirect to login
+        // instead of silently showing "No modules detected"
+        if (e instanceof ErpApiError && (e.status === 401 || e.status === 403)) {
+            throw e
+        }
         console.error("Failed to fetch SaaS modules:", e)
         return []
     }

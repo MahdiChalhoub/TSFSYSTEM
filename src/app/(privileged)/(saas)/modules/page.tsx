@@ -44,6 +44,7 @@ export default function SaaSModulesPage() {
     const [pendingUninstall, setPendingUninstall] = useState<string | null>(null)
     const [pendingDelete, setPendingDelete] = useState<string | null>(null)
     const [pendingRollback, setPendingRollback] = useState<{ code: string; version: string } | null>(null)
+    const [authError, setAuthError] = useState(false)
 
     useEffect(() => {
         loadModules()
@@ -51,14 +52,21 @@ export default function SaaSModulesPage() {
 
     async function loadModules() {
         setLoading(true)
+        setAuthError(false)
         try {
 
             const data = await getSaaSModules()
             setModules(data)
             setLastSynced(new Date().toLocaleTimeString())
             router.refresh() // Force Next.js router cache update
-        } catch {
-            toast.error("Failed to load modules")
+        } catch (e: unknown) {
+            // [SECURITY] Detect auth errors and show explicit message
+            const msg = (e instanceof Error ? e.message : String(e)).toLowerCase()
+            if (msg.includes('401') || msg.includes('403') || msg.includes('credentials') || msg.includes('unauthorized') || msg.includes('token')) {
+                setAuthError(true)
+            } else {
+                toast.error("Failed to load modules")
+            }
         } finally {
             setLoading(false)
         }
@@ -206,7 +214,20 @@ export default function SaaSModulesPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {loading ? (
+                {authError ? (
+                    <div className="col-span-full py-20 text-center space-y-4">
+                        <div className="mx-auto w-16 h-16 rounded-3xl bg-red-100 flex items-center justify-center text-red-600 mb-4">
+                            <ShieldCheck size={32} />
+                        </div>
+                        <h3 className="text-xl font-black text-gray-900">Session Expired</h3>
+                        <p className="text-gray-500 font-medium text-sm max-w-md mx-auto">
+                            Your authentication token has expired or is invalid. Please log in again to access the Global Registry.
+                        </p>
+                        <a href="/saas/login" className="inline-block mt-4 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-2xl shadow-lg shadow-emerald-200 transition-all">
+                            Re-authenticate →
+                        </a>
+                    </div>
+                ) : loading ? (
                     <div className="col-span-full py-20 text-center text-gray-500 font-medium italic">Scanning core modules...</div>
                 ) : modules.length === 0 ? (
                     <div className="col-span-full py-20 text-center text-gray-500 font-medium font-mono">No modules detected in filesystem.</div>
