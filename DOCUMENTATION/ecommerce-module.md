@@ -22,7 +22,13 @@ Independent eCommerce module that turns each organization into a **Shopify-like 
 | **Catalogue** | Browse only / B2B quotes | Product grid, NO prices | "Request Quote" button |
 | **Subscription** | SaaS / recurring services | Plans grid, feature comparison | Subscribe flow |
 | **Landing Page** | Company website | Hero + About + Services + Contact | Contact form only |
-| **Portfolio** | Creative / agency | Project gallery, case studies | Inquiry CTA |
+## Storefront URL Aliases
+The following aliases now work on any tenant subdomain (e.g. `pos.tsf.ci/`):
+- `/` — Main Storefront
+- `/store` — Alias for storefront
+- `/home` — Alias for storefront
+
+These are rewritten internally to `/tenant/[slug]`. All other routes (e.g. `/dashboard`, `/finance`) are passed through as regular application routes.
 
 ## Admin Theme Manager Page (`/ecommerce/themes`)
 1. **Step 1 — Store Type Picker**: 5 selectable cards, instant save
