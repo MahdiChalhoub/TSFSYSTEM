@@ -70,8 +70,11 @@ export interface CustomerUser {
     barcode?: string
 }
 
+export type StoreType = 'PRODUCT_STORE' | 'CATALOGUE' | 'SUBSCRIPTION' | 'LANDING_PAGE' | 'PORTFOLIO'
+
 export interface StorefrontConfig {
     store_mode: 'B2C' | 'B2B' | 'CATALOG_QUOTE' | 'HYBRID'
+    storefront_type: StoreType
     storefront_title: string
     storefront_tagline: string
     show_stock_levels: boolean

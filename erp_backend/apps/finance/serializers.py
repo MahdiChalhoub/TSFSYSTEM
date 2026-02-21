@@ -31,10 +31,29 @@ class ChartOfAccountSerializer(serializers.ModelSerializer):
 
 class FinancialAccountSerializer(serializers.ModelSerializer):
     organization = serializers.PrimaryKeyRelatedField(read_only=True)
+    ledgerAccount = serializers.SerializerMethodField()
+    assignedUsers = serializers.SerializerMethodField()
 
     class Meta:
         model = FinancialAccount
         fields = '__all__'
+
+    def get_ledgerAccount(self, obj):
+        """Return nested CoA data for the linked ledger account."""
+        if obj.linked_coa:
+            return {
+                'id': obj.linked_coa.id,
+                'code': obj.linked_coa.code,
+                'name': obj.linked_coa.name,
+                'type': obj.linked_coa.type,
+            }
+        return None
+
+    def get_assignedUsers(self, obj):
+        """Return list of users assigned to this financial account."""
+        from erp.models import User
+        users = User.objects.filter(cash_register=obj)
+        return [{'id': u.id, 'name': u.get_full_name() or u.username} for u in users]
 
 
 class FiscalPeriodSerializer(serializers.ModelSerializer):
