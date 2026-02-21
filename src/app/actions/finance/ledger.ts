@@ -110,13 +110,27 @@ export async function updateJournalEntry(id: number, data: unknown) {
     }
 }
 
-export async function getLedgerEntries(scope: 'OFFICIAL' | 'INTERNAL' = 'INTERNAL', filters?: { status?: string, q?: string }) {
+export async function getLedgerEntries(
+    scope: 'OFFICIAL' | 'INTERNAL' = 'INTERNAL',
+    filters?: {
+        status?: string
+        q?: string
+        fiscal_year?: string
+        date_from?: string
+        date_to?: string
+        entry_type?: string
+    }
+) {
     try {
         let path = 'journal/'
         const params = new URLSearchParams()
         if (scope === 'OFFICIAL') params.append('scope', 'OFFICIAL')
         if (filters?.status) params.append('status', filters.status)
         if (filters?.q) params.append('search', filters.q)
+        if (filters?.fiscal_year) params.append('fiscal_year', filters.fiscal_year)
+        if (filters?.date_from) params.append('date_from', filters.date_from)
+        if (filters?.date_to) params.append('date_to', filters.date_to)
+        if (filters?.entry_type) params.append('entry_type', filters.entry_type)
 
         const queryString = params.toString()
         if (queryString) path += `?${queryString}`
