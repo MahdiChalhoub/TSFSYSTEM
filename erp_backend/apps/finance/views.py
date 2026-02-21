@@ -337,6 +337,47 @@ class JournalEntryViewSet(UDLEViewSetMixin, TenantModelViewSet):
     queryset = JournalEntry.objects.all()
     serializer_class = JournalEntrySerializer
 
+    def get_queryset(self):
+        qs = super().get_queryset().order_by('-transaction_date', '-id')
+        params = self.request.query_params
+
+        # Filter by fiscal year
+        fiscal_year = params.get('fiscal_year')
+        if fiscal_year:
+            qs = qs.filter(fiscal_year_id=fiscal_year)
+
+        # Filter by date range
+        date_from = params.get('date_from')
+        date_to = params.get('date_to')
+        if date_from:
+            qs = qs.filter(transaction_date__gte=date_from)
+        if date_to:
+            qs = qs.filter(transaction_date__lte=date_to)
+
+        # Filter by status
+        status_filter = params.get('status')
+        if status_filter:
+            qs = qs.filter(status=status_filter)
+
+        # Filter by scope
+        scope = params.get('scope')
+        if scope:
+            qs = qs.filter(scope=scope)
+
+        # Filter by entry type (opening vs manual)
+        entry_type = params.get('entry_type')
+        if entry_type == 'OPENING':
+            qs = qs.filter(reference__startswith='OPEN-')
+        elif entry_type == 'MANUAL':
+            qs = qs.exclude(reference__startswith='OPEN-')
+
+        # Search
+        search = params.get('search')
+        if search:
+            qs = qs.filter(description__icontains=search)
+
+        return qs
+
     def create(self, request, *args, **kwargs):
         organization_id = get_current_tenant_id()
         if not organization_id:
