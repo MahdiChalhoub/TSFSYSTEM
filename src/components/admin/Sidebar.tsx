@@ -73,6 +73,8 @@ const MENU_ITEMS = [
         module: 'pos',
         children: [
             { title: 'POS Terminal', path: '/saas/sales' },
+            { title: 'Order History', path: '/saas/sales/history' },
+            { title: 'Daily Summary', path: '/saas/sales/summary' },
             {
                 title: 'Purchase Registry',
                 children: [
@@ -110,16 +112,33 @@ const MENU_ITEMS = [
         module: 'finance',
         children: [
             { title: 'Performance Dashboard', path: '/saas/finance/dashboard' },
+            {
+                title: 'Transactions',
+                children: [
+                    { title: 'General Ledger', path: '/saas/finance/ledger' },
+                    { title: 'Invoices', path: '/saas/finance/invoices' },
+                    { title: 'Payments & Receipts', path: '/saas/finance/payments' },
+                    { title: 'Vouchers', path: '/saas/finance/vouchers' },
+                    { title: 'Expenses', path: '/saas/finance/expenses' },
+                    { title: 'Sales Returns', path: '/saas/finance/sales-returns' },
+                    { title: 'Purchase Returns', path: '/saas/finance/purchase-returns' },
+                ]
+            },
             { title: 'Accounts & Drawers', path: '/saas/finance/accounts' },
             { title: 'Chart of Accounts', path: '/saas/finance/chart-of-accounts' },
             { title: 'COA Templates', path: '/saas/finance/chart-of-accounts/templates' },
             { title: 'Migration Tool', path: '/saas/finance/chart-of-accounts/migrate' },
-            { title: 'General Ledger', path: '/saas/finance/ledger' },
             { title: 'Opening Balances', path: '/saas/finance/ledger/opening' },
-            { title: 'Account Statement', path: '/saas/finance/reports/statement' },
-            { title: 'Trial Balance', path: '/saas/finance/reports/trial-balance' },
-            { title: 'Profit & Loss', path: '/saas/finance/reports/pnl' },
-            { title: 'Balance Sheet', path: '/saas/finance/reports/balance-sheet' },
+            {
+                title: 'Financial Reports',
+                children: [
+                    { title: 'Account Statement', path: '/saas/finance/reports/statement' },
+                    { title: 'Trial Balance', path: '/saas/finance/reports/trial-balance' },
+                    { title: 'Profit & Loss', path: '/saas/finance/reports/pnl' },
+                    { title: 'Balance Sheet', path: '/saas/finance/reports/balance-sheet' },
+                    { title: 'Aging Report', path: '/saas/finance/reports/aging' },
+                ]
+            },
             { title: 'Fiscal Years', path: '/saas/finance/fiscal-years' },
             { title: 'Pricing Engine', path: '/saas/finance/pricing' },
             { title: 'Loan Contracts', path: '/saas/finance/loans' },
@@ -134,8 +153,42 @@ const MENU_ITEMS = [
         module: 'crm',
         children: [
             { title: 'Contact Center', path: '/saas/crm/contacts' },
+            { title: 'Insights & Analytics', path: '/saas/crm/insights' },
             { title: 'Customer Loyalty', path: '/saas/crm/loyalty' },
+            { title: 'Dynamic Pricing', path: '/saas/crm/pricing' },
+            {
+                title: 'Portal Previews',
+                children: [
+                    { title: 'Supplier Gate', path: '/saas/crm/supplier-gate-preview' },
+                    { title: 'Client Gate', path: '/saas/crm/client-gate-preview' },
+                ]
+            },
             { title: 'Supplier Portals', path: '/saas/crm/suppliers' },
+        ]
+    },
+    {
+        title: 'Workspace',
+        icon: Briefcase,
+        module: 'workspace',
+        children: [
+            { title: 'Tasks Hub', path: '/saas/workspace/tasks' },
+            { title: 'My Performance', path: '/saas/workspace/performance' },
+            { title: 'Checklist Center', path: '/saas/workspace/checklists' },
+            { title: 'Proformas & Quotes', path: '/saas/workspace/proformas' },
+            { title: 'Tender Inbox', path: '/saas/workspace/quote-inbox' },
+            { title: 'Portal Management', path: '/saas/workspace/portal-config' },
+        ]
+    },
+    {
+        title: 'Ecommerce',
+        icon: ShoppingCart,
+        module: 'ecommerce',
+        children: [
+            { title: 'Store Dashboard', path: '/saas/ecommerce/dashboard' },
+            { title: 'Product Catalog', path: '/saas/ecommerce/catalog' },
+            { title: 'Online Orders', path: '/saas/ecommerce/orders' },
+            { title: 'Theme Customizer', path: '/saas/ecommerce/themes' },
+            { title: 'Store Settings', path: '/saas/ecommerce/settings' },
         ]
     },
     {
@@ -158,6 +211,15 @@ const MENU_ITEMS = [
             { title: 'Organizations', path: '/saas/organizations' },
             { title: 'Global Registry', path: '/saas/modules' },
             { title: 'Connector Control', path: '/saas/connector' },
+            {
+                title: 'AI & Intelligence',
+                children: [
+                    { title: 'AI Tool Hub', path: '/saas/mcp/tools' },
+                    { title: 'Service Providers', path: '/saas/mcp/providers' },
+                    { title: 'Model Configuration', path: '/saas/mcp/settings' },
+                    { title: 'Usage/Credits', path: '/saas/mcp/usage' },
+                ]
+            },
             { title: 'Instance Switcher', path: '/saas/switcher' },
             { title: 'Platform Health', path: '/saas/health' },
             { title: 'Kernel Updates', path: '/saas/updates' },
