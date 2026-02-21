@@ -17,16 +17,21 @@ export default function EcommerceDashboardPage() {
     const [stats, setStats] = useState<Stats | null>(null);
 
     useEffect(() => {
-        // Stats would come from the ecommerce API once fully wired
-        setStats({
-            total_orders: 0,
-            monthly_orders: 0,
-            monthly_revenue: '0.00',
-            pending: 0,
-            processing: 0,
-            shipped: 0,
-            delivered: 0,
-        });
+        const fetchStats = async () => {
+            try {
+                const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL;
+                const res = await fetch(`${djangoUrl}/api/client-portal/config/stats/`, {
+                    headers: { 'Authorization': `Token ${localStorage.getItem('token')}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setStats(data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch ecommerce stats:", error);
+            }
+        };
+        fetchStats();
     }, []);
 
     const cards = [

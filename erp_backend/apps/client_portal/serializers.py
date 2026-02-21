@@ -74,7 +74,8 @@ class ClientOrderListSerializer(serializers.ModelSerializer):
 
 class ClientOrderSerializer(serializers.ModelSerializer):
     contact_name = serializers.CharField(source='contact.name', read_only=True)
-    lines = ClientOrderLineSerializer(many=True, read_only=True)
+    lines = ClientOrderLineSerializer(many=True, required=False)
+    stripe_client_secret = serializers.CharField(read_only=True, required=False)
 
     class Meta:
         model = ClientOrder
@@ -83,6 +84,40 @@ class ClientOrderSerializer(serializers.ModelSerializer):
             'order_number', 'subtotal', 'tax_amount', 'total_amount',
             'placed_at', 'delivered_at', 'pos_order', 'created_at', 'updated_at',
         )
+
+    def create(self, validated_data):
+        lines_data = self.initial_data.get('lines', [])
+        order = ClientOrder.objects.create(**validated_data)
+        for line_data in lines_data:
+            # Basic validation/mapping for product-based lines
+            product_id = line_data.get('product_id')
+            qty = Decimal(str(line_data.get('quantity', 1)))
+            price = Decimal(str(line_data.get('unit_price', 0)))
+            
+            product_name = line_data.get('product_name', 'Product')
+            tax_rate = Decimal('0.00')
+
+            if product_id:
+                from apps.inventory.models import Product
+                try:
+                    product = Product.objects.get(id=product_id)
+                    product_name = product.name
+                    tax_rate = product.tva_rate
+                except Product.DoesNotExist:
+                    pass
+
+            ClientOrderLine.objects.create(
+                organization=order.organization,
+                order=order,
+                product_id=product_id,
+                product_name=product_name,
+                quantity=qty,
+                unit_price=price,
+                tax_rate=tax_rate
+            )
+        
+        order.recalculate_totals()
+        return order
 
 
 # =============================================================================
@@ -132,10 +167,23 @@ class ClientPortalConfigSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ('created_at', 'updated_at')
 
+class QuoteItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuoteItem
+        fields = '__all__'
+        read_only_fields = ('quote_request',)
+
 class QuoteRequestSerializer(serializers.ModelSerializer):
-    product_name_display = serializers.CharField(source='product.name', read_only=True, default='')
+    items = QuoteItemSerializer(many=True, required=False)
 
     class Meta:
         model = QuoteRequest
         fields = '__all__'
         read_only_fields = ('quote_number', 'created_at', 'updated_at')
+
+    def create(self, validated_data):
+        items_data = validated_data.pop('items', [])
+        quote_request = QuoteRequest.objects.create(**validated_data)
+        for item_data in items_data:
+            QuoteItem.objects.create(quote_request=quote_request, **item_data)
+        return quote_request

@@ -98,7 +98,12 @@ export default function QuoteInboxClient({ quotes: initial }: { quotes: any[] })
                                     }}>{sc.label}</span>
                                 </div>
                                 <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '0.5rem' }}>
-                                    <strong>{q.product_name}</strong> × {q.quantity}
+                                    {q.items && q.items.length > 0 ? (
+                                        <span>{q.items[0].product_name} {q.items.length > 1 ? `+ ${q.items.length - 1} more` : ''}</span>
+                                    ) : (
+                                        <strong>{q.product_name || 'No items'}</strong>
+                                    )}
+                                    {q.quantity && !q.items?.length ? ` × ${q.quantity}` : ''}
                                 </div>
                                 <div style={{ fontSize: '0.75rem', color: '#475569', marginTop: '0.25rem' }}>
                                     {q.quote_number} • {new Date(q.created_at).toLocaleDateString()}
@@ -116,6 +121,7 @@ export default function QuoteInboxClient({ quotes: initial }: { quotes: any[] })
                 border: '1px solid rgba(255,255,255,0.06)',
                 padding: selected ? '1.5rem' : '3rem 1.5rem',
                 display: 'flex', flexDirection: 'column',
+                overflowY: 'auto', maxHeight: 'calc(100vh - 120px)'
             }}>
                 {!selected ? (
                     <div style={{ textAlign: 'center', color: '#475569', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
@@ -141,10 +147,25 @@ export default function QuoteInboxClient({ quotes: initial }: { quotes: any[] })
 
                         <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '0.5rem 0' }} />
 
-                        {/* Product Info */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', margin: '0.75rem 0' }}>
-                            <DetailRow icon={<Package size={14} />} label="Product" value={selected.product_name} />
-                            <DetailRow icon={<Hash size={14} />} label="Quantity" value={selected.quantity} />
+                        {/* Items Info */}
+                        <div style={{ margin: '0.75rem 0' }}>
+                            <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600, marginBottom: '0.5rem' }}>REQUESTED ITEMS</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                {selected.items && selected.items.length > 0 ? (
+                                    selected.items.map((item: any, idx: number) => (
+                                        <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', padding: '0.6rem', borderRadius: 8, border: '1px solid rgba(255,255,255,0.04)' }}>
+                                            <div style={{ color: '#e2e8f0', fontSize: '0.85rem', fontWeight: 500 }}>{item.product_name}</div>
+                                            <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Qty: {item.quantity}</div>
+                                            {item.notes && <div style={{ color: '#64748b', fontSize: '0.75rem', marginTop: 4, fontStyle: 'italic' }}>Note: {item.notes}</div>}
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '0.6rem', borderRadius: 8 }}>
+                                        <div style={{ color: '#e2e8f0', fontSize: '0.85rem', fontWeight: 500 }}>{selected.product_name}</div>
+                                        <div style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Qty: {selected.quantity}</div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         {/* Message */}

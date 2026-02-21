@@ -51,22 +51,26 @@ export default function QuotePage() {
         setSubmitting(true)
         setError('')
 
-        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://127.0.0.1:8000'
+        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL
         const headers: Record<string, string> = { 'Content-Type': 'application/json' }
         if (token) headers['Authorization'] = `Token ${token}`
+        headers['X-Tenant-Id'] = slug
 
         try {
             const res = await fetch(`${djangoUrl}/api/client-portal/quote-request/`, {
                 method: 'POST',
                 headers,
                 body: JSON.stringify({
-                    slug,
-                    contact_name: contactName,
+                    full_name: contactName,
                     email,
                     phone,
-                    company,
+                    company_name: company,
                     message,
-                    items,
+                    items: items.map(it => ({
+                        product_name: it.product_name,
+                        quantity: it.quantity,
+                        notes: it.notes
+                    })),
                 }),
             })
             if (!res.ok) {

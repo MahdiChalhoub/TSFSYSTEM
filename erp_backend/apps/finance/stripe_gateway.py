@@ -214,6 +214,20 @@ class StripeGatewayService:
 
         logger.info(f"[Stripe] Payment succeeded: {data.get('id')} — {amount} {currency}")
 
+        # Auto-record if it's a ClientOrder
+        if metadata.get('type') == 'CLIENT_ORDER' and metadata.get('order_id'):
+            order_id = metadata.get('order_id')
+            try:
+                from apps.client_portal.models import ClientOrder
+                order = ClientOrder.objects.filter(id=order_id).first()
+                if order:
+                    order.payment_status = 'PAID'
+                    order.save(update_fields=['payment_status', 'updated_at'])
+                    logger.info(f"[Stripe] ClientOrder {order_id} marked PAID")
+                    return {'action': 'order_marked_paid', 'order_id': order_id}
+            except Exception as e:
+                logger.error(f"[Stripe] Failed to mark order {order_id} as paid: {e}")
+
         # Auto-record payment if invoice_id in metadata
         invoice_id = metadata.get('invoice_id')
         if invoice_id:

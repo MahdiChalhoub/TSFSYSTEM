@@ -24,6 +24,13 @@ export default function EcommerceSettingsClient({ config }: Props) {
         show_stock_levels: config?.show_stock_levels ?? false,
         allow_guest_browsing: config?.allow_guest_browsing ?? true,
         require_approval_for_orders: config?.require_approval_for_orders ?? false,
+        seo_title: config?.seo_title || '',
+        seo_description: config?.seo_description || '',
+        og_image_url: config?.og_image_url || '',
+        logo_url: config?.logo_url || '',
+        primary_color: config?.primary_color || '#10b981',
+        secondary_color: config?.secondary_color || '#0f172a',
+        custom_css: config?.custom_css || '',
     });
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
@@ -53,43 +60,31 @@ export default function EcommerceSettingsClient({ config }: Props) {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '680px' }}>
+            {/* ... (keeping store mode) */}
 
-            {/* Store Mode */}
+            {/* Branding & Theme */}
             <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1.5rem' }}>
-                <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', fontWeight: 600 }}>Store Mode</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                    {STORE_MODES.map(m => (
-                        <div
-                            key={m.value}
-                            onClick={() => setForm(f => ({ ...f, store_mode: m.value }))}
-                            style={{
-                                border: `2px solid ${form.store_mode === m.value ? '#6366f1' : '#e2e8f0'}`,
-                                borderRadius: '10px',
-                                padding: '1rem',
-                                cursor: 'pointer',
-                                background: form.store_mode === m.value ? '#eef2ff' : '#fff',
-                                transition: 'all 0.15s ease',
-                            }}
-                        >
-                            <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{m.label}</div>
-                            <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>{m.desc}</div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            {/* Branding */}
-            <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1.5rem' }}>
-                <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', fontWeight: 600 }}>Branding</h3>
+                <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', fontWeight: 600 }}>Branding & Visuals</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    <div>
-                        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.375rem' }}>Storefront Title</label>
-                        <input
-                            style={fieldStyle}
-                            value={form.storefront_title}
-                            onChange={e => setForm(f => ({ ...f, storefront_title: e.target.value }))}
-                            placeholder="Leave blank to use organization name"
-                        />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.375rem' }}>Storefront Title</label>
+                            <input
+                                style={fieldStyle}
+                                value={form.storefront_title}
+                                onChange={e => setForm(f => ({ ...f, storefront_title: e.target.value }))}
+                                placeholder="Leave blank to use organization name"
+                            />
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.375rem' }}>Logo URL</label>
+                            <input
+                                style={fieldStyle}
+                                value={form.logo_url}
+                                onChange={e => setForm(f => ({ ...f, logo_url: e.target.value }))}
+                                placeholder="https://example.com/logo.png"
+                            />
+                        </div>
                     </div>
                     <div>
                         <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.375rem' }}>Tagline</label>
@@ -98,6 +93,65 @@ export default function EcommerceSettingsClient({ config }: Props) {
                             value={form.storefront_tagline}
                             onChange={e => setForm(f => ({ ...f, storefront_tagline: e.target.value }))}
                             placeholder="Welcome message for the storefront"
+                        />
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.375rem' }}>Primary Color</label>
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                <input type="color" value={form.primary_color} onChange={e => setForm(f => ({ ...f, primary_color: e.target.value }))} style={{ width: '40px', height: '40px', padding: '0', border: 'none', background: 'transparent', cursor: 'pointer' }} />
+                                <input style={fieldStyle} value={form.primary_color} onChange={e => setForm(f => ({ ...f, primary_color: e.target.value }))} />
+                            </div>
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.375rem' }}>Secondary Color</label>
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                <input type="color" value={form.secondary_color} onChange={e => setForm(f => ({ ...f, secondary_color: e.target.value }))} style={{ width: '40px', height: '40px', padding: '0', border: 'none', background: 'transparent', cursor: 'pointer' }} />
+                                <input style={fieldStyle} value={form.secondary_color} onChange={e => setForm(f => ({ ...f, secondary_color: e.target.value }))} />
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.375rem' }}>Custom CSS</label>
+                        <textarea
+                            style={{ ...fieldStyle, minHeight: '100px', fontFamily: 'monospace', fontSize: '0.85rem' }}
+                            value={form.custom_css}
+                            onChange={e => setForm(f => ({ ...f, custom_css: e.target.value }))}
+                            placeholder=".store-header { background: red; }"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* SEO Settings */}
+            <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1.5rem' }}>
+                <h3 style={{ margin: '0 0 1rem', fontSize: '1rem', fontWeight: 600 }}>SEO & Social</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div>
+                        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.375rem' }}>Meta Title</label>
+                        <input
+                            style={fieldStyle}
+                            value={form.seo_title}
+                            onChange={e => setForm(f => ({ ...f, seo_title: e.target.value }))}
+                            placeholder="SEO Optimized Page Title"
+                        />
+                    </div>
+                    <div>
+                        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.375rem' }}>Meta Description</label>
+                        <textarea
+                            style={{ ...fieldStyle, minHeight: '80px', resize: 'vertical' }}
+                            value={form.seo_description}
+                            onChange={e => setForm(f => ({ ...f, seo_description: e.target.value }))}
+                            placeholder="Search engine snippet description"
+                        />
+                    </div>
+                    <div>
+                        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.375rem' }}>OG Image URL</label>
+                        <input
+                            style={fieldStyle}
+                            value={form.og_image_url}
+                            onChange={e => setForm(f => ({ ...f, og_image_url: e.target.value }))}
+                            placeholder="https://example.com/social-share.jpg"
                         />
                     </div>
                 </div>
