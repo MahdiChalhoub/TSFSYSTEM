@@ -72,8 +72,8 @@ export async function syncInventoryValueToLedger() {
 
     const res = await createJournalEntry(entryData)
 
-    revalidatePath('/admin/finance/dashboard')
-    revalidatePath('/admin/finance/ledger')
+    revalidatePath('/finance/dashboard')
+    revalidatePath('/finance/ledger')
 
     return {
         success: true,

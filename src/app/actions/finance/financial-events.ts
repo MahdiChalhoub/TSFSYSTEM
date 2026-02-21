@@ -40,9 +40,9 @@ export async function createFinancialEvent(data: FinancialEventInput) {
             })
         })
 
-        revalidatePath('/admin/finance/events')
+        revalidatePath('/finance/events')
         return { success: true, eventId: event.id }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Create Event Failed", e)
         throw e
     }
@@ -62,7 +62,7 @@ export async function updateFinancialEvent(id: number, data: Partial<FinancialEv
                 contact_id: data.contactId
             })
         })
-        revalidatePath('/admin/finance/events')
+        revalidatePath('/finance/events')
         return { success: true }
     } catch (e) {
         console.error("Update Event Failed", e)

@@ -36,9 +36,9 @@ export async function createLoanContract(data: CreateLoanInput) {
             })
         })
 
-        revalidatePath('/admin/finance/loans')
+        revalidatePath('/finance/loans')
         return { success: true, loanId: loan.id }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Create Loan Failed", e)
         throw e
     }
@@ -52,11 +52,10 @@ export async function disburseLoan(loanId: number, targetAccountId: number) {
                 account_id: targetAccountId
             })
         })
-        revalidatePath(`/admin/finance/loans/${loanId}`)
+        revalidatePath(`/finance/loans/${loanId}`)
         return { success: true }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Disburse Loan Failed", e)
         throw e
     }
 }
-

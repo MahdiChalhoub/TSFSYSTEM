@@ -1,19 +1,27 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
 
 import { erpFetch } from '@/lib/erp-api'
+
+const PeriodUpdateSchema = z.object({
+    name: z.string().min(1).optional(),
+    start_date: z.string().optional(),
+    end_date: z.string().optional(),
+    status: z.enum(['OPEN', 'CLOSED', 'LOCKED']).optional(),
+}).passthrough()
 
 export async function getFiscalYears() {
     try {
         const data = await erpFetch('fiscal-years/')
-        return data.map((year: any) => ({
+        const years = Array.isArray(data) ? data : (data?.results || [])
+        return years.map((year: Record<string, any>) => ({
             ...year,
             startDate: year.start_date,
             endDate: year.end_date,
             isHardLocked: year.is_hard_locked,
-            // Ensure periods are also mapped if necessary, but periods usually come from nested serializer
-            // If periods have snake_case, we might need to map them too ideally
+            status: year.status || (year.is_hard_locked ? 'FINALIZED' : year.is_closed ? 'CLOSED' : 'OPEN'),
         }))
     } catch (error) {
         console.error("Failed to fetch fiscal years:", error)
@@ -23,7 +31,8 @@ export async function getFiscalYears() {
 
 export async function getLatestFiscalYear() {
     try {
-        const years = await erpFetch('fiscal-years/?limit=1&ordering=-end_date')
+        const raw = await erpFetch('fiscal-years/?limit=1&ordering=-end_date')
+        const years = Array.isArray(raw) ? raw : (raw?.results || [])
         const year = years[0] || null
         if (year) {
             return {
@@ -76,9 +85,9 @@ export async function createFiscalYear(config: FiscalYearConfig) {
                 include_audit: config.includeAuditPeriod // Mapping includeAuditPeriod
             })
         })
-        revalidatePath('/admin/finance/fiscal-years')
+        revalidatePath('/finance/fiscal-years')
         return { success: true, id: result.id }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Failed to create fiscal year:", error)
         throw error
     }
@@ -89,9 +98,9 @@ export async function closeFiscalYear(id: number) {
         await erpFetch(`fiscal-years/${id}/close/`, {
             method: 'POST'
         })
-        revalidatePath('/admin/finance/fiscal-years')
+        revalidatePath('/finance/fiscal-years')
         return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Failed to close fiscal year:", error)
         throw error
     }
@@ -102,24 +111,25 @@ export async function deleteFiscalYear(id: number) {
         await erpFetch(`fiscal-years/${id}/`, {
             method: 'DELETE'
         })
-        revalidatePath('/admin/finance/fiscal-years')
+        revalidatePath('/finance/fiscal-years')
         return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Failed to delete fiscal year:", error)
         throw error
     }
 }
 
-export async function updatePeriod(periodId: number, data: any) {
+export async function updatePeriod(periodId: number, data: unknown) {
+    const parsed = PeriodUpdateSchema.parse(data)
     try {
         await erpFetch(`fiscal-periods/${periodId}/`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+            body: JSON.stringify(parsed)
         })
-        revalidatePath('/admin/finance/fiscal-years')
+        revalidatePath('/finance/fiscal-years')
         return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Failed to update period:", error)
         throw error
     }
@@ -132,10 +142,25 @@ export async function updatePeriodStatus(periodId: number, newStatus: string) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ status: newStatus })
         })
-        revalidatePath('/admin/finance/fiscal-years')
+        revalidatePath('/finance/fiscal-years')
         return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Failed to update period status:", error)
+        throw error
+    }
+}
+
+// NOTE: Fiscal year lock is intentionally one-way (no unlock).
+// Once locked/finalized, a fiscal year cannot be reopened per accounting standards.
+export async function lockFiscalYear(id: number) {
+    try {
+        await erpFetch(`fiscal-years/${id}/lock/`, {
+            method: 'POST'
+        })
+        revalidatePath('/finance/fiscal-years')
+        return { success: true }
+    } catch (error: unknown) {
+        console.error("Failed to lock fiscal year:", error)
         throw error
     }
 }
@@ -147,9 +172,9 @@ export async function hardLockFiscalYear(id: number) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ is_hard_locked: true, status: 'CLOSED' })
         })
-        revalidatePath('/admin/finance/fiscal-years')
+        revalidatePath('/finance/fiscal-years')
         return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Failed to hard lock fiscal year:", error)
         throw error
     }
@@ -175,9 +200,9 @@ export async function transferBalancesToNextYear(fromYearId: number, toYearId: n
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ target_year_id: toYearId })
         })
-        revalidatePath('/admin/finance/fiscal-years')
+        revalidatePath('/finance/fiscal-years')
         return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Failed to transfer balances:", error)
         throw error
     }

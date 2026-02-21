@@ -23,7 +23,7 @@ const LEBANESE_PCN: TemplateAccount[] = [
         code: '1', name: 'Capitaux et Passif Non Courant', type: 'EQUITY', children: [
             { code: '10', name: 'Capital', type: 'EQUITY' },
             { code: '11', name: 'Reserves', type: 'EQUITY' },
-            { code: '12', name: 'Resultat reporté', type: 'EQUITY' },
+            { code: '12', name: 'Resultat report├⌐', type: 'EQUITY' },
             { code: '13', name: 'Resultat de l\'exercice', type: 'EQUITY' },
         ]
     },
@@ -31,22 +31,22 @@ const LEBANESE_PCN: TemplateAccount[] = [
         code: '2', name: 'Actif Non Courant (Immobilisations)', type: 'ASSET', children: [
             { code: '21', name: 'Immobilisations Incorporelles', type: 'ASSET' },
             { code: '22', name: 'Immobilisations Corporelles', type: 'ASSET' },
-            { code: '24', name: 'Immobilisations Financières', type: 'ASSET' },
+            { code: '24', name: 'Immobilisations Financi├¿res', type: 'ASSET' },
         ]
     },
     {
         code: '3', name: 'Stocks et En-cours', type: 'ASSET', children: [
             { code: '31', name: 'Marchandises', type: 'ASSET' },
-            { code: '32', name: 'Matières Premières', type: 'ASSET' },
+            { code: '32', name: 'Mati├¿res Premi├¿res', type: 'ASSET' },
         ]
     },
     {
         code: '4', name: 'Comptes de Tiers', type: 'LIABILITY', children: [
             { code: '40', name: 'Fournisseurs', type: 'LIABILITY', subType: 'PAYABLE' },
-            { code: '41', name: 'Clients (Créances)', type: 'ASSET', subType: 'RECEIVABLE' },
+            { code: '41', name: 'Clients (Cr├⌐ances)', type: 'ASSET', subType: 'RECEIVABLE' },
             { code: '42', name: 'Personnel', type: 'LIABILITY' },
             { code: '43', name: 'Organismes Sociaux', type: 'LIABILITY' },
-            { code: '44', name: 'Etat et Collectivités Publiques', type: 'LIABILITY' },
+            { code: '44', name: 'Etat et Collectivit├⌐s Publiques', type: 'LIABILITY' },
         ]
     },
     {
@@ -58,11 +58,11 @@ const LEBANESE_PCN: TemplateAccount[] = [
     {
         code: '6', name: 'Comptes de Charges', type: 'EXPENSE', children: [
             { code: '60', name: 'Achats', type: 'EXPENSE' },
-            { code: '61', name: 'Services Extérieurs', type: 'EXPENSE' },
-            { code: '62', name: 'Autres Services Extérieurs', type: 'EXPENSE' },
-            { code: '63', name: 'Impôts et Taxes', type: 'EXPENSE' },
+            { code: '61', name: 'Services Ext├⌐rieurs', type: 'EXPENSE' },
+            { code: '62', name: 'Autres Services Ext├⌐rieurs', type: 'EXPENSE' },
+            { code: '63', name: 'Imp├┤ts et Taxes', type: 'EXPENSE' },
             { code: '64', name: 'Charges de Personnel', type: 'EXPENSE' },
-            { code: '66', name: 'Charges Financières', type: 'EXPENSE' },
+            { code: '66', name: 'Charges Financi├¿res', type: 'EXPENSE' },
         ]
     },
     {
@@ -154,9 +154,9 @@ const IFRS_COA: TemplateAccount[] = [
             },
             {
                 code: '1210', name: 'Accumulated Depreciation (CONTRA-ASSET)', type: 'ASSET', children: [
-                    { code: '1211', name: 'Accumulated Depreciation – Equipment', type: 'ASSET', syscohadaCode: '28', syscohadaClass: 'Class 2' },
-                    { code: '1212', name: 'Accumulated Depreciation – Vehicles', type: 'ASSET', syscohadaCode: '28', syscohadaClass: 'Class 2' },
-                    { code: '1213', name: 'Accumulated Amortization – Software', type: 'ASSET', syscohadaCode: '28', syscohadaClass: 'Class 2' },
+                    { code: '1211', name: 'Accumulated Depreciation ΓÇô Equipment', type: 'ASSET', syscohadaCode: '28', syscohadaClass: 'Class 2' },
+                    { code: '1212', name: 'Accumulated Depreciation ΓÇô Vehicles', type: 'ASSET', syscohadaCode: '28', syscohadaClass: 'Class 2' },
+                    { code: '1213', name: 'Accumulated Amortization ΓÇô Software', type: 'ASSET', syscohadaCode: '28', syscohadaClass: 'Class 2' },
                 ]
             }
         ]
@@ -203,9 +203,9 @@ const IFRS_COA: TemplateAccount[] = [
         code: '4000', name: 'REVENUE', type: 'INCOME', children: [
             {
                 code: '4100', name: 'Sales Revenue', type: 'INCOME', children: [
-                    { code: '4101', name: 'Sales – Cash', type: 'INCOME', syscohadaCode: '70', syscohadaClass: 'Class 7' },
-                    { code: '4102', name: 'Sales – Credit', type: 'INCOME', syscohadaCode: '70', syscohadaClass: 'Class 7' },
-                    { code: '4103', name: 'Sales – Online', type: 'INCOME', syscohadaCode: '70', syscohadaClass: 'Class 7' },
+                    { code: '4101', name: 'Sales ΓÇô Cash', type: 'INCOME', syscohadaCode: '70', syscohadaClass: 'Class 7' },
+                    { code: '4102', name: 'Sales ΓÇô Credit', type: 'INCOME', syscohadaCode: '70', syscohadaClass: 'Class 7' },
+                    { code: '4103', name: 'Sales ΓÇô Online', type: 'INCOME', syscohadaCode: '70', syscohadaClass: 'Class 7' },
                 ]
             },
             {
@@ -284,9 +284,9 @@ const SYSCOHADA_REVISED: TemplateAccount[] = [
         code: "1", name: "Comptes de capitaux", type: "EQUITY", children: [
             { code: "10", name: "Capital", type: "EQUITY" },
             { code: "11", name: "Reserves", type: "EQUITY" },
-            { code: "12", name: "Report à nouveau", type: "EQUITY" },
+            { code: "12", name: "Report ├á nouveau", type: "EQUITY" },
             { code: "13", name: "Resultat net de l'exercice", type: "EQUITY" },
-            { code: "16", name: "Emprunts et dettes assimilées", type: "LIABILITY" },
+            { code: "16", name: "Emprunts et dettes assimil├⌐es", type: "LIABILITY" },
         ]
     },
     {
@@ -308,10 +308,10 @@ const SYSCOHADA_REVISED: TemplateAccount[] = [
     },
     {
         code: "4", name: "Comptes de tiers", type: "ASSET", children: [
-            { code: "40", name: "Fournisseurs et comptes rattachés", type: "LIABILITY", subType: "PAYABLE" },
-            { code: "41", name: "Clients et comptes rattachés", type: "ASSET", subType: "RECEIVABLE" },
+            { code: "40", name: "Fournisseurs et comptes rattach├⌐s", type: "LIABILITY", subType: "PAYABLE" },
+            { code: "41", name: "Clients et comptes rattach├⌐s", type: "ASSET", subType: "RECEIVABLE" },
             { code: "42", name: "Personnel", type: "LIABILITY" },
-            { code: "44", name: "Etat et collectivités publiques", type: "LIABILITY" },
+            { code: "44", name: "Etat et collectivit├⌐s publiques", type: "LIABILITY" },
         ]
     },
     {
@@ -349,7 +349,7 @@ const TEMPLATES = {
 }
 
 export async function importChartOfAccountsTemplate(templateKey: keyof typeof TEMPLATES, options?: { reset?: boolean }) {
-    console.log(`[COA_TEMPLATE] Starting import for ${templateKey}, reset=${options?.reset}`)
+
 
     try {
         const { erpFetch } = await import('@/lib/erp-api')
@@ -362,7 +362,7 @@ export async function importChartOfAccountsTemplate(templateKey: keyof typeof TE
         })
 
         try {
-            revalidatePath('/admin/finance/chart-of-accounts')
+            revalidatePath('/finance/chart-of-accounts')
         } catch (e) {
             // Ignore
         }
@@ -385,8 +385,8 @@ export async function getTemplatePreview(templateKey: keyof typeof TEMPLATES) {
  * MAPPING TOOL (Advanced)
  * Moves all balances from old accounts to new ones and deactivates old ones.
  */
-export async function migrateBalances(data: { mappings: any[], description: string }) {
-    console.log(`[COA_MIGRATE] Executing migration: ${data.description}`)
+export async function migrateBalances(data: { mappings: Record<string, any>[], description: string }) {
+
     try {
         const { erpFetch } = await import('@/lib/erp-api')
         return await erpFetch('coa/migrate/', {
@@ -399,6 +399,6 @@ export async function migrateBalances(data: { mappings: any[], description: stri
     }
 }
 
-export async function sweepInactiveBalances(mapping: any) {
+export async function sweepInactiveBalances(mapping: Record<string, any>) {
     throw new Error("Sweep logic must be moved to Django Backend via erpFetch.")
 }

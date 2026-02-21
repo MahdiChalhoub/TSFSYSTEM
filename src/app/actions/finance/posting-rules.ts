@@ -70,7 +70,7 @@ export async function savePostingRules(config: PostingRulesConfig) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(config)
         })
-        revalidatePath('/admin/finance/settings/posting-rules')
+        revalidatePath('/finance/settings/posting-rules')
         return { success: true }
     } catch (error) {
         console.error("Failed to save posting rules:", error)
@@ -83,7 +83,7 @@ export async function applySmartPostingRules() {
         await erpFetch('settings/smart_apply/', {
             method: 'POST'
         })
-        revalidatePath('/admin/finance/settings/posting-rules')
+        revalidatePath('/finance/settings/posting-rules')
         return { success: true }
     } catch (error) {
         console.error("Failed to apply smart posting rules:", error)

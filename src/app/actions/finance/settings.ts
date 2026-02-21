@@ -15,6 +15,7 @@ export type FinancialSettingsState = {
     dualView?: boolean
     customTaxRules?: string
     pricingCostBasis?: string
+    officialAccessPin?: string
 }
 
 export async function getSettingsLockStatus() {
@@ -32,8 +33,8 @@ export async function getFinancialSettings() {
             salesTaxPercentage: Number(result.salesTaxPercentage),
             purchaseTaxPercentage: Number(result.purchaseTaxPercentage),
         }
-    } catch (error: any) {
-        const isContextError = error.message && error.message.includes('No organization context');
+    } catch (error: unknown) {
+        const isContextError = (error instanceof Error ? error.message : String(error)) && (error instanceof Error ? error.message : String(error)).includes('No organization context');
 
         if (!isContextError) {
             console.error("Failed to fetch settings:", error)
@@ -56,7 +57,7 @@ export async function updateFinancialSettings(data: FinancialSettingsState) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         })
-        revalidatePath('/admin/finance/settings')
+        revalidatePath('/finance/settings')
         return { success: true }
     } catch (error) {
         console.error("Failed to update settings:", error)

@@ -2,6 +2,28 @@
 
 import { erpFetch } from '@/lib/erp-api'
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
+
+const JournalLineSchema = z.object({
+    accountId: z.number({ message: 'Account is required' }).int().positive().optional(),
+    account_id: z.number().int().positive().optional(),
+    debit: z.number().min(0, 'Debit must be non-negative'),
+    credit: z.number().min(0, 'Credit must be non-negative'),
+    description: z.string().optional(),
+    contactId: z.number().int().positive().nullable().optional(),
+    contact_id: z.number().int().positive().nullable().optional(),
+    employeeId: z.number().int().positive().nullable().optional(),
+    employee_id: z.number().int().positive().nullable().optional(),
+}).refine(d => (d.accountId || d.account_id), { message: 'Each line must have an account' })
+
+const JournalEntrySchema = z.object({
+    description: z.string().optional(),
+    date: z.string().optional(),
+    reference: z.string().optional(),
+    entry_type: z.string().optional(),
+    scope: z.enum(['OFFICIAL', 'INTERNAL']).optional(),
+    lines: z.array(JournalLineSchema).min(1, 'At least one journal line is required'),
+}).passthrough()
 
 export type JournalLineInput = {
     accountId: number
@@ -18,8 +40,8 @@ export type JournalLineInput = {
  */
 export async function verifyTrialBalance() {
     try {
-        const accounts = await erpFetch('chart-of-accounts/trial_balance/')
-        const total = accounts.reduce((acc: number, cur: any) => acc + (cur.temp_balance || 0), 0)
+        const accounts = await erpFetch('coa/trial_balance/')
+        const total = accounts.reduce((acc: number, cur: Record<string, any>) => acc + (cur.temp_balance || 0), 0)
 
         if (Math.abs(total) > 0.01) {
             console.error(`CRITICAL: System Out of Balance! Trial Balance Total: ${total}`)
@@ -32,15 +54,18 @@ export async function verifyTrialBalance() {
     }
 }
 
-export async function createJournalEntry(data: any) {
+export async function createJournalEntry(data: unknown) {
+    const parsed = JournalEntrySchema.parse(data)
     // Map camelCase lines to snake_case for Django if needed, 
     // although ViewSet now handles some of it, let's be explicit.
-    if (data.lines) {
-        data.lines = data.lines.map((l: any) => ({
+    if (parsed.lines) {
+        parsed.lines = parsed.lines.map((l) => ({
             account_id: l.accountId || l.account_id,
             debit: l.debit,
             credit: l.credit,
-            description: l.description
+            description: l.description,
+            contact_id: l.contactId || l.contact_id || null,
+            employee_id: l.employeeId || l.employee_id || null,
         }))
     }
 
@@ -48,23 +73,26 @@ export async function createJournalEntry(data: any) {
         const result = await erpFetch('journal/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+            body: JSON.stringify(parsed)
         })
-        revalidatePath('/admin/finance/ledger')
+        revalidatePath('/finance/ledger')
         return result
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Failed to create journal entry:", error)
         throw error
     }
 }
 
-export async function updateJournalEntry(id: number, data: any) {
-    if (data.lines) {
-        data.lines = data.lines.map((l: any) => ({
+export async function updateJournalEntry(id: number, data: unknown) {
+    const parsed = JournalEntrySchema.parse(data)
+    if (parsed.lines) {
+        parsed.lines = parsed.lines.map((l) => ({
             account_id: l.accountId || l.account_id,
             debit: l.debit,
             credit: l.credit,
-            description: l.description
+            description: l.description,
+            contact_id: l.contactId || l.contact_id || null,
+            employee_id: l.employeeId || l.employee_id || null,
         }))
     }
 
@@ -72,23 +100,41 @@ export async function updateJournalEntry(id: number, data: any) {
         const result = await erpFetch(`journal/${id}/`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+            body: JSON.stringify(parsed)
         })
-        revalidatePath('/admin/finance/ledger')
+        revalidatePath('/finance/ledger')
         return result
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Failed to update journal entry:", error)
         throw error
     }
 }
 
-export async function getLedgerEntries(scope: 'OFFICIAL' | 'INTERNAL' = 'INTERNAL', filters?: { status?: string, q?: string }) {
+export async function getLedgerEntries(
+    scope: 'OFFICIAL' | 'INTERNAL' = 'INTERNAL',
+    filters?: {
+        status?: string
+        q?: string
+        fiscal_year?: string
+        date_from?: string
+        date_to?: string
+        entry_type?: string
+        source_type?: string
+        is_auto?: string
+    }
+) {
     try {
         let path = 'journal/'
         const params = new URLSearchParams()
         if (scope === 'OFFICIAL') params.append('scope', 'OFFICIAL')
         if (filters?.status) params.append('status', filters.status)
         if (filters?.q) params.append('search', filters.q)
+        if (filters?.fiscal_year) params.append('fiscal_year', filters.fiscal_year)
+        if (filters?.date_from) params.append('date_from', filters.date_from)
+        if (filters?.date_to) params.append('date_to', filters.date_to)
+        if (filters?.entry_type) params.append('entry_type', filters.entry_type)
+        if (filters?.source_type) params.append('source_type', filters.source_type)
+        if (filters?.is_auto) params.append('is_auto', filters.is_auto)
 
         const queryString = params.toString()
         if (queryString) path += `?${queryString}`
@@ -105,9 +151,9 @@ export async function reverseJournalEntry(id: number) {
         const result = await erpFetch(`journal/${id}/reverse/`, {
             method: 'POST'
         })
-        revalidatePath('/admin/finance/ledger')
+        revalidatePath('/finance/ledger')
         return result
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Failed to reverse journal entry:", error)
         throw error
     }
@@ -120,7 +166,7 @@ export async function recalculateAccountBalances() {
         await erpFetch('journal/recalculate_balances/', {
             method: 'POST'
         })
-        revalidatePath('/admin/finance/chart-of-accounts')
+        revalidatePath('/finance/chart-of-accounts')
         return { success: true }
     } catch (error) {
         console.error("Failed to recalculate balances:", error)
@@ -128,13 +174,16 @@ export async function recalculateAccountBalances() {
     }
 }
 
-export async function clearAllJournalEntries() {
+export async function clearAllJournalEntries(confirm: 'YES_DELETE_ALL' | null = null) {
+    if (confirm !== 'YES_DELETE_ALL') {
+        return { success: false, message: 'Confirmation required: pass "YES_DELETE_ALL" to proceed.' }
+    }
     try {
         await erpFetch('journal/clear_all/', {
             method: 'POST'
         })
-        revalidatePath('/admin/finance/ledger')
-        revalidatePath('/admin/finance/chart-of-accounts')
+        revalidatePath('/finance/ledger')
+        revalidatePath('/finance/chart-of-accounts')
         return { success: true }
     } catch (error) {
         console.error("Failed to clear entries:", error)
@@ -162,9 +211,52 @@ export async function getJournalEntry(id: number) {
     }
 }
 
-export async function createOpeningBalanceEntry(data: any) {
+export async function createOpeningBalanceEntry(data: unknown) {
+    const parsed = JournalEntrySchema.parse(data)
     return createJournalEntry({
-        ...data,
+        ...parsed,
         entry_type: 'OPENING_BALANCE'
     })
+}
+
+// ─── Lifecycle Actions ──────────────────────────────────────────
+
+export async function lockJournalEntry(id: number, comment?: string) {
+    const result = await erpFetch(`journal/${id}/lock/`, {
+        method: 'POST',
+        body: JSON.stringify({ comment: comment || '' })
+    })
+    revalidatePath('/finance/ledger')
+    return result
+}
+
+export async function unlockJournalEntry(id: number, comment: string) {
+    const result = await erpFetch(`journal/${id}/unlock/`, {
+        method: 'POST',
+        body: JSON.stringify({ comment })
+    })
+    revalidatePath('/finance/ledger')
+    return result
+}
+
+export async function verifyJournalEntry(id: number, comment?: string) {
+    const result = await erpFetch(`journal/${id}/verify/`, {
+        method: 'POST',
+        body: JSON.stringify({ comment: comment || '' })
+    })
+    revalidatePath('/finance/ledger')
+    return result
+}
+
+export async function confirmJournalEntry(id: number, comment?: string) {
+    const result = await erpFetch(`journal/${id}/confirm/`, {
+        method: 'POST',
+        body: JSON.stringify({ comment: comment || '' })
+    })
+    revalidatePath('/finance/ledger')
+    return result
+}
+
+export async function getJournalEntryHistory(id: number) {
+    return await erpFetch(`journal/${id}/lifecycle_history/`)
 }

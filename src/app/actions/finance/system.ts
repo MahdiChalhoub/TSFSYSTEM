@@ -28,4 +28,3 @@ export async function seedTestData() {
     // We cannot direct-write to the DB from Next.js anymore.
     throw new Error("Seeding via Frontend is deprecated. Please use Django Management Commands (e.g. python manage.py seed_test_data).");
 }
-

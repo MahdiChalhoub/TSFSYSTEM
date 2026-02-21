@@ -7,8 +7,8 @@ export async function getFinancialDashboardStats(scope: 'OFFICIAL' | 'INTERNAL' 
     try {
         const data = await erpFetch(`dashboard/financial_stats/?scope=${scope}`);
         return serializeDecimals(data);
-    } catch (e: any) {
-        if (e.message && e.message.includes('Authentication credentials')) {
+    } catch (e: unknown) {
+        if ((e instanceof Error ? e.message : String(e)) && (e instanceof Error ? e.message : String(e)).includes('Authentication credentials')) {
             return serializeDecimals({
                 totalCash: 0,
                 monthlyIncome: 0,
@@ -51,8 +51,8 @@ export async function getAdminDashboardStats() {
     try {
         const data = await erpFetch('dashboard/admin_stats/');
         return serializeDecimals(data);
-    } catch (e: any) {
-        if (e.message && e.message.includes('Authentication credentials')) {
+    } catch (e: unknown) {
+        if ((e instanceof Error ? e.message : String(e)) && (e instanceof Error ? e.message : String(e)).includes('Authentication credentials')) {
             // Explicitly ignore auth errors as redirect happens elsewhere
             return serializeDecimals({
                 totalSales: 0,
@@ -62,7 +62,7 @@ export async function getAdminDashboardStats() {
                 latestSales: []
             });
         }
-        console.warn("Failed to fetch dashboard stats from Django:", e);
+        console.debug("Failed to fetch dashboard stats from Django:", e);
         return serializeDecimals({
             totalSales: 0,
             activeOrders: 0,
@@ -72,4 +72,3 @@ export async function getAdminDashboardStats() {
         });
     }
 }
-

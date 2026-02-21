@@ -5,23 +5,20 @@ import { revalidatePath } from 'next/cache'
 
 export async function calculateProductPrice(productId: number, customerGroupId?: number) {
     try {
-        // 1. Get Product Baseline
         const product = await erpFetch(`/inventory/products/${productId}/`)
 
         if (!product) throw new Error('Product not found')
 
-        // Default Price (Fallback)
-        // Backend returns snake_case
         const basePrice = Number(product.selling_price_ttc || 0)
-        let finalPrice = basePrice
+        const finalPrice = basePrice
         const appliedRule = null
 
-        // TODO: Port PricingRule logic to Django Backend (PricingService)
-        // For now, we return the base price.
+        // PricingRule logic is not yet ported to Django Backend.
+        // Returns base price as final price until PricingService is implemented.
 
         return {
             basePrice: basePrice,
-            finalPrice: Math.max(0, finalPrice), // No negative prices
+            finalPrice: Math.max(0, finalPrice),
             appliedRule: appliedRule
         }
     } catch (error) {
@@ -31,12 +28,11 @@ export async function calculateProductPrice(productId: number, customerGroupId?:
 }
 
 export async function getPriceLists() {
-    // TODO: Implement PriceList model in Django
-    return []
+    // PriceList model not yet implemented in Django
+    return { success: false, message: 'Price lists are not yet implemented.', data: [] }
 }
 
 export async function createPriceList(name: string) {
-    // TODO: Implement PriceList creation in Django
-    console.warn("createPriceList not yet implemented in backend")
-    revalidatePath('/admin/finance/pricing')
+    // PriceList creation not yet implemented in Django
+    return { success: false, message: 'Price list creation is not yet implemented.' }
 }

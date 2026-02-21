@@ -1,29 +1,22 @@
 'use server'
 
-// import { prisma } from '@/lib/db' // Removed Prisma
+/**
+ * Financial Diagnostics — NOT YET IMPLEMENTED
+ * These functions are stubs pending Django backend implementation.
+ * They return explicit not-implemented status to prevent silent fake success.
+ */
 
 export async function diagnoseFinancialDiscrepancy() {
-    // TODO: Implement diagnostic logic in Django backend
-    // For now return empty issues list to unblock build
-    console.warn("diagnoseFinancialDiscrepancy: Backend implementation pending.")
-    const issues: any[] = []
-
-    // Example Mock Issue (Commented out)
-    /*
-    issues.push({
-        type: 'BACKEND_NOT_CONNECTED',
-        severity: 'WARNING',
-        title: 'Diagnostics Unavailable',
-        description: 'The diagnostic engine is being migrated to the new core.',
-        action: null
-    })
-    */
-
-    return issues
+    return {
+        success: false,
+        message: 'Financial diagnostics engine is not yet implemented. This feature is being developed.',
+        issues: []
+    }
 }
 
 export async function healLedgerResidues() {
-    // TODO: Implement healing logic in Django backend
-    console.warn("healLedgerResidues: Backend implementation pending.")
-    return { success: true, message: "Healing logic is currently being migrated." }
+    return {
+        success: false,
+        message: 'Ledger healing is not yet implemented. This feature is being developed.'
+    }
 }
