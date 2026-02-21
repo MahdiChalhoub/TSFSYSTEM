@@ -48,7 +48,7 @@ export default function PricingManager({
         fd.set('name', groupName);
         fd.set('description', groupDesc);
         fd.set('priority', groupPriority);
-        const result = await createPriceGroup(null, fd);
+        const result = await createPriceGroup(null as any, fd);
         setSaving(false);
         if (result.success) {
             setShowGroupForm(false);
@@ -70,7 +70,7 @@ export default function PricingManager({
         if (ruleGroupId) fd.set('priceGroupId', ruleGroupId);
         if (ruleProductId) fd.set('productId', ruleProductId);
         if (ruleCategoryId) fd.set('categoryId', ruleCategoryId);
-        const result = await createPriceRule(null, fd);
+        const result = await createPriceRule(null as any, fd);
         setSaving(false);
         if (result.success) {
             setShowRuleForm(false);

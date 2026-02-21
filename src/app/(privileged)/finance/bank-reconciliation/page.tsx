@@ -21,7 +21,7 @@ function fmt(n: number) {
 
 export default function BankReconciliationPage() {
     const [accounts, setAccounts] = useState<FinancialAccount[]>([])
-    const [detail, setDetail] = useState<Record<string, unknown> | null>(null)
+    const [detail, setDetail] = useState<Record<string, any> | null>(null)
     const [loading, setLoading] = useState(true)
     const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null)
     const [search, setSearch] = useState('')
@@ -189,7 +189,7 @@ export default function BankReconciliationPage() {
     }
 
     // Account List View
-    const totalBalance = accounts.reduce((sum, a) => sum + (a.book_balance || 0), 0)
+    const totalBalance = accounts.reduce((sum, a) => sum + ((a as any).book_balance || 0), 0)
 
     return (
         <div className="p-6 space-y-6">

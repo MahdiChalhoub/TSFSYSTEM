@@ -25,7 +25,7 @@ const slugify = (text: string) => {
 
 function BusinessRegisterContent() {
     const searchParams = useSearchParams();
-    const [state, action, isPending] = useActionState(registerBusinessAction, null);
+    const [state, action, isPending] = useActionState(registerBusinessAction as any, null);
     const [config, setConfig] = useState<PublicConfig>({ business_types: [], currencies: [] });
     const [businessName, setBusinessName] = useState("");
     const [slug, setSlug] = useState("");
@@ -64,8 +64,8 @@ function BusinessRegisterContent() {
         }
     };
 
-    if (state?.success && state?.login_url) {
-        window.location.href = state.login_url;
+    if ((state as any)?.success && (state as any)?.login_url) {
+        window.location.href = (state as any)?.login_url;
         return (
             <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 relative overflow-hidden">
                 <div className="absolute inset-0 bg-emerald-500/5 blur-[160px] rounded-full" />
@@ -132,7 +132,7 @@ function BusinessRegisterContent() {
                 <CardContent className="p-10 md:p-16">
                     <form action={action} className="space-y-12">
                         {/* Error Reporting */}
-                        {((state as any)?.error?.root || state?.error) && (
+                        {((state as any)?.error?.root || (state as any)?.error) && (
                             <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3 text-red-400 text-xs font-bold animate-in zoom-in-95">
                                 <AlertCircle size={16} />
                                 <div className="flex-1">

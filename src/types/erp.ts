@@ -863,6 +863,10 @@ export interface PurchaseLine {
     sellingPriceTTC?: number
     taxRate?: number
     expiryDate?: string
+    stockLevel?: number
+    proposedQty?: number
+    barcode?: string
+    lastPrice?: string | number
     [key: string]: unknown
 }
 
@@ -957,9 +961,17 @@ export interface SaasOrganization {
     is_active?: boolean
     status?: string
     plan_name?: string
+    current_plan_name?: string
+    business_type_name?: string
+    country?: string
+    business_email?: string
+    client_name?: string
+    phone?: string
     subscription_status?: string
     created_at?: string
     user_count?: number
+    site_count?: number
+    module_count?: number
     modules?: Array<Record<string, unknown>>
     sites?: Array<Record<string, unknown>>
     subscription?: Record<string, unknown>
@@ -967,18 +979,86 @@ export interface SaasOrganization {
 }
 
 export interface SaasUsageData {
-    users?: number
-    products?: number
-    orders?: number
-    storage?: number
-    api_calls?: number
+    plan?: {
+        id?: number
+        name?: string
+        monthly_price?: string | number
+        annual_price?: string | number
+        expiry?: string
+        modules?: string[]
+        [key: string]: unknown
+    }
+    client?: {
+        id?: number
+        full_name?: string
+        company_name?: string
+        email?: string
+        phone?: string
+        [key: string]: unknown
+    }
+    users: {
+        current: number
+        limit: number
+        percent: number
+    }
+    sites: {
+        current: number
+        limit: number
+        percent: number
+    }
+    storage: {
+        current_mb: number
+        limit_mb: number
+        percent: number
+    }
+    invoices: {
+        current: number
+        limit: number
+        percent: number
+    }
+    modules: {
+        current: number
+        limit: number
+        percent: number
+        total_available?: number
+    }
+    warnings?: Array<{
+        code?: string
+        level?: string
+        message?: string
+        suggestion?: string
+        [key: string]: unknown
+    }>
+    available_plans?: Array<Record<string, unknown>>
+    [key: string]: unknown
+}
+
+export interface SaasBillingClient {
+    id?: number
+    full_name?: string
+    company_name?: string
+    email?: string
+    phone?: string
     [key: string]: unknown
 }
 
 export interface SaasBillingData {
-    history: Array<Record<string, unknown>>
-    balance: { total_paid: string; total_credits: string; net_balance: string;[key: string]: unknown }
-    client: Record<string, unknown> | null
+    history: Array<{
+        id?: number
+        amount?: string | number
+        type?: string
+        date?: string
+        reference?: string
+        description?: string
+        [key: string]: unknown
+    }>
+    balance: {
+        total_paid: string
+        total_credits: string
+        net_balance: string
+        [key: string]: unknown
+    }
+    client: SaasBillingClient | null
     [key: string]: unknown
 }
 
@@ -988,16 +1068,34 @@ export interface SaasAddonData {
     [key: string]: unknown
 }
 
+export interface SaasPlanLimits {
+    max_users?: number
+    max_sites?: number
+    max_storage_gb?: number
+    max_products?: number
+    max_invoices?: number
+    custom?: boolean
+    [key: string]: unknown
+}
+
 export interface SaasPlan {
     id: number
     name: string
     description?: string
     price?: string | number
+    monthly_price?: string | number
+    annual_price?: string | number
     max_users?: number
     max_products?: number
     max_sites?: number
+    max_storage_mb?: number
+    max_invoices?: number
+    modules?: string[]
     features?: Record<string, unknown>
     addons?: Array<Record<string, unknown>>
+    limits?: SaasPlanLimits
+    trial_days?: number
+    is_active?: boolean
     [key: string]: unknown
 }
 
@@ -1097,8 +1195,21 @@ export interface SaasModule {
     id: number
     name: string
     code: string
+    status?: string
     is_active?: boolean
     is_core?: boolean
+    description?: string
+    version?: string
+    icon?: string
+    active_features?: string[]
+    features?: Array<{
+        code: string
+        label?: string
+        description?: string
+        enabled?: boolean
+        [key: string]: unknown
+    }>
+    dependencies?: string[]
     [key: string]: unknown
 }
 
@@ -1110,14 +1221,22 @@ export interface SaasUser {
     last_name?: string
     role?: string
     is_active?: boolean
+    is_superuser?: boolean
+    is_staff?: boolean
+    date_joined?: string
     [key: string]: unknown
 }
 
 export interface SaasSite {
     id: number
     name: string
+    code?: string
     address?: string
+    city?: string
+    phone?: string
+    vat_number?: string
     is_active?: boolean
+    created_at?: string
     [key: string]: unknown
 }
 

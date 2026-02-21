@@ -26,7 +26,7 @@ function buildCategoryTree(flatCategories: Record<string, any>[]): CategoryNode[
     const roots: CategoryNode[] = [];
 
     flatCategories.forEach(cat => {
-        categoryMap.set(cat.id, { ...cat, children: [] });
+        categoryMap.set(cat.id, { ...cat, children: [] } as any);
     });
 
     flatCategories.forEach(cat => {

@@ -115,7 +115,7 @@ export default function ProfitDistributionPage() {
 
     const walletColors = ["from-blue-500 to-blue-600", "from-emerald-500 to-emerald-600", "from-violet-500 to-violet-600", "from-amber-500 to-amber-600", "from-rose-500 to-rose-600", "from-cyan-500 to-cyan-600"]
 
-    const statusConfig: Record<string, { icon: Record<string, any>; color: string; bg: string }> = {
+    const statusConfig: Record<string, { icon: React.ComponentType<any>; color: string; bg: string }> = {
         POSTED: { icon: CheckCircle2, color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
         APPROVED: { icon: CheckCircle2, color: "text-blue-700", bg: "bg-blue-50 border-blue-200" },
         DRAFT: { icon: Clock, color: "text-amber-700", bg: "bg-amber-50 border-amber-200" },
@@ -245,14 +245,14 @@ export default function ProfitDistributionPage() {
                             <div className="space-y-5 pt-2">
                                 <div className="bg-gradient-to-br from-stone-50 to-emerald-50/30 rounded-2xl p-5 border">
                                     <p className="text-xs font-bold text-stone-400 uppercase">Fiscal Year</p>
-                                    <p className="text-lg font-bold text-stone-800">{preview.fiscal_year}</p>
+                                    <p className="text-lg font-bold text-stone-800">{String(preview.fiscal_year)}</p>
                                     <p className="text-xs font-bold text-stone-400 uppercase mt-3">Net Profit</p>
                                     <p className="text-4xl font-bold text-emerald-600">{Number(preview.net_profit).toLocaleString()}</p>
                                 </div>
 
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-stone-500 uppercase">Allocation Breakdown</label>
-                                    {Object.entries(preview.allocations).map(([wallet, amount]: Record<string, any>, idx: number) => (
+                                    {Object.entries(preview.allocations as any).map(([wallet, amount]: [string, any], idx: number) => (
                                         <div key={wallet} className="flex justify-between items-center p-3 bg-white border rounded-xl">
                                             <div className="flex items-center gap-2">
                                                 <div className={`w-3 h-3 rounded-full bg-gradient-to-br ${walletColors[idx % walletColors.length]}`} />
@@ -345,7 +345,7 @@ export default function ProfitDistributionPage() {
                                     <TableCell className="text-right font-semibold text-stone-800">{Number(d.net_profit).toLocaleString()}</TableCell>
                                     <TableCell>
                                         <div className="flex flex-wrap gap-1.5">
-                                            {d.allocations && Object.entries(d.allocations).map(([k, v]: Record<string, any>, idx: number) => (
+                                            {d.allocations && Object.entries(d.allocations).map(([k, v]: any, idx: number) => (
                                                 <Badge key={k} variant="outline" className="rounded-lg text-[11px] border-stone-200 text-stone-600 gap-1">
                                                     <div className={`w-2 h-2 rounded-full bg-gradient-to-br ${walletColors[idx % walletColors.length]}`} />
                                                     {k}: {Number(v).toLocaleString()}

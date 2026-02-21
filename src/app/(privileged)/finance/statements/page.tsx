@@ -42,11 +42,11 @@ export default function StatementsPage() {
         }
     }
 
-    async function viewStatement(contact: Record<string, any>) {
+    async function viewStatement(contact: Contact) {
         setLoading(true)
         setSelectedContact(contact)
         try {
-            const data = await getContactStatement(contact.id)
+            const data = await getContactStatement(String(contact.id))
             setDetail(data)
         } catch {
             toast.error("Failed to load statement")
@@ -83,10 +83,10 @@ export default function StatementsPage() {
                         <ArrowLeft size={16} className="mr-1" /> Back
                     </Button>
                     <div>
-                        <h1 className="text-xl font-bold text-gray-900">{detail.contact?.name || selectedContact.name}</h1>
+                        <h1 className="text-xl font-bold text-gray-900">{(detail as any).contact?.name || selectedContact.name}</h1>
                         <p className="text-sm text-gray-500">
-                            <Badge variant="outline" className="mr-2">{detail.contact?.type || selectedContact.type}</Badge>
-                            {detail.contact?.email} · {detail.contact?.phone}
+                            <Badge variant="outline" className="mr-2">{(detail as any).contact?.type || (selectedContact as any).type}</Badge>
+                            {(detail as any).contact?.email} · {(detail as any).contact?.phone}
                         </p>
                     </div>
                 </header>
@@ -96,29 +96,29 @@ export default function StatementsPage() {
                     <Card className="border-l-4 border-l-blue-500">
                         <CardContent className="py-4 text-center">
                             <ShoppingCart size={20} className="mx-auto mb-1 text-blue-500" />
-                            <p className="text-2xl font-bold">{detail.stats?.order_count || 0}</p>
+                            <p className="text-2xl font-bold">{(detail as any).stats?.order_count || 0}</p>
                             <p className="text-[10px] text-gray-400 uppercase">Orders</p>
                         </CardContent>
                     </Card>
                     <Card className="border-l-4 border-l-emerald-500">
                         <CardContent className="py-4 text-center">
                             <DollarSign size={20} className="mx-auto mb-1 text-emerald-500" />
-                            <p className="text-xl font-bold text-emerald-700">{fmt(detail.stats?.total_revenue || 0)}</p>
+                            <p className="text-xl font-bold text-emerald-700">{fmt((detail as any).stats?.total_revenue || 0)}</p>
                             <p className="text-[10px] text-gray-400 uppercase">Total Revenue</p>
                         </CardContent>
                     </Card>
                     <Card className="border-l-4 border-l-purple-500">
                         <CardContent className="py-4 text-center">
                             <CreditCard size={20} className="mx-auto mb-1 text-purple-500" />
-                            <p className="text-xl font-bold text-purple-700">{fmt(detail.stats?.total_paid || 0)}</p>
+                            <p className="text-xl font-bold text-purple-700">{fmt((detail as any).stats?.total_paid || 0)}</p>
                             <p className="text-[10px] text-gray-400 uppercase">Total Paid</p>
                         </CardContent>
                     </Card>
-                    <Card className={`border-l-4 ${(detail.balance?.amount || 0) > 0 ? 'border-l-red-500' : 'border-l-green-500'}`}>
+                    <Card className={`border-l-4 ${((detail as any).balance?.amount || 0) > 0 ? 'border-l-red-500' : 'border-l-green-500'}`}>
                         <CardContent className="py-4 text-center">
-                            <BookOpen size={20} className={`mx-auto mb-1 ${(detail.balance?.amount || 0) > 0 ? 'text-red-500' : 'text-green-500'}`} />
-                            <p className={`text-xl font-bold ${(detail.balance?.amount || 0) > 0 ? 'text-red-700' : 'text-green-700'}`}>
-                                {fmt(detail.balance?.amount || 0)}
+                            <BookOpen size={20} className={`mx-auto mb-1 ${((detail as any).balance?.amount || 0) > 0 ? 'text-red-500' : 'text-green-500'}`} />
+                            <p className={`text-xl font-bold ${((detail as any).balance?.amount || 0) > 0 ? 'text-red-700' : 'text-green-700'}`}>
+                                {fmt((detail as any).balance?.amount || 0)}
                             </p>
                             <p className="text-[10px] text-gray-400 uppercase">Balance</p>
                         </CardContent>
@@ -154,9 +154,9 @@ export default function StatementsPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {(detail.orders || []).length === 0 ? (
+                                    {((detail as any).orders || []).length === 0 ? (
                                         <TableRow><TableCell colSpan={5} className="text-center text-gray-400 py-8">No orders</TableCell></TableRow>
-                                    ) : (detail.orders || []).map((o: Record<string, any>) => (
+                                    ) : ((detail as any).orders || []).map((o: Record<string, any>) => (
                                         <TableRow key={o.id}>
                                             <TableCell className="text-sm">{o.date || '—'}</TableCell>
                                             <TableCell className="font-mono text-xs">{o.ref_code || `#${o.id}`}</TableCell>
@@ -179,9 +179,9 @@ export default function StatementsPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {(detail.payments || []).length === 0 ? (
+                                    {((detail as any).payments || []).length === 0 ? (
                                         <TableRow><TableCell colSpan={4} className="text-center text-gray-400 py-8">No payments</TableCell></TableRow>
-                                    ) : (detail.payments || []).map((p: Record<string, any>, i: number) => (
+                                    ) : ((detail as any).payments || []).map((p: Record<string, any>, i: number) => (
                                         <TableRow key={i}>
                                             <TableCell className="text-sm">{p.date || '—'}</TableCell>
                                             <TableCell className="font-mono text-xs">{p.reference || '—'}</TableCell>
@@ -205,9 +205,9 @@ export default function StatementsPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {(detail.journal || []).length === 0 ? (
+                                    {((detail as any).journal || []).length === 0 ? (
                                         <TableRow><TableCell colSpan={6} className="text-center text-gray-400 py-8">No journal entries</TableCell></TableRow>
-                                    ) : (detail.journal || []).map((j: Record<string, any>) => (
+                                    ) : ((detail as any).journal || []).map((j: Record<string, any>) => (
                                         <TableRow key={j.id}>
                                             <TableCell className="text-sm">{j.date || '—'}</TableCell>
                                             <TableCell className="font-mono text-xs text-blue-600">{j.reference || '—'}</TableCell>
@@ -279,7 +279,7 @@ export default function StatementsPage() {
                                         <TableCell className="text-sm text-gray-500">{c.phone || '—'}</TableCell>
                                         <TableCell className="text-sm text-gray-500">{c.email || '—'}</TableCell>
                                         <TableCell className="text-right">
-                                            <Button size="sm" variant="outline" onClick={() => viewStatement(c)}>
+                                            <Button size="sm" variant="outline" onClick={() => viewStatement(c as any)}>
                                                 <FileText size={14} className="mr-1" /> Statement
                                             </Button>
                                         </TableCell>

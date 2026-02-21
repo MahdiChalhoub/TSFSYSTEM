@@ -327,7 +327,7 @@ export default function SaaSModulesPage() {
                                 <div className="space-y-6 pt-6 border-t border-gray-100">
                                     <div className="flex justify-between items-center bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-inner">
                                         <span className="text-[10px] text-gray-400 uppercase font-black tracking-widest leading-none">Global Coverage</span>
-                                        <span className="text-emerald-600 font-mono font-bold leading-none">{m.total_installs} Tenants</span>
+                                        <span className="text-emerald-600 font-mono font-bold leading-none">{String(m.total_installs)} Tenants</span>
                                     </div>
 
                                     {m.dependencies && m.dependencies.length > 0 && (
@@ -378,7 +378,7 @@ export default function SaaSModulesPage() {
                                                         Select a previous version to restore. This will replace the source code but <strong>will not revert database schemas</strong>.
                                                     </DialogDescription>
                                                 </DialogHeader>
-                                                <BackupList moduleCode={m.code} onRollback={(v) => setPendingRollback({ code: m.code, version: v })} currentVersion={m.version} />
+                                                <BackupList moduleCode={m.code} onRollback={(v) => setPendingRollback({ code: m.code, version: v })} currentVersion={m.version || ''} />
                                             </DialogContent>
                                         </Dialog>
 
@@ -462,7 +462,7 @@ function BackupList({ moduleCode, onRollback, currentVersion }: { moduleCode: st
 
     useEffect(() => {
         getModuleBackups(moduleCode).then((data: Record<string, any>[]) => {
-            setBackups(data)
+            setBackups(data as any)
             setLoading(false)
         }).catch(() => setLoading(false))
     }, [moduleCode])
@@ -476,14 +476,14 @@ function BackupList({ moduleCode, onRollback, currentVersion }: { moduleCode: st
                 {backups.map((b, i) => (
                     <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-gray-900 border border-gray-800">
                         <div>
-                            <div className="font-bold text-white text-sm">v{b.version}</div>
-                            <div className="text-xs text-gray-500 mt-0.5">{b.date}</div>
+                            <div className="font-bold text-white text-sm">v{String(b.version)}</div>
+                            <div className="text-xs text-gray-500 mt-0.5">{String(b.date)}</div>
                         </div>
                         {b.version !== currentVersion && (
                             <Button
                                 size="sm"
                                 variant="secondary"
-                                onClick={() => onRollback(b.version)}
+                                onClick={() => onRollback(String(b.version))}
                                 className="h-8 text-xs font-bold"
                             >
                                 <RotateCcw size={12} className="mr-2" />

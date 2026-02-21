@@ -137,6 +137,26 @@ class SaaSModuleViewSet(viewsets.ViewSet):
         names = ModuleManager.sync()
         return Response({'message': f'Synced {len(names)} modules from filesystem', 'codes': names})
 
+    @action(detail=False, methods=['post'])
+    def hot_reload(self, request):
+        """
+        Hot-reload all modules without server restart.
+        Syncs registry, reloads changed Python code, and resets URL caches.
+        """
+        try:
+            report = ModuleManager.hot_reload()
+            return Response({
+                'message': f'Hot-reload complete: {len(report["discovered"])} discovered, '
+                           f'{len(report["updated"])} updated, {len(report["reloaded"])} reimported',
+                'discovered': report['discovered'],
+                'updated': report['updated'],
+                'reloaded': report['reloaded'],
+                'url_reset': report['url_reset'],
+                'errors': report['errors'],
+            })
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     @action(detail=True, methods=['post'])
     def install_global(self, request, pk=None):
         """Installs a specific module for ALL organizations (feature grant)"""
@@ -831,7 +851,9 @@ class OrgModuleViewSet(viewsets.ViewSet):
                 'status': 'INSTALLED' if (is_core or m.name in enabled_map) else 'UNINSTALLED',
                 'is_core': is_core,
                 'active_features': om_record.active_features if om_record else [],
-                'available_features': available_features
+                'available_features': available_features,
+                'dependencies': m.manifest.get('dependencies', []),
+                'version': m.manifest.get('version', '1.0.0'),
             })
         return Response(data)
 
@@ -1147,18 +1169,27 @@ class OrgModuleViewSet(viewsets.ViewSet):
         for mod_code in (old_plan_modules - new_plan_modules):
             OrganizationModule.objects.filter(organization=org, module_name=mod_code, is_enabled=True).update(is_enabled=False)
 
-        # ─── 4. Connector hook ──────────────────────────────────────
+        # ─── 4. Dispatch events for finance + CRM integration ──────
         try:
             from erp.connector_engine import ConnectorEngine
             engine = ConnectorEngine()
             for inv in invoices_created:
-                engine.route_write(
-                    source_module='saas', target_module='finance',
-                    endpoint='billing/plan-change/',
-                    data={'organization_id': str(org.id), 'type': inv['type'], 'amount': inv['amount'], 'description': inv['description']},
-                    organization_id=str(org.id), user=user
+                engine.dispatch_event(
+                    source_module='kernel',
+                    event_name='subscription:payment_created',
+                    payload={
+                        'org_id': str(org.id),
+                        'org_name': org.name,
+                        'plan_name': new_plan.name,
+                        'old_plan_name': old_plan_name,
+                        'amount': inv['amount'],
+                        'type': inv['type'],
+                        'description': inv['description'],
+                    },
+                    organization_id=org.id
                 )
-        except: pass
+        except Exception as e:
+            logger.warning(f"Failed to dispatch subscription:payment_created event: {e}")
 
         return invoices_created
 

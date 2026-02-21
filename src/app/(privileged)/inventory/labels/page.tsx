@@ -109,7 +109,7 @@ export default function LabelPrintingPage() {
                         <div class="barcode">${p.barcode || p.sku || '000000'}</div>
                         <div class="bottom">
                             <span class="sku">${p.barcode || '\u2014'}</span>
-                            <span class="price">${fmt(parseFloat(p.selling_price_ttc || p.cost_price || 0))}</span>
+                            <span class="price">${fmt(parseFloat(String(p.selling_price_ttc || p.cost_price || 0)))}</span>
                         </div>
                     </div>
                 `).join('')}
@@ -320,7 +320,7 @@ export default function LabelPrintingPage() {
                                     </p>
                                     <div className="flex justify-between items-end">
                                         <span className="text-[10px] text-gray-400">{p.barcode || '\u2014'}</span>
-                                        <span className="font-bold text-sm">{fmt(parseFloat(p.selling_price_ttc || 0))}</span>
+                                        <span className="font-bold text-sm">{fmt(parseFloat(String(p.selling_price_ttc || 0)))}</span>
                                     </div>
                                 </div>
                             ))}

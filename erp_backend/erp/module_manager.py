@@ -259,6 +259,12 @@ class ModuleManager:
             
             print(f"✅ Module {module_name} successfully hardened to {new_version}")
 
+            # Auto hot-reload so new routes/events are immediately available
+            try:
+                ModuleManager.hot_reload()
+            except Exception as hr_err:
+                print(f"⚠️ Hot-reload after upgrade skipped: {hr_err}")
+
         except Exception as e:
             # Global Failure Handler
             print(f"❌ Upgrade CRITICALLY failed: {str(e)}")
@@ -501,3 +507,94 @@ class ModuleManager:
             raise e
         finally:
             ModuleManager.release_lock()
+
+    # =========================================================================
+    # HOT RELOAD — Apply module changes without full server restart
+    # =========================================================================
+
+    @staticmethod
+    def hot_reload():
+        """
+        Hot-reload module registry without restarting the server.
+        
+        Steps:
+        1. Sync filesystem → DB registry (discover new modules, update changed ones)
+        2. Invalidate Python import caches for modules whose checksums changed
+        3. Clear Django's URL resolver cache so new routes are immediately routable
+        
+        Returns a report dict with:
+        - discovered: list of module names found on filesystem
+        - updated: list of module names whose code changed (checksum mismatch)
+        - reloaded: list of Python module paths that were reimported
+        - url_reset: whether the URL resolver was cleared
+        """
+        import importlib
+        import sys
+        
+        report = {
+            'discovered': [],
+            'updated': [],
+            'reloaded': [],
+            'url_reset': False,
+            'errors': [],
+        }
+        
+        # ── Step 1: Sync DB registry from filesystem ──────────────────
+        # Capture old checksums before sync
+        old_checksums = {
+            sm.name: sm.checksum
+            for sm in SystemModule.objects.all()
+        }
+        
+        report['discovered'] = ModuleManager.sync()
+        
+        # ── Step 2: Detect which modules changed (checksum diff) ──────
+        new_records = SystemModule.objects.filter(name__in=report['discovered'])
+        for sm in new_records:
+            old_cs = old_checksums.get(sm.name)
+            if old_cs is None or old_cs != sm.checksum:
+                report['updated'].append(sm.name)
+        
+        # ── Step 3: Invalidate Python import caches for changed modules ──
+        for module_name in report['updated']:
+            # Reload the module's Python code so importlib picks up changes
+            prefixes = [
+                f'apps.{module_name}',
+                f'apps.{module_name}.events',
+                f'apps.{module_name}.urls',
+                f'apps.{module_name}.views',
+                f'apps.{module_name}.models',
+                f'apps.{module_name}.serializers',
+            ]
+            for prefix in prefixes:
+                if prefix in sys.modules:
+                    try:
+                        importlib.reload(sys.modules[prefix])
+                        report['reloaded'].append(prefix)
+                    except Exception as e:
+                        report['errors'].append(f"Reload {prefix}: {e}")
+        
+        # ── Step 4: Reset Django URL resolver ─────────────────────────
+        try:
+            from django.urls import clear_url_caches
+            from importlib import import_module
+            
+            # Clear Django's internal URL resolver caches
+            clear_url_caches()
+            
+            # Reload the root URL conf and the kernel urls module
+            root_urlconf = 'core.urls'
+            if root_urlconf in sys.modules:
+                importlib.reload(sys.modules[root_urlconf])
+            erp_urls = 'erp.urls'
+            if erp_urls in sys.modules:
+                importlib.reload(sys.modules[erp_urls])
+            
+            report['url_reset'] = True
+        except Exception as e:
+            report['errors'].append(f"URL reset: {e}")
+        
+        print(f"🔄 Hot-reload complete: {len(report['discovered'])} modules, "
+              f"{len(report['updated'])} updated, {len(report['reloaded'])} reimported")
+        
+        return report

@@ -41,7 +41,7 @@ export default function EmployeeModal({
 
                 <form action={async (fd) => {
                     const res = await action(fd);
-                    if (res?.success) onClose();
+                    if ((res as any)?.success) onClose();
                 }} className="p-8 space-y-8">
 
                     {/* PERSONAL INFO */}

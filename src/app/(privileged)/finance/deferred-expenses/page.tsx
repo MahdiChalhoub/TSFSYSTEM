@@ -99,7 +99,7 @@ export default function DeferredExpensesPage() {
     const totalCommitted = expenses.reduce((s, e) => s + Number(e.total_amount || 0), 0)
     const totalRemaining = expenses.reduce((s, e) => s + Number(e.remaining_amount || 0), 0)
 
-    const statusConfig: Record<string, { icon: Record<string, any>; color: string; bg: string }> = {
+    const statusConfig: Record<string, { icon: React.ComponentType<any>; color: string; bg: string }> = {
         ACTIVE: { icon: PlayCircle, color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
         COMPLETED: { icon: CheckCircle2, color: "text-blue-700", bg: "bg-blue-50 border-blue-200" },
     }

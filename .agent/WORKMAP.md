@@ -22,61 +22,65 @@
 
 ## 🟠 HIGH
 
-### [OPEN] Finance Module Not Ready
+### [DONE 2026-02-21] Finance Module Subscription Integration (v2.7.0-b012)
 - **Discovered**: 2026-02-09
 - **Impact**: ConnectorEngine finance hooks silently fail, no ledger entries created for plan changes
-- **Files**: `erp_backend/apps/finance/`
-- **Notes**: Plan switch creates SubscriptionPayment records but can't push to finance ledger. CRM Contact balance stays at $0.00.
+- **Files**: `erp_backend/apps/finance/events.py`, `erp_backend/erp/views_saas_modules.py`
+- **Fix**: Replaced broken `route_write` with `dispatch_event('subscription:payment_created')`. Implemented `_on_subscription_payment_created` handler that creates journal entries (DR AR/CR Revenue) in SaaS master org.
 
-### [OPEN] CRM Contact Balance Not Synced
+### [DONE 2026-02-21] CRM Contact Balance Sync (v2.7.0-b012)
 - **Discovered**: 2026-02-09
 - **Impact**: CRM contacts show $0.00 balance even after subscription payments
-- **Files**: `erp_backend/erp/models.py` (sync_to_crm_contact), `apps/crm/models.py`
-- **Depends On**: Finance module integration
+- **Files**: `erp_backend/apps/crm/events.py`
+- **Fix**: Implemented `_on_subscription_payment_created` CRM handler that updates billing contact balance via SaaSClient email lookup.
 
 ---
 
 ## 🟡 MEDIUM
 
-### [OPEN] Plan Switch UI Refresh
+### [DONE 2026-02-21] Plan Switch UI Refresh (v2.7.0-b013)
 - **Discovered**: 2026-02-09
 - **Impact**: After confirming plan switch, usage/billing data may not visually update without page refresh
 - **Files**: `src/app/(privileged)/(saas)/organizations/[id]/page.tsx`
-- **Notes**: The state refresh logic works but may have race conditions with large data loads
+- **Fix**: Plan switch now refreshes ALL state (org, usage, billing, modules, addons), not just usage+billing. Modules tab and header badge now update immediately.
 
-### [OPEN] Direct CRM Profile Link
+### [DONE 2026-02-21] Direct CRM Profile Link (v2.7.0-b013)
 - **Discovered**: 2026-02-09
 - **Impact**: "View CRM Profile" button navigates to search instead of direct contact record
 - **Files**: `src/app/(privileged)/(saas)/organizations/[id]/page.tsx`
-- **Notes**: Needs CRM Contact ID stored on SaaSClient or Organization model
+- **Fix**: Added `auto_select=true` query param for CRM contacts page to auto-select the matching contact.
 
-### [OPEN] PWA Icon Missing
+### [DONE 2026-02-21] PWA Icon Verified (v2.7.0-b013)
 - **Discovered**: 2026-02-09
 - **Impact**: Console warning about missing manifest icon at `/icons/icon-192.png`
-- **Files**: `public/icons/`, `public/manifest.json`
+- **Files**: `public/icons/icon-192.png`, `public/manifest.json`
+- **Fix**: Verified icons exist and manifest references are correct — may have been a caching issue.
 
 ---
 
 ## 🟢 LOW
 
-### [OPEN] Module Hot-Reload
-- **Discovered**: 2026-02-05
+### [DONE 2026-02-21] Module Hot-Reload (v2.7.0-b015)
+- **Discovered**: 2026-02-09
 - **Impact**: Modules require server restart after installation
-- **Notes**: Deferred backlog item from engine.md
+- **Files**: `erp_backend/erp/module_manager.py`, `erp_backend/erp/views_saas_modules.py`, `src/app/(privileged)/(saas)/organizations/[id]/actions.ts`, `src/app/(privileged)/(saas)/organizations/[id]/page.tsx`
+- **Fix**: Added `hot_reload()` method (DB sync + import cache invalidation + URL resolver reset). Auto-called after `upgrade()`. Exposed via API and frontend button.
 
-### [OPEN] Kernel Rollback Functionality
+### [DONE 2026-02-21] Kernel Rollback Functionality (v2.7.0-b016)
 - **Discovered**: 2026-02-05
 - **Impact**: No way to rollback kernel updates
-- **Notes**: Deferred backlog item from engine.md
-
-### [OPEN] Module Dependency Resolution UI
-- **Discovered**: 2026-02-05
-- **Impact**: No visual dependency graph between modules
-- **Notes**: Deferred backlog item from engine.md
+- **Files**: `erp_backend/erp/kernel_manager.py`, `erp_backend/erp/views_kernel.py`
+- **Fix**: Added `list_backups()` and `rollback()` to `KernelManager`. Exposed via `GET /api/kernel/backups/` and `POST /api/kernel/rollback/` endpoints. Rollback creates safety backup before restoring.
 
 ---
 
 ## ✅ COMPLETED
+
+### [DONE 2026-02-21] Module Dependency Resolution UI (v2.7.0-b014)
+- **Discovered**: 2026-02-09
+- **Impact**: No visual dependency graph for modules — admins can't see dependency chains
+- **Files**: `erp_backend/erp/views_saas_modules.py`, `src/app/(privileged)/(saas)/organizations/[id]/page.tsx`
+- **Fix**: Added `dependencies` and `version` to modules API. Built SVG-based dependency graph with layered layout, color-coded nodes, Bézier curve edges, and dependency warnings.
 
 ### [DONE 2026-02-09] Business Registration Endpoint (v2.7.0-b010)
 - Created `auth/register/business/` public endpoint

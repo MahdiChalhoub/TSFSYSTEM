@@ -40,10 +40,10 @@ export default function OrganizationsPage() {
 
     // Apply filters
     const filteredOrgs = orgs.filter(o => {
-        if (search && !o.name.toLowerCase().includes(search.toLowerCase()) && !o.slug.toLowerCase().includes(search.toLowerCase())) return false
+        if (search && !o.name.toLowerCase().includes(search.toLowerCase()) && !(o.slug ?? '').toLowerCase().includes(search.toLowerCase())) return false
         if (filterPlan !== 'all' && (o.current_plan_name || 'Free Tier') !== filterPlan) return false
         if (filterType !== 'all' && (o.business_type_name || '') !== filterType) return false
-        if (filterCountry !== 'all' && !(o.country || '').toLowerCase().includes(filterCountry.toLowerCase())) return false
+        if (filterCountry !== 'all' && !((o.country as string) || '').toLowerCase().includes(filterCountry.toLowerCase())) return false
         if (filterStatus === 'active' && !o.is_active) return false
         if (filterStatus === 'suspended' && o.is_active) return false
         return true
@@ -89,7 +89,7 @@ export default function OrganizationsPage() {
                 toast.success(currentActive ? "Organization suspended" : "Organization activated")
             }
             loadData()
-        } catch (e: unknown) {
+        } catch (e: any) {
             const msg = tryParseError(e)
             toast.error(msg || "Failed to update status")
         }
@@ -107,14 +107,14 @@ export default function OrganizationsPage() {
                 toast.success(result?.message || "Organization deleted")
             }
             loadData()
-        } catch (e: unknown) {
+        } catch (e: any) {
             const msg = tryParseError(e)
             toast.error(msg || "Failed to delete organization.")
         }
     }
 
     // Parse error messages from backend JSON responses
-    function tryParseError(e: Record<string, any>): string {
+    function tryParseError(e: any): string {
         try {
             if (e?.message) {
                 const parsed = JSON.parse((e instanceof Error ? e.message : String(e)))
@@ -142,7 +142,7 @@ export default function OrganizationsPage() {
                 setNewOrg({ name: '', slug: '', business_email: '', phone: '', country: '', business_type: '', base_currency: '' })
                 loadData()
             }
-        } catch (e: unknown) {
+        } catch (e: any) {
             const msg = tryParseError(e)
             toast.error(msg || "Provisioning failed")
         } finally {
@@ -155,12 +155,12 @@ export default function OrganizationsPage() {
     const [loadingModules, setLoadingModules] = useState(false)
     const [modulesOpen, setModulesOpen] = useState(false)
 
-    async function handleOpenModules(org: Record<string, any>) {
+    async function handleOpenModules(org: SaasOrganization) {
         setSelectedOrg(org)
         setModulesOpen(true)
         setLoadingModules(true)
         try {
-            const data = await getOrgModules(org.id)
+            const data = await getOrgModules(String(org.id))
             if (Array.isArray(data)) {
                 setOrgModules(data)
             } else {
@@ -177,14 +177,14 @@ export default function OrganizationsPage() {
     async function handleModuleToggle(moduleCode: string, currentStatus: string) {
         const action = currentStatus === 'INSTALLED' ? 'disable' : 'enable'
         try {
-            const result = await toggleOrgModule(selectedOrg.id, moduleCode, action)
+            const result = await toggleOrgModule(String(selectedOrg!.id), moduleCode, action)
             if (result?.error) {
                 toast.error(result.error)
             } else {
                 toast.success(`Module ${action}d`)
             }
-            const data = await getOrgModules(selectedOrg.id)
-            setOrgModules(data)
+            const data = await getOrgModules(String(selectedOrg!.id))
+            if (Array.isArray(data)) setOrgModules(data)
         } catch (e: unknown) {
             toast.error((e instanceof Error ? e.message : String(e)) || "Failed to toggle module")
         }
@@ -333,7 +333,7 @@ export default function OrganizationsPage() {
                 <select value={filterPlan} onChange={e => setFilterPlan(e.target.value)}
                     className="text-xs font-bold border border-gray-100 rounded-xl px-3 py-2.5 bg-gray-50 text-gray-700 focus:ring-2 focus:ring-emerald-500/30">
                     <option value="all">All Plans</option>
-                    {uniquePlans.map(p => <option key={p} value={p}>{p}</option>)}
+                    {uniquePlans.map(p => <option key={String(p)} value={String(p)}>{String(p)}</option>)}
                 </select>
                 {businessTypes.length > 0 && (
                     <select value={filterType} onChange={e => setFilterType(e.target.value)}
@@ -384,7 +384,7 @@ export default function OrganizationsPage() {
                                             {org.is_active ? 'Active' : 'Suspended'}
                                         </Badge>
                                         <Badge className="bg-purple-50 text-purple-600 border-purple-100 text-[9px] font-black">
-                                            {org.current_plan_name || 'Free Tier'}
+                                            {String(org.current_plan_name || 'Free Tier')}
                                         </Badge>
                                     </div>
                                 </div>
@@ -397,26 +397,26 @@ export default function OrganizationsPage() {
                                 <div className="grid grid-cols-3 gap-2">
                                     <div className="p-3 bg-gray-50 rounded-2xl border border-gray-100 text-center">
                                         <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">Sites</div>
-                                        <div className="text-lg font-bold text-gray-900">{org.site_count ?? 0}</div>
+                                        <div className="text-lg font-bold text-gray-900">{Number(org.site_count ?? 0)}</div>
                                     </div>
                                     <div className="p-3 bg-gray-50 rounded-2xl border border-gray-100 text-center">
                                         <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">Users</div>
-                                        <div className="text-lg font-bold text-gray-900">{org.user_count ?? 0}</div>
+                                        <div className="text-lg font-bold text-gray-900">{Number(org.user_count ?? 0)}</div>
                                     </div>
                                     <div className="p-3 bg-gray-50 rounded-2xl border border-gray-100 text-center">
                                         <div className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1">Modules</div>
-                                        <div className="text-lg font-bold text-gray-900">{org.module_count ?? 0}</div>
+                                        <div className="text-lg font-bold text-gray-900">{Number(org.module_count ?? 0)}</div>
                                     </div>
                                 </div>
 
-                                {org.business_email && (
+                                {(org.business_email as string) && (
                                     <div className="text-xs text-gray-400 flex items-center gap-2 px-1">
-                                        <Mail size={12} /> {org.business_email}
+                                        <Mail size={12} /> {String(org.business_email)}
                                     </div>
                                 )}
-                                {org.client_name && (
+                                {(org.client_name as string) && (
                                     <div className="text-xs text-gray-400 flex items-center gap-2 px-1">
-                                        <Users size={12} /> <span className="font-semibold text-gray-500">{org.client_name}</span>
+                                        <Users size={12} /> <span className="font-semibold text-gray-500">{String(org.client_name)}</span>
                                     </div>
                                 )}
 
@@ -430,7 +430,7 @@ export default function OrganizationsPage() {
                                                 ? 'bg-gray-50 hover:bg-orange-50 text-gray-400 hover:text-orange-600 hover:border-orange-200'
                                                 : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600 hover:border-emerald-200'
                                             }`}
-                                        onClick={() => handleToggle(org.id, org.is_active, org.slug)}
+                                        onClick={() => handleToggle(String(org.id), org.is_active ?? false, org.slug ?? '')}
                                         disabled={isSaasOrg}
                                     >
                                         <Power size={16} className="mr-2" />
@@ -503,7 +503,7 @@ export default function OrganizationsPage() {
                                                     ? "bg-red-50 text-red-500 hover:bg-red-100 border border-red-100 rounded-xl px-4"
                                                     : "bg-emerald-600 text-white hover:bg-emerald-500 rounded-xl px-4"
                                                 }
-                                                onClick={() => handleModuleToggle(m.code, m.status)}
+                                                onClick={() => handleModuleToggle(m.code!, m.status!)}
                                             >
                                                 {m.status === 'INSTALLED' ? 'Deactivate' : 'Activate'}
                                             </Button>
@@ -516,11 +516,11 @@ export default function OrganizationsPage() {
                                 </div>
 
                                 {/* Feature Flags UI */}
-                                {m.status === 'INSTALLED' && m.available_features?.length > 0 && (
+                                {m.status === 'INSTALLED' && ((m.available_features as any[])?.length ?? 0) > 0 && (
                                     <div className="mt-4 pt-4 border-t border-gray-100 pl-2">
                                         <p className="text-[10px] text-gray-500 font-bold uppercase mb-3">Extended Capabilities</p>
                                         <div className="grid grid-cols-2 gap-2">
-                                            {m.available_features.map((f: Record<string, any>) => (
+                                            {(m.available_features as any[]).map((f: Record<string, any>) => (
                                                 <label key={f.code} className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 cursor-pointer select-none p-2 rounded-lg hover:bg-gray-50 transition-colors">
                                                     <input
                                                         type="checkbox"
@@ -532,10 +532,10 @@ export default function OrganizationsPage() {
                                                                 : (m.active_features || []).filter((c: string) => c !== f.code)
 
                                                             try {
-                                                                await updateOrgModuleFeatures(selectedOrg.id, m.code, newFeatures)
+                                                                await updateOrgModuleFeatures(String(selectedOrg!.id), m.code!, newFeatures)
                                                                 toast.success("Feature updated")
-                                                                const data = await getOrgModules(selectedOrg.id)
-                                                                setOrgModules(data)
+                                                                const data = await getOrgModules(String(selectedOrg!.id))
+                                                                if (Array.isArray(data)) setOrgModules(data)
                                                             } catch {
                                                                 toast.error("Failed to update feature")
                                                             }

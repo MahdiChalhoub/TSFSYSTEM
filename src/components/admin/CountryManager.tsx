@@ -30,7 +30,7 @@ export function CountryManager({ countries, categories = [] }: CountryManagerPro
     });
 
     const handleEdit = (country: Record<string, any>) => {
-        setEditingCountry(country);
+        setEditingCountry(country as any);
         setIsModalOpen(true);
     };
 
@@ -110,7 +110,7 @@ export function CountryManager({ countries, categories = [] }: CountryManagerPro
                 </div>
             </div>
 
-            <CountryFormModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} country={editingCountry} />
+            <CountryFormModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} country={editingCountry as any} />
         </div>
     );
 }

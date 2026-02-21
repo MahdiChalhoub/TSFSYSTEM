@@ -42,9 +42,9 @@ export default function PricingSection() {
 
             <div className={`grid grid-cols-1 gap-8 ${plans.length <= 3 ? 'md:grid-cols-3' : plans.length <= 4 ? 'md:grid-cols-2 lg:grid-cols-4' : 'md:grid-cols-2 lg:grid-cols-3'}`}>
                 {plans.map((plan) => {
-                    const isCustom = parseFloat(plan.monthly_price) < 0 || plan.limits?.custom
-                    const isFree = parseFloat(plan.monthly_price) === 0
-                    const limits = plan.limits || {}
+                    const isCustom = parseFloat(String(plan.monthly_price ?? '0')) < 0 || plan.limits?.custom
+                    const isFree = parseFloat(String(plan.monthly_price ?? '0')) === 0
+                    const limits = plan.limits || {} as Record<string, any>
 
                     return (
                         <Card key={plan.id} className={`backdrop-blur-xl rounded-[2rem] overflow-hidden flex flex-col transition-all hover:-translate-y-2 duration-300 group ${isCustom
@@ -55,7 +55,7 @@ export default function PricingSection() {
                                 <div className="flex items-center justify-between">
                                     <CardTitle className="text-2xl font-black text-white">{plan.name}</CardTitle>
                                     <div className="flex gap-1.5">
-                                        {plan.trial_days > 0 && <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[10px]">{plan.trial_days}d Free Trial</Badge>}
+                                        {(plan.trial_days ?? 0) > 0 && <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[10px]">{plan.trial_days}d Free Trial</Badge>}
                                         {isCustom && <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-[10px]">Enterprise</Badge>}
                                     </div>
                                 </div>
@@ -69,7 +69,7 @@ export default function PricingSection() {
                                         <span className="text-4xl font-black text-emerald-400">Free</span>
                                     ) : (
                                         <>
-                                            <span className="text-4xl font-black text-white">${parseFloat(plan.monthly_price).toFixed(0)}</span>
+                                            <span className="text-4xl font-black text-white">${parseFloat(String(plan.monthly_price ?? '0')).toFixed(0)}</span>
                                             <span className="text-slate-500 font-bold text-sm uppercase tracking-wider ml-2">/ month</span>
                                         </>
                                     )}
@@ -105,13 +105,13 @@ export default function PricingSection() {
                                 </div>
 
                                 {/* Modules */}
-                                {plan.modules?.length > 0 && (
+                                {(plan.modules?.length ?? 0) > 0 && (
                                     <div className="flex flex-wrap gap-1.5 mb-6">
-                                        {plan.modules.slice(0, 5).map((m: string) => (
+                                        {plan.modules!.slice(0, 5).map((m: string) => (
                                             <Badge key={m} className="bg-white/5 text-slate-400 text-[9px] border-white/10 uppercase tracking-wider">{m}</Badge>
                                         ))}
-                                        {plan.modules.length > 5 && (
-                                            <Badge className="bg-white/5 text-slate-400 text-[9px] border-white/10">+{plan.modules.length - 5}</Badge>
+                                        {plan.modules!.length > 5 && (
+                                            <Badge className="bg-white/5 text-slate-400 text-[9px] border-white/10">+{plan.modules!.length - 5}</Badge>
                                         )}
                                     </div>
                                 )}

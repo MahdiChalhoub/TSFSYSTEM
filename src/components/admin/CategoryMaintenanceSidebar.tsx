@@ -24,7 +24,7 @@ function buildCategoryTree(flatCategories: Record<string, any>[]): CategoryNode[
 
     // Clone and map
     flatCategories.forEach(cat => {
-        categoryMap.set(cat.id, { ...cat, children: [] });
+        categoryMap.set(cat.id, { ...cat, children: [] } as any);
     });
 
     // Build hierarchy

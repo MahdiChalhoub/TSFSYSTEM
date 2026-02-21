@@ -446,7 +446,7 @@ Always be specific with numbers and actionable recommendations.`
                                         {/* Chart messages */}
                                         {msg.role === 'chart' && msg.data && (
                                             <div className="my-4">
-                                                <AIChart chart={msg.data} />
+                                                <AIChart chart={msg.data as any} />
                                             </div>
                                         )}
 

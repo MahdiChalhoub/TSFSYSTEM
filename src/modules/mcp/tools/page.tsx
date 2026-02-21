@@ -115,7 +115,7 @@ export default function MCPToolsPage() {
             internal_endpoint: tool.internal_endpoint,
             http_method: tool.http_method,
             parameters_schema: tool.parameters_schema,
-            required_permissions: tool.required_permissions,
+            required_permissions: tool.required_permissions as any,
             is_active: tool.is_active,
             requires_confirmation: tool.requires_confirmation
         })
@@ -151,11 +151,11 @@ export default function MCPToolsPage() {
 
             if (editingTool) {
                 const res = await updateMCPTool(editingTool.id, data)
-                if (!res.success) throw new Error(res.error)
+                if (!res.success) throw new Error((res as any).error)
                 toast.success('Tool updated')
             } else {
                 const res = await createMCPTool(data)
-                if (!res.success) throw new Error(res.error)
+                if (!res.success) throw new Error((res as any).error)
                 toast.success('Tool created')
             }
             setIsDialogOpen(false)
@@ -175,7 +175,7 @@ export default function MCPToolsPage() {
         if (deleteToolId === null) return
         try {
             const res = await deleteMCPTool(deleteToolId)
-            if (!res.success) throw new Error(res.error)
+            if (!res.success) throw new Error((res as any).error)
             toast.success('Tool deleted')
             await loadData()
         } catch (e: unknown) {

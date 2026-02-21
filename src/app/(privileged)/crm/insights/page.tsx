@@ -47,12 +47,12 @@ export default function CustomerInsightsPage() {
             const cOrders = orders.filter(o =>
                 (o.contact === c.id || o.contact_id === c.id) && o.type === 'SALE'
             )
-            const totalSpent = cOrders.reduce((s, o) => s + parseFloat(o.total_amount || 0), 0)
+            const totalSpent = cOrders.reduce((s, o) => s + parseFloat(String(o.total_amount || 0)), 0)
             const completedOrders = cOrders.filter(o => o.status === 'COMPLETED')
             const lastOrder = cOrders.sort((a: Record<string, any>, b: Record<string, any>) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
 
             // Calculate recency in days
-            const lastDate = lastOrder?.created_at ? new Date(lastOrder.created_at) : null
+            const lastDate = lastOrder?.created_at ? new Date(String(lastOrder.created_at)) : null
             const daysSinceLast = lastDate ? Math.floor((Date.now() - lastDate.getTime()) / 86400000) : 999
 
             // Simple tier based on total

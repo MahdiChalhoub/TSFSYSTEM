@@ -15,7 +15,7 @@ import {
     User, Clock, ChevronLeft, ChevronRight, FileText, Filter, Eye
 } from "lucide-react"
 
-const ACTION_CONFIG: Record<string, { icon: Record<string, any>, color: string, bg: string }> = {
+const ACTION_CONFIG: Record<string, { icon: React.ComponentType<any>, color: string, bg: string }> = {
     CREATE: { icon: Plus, color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
     UPDATE: { icon: Edit, color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
     DELETE: { icon: Trash2, color: 'text-red-700', bg: 'bg-red-50 border-red-200' },

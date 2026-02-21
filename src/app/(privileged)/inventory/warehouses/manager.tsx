@@ -104,7 +104,7 @@ export default function WarehouseManager({ warehouses }: { warehouses: Record<st
                                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button
                                         onClick={() => {
-                                            setEditingWarehouse(wh);
+                                            setEditingWarehouse(wh as any);
                                             setIsModalOpen(true);
                                         }}
                                         className="p-2 hover:bg-emerald-50 text-emerald-600 rounded-xl transition-colors"
@@ -149,7 +149,7 @@ export default function WarehouseManager({ warehouses }: { warehouses: Record<st
 
             {isModalOpen && (
                 <WarehouseModal
-                    warehouse={editingWarehouse}
+                    warehouse={editingWarehouse as any}
                     onClose={() => setIsModalOpen(false)}
                 />
             )}

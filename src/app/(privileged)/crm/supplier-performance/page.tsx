@@ -48,7 +48,7 @@ export default function SupplierPerformancePage() {
             const sOrders = orders.filter(o =>
                 o.contact === s.id || o.contact_id === s.id
             )
-            const totalSpent = sOrders.reduce((sum, o) => sum + parseFloat(o.total_amount || 0), 0)
+            const totalSpent = sOrders.reduce((sum, o) => sum + parseFloat(String(o.total_amount || 0)), 0)
             const completedOrders = sOrders.filter(o => o.status === 'COMPLETED')
             const completionRate = sOrders.length > 0 ? (completedOrders.length / sOrders.length * 100) : 0
             const lastOrder = sOrders.sort((a: Record<string, any>, b: Record<string, any>) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]

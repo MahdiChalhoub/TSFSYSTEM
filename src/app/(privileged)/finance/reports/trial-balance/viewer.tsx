@@ -188,10 +188,10 @@ function AccountRow({ account, level, allAccounts, formatAmount }: { account: Re
                     </div>
                 </td>
                 <td className="p-3 text-right font-mono font-medium">
-                    {account.balance > 0 ? formatAmount(account.balance) : '-'}
+                    {account.balance > 0 ? (formatAmount as any)(Number(account.balance)) : '-'}
                 </td>
                 <td className="p-3 text-right font-mono font-medium text-stone-500">
-                    {account.balance < 0 ? formatAmount(Math.abs(account.balance)) : '-'}
+                    {account.balance < 0 ? (formatAmount as any)(Math.abs(Number(account.balance))) : '-'}
                 </td>
             </tr>
             {isParent && expanded && account.children.map((childId: Record<string, any>) => {

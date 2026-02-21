@@ -222,7 +222,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
     }
 
     const openEditModal = (account: Record<string, any>) => {
-        setEditingAccount(account)
+        setEditingAccount(account as any)
     }
 
     // Expose globally for children to use

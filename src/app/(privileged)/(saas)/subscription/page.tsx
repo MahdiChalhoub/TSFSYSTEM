@@ -63,8 +63,8 @@ export default function SubscriptionPage() {
         </div>
     )
 
-    const plan = org.current_plan_details || (org.current_plan ? { name: "Legacy Plan" } : null)
-    const expiryDate = org.plan_expiry_at ? new Date(org.plan_expiry_at) : null
+    const plan: any = org.current_plan_details || (org.current_plan ? { name: "Legacy Plan" } : null)
+    const expiryDate = org.plan_expiry_at ? new Date(String(org.plan_expiry_at)) : null
     const isExpired = expiryDate ? new Date() > expiryDate : false
     const daysLeft = expiryDate ? Math.ceil((expiryDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0
 
@@ -143,7 +143,7 @@ export default function SubscriptionPage() {
                                                 <CardHeader>
                                                     <CardTitle className="text-lg">{p.name}</CardTitle>
                                                     <div className="mt-2">
-                                                        <span className="text-2xl font-black">${parseFloat(p.monthly_price).toFixed(0)}</span>
+                                                        <span className="text-2xl font-black">${parseFloat(String(p.monthly_price)).toFixed(0)}</span>
                                                         <span className="text-xs text-gray-500 font-bold uppercase ml-1">/mo</span>
                                                     </div>
                                                 </CardHeader>
@@ -152,7 +152,7 @@ export default function SubscriptionPage() {
                                                         className="w-full"
                                                         variant={plan?.id === p.id ? "outline" : "default"}
                                                         disabled={plan?.id === p.id || upgrading}
-                                                        onClick={() => handleUpgrade(p.id)}
+                                                        onClick={() => handleUpgrade(String(p.id))}
                                                     >
                                                         {upgrading ? "Processing..." : plan?.id === p.id ? "Current Plan" : "Select"}
                                                     </Button>
@@ -179,7 +179,7 @@ export default function SubscriptionPage() {
                         <div>
                             <div className="flex justify-between text-sm mb-2 font-bold text-gray-700">
                                 <span>Storage</span>
-                                <span>{Math.round((org.data_usage_bytes || 0) / 1024 / 1024)} MB</span>
+                                <span>{Math.round(Number(org.data_usage_bytes || 0) / 1024 / 1024)} MB</span>
                             </div>
                             <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                                 <div className="h-full bg-emerald-500 w-[5%]" />
@@ -188,7 +188,7 @@ export default function SubscriptionPage() {
                         <div>
                             <div className="flex justify-between text-sm mb-2 font-bold text-gray-700">
                                 <span>Users</span>
-                                <span>{org._count?.users || 1} / 5</span>
+                                <span>{(org as any)._count?.users || 1} / 5</span>
                             </div>
                             <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                                 <div className="h-full bg-emerald-500 w-[20%]" />

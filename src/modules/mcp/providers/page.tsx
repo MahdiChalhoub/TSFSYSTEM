@@ -132,11 +132,11 @@ export default function MCPProvidersPage() {
         try {
             if (editingProvider) {
                 const res = await updateMCPProvider(editingProvider.id, formData)
-                if (!res.success) throw new Error(res.error)
+                if (!res.success) throw new Error((res as any).error)
                 toast.success('Provider updated')
             } else {
                 const res = await createMCPProvider(formData)
-                if (!res.success) throw new Error(res.error)
+                if (!res.success) throw new Error((res as any).error)
                 toast.success('Provider created')
             }
             setIsDialogOpen(false)
@@ -156,7 +156,7 @@ export default function MCPProvidersPage() {
         if (deleteProviderId === null) return
         try {
             const res = await deleteMCPProvider(deleteProviderId)
-            if (!res.success) throw new Error(res.error)
+            if (!res.success) throw new Error((res as any).error)
             toast.success('Provider deleted')
             await loadData()
         } catch (e: unknown) {
@@ -185,7 +185,7 @@ export default function MCPProvidersPage() {
     async function handleSetDefault(id: number) {
         try {
             const res = await setDefaultProvider(id)
-            if (!res.success) throw new Error(res.error)
+            if (!res.success) throw new Error((res as any).error)
             toast.success('Default provider updated')
             await loadData()
         } catch (e: unknown) {

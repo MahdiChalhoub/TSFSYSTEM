@@ -217,11 +217,11 @@ export default function ConnectorPoliciesPage() {
         try {
             if (editingPolicy) {
                 const res = await updateConnectorPolicy(editingPolicy.id, formData)
-                if (!res.success) throw new Error(res.error)
+                if (!res.success) throw new Error((res as any).error)
                 toast.success('Policy updated')
             } else {
                 const res = await createConnectorPolicy(formData)
-                if (!res.success) throw new Error(res.error)
+                if (!res.success) throw new Error((res as any).error)
                 toast.success('Policy created')
             }
             setIsDialogOpen(false)
@@ -237,7 +237,7 @@ export default function ConnectorPoliciesPage() {
 
         try {
             const res = await deleteConnectorPolicy(id)
-            if (!res.success) throw new Error(res.error)
+            if (!res.success) throw new Error((res as any).error)
             toast.success('Policy deleted')
             await loadData()
         } catch (e: unknown) {
@@ -250,7 +250,7 @@ export default function ConnectorPoliciesPage() {
         setGenerating(true)
         try {
             const res = await autoGeneratePolicies()
-            if (!res.success) throw new Error(res.error)
+            if (!res.success) throw new Error((res as any).error)
             toast.success(res.message)
             await loadData()
         } catch (e: unknown) {

@@ -286,7 +286,7 @@ export function UniversalDataTable({
                                                     onChange={(e) => setFilters(prev => ({ ...prev, [field.name]: e.target.value }))}
                                                 >
                                                     <option value="">All</option>
-                                                    {field.choices.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                                                    {field.choices.map(c => <option key={String(c.value)} value={String(c.value)}>{String(c.label)}</option>)}
                                                 </select>
                                             ) : (
                                                 <Input
@@ -476,7 +476,7 @@ export function UniversalDataTable({
                         ) : (
                             data.map((row, idx) => (
                                 <TableRow
-                                    key={row.id || idx}
+                                    key={String(row.id || idx)}
                                     onClick={() => onRowClick?.(row)}
                                     className={`group cursor-pointer border-gray-50 ${onRowClick ? 'hover:bg-slate-50/80 transition-all' : ''}`}
                                 >

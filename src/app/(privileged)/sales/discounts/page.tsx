@@ -19,13 +19,13 @@ function fmt(n: number) {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
 }
 
-const TYPE_CONFIG: Record<string, { label: string; icon: Record<string, any>; color: string }> = {
+const TYPE_CONFIG: Record<string, { label: string; icon: React.ComponentType<any>; color: string }> = {
     PERCENTAGE: { label: 'Percentage Off', icon: Percent, color: 'text-blue-600 bg-blue-50' },
     FIXED: { label: 'Fixed Amount', icon: DollarSign, color: 'text-green-600 bg-green-50' },
     BUY_X_GET_Y: { label: 'Buy X Get Y', icon: Plus, color: 'text-purple-600 bg-purple-50' },
 }
 
-const SCOPE_CONFIG: Record<string, { label: string; icon: Record<string, any> }> = {
+const SCOPE_CONFIG: Record<string, { label: string; icon: React.ComponentType<any> }> = {
     ORDER: { label: 'Entire Order', icon: ShoppingCart },
     PRODUCT: { label: 'Specific Product', icon: Package },
     CATEGORY: { label: 'Category', icon: Layers },

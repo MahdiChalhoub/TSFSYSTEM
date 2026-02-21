@@ -221,7 +221,7 @@ export default function OpeningBalanceForm({ accounts }: Props) {
                                                 type="number" step="0.01"
                                                 placeholder="0.00"
                                                 value={row.balance}
-                                                onChange={e => updateRow(row.id, 'balance', e.target.value)}
+                                                onChange={e => updateRow(row.id, 'balance', e.target.value as any)}
                                                 className="w-full text-right p-2 border-none focus:ring-0 bg-transparent font-mono font-bold text-stone-700"
                                                 onKeyDown={(e) => {
                                                     if (e.key === 'Enter') {

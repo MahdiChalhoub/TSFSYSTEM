@@ -159,3 +159,136 @@ class KernelManager:
             for byte_block in iter(lambda: f.read(4096), b""):
                 sha256_hash.update(byte_block)
         return sha256_hash.hexdigest()
+
+    # =========================================================================
+    # ROLLBACK — Restore kernel to a previous version from backup
+    # =========================================================================
+
+    @staticmethod
+    def list_backups():
+        """
+        List available kernel backups from the backups directory.
+        Returns list of dicts with version, timestamp, path, and size.
+        """
+        backups_dir = os.path.join(settings.BASE_DIR, 'backups')
+        if not os.path.exists(backups_dir):
+            return []
+
+        backups = []
+        for entry in sorted(os.listdir(backups_dir), reverse=True):
+            if not entry.startswith('kernel_'):
+                continue
+            full_path = os.path.join(backups_dir, entry)
+            if not os.path.isdir(full_path):
+                continue
+
+            # Parse version and timestamp from dir name: kernel_{version}_{timestamp}
+            parts = entry[len('kernel_'):].rsplit('_', 1)
+            version = parts[0] if len(parts) >= 1 else 'unknown'
+            
+            # Calculate total size
+            total_size = 0
+            for dirpath, _, filenames in os.walk(full_path):
+                for f in filenames:
+                    total_size += os.path.getsize(os.path.join(dirpath, f))
+
+            backups.append({
+                'dir_name': entry,
+                'version': version,
+                'path': full_path,
+                'size_mb': round(total_size / (1024 * 1024), 2),
+                'contents': [d for d in os.listdir(full_path) if os.path.isdir(os.path.join(full_path, d))],
+            })
+
+        return backups
+
+    @staticmethod
+    def rollback(backup_dir_name):
+        """
+        Rollback kernel to a previous backup.
+
+        Steps:
+        1. Validate backup exists and contains expected dirs
+        2. Restore core dirs from backup
+        3. Update SystemUpdate records (un-apply current, re-apply previous)
+        4. Trigger hot-reload
+
+        Args:
+            backup_dir_name: Name of the backup directory (e.g. 'kernel_2.6.0_20260221123456')
+        """
+        backups_dir = os.path.join(settings.BASE_DIR, 'backups')
+        backup_path = os.path.join(backups_dir, backup_dir_name)
+
+        if not os.path.exists(backup_path):
+            raise ValidationError(f"Backup not found: {backup_dir_name}")
+
+        if not backup_dir_name.startswith('kernel_'):
+            raise ValidationError(f"Not a kernel backup: {backup_dir_name}")
+
+        core_dirs = ['erp', 'lib', 'apps_core']
+
+        # Validate at least one core dir exists in backup
+        available_dirs = [d for d in core_dirs if os.path.isdir(os.path.join(backup_path, d))]
+        if not available_dirs:
+            raise ValidationError(f"Backup contains none of the expected dirs: {core_dirs}")
+
+        # Parse version from backup dir name
+        backup_version = backup_dir_name[len('kernel_'):].rsplit('_', 1)[0]
+        current_version = KernelManager.get_current_version()
+
+        try:
+            with transaction.atomic():
+                print(f"🔄 Rolling back Kernel from {current_version} → {backup_version}...")
+
+                # 1. Create a safety backup of the CURRENT state before rollback
+                safety_backup = os.path.join(
+                    backups_dir,
+                    f"kernel_{current_version}_pre_rollback_{timezone.now().strftime('%Y%m%d%H%M%S')}"
+                )
+                os.makedirs(safety_backup, exist_ok=True)
+                for d in core_dirs:
+                    src = os.path.join(settings.BASE_DIR, d)
+                    if os.path.exists(src):
+                        shutil.copytree(src, os.path.join(safety_backup, d), dirs_exist_ok=True)
+
+                # 2. Restore from backup
+                for d in available_dirs:
+                    src = os.path.join(backup_path, d)
+                    dst = os.path.join(settings.BASE_DIR, d)
+                    print(f"  📦 Restoring {d}/...")
+                    if os.path.exists(dst):
+                        shutil.rmtree(dst)
+                    shutil.copytree(src, dst)
+
+                # 3. Update DB records
+                # Un-apply all current updates that are newer than backup version
+                SystemUpdate.objects.filter(is_applied=True).update(
+                    is_applied=False,
+                    metadata={"rollback_reason": f"Rolled back to {backup_version}"}
+                )
+                # Re-apply the target version if it exists in DB
+                target_update = SystemUpdate.objects.filter(version=backup_version).first()
+                if target_update:
+                    target_update.is_applied = True
+                    target_update.applied_at = timezone.now()
+                    target_update.save()
+
+                print(f"✅ Kernel rolled back to {backup_version}. SYSTEM RESTART RECOMMENDED.")
+
+        except Exception as e:
+            print(f"💥 Kernel Rollback FAILED: {str(e)}")
+            raise ValidationError(f"Kernel rollback failed: {str(e)}")
+
+        # 4. Hot-reload (best-effort, outside transaction)
+        try:
+            from .module_manager import ModuleManager
+            ModuleManager.hot_reload()
+        except Exception as hr_err:
+            print(f"⚠️ Hot-reload after rollback skipped: {hr_err}")
+
+        return {
+            'from_version': current_version,
+            'to_version': backup_version,
+            'restored_dirs': available_dirs,
+            'safety_backup': os.path.basename(safety_backup),
+        }

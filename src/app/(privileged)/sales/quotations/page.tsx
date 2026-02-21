@@ -35,9 +35,9 @@ export default async function QuotationsPage() {
             erpFetch('/contacts/'),
             erpFetch('/products/'),
         ])
-        quotations = Array.isArray(qRes) ? qRes : qRes.results || []
-        contacts = Array.isArray(cRes) ? cRes : cRes.results || []
-        products = Array.isArray(pRes) ? pRes : pRes.results || []
+        quotations = Array.isArray(qRes) ? qRes : (qRes as any).results || []
+        contacts = Array.isArray(cRes) ? cRes : (cRes as any).results || []
+        products = Array.isArray(pRes) ? pRes : (pRes as any).results || []
     } catch { /* empty */ }
 
     return (
@@ -49,9 +49,9 @@ export default async function QuotationsPage() {
                 </p>
             </div>
             <QuotationManager
-                initialQuotations={quotations}
+                initialQuotations={quotations as any}
                 contacts={contacts}
-                products={products}
+                products={products as any}
             />
         </div>
     )

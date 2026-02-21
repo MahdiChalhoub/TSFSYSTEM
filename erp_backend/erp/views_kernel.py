@@ -78,3 +78,46 @@ class KernelViewSet(viewsets.ViewSet):
             import traceback
             traceback.print_exc()
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['get'])
+    def backups(self, request):
+        """Lists available kernel backups for rollback."""
+        backups = KernelManager.list_backups()
+        return Response({
+            'backups': [{
+                'dir_name': b['dir_name'],
+                'version': b['version'],
+                'size_mb': b['size_mb'],
+                'contents': b['contents'],
+            } for b in backups]
+        })
+
+    @action(detail=False, methods=['post'])
+    def rollback(self, request):
+        """
+        Rollback kernel to a previous backup.
+        Requires: {"backup": "kernel_2.6.0_20260221123456"}
+        """
+        if not request.user.is_staff:
+            return Response({'error': 'Staff access required'}, status=status.HTTP_403_FORBIDDEN)
+
+        backup_dir = request.data.get('backup')
+        if not backup_dir:
+            return Response(
+                {'error': 'Missing "backup" field. Use GET /api/kernel/backups/ to list available backups.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            result = KernelManager.rollback(backup_dir)
+            return Response({
+                'message': f'Kernel rolled back from {result["from_version"]} to {result["to_version"]}',
+                'from_version': result['from_version'],
+                'to_version': result['to_version'],
+                'restored_dirs': result['restored_dirs'],
+                'safety_backup': result['safety_backup'],
+            })
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

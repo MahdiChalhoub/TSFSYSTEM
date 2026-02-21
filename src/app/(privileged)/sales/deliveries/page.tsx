@@ -17,7 +17,7 @@ function fmt(n: number) {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
 }
 
-const STATUS_CONFIG: Record<string, { label: string; bg: string; icon: Record<string, any> }> = {
+const STATUS_CONFIG: Record<string, { label: string; bg: string; icon: React.ComponentType<any> }> = {
     PENDING: { label: 'Pending', bg: 'bg-gray-100 text-gray-700', icon: Clock },
     PREPARING: { label: 'Preparing', bg: 'bg-blue-100 text-blue-700', icon: Package },
     IN_TRANSIT: { label: 'In Transit', bg: 'bg-amber-100 text-amber-700', icon: Truck },

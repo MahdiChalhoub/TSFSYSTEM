@@ -5,4 +5,4 @@
  * Module consumers should import from '@/modules/mcp' instead of 
  * directly referencing '@/components/ai/'.
  */
-export { default as AICharts } from '@/components/ai/AICharts';
+export { AIChart as AICharts } from '@/components/ai/AICharts';

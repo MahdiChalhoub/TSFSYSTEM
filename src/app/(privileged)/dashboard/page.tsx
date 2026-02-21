@@ -92,7 +92,7 @@ export default function CustomDashboard() {
 
     const paymentMethods = data.salesSummary?.payment_methods || {}
     const topSellers = Object.entries(data.salesSummary?.user_stats || {})
-        .sort(([, a]: Record<string, any>, [, b]: Record<string, any>) => b.total - a.total)
+        .sort(([, a]: any, [, b]: any) => b.total - a.total)
         .slice(0, 5)
 
     return (

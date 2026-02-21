@@ -21,7 +21,7 @@ export default function FormalOrderForm({
     const [selectedSiteId, setSelectedSiteId] = useState<number | ''>('');
     const [selectedSupplierId, setSelectedSupplierId] = useState<number | ''>('');
     const [supplierPriceHints, setSupplierPriceHints] = useState<Record<number, number>>({});
-    const [availableWarehouses, setAvailableWarehouses] = useState<Record<string, unknown>[]>([]);
+    const [availableWarehouses, setAvailableWarehouses] = useState<Record<string, any>[]>([]);
     const [lines, setLines] = useState<PurchaseLine[]>([]);
 
     useEffect(() => {
@@ -73,7 +73,7 @@ export default function FormalOrderForm({
         setLines(lines.filter((_, i) => i !== idx));
     };
 
-    const totalAmount = lines.reduce((acc, l) => acc + (l.quantity * l.unitPrice), 0);
+    const totalAmount = lines.reduce((acc, l) => acc + (l.quantity * Number(l.unitPrice)), 0);
 
     return (
         <form action={formAction} className="space-y-6">
@@ -101,7 +101,7 @@ export default function FormalOrderForm({
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 text-center">Warehouse</label>
                     <select className="w-full text-xs font-bold bg-transparent border-none focus:ring-0 text-center text-indigo-600" name="warehouseId" required>
                         <option value="">Warehouse...</option>
-                        {availableWarehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+                        {availableWarehouses.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}
                     </select>
                 </div>
 
@@ -153,7 +153,7 @@ export default function FormalOrderForm({
                                     <tr key={line.productId} className="hover:bg-gray-50/50 transition-colors">
                                         <td className="p-6">
                                             <div className="font-bold text-gray-900">{line.productName}</div>
-                                            <div className="text-[10px] text-gray-400 font-mono mt-1">{line.sku}</div>
+                                            <div className="text-[10px] text-gray-400 font-mono mt-1">{String(line.sku)}</div>
                                             <input type="hidden" name={`lines[${idx}][productId]`} value={line.productId} />
                                         </td>
                                         <td className="p-6">
@@ -170,7 +170,7 @@ export default function FormalOrderForm({
                                                 <input
                                                     type="number" step="0.01"
                                                     className="w-full bg-white border border-gray-200 rounded-xl p-2.5 pr-10 text-center font-bold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition-all"
-                                                    value={line.unitPrice}
+                                                    value={Number(line.unitPrice)}
                                                     onChange={(e) => updateLine(idx, { unitPrice: Number(e.target.value) })}
                                                     name={`lines[${idx}][unitPrice]`}
                                                 />
@@ -185,7 +185,7 @@ export default function FormalOrderForm({
                                             </div>
                                         </td>
                                         <td className="p-6 text-right font-black text-gray-900 whitespace-nowrap">
-                                            {(line.quantity * line.unitPrice).toLocaleString()} XOF
+                                            {(line.quantity * Number(line.unitPrice)).toLocaleString()} XOF
                                         </td>
                                         <td className="p-6 text-center">
                                             <button type="button" onClick={() => removeLine(idx)} className="p-2 text-gray-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all">
@@ -249,7 +249,7 @@ export default function FormalOrderForm({
 
 function ProductSearch({ callback, siteId }: { callback: (p: Record<string, any>) => void, siteId: number }) {
     const [query, setQuery] = useState('');
-    const [results, setResults] = useState<Record<string, unknown>[]>([]);
+    const [results, setResults] = useState<Record<string, any>[]>([]);
     const [open, setOpen] = useState(false);
 
     useEffect(() => {
@@ -280,7 +280,7 @@ function ProductSearch({ callback, siteId }: { callback: (p: Record<string, any>
                 <div className="absolute top-full left-0 right-0 mt-3 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-in slide-in-from-top-2 duration-300">
                     {results.map(r => (
                         <button
-                            key={r.id}
+                            key={String(r.id)}
                             type="button"
                             onClick={() => {
                                 callback(r);

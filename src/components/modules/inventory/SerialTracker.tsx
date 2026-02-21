@@ -37,7 +37,7 @@ export function SerialTracker() {
     };
 
     const fetchHistory = async (serial: Record<string, any>) => {
-        setSelectedSerial(serial);
+        setSelectedSerial(serial as any);
         setHistoryLoading(true);
         try {
             const data = await getSerialHistoryAction(serial.id);

@@ -44,7 +44,7 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
             Papa.parse(selectedFile, {
                 header: false,
                 preview: 1,
-                complete: (results) => {
+                complete: (results: any) => {
                     const firstRow = results.data[0] as string[];
                     setHeaders(firstRow || []);
                     // Auto-map if headers match exactly

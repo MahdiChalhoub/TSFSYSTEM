@@ -136,7 +136,7 @@ export function AttributeFormModal({ isOpen, onClose, attribute, categories }: A
                         </label>
 
                         <CategoryTreeSelector
-                            categories={buildCategoryTree(categories)}
+                            categories={buildCategoryTree(categories) as any}
                             selectedIds={selectedCategoryIds}
                             onChange={setSelectedCategoryIds}
                             maxHeight="max-h-56"

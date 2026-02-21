@@ -195,7 +195,7 @@ export default function EmployeeManager({
                             )}
                             {scopeAccess !== 'official' && (
                                 <button
-                                    onClick={() => setScopeEmployee(emp)}
+                                    onClick={() => setScopeEmployee(emp as any)}
                                     className="py-3.5 rounded-2xl bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 hover:text-white transition-all shadow-sm flex items-center justify-center gap-1"
                                 >
                                     <Lock size={10} />
@@ -217,7 +217,7 @@ export default function EmployeeManager({
 
             {scopeEmployee && (
                 <ScopePasswordModal
-                    employee={scopeEmployee}
+                    employee={scopeEmployee as any}
                     onClose={() => setScopeEmployee(null)}
                 />
             )}

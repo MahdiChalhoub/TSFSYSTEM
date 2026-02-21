@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { SaasOrganization, SaasUsageData, SaasBillingData, SaasAddonData, SaasPlan, SaasModule, SaasUser, SaasSite } from "@/types/erp"
 import { useParams, useRouter } from "next/navigation"
-import { getOrganization, getOrgUsage, getOrgBilling, getOrgModules, toggleOrgModule, updateModuleFeatures, changeOrgPlan, getOrgUsers, createOrgUser, resetOrgUserPassword, getOrgSites, createOrgSite, toggleOrgSite, listClients, createClient, setOrgClient, getOrgAddons, purchaseAddon, cancelAddon, getOrgEncryptionStatus, toggleOrgEncryption } from "./actions"
+import { getOrganization, getOrgUsage, getOrgBilling, getOrgModules, toggleOrgModule, updateModuleFeatures, changeOrgPlan, getOrgUsers, createOrgUser, resetOrgUserPassword, getOrgSites, createOrgSite, toggleOrgSite, listClients, createClient, setOrgClient, getOrgAddons, purchaseAddon, cancelAddon, getOrgEncryptionStatus, toggleOrgEncryption, hotReloadModules } from "./actions"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -15,12 +15,12 @@ import {
     AlertTriangle, Loader2, ToggleLeft, ToggleRight, Crown, Layers, Activity,
     CreditCard, TrendingUp, ChevronRight, Plus, KeyRound,
     UserCog, Eye, EyeOff, Check, Building2, Power, UserCircle, Mail,
-    Puzzle, ShoppingCart, XCircle, ShieldCheck, ShieldOff
+    Puzzle, ShoppingCart, XCircle, ShieldCheck, ShieldOff, RefreshCw
 } from "lucide-react"
 
 // ─── Usage Meter ─────────────────────────────────────────────────────────────
 function UsageMeter({ label, icon: Icon, current, limit, percent, unit = '' }: {
-    label: string; icon: Record<string, any>; current: number; limit: number; percent: number; unit?: string
+    label: string; icon: React.ComponentType<any>; current: number; limit: number; percent: number; unit?: string
 }) {
     const isWarning = percent >= 80
     const isDanger = percent >= 95
@@ -262,7 +262,7 @@ export default function OrganizationDetailPage() {
         if (!newPassword || newPassword.length < 6) return toast.error("Password must be at least 6 characters")
         setResetting(true)
         try {
-            const result = await resetOrgUserPassword(orgId, resetTarget.id, newPassword)
+            const result = await resetOrgUserPassword(orgId, (resetTarget as { id: string }).id, newPassword)
             toast.success(result.message || 'Password reset')
             setResetTarget(null)
             setNewPassword('')
@@ -366,9 +366,9 @@ export default function OrganizationDetailPage() {
             {activeTab === 'overview' && (
                 <div className="space-y-6">
                     {/* Integrity Warnings */}
-                    {usage?.warnings?.length > 0 && (
+                    {(usage?.warnings?.length ?? 0) > 0 && (
                         <div className="space-y-2">
-                            {usage.warnings.map((w: Record<string, any>) => {
+                            {usage!.warnings!.map((w: Record<string, any>) => {
                                 const styles: Record<string, string> = {
                                     critical: 'bg-red-50 border-red-200 text-red-800',
                                     warning: 'bg-amber-50 border-amber-200 text-amber-800',
@@ -543,6 +543,35 @@ export default function OrganizationDetailPage() {
             {/* ─── Modules Tab ──────────────────────────────────────────── */}
             {activeTab === 'modules' && (
                 <div className="space-y-8">
+                    {/* Hot Reload Bar */}
+                    <div className="flex items-center justify-between">
+                        <p className="text-xs text-gray-400">{modules.length} modules registered</p>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1.5 text-xs"
+                            onClick={async () => {
+                                try {
+                                    const result = await hotReloadModules()
+                                    toast.success(result.message || 'Hot-reload complete')
+                                    if (result.updated?.length > 0) {
+                                        toast.info(`Updated: ${result.updated.join(', ')}`)
+                                    }
+                                    if (result.errors?.length > 0) {
+                                        result.errors.forEach((e: string) => toast.warning(e))
+                                    }
+                                    // Refresh module list
+                                    const modulesData = await getOrgModules(orgId)
+                                    setModules(Array.isArray(modulesData) ? modulesData : [])
+                                } catch {
+                                    toast.error('Hot-reload failed')
+                                }
+                            }}
+                        >
+                            <RefreshCw size={12} /> Hot Reload
+                        </Button>
+                    </div>
+
                     {coreModules.length > 0 && (
                         <div>
                             <h3 className="text-xs font-black uppercase tracking-widest text-indigo-500 mb-4 flex items-center gap-2">
@@ -561,6 +590,191 @@ export default function OrganizationDetailPage() {
                             {businessModules.map(m => <ModuleCard key={m.code} module={m} onToggle={handleToggle} toggling={toggling} onFeatureToggle={handleFeatureToggle} />)}
                         </div>
                     </div>
+
+                    {/* ─── Dependency Graph ──────────────────────────────── */}
+                    {(() => {
+                        // Build dependency data
+                        const moduleMap = new Map(modules.map(m => [m.code, m]))
+                        const deps = modules.filter(m => (m as any).dependencies?.length > 0)
+                        const warnings: { module: string; missing: string }[] = []
+                        deps.forEach(m => {
+                            ((m as any).dependencies || []).forEach((dep: string) => {
+                                const depMod = moduleMap.get(dep)
+                                if (m.status === 'INSTALLED' && depMod && depMod.status !== 'INSTALLED') {
+                                    warnings.push({ module: m.name || m.code, missing: depMod.name || dep })
+                                }
+                            })
+                        })
+
+                        // Compute layers for layout (topological sort by depth)
+                        const depthMap = new Map<string, number>()
+                        function getDepth(code: string, visited = new Set<string>()): number {
+                            if (depthMap.has(code)) return depthMap.get(code)!
+                            if (visited.has(code)) return 0
+                            visited.add(code)
+                            const m = moduleMap.get(code)
+                            const moduleDeps: string[] = (m as any)?.dependencies || []
+                            const depth = moduleDeps.length === 0
+                                ? 0
+                                : Math.max(...moduleDeps.map((d: string) => getDepth(d, visited))) + 1
+                            depthMap.set(code, depth)
+                            return depth
+                        }
+                        modules.forEach(m => getDepth(m.code))
+
+                        // Group by layers
+                        const layers = new Map<number, typeof modules>()
+                        modules.forEach(m => {
+                            const d = depthMap.get(m.code) || 0
+                            if (!layers.has(d)) layers.set(d, [])
+                            layers.get(d)!.push(m)
+                        })
+                        const sortedLayers = Array.from(layers.entries()).sort((a, b) => a[0] - b[0])
+                        const maxLayer = sortedLayers.length
+
+                        // Node positions for SVG lines
+                        const NODE_W = 160, NODE_H = 56, GAP_X = 32, GAP_Y = 72, PAD_X = 40, PAD_Y = 40
+                        const positions = new Map<string, { x: number; y: number }>()
+                        sortedLayers.forEach(([layer, mods]) => {
+                            const totalW = mods.length * NODE_W + (mods.length - 1) * GAP_X
+                            const startX = PAD_X + (Math.max(...sortedLayers.map(([, ms]) => ms.length)) * (NODE_W + GAP_X) - GAP_X - totalW) / 2
+                            mods.forEach((m, i) => {
+                                positions.set(m.code, {
+                                    x: startX + i * (NODE_W + GAP_X),
+                                    y: PAD_Y + layer * (NODE_H + GAP_Y),
+                                })
+                            })
+                        })
+                        const svgW = PAD_X * 2 + Math.max(...sortedLayers.map(([, ms]) => ms.length)) * (NODE_W + GAP_X) - GAP_X
+                        const svgH = PAD_Y * 2 + maxLayer * (NODE_H + GAP_Y) - GAP_Y
+
+                        // Build edges
+                        const edges: { from: string; to: string }[] = []
+                        modules.forEach(m => {
+                            ((m as any).dependencies || []).forEach((dep: string) => {
+                                if (moduleMap.has(dep)) edges.push({ from: dep, to: m.code })
+                            })
+                        })
+
+                        return (
+                            <Card className="border-gray-100 shadow-sm">
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-lg font-bold flex items-center gap-2">
+                                        <Layers size={16} className="text-indigo-500" /> Module Dependency Map
+                                    </CardTitle>
+                                    <CardDescription>Visual dependency graph — arrows show "depends on" relationships</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    {warnings.length > 0 && (
+                                        <div className="mb-4 space-y-1.5">
+                                            {warnings.map((w, i) => (
+                                                <div key={i} className="flex items-center gap-2 p-2.5 bg-amber-50 border border-amber-100 rounded-xl text-xs text-amber-700">
+                                                    <AlertTriangle size={12} className="text-amber-500 shrink-0" />
+                                                    <span><strong>{w.module}</strong> is active but dependency <strong>{w.missing}</strong> is not installed</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Legend */}
+                                    <div className="flex items-center gap-4 mb-4 text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+                                        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-indigo-500" /> Core</span>
+                                        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-emerald-500" /> Active</span>
+                                        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-gray-300" /> Inactive</span>
+                                        <span className="flex items-center gap-1.5">
+                                            <svg width="20" height="10"><line x1="0" y1="5" x2="20" y2="5" stroke="#a5b4fc" strokeWidth="2" markerEnd="url(#arrowhead)" /></svg>
+                                            Depends on
+                                        </span>
+                                    </div>
+
+                                    {/* Graph */}
+                                    <div className="overflow-x-auto rounded-xl border border-gray-100 bg-gray-50/50">
+                                        <svg width={svgW} height={svgH} className="block">
+                                            <defs>
+                                                <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                                                    <polygon points="0 0, 8 3, 0 6" fill="#a5b4fc" />
+                                                </marker>
+                                            </defs>
+
+                                            {/* Edges */}
+                                            {edges.map(({ from, to }, i) => {
+                                                const pFrom = positions.get(from)
+                                                const pTo = positions.get(to)
+                                                if (!pFrom || !pTo) return null
+                                                const x1 = pFrom.x + NODE_W / 2
+                                                const y1 = pFrom.y + NODE_H
+                                                const x2 = pTo.x + NODE_W / 2
+                                                const y2 = pTo.y
+                                                const midY = (y1 + y2) / 2
+                                                return (
+                                                    <path
+                                                        key={i}
+                                                        d={`M ${x1} ${y1} C ${x1} ${midY}, ${x2} ${midY}, ${x2} ${y2}`}
+                                                        fill="none"
+                                                        stroke="#a5b4fc"
+                                                        strokeWidth="2"
+                                                        markerEnd="url(#arrowhead)"
+                                                        className="transition-all"
+                                                    />
+                                                )
+                                            })}
+
+                                            {/* Nodes */}
+                                            {modules.map(m => {
+                                                const pos = positions.get(m.code)
+                                                if (!pos) return null
+                                                const isCore = m.is_core
+                                                const isActive = m.status === 'INSTALLED'
+                                                const bgColor = isCore ? '#eef2ff' : isActive ? '#ecfdf5' : '#f9fafb'
+                                                const borderColor = isCore ? '#c7d2fe' : isActive ? '#a7f3d0' : '#e5e7eb'
+                                                const textColor = isCore ? '#4338ca' : isActive ? '#065f46' : '#6b7280'
+                                                const badgeColor = isCore ? '#6366f1' : isActive ? '#10b981' : '#d1d5db'
+
+                                                return (
+                                                    <g key={m.code}>
+                                                        <rect
+                                                            x={pos.x} y={pos.y}
+                                                            width={NODE_W} height={NODE_H}
+                                                            rx={12}
+                                                            fill={bgColor}
+                                                            stroke={borderColor}
+                                                            strokeWidth={1.5}
+                                                            className="transition-all"
+                                                        />
+                                                        {/* Status dot */}
+                                                        <circle
+                                                            cx={pos.x + 14} cy={pos.y + NODE_H / 2}
+                                                            r={4}
+                                                            fill={badgeColor}
+                                                        />
+                                                        {/* Module name */}
+                                                        <text
+                                                            x={pos.x + 26} y={pos.y + NODE_H / 2 - 6}
+                                                            fill={textColor}
+                                                            fontSize="11"
+                                                            fontWeight="700"
+                                                            fontFamily="system-ui"
+                                                        >
+                                                            {(m.name || m.code).length > 16 ? (m.name || m.code).slice(0, 15) + '…' : (m.name || m.code)}
+                                                        </text>
+                                                        {/* Version */}
+                                                        <text
+                                                            x={pos.x + 26} y={pos.y + NODE_H / 2 + 10}
+                                                            fill="#9ca3af"
+                                                            fontSize="9"
+                                                            fontFamily="system-ui"
+                                                        >
+                                                            v{(m as any).version || '1.0.0'}
+                                                        </text>
+                                                    </g>
+                                                )
+                                            })}
+                                        </svg>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )
+                    })()}
                 </div>
             )}
 
@@ -675,7 +889,7 @@ export default function OrganizationDetailPage() {
                                                 </div>
                                             </div>
                                         </div>
-                                        <button onClick={() => handleToggleSite(site.id)} className="transition-transform hover:scale-110">
+                                        <button onClick={() => handleToggleSite(String(site.id))} className="transition-transform hover:scale-110">
                                             <Power size={18} className={site.is_active ? 'text-emerald-500' : 'text-gray-300'} />
                                         </button>
                                     </div>
@@ -715,7 +929,7 @@ export default function OrganizationDetailPage() {
                                             <div>
                                                 <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Active Modules</p>
                                                 <p className="text-2xl font-black text-gray-900 mt-1">
-                                                    {usage.modules.current} <span className="text-sm font-medium text-gray-400">/ {usage.modules.total_available} available</span>
+                                                    {usage.modules.current} <span className="text-sm font-medium text-gray-400">/ {usage.modules.total_available ?? usage.modules.limit} available</span>
                                                 </p>
                                             </div>
                                             <Button variant="outline" size="sm" className="rounded-xl" onClick={() => setActiveTab('modules')}>Manage</Button>
@@ -811,7 +1025,7 @@ export default function OrganizationDetailPage() {
                                     <Button
                                         variant="outline"
                                         className="w-full border-indigo-200 text-indigo-600 hover:bg-indigo-50 rounded-xl font-bold"
-                                        onClick={() => router.push(`/crm/contacts?search=${encodeURIComponent(billing.client.email)}`)}
+                                        onClick={() => router.push(`/crm/contacts?search=${encodeURIComponent(billing?.client?.email || '')}&auto_select=true`)}
                                     >
                                         <Users size={14} className="mr-2" /> View CRM Profile
                                     </Button>
@@ -821,19 +1035,19 @@ export default function OrganizationDetailPage() {
                     </div>
 
                     {/* Available Plans */}
-                    {usage?.available_plans?.length > 0 && (
+                    {(usage?.available_plans?.length ?? 0) > 0 && (
                         <Card className="border-gray-100 shadow-sm">
                             <CardHeader>
                                 <div className="flex justify-between items-center">
                                     <CardTitle className="font-bold">Available Plans</CardTitle>
-                                    <Badge className="bg-gray-100 text-gray-500 text-[10px]">{usage.available_plans.length} plans</Badge>
+                                    <Badge className="bg-gray-100 text-gray-500 text-[10px]">{usage!.available_plans!.length} plans</Badge>
                                 </div>
                                 <CardDescription className="text-xs text-gray-400">Select a plan to assign to this organization. Plans are managed from the <a href="/subscription-plans" className="text-emerald-600 underline hover:text-emerald-700 font-bold">Subscription Plans</a> page.</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {usage.available_plans.map((p: Record<string, any>) => {
-                                        const isCurrent = usage.plan?.id === p.id
+                                    {usage!.available_plans!.map((p: Record<string, any>) => {
+                                        const isCurrent = usage!.plan?.id === p.id
                                         const isCustom = parseFloat(p.monthly_price) < 0
                                         const isFree = parseFloat(p.monthly_price) === 0
                                         const limits = p.limits || {}
@@ -897,7 +1111,7 @@ export default function OrganizationDetailPage() {
                                                 {!isCurrent && (
                                                     <Button size="sm"
                                                         className="w-full mt-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs"
-                                                        onClick={() => setPlanSwitchTarget(p)}>
+                                                        onClick={() => setPlanSwitchTarget(p as SaasPlan)}>
                                                         Switch to This Plan
                                                     </Button>
                                                 )}
@@ -1184,7 +1398,7 @@ export default function OrganizationDetailPage() {
                     {resetTarget && (
                         <div className="space-y-4 py-4">
                             <p className="text-sm text-gray-500">
-                                Set a new password for <strong className="text-gray-900">{resetTarget.username}</strong>
+                                Set a new password for <strong className="text-gray-900">{String((resetTarget as Record<string, unknown>).username)}</strong>
                             </p>
                             <div className="relative">
                                 <Input type={showPass ? 'text' : 'password'} value={newPassword}
@@ -1258,8 +1472,8 @@ export default function OrganizationDetailPage() {
                         <DialogTitle className="font-black text-lg">Confirm Plan Switch</DialogTitle>
                     </DialogHeader>
                     {planSwitchTarget && (() => {
-                        const currentPrice = parseFloat(usage?.plan?.monthly_price || '0')
-                        const targetPrice = parseFloat(planSwitchTarget.monthly_price)
+                        const currentPrice = parseFloat(String(usage?.plan?.monthly_price ?? '0'))
+                        const targetPrice = parseFloat(String(planSwitchTarget.monthly_price ?? '0'))
                         const isUpgrade = targetPrice > currentPrice
                         const isDowngrade = targetPrice < currentPrice
                         const diff = Math.abs(targetPrice - currentPrice)
@@ -1301,11 +1515,11 @@ export default function OrganizationDetailPage() {
                                     <p className="text-[11px] text-gray-400">A <strong>Credit Note</strong> of ${diff.toFixed(2)}/mo will be issued, plus a new <strong>Purchase Invoice</strong> for ${targetPrice.toFixed(2)}/mo.</p>
                                 )}
 
-                                {planSwitchTarget.modules?.length > 0 && (
+                                {(planSwitchTarget.modules?.length ?? 0) > 0 && (
                                     <div>
                                         <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Modules in new plan:</p>
                                         <div className="flex flex-wrap gap-1">
-                                            {planSwitchTarget.modules.map((m: string) => (
+                                            {planSwitchTarget.modules!.map((m: string) => (
                                                 <Badge key={m} className="bg-gray-50 text-gray-500 text-[9px] border border-gray-100 uppercase">{m}</Badge>
                                             ))}
                                         </div>
@@ -1323,18 +1537,24 @@ export default function OrganizationDetailPage() {
                                 if (!planSwitchTarget) return
                                 setSwitching(true)
                                 try {
-                                    const result = await changeOrgPlan(orgId, planSwitchTarget.id)
+                                    const result = await changeOrgPlan(orgId, String(planSwitchTarget.id))
                                     toast.success(result.message || `Switched to ${planSwitchTarget.name}`)
                                     if (result.modules_disabled?.length > 0) {
                                         toast.info(`Disabled modules: ${result.modules_disabled.join(', ')}`)
                                     }
-                                    // Refresh usage + billing data
-                                    const [newUsage, newBilling] = await Promise.all([
+                                    // Refresh ALL state — plan changes affect org, usage, billing, modules, and addons
+                                    const [orgData, newUsage, newBilling, modulesData, addonsData] = await Promise.all([
+                                        getOrganization(orgId),
                                         getOrgUsage(orgId),
                                         getOrgBilling(orgId),
+                                        getOrgModules(orgId),
+                                        getOrgAddons(orgId),
                                     ])
+                                    setOrg(orgData)
                                     setUsage(newUsage)
                                     setBilling(newBilling?.history ? newBilling : { history: Array.isArray(newBilling) ? newBilling : [], balance: { total_paid: '0.00', total_credits: '0.00', net_balance: '0.00' }, client: null })
+                                    setModules(Array.isArray(modulesData) ? modulesData : [])
+                                    setAddons(addonsData || { purchased: [], available: [] })
                                     setPlanSwitchTarget(null)
                                 } catch (err: unknown) {
                                     toast.error((err instanceof Error ? err.message : String(err)) || 'Failed to change plan')

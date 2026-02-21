@@ -55,7 +55,7 @@ export default async function MaintenancePage(props: {
                 if (found) return found;
             }
         }
-        return null;
+        return null as any;
     }
 
     // Props safe for client

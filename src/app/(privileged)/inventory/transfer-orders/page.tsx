@@ -22,7 +22,7 @@ import {
     ArrowLeftRight, History, Warehouse
 } from "lucide-react"
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; icon: Record<string, any> }> = {
+const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ComponentType<any> }> = {
     OPEN: { label: 'Open', color: 'bg-blue-100 text-blue-700', icon: Clock },
     LOCKED: { label: 'Locked', color: 'bg-amber-100 text-amber-700', icon: Lock },
     VERIFIED: { label: 'Verified', color: 'bg-purple-100 text-purple-700', icon: ShieldCheck },

@@ -39,6 +39,7 @@ def handle_event(event_name: str, payload: dict, organization_id: int):
         'order:completed': _on_order_completed,
         'inventory:adjusted': _on_inventory_adjusted,
         'subscription:renewed': _on_subscription_renewed,
+        'subscription:payment_created': _on_subscription_payment_created,
     }
     
     handler = handlers.get(event_name)
@@ -239,9 +240,10 @@ def _on_contact_created(payload: dict, organization_id: int) -> dict:
 def _on_order_completed(payload: dict, organization_id: int):
     """React to POS order completion — create journal entries."""
     logger.info(f"💰 Finance: Processing order completion for org {organization_id}")
-    # Future: Auto-create journal entries from completed orders
-    # order_id = payload.get('order_id')
-    # JournalEntryService.create_from_order(order_id, organization_id)
+    # Note: POS checkout already creates journal entries directly via
+    # LedgerService in POSService.checkout(). This handler is for
+    # non-POS order completions (e.g. eCommerce, external integrations).
+    # TODO: Implement when eCommerce checkout flow dispatches this event.
 
 
 def _on_inventory_adjusted(payload: dict, organization_id: int):
@@ -253,4 +255,110 @@ def _on_inventory_adjusted(payload: dict, organization_id: int):
 def _on_subscription_renewed(payload: dict, organization_id: int):
     """React to subscription renewals — record revenue."""
     logger.info(f"🔄 Finance: Subscription renewal for org {organization_id}")
-    # Future: Create revenue recognition journal entries
+    # Future: Create revenue recognition journal entries for recurring billing
+
+
+def _on_subscription_payment_created(payload: dict, organization_id: int) -> dict:
+    """
+    React to a subscription payment — create journal entries in the SaaS
+    master org's ledger.
+    
+    This is the core finance integration for SaaS billing:
+    - PURCHASE: DR Accounts Receivable, CR Subscription Revenue
+    - CREDIT_NOTE: DR Subscription Revenue, CR Accounts Receivable
+    
+    The journal entry is created in the SaaS master org (slug='saas'),
+    NOT in the tenant org, because the financial relationship is between
+    the platform owner and the tenant.
+    """
+    from .models import ChartOfAccount
+    from .services import LedgerService
+    from erp.models import Organization
+    
+    org_id = payload.get('org_id')
+    org_name = payload.get('org_name', 'Unknown')
+    plan_name = payload.get('plan_name', 'Unknown')
+    amount_str = payload.get('amount', '0')
+    payment_type = payload.get('type')  # PURCHASE or CREDIT_NOTE
+    description = payload.get('description', '')
+    
+    if not org_id or not payment_type:
+        logger.warning("Finance: subscription:payment_created missing org_id or type")
+        return {'success': False, 'error': 'Missing org_id or type'}
+    
+    amount = Decimal(str(amount_str))
+    if amount <= 0:
+        logger.debug(f"Finance: Skipping zero-amount subscription payment for org {org_id}")
+        return {'success': True, 'skipped': True, 'reason': 'zero_amount'}
+    
+    # Find the SaaS master org — all billing ledger entries go here
+    saas_org = Organization.objects.filter(slug='saas').first()
+    if not saas_org:
+        logger.error("Finance: No SaaS master org found — cannot record subscription payment")
+        return {'success': False, 'error': 'SaaS master org not found'}
+    
+    try:
+        # Look up the Accounts Receivable and Revenue accounts
+        ar_account = ChartOfAccount.objects.filter(
+            organization=saas_org, sub_type='RECEIVABLE', is_active=True
+        ).first()
+        
+        revenue_account = ChartOfAccount.objects.filter(
+            organization=saas_org, sub_type='REVENUE', is_active=True
+        ).first()
+        
+        if not ar_account or not revenue_account:
+            logger.error(
+                f"Finance: Missing CoA accounts for SaaS org "
+                f"(AR={ar_account}, Revenue={revenue_account})"
+            )
+            return {'success': False, 'error': 'Missing AR or Revenue CoA accounts'}
+        
+        # Build the journal entry lines based on payment type
+        if payment_type == 'PURCHASE':
+            # Tenant owes money → DR Receivable, CR Revenue
+            je_description = f"Subscription: {plan_name} — {org_name} | {description}"
+            lines = [
+                {'account_id': ar_account.id, 'debit': amount, 'credit': Decimal('0'),
+                 'description': f'Receivable from {org_name}'},
+                {'account_id': revenue_account.id, 'debit': Decimal('0'), 'credit': amount,
+                 'description': f'Subscription revenue: {plan_name}'},
+            ]
+        elif payment_type == 'CREDIT_NOTE':
+            # Refund/credit → DR Revenue, CR Receivable
+            je_description = f"Credit Note: {org_name} downgrade | {description}"
+            lines = [
+                {'account_id': revenue_account.id, 'debit': amount, 'credit': Decimal('0'),
+                 'description': f'Revenue reversal: {org_name}'},
+                {'account_id': ar_account.id, 'debit': Decimal('0'), 'credit': amount,
+                 'description': f'Credit to {org_name}'},
+            ]
+        else:
+            logger.warning(f"Finance: Unknown payment type '{payment_type}'")
+            return {'success': False, 'error': f'Unknown payment type: {payment_type}'}
+        
+        entry = LedgerService.create_journal_entry(
+            organization=saas_org,
+            transaction_date=timezone.now(),
+            description=je_description,
+            reference=f"SUB-{org_id[:8]}",
+            status='POSTED',
+            scope='OFFICIAL',
+            lines=lines
+        )
+        
+        logger.info(
+            f"✅ Finance: Subscription journal entry created — "
+            f"{payment_type} ${amount} for '{org_name}' (plan: {plan_name})"
+        )
+        
+        return {
+            'success': True,
+            'journal_entry_id': str(entry.id) if entry else None,
+            'amount': str(amount),
+            'type': payment_type,
+        }
+        
+    except Exception as e:
+        logger.error(f"Finance: Failed to create subscription journal entry: {e}")
+        return {'success': False, 'error': str(e)}

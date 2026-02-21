@@ -196,9 +196,9 @@ export default function ApprovalsPage() {
                                             </TableCell>
                                             <TableCell>
                                                 <div className="space-y-1">
-                                                    <div className="text-sm font-semibold text-foreground/80">{u.employee_details?.phone || "No Comms"}</div>
+                                                    <div className="text-sm font-semibold text-foreground/80">{(u as any).employee_details?.phone || "No Comms"}</div>
                                                     <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-tighter font-bold text-muted-foreground opacity-70">
-                                                        <AlertCircle className="h-3 w-3" /> {u.employee_details?.nationality || "Global"}
+                                                        <AlertCircle className="h-3 w-3" /> {(u as any).employee_details?.nationality || "Global"}
                                                     </div>
                                                 </div>
                                             </TableCell>

@@ -64,7 +64,7 @@ type WizardStep = "LIST" | "SOURCE" | "UPLOAD" | "BUSINESSES" | "PREVIEW" | "RUN
 // STATUS VISUALS
 // ─────────────────────────────────────────────────────────────────────────────
 
-const statusConfig: Record<string, { color: string; icon: Record<string, any>; label: string }> = {
+const statusConfig: Record<string, { color: string; icon: React.ComponentType<any>; label: string }> = {
     PENDING: { color: "bg-slate-500/20 text-slate-400 border-slate-500/30", icon: FileUp, label: "Pending" },
     PARSING: { color: "bg-blue-500/20 text-blue-400 border-blue-500/30", icon: Database, label: "Parsing" },
     RUNNING: { color: "bg-amber-500/20 text-amber-400 border-amber-500/30", icon: Loader2, label: "Running" },

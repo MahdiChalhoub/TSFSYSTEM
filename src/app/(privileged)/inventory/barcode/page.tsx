@@ -45,7 +45,7 @@ export default function BarcodeSettingsPage() {
         setSaving(true);
         setMessage(null);
 
-        const res = await updateBarcodeSettings(data);
+        const res = await updateBarcodeSettings(data as any);
 
         if (res.success) {
             setMessage({ type: 'success', text: 'Settings saved successfully' });

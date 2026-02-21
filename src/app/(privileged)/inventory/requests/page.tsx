@@ -21,13 +21,13 @@ import {
     FileQuestion, ArrowDownUp, ArrowLeftRight, ShoppingCart
 } from "lucide-react"
 
-const TYPE_CONFIG: Record<string, { label: string; icon: Record<string, any>; color: string }> = {
+const TYPE_CONFIG: Record<string, { label: string; icon: React.ComponentType<any>; color: string }> = {
     STOCK_ADJUSTMENT: { label: 'Stock Adjustment', icon: ArrowDownUp, color: 'bg-blue-100 text-blue-700' },
     STOCK_TRANSFER: { label: 'Stock Transfer', icon: ArrowLeftRight, color: 'bg-indigo-100 text-indigo-700' },
     PURCHASE_ORDER: { label: 'Purchase Order', icon: ShoppingCart, color: 'bg-amber-100 text-amber-700' },
 }
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; icon: Record<string, any> }> = {
+const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ComponentType<any> }> = {
     PENDING: { label: 'Pending', color: 'bg-amber-100 text-amber-700', icon: Clock },
     APPROVED: { label: 'Approved', color: 'bg-emerald-100 text-emerald-700', icon: CheckCircle2 },
     REJECTED: { label: 'Rejected', color: 'bg-red-100 text-red-700', icon: XCircle },

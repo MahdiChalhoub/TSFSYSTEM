@@ -16,7 +16,7 @@ export default async function ComboPage() {
     let products: Product[] = []
     try {
         const res = await erpFetch('/products/')
-        products = Array.isArray(res) ? res : res.results || []
+        products = Array.isArray(res) ? res : (res as any).results || []
     } catch { /* empty */ }
 
     const comboProducts = products.filter((p: Product) => p.product_type === 'COMBO')

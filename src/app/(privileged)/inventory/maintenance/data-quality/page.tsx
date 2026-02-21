@@ -121,7 +121,7 @@ export default function DataQualityPage() {
     }, [products, search, issueFilter])
 
     // ─── Inline Edit ───
-    const setEdit = (productId: number, field: string, value: Record<string, any>) => {
+    const setEdit = (productId: number, field: string, value: any) => {
         setPendingEdits(prev => {
             const next = new Map(prev)
             const existing = next.get(productId) || {}
@@ -130,7 +130,7 @@ export default function DataQualityPage() {
         })
     }
 
-    const getEditValue = (productId: number, field: string, original: Record<string, any>) => {
+    const getEditValue = (productId: number, field: string, original: any) => {
         const edit = pendingEdits.get(productId)
         if (edit && field in edit) return (edit as any)[field]
         return original

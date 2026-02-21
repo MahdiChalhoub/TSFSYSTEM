@@ -127,15 +127,15 @@ export default function PurchaseForm({
 
         // Handle HT/TTC Recalculations
         if (updates.unitCostHT !== undefined) {
-            newLines[idx].unitCostTTC = Number((updates.unitCostHT * (1 + newLines[idx].taxRate)).toFixed(2));
+            newLines[idx]!.unitCostTTC = Number((updates.unitCostHT * (1 + newLines[idx]!.taxRate!)).toFixed(2));
         } else if (updates.unitCostTTC !== undefined) {
-            newLines[idx].unitCostHT = Number((updates.unitCostTTC / (1 + newLines[idx].taxRate)).toFixed(2));
+            newLines[idx]!.unitCostHT = Number((updates.unitCostTTC / (1 + newLines[idx]!.taxRate!)).toFixed(2));
         }
 
         if (updates.sellingPriceHT !== undefined) {
-            newLines[idx].sellingPriceTTC = Number((updates.sellingPriceHT * (1 + newLines[idx].taxRate)).toFixed(2));
+            newLines[idx]!.sellingPriceTTC = Number((updates.sellingPriceHT * (1 + newLines[idx]!.taxRate!)).toFixed(2));
         } else if (updates.sellingPriceTTC !== undefined) {
-            newLines[idx].sellingPriceHT = Number((updates.sellingPriceTTC / (1 + newLines[idx].taxRate)).toFixed(2));
+            newLines[idx]!.sellingPriceHT = Number((updates.sellingPriceTTC / (1 + newLines[idx]!.taxRate!)).toFixed(2));
         }
 
         setLines(newLines);
@@ -246,7 +246,7 @@ export default function PurchaseForm({
                         </select>
                         <select className="flex-1 bg-transparent text-[10px] font-bold text-emerald-600 border-none p-0 focus:ring-0" name="warehouseId" required>
                             <option value="">WH...</option>
-                            {availableWarehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+                            {availableWarehouses.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}
                         </select>
                     </div>
                 </div>
@@ -305,7 +305,7 @@ export default function PurchaseForm({
                                 <tr key={line.productId} className="group hover:bg-gray-50/80 transition-colors">
                                     <td className="p-4">
                                         <div className="font-bold text-gray-900 mb-1">{line.productName}</div>
-                                        <div className="text-[10px] text-gray-400 font-mono tracking-tighter">{line.barcode || 'NO_BARCODE'}</div>
+                                        <div className="text-[10px] text-gray-400 font-mono tracking-tighter">{String(line.barcode || 'NO_BARCODE')}</div>
                                         <input type="hidden" name={`lines[${idx}][productId]`} value={line.productId} />
                                         <input type="hidden" name={`lines[${idx}][taxRate]`} value={line.taxRate} />
                                     </td>
@@ -405,7 +405,7 @@ export default function PurchaseForm({
                                         />
                                     </td>
                                     <td className="p-2 text-right font-black text-gray-900">
-                                        ${(line.quantity * (invoicePriceType === 'TTC' ? line.unitCostTTC : line.unitCostHT)).toFixed(2)}
+                                        ${(line.quantity * (invoicePriceType === 'TTC' ? (line.unitCostTTC ?? 0) : (line.unitCostHT ?? 0))).toFixed(2)}
                                     </td>
                                     <td className="p-2 text-center">
                                         <button
@@ -526,7 +526,7 @@ function ProductSearch({ callback, siteId }: { callback: (p: Record<string, any>
                 <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
                     {results.map(r => (
                         <button
-                            key={r.id}
+                            key={String((r as any).id)}
                             type="button"
                             onClick={() => {
                                 callback(r);
@@ -536,12 +536,12 @@ function ProductSearch({ callback, siteId }: { callback: (p: Record<string, any>
                             className="w-full p-3 text-left hover:bg-emerald-50 flex items-center justify-between group transition-all"
                         >
                             <div>
-                                <div className="font-bold text-sm text-gray-900 group-hover:text-emerald-700">{r.name}</div>
-                                <div className="text-[10px] text-gray-400">{r.sku} ΓÇó Stock: {r.stockLevel}</div>
+                                <div className="font-bold text-sm text-gray-900 group-hover:text-emerald-700">{String((r as any).name)}</div>
+                                <div className="text-[10px] text-gray-400">{String((r as any).sku)} · Stock: {String((r as any).stockLevel)}</div>
                             </div>
                             <div className="text-right">
-                                <div className="text-xs font-bold text-gray-700">${r.costPriceHT} HT</div>
-                                <div className="text-[10px] text-emerald-500 font-bold">Suggested: +{r.proposedQty}</div>
+                                <div className="text-xs font-bold text-gray-700">${String((r as any).costPriceHT)} HT</div>
+                                <div className="text-[10px] text-emerald-500 font-bold">Suggested: +{String((r as any).proposedQty)}</div>
                             </div>
                         </button>
                     ))}

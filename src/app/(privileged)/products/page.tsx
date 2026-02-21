@@ -243,9 +243,9 @@ function GroupRow({ group }: { group: Record<string, any> }) {
                 <div className="flex flex-col gap-1">
                     <span className="text-sm font-medium text-gray-900">{variantCount} Variants</span>
                     <div className="flex gap-1 flex-wrap">
-                        {uniqueCountries.map((c: Record<string, any>) => (
-                            <span key={c} className="text-[10px] bg-white border border-gray-200 px-1.5 py-0.5 rounded shadow-sm flex items-center gap-0.5">
-                                <Globe size={8} className="text-gray-400" /> {c}
+                        {uniqueCountries.map((c: any) => (
+                            <span key={String(c)} className="text-[10px] bg-white border border-gray-200 px-1.5 py-0.5 rounded shadow-sm flex items-center gap-0.5">
+                                <Globe size={8} className="text-gray-400" /> {String(c)}
                             </span>
                         ))}
                     </div>

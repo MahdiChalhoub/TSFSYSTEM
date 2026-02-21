@@ -29,7 +29,7 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
 
     const runDiagnostics = async () => {
         const issues = await diagnoseFinancialDiscrepancy()
-        setDiagnostics(issues)
+        setDiagnostics(issues as any)
     }
 
     useEffect(() => {
@@ -247,9 +247,9 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
                                     <div key={idx} className={`p-5 rounded-2xl border flex gap-4 ${issue.severity === 'CRITICAL' ? 'bg-rose-50 border-rose-100' : 'bg-amber-50 border-amber-100'}`}>
                                         <AlertTriangle size={24} className={issue.severity === 'CRITICAL' ? 'text-rose-500' : 'text-amber-500'} />
                                         <div className="flex-1">
-                                            <h4 className="font-bold text-sm text-stone-900">{issue.title}</h4>
-                                            <p className="text-xs text-stone-600 mt-1 leading-relaxed">{issue.description}</p>
-                                            {issue.action && (
+                                            <h4 className="font-bold text-sm text-stone-900">{String(issue.title)}</h4>
+                                            <p className="text-xs text-stone-600 mt-1 leading-relaxed">{String(issue.description)}</p>
+                                            {String(issue.action) && (
                                                 <button
                                                     onClick={() => handleAction(issue)}
                                                     disabled={isHealing}

@@ -18,7 +18,7 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
         rollForward: () => {
             startTransition(async () => {
                 try {
-                    await transferBalancesToNextYear(year.id, nextYear.id)
+                    await transferBalancesToNextYear(year.id, nextYear!.id)
                     toast.success("Balances transferred successfully!")
                 } catch (err: unknown) {
                     toast.error((err instanceof Error ? err.message : String(err)))
@@ -229,7 +229,7 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
                                     </div>
 
                                     <button
-                                        onClick={() => setEditingPeriod(p)}
+                                        onClick={() => setEditingPeriod(p as any)}
                                         className="text-[9px] font-bold uppercase hover:underline mt-1"
                                     >
                                         Edit

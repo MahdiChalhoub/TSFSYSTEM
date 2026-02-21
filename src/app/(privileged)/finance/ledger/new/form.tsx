@@ -51,7 +51,7 @@ export default function JournalEntryForm({ accounts, fiscalYears, initialEntry }
 
     const removeLine = (index: number) => {
         if (lines.length <= 2) return
-        setLines(lines.filter((_, i) => i !== index))
+        setLines(lines.filter((_: any, i: any) => i !== index))
     }
 
     const updateLine = (index: number, field: string, value: string) => {
@@ -91,8 +91,8 @@ export default function JournalEntryForm({ accounts, fiscalYears, initialEntry }
         setLines(newLines)
     }
 
-    const totalDebit = lines.reduce((sum, line) => sum + (Number(line.debit) || 0), 0)
-    const totalCredit = lines.reduce((sum, line) => sum + (Number(line.credit) || 0), 0)
+    const totalDebit = lines.reduce((sum: any, line: any) => sum + (Number(line.debit) || 0), 0)
+    const totalCredit = lines.reduce((sum: any, line: any) => sum + (Number(line.credit) || 0), 0)
     const diff = totalDebit - totalCredit
     const isBalanced = Math.abs(diff) < 0.01
 
@@ -229,7 +229,7 @@ export default function JournalEntryForm({ accounts, fiscalYears, initialEntry }
                         </tr>
                     </thead>
                     <tbody>
-                        {lines.map((line, idx) => (
+                        {lines.map((line: any, idx: any) => (
                             <tr key={idx} className="border-b border-stone-100 last:border-0 hover:bg-stone-50/50">
                                 <td className="p-2 relative">
                                     <div className="flex items-center gap-2">

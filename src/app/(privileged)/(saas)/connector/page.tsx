@@ -106,7 +106,7 @@ export default function ConnectorDashboardPage() {
                 toast.success(`Cleaned up ${res.data?.expired_count || 0} expired buffers`)
                 await loadData()
             } else {
-                toast.error(res.error)
+                toast.error((res as any).error)
             }
         } catch {
             toast.error('Cleanup failed')

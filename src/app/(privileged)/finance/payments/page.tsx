@@ -23,13 +23,13 @@ type ActiveView = 'ALL' | 'SUPPLIER_PAYMENT' | 'CUSTOMER_RECEIPT' | 'AGED_AR' | 
 type SortKey = 'payment_date' | 'type' | 'amount' | 'status'
 type SortDir = 'asc' | 'desc'
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: Record<string, any> }> = {
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ComponentType<any> }> = {
     DRAFT: { label: 'Draft', color: 'text-stone-600', bg: 'bg-stone-50 border-stone-200', icon: Clock },
     POSTED: { label: 'Posted', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', icon: CheckCircle2 },
     CANCELLED: { label: 'Cancelled', color: 'text-red-700', bg: 'bg-red-50 border-red-200', icon: XCircle },
 }
 
-const TYPE_CONFIG: Record<string, { label: string; color: string; bg: string; icon: Record<string, any> }> = {
+const TYPE_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ComponentType<any> }> = {
     SUPPLIER_PAYMENT: { label: 'Supplier Payment', color: 'text-rose-700', bg: 'bg-rose-50 border-rose-200', icon: ArrowUpRight },
     CUSTOMER_RECEIPT: { label: 'Customer Receipt', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', icon: ArrowDownLeft },
     REFUND: { label: 'Refund', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', icon: CreditCard },

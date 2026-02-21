@@ -18,7 +18,7 @@ export default function GlobalInventoryManager({
 
     const loadData = (newPage: number, newSearch: string) => {
         startTransition(async () => {
-            const result = await fetchAction({
+            const result = await (fetchAction as any)({
                 search: newSearch,
                 offset: (newPage - 1) * 50,
                 limit: 50

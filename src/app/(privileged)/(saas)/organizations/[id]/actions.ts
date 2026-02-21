@@ -9,7 +9,7 @@ export async function getOrganization(id: string) {
 
         return result
     } catch (error: unknown) {
-        console.error(`[SaaS Detail] Error fetching org ${id}:`, error?.message || error)
+        console.error(`[SaaS Detail] Error fetching org ${id}:`, (error as any)?.message || error)
         return null
     }
 }
@@ -38,6 +38,18 @@ export async function getOrgModules(orgId: string) {
     } catch (error) {
         console.error("[SaaS] Error fetching modules:", error)
         return []
+    }
+}
+
+export async function hotReloadModules() {
+    try {
+        return await erpFetch('saas/modules/hot_reload/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        })
+    } catch (error) {
+        console.error("[SaaS] Error hot-reloading modules:", error)
+        throw error
     }
 }
 

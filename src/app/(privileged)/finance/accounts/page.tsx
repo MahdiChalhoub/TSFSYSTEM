@@ -98,7 +98,7 @@ export default function FinancialAccountsPage() {
 }
 
 function AccountCard({ account, onDelete, onRefresh }: { account: Record<string, any>, onDelete: () => void, onRefresh: () => void }) {
-    const icon: Record<string, any> = {
+    const icon: Record<string, React.ComponentType<any>> = {
         'CASH': Wallet,
         'BANK': Building,
         'MOBILE': Smartphone,

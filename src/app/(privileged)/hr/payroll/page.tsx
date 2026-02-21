@@ -57,11 +57,11 @@ export default function PayrollSummaryPage() {
         return items.sort((a: Record<string, any>, b: Record<string, any>) => parseFloat(b.salary || 0) - parseFloat(a.salary || 0))
     }, [employees, typeFilter, search])
 
-    const totalPayroll = employees.reduce((s, e) => s + parseFloat(e.salary || 0), 0)
+    const totalPayroll = employees.reduce((s, e) => s + parseFloat(String(e.salary || 0)), 0)
     const avgSalary = employees.length > 0 ? totalPayroll / employees.length : 0
-    const maxSalary = Math.max(...employees.map(e => parseFloat(e.salary || 0)), 0)
+    const maxSalary = Math.max(...employees.map(e => parseFloat(String(e.salary || 0))), 0)
     const typeCounts: Record<string, number> = {}
-    employees.forEach(e => { typeCounts[e.employee_type] = (typeCounts[e.employee_type] || 0) + 1 })
+    employees.forEach(e => { typeCounts[e.employee_type || 'unknown'] = (typeCounts[e.employee_type || 'unknown'] || 0) + 1 })
 
     if (loading) {
         return (

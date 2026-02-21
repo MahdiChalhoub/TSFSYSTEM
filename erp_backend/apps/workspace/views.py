@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from django.db.models import Q, Count
 
-from erp.views import TenantFilterMixin, AuditLogMixin
+from erp.mixins import TenantFilterMixin, AuditLogMixin
 from .models import (
     TaskCategory, TaskTemplate, AutoTaskRule, Task, TaskComment,
     TaskAttachment, EmployeeRequest,

@@ -341,13 +341,13 @@ export default function SubscriptionPlansPage() {
                         <div key={cat.id} className="space-y-4">
                             <div className="flex items-center gap-3 pb-2 border-b border-gray-100">
                                 <h3 className="text-xl font-bold text-gray-800">{cat.name}</h3>
-                                <Badge variant="secondary" className="text-xs font-mono">{cat.type}</Badge>
+                                <Badge variant="secondary" className="text-xs font-mono">{String(cat.type)}</Badge>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                {plans.filter(p => p.category?.id === cat.id).map(plan => {
-                                    const isCustom = parseFloat(plan.monthly_price) < 0 || plan.limits?.custom
-                                    const limits = plan.limits || {}
+                                {plans.filter(p => (p.category as any)?.id === cat.id).map(plan => {
+                                    const isCustom = parseFloat(String(plan.monthly_price)) < 0 || (plan.limits as any)?.custom
+                                    const limits: any = plan.limits || {}
 
                                     return (
                                         <Card key={plan.id} className={`transition-all shadow-sm hover:shadow-lg group overflow-hidden cursor-pointer ${isCustom
@@ -394,14 +394,14 @@ export default function SubscriptionPlansPage() {
                                                                 <div>
                                                                     <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Monthly</p>
                                                                     <p className="text-2xl font-black text-emerald-600">
-                                                                        {parseFloat(plan.monthly_price) === 0 ? 'Free' : `$${parseFloat(plan.monthly_price).toFixed(0)}`}
+                                                                        {parseFloat(String(plan.monthly_price)) === 0 ? 'Free' : `$${parseFloat(String(plan.monthly_price)).toFixed(0)}`}
                                                                     </p>
                                                                 </div>
-                                                                {parseFloat(plan.annual_price) > 0 && (
+                                                                {parseFloat(String(plan.annual_price)) > 0 && (
                                                                     <div className="pb-0.5">
                                                                         <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Annual</p>
                                                                         <p className="text-lg font-bold text-gray-500">
-                                                                            ${parseFloat(plan.annual_price).toFixed(0)}<span className="text-xs font-normal">/yr</span>
+                                                                            ${parseFloat(String(plan.annual_price)).toFixed(0)}<span className="text-xs font-normal">/yr</span>
                                                                         </p>
                                                                     </div>
                                                                 )}
@@ -462,7 +462,7 @@ export default function SubscriptionPlansPage() {
                                         </Card>
                                     )
                                 })}
-                                {plans.filter(p => p.category?.id === cat.id).length === 0 && (
+                                {plans.filter(p => (p.category as any)?.id === cat.id).length === 0 && (
                                     <div className="col-span-full py-8 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200 text-gray-400 text-sm">
                                         No plans in this category yet.
                                     </div>
@@ -628,14 +628,14 @@ export default function SubscriptionPlansPage() {
                 onOpenChange={(open) => { if (!open) setPendingDeleteAddon(null) }}
                 onConfirm={async () => {
                     if (pendingDeleteAddon) {
-                        await deleteAddon(pendingDeleteAddon.id)
+                        await deleteAddon(String((pendingDeleteAddon as any).id))
                         toast.success('Add-on deleted')
                         loadData()
                     }
                     setPendingDeleteAddon(null)
                 }}
                 title="Delete Add-on"
-                description={`Are you sure you want to delete the add-on "${pendingDeleteAddon?.name || ''}"? This cannot be undone.`}
+                description={`Are you sure you want to delete the add-on "${String((pendingDeleteAddon as any)?.name || '')}"? This cannot be undone.`}
                 confirmText="Delete"
                 variant="danger"
             />

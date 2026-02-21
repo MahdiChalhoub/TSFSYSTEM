@@ -18,7 +18,7 @@ function fmt(n: number) {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
 }
 
-const SEVERITY_CONFIG: Record<string, { color: string, bg: string, icon: Record<string, any>, label: string }> = {
+const SEVERITY_CONFIG: Record<string, { color: string, bg: string, icon: React.ComponentType<any>, label: string }> = {
     EXPIRED: { color: 'text-red-700', bg: 'bg-red-50 border-red-200', icon: Skull, label: 'Expired' },
     CRITICAL: { color: 'text-orange-700', bg: 'bg-orange-50 border-orange-200', icon: AlertTriangle, label: 'Critical (0-30 days)' },
     WARNING: { color: 'text-yellow-700', bg: 'bg-yellow-50 border-yellow-200', icon: Clock, label: 'Warning (30-60 days)' },

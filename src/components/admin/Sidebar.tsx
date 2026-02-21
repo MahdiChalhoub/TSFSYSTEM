@@ -621,7 +621,7 @@ function MenuItem({
         if (hasChildren) {
             setExpanded(!expanded);
         } else if (item.path) {
-            openTab(item.title, item.path);
+            (openTab as any)(item.title, item.path);
         }
     };
 

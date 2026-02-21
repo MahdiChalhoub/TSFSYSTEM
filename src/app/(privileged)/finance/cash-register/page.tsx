@@ -56,13 +56,13 @@ export default function CashRegisterPage() {
         }
     }
 
-    const sales = data?.sales || { count: 0, total: 0, tax: 0, discount: 0 }
-    const purchases = data?.purchases || { count: 0, total: 0 }
-    const returns = data?.returns || { count: 0, total: 0 }
-    const paymentMethods = data?.payment_methods || {}
-    const userStats = data?.user_stats || {}
-    const hourly = data?.hourly || Array(24).fill(0)
-    const recent = data?.recent || []
+    const sales = (data as any)?.sales || { count: 0, total: 0, tax: 0, discount: 0 }
+    const purchases = (data as any)?.purchases || { count: 0, total: 0 }
+    const returns = (data as any)?.returns || { count: 0, total: 0 }
+    const paymentMethods = (data as any)?.payment_methods || {}
+    const userStats = (data as any)?.user_stats || {}
+    const hourly: number[] = (data as any)?.hourly || Array(24).fill(0)
+    const recent: Record<string, any>[] = (data as any)?.recent || []
     const maxHourly = Math.max(...hourly, 1)
 
     if (loading && !data) {
@@ -138,7 +138,7 @@ export default function CashRegisterPage() {
                             </div>
                             <div>
                                 <p className="text-xs text-gray-500 uppercase">Net Revenue</p>
-                                <p className="text-2xl font-bold text-green-700">{fmt(data?.net_revenue || 0)}</p>
+                                <p className="text-2xl font-bold text-green-700">{fmt((data as any)?.net_revenue || 0)}</p>
                                 <p className="text-xs text-gray-400">After returns</p>
                             </div>
                         </div>

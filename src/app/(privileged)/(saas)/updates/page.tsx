@@ -154,12 +154,12 @@ export default function SystemUpdatesPage() {
                                 <span className="text-[10px] md:text-xs font-black text-gray-500 uppercase tracking-widest">Integrity</span>
                                 <span className="text-emerald-600 font-bold flex items-center gap-1 text-[10px] md:text-xs">
                                     <CheckCircle2 size={12} className="md:w-3.5 md:h-3.5" />
-                                    {status?.integrity || "Verified"}
+                                    {String(status?.integrity || "Verified")}
                                 </span>
                             </div>
                             <div className="flex justify-between items-center py-2 md:py-3 border-b border-gray-100">
                                 <span className="text-[10px] md:text-xs font-black text-gray-500 uppercase tracking-widest">Environment</span>
-                                <span className="text-gray-500 font-mono text-[9px] md:text-[10px] truncate max-w-[120px] md:max-w-none">{status?.environment || "---"}</span>
+                                <span className="text-gray-500 font-mono text-[9px] md:text-[10px] truncate max-w-[120px] md:max-w-none">{String(status?.environment || "---")}</span>
                             </div>
                         </div>
 
@@ -210,7 +210,7 @@ export default function SystemUpdatesPage() {
                                                     )
                                                     }
                                                 </div>
-                                                <p className="text-xs md:text-sm text-gray-500 font-medium line-clamp-1">{update.changelog || "System stabilization and security patches."}</p>
+                                                <p className="text-xs md:text-sm text-gray-500 font-medium line-clamp-1">{String(update.changelog || "System stabilization and security patches.")}</p>
                                             </div>
                                             {!update.is_applied && (
                                                 <Button
@@ -227,12 +227,12 @@ export default function SystemUpdatesPage() {
                                         <div className="mt-4 flex flex-wrap items-center gap-4 md:gap-6 text-[9px] md:text-[10px] uppercase font-black tracking-widest text-gray-600">
                                             <div className="flex items-center gap-2">
                                                 <Clock size={10} className="md:w-3 md:h-3" />
-                                                STAGED: {format(new Date(update.created_at), 'MMM dd, yyyy HH:mm')}
+                                                STAGED: {format(new Date(String(update.created_at)), 'MMM dd, yyyy HH:mm')}
                                             </div>
-                                            {update.is_applied && (
+                                            {!!(update.is_applied) && (
                                                 <div className="flex items-center gap-2 text-emerald-600/70">
                                                     <CheckCircle2 size={10} className="md:w-3 md:h-3" />
-                                                    INSTALLED: {format(new Date(update.applied_at), 'MMM dd, yyyy HH:mm')}
+                                                    INSTALLED: {format(new Date(String(update.applied_at)), 'MMM dd, yyyy HH:mm')}
                                                 </div>
                                             )}
                                         </div>

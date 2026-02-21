@@ -103,7 +103,7 @@ export default function PackagesPage() {
         try {
             await apiClient.post("/api/packages/upload/", formData, {
                 headers: { "Content-Type": "multipart/form-data" },
-                onUploadProgress: (progressEvent) => {
+                onUploadProgress: (progressEvent: any) => {
                     const progress = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1))
                     setUploadProgress(progress)
                 }
@@ -178,7 +178,7 @@ export default function PackagesPage() {
                         <div className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 rounded-xl border border-white/5">
                             <HardDrive className="w-4 h-4 text-cyan-400" />
                             <span className="text-sm text-slate-300">
-                                {stats?.total || 0} packages stored
+                                {String(stats?.total || 0)} packages stored
                             </span>
                         </div>
                     </div>
@@ -187,10 +187,10 @@ export default function PackagesPage() {
                 {/* Stats Cards */}
                 <div className="grid grid-cols-4 gap-4">
                     {[
-                        { label: "Backend Kernel", count: stats?.by_type?.kernel || 0, icon: Server, color: "cyan" },
-                        { label: "Frontend Kernel", count: stats?.by_type?.frontend || 0, icon: Monitor, color: "amber" },
-                        { label: "Modules", count: stats?.by_type?.module || 0, icon: Puzzle, color: "emerald" },
-                        { label: "Applied", count: stats?.by_status?.applied || 0, icon: CheckCircle2, color: "green" },
+                        { label: "Backend Kernel", count: (stats as any)?.by_type?.kernel || 0, icon: Server, color: "cyan" },
+                        { label: "Frontend Kernel", count: (stats as any)?.by_type?.frontend || 0, icon: Monitor, color: "amber" },
+                        { label: "Modules", count: (stats as any)?.by_type?.module || 0, icon: Puzzle, color: "emerald" },
+                        { label: "Applied", count: (stats as any)?.by_status?.applied || 0, icon: CheckCircle2, color: "green" },
                     ].map((stat) => (
                         <Card key={stat.label} className="bg-slate-900/50 border-white/5">
                             <CardContent className="p-4 flex items-center gap-4">

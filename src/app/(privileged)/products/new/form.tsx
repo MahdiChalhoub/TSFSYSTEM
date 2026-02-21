@@ -84,7 +84,7 @@ export default function AddProductForm({
                 setFilteredAttributes(filteredAttributeList);
 
                 // Reset brand if not in filtered list
-                if (selectedBrandId && !filteredBrandList.find(b => String(b.id) === selectedBrandId)) {
+                if (selectedBrandId && !filteredBrandList.find((b: any) => String(b.id) === selectedBrandId)) {
                     setSelectedBrandId('');
                     const brandSelect = document.getElementById('brand-select') as HTMLSelectElement;
                     if (brandSelect) brandSelect.value = '';
@@ -133,7 +133,7 @@ export default function AddProductForm({
                         {/* Step 1: Category FIRST */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">1∩╕ÅΓâú Category</label>
-                            <CategorySelector categories={categories} onChange={(id) => setSelectedCategoryId(id)} />
+                            <CategorySelector categories={categories as any} onChange={(id) => setSelectedCategoryId(id)} />
                             <input type="hidden" name="categoryId" value={selectedCategoryId || ''} />
                             <p className="text-xs text-gray-500 mt-1">≡ƒÆí This will filter available brands</p>
                         </div>

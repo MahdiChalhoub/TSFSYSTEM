@@ -96,7 +96,7 @@ export async function registerBusinessAction(prevState: Record<string, any>, for
         return { success: true, login_url: data.login_url };
 
     } catch (error: unknown) {
-        const msg = error?.message || 'Unknown error';
+        const msg = (error as any)?.message || 'Unknown error';
         // Try to parse as JSON first (erpFetch sometimes wraps errors as JSON strings)
         try {
             const errData = JSON.parse(msg);
@@ -153,7 +153,7 @@ export async function registerUserAction(prevState: Record<string, any>, formDat
 
     } catch (error: unknown) {
         console.error("User Register Error", error);
-        const msg = error?.message || 'Unknown error';
+        const msg = (error as any)?.message || 'Unknown error';
         try {
             const errData = JSON.parse(msg);
             return { error: errData };

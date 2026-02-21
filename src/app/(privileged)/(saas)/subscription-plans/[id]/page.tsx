@@ -103,7 +103,7 @@ export default function PlanDetailPage() {
             const result = await togglePlanPublic(id as string)
             toast.success(result.message)
             setForm(f => ({ ...f, is_public: result.is_public }))
-            setPlan((p: Record<string, any>) => ({ ...p, is_public: result.is_public }))
+            setPlan((p: any) => ({ ...p, is_public: result.is_public }))
         } catch {
             toast.error("Failed to toggle visibility")
         }
@@ -165,12 +165,12 @@ export default function PlanDetailPage() {
         }))
     }
 
-    const isCustom = plan && parseFloat(plan.monthly_price) < 0
+    const isCustom = plan && parseFloat(String(plan.monthly_price)) < 0
     const tabs = [
         { key: 'overview', label: 'Overview' },
         { key: 'modules', label: 'Modules & Features' },
         { key: 'limits', label: 'Limits' },
-        { key: 'orgs', label: `Organizations (${plan?.organizations?.length || 0})` },
+        { key: 'orgs', label: `Organizations (${(plan?.organizations as any)?.length || 0})` },
     ]
 
     const limitConfig = [
@@ -496,12 +496,12 @@ export default function PlanDetailPage() {
                 <Card className="bg-white shadow-sm">
                     <CardHeader>
                         <CardTitle className="text-lg font-bold">Organizations on this Plan</CardTitle>
-                        <CardDescription>{plan.organizations?.length || 0} organization(s) currently subscribed</CardDescription>
+                        <CardDescription>{(plan.organizations as any)?.length || 0} organization(s) currently subscribed</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        {plan.organizations?.length > 0 ? (
+                        {(plan.organizations as any)?.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {plan.organizations.map((org: Record<string, any>) => (
+                                {(plan.organizations as any).map((org: Record<string, any>) => (
                                     <div key={org.id}
                                         className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 border border-gray-100 hover:border-emerald-200 hover:shadow-sm transition-all cursor-pointer"
                                         onClick={() => router.push(`/organizations/${org.id}`)}

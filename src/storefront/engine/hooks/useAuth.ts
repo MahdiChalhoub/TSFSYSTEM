@@ -21,7 +21,7 @@ export function useAuth(): UseAuthReturn {
         } as CustomerUser : null,
         isAuthenticated: ctx.isAuthenticated,
         loading: false,
-        login: ctx.login,
+        login: ctx.login as any,
         logout: ctx.logout,
     }
 }

@@ -70,7 +70,7 @@ export default function AssetsPage() {
     }
 
     async function viewSchedule(asset: Record<string, any>) {
-        setSelectedAsset(asset)
+        setSelectedAsset(asset as any)
         try {
             const s = await getAssetSchedule(asset.id)
             setSchedule(Array.isArray(s) ? s : [])
@@ -85,7 +85,7 @@ export default function AssetsPage() {
             try {
                 await postDepreciation(assetId, scheduleId)
                 toast.success("Depreciation posted")
-                viewSchedule(selectedAsset)
+                viewSchedule(selectedAsset as any)
                 loadData()
             } catch (err: unknown) {
                 toast.error((err instanceof Error ? err.message : String(err)) || "Failed to post depreciation")
@@ -105,7 +105,7 @@ export default function AssetsPage() {
     const totalBook = assets.reduce((s, a) => s + Number(a.book_value || 0), 0)
     const fullyDepreciated = assets.filter(a => a.status === "FULLY_DEPRECIATED").length
 
-    const statusConfig: Record<string, { icon: Record<string, any>; color: string; bg: string }> = {
+    const statusConfig: Record<string, { icon: React.ComponentType<any>; color: string; bg: string }> = {
         ACTIVE: { icon: CheckCircle2, color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
         FULLY_DEPRECIATED: { icon: AlertTriangle, color: "text-stone-600", bg: "bg-stone-100 border-stone-200" },
         DISPOSED: { icon: XCircle, color: "text-rose-700", bg: "bg-rose-50 border-rose-200" },

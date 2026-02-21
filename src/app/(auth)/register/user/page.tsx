@@ -13,7 +13,7 @@ import { PLATFORM_CONFIG } from "@/lib/saas_config";
 import { PasswordStrength } from "@/components/ui/password-strength";
 
 export default function UserRegisterPage() {
-    const [state, action, isPending] = useActionState(registerUserAction, null);
+    const [state, action, isPending] = useActionState(registerUserAction as any, null);
     const [config, setConfig] = useState<PublicConfig>({ tenant: { roles: [] } });
     const [passwordValue, setPasswordValue] = useState('');
 
@@ -25,7 +25,7 @@ export default function UserRegisterPage() {
     const roles = config.tenant?.roles || [];
     const tenantLogo = config.tenant?.logo;
 
-    if (state?.success) {
+    if ((state as any)?.success) {
         return (
             <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 relative overflow-hidden">
                 <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/5 blur-[160px] rounded-full" />
@@ -92,10 +92,10 @@ export default function UserRegisterPage() {
 
                 <CardContent className="p-10">
                     <form action={action} className="space-y-6">
-                        {(state?.error as any)?.root && (
+                        {((state as any)?.error)?.root && (
                             <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3 text-red-400 text-xs font-bold animate-in zoom-in-95">
                                 <AlertCircle size={16} />
-                                {(state?.error as any).root}
+                                {((state as any)?.error as any)?.root}
                             </div>
                         )}
 

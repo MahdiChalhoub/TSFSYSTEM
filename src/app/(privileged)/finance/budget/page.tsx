@@ -41,8 +41,8 @@ export default function BudgetPlanningPage() {
     const incomeAccounts = accounts.filter(a => a.type === 'INCOME')
     const expenseAccounts = accounts.filter(a => a.type === 'EXPENSE')
 
-    const totalIncome = incomeAccounts.reduce((s, a) => s + parseFloat(a.balance || 0), 0)
-    const totalExpense = expenseAccounts.reduce((s, a) => s + parseFloat(a.balance || 0), 0)
+    const totalIncome = incomeAccounts.reduce((s, a) => s + parseFloat(String(a.balance || 0)), 0)
+    const totalExpense = expenseAccounts.reduce((s, a) => s + parseFloat(String(a.balance || 0)), 0)
     const netResult = totalIncome - totalExpense
 
     if (loading) {
