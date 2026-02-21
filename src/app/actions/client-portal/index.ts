@@ -182,3 +182,20 @@ export async function rateTicketResolution(ticketId: number, rating: number, fee
         method: 'POST', body: JSON.stringify({ rating, feedback: feedback || '' })
     });
 }
+
+// =============================================================================
+// ADMIN: QUOTE REQUEST MANAGEMENT
+// =============================================================================
+
+export async function getQuoteRequests() {
+    try { return await erpFetch('client-portal/quote-requests/'); } catch { return []; }
+}
+export async function getQuoteRequest(id: number) {
+    return erpFetch(`client-portal/quote-requests/${id}/`);
+}
+export async function updateQuoteRequest(id: number, data: any) {
+    return erpFetch(`client-portal/quote-requests/${id}/`, { method: 'PATCH', body: JSON.stringify(data) });
+}
+export async function deleteQuoteRequest(id: number) {
+    return erpFetch(`client-portal/quote-requests/${id}/`, { method: 'DELETE' });
+}

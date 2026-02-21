@@ -20,13 +20,13 @@ from django.db.models import Sum, Count
 from erp.views import TenantModelViewSet
 from .models import (
     ClientPortalConfig, ClientPortalAccess, ClientWallet, WalletTransaction,
-    ClientOrder, ClientOrderLine, ClientTicket,
+    ClientOrder, ClientOrderLine, ClientTicket, QuoteRequest,
 )
 from .serializers import (
     ClientPortalAccessSerializer,
     ClientWalletSerializer, WalletTransactionSerializer,
     ClientOrderSerializer, ClientOrderListSerializer, ClientOrderLineSerializer,
-    ClientTicketSerializer,
+    ClientTicketSerializer, QuoteRequestSerializer,
     ClientDashboardSerializer,
 )
 from .permissions import IsClientUser, HasClientPermission
@@ -676,3 +676,45 @@ class ClientPortalConfigViewSet(TenantModelViewSet):
         config = ClientPortalConfig.get_config(org)
         from .serializers import ClientPortalConfigSerializer
         return Response(ClientPortalConfigSerializer(config).data)
+# =============================================================================
+# QUOTE REQUESTS (CATALOGUE MODE)
+# =============================================================================
+
+class QuoteRequestViewSet(TenantModelViewSet):
+    """
+    ViewSet for handling Quote Requests.
+    Creation is public (AllowAny), while viewing and managing is restricted to staff.
+    """
+    queryset = QuoteRequest.objects.all()
+    serializer_class = QuoteRequestSerializer
+
+    def get_permissions(self):
+        if self.action == 'create':
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
+    def perform_create(self, serializer):
+        org = None
+        # Try to resolve organization from authenticated user
+        if self.request.user.is_authenticated and hasattr(self.request.user, 'organization'):
+            org = self.request.user.organization
+        else:
+            # Resolve from header X-Tenant-Id (slug) for guest visitors
+            org_slug = self.request.headers.get('X-Tenant-Id')
+            if org_slug:
+                from erp.models import Organization
+                org = Organization.objects.filter(slug=org_slug).first()
+
+        if org:
+            # Handle contact linking for logged-in clients
+            contact = None
+            if self.request.user.is_authenticated:
+                try:
+                    contact = self.request.user.client_access.contact
+                except:
+                    pass
+
+            serializer.save(organization=org, contact=contact)
+        else:
+            # If organization cannot be determined, let it fail with validation error or use default logic
+            super().perform_create(serializer)

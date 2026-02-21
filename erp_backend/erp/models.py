@@ -548,6 +548,9 @@ class PlanCategory(models.Model):
     type = models.CharField(max_length=20)
     country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True, blank=True)
     parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='children')
+    # Bridge to inventory — uses IntegerField to avoid hard cross-app dependency
+    linked_inventory_category = models.IntegerField(null=True, blank=True,
+        help_text='FK to inventory Category.id for catalog integration')
 
     class Meta:
         db_table = 'plancategory'
@@ -568,6 +571,9 @@ class SubscriptionPlan(models.Model):
     trial_days = models.IntegerField(default=0, help_text="Free trial duration in days. 0 = no trial.")
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+    # Filter plans by organization business type (#15)
+    business_types = models.ManyToManyField(BusinessType, blank=True, related_name='plans',
+        help_text='Business types this plan is available for. Empty = available to all.')
 
     class Meta:
         db_table = 'subscriptionplan'

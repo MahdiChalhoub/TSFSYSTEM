@@ -4,7 +4,7 @@ Client Portal — Serializers
 from rest_framework import serializers
 from .models import (
     ClientPortalConfig, ClientPortalAccess, ClientWallet, WalletTransaction,
-    ClientOrder, ClientOrderLine, ClientTicket,
+    ClientOrder, ClientOrderLine, ClientTicket, QuoteRequest,
 )
 
 
@@ -132,3 +132,10 @@ class ClientPortalConfigSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ('created_at', 'updated_at')
 
+class QuoteRequestSerializer(serializers.ModelSerializer):
+    product_name_display = serializers.CharField(source='product.name', read_only=True, default='')
+
+    class Meta:
+        model = QuoteRequest
+        fields = '__all__'
+        read_only_fields = ('quote_number', 'created_at', 'updated_at')
