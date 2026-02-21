@@ -17,7 +17,7 @@ class SaaSIPWhitelistMiddleware:
     Restricts /api/saas/ endpoints to whitelisted IPs.
 
     Configure in settings.py:
-        SAAS_ADMIN_IP_WHITELIST = ['127.0.0.1', '91.99.186.183']
+        SAAS_ADMIN_IP_WHITELIST = ['127.0.0.1']
 
     If empty or not set, all IPs are allowed (open mode).
     """

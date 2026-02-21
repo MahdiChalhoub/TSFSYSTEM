@@ -62,8 +62,8 @@ export async function loginAction(prevState: any, formData: FormData) {
         const isIp = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?::[0-9]+)?$/.test(host);
 
         if (isIp) {
-            // WE ARE ON AN IP ADDRESS via direct access (e.g. http://91.99.186.183:3000)
-            // We CANNOT redirect to saas.91.99.186.183
+            // WE ARE ON AN IP ADDRESS via direct access
+            // We CANNOT redirect to saas.ip-address
             // So we skip the redirection and allow the login to proceed on this host.
             // The user will just stay on the IP.
             // IP address detected — skip subdomain redirect
