@@ -97,6 +97,16 @@ export default async function middleware(req: NextRequest) {
             || url.pathname.startsWith('/dashboard')
             || url.pathname.startsWith('/organizations')
             || url.pathname.startsWith('/modules')
+            || url.pathname.startsWith('/sales')
+            || url.pathname.startsWith('/products')
+            || url.pathname.startsWith('/inventory')
+            || url.pathname.startsWith('/finance')
+            || url.pathname.startsWith('/purchases')
+            || url.pathname.startsWith('/hr')
+            || url.pathname.startsWith('/settings')
+            || url.pathname.startsWith('/pos')
+            || url.pathname.startsWith('/crm')
+            || url.pathname.startsWith('/saas')
             || url.pathname.startsWith('/tsf-system-kernel-7788');
 
         if (isAppRoute) {
