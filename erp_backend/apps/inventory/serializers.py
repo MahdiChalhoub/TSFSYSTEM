@@ -150,6 +150,29 @@ class ProductGroupSerializer(serializers.ModelSerializer):
 
 
 # =============================================================================
+# COMBO COMPONENT SERIALIZER (defined before ProductSerializer which references it)
+# =============================================================================
+
+class ComboComponentSerializer(serializers.ModelSerializer):
+    """Serializer for combo/bundle product components."""
+    component_name = serializers.CharField(source='component_product.name', read_only=True)
+    component_sku = serializers.CharField(source='component_product.sku', read_only=True)
+    component_price = serializers.DecimalField(
+        source='component_product.selling_price_ttc', max_digits=15, decimal_places=2, read_only=True
+    )
+
+    class Meta:
+        model = ComboComponent
+        fields = [
+            'id', 'combo_product', 'component_product',
+            'component_name', 'component_sku', 'component_price',
+            'quantity', 'price_override', 'sort_order',
+            'organization',
+        ]
+        read_only_fields = ['organization']
+
+
+# =============================================================================
 # PRODUCT SERIALIZERS
 # =============================================================================
 
@@ -200,23 +223,7 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         read_only_fields = ['organization']
 
 
-class ComboComponentSerializer(serializers.ModelSerializer):
-    """Serializer for combo/bundle product components."""
-    component_name = serializers.CharField(source='component_product.name', read_only=True)
-    component_sku = serializers.CharField(source='component_product.sku', read_only=True)
-    component_price = serializers.DecimalField(
-        source='component_product.selling_price_ttc', max_digits=15, decimal_places=2, read_only=True
-    )
 
-    class Meta:
-        model = ComboComponent
-        fields = [
-            'id', 'combo_product', 'component_product',
-            'component_name', 'component_sku', 'component_price',
-            'quantity', 'price_override', 'sort_order',
-            'organization',
-        ]
-        read_only_fields = ['organization']
 
 
 # =============================================================================
