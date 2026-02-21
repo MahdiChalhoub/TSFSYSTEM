@@ -321,10 +321,11 @@ export const MENU_ITEMS = [
         icon: Globe,
         module: 'ecommerce',
         children: [
-            { title: 'Storefront Dashboard', path: '/workspace/portal-config', icon: Settings },
-            { title: 'eCommerce Orders', path: '/workspace/client-orders', icon: ShoppingCart },
-            { title: 'Client Access', path: '/workspace/client-access', icon: Users },
-            { title: 'Client Tickets', path: '/workspace/client-tickets', icon: ClipboardList },
+            { title: 'Storefront Overview', path: '/ecommerce/dashboard', icon: BarChart3 },
+            { title: 'Storefront Settings', path: '/ecommerce/settings', icon: Settings },
+            { title: 'Theme Manager', path: '/ecommerce/themes', icon: Layers },
+            { title: 'Online Orders', path: '/ecommerce/orders', icon: ShoppingCart },
+            { title: 'Product Catalog', path: '/ecommerce/catalog', icon: Tag },
         ]
     },
     {
