@@ -14,20 +14,12 @@ const debug = (...args: unknown[]) => isDev && console.log(...args);
 /** Custom error class for ERP API errors — used for type-safe catch blocks */
 export class ErpApiError extends Error {
     status: number
-    constructor(message: string, status: number) {
+    data: any
+    constructor(message: string, status: number, data: any = null) {
         super(message)
         this.name = 'ErpApiError'
         this.status = status
-    }
-}
-
-export class ErpApiError extends Error {
-    status: number;
-    data: any;
-    constructor(status: number, data: any) {
-        super(`ERP API Error ${status}`);
-        this.status = status;
-        this.data = data;
+        this.data = data
     }
 }
 
