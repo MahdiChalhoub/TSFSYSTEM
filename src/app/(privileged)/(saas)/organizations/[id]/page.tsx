@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { SaasOrganization, SaasUsageData, SaasBillingData, SaasAddonData, SaasPlan, SaasModule, SaasUser, SaasSite } from "@/types/erp"
 import { useParams, useRouter } from "next/navigation"
-import { getOrganization, getOrgUsage, getOrgBilling, getOrgModules, toggleOrgModule, updateModuleFeatures, changeOrgPlan, getOrgUsers, createOrgUser, resetOrgUserPassword, getOrgSites, createOrgSite, toggleOrgSite, listClients, createClient, setOrgClient, getOrgAddons, purchaseAddon, cancelAddon } from "./actions"
+import { getOrganization, getOrgUsage, getOrgBilling, getOrgModules, toggleOrgModule, updateModuleFeatures, changeOrgPlan, getOrgUsers, createOrgUser, resetOrgUserPassword, getOrgSites, createOrgSite, toggleOrgSite, listClients, createClient, setOrgClient, getOrgAddons, purchaseAddon, cancelAddon, getOrgEncryptionStatus, toggleOrgEncryption } from "./actions"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -11,12 +11,11 @@ import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { toast } from "sonner"
 import {
-    ArrowLeft, Users, MapPin, HardDrive, FileText,
-    Package, ShieldCheck, AlertTriangle, Loader2,
-    ToggleLeft, ToggleRight, Crown, Layers, Activity,
+    ArrowLeft, Users, MapPin, FileText, HardDrive, Package, Settings, Shield,
+    AlertTriangle, Loader2, ToggleLeft, ToggleRight, Crown, Layers, Activity,
     CreditCard, TrendingUp, ChevronRight, Plus, KeyRound,
     UserCog, Eye, EyeOff, Check, Building2, Power, UserCircle, Mail,
-    Puzzle, ShoppingCart, XCircle
+    Puzzle, ShoppingCart, XCircle, ShieldCheck, ShieldOff
 } from "lucide-react"
 
 // ─── Usage Meter ─────────────────────────────────────────────────────────────
@@ -155,6 +154,8 @@ export default function OrganizationDetailPage() {
     const [purchasingAddon, setPurchasingAddon] = useState<string | null>(null)
     const [cancellingAddon, setCancellingAddon] = useState<string | null>(null)
     const [toggling, setToggling] = useState<string | null>(null)
+    const [encryptionStatus, setEncryptionStatus] = useState<Record<string, any> | null>(null)
+    const [togglingEncryption, setTogglingEncryption] = useState(false)
 
     // User creation dialog
     const [showCreateUser, setShowCreateUser] = useState(false)
@@ -203,6 +204,9 @@ export default function OrganizationDetailPage() {
                 setUsers(Array.isArray(usersData) ? usersData : [])
                 setSites(Array.isArray(sitesData) ? sitesData : [])
                 setAddons(addonsData || { purchased: [], available: [] })
+
+                // Load encryption status
+                getOrgEncryptionStatus(orgId).then(s => setEncryptionStatus(s)).catch(() => { })
             } catch {
                 toast.error("Failed to load organization details")
             } finally {
@@ -487,6 +491,48 @@ export default function OrganizationDetailPage() {
                                             </Button>
                                         </div>
                                     )}
+                                </CardContent>
+                            </Card>
+
+                            {/* Encryption Card */}
+                            <Card className={`border-gray-100 shadow-sm ${encryptionStatus?.encryption_enabled ? 'border-emerald-200 bg-emerald-50/20' : ''}`}>
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-lg font-bold flex items-center gap-2">
+                                        {encryptionStatus?.encryption_enabled
+                                            ? <ShieldCheck size={16} className="text-emerald-600" />
+                                            : <ShieldOff size={16} className="text-gray-400" />}
+                                        AES-256 Encryption
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-center py-2">
+                                        <div className={`text-sm font-bold ${encryptionStatus?.encryption_enabled ? 'text-emerald-700' : 'text-gray-500'}`}>
+                                            {encryptionStatus === null ? 'Loading...' : encryptionStatus?.encryption_enabled ? 'Active' : 'Disabled'}
+                                        </div>
+                                        {encryptionStatus?.activated_at && (
+                                            <p className="text-[10px] text-gray-400 mt-1">Since {new Date(encryptionStatus.activated_at).toLocaleDateString()}</p>
+                                        )}
+                                    </div>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        disabled={togglingEncryption}
+                                        className={`w-full rounded-xl font-bold text-xs mt-2 ${encryptionStatus?.encryption_enabled
+                                            ? 'border-rose-200 text-rose-600 hover:bg-rose-50'
+                                            : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'}`}
+                                        onClick={async () => {
+                                            setTogglingEncryption(true)
+                                            try {
+                                                const action = encryptionStatus?.encryption_enabled ? 'deactivate' : 'activate'
+                                                await toggleOrgEncryption(orgId, action)
+                                                const updated = await getOrgEncryptionStatus(orgId)
+                                                setEncryptionStatus(updated)
+                                                toast.success(`Encryption ${action}d successfully`)
+                                            } catch { toast.error('Failed to toggle encryption') }
+                                            finally { setTogglingEncryption(false) }
+                                        }}>
+                                        {togglingEncryption ? 'Processing...' : encryptionStatus?.encryption_enabled ? 'Deactivate' : 'Activate'}
+                                    </Button>
                                 </CardContent>
                             </Card>
                         </div>

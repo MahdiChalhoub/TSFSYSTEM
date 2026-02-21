@@ -210,3 +210,23 @@ export async function cancelAddon(orgId: string, purchaseId: string) {
         headers: { 'Content-Type': 'application/json' },
     })
 }
+
+// ─── Encryption Management ──────────────────────────────────────
+
+export async function getOrgEncryptionStatus(orgId: string) {
+    try {
+        return await erpFetch('saas/modules/encryption/status/', {
+            headers: { 'X-Org-Id': orgId }
+        })
+    } catch (error) {
+        console.error("[SaaS] Error fetching encryption status:", error)
+        return null
+    }
+}
+
+export async function toggleOrgEncryption(orgId: string, action: 'activate' | 'deactivate') {
+    return await erpFetch(`saas/modules/encryption/${action}/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Org-Id': orgId },
+    })
+}
