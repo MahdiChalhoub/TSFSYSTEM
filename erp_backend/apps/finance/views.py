@@ -40,7 +40,60 @@ class FinancialAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):
     queryset = FinancialAccount.objects.select_related('linked_coa').all()
     serializer_class = FinancialAccountSerializer
 
+    # Permission code → account type mapping
+    PERM_TYPE_MAP = {
+        'finance.account.cash': 'CASH',
+        'finance.account.bank': 'BANK',
+        'finance.account.mobile': 'MOBILE',
+        'finance.account.petty_cash': 'PETTY_CASH',
+        'finance.account.savings': 'SAVINGS',
+        'finance.account.foreign': 'FOREIGN',
+        'finance.account.escrow': 'ESCROW',
+        'finance.account.investment': 'INVESTMENT',
+    }
+
+    def _user_has_permission(self, user, code):
+        """Check if user's role includes a specific permission code."""
+        if user.is_superuser:
+            return True
+        if not hasattr(user, 'role') or not user.role:
+            return False
+        return user.role.permissions.filter(code=code).exists()
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        user = self.request.user
+
+        # Superusers and users with finance.account.all bypass type filtering
+        if user.is_superuser or self._user_has_permission(user, 'finance.account.all'):
+            return qs
+
+        # No role = no accounts (except assigned cash register)
+        if not hasattr(user, 'role') or not user.role:
+            if user.cash_register_id:
+                return qs.filter(id=user.cash_register_id)
+            return qs.none()
+
+        # Get user's permitted account types from their role's permissions
+        user_perms = set(user.role.permissions.values_list('code', flat=True))
+        allowed_types = [
+            acct_type for perm_code, acct_type in self.PERM_TYPE_MAP.items()
+            if perm_code in user_perms
+        ]
+
+        if not allowed_types:
+            # Fallback: show only assigned cash register
+            if user.cash_register_id:
+                return qs.filter(id=user.cash_register_id)
+            return qs.none()
+
+        return qs.filter(type__in=allowed_types)
+
     def create(self, request, *args, **kwargs):
+        # Gate account creation behind finance.account.manage permission
+        if not self._user_has_permission(request.user, 'finance.account.manage'):
+            return Response({"error": "Permission denied: finance.account.manage required"}, status=status.HTTP_403_FORBIDDEN)
+
         organization_id = get_current_tenant_id()
         if not organization_id:
             return Response({"error": "No organization context found"}, status=status.HTTP_400_BAD_REQUEST)
@@ -97,6 +150,11 @@ class FinancialAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):
             return Response({"message": "User unassigned successfully"})
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, *args, **kwargs):
+        if not self._user_has_permission(request.user, 'finance.account.manage'):
+            return Response({"error": "Permission denied: finance.account.manage required"}, status=status.HTTP_403_FORBIDDEN)
+        return super().destroy(request, *args, **kwargs)
 
 
 class ChartOfAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):

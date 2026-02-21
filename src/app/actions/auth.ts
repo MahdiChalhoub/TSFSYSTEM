@@ -25,7 +25,7 @@ const RootLoginSchema = z.object({
     slug: z.string().optional() // Optional because tenant login doesn't need it
 })
 
-export async function loginAction(prevState: Record<string, any>, formData: FormData) {
+export async function loginAction(prevState: any, formData: FormData) {
     const data = Object.fromEntries(formData.entries())
 
     // Check if we are validating with slug or without
@@ -264,11 +264,28 @@ export async function logoutAction() {
                     'Authorization': `Token ${token}`
                 },
             })
-        } catch (e) { console.error('Logout backend call failed (non-blocking):', e) }
+        } catch (e) {
+            console.error('Logout backend call failed (non-blocking):', e)
+        }
     }
 
+    // Standard delete()
     cookieStore.delete('auth_token')
     cookieStore.delete('scope_access')
+
+    // EXTENDED CLEAR: For wildcard domain cookies, we must explicitly set them to expire
+    // with the same domain they were created with.
+    const headerStore = await import('next/headers');
+    const hList = await headerStore.headers();
+    const host = hList.get('host') || '';
+    const isLocal = host.includes('localhost');
+    const cookieDomain = isLocal ? undefined : `.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'tsf.ci'}`;
+
+    if (cookieDomain) {
+        cookieStore.set('auth_token', '', { domain: cookieDomain, path: '/', maxAge: 0 })
+        cookieStore.set('scope_access', '', { domain: cookieDomain, path: '/', maxAge: 0 })
+    }
+
     redirect('/')
 }
 
