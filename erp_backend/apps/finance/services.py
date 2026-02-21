@@ -770,6 +770,37 @@ class BarcodeService:
                 
             return final_barcode
 
+    @staticmethod
+    def generate_base64_image(barcode_value, format_type='ean13'):
+        """
+        Generates a base64 encoded PNG image for a given barcode string.
+        """
+        import io
+        import base64
+        import barcode
+        from barcode.writer import ImageWriter
+        
+        try:
+            if format_type == 'ean13' and len(str(barcode_value)) != 13:
+                format_type = 'code128'
+                
+            barcode_class = barcode.get_barcode_class(format_type)
+            code = barcode_class(str(barcode_value), writer=ImageWriter())
+            
+            buffer = io.BytesIO()
+            code.write(buffer, options={
+                'write_text': True,
+                'font_size': 10,
+                'text_distance': 4,
+                'module_height': 12.0,
+                'quiet_zone': 6.0
+            })
+            
+            img_str = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            return f"data:image/png;base64,{img_str}"
+        except Exception as e:
+            return None
+
 
 class LoanService:
     @staticmethod

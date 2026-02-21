@@ -134,6 +134,46 @@ class ProductViewSet(UDLEViewSetMixin, TenantModelViewSet):
         except Organization.DoesNotExist:
             return Response({"error": "Organization not found"}, status=404)
 
+    def update(self, request, *args, **kwargs):
+        """
+        Custom update method to support nested combo component updates
+        when modifying an existing COMBO product.
+        """
+        response = super().update(request, *args, **kwargs)
+        product = self.get_object()
+        
+        # If product is not COMBO, wipe existing components if any
+        if getattr(product, 'product_type', 'STANDARD') != 'COMBO':
+            ComboComponent.objects.filter(combo_product=product).delete()
+            return response
+            
+        # Parse and sync nested combo component data
+        if 'comboComponents' in request.data:
+            combo_data = request.data.get('comboComponents', [])
+            organization = product.organization
+            
+            with transaction.atomic():
+                # For simplicity, clear and rebuild components
+                ComboComponent.objects.filter(combo_product=product).delete()
+                
+                for idx, comp in enumerate(combo_data):
+                    comp_id = comp.get('component_product_id')
+                    qty = comp.get('quantity', 1)
+                    if not comp_id: continue
+                    try:
+                        child = Product.objects.get(id=comp_id, organization=organization)
+                        ComboComponent.objects.create(
+                            organization=organization,
+                            combo_product=product,
+                            component_product=child,
+                            quantity=qty,
+                            sort_order=idx
+                        )
+                    except Product.DoesNotExist:
+                        pass
+                        
+        return response
+
     # --- H5: bulk_move with target validation ---
     @action(detail=False, methods=['post'])
     def bulk_move(self, request):
@@ -384,7 +424,6 @@ class ProductViewSet(UDLEViewSetMixin, TenantModelViewSet):
                 cost_price_ht=data.get('costPrice', 0),
                 status='ACTIVE',
                 selling_price_ht=data.get('sellingPriceHT', 0),
-                selling_price_ttc=data.get('sellingPriceTTC', 0),
                 tva_rate=data.get('taxRate', 0),
 
                 min_stock_level=data.get('minStockLevel', 10),
@@ -392,6 +431,26 @@ class ProductViewSet(UDLEViewSetMixin, TenantModelViewSet):
                 size=data.get('size'),
                 size_unit_id=data.get('sizeUnitId'),
             )
+
+            # --- Save COMBO Components ---
+            combo_components_data = request.data.get('comboComponents', [])
+            if data.get('product_type') == 'COMBO' and combo_components_data:
+                for idx, comp in enumerate(combo_components_data):
+                    comp_id = comp.get('component_product_id')
+                    qty = comp.get('quantity', 1)
+                    if not comp_id: continue
+                    
+                    try:
+                        child = Product.objects.get(id=comp_id, organization=organization)
+                        ComboComponent.objects.create(
+                            organization=organization,
+                            combo_product=product,
+                            component_product=child,
+                            quantity=qty,
+                            sort_order=idx
+                        )
+                    except Product.DoesNotExist:
+                        pass # Silently skip invalid components for now
 
             return Response(ProductSerializer(product).data, status=status.HTTP_201_CREATED)
 

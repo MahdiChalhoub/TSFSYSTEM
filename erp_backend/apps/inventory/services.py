@@ -262,9 +262,39 @@ class InventoryService:
         
         with transaction.atomic():
             # Lock product for consistent AMC capture
-            from apps.inventory.models import Product
+            from apps.inventory.models import Product, COMBOItem
             product = Product.objects.select_for_update().get(id=product.id)
             current_amc = Decimal(str(product.cost_price))
+            
+            # --- Auto-Kitting (COMBO) Logic ---
+            if getattr(product, 'product_type', 'STANDARD') == 'COMBO':
+                # For COMBO items, we don't reduce the COMBO itself.
+                # Instead, we mathematically reduce its underlying components.
+                combo_components = ComboComponent.objects.filter(combo_product=product)
+                if not combo_components.exists():
+                    raise ValidationError(f"COMBO Product {product.name} has no components defined.")
+                    
+                total_cogs = Decimal('0')
+                for item in combo_components:
+                    child_qty = item.quantity * qty_to_reduce
+                    # Recursive call to deduct the child item
+                    # Notice we don't pass serials down automatically for combos right now
+                    child_cogs = InventoryService.reduce_stock(
+                        organization=organization,
+                        product=item.component_product,
+                        warehouse=warehouse,
+                        quantity=child_qty,
+                        reference=f"{reference}-C-{item.component_product.id}",
+                        user=user,
+                        scope=scope
+                    )
+                    total_cogs += (child_cogs * child_qty)
+                
+                # The effective AMC of this COMBO sale is the sum of its parts' COGS
+                eff_amc = total_cogs / qty_to_reduce if qty_to_reduce > 0 else Decimal('0')
+                return eff_amc
+            # ----------------------------------
+
             inventory = Inventory.objects.filter(
                 organization=organization,
                 warehouse=warehouse,

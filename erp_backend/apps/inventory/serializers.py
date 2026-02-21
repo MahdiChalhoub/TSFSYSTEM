@@ -162,6 +162,7 @@ class ProductSerializer(serializers.ModelSerializer):
     unit_short_name = serializers.CharField(source='unit.short_name', read_only=True, default=None)
     parfum_name = serializers.CharField(source='parfum.name', read_only=True, default=None)
     size_unit_name = serializers.CharField(source='size_unit.short_name', read_only=True, default=None)
+    combo_components = ComboComponentSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
@@ -178,7 +179,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'min_stock_level', 'max_stock_level', 'reorder_point', 'reorder_quantity',
             'is_expiry_tracked', 'tracks_serials',
             'status', 'is_active', 'created_at', 'updated_at',
-            'organization',
+            'combo_components', 'organization',
         ]
         read_only_fields = ['organization']
 
