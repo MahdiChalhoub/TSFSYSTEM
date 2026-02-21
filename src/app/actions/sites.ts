@@ -14,20 +14,20 @@ export type SiteState = {
 export async function getSites() {
     try {
         const result = await erpFetch('sites/')
-        return result.map((site: any) => ({
+        return result.map((site: Record<string, any>) => ({
             ...site,
             _count: {
                 warehouses: 0, // Django doesn't provide this by default, but we can add it later if needed
                 users: 0
             }
         }))
-    } catch (error: any) {
+    } catch (error: unknown) {
         // Suppress auth errors or 404s (e.g. valid for root domain or logged out state)
         // We just return empty list so the Layout doesn't crash
-        if (error.message && (
-            error.message.includes('Authentication credentials') ||
-            error.message.includes('Not Found') ||
-            error.message.includes('No organization context')
+        if ((error instanceof Error ? error.message : String(error)) && (
+            (error instanceof Error ? error.message : String(error)).includes('Authentication credentials') ||
+            (error instanceof Error ? error.message : String(error)).includes('Not Found') ||
+            (error instanceof Error ? error.message : String(error)).includes('No organization context')
         )) {
             return []
         }
@@ -63,10 +63,10 @@ export async function createSite(prevState: SiteState, formData: FormData): Prom
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         })
-        revalidatePath('/admin/settings/sites');
+        revalidatePath('/settings/sites');
         return { message: 'success' };
-    } catch (e: any) {
-        return { message: 'Database Error: ' + e.message };
+    } catch (e: unknown) {
+        return { message: 'Database Error: ' + (e instanceof Error ? e.message : String(e)) };
     }
 }
 
@@ -87,10 +87,10 @@ export async function updateSite(id: number, prevState: SiteState, formData: For
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         })
-        revalidatePath('/admin/settings/sites');
+        revalidatePath('/settings/sites');
         return { message: 'success' };
-    } catch (e: any) {
-        return { message: 'Database Error: ' + e.message };
+    } catch (e: unknown) {
+        return { message: 'Database Error: ' + (e instanceof Error ? e.message : String(e)) };
     }
 }
 
@@ -99,9 +99,9 @@ export async function deleteSite(id: number) {
         await erpFetch(`sites/${id}/`, {
             method: 'DELETE'
         })
-        revalidatePath('/admin/settings/sites');
+        revalidatePath('/settings/sites');
         return { success: true };
-    } catch (e: any) {
-        return { success: false, message: e.message };
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) };
     }
 }

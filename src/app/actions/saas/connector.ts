@@ -73,8 +73,8 @@ export async function createConnectorPolicy(data: {
             body: JSON.stringify(data)
         })
         return { success: true, data: res }
-    } catch (e: any) {
-        return { success: false, error: e.message || 'Failed to create policy' }
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to create policy' }
     }
 }
 
@@ -85,8 +85,8 @@ export async function updateConnectorPolicy(id: number, data: Record<string, unk
             body: JSON.stringify(data)
         })
         return { success: true, data: res }
-    } catch (e: any) {
-        return { success: false, error: e.message || 'Failed to update policy' }
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to update policy' }
     }
 }
 
@@ -94,8 +94,8 @@ export async function deleteConnectorPolicy(id: number) {
     try {
         await erpFetch(`connector/policies/${id}/`, { method: 'DELETE' })
         return { success: true }
-    } catch (e: any) {
-        return { success: false, error: e.message || 'Failed to delete policy' }
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to delete policy' }
     }
 }
 
@@ -128,8 +128,8 @@ export async function retryBufferedRequest(id: number) {
             method: 'POST'
         })
         return { success: true, data: res }
-    } catch (e: any) {
-        return { success: false, error: e.message || 'Failed to retry request' }
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to retry request' }
     }
 }
 
@@ -140,8 +140,8 @@ export async function replayAllBuffered(module: string, organizationId: number) 
             body: JSON.stringify({ module, organization_id: organizationId })
         })
         return { success: true, data: res }
-    } catch (e: any) {
-        return { success: false, error: e.message || 'Failed to replay buffers' }
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to replay buffers' }
     }
 }
 
@@ -151,8 +151,8 @@ export async function cleanupExpiredBuffers() {
             method: 'POST'
         })
         return { success: true, data: res }
-    } catch (e: any) {
-        return { success: false, error: e.message || 'Failed to cleanup' }
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to cleanup' }
     }
 }
 
@@ -204,7 +204,7 @@ export async function getAvailableModules() {
     try {
         // Get all system modules from the modules endpoint
         const modules = await erpFetch('modules/') || []
-        return modules.map((m: any) => ({
+        return modules.map((m: Record<string, any>) => ({
             code: m.code,
             name: m.name,
             is_core: m.is_core || false
@@ -227,7 +227,7 @@ export async function autoGeneratePolicies() {
     try {
         const modules = await getAvailableModules()
         const existingPolicies = await getConnectorPolicies()
-        const existingModules = new Set(existingPolicies.map((p: any) => p.target_module))
+        const existingModules = new Set(existingPolicies.map((p: Record<string, any>) => p.target_module))
 
         const created: string[] = []
         const skipped: string[] = []
@@ -267,7 +267,7 @@ export async function autoGeneratePolicies() {
             skipped,
             message: `Created ${created.length} policies, skipped ${skipped.length} (already exist)`
         }
-    } catch (e: any) {
-        return { success: false, error: e.message || 'Failed to auto-generate policies' }
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) || 'Failed to auto-generate policies' }
     }
 }

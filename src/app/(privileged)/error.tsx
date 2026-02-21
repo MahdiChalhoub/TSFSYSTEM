@@ -17,10 +17,10 @@ export default function PrivilegedError({
                 <AlertCircle size={32} />
             </div>
             <h2 className="text-2xl font-black text-gray-900 tracking-tight underline decoration-red-500 decoration-4 underline-offset-4">
-                Platform Sync Interrupted
+                Something Went Wrong
             </h2>
             <p className="text-gray-500 mt-4 font-medium max-w-sm mx-auto leading-relaxed">
-                An unexpected error occurred while communicating with the platform core. This usually happens during background upgrades.
+                An unexpected error occurred while loading this page. Please try again or return to the dashboard.
             </p>
 
             <div className="mt-8 bg-white border border-gray-200 p-4 rounded-2xl max-w-md w-full text-left">
@@ -36,14 +36,14 @@ export default function PrivilegedError({
                     className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-6 rounded-2xl font-black shadow-lg shadow-emerald-200 transition-all flex gap-3"
                 >
                     <RotateCcw size={18} />
-                    Retry Uplink
+                    Try Again
                 </Button>
                 <Button
                     variant="outline"
-                    onClick={() => window.location.href = '/'}
+                    onClick={() => window.location.href = '/dashboard'}
                     className="border-gray-200 bg-white hover:bg-gray-50 text-gray-700 px-8 py-6 rounded-2xl font-black transition-all"
                 >
-                    Return Home
+                    Go to Dashboard
                 </Button>
             </div>
         </div>

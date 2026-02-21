@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import '../globals.css';
@@ -7,18 +8,19 @@ import { TopHeader } from '@/components/admin/TopHeader';
 import { TabNavigator } from '@/components/admin/TabNavigator';
 import { DevProvider } from '@/context/DevContext';
 import DebugOverlay from '@/components/dev/DebugOverlay';
+import { CommandPalette } from '@/components/admin/CommandPalette';
 
-import { Outfit } from 'next/font/google';
+
 import { getSites } from '@/app/actions/sites';
-import { getOrganizations } from '@/app/(privileged)/saas/organizations/actions';
+import { getOrganizations } from '@/app/(privileged)/(saas)/organizations/actions';
 import { getUser } from '@/app/actions/auth';
 import { getGlobalFinancialSettings } from '@/app/actions/settings';
 
-import { headers } from 'next/headers';
+import { headers, cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
-const outfit = Outfit({ subsets: ['latin'] });
+
 
 export default async function AdminLayout({
     children,
@@ -57,7 +59,7 @@ export default async function AdminLayout({
                 <div className="w-16 h-16 rounded-3xl bg-emerald-100 flex items-center justify-center text-emerald-600 mb-6 animate-pulse">
                     <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin" />
                 </div>
-                <h2 className="text-2xl font-black text-gray-900 tracking-tight">Reconnecting to Platform Uplink...</h2>
+                <h2 className="text-2xl font-black text-gray-900 tracking-tight">Reconnecting...</h2>
                 <p className="text-gray-500 mt-2 font-medium max-w-sm mx-auto">
                     The platform backend is applying updates. Your session is safe.
                     Checking link status...
@@ -67,13 +69,12 @@ export default async function AdminLayout({
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '0.2s' }} />
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '0.4s' }} />
                 </div>
-                <script dangerouslySetInnerHTML={{ __html: 'setTimeout(() => window.location.reload(), 2000)' }} />
+                <meta httpEquiv="refresh" content="10" />
             </div>
         );
     }
 
     if (!user) {
-        // If we are in SaaS context, redirect to SaaS login
         if (isSaas) {
             redirect('/saas/login?error=session_expired');
         }
@@ -84,20 +85,23 @@ export default async function AdminLayout({
     const [sites, organizations, financialSettings] = await Promise.all([
         getSites(),
         getOrganizations(),
-        !isSaas ? getGlobalFinancialSettings() : Promise.resolve({ dualView: false })
+        getGlobalFinancialSettings()
     ]);
 
 
 
+    const cookieStore = await cookies();
+    const scopeAccess = cookieStore.get('scope_access')?.value as 'official' | 'internal' | undefined;
+
     return (
-        <AdminProvider contextKey={currentSlug}>
+        <AdminProvider contextKey={currentSlug} initialScopeAccess={scopeAccess || 'internal'}>
             <DevProvider>
                 <div className="flex h-screen bg-gray-50 overflow-hidden font-sans text-gray-900">
                     {/* Left Panel: Sidebar Tree */}
                     <Sidebar
                         isSaas={isSaas}
                         isSuperuser={user?.is_superuser || false}
-                        dualViewEnabled={financialSettings?.dualView || false}
+                        dualViewEnabled={(user?.is_superuser) || (financialSettings?.dualView || false)}
                     />
 
                     {/* Right Panel: Content */}
@@ -109,11 +113,14 @@ export default async function AdminLayout({
                         <TabNavigator />
 
                         {/* 3. The Page Content */}
-                        <main className="flex-1 overflow-auto relative">
-                            {children}
+                        <main className="flex-1 overflow-auto relative p-6 md:p-8">
+                            <Suspense fallback={null}>
+                                {children}
+                            </Suspense>
                         </main>
                     </div>
                     <DebugOverlay />
+                    <CommandPalette />
                 </div>
             </DevProvider>
         </AdminProvider>

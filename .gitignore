@@ -69,3 +69,6 @@ tmp/
 temp/
 /media/
 /static/root/
+node_modules
+venv/
+erp_backend/.venv/

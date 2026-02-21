@@ -1,32 +1,67 @@
 'use server'
 
-/**
- * CRM Module - Contacts Actions (Stub)
- * These are placeholder exports for when CRM module is not installed.
- * Returns empty data gracefully.
- */
+import { erpFetch } from "@/lib/erp-api"
+import { z } from 'zod'
 
-export async function getContactsByType(type: 'PARTNER' | 'SUPPLIER' | 'CUSTOMER') {
-    // Stub: Return empty when CRM module not installed
-    return []
-}
+const ContactSchema = z.object({
+    name: z.string().min(1, 'Contact name is required'),
+    type: z.enum(['PARTNER', 'SUPPLIER', 'CUSTOMER']).optional(),
+    email: z.string().email().optional().or(z.literal('')),
+    phone: z.string().optional(),
+    address: z.string().optional(),
+    company: z.string().optional(),
+    tax_id: z.string().optional(),
+    notes: z.string().optional(),
+}).passthrough()
 
 export async function getContacts() {
-    return []
+    try {
+        const data = await erpFetch('contacts/')
+        return Array.isArray(data) ? data : []
+    } catch {
+        return []
+    }
+}
+
+export async function getContactsByType(type: 'PARTNER' | 'SUPPLIER' | 'CUSTOMER') {
+    try {
+        const all = await erpFetch('contacts/')
+        return Array.isArray(all) ? all.filter((c: Record<string, any>) => c.type === type) : []
+    } catch {
+        return []
+    }
 }
 
 export async function getContact(id: number) {
-    return null
+    try {
+        return await erpFetch(`contacts/${id}/`)
+    } catch {
+        return null
+    }
 }
 
-export async function createContact(data: any) {
-    throw new Error('CRM module not installed')
+export async function getContactSummary(contactId: number) {
+    return await erpFetch(`contacts/${contactId}/summary/`)
 }
 
-export async function updateContact(id: number, data: any) {
-    throw new Error('CRM module not installed')
+export async function createContact(data: unknown) {
+    const parsed = ContactSchema.parse(data)
+    return await erpFetch('contacts/', {
+        method: 'POST',
+        body: JSON.stringify(parsed)
+    })
+}
+
+export async function updateContact(id: number, data: unknown) {
+    const parsed = ContactSchema.partial().parse(data)
+    return await erpFetch(`contacts/${id}/`, {
+        method: 'PATCH',
+        body: JSON.stringify(parsed)
+    })
 }
 
 export async function deleteContact(id: number) {
-    throw new Error('CRM module not installed')
+    return await erpFetch(`contacts/${id}/`, {
+        method: 'DELETE'
+    })
 }

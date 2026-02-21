@@ -16,7 +16,7 @@ export async function getPublicConfig() {
 
 export async function getPublicPlans() {
     try {
-        const data = await erpFetch('saas/plans/');
+        const data = await erpFetch('saas/pricing/');
         return Array.isArray(data) ? data : [];
     } catch (error) {
         console.error("Public plans fetch error:", error);
@@ -24,7 +24,7 @@ export async function getPublicPlans() {
     }
 }
 
-export async function registerBusinessAction(prevState: any, formData: FormData) {
+export async function registerBusinessAction(prevState: Record<string, any>, formData: FormData) {
     const rawData = Object.fromEntries(formData.entries());
 
     // Build payload for Django (as FormData to support Logo)
@@ -95,9 +95,11 @@ export async function registerBusinessAction(prevState: any, formData: FormData)
 
         return { success: true, login_url: data.login_url };
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const msg = (error as any)?.message || 'Unknown error';
+        // Try to parse as JSON first (erpFetch sometimes wraps errors as JSON strings)
         try {
-            const errData = JSON.parse(error.message);
+            const errData = JSON.parse(msg);
             // Check for generic DRF error structure
             if (errData.detail) {
                 return { error: { root: [errData.detail] } };
@@ -109,12 +111,17 @@ export async function registerBusinessAction(prevState: any, formData: FormData)
             }
             return { error: errData };
         } catch (e) {
+            // Not JSON — erpFetch throws plain string messages for extracted errors
+            // e.g. "This business slug is already taken." or "ERP Error: Bad Request"
+            if (msg && msg !== 'Unknown error') {
+                return { error: { root: [msg] } };
+            }
             return { error: { root: ["Connection failed or invalid response"] } };
         }
     }
 }
 
-export async function registerUserAction(prevState: any, formData: FormData) {
+export async function registerUserAction(prevState: Record<string, any>, formData: FormData) {
     const rawData = Object.fromEntries(formData.entries());
 
     const payload = {
@@ -144,12 +151,16 @@ export async function registerUserAction(prevState: any, formData: FormData) {
 
         return { success: true, message: "Registration successful! Please wait for approval." };
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("User Register Error", error);
+        const msg = (error as any)?.message || 'Unknown error';
         try {
-            const errData = JSON.parse(error.message);
+            const errData = JSON.parse(msg);
             return { error: errData };
         } catch (e) {
+            if (msg && msg !== 'Unknown error') {
+                return { error: { root: [msg] } };
+            }
             return { error: { root: ["Connection failed"] } };
         }
     }

@@ -1,9 +1,16 @@
 'use server'
 
+export async function meAction() {
+    const { erpFetch } = await import("@/lib/erp-api")
+    return erpFetch('auth/me/')
+}
+
+import { cache } from 'react'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { PLATFORM_CONFIG } from '@/lib/saas_config'
+import { ErpApiError } from '@/lib/erp-api'
 
 // Original schema
 const LoginSchema = z.object({
@@ -55,19 +62,20 @@ export async function loginAction(prevState: any, formData: FormData) {
         const isIp = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?::[0-9]+)?$/.test(host);
 
         if (isIp) {
-            // WE ARE ON AN IP ADDRESS via direct access (e.g. http://91.99.186.183:3000)
-            // We CANNOT redirect to saas.91.99.186.183
+            // WE ARE ON AN IP ADDRESS via direct access
+            // We CANNOT redirect to saas.ip-address
             // So we skip the redirection and allow the login to proceed on this host.
             // The user will just stay on the IP.
-            console.log(`[AUTH] IP Address detected (${host}). Skipping subdomain redirect for slug: ${slug}`);
+            // IP address detected — skip subdomain redirect
         }
         else {
             // Domain-based logic (localhost or production domain)
             const baseDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || PLATFORM_CONFIG.domain;
             let protocol = "http";
 
-            // Prefer HTTPS if header exists OR if we are on the production domain
-            if (headersList.get('x-forwarded-proto') === 'https' || host.includes(baseDomain) || host.includes('vercel.app')) {
+            // Prefer HTTPS if header says so, or on production domain (never on localhost)
+            const isLocalhost = host.includes('localhost');
+            if (headersList.get('x-forwarded-proto') === 'https' || (!isLocalhost && (host.includes(baseDomain) || host.includes('vercel.app')))) {
                 protocol = "https";
             }
 
@@ -87,13 +95,78 @@ export async function loginAction(prevState: any, formData: FormData) {
 
             // Only redirect if we are not already on that host
             if (host !== newHost) {
-                redirect(`${protocol}://${newHost}/login?u=${btoa(data.username as string)}`);
+                redirect(`${protocol}://${newHost}/login`);
                 return;
             }
         }
     }
 
-    // Normal Login (Tenant Context detected or ignored)
+    // ── 2FA Challenge Resolution (Step 2) ──────────────────────────────────────
+    // When challenge_id is present, the user already authenticated in step 1.
+    // Credentials are stored server-side — only challenge_id + OTP needed.
+    if (data.challenge_id && data.challenge_id.toString().trim() !== '') {
+        const { erpFetch } = await import("@/lib/erp-api")
+        try {
+            const responseData = await erpFetch('auth/login/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    challenge_id: data.challenge_id,
+                    otp_token: data.otp_token
+                }),
+            })
+
+            const token = responseData.token
+            const scopeAccess = responseData.scope_access || 'internal'
+            const hStore = await import('next/headers');
+            const hList = await hStore.headers();
+            const isSecure = hList.get('x-forwarded-proto') === 'https';
+            const host2 = hList.get('host') || '';
+            const isLocal = host2.includes('localhost');
+            const cookieDomain = isLocal ? undefined : `.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'tsf.ci'}`;
+
+            const cookieStore = await cookies()
+            cookieStore.set('auth_token', token, {
+                httpOnly: true,
+                secure: isSecure,
+                sameSite: 'lax',
+                path: '/',
+                maxAge: 60 * 60 * 24 * 7,
+                ...(cookieDomain && { domain: cookieDomain }),
+            })
+            cookieStore.set('scope_access', scopeAccess, {
+                httpOnly: true,
+                secure: isSecure,
+                sameSite: 'lax',
+                path: '/',
+                maxAge: 60 * 60 * 24 * 7,
+                ...(cookieDomain && { domain: cookieDomain }),
+            })
+        } catch (error: unknown) {
+            let message = 'Verification failed'
+            try {
+                const errData = JSON.parse((error instanceof Error ? error.message : String(error)))
+                if (errData.error) message = errData.error
+                else if (errData.detail) message = errData.detail
+            } catch (e) {
+                message = (error instanceof Error ? error.message : String(error)) || 'Service unavailable'
+            }
+            return { error: { root: [message] } }
+        }
+
+        // Redirect after successful 2FA
+        const headerStore = await import('next/headers');
+        const hList = await headerStore.headers();
+        const host = hList.get('host') || '';
+        if (data.slug === 'saas' || host.includes('saas')) {
+            redirect('/dashboard')
+        } else {
+            // Tenant subdomains: go to admin dashboard, not storefront
+            redirect('/dashboard')
+        }
+    }
+
+    // ── Normal Login (Step 1) ────────────────────────────────────────────────
     const validated = LoginSchema.safeParse(data)
 
     if (!validated.success) {
@@ -110,14 +183,31 @@ export async function loginAction(prevState: any, formData: FormData) {
             body: JSON.stringify({
                 username,
                 password,
-                site_id: data.site_id
+                site_id: data.site_id,
+                otp_token: data.otp_token
             }),
         })
 
+        if (responseData.two_factor_required) {
+            return {
+                two_factor_required: true,
+                message: responseData.message,
+                challenge_id: responseData.challenge_id,
+                _username: username,
+                _slug: data.slug
+            }
+        }
+
         const token = responseData.token
+        const scopeAccess = responseData.scope_access || 'internal'
         const hStore = await import('next/headers');
         const hList = await hStore.headers();
         const isSecure = hList.get('x-forwarded-proto') === 'https';
+        const host = hList.get('host') || '';
+
+        // Shared cookie domain: .tsf.ci allows auth across all subdomains
+        const isLocalhost = host.includes('localhost');
+        const cookieDomain = isLocalhost ? undefined : `.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'tsf.ci'}`;
 
         const cookieStore = await cookies()
         cookieStore.set('auth_token', token, {
@@ -125,20 +215,28 @@ export async function loginAction(prevState: any, formData: FormData) {
             secure: isSecure,
             sameSite: 'lax',
             path: '/',
-            maxAge: 60 * 60 * 24 * 7, // 7 days session for better DX
+            maxAge: 60 * 60 * 24 * 7,
+            ...(cookieDomain && { domain: cookieDomain }),
         })
-        console.log(`[AUTH_ACTION] Cookie set successfully (Secure: ${isSecure}) for token: ${token.substring(0, 5)}...`);
+        cookieStore.set('scope_access', scopeAccess, {
+            httpOnly: true,
+            secure: isSecure,
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 60 * 60 * 24 * 7,
+            ...(cookieDomain && { domain: cookieDomain }),
+        })
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Login Tactical Error:', error)
-        let message = `${PLATFORM_CONFIG.name} Uplink Failure`
+        let message = `${PLATFORM_CONFIG.name} Login Failed`
         try {
-            const errData = JSON.parse(error.message)
+            const errData = JSON.parse((error instanceof Error ? error.message : String(error)))
             if (errData.non_field_errors) message = errData.non_field_errors[0]
             else if (errData.detail) message = errData.detail
             else if (errData.error) message = errData.error
         } catch (e) {
-            message = error.message || 'Service unavailable'
+            message = (error instanceof Error ? error.message : String(error)) || 'Service unavailable'
         }
         return { error: { root: [message] } }
     }
@@ -147,16 +245,9 @@ export async function loginAction(prevState: any, formData: FormData) {
     const hList = await headerStore.headers();
     const host = hList.get('host') || '';
 
-    // FIX: Use PUBLIC URLs, not internal file paths
-    if (data.slug === 'saas' || host.includes('saas')) {
-        // Middleware maps /saas/* -> /admin/saas/*
-        redirect('/saas/dashboard')
-    } else {
-        // Tenants: Redirect to root. 
-        // If on subdomain: / -> /tenant/[slug]/page
-        // If on IP: This will go to Landing. Tenants via IP need full path support which is out of scope for login action.
-        redirect('/')
-    }
+    // After login: always go to admin dashboard
+    // On tenant subdomains, / would be the storefront — staff need /dashboard
+    redirect('/dashboard')
 }
 
 export async function logoutAction() {
@@ -173,24 +264,161 @@ export async function logoutAction() {
                     'Authorization': `Token ${token}`
                 },
             })
-        } catch (e) { }
+        } catch (e) {
+            console.error('Logout backend call failed (non-blocking):', e)
+        }
     }
 
+    // Standard delete()
     cookieStore.delete('auth_token')
-    redirect('/login')
+    cookieStore.delete('scope_access')
+
+    // EXTENDED CLEAR: For wildcard domain cookies, we must explicitly set them to expire
+    // with the same domain they were created with.
+    const headerStore = await import('next/headers');
+    const hList = await headerStore.headers();
+    const host = hList.get('host') || '';
+    const isLocal = host.includes('localhost');
+    const cookieDomain = isLocal ? undefined : `.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'tsf.ci'}`;
+
+    if (cookieDomain) {
+        cookieStore.set('auth_token', '', { domain: cookieDomain, path: '/', maxAge: 0 })
+        cookieStore.set('scope_access', '', { domain: cookieDomain, path: '/', maxAge: 0 })
+    }
+
+    redirect('/')
 }
 
-export async function getUser() {
+/**
+ * React.cache() deduplicates calls within a single server render.
+ * Multiple layouts calling getUser() in the same request → only 1 API call.
+ */
+export const getUser = cache(async function getUser() {
     const { erpFetch } = await import("@/lib/erp-api")
     try {
         const user = await erpFetch('auth/me/')
         return user
-    } catch (error: any) {
-        // Only return null if backend explicitly said "Go away"
-        const isAuthError = error.message?.includes('401') || error.message?.includes('403') || error.message?.includes('credentials');
-        if (isAuthError) return null;
+    } catch (error: unknown) {
+        // Robust check for session expiry / invalid credentials
+        const msg = (error instanceof Error ? error.message : String(error))?.toLowerCase() || '';
+        const isAuthError =
+            (error instanceof ErpApiError && (error.status === 401 || error.status === 403)) ||
+            msg.includes('invalid token') ||
+            msg.includes('credentials') ||
+            msg.includes('unauthorized') ||
+            msg.includes('not provided');
+
+        if (isAuthError) {
+            return null;
+        }
 
         // Otherwise throw so layout can show "Reconnecting" or error boundary
+        // This handles cases where the backend is down (ECONNREFUSED) or returning 500
         throw error;
     }
+})
+
+/**
+ * Notifications
+ */
+export async function getNotifications() {
+    const { erpFetch } = await import("@/lib/erp-api")
+    return erpFetch('notifications/')
+}
+
+export async function markNotificationAsRead(id: number) {
+    const { erpFetch } = await import("@/lib/erp-api")
+    return erpFetch(`notifications/${id}/mark-read/`, { method: 'POST' })
+}
+
+export async function markAllNotificationsRead() {
+    const { erpFetch } = await import("@/lib/erp-api")
+    return erpFetch('notifications/mark-all-read/', { method: 'POST' })
+}
+
+/**
+ * Password Reset
+ */
+export async function requestPasswordResetAction(email: string) {
+    const { erpFetch } = await import("@/lib/erp-api")
+    return erpFetch('auth/password-reset/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+    })
+}
+
+const PasswordResetSchema = z.object({
+    token: z.string().min(1, 'Reset token is required'),
+    new_password: z.string().min(8, 'Password must be at least 8 characters'),
+    confirm_password: z.string().min(1, 'Password confirmation is required'),
+}).refine(data => data.new_password === data.confirm_password, {
+    message: 'Passwords do not match',
+    path: ['confirm_password'],
+})
+
+export async function confirmPasswordResetAction(data: Record<string, any>) {
+    const validated = PasswordResetSchema.safeParse(data)
+    if (!validated.success) {
+        throw new Error(validated.error.issues[0]?.message || 'Invalid input')
+    }
+    const { erpFetch } = await import("@/lib/erp-api")
+    return erpFetch('auth/password-reset/confirm/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(validated.data)
+    })
+}
+
+/**
+ * User Admin (Approval Workflow)
+ */
+export async function getPendingUsers() {
+    const { erpFetch } = await import("@/lib/erp-api")
+    return erpFetch('users/?registration_status=PENDING')
+}
+
+export async function approveUserAction(id: number) {
+    const { erpFetch } = await import("@/lib/erp-api")
+    return erpFetch(`users/${id}/approve/`, { method: 'POST' })
+}
+
+export async function rejectUserAction(id: number) {
+    const { erpFetch } = await import("@/lib/erp-api")
+    return erpFetch(`users/${id}/reject/`, { method: 'POST' })
+}
+
+export async function requestCorrectionAction(id: number, notes: string) {
+    const { erpFetch } = await import("@/lib/erp-api")
+    return erpFetch(`users/${id}/request-correction/`, {
+        method: 'POST',
+        body: JSON.stringify({ notes })
+    })
+}
+
+// ── Two-Factor Authentication (2FA) ──────────────────────────────────────────
+
+export async function setup2FAAction() {
+    const { erpFetch } = await import("@/lib/erp-api")
+    return erpFetch('auth/2fa/setup/', {
+        method: 'POST'
+    })
+}
+
+export async function verify2FAAction(token: string) {
+    const { erpFetch } = await import("@/lib/erp-api")
+    return erpFetch('auth/2fa/verify/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token })
+    })
+}
+
+export async function disable2FAAction(token: string) {
+    const { erpFetch } = await import("@/lib/erp-api")
+    return erpFetch('auth/2fa/disable/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token })
+    })
 }

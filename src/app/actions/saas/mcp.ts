@@ -7,6 +7,28 @@
  */
 
 import { erpFetch } from '@/lib/erp-api'
+import { z } from 'zod'
+
+const MCPProviderUpdateSchema = z.object({
+    name: z.string().min(1).optional(),
+    provider_type: z.string().optional(),
+    api_key: z.string().optional(),
+    api_base_url: z.string().url().optional().or(z.literal('')),
+    model_name: z.string().optional(),
+    max_tokens: z.number().int().positive().optional(),
+    temperature: z.number().min(0).max(2).optional(),
+    timeout_seconds: z.number().int().positive().optional(),
+    is_default: z.boolean().optional(),
+}).passthrough()
+
+const MCPToolSchema = z.object({
+    name: z.string().min(1, 'Tool name is required'),
+    description: z.string().optional(),
+    tool_type: z.string().optional(),
+    endpoint_url: z.string().optional(),
+    parameters_schema: z.record(z.string(), z.any()).optional(),
+    is_active: z.boolean().optional(),
+}).passthrough()
 
 // =============================================================================
 // PROVIDERS
@@ -37,20 +59,21 @@ export async function createMCPProvider(data: {
             body: JSON.stringify(data)
         })
         return { success: true, data: result }
-    } catch (e: any) {
-        return { success: false, error: e.message }
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) }
     }
 }
 
-export async function updateMCPProvider(id: number, data: any) {
+export async function updateMCPProvider(id: number, data: unknown) {
+    const parsed = MCPProviderUpdateSchema.parse(data)
     try {
         const result = await erpFetch(`/mcp/providers/${id}/`, {
             method: 'PATCH',
-            body: JSON.stringify(data)
+            body: JSON.stringify(parsed)
         })
         return { success: true, data: result }
-    } catch (e: any) {
-        return { success: false, error: e.message }
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) }
     }
 }
 
@@ -58,8 +81,8 @@ export async function deleteMCPProvider(id: number) {
     try {
         await erpFetch(`/mcp/providers/${id}/`, { method: 'DELETE' })
         return { success: true }
-    } catch (e: any) {
-        return { success: false, error: e.message }
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) }
     }
 }
 
@@ -67,8 +90,8 @@ export async function testMCPProvider(id: number) {
     try {
         const result = await erpFetch(`/mcp/providers/${id}/test/`, { method: 'POST' })
         return result
-    } catch (e: any) {
-        return { success: false, message: e.message }
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) }
     }
 }
 
@@ -76,8 +99,8 @@ export async function setDefaultProvider(id: number) {
     try {
         await erpFetch(`/mcp/providers/${id}/set_default/`, { method: 'POST' })
         return { success: true }
-    } catch (e: any) {
-        return { success: false, error: e.message }
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) }
     }
 }
 
@@ -94,27 +117,29 @@ export async function getMCPTool(id: number) {
     return await erpFetch(`/mcp/tools/${id}/`)
 }
 
-export async function createMCPTool(data: any) {
+export async function createMCPTool(data: unknown) {
+    const parsed = MCPToolSchema.parse(data)
     try {
         const result = await erpFetch('/mcp/tools/', {
             method: 'POST',
-            body: JSON.stringify(data)
+            body: JSON.stringify(parsed)
         })
         return { success: true, data: result }
-    } catch (e: any) {
-        return { success: false, error: e.message }
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) }
     }
 }
 
-export async function updateMCPTool(id: number, data: any) {
+export async function updateMCPTool(id: number, data: unknown) {
+    const parsed = MCPToolSchema.partial().parse(data)
     try {
         const result = await erpFetch(`/mcp/tools/${id}/`, {
             method: 'PATCH',
-            body: JSON.stringify(data)
+            body: JSON.stringify(parsed)
         })
         return { success: true, data: result }
-    } catch (e: any) {
-        return { success: false, error: e.message }
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) }
     }
 }
 
@@ -122,8 +147,8 @@ export async function deleteMCPTool(id: number) {
     try {
         await erpFetch(`/mcp/tools/${id}/`, { method: 'DELETE' })
         return { success: true }
-    } catch (e: any) {
-        return { success: false, error: e.message }
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) }
     }
 }
 
@@ -131,8 +156,8 @@ export async function registerDefaultTools() {
     try {
         const result = await erpFetch('/mcp/tools/register_defaults/', { method: 'POST' })
         return result
-    } catch (e: any) {
-        return { success: false, error: e.message }
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) }
     }
 }
 
@@ -152,8 +177,8 @@ export async function sendMCPChat(data: {
             body: JSON.stringify(data)
         })
         return { success: true, ...result }
-    } catch (e: any) {
-        return { success: false, error: e.message }
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) }
     }
 }
 
@@ -167,8 +192,8 @@ export async function executeMCPTool(data: {
             body: JSON.stringify(data)
         })
         return result
-    } catch (e: any) {
-        return { success: false, error: e.message }
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) }
     }
 }
 
@@ -193,8 +218,8 @@ export async function deleteMCPConversation(id: number) {
     try {
         await erpFetch(`/mcp/conversations/${id}/`, { method: 'DELETE' })
         return { success: true }
-    } catch (e: any) {
-        return { success: false, error: e.message }
+    } catch (e: unknown) {
+        return { success: false, message: (e instanceof Error ? e.message : String(e)) }
     }
 }
 

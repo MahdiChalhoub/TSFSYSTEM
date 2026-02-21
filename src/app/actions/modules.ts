@@ -15,7 +15,7 @@ export interface ModuleInfo {
 
 export async function getModules(): Promise<ModuleInfo[]> {
     try {
-        return await erpFetch('/api/modules/') as ModuleInfo[]
+        return await erpFetch('modules/') as ModuleInfo[]
     } catch (e) {
         console.error("Failed to fetch modules:", e)
         return []
@@ -27,13 +27,13 @@ export async function enableModule(code: string) {
         const data = await erpFetch(`/api/modules/${code}/enable/`, {
             method: 'POST'
         })
-        revalidatePath('/admin/settings/modules')
+        revalidatePath('/settings/modules')
         return data as { message: string, error?: string }
-    } catch (e: any) {
+    } catch (e: unknown) {
         try {
-            return JSON.parse(e.message)
+            return JSON.parse((e instanceof Error ? e.message : String(e)))
         } catch {
-            return { error: e.message }
+            return { error: (e instanceof Error ? e.message : String(e)) }
         }
     }
 }
@@ -43,13 +43,13 @@ export async function disableModule(code: string) {
         const data = await erpFetch(`/api/modules/${code}/disable/`, {
             method: 'POST'
         })
-        revalidatePath('/admin/settings/modules')
+        revalidatePath('/settings/modules')
         return data as { message: string, error?: string }
-    } catch (e: any) {
+    } catch (e: unknown) {
         try {
-            return JSON.parse(e.message)
+            return JSON.parse((e instanceof Error ? e.message : String(e)))
         } catch {
-            return { error: e.message }
+            return { error: (e instanceof Error ? e.message : String(e)) }
         }
     }
 }

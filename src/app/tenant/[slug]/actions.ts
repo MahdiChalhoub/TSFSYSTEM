@@ -36,16 +36,189 @@ export async function validateTenantAccess(slug: string) {
  */
 export async function getPublicProducts(slug: string) {
     try {
-        // We use a specific endpoint or filter by slug. 
-        // For now, we'll fetch from a public-facing API or use a service account token if needed.
-        // But since it's a "Storefront", we want it to be light.
-        const res = await fetch(`http://127.0.0.1:8000/api/products/storefront/?organization_slug=${slug}`, {
+        const djangoUrl = process.env.DJANGO_URL || 'http://127.0.0.1:8000';
+        const res = await fetch(`${djangoUrl}/api/products/storefront/?organization_slug=${slug}`, {
             next: { revalidate: 300 } // Cache for 5 mins
         });
         if (!res.ok) return [];
         return await res.json();
     } catch (error) {
-        console.error("[STOREFRONT] Failed to fetch products:", error);
+        // Storefront products are optional — fail silently
         return [];
+    }
+}
+
+/**
+ * Fetches the public storefront configuration (store_mode, branding, etc.).
+ */
+export async function getStorefrontConfig(slug: string) {
+    try {
+        const djangoUrl = process.env.DJANGO_URL || 'http://127.0.0.1:8000';
+        const res = await fetch(`${djangoUrl}/api/client-portal/storefront/config/?slug=${slug}`, {
+            next: { revalidate: 300 }
+        });
+        if (!res.ok) return null;
+        return await res.json();
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Client portal login — authenticates client credentials against the portal.
+ */
+export async function clientLogin(slug: string, email: string, password: string) {
+    try {
+        const djangoUrl = process.env.DJANGO_URL || 'http://127.0.0.1:8000';
+        const res = await fetch(`${djangoUrl}/api/client-portal/portal-auth/login/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password, slug }),
+        });
+        const data = await res.json();
+        if (!res.ok) return { success: false, error: data.error || 'Login failed' };
+        return { success: true, data };
+    } catch (err: any) {
+        return { success: false, error: err.message || 'Network error' };
+    }
+}
+
+/**
+ * Fetches authenticated client's order history.
+ */
+export async function getMyOrders(token: string) {
+    try {
+        const djangoUrl = process.env.DJANGO_URL || 'http://127.0.0.1:8000';
+        const res = await fetch(`${djangoUrl}/api/client-portal/my-orders/`, {
+            headers: { 'Authorization': `Token ${token}` },
+            cache: 'no-store',
+        });
+        if (!res.ok) return [];
+        const data = await res.json();
+        return Array.isArray(data) ? data : data.results || [];
+    } catch {
+        return [];
+    }
+}
+
+/**
+ * Fetches authenticated client's wallet and loyalty data.
+ */
+export async function getMyWallet(token: string) {
+    try {
+        const djangoUrl = process.env.DJANGO_URL || 'http://127.0.0.1:8000';
+        const res = await fetch(`${djangoUrl}/api/client-portal/my-wallet/`, {
+            headers: { 'Authorization': `Token ${token}` },
+            cache: 'no-store',
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        return Array.isArray(data) ? data[0] : data;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Fetches authenticated client's support tickets.
+ */
+export async function getMyTickets(token: string) {
+    try {
+        const djangoUrl = process.env.DJANGO_URL || 'http://127.0.0.1:8000';
+        const res = await fetch(`${djangoUrl}/api/client-portal/my-tickets/`, {
+            headers: { 'Authorization': `Token ${token}` },
+            cache: 'no-store',
+        });
+        if (!res.ok) return [];
+        const data = await res.json();
+        return Array.isArray(data) ? data : data.results || [];
+    } catch {
+        return [];
+    }
+}
+
+/**
+ * Creates a support ticket for the authenticated client.
+ */
+export async function createTicket(token: string, payload: { ticket_type: string; subject: string; description: string }) {
+    try {
+        const djangoUrl = process.env.DJANGO_URL || 'http://127.0.0.1:8000';
+        const res = await fetch(`${djangoUrl}/api/client-portal/my-tickets/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Token ${token}` },
+            body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+            const data = await res.json();
+            return { success: false, error: data.error || 'Failed to create ticket' };
+        }
+        return { success: true, data: await res.json() };
+    } catch (err: any) {
+        return { success: false, error: err.message };
+    }
+}
+
+/**
+ * Creates a new client order and returns it.
+ */
+export async function createOrder(token: string, payload: Record<string, any>) {
+    try {
+        const djangoUrl = process.env.DJANGO_URL || 'http://127.0.0.1:8000';
+        const res = await fetch(`${djangoUrl}/api/client-portal/my-orders/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Token ${token}` },
+            body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+            const data = await res.json();
+            return { success: false, error: data.error || 'Failed to create order' };
+        }
+        return { success: true, data: await res.json() };
+    } catch (err: any) {
+        return { success: false, error: err.message };
+    }
+}
+
+/**
+ * Submits a quote request (for CATALOG_QUOTE store mode).
+ */
+export async function submitQuoteRequest(slug: string, payload: Record<string, any>, token?: string) {
+    try {
+        const djangoUrl = process.env.DJANGO_URL || 'http://127.0.0.1:8000';
+        const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+            'X-Tenant-Id': slug,
+        };
+        if (token) headers['Authorization'] = `Token ${token}`;
+        const res = await fetch(`${djangoUrl}/api/client-portal/quote-requests/`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+            const data = await res.json();
+            return { success: false, error: data.error || data.detail || JSON.stringify(data) };
+        }
+        return { success: true, data: await res.json() };
+    } catch (err: any) {
+        return { success: false, error: err.message };
+    }
+}
+
+/**
+ * Fetches the client's dashboard summary (stats, barcode, etc.).
+ */
+export async function getClientDashboard(token: string) {
+    try {
+        const djangoUrl = process.env.DJANGO_URL || 'http://127.0.0.1:8000';
+        const res = await fetch(`${djangoUrl}/api/client-portal/dashboard/`, {
+            headers: { 'Authorization': `Token ${token}` },
+            cache: 'no-store',
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        return Array.isArray(data) && data.length > 0 ? data[0] : data;
+    } catch {
+        return null;
     }
 }

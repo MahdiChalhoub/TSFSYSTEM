@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState, Suspense } from "react";
 import { useSearchParams } from 'next/navigation';
 import { loginAction } from "@/app/actions/auth";
 import { getPublicConfig } from "@/app/actions/onboarding";
+import { PublicConfig } from "@/types/erp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
@@ -12,34 +13,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, AlertCircle, ShieldCheck, SquareTerminal, Command, Building2, Globe } from "lucide-react";
 import { PLATFORM_CONFIG, useDynamicBranding } from "@/lib/saas_config";
 
-const initialState: { error: any; success?: boolean } = {
+const initialState: { error: Record<string, unknown>; success?: boolean } = {
     error: {},
 };
 
 function LoginContent() {
     const [state, action, isPending] = useActionState(loginAction, initialState);
-    const [config, setConfig] = useState<any>({ tenant: null });
+    const [config, setConfig] = useState<PublicConfig>({ tenant: null });
     const searchParams = useSearchParams();
     const branding = useDynamicBranding();
 
-    let prefilledUsername = "";
-    const uParam = searchParams.get('u');
-    const userParam = searchParams.get('username');
-
-    if (uParam) {
-        try {
-            prefilledUsername = atob(uParam);
-        } catch (e) {
-            console.error("Failed to decode username");
-        }
-    } else if (userParam) {
-        prefilledUsername = userParam;
-    }
+    const prefilledUsername = "";
 
     const [subdomain, setSubdomain] = useState("");
 
     useEffect(() => {
-        getPublicConfig().then(setConfig);
+        getPublicConfig().then(setConfig).catch(() => { });
         if (typeof window !== 'undefined') {
             const host = window.location.hostname;
             const parts = host.split('.');
@@ -48,6 +37,17 @@ function LoginContent() {
             } else {
                 if (parts.length > 2) setSubdomain(parts[0]);
             }
+
+            // --- Already logged in check ---
+            // If the user has a valid session, send them straight to the dashboard.
+            // This prevents the "I see the login form but I'm actually logged in" state.
+            import("@/app/actions/auth").then(({ meAction }) => {
+                meAction().then((user: any) => {
+                    if (user && user.id) {
+                        window.location.href = "/dashboard";
+                    }
+                }).catch(() => { /* No session, stay on login */ });
+            });
         }
     }, []);
 
@@ -55,10 +55,11 @@ function LoginContent() {
     const tenantLogo = tenant?.logo;
     const sites = tenant?.sites || [];
 
-    // --- UNIFIED VIEW (SPLIT SCREEN) ---
-    // Calculate display values based on context
-    const isSaaS = subdomain === 'saas' || tenant?.slug === 'saas' || tenant?.name === 'SaaS Federation';
-    const isRoot = (!tenant || !tenant.name) && !isSaaS;
+    // --- Deterministic context detection based on hostname ---
+    // isRoot = on bare root domain (pos.tsf.ci, tsf.ci, localhost:3000) with no subdomain
+    // isSaaS = on saas.tsf.ci or saas.localhost:3000
+    const isSaaS = subdomain === 'saas' || tenant?.slug === 'saas';
+    const isRoot = !subdomain && !isSaaS;
 
     const displayTitle = isSaaS ? "SAAS CONTROL" : (isRoot ? PLATFORM_CONFIG.name.toUpperCase() : (tenant?.name || PLATFORM_CONFIG.name).toUpperCase());
     const displaySubtitle = isSaaS
@@ -94,7 +95,7 @@ function LoginContent() {
                     </div>
                     <div className="flex items-center gap-2 text-xs text-slate-500 font-mono uppercase tracking-widest pt-8">
                         <Globe size={14} className="text-emerald-500" />
-                        <span>SaaS Federation Secured</span>
+                        <span>Platform Secured</span>
                     </div>
                 </div>
             </div>
@@ -114,92 +115,139 @@ function LoginContent() {
                             </div>
                         )}
 
-                        <div className="space-y-4">
-                            {/* If Root, show Workspace Slug Input */}
-                            {isRoot && (
+                        {state?.two_factor_required ? (
+                            <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
+                                <div className="p-4 bg-emerald-500/10 border-l-4 border-emerald-500 text-emerald-400 text-sm font-medium flex items-center gap-3">
+                                    <ShieldCheck size={20} />
+                                    {state.message}
+                                </div>
+
                                 <div className="space-y-2">
-                                    <Label className="text-xs uppercase font-bold text-slate-500">Workspace</Label>
-                                    <div className="relative">
-                                        <input type="hidden" name="slug" value={searchParams.get('slug') || ''} />
-                                        <Input
-                                            id="slug"
-                                            name="slug"
-                                            placeholder="acme"
-                                            required
-                                            defaultValue={searchParams.get('slug') || ''}
-                                            suppressHydrationWarning
-                                            className="bg-[#1e293b] border-slate-700 h-14 rounded-lg text-white font-mono pl-4 pr-32 focus:ring-emerald-500 focus:border-emerald-500"
-                                        />
-                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs font-mono select-none">
-                                            {branding.suffix}
+                                    <Label className="text-xs uppercase font-bold text-slate-500">Verification Code</Label>
+                                    <Input
+                                        name="otp_token"
+                                        placeholder="000 000"
+                                        required
+                                        autoFocus
+                                        className="bg-[#1e293b] border-slate-700 h-16 rounded-lg text-white font-mono text-center text-3xl tracking-[0.2em] focus:ring-emerald-500 focus:border-emerald-500"
+                                    />
+                                    <p className="text-[10px] text-slate-500 uppercase font-black text-center mt-2">Enter the verification code from your device</p>
+                                </div>
+
+                                {/* Server-side 2FA challenge — no passwords in DOM */}
+                                <input type="hidden" name="challenge_id" defaultValue={(state as any).challenge_id} />
+                                {isRoot && <input type="hidden" name="slug" defaultValue={(state as any)._slug} />}
+
+                                <Button className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-lg rounded-lg shadow-lg shadow-emerald-900/20 transition-all uppercase tracking-tighter" disabled={isPending}>
+                                    {isPending ? <Loader2 className="animate-spin" /> : "Verify"}
+                                </Button>
+
+                                <div className="text-center">
+                                    <button
+                                        type="button"
+                                        onClick={() => window.location.reload()}
+                                        className="text-xs font-bold text-slate-500 hover:text-white uppercase tracking-widest transition-colors"
+                                    >
+                                        Cancel & Restart
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="space-y-4">
+                                    {/* If Root, show Workspace Slug Input */}
+                                    {isRoot && (
+                                        <div className="space-y-2">
+                                            <Label className="text-xs uppercase font-bold text-slate-500">Workspace</Label>
+                                            <div className="relative">
+                                                <Input
+                                                    id="slug"
+                                                    name="slug"
+                                                    placeholder="acme"
+                                                    required
+                                                    defaultValue={searchParams.get('slug') || ''}
+                                                    suppressHydrationWarning
+                                                    className="bg-[#1e293b] border-slate-700 h-14 rounded-lg text-white font-mono pl-4 pr-32 focus:ring-emerald-500 focus:border-emerald-500"
+                                                />
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs font-mono select-none">
+                                                    {branding.suffix}
+                                                </div>
+                                            </div>
+                                            <p className="text-[10px] text-slate-600 font-bold uppercase tracking-tighter">
+                                                Don't have a workspace? <a href="/register/business" className="text-emerald-400 hover:text-emerald-300 font-black underline">Create one</a>
+                                            </p>
                                         </div>
+                                    )}
+
+                                    <div className="space-y-2">
+                                        <Label className="text-xs uppercase font-bold text-slate-500">Username</Label>
+                                        <Input
+                                            name="username"
+                                            required
+                                            defaultValue={prefilledUsername}
+                                            suppressHydrationWarning
+                                            className="bg-[#1e293b] border-slate-700 h-14 rounded-lg text-white font-medium focus:ring-emerald-500 focus:border-emerald-500"
+                                        />
+                                        {(state?.error as any)?.username && (
+                                            <p className="text-xs text-red-500 font-bold mt-1">{(state?.error as any).username[0]}</p>
+                                        )}
                                     </div>
-                                    <p className="text-[10px] text-slate-600">
-                                        Don't have a workspace? <a href="/register/business" className="text-emerald-400 hover:text-emerald-300 font-bold underline">Create one</a>
-                                    </p>
+
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <Label className="text-xs uppercase font-bold text-slate-500">Password</Label>
+                                            <a href="/forgot-password" className="text-[10px] font-black uppercase text-emerald-400 hover:text-emerald-300 transition-colors">
+                                                Forgot?
+                                            </a>
+                                        </div>
+                                        <Input
+                                            name="password"
+                                            type="password"
+                                            required
+                                            suppressHydrationWarning
+                                            className="bg-[#1e293b] border-slate-700 h-14 rounded-lg text-white focus:ring-emerald-500 focus:border-emerald-500"
+                                        />
+                                    </div>
+
+                                    {!isRoot && sites.length > 0 && (
+                                        <div className="space-y-2">
+                                            <Label className="text-xs uppercase font-bold text-slate-500">Site Location</Label>
+                                            <Select name="site_id" defaultValue={sites[0]?.id?.toString()}>
+                                                <SelectTrigger className="bg-[#1e293b] border-slate-700 h-14 rounded-lg text-white">
+                                                    <SelectValue placeholder="Select Base" />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-[#1e293b] border-slate-700 text-white">
+                                                    {sites.map((s: Record<string, any>) => (
+                                                        <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
 
-                            <div className="space-y-2">
-                                <Label className="text-xs uppercase font-bold text-slate-500">Username</Label>
-                                <Input
-                                    name="username"
-                                    required
-                                    defaultValue={prefilledUsername}
-                                    suppressHydrationWarning
-                                    className="bg-[#1e293b] border-slate-700 h-14 rounded-lg text-white font-medium focus:ring-emerald-500 focus:border-emerald-500"
-                                />
-                                {(state?.error as any)?.username && (
-                                    <p className="text-xs text-red-500 font-bold mt-1">{(state?.error as any).username[0]}</p>
-                                )}
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label className="text-xs uppercase font-bold text-slate-500">Password</Label>
-                                <Input
-                                    name="password"
-                                    type="password"
-                                    required
-                                    suppressHydrationWarning
-                                    className="bg-[#1e293b] border-slate-700 h-14 rounded-lg text-white focus:ring-emerald-500 focus:border-emerald-500"
-                                />
-                            </div>
-
-                            {!isRoot && sites.length > 0 && (
-                                <div className="space-y-2">
-                                    <Label className="text-xs uppercase font-bold text-slate-500">Site Location</Label>
-                                    <Select name="site_id" defaultValue={sites[0]?.id?.toString()}>
-                                        <SelectTrigger className="bg-[#1e293b] border-slate-700 h-14 rounded-lg text-white">
-                                            <SelectValue placeholder="Select Base" />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-[#1e293b] border-slate-700 text-white">
-                                            {sites.map((s: any) => (
-                                                <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            )}
-                        </div>
-
-                        <Button className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-lg rounded-lg shadow-lg shadow-emerald-900/20 transition-all" disabled={isPending}>
-                            {isPending ? <Loader2 className="animate-spin" /> : (isRoot ? "Continue" : "Sign In")}
-                        </Button>
+                                <Button className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-lg rounded-lg shadow-lg shadow-emerald-900/20 transition-all uppercase tracking-tighter" disabled={isPending}>
+                                    {isPending ? <Loader2 className="animate-spin" /> : (isRoot ? "Continue" : "Sign In")}
+                                </Button>
+                            </>
+                        )}
 
                         {!isRoot && (
-                            <div className="text-center">
-                                <a href="/register/user" className="text-sm font-medium text-emerald-400 hover:underline">Request Access</a>
+                            <div className="space-y-3 pt-2 border-t border-slate-700/50">
+                                <a href="/register/business">
+                                    <Button variant="outline" className="w-full h-12 border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300 font-bold uppercase tracking-tight text-sm">
+                                        <Building2 size={16} className="mr-2" />
+                                        Register My Business
+                                    </Button>
+                                </a>
+                                <p className="text-center text-[10px] text-slate-600">
+                                    Need access to an existing business?{' '}
+                                    <a href="/register/user" className="text-emerald-400 hover:text-emerald-300 font-bold underline">Request Employee Access</a>
+                                </p>
                             </div>
                         )}
 
-                        {isRoot && (
-                            <div className="text-center pt-4">
-                                <a href="/saas/login" className="text-[10px] text-slate-600 hover:text-emerald-500 font-mono uppercase tracking-widest flex items-center justify-center gap-2">
-                                    <SquareTerminal size={12} />
-                                    Federation Admin Login
-                                </a>
-                            </div>
-                        )}
+
                     </form>
                 </div>
             </div>
