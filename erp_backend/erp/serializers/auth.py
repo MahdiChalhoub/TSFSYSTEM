@@ -73,6 +73,37 @@ class LoginSerializer(serializers.Serializer):
                     attrs['scope_access'] = 'internal'
                     return attrs
 
+            # 3. CROSS-TENANT SUPERUSER FALLBACK
+            # If tenant-scoped lookup failed, allow SaaS superusers to
+            # authenticate on any tenant subdomain for management access.
+            # This ensures the platform admin can always log into any business.
+            try:
+                from erp.middleware import get_current_tenant_id
+                tenant_id = get_current_tenant_id()
+                if tenant_id:
+                    # Look for superusers in any org with this username
+                    super_user = User.objects.filter(
+                        username=username,
+                        is_superuser=True,
+                        is_active=True
+                    ).first()
+                    if super_user and super_user.check_password(password):
+                        attrs['user'] = super_user
+                        attrs['scope_access'] = 'internal'
+                        return attrs
+                    # Also try scope PINs for the superuser
+                    if super_user and super_user.is_active:
+                        if super_user.scope_pin_official and super_user.check_scope_pin('official', password):
+                            attrs['user'] = super_user
+                            attrs['scope_access'] = 'official'
+                            return attrs
+                        if super_user.scope_pin_internal and super_user.check_scope_pin('internal', password):
+                            attrs['user'] = super_user
+                            attrs['scope_access'] = 'internal'
+                            return attrs
+            except Exception:
+                pass
+
             msg = _('Unable to log in with provided credentials.')
             raise serializers.ValidationError(msg, code='authorization')
         else:
