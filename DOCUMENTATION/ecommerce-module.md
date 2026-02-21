@@ -1,54 +1,65 @@
 # eCommerce Module — Documentation
 
 ## Goal
-Independent eCommerce module for managing the storefront. Separate from Client Gate (CRM) with its own dedicated pages and sidebar section.
+Independent eCommerce module that turns each organization into a **Shopify-like storefront**. Admins choose their **Store Type** (layout/behavior) and **Visual Theme** (colors/fonts).
 
 ## Architecture
 
 ```
-┌─────────────────────────┐     ┌──────────────────┐
-│  ecommerce (module)     │────>│  client_portal   │
-│  Proxy models + APIs    │     │  Real DB tables   │
-│  Dedicated /ecommerce/* │     │  /workspace/*     │
-│  pages                  │     │  pages            │
-└─────────────────────────┘     └──────────────────┘
+┌─────────────────────────────┐     ┌──────────────────┐
+│  ecommerce (module)         │────>│  client_portal   │
+│  Proxy models + APIs        │     │  Real DB tables   │
+│  /ecommerce/* admin pages   │     │  /workspace/*     │
+│  Store Type + Theme system  │     │                   │
+└─────────────────────────────┘     └──────────────────┘
 ```
 
-## eCommerce vs Client Gate Routes
+## Store Types
 
-| eCommerce Module | Client Gate (CRM) |
-|------------------|-------------------|
-| `/ecommerce/dashboard` — Storefront Overview | `/workspace/portal-config` — Portal Config |
-| `/ecommerce/settings` — Store Mode, Branding, Toggles | `/workspace/client-access` — Client Access |
-| `/ecommerce/themes` — Theme Manager | `/workspace/client-orders` — Order Admin |
-| `/ecommerce/orders` — Online Orders | `/workspace/client-tickets` — Ticket Admin |
-| `/ecommerce/catalog` — Product Catalog | — |
+| Type | Use Case | Homepage Layout | Checkout |
+|------|----------|----------------|----------|
+| **Product Store** | Retail e-commerce | Product grid, categories, featured | Cart → Checkout → Pay |
+| **Catalogue** | Browse only / B2B quotes | Product grid, NO prices | "Request Quote" button |
+| **Subscription** | SaaS / recurring services | Plans grid, feature comparison | Subscribe flow |
+| **Landing Page** | Company website | Hero + About + Services + Contact | Contact form only |
+| **Portfolio** | Creative / agency | Project gallery, case studies | Inquiry CTA |
 
-## Sidebar Entry (module-gated: `ecommerce`)
-- Storefront Overview (`/ecommerce/dashboard`)
-- Storefront Settings (`/ecommerce/settings`)
-- Theme Manager (`/ecommerce/themes`)
-- Online Orders (`/ecommerce/orders`)
-- Product Catalog (`/ecommerce/catalog`)
+## Admin Theme Manager Page (`/ecommerce/themes`)
+1. **Step 1 — Store Type Picker**: 5 selectable cards, instant save
+2. **Step 2 — Visual Theme**: ThemeSelector (Midnight, Boutique, etc.)
 
-## Backend API Endpoints
+## Data Model
+
+### `ClientPortalConfig.storefront_type`
+- **Type**: CharField(max_length=30)
+- **Choices**: PRODUCT_STORE, CATALOGUE, SUBSCRIPTION, LANDING_PAGE, PORTFOLIO
+- **Default**: PRODUCT_STORE
+- **READ by**: StorefrontPublicConfigView, ecommerce serializers
+- **WRITE by**: updatePortalConfig action, Admin
+
+## Frontend Components
+
+| Component | Path | Purpose |
+|-----------|------|---------|
+| `ThemedHomePage` | `src/app/tenant/[slug]/ThemedHomePage.tsx` | Routes to type-specific homepage |
+| `LandingHomePage` | `src/storefront/components/LandingHomePage.tsx` | Hero + services + contact |
+| `CatalogueHomePage` | `src/storefront/components/CatalogueHomePage.tsx` | Products without prices |
+| `SubscriptionHomePage` | `src/storefront/components/SubscriptionHomePage.tsx` | Pricing plans grid |
+| `PortfolioHomePage` | `src/storefront/components/PortfolioHomePage.tsx` | Project gallery |
+| `StoreTypePicker` | `src/app/(privileged)/ecommerce/themes/StoreTypePicker.tsx` | Admin type selector |
+
+## API Endpoints
+
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| GET | `/api/ecommerce/catalog/?slug=X` | Public | Product catalog |
-| GET | `/api/ecommerce/themes/` | Public | Available themes |
-| GET | `/api/ecommerce/orders/` | Admin | List orders |
-| GET | `/api/ecommerce/orders/stats/` | Admin | Order stats |
+| GET | `/api/client-portal/storefront-config/?slug=X` | Public | Returns `storefront_type` + config |
+| GET | `/api/ecommerce/themes/` | Public | Available visual themes |
+| PATCH | `/api/client-portal/config/{id}/` | Admin | Update storefront_type / theme |
 
-## Data
-- **READ**: Proxy models from `client_portal` tables
-- **WRITE**: Same tables via proxy models
-- **No migration needed**: Zero new DB tables
-
-## Pages
-| Page | Type | Key Features |
-|------|------|-------------|
-| Dashboard | Client | Stats cards, analytics placeholder |
-| Settings | Server + Client | Store mode selector, branding, feature toggles |
-| Themes | Server | Reuses ThemeSelector from portal-config |
-| Orders | Client | Status filter pills, order table |
-| Catalog | Client | Product grid, search |
+## Workflow
+1. Admin → `/ecommerce/themes`
+2. Picks Store Type (saves `storefront_type`)
+3. Picks Visual Theme (saves `storefront_theme`)
+4. Customer visits `/tenant/[slug]/`
+5. `ThemedHomePage` reads `storefront_type` → renders correct layout
+6. Visual theme colors/fonts applied via `useTheme()`
