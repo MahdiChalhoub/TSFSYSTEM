@@ -507,3 +507,62 @@ class ClientTicket(TenantModel):
         if not self.ticket_number:
             self.ticket_number = f"TKT-{timezone.now().strftime('%y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
         super().save(*args, **kwargs)
+
+
+# =============================================================================
+# QUOTE REQUESTS (CATALOGUE MODE)
+# =============================================================================
+
+class QuoteRequest(TenantModel):
+    """
+    Leads/Inquiries from the Catalogue storefront.
+    Allows guests and registered clients to request quotes for specific products.
+    """
+    STATUS_CHOICES = (
+        ('PENDING', 'Pending Assessment'),
+        ('REPLIED', 'Proposal Sent'),
+        ('CONVERTED', 'Converted to Order'),
+        ('DECLINED', 'Declined'),
+        ('EXPIRED', 'Expired'),
+    )
+
+    quote_number = models.CharField(max_length=50, unique=True, null=True, blank=True)
+
+    # Customer Info (Can be Guest or Registered)
+    contact = models.ForeignKey('crm.Contact', on_delete=models.SET_NULL, null=True, blank=True,
+                                 related_name='quote_requests')
+
+    # Guest details (if no contact)
+    full_name = models.CharField(max_length=255)
+    email = models.EmailField()
+    phone = models.CharField(max_length=50, blank=True, default='')
+    company_name = models.CharField(max_length=255, blank=True, default='')
+
+    # Product details
+    product = models.ForeignKey('inventory.Product', on_delete=models.SET_NULL, null=True, blank=True)
+    product_name = models.CharField(max_length=255, help_text='Snapshot of product name')
+    quantity = models.DecimalField(max_digits=15, decimal_places=2, default=1)
+
+    # Message / Requirements
+    message = models.TextField(help_text='Customer requirements or questions')
+    internal_notes = models.TextField(blank=True, default='')
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+
+    # Tracking
+    source_url = models.URLField(blank=True, default='', help_text='The page where the quote was requested')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'client_quote_request'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.quote_number} — {self.full_name}"
+
+    def save(self, *args, **kwargs):
+        if not self.quote_number:
+            self.quote_number = f"QT-{timezone.now().strftime('%y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
+        super().save(*args, **kwargs)
