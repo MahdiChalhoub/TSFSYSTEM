@@ -1,63 +1,54 @@
 # eCommerce Module — Documentation
 
 ## Goal
-Register eCommerce as an independent, module-gated feature in the platform. Separate from client_portal while sharing its database tables via Django proxy models.
+Independent eCommerce module for managing the storefront. Separate from Client Gate (CRM) with its own dedicated pages and sidebar section.
 
 ## Architecture
 
 ```
-┌─────────────────┐     ┌──────────────────┐
-│  ecommerce      │────>│  client_portal   │
-│  (proxy models) │     │  (real tables)   │
-│                 │     │                  │
-│ StorefrontConfig│     │ ClientPortalConfig│
-│ Order           │     │ ClientOrder      │
-│ OrderLine       │     │ ClientOrderLine  │
-└─────────────────┘     └──────────────────┘
-         │
-         ▼
-   Theme Engine  ←── ThemeRegistry (midnight, boutique)
-   (frontend)        ThemeProvider ← ThemeLayout
+┌─────────────────────────┐     ┌──────────────────┐
+│  ecommerce (module)     │────>│  client_portal   │
+│  Proxy models + APIs    │     │  Real DB tables   │
+│  Dedicated /ecommerce/* │     │  /workspace/*     │
+│  pages                  │     │  pages            │
+└─────────────────────────┘     └──────────────────┘
 ```
 
-## Data Flow
-- **READ**: eCommerce views read from `client_portal` tables via proxy models
-- **WRITE**: Orders/config written through proxy models — same underlying DB tables
-- **Theme**: `StorefrontPublicConfigView` returns `storefront_theme` → PortalContext → ThemeProvider
-- **Catalog**: `CatalogView` reads from `inventory.Product`
+## eCommerce vs Client Gate Routes
 
-## Variables User Interacts With
-- Module enable/disable toggle on Modules page
-- Sidebar eCommerce section (gated by module code)
+| eCommerce Module | Client Gate (CRM) |
+|------------------|-------------------|
+| `/ecommerce/dashboard` — Storefront Overview | `/workspace/portal-config` — Portal Config |
+| `/ecommerce/settings` — Store Mode, Branding, Toggles | `/workspace/client-access` — Client Access |
+| `/ecommerce/themes` — Theme Manager | `/workspace/client-orders` — Order Admin |
+| `/ecommerce/orders` — Online Orders | `/workspace/client-tickets` — Ticket Admin |
+| `/ecommerce/catalog` — Product Catalog | — |
 
-## Backend Files
-| File | Purpose |
-|------|---------|
-| `manifest.json` | Module registration (code, name, deps) |
-| `apps.py` | Django AppConfig |
-| `models.py` | Proxy models (StorefrontConfig, Order, OrderLine) |
-| `serializers.py` | DRF serializers |
-| `views.py` | Catalog, themes, orders/stats, config viewsets |
-| `urls.py` | URL routing (auto-discovered by kernel) |
-| `admin.py` | Django admin registration |
+## Sidebar Entry (module-gated: `ecommerce`)
+- Storefront Overview (`/ecommerce/dashboard`)
+- Storefront Settings (`/ecommerce/settings`)
+- Theme Manager (`/ecommerce/themes`)
+- Online Orders (`/ecommerce/orders`)
+- Product Catalog (`/ecommerce/catalog`)
 
-## Frontend Files
-| File | Purpose |
-|------|---------|
-| `src/modules/ecommerce/manifest.json` | Route definitions, permissions |
-| `Sidebar.tsx` | eCommerce section with 4 links |
-
-## API Endpoints
+## Backend API Endpoints
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| GET | `/api/ecommerce/catalog/?slug=X` | Public | Product catalog for storefront |
-| GET | `/api/ecommerce/themes/` | Public | Available themes list |
-| GET | `/api/ecommerce/orders/` | Admin | List eCommerce orders |
-| GET | `/api/ecommerce/orders/stats/` | Admin | Order dashboard stats |
-| GET | `/api/ecommerce/storefront-config/` | Admin | Storefront configuration |
+| GET | `/api/ecommerce/catalog/?slug=X` | Public | Product catalog |
+| GET | `/api/ecommerce/themes/` | Public | Available themes |
+| GET | `/api/ecommerce/orders/` | Admin | List orders |
+| GET | `/api/ecommerce/orders/stats/` | Admin | Order stats |
 
-## How It Integrates
-1. **Auto-discovered** by Django: `settings.py` scans `apps/` for `apps.py`, `erp/urls.py` scans for `urls.py`
-2. **Module sync** picks up `manifest.json` → creates `SystemModule` record
-3. **Sidebar** shows eCommerce section when module is enabled (module gate: `ecommerce`)
-4. **Zero migration risk**: Proxy models = no new DB tables
+## Data
+- **READ**: Proxy models from `client_portal` tables
+- **WRITE**: Same tables via proxy models
+- **No migration needed**: Zero new DB tables
+
+## Pages
+| Page | Type | Key Features |
+|------|------|-------------|
+| Dashboard | Client | Stats cards, analytics placeholder |
+| Settings | Server + Client | Store mode selector, branding, feature toggles |
+| Themes | Server | Reuses ThemeSelector from portal-config |
+| Orders | Client | Status filter pills, order table |
+| Catalog | Client | Product grid, search |
