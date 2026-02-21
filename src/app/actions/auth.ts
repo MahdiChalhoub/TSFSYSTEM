@@ -161,7 +161,8 @@ export async function loginAction(prevState: Record<string, any>, formData: Form
         if (data.slug === 'saas' || host.includes('saas')) {
             redirect('/dashboard')
         } else {
-            redirect('/')
+            // Tenant subdomains: go to admin dashboard, not storefront
+            redirect('/dashboard')
         }
     }
 
@@ -244,16 +245,9 @@ export async function loginAction(prevState: Record<string, any>, formData: Form
     const hList = await headerStore.headers();
     const host = hList.get('host') || '';
 
-    // FIX: Use PUBLIC URLs, not internal file paths
-    if (data.slug === 'saas' || host.includes('saas')) {
-        // Middleware maps /saas/* -> /saas/*
-        redirect('/dashboard')
-    } else {
-        // Tenants: Redirect to root. 
-        // If on subdomain: / -> /tenant/[slug]/page
-        // If on IP: This will go to Landing. Tenants via IP need full path support which is out of scope for login action.
-        redirect('/')
-    }
+    // After login: always go to admin dashboard
+    // On tenant subdomains, / would be the storefront — staff need /dashboard
+    redirect('/dashboard')
 }
 
 export async function logoutAction() {
