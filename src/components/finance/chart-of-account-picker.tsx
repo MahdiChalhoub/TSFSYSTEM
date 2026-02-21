@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { ChartOfAccount } from "@/types/erp";
 import { Check, ChevronsUpDown, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -17,7 +18,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
-import { getChartOfAccountsList } from '@/app/(privileged)/saas/finance/accounts/picker-actions';
+import { getChartOfAccountsList } from '@/app/(privileged)/finance/(definitions)/accounts/picker-actions';
 
 export function ChartOfAccountPicker({ value, onChange, disabled = false, filterType }: {
     value?: number,
@@ -26,7 +27,7 @@ export function ChartOfAccountPicker({ value, onChange, disabled = false, filter
     filterType?: string
 }) {
     const [open, setOpen] = useState(false);
-    const [accounts, setAccounts] = useState<any[]>([]);
+    const [accounts, setAccounts] = useState<ChartOfAccount[]>([]);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useAdmin } from '@/context/AdminContext';
+import { SidebarDynamicItem } from "@/types/erp";
 import {
     ShoppingBag,
     Box,
@@ -23,7 +24,25 @@ import {
     Sparkles,
     Cloud,
     MessageSquare,
-    Wrench
+    Wrench,
+    BookOpen,
+    TrendingUp,
+    Calendar,
+    DollarSign,
+    Bell,
+    Tag,
+    Warehouse,
+    FolderTree,
+    ServerCog,
+    Building2,
+    Shield,
+    ClipboardList,
+    ScrollText,
+    Wallet,
+    Globe,
+    ListChecks,
+    Trophy,
+    Eye
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
@@ -52,19 +71,37 @@ const ICON_MAP: Record<string, any> = {
     Sparkles,
     Cloud,
     MessageSquare,
-    Wrench
+    Wrench,
+    BookOpen,
+    TrendingUp,
+    Calendar,
+    DollarSign,
+    Bell,
+    Tag,
+    Warehouse,
+    FolderTree,
+    ServerCog,
+    Building2,
+    Shield,
+    ClipboardList,
+    ScrollText,
+    Wallet,
+    Globe,
+    ListChecks,
+    Trophy
 };
 
 function getIcon(name: string) {
     return ICON_MAP[name] || Box;
 }
 
-// Data Structure for the Recursive Menu
-const MENU_ITEMS = [
+// ─── Tree-Structured Menu ────────────────────────────────────────
+// Module → Feature Group → Page
+export const MENU_ITEMS = [
     {
         title: 'Dashboard',
         icon: LayoutDashboard,
-        path: '/saas/dashboard',
+        path: '/dashboard',
         module: 'core'
     },
     {
@@ -76,13 +113,33 @@ const MENU_ITEMS = [
             { title: 'Order History', path: '/saas/sales/history' },
             { title: 'Daily Summary', path: '/saas/sales/summary' },
             {
-                title: 'Purchase Registry',
+                title: 'Point of Sale',
+                icon: ShoppingCart,
                 children: [
-                    { title: 'Active Invoices', path: '/saas/purchases' },
-                    { title: 'Archived POs', path: '/saas/purchases/archived' },
+                    { title: 'POS Terminal', path: '/sales' },
+                    { title: 'Order History', path: '/sales/history' },
+                    { title: 'Sales Analytics', path: '/sales/analytics' },
+                    { title: 'Quotations', path: '/sales/quotations' },
+                    { title: 'Deliveries', path: '/sales/deliveries' },
+                    { title: 'Discount Rules', path: '/sales/discounts' },
+                    { title: 'Consignment', path: '/sales/consignment' },
+                    { title: 'Delivery Zones', path: '/sales/delivery-zones' },
+                    { title: 'Sales Returns', path: '/sales/returns' },
+                    { title: 'Import Sales', path: '/sales/import' },
                 ]
             },
-            { title: 'New PO Invoice', path: '/saas/purchases/new' },
+            {
+                title: 'Purchasing',
+                icon: Wallet,
+                children: [
+                    { title: 'Procurement Center', path: '/purchases' },
+                    { title: 'Purchase Dashboard', path: '/purchases/dashboard' },
+                    { title: 'New RFQ / Order', path: '/purchases/new-order' },
+                    { title: 'Quick Purchase', path: '/purchases/new' },
+                    { title: 'Purchase Returns', path: '/purchases/returns' },
+                    { title: 'Supplier Sourcing', path: '/purchases/sourcing' },
+                ]
+            },
         ]
     },
     {
@@ -90,20 +147,64 @@ const MENU_ITEMS = [
         icon: Box,
         module: 'inventory',
         children: [
-            { title: 'Product Master', path: '/saas/products' },
-            { title: 'Product Groups', path: '/saas/products?view=grouped' },
-            { title: 'New Product Group', path: '/saas/products/create-group' },
-            { title: 'Barcode Configuration', path: '/saas/inventory/barcode', module: 'inventory' },
-            { title: 'Warehouses & Zones', path: '/saas/inventory/warehouses' },
-            { title: 'Stock Adjustments', path: '/saas/inventory/adjustments' },
-            { title: 'Global Inventory', path: '/saas/inventory/global' },
-            { title: 'Categories', path: '/saas/inventory/categories' },
-            { title: 'Categories Audit', path: '/saas/inventory/categories/maintenance' },
-            { title: 'Units & Packaging', path: '/saas/inventory/units' },
-            { title: 'Brands', path: '/saas/inventory/brands' },
-            { title: 'Countries', path: '/saas/inventory/countries' },
-            { title: 'Attributes', path: '/saas/inventory/attributes' },
-            { title: 'System Maintenance', path: '/saas/inventory/maintenance' },
+            {
+                title: 'Products',
+                icon: Tag,
+                children: [
+                    { title: 'Product Master', path: '/products' },
+                    { title: 'Product Analytics', path: '/inventory/analytics' },
+                    { title: 'Combo & Bundles', path: '/inventory/combo' },
+                    { title: 'Label Printing', path: '/inventory/labels' },
+                    { title: 'Product Groups', path: '/products?view=grouped' },
+                    { title: 'New Product Group', path: '/products/create-group' },
+                ]
+            },
+            {
+                title: 'Warehousing',
+                icon: Warehouse,
+                children: [
+                    { title: 'Warehouses & Zones', path: '/inventory/warehouses' },
+                    { title: 'Stock Adjustments', path: '/inventory/adjustments' },
+                    { title: 'Global Inventory', path: '/inventory/global' },
+                    { title: 'Barcode Configuration', path: '/inventory/barcode' },
+                    { title: 'Expiry Alerts', path: '/inventory/expiry-alerts' },
+                    { title: 'Low Stock Alerts', path: '/inventory/low-stock' },
+                    { title: 'Stock Movements', path: '/inventory/movements' },
+                    { title: 'Inventory Alerts', path: '/inventory/alerts' },
+                    { title: 'Serial Numbers', path: '/inventory/serials' },
+                    { title: 'Stock Count', path: '/inventory/stock-count' },
+                ]
+            },
+            {
+                title: 'Stock Orders',
+                icon: ClipboardList,
+                children: [
+                    { title: 'Adjustment Orders', path: '/inventory/adjustment-orders' },
+                    { title: 'Transfer Orders', path: '/inventory/transfer-orders' },
+                    { title: 'Operational Requests', path: '/inventory/requests' },
+                    { title: 'Stock Valuation', path: '/inventory/valuation' },
+                ]
+            },
+            {
+                title: 'Catalog Setup',
+                icon: FolderTree,
+                children: [
+                    { title: 'Categories', path: '/inventory/categories' },
+                    { title: 'Categories Audit', path: '/inventory/categories/maintenance' },
+                    { title: 'Units & Packaging', path: '/inventory/units' },
+                    { title: 'Brands', path: '/inventory/brands' },
+                    { title: 'Countries', path: '/inventory/countries' },
+                    { title: 'Attributes', path: '/inventory/attributes' },
+                ]
+            },
+            {
+                title: 'System Maintenance',
+                icon: Wrench,
+                children: [
+                    { title: 'Maintenance Dashboard', path: '/inventory/maintenance' },
+                    { title: 'Data Quality', path: '/inventory/maintenance/data-quality' },
+                ]
+            },
         ]
     },
     {
@@ -196,11 +297,29 @@ const MENU_ITEMS = [
         icon: ShieldCheck,
         module: 'hr',
         children: [
-            { title: 'Employee Manager', path: '/saas/hr/employees' },
-            { title: 'Payroll & Accruals', path: '/saas/hr/payroll' },
-            { title: 'Enlistment Approvals', path: '/saas/users/approvals' },
-            { title: 'Access Control (Roles)', path: '/saas/hr/roles' },
+            { title: 'Employee Manager', path: '/hr/employees' },
+            { title: 'Departments', path: '/hr/departments' },
+            { title: 'Shifts', path: '/hr/shifts' },
+            { title: 'Attendance', path: '/hr/attendance' },
+            { title: 'Leave Requests', path: '/hr/leaves' },
+            { title: 'Payroll Summary', path: '/hr/payroll' },
+            { title: 'Pending Approvals', path: '/users/approvals' },
         ]
+    },
+    {
+        title: 'Workspace',
+        icon: ClipboardList,
+        module: 'workspace',
+        children: [
+            { title: 'TaskBoard', path: '/workspace/tasks', icon: ClipboardList },
+            { title: 'Checklists', path: '/workspace/checklists', icon: ListChecks },
+            { title: 'Performance', path: '/workspace/performance', icon: Trophy },
+        ]
+    },
+    {
+        title: 'Import from Third Party',
+        icon: Globe,
+        path: '/migration',
     },
     {
         title: 'SaaS Control',
@@ -231,8 +350,12 @@ const MENU_ITEMS = [
         icon: Settings,
         module: 'core',
         children: [
-            { title: 'Sites & Branches', path: '/saas/settings/sites' },
-            { title: 'Billing & Subscription', path: '/saas/subscription', icon: CreditCard },
+            { title: 'Cloud Storage', path: '/storage', icon: Cloud },
+            { title: 'Sites & Branches', path: '/settings/sites', visibility: 'saas' },
+            { title: 'Roles & Permissions', path: '/settings/roles' },
+            { title: 'Security Settings', path: '/settings/security', icon: Shield },
+            { title: 'Notifications', path: '/settings/notifications', icon: Bell },
+            { title: 'Billing & Subscription', path: '/subscription', icon: CreditCard },
         ]
     },
 ];
@@ -246,9 +369,9 @@ export function Sidebar({
     isSuperuser?: boolean;
     dualViewEnabled?: boolean;
 }) {
-    const { sidebarOpen, toggleSidebar, openTab, activeTab, viewScope, setViewScope } = useAdmin();
+    const { sidebarOpen, toggleSidebar, openTab, activeTab, viewScope, setViewScope, canToggleScope, scopeAccess } = useAdmin();
     const [installedModules, setInstalledModules] = useState<Set<string>>(new Set(['core']));
-    const [dynamicItems, setDynamicItems] = useState<any[]>([]);
+    const [dynamicItems, setDynamicItems] = useState<SidebarDynamicItem[]>([]);
 
     useEffect(() => {
         async function fetchData() {
@@ -259,19 +382,26 @@ export function Sidebar({
                 ]);
 
                 if (Array.isArray(modules)) {
-                    setInstalledModules(new Set(modules.map((m: any) => m.code)));
+                    setInstalledModules(new Set(modules.map((m: Record<string, unknown>) => m.code as string)));
                 }
 
                 if (Array.isArray(sidebarData)) {
-                    // Convert icon strings to Components
-                    const parsed = sidebarData.map(item => ({
-                        ...item,
-                        icon: getIcon(item.icon),
-                        children: item.children?.map((c: any) => ({
-                            ...c,
-                            icon: c.icon ? getIcon(c.icon) : undefined
-                        }))
-                    }));
+                    // Convert icon strings to Components and prefix paths for isolation
+                    const parsed = sidebarData.map(item => {
+                        const moduleCode = item.module || 'core';
+                        const prefix = moduleCode !== 'core' ? `/m/${moduleCode}` : '';
+
+                        return {
+                            ...item,
+                            icon: getIcon(item.icon),
+                            path: item.path && !item.path.startsWith('/saas') ? `/saas${prefix}${item.path}` : item.path,
+                            children: item.children?.map((c: SidebarDynamicItem) => ({
+                                ...c,
+                                icon: c.icon ? getIcon(c.icon) : undefined,
+                                path: c.path && !c.path.startsWith('/saas') ? `/saas${prefix}${c.path}` : c.path,
+                            }))
+                        };
+                    });
                     setDynamicItems(parsed);
                 }
             } catch (e) {
@@ -289,7 +419,7 @@ export function Sidebar({
         if (!isSaas && item.visibility === 'saas') return false;
 
         // 2. Filter by Installed Module
-        if (item.module && item.module !== 'core' && !installedModules.has(item.module)) {
+        if (item.module && item.module !== 'core' && !installedModules.has(String(item.module))) {
             return false;
         }
         return true;
@@ -321,43 +451,45 @@ export function Sidebar({
             )}>
                 <div className="p-8 border-b border-gray-800/50 flex items-center gap-4 shrink-0">
                     <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-900/20 text-white font-bold text-xl">
-                        T
+                        {PLATFORM_CONFIG.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
                         <h1 className="text-xl font-bold text-white tracking-tight leading-none">{PLATFORM_CONFIG.name}</h1>
-                        <p className="text-xs text-emerald-400 font-medium mt-1.5">{isSaas ? 'Federation Admin' : 'Workspace Admin'}</p>
+                        <p className="text-xs text-emerald-400 font-medium mt-1.5">{isSaas ? 'Platform Admin' : 'Workspace Admin'}</p>
                     </div>
                 </div>
 
-                {/* View Scope Switcher */}
-                {(isSuperuser && dualViewEnabled) && (
-                    <div className="mx-6 mt-6 p-1.5 bg-[#0B1120] rounded-2xl border border-gray-800 flex gap-1 shrink-0">
-                        <button
-                            onClick={() => setViewScope('OFFICIAL')}
-                            suppressHydrationWarning={true}
-                            className={clsx(
-                                "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
-                                viewScope === 'OFFICIAL'
-                                    ? "bg-emerald-600 text-white shadow-lg shadow-emerald-900/40"
-                                    : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
-                            )}
-                        >
-                            <Layers size={14} />
-                            Declared
-                        </button>
-                        <button
-                            onClick={() => setViewScope('INTERNAL')}
-                            suppressHydrationWarning={true}
-                            className={clsx(
-                                "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
-                                viewScope === 'INTERNAL'
-                                    ? "bg-gray-700 text-white shadow-lg"
-                                    : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
-                            )}
-                        >
-                            <BarChart3 size={14} />
-                            Both
-                        </button>
+                {/* View Scope Switcher — only visible for full-access users */}
+                {dualViewEnabled && canToggleScope && (
+                    <div className="mx-6 mt-6 shrink-0">
+                        <div className="p-1.5 bg-[#0B1120] rounded-2xl border border-gray-800 flex gap-1">
+                            <button
+                                onClick={() => setViewScope('OFFICIAL')}
+                                suppressHydrationWarning={true}
+                                className={clsx(
+                                    "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
+                                    viewScope === 'OFFICIAL'
+                                        ? "bg-emerald-600 text-white shadow-lg shadow-emerald-900/40"
+                                        : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
+                                )}
+                            >
+                                <Layers size={14} />
+                                Official
+                            </button>
+                            <button
+                                onClick={() => setViewScope('INTERNAL')}
+                                suppressHydrationWarning={true}
+                                className={clsx(
+                                    "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
+                                    viewScope === 'INTERNAL'
+                                        ? "bg-gray-700 text-white shadow-lg"
+                                        : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
+                                )}
+                            >
+                                <BarChart3 size={14} />
+                                Internal
+                            </button>
+                        </div>
                     </div>
                 )}
 
@@ -390,8 +522,8 @@ function MenuItem({
     installedModules,
     level = 0
 }: {
-    item: any,
-    openTab: any,
+    item: Record<string, any>,
+    openTab: Record<string, any>,
     activeTab: string,
     installedModules: Set<string>,
     level?: number
@@ -405,13 +537,13 @@ function MenuItem({
     const hasChildren = item.children && item.children.length > 0;
 
     // 2. Recursive Active State Detection
-    const checkActive = (it: any): boolean => {
+    const checkActive = (it: SidebarDynamicItem): boolean => {
         if (it.path === activeTab) return true;
-        if (it.children) return it.children.some((c: any) => checkActive(c));
+        if (it.children) return it.children.some((c: SidebarDynamicItem) => checkActive(c));
         return false;
     };
 
-    const isChildActive = hasChildren && item.children.some((child: any) => checkActive(child));
+    const isChildActive = hasChildren && item.children.some((child: SidebarDynamicItem) => checkActive(child));
     const isActive = activeTab === item.path;
 
     // 3. Expansion Logic
@@ -424,7 +556,7 @@ function MenuItem({
         if (hasChildren) {
             setExpanded(!expanded);
         } else if (item.path) {
-            openTab(item.title, item.path);
+            (openTab as any)(item.title, item.path);
         }
     };
 
@@ -462,7 +594,7 @@ function MenuItem({
 
             {hasChildren && expanded && (
                 <div className="ml-6 pl-4 border-l border-gray-800/50 my-1.5 space-y-1">
-                    {item.children.map((child: any, idx: number) => (
+                    {item.children.map((child: Record<string, any>, idx: number) => (
                         <MenuItem
                             key={idx}
                             item={child}
