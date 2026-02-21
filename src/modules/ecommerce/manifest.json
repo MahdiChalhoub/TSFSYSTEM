@@ -7,10 +7,7 @@
     "isolation": "shared",
     "icon": "Globe",
     "routes": [
-        "/workspace/portal-config",
-        "/workspace/client-orders",
-        "/workspace/client-access",
-        "/workspace/client-tickets"
+        "/ecommerce/*"
     ],
     "permissions": [
         "read:ecommerce",
