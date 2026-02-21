@@ -269,24 +269,26 @@ export async function logoutAction() {
         }
     }
 
-    // Standard delete()
-    cookieStore.delete('auth_token')
-    cookieStore.delete('scope_access')
-
-    // EXTENDED CLEAR: For wildcard domain cookies, we must explicitly set them to expire
-    // with the same domain they were created with.
+    // Identify standard and wildcard domain
     const headerStore = await import('next/headers');
     const hList = await headerStore.headers();
     const host = hList.get('host') || '';
     const isLocal = host.includes('localhost');
-    const cookieDomain = isLocal ? undefined : `.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'tsf.ci'}`;
+    const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'tsf.ci';
+    const cookieDomain = isLocal ? undefined : `.${rootDomain}`;
 
+    // Clear standard cookies
+    cookieStore.delete('auth_token')
+    cookieStore.delete('scope_access')
+
+    // Force clear wildcard cookies if they exist
     if (cookieDomain) {
         cookieStore.set('auth_token', '', { domain: cookieDomain, path: '/', maxAge: 0 })
         cookieStore.set('scope_access', '', { domain: cookieDomain, path: '/', maxAge: 0 })
     }
 
-    redirect('/')
+    // Redirect to root login page for a clean state
+    return redirect('/login')
 }
 
 /**

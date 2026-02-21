@@ -321,7 +321,7 @@ export default function MCPConversationsPage() {
 
             <ConfirmDialog
                 open={deleteConvId !== null}
-                onOpenChange={(open) => { if (!open) setDeleteConvId(null) }}
+                onOpenChange={(open: boolean) => { if (!open) setDeleteConvId(null) }}
                 onConfirm={confirmDeleteConv}
                 title="Delete Conversation?"
                 description="This conversation will be permanently deleted."

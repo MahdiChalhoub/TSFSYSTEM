@@ -51,7 +51,7 @@ export function UserPicker({ value, onChange, disabled = false }: {
     const selectedUser = users.find(u => u.id.toString() === value);
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover open={open} onOpenChange={(open: boolean) => setOpen(open)}>
             <PopoverTrigger asChild>
                 <Button
                     variant="outline"

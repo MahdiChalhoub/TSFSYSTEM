@@ -158,7 +158,7 @@ function UnitTreeNode({ unit, level, potentialParents }: { unit: UnitNode; level
 
             <ConfirmDialog
                 open={deleteTarget !== null}
-                onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
+                onOpenChange={(open: boolean) => { if (!open) setDeleteTarget(null) }}
                 onConfirm={confirmDelete}
                 title={`Delete "${deleteTarget?.name}"?`}
                 description="This will permanently remove this unit. Products using it may be affected."

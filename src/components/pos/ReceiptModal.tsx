@@ -45,7 +45,7 @@ export function ReceiptModal({ orderId, refCode, isOpen, onClose }: {
     }
 
     return (
-        <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <Dialog open={isOpen} onOpenChange={(open: boolean) => !open && onClose()}>
             <DialogContent className="max-w-md p-0 overflow-hidden border-none shadow-2xl rounded-3xl">
                 <div className="bg-emerald-600 p-8 text-center text-white relative">
                     <div className="absolute top-4 right-4 cursor-pointer hover:bg-white/20 p-2 rounded-full" onClick={onClose}>

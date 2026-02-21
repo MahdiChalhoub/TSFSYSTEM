@@ -960,7 +960,7 @@ export default function MigrationPage() {
 
             <ConfirmDialog
                 open={rollbackTarget !== null}
-                onOpenChange={(open) => { if (!open) setRollbackTarget(null) }}
+                onOpenChange={(open: boolean) => { if (!open) setRollbackTarget(null) }}
                 onConfirm={confirmRollback}
                 title="Rollback Migration?"
                 description="This will DELETE all data imported by this migration. This action cannot be undone."

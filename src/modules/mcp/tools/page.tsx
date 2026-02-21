@@ -460,7 +460,7 @@ export default function MCPToolsPage() {
 
             <ConfirmDialog
                 open={deleteToolId !== null}
-                onOpenChange={(open) => { if (!open) setDeleteToolId(null) }}
+                onOpenChange={(open: boolean) => { if (!open) setDeleteToolId(null) }}
                 onConfirm={confirmDelete}
                 title="Delete Tool?"
                 description="This MCP tool will be permanently removed."

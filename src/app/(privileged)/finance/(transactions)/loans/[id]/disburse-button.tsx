@@ -35,7 +35,7 @@ export function DisburseButton({ loanId, amount }: { loanId: number, amount: num
     }
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={(open: boolean) => setOpen(open)}>
             <DialogTrigger asChild>
                 <Button className="bg-green-600 hover:bg-green-700">
                     <Wallet className="mr-2 h-4 w-4" /> Disburse Funds

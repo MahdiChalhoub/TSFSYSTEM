@@ -52,7 +52,7 @@ export function ChartOfAccountPicker({ value, onChange, disabled = false, filter
     const selectedAccount = accounts.find(a => a.id === value);
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover open={open} onOpenChange={(open: boolean) => setOpen(open)}>
             <PopoverTrigger asChild>
                 <Button
                     variant="outline"

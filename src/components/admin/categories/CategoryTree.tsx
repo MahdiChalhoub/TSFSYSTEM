@@ -71,7 +71,7 @@ export function CategoryTree({ categories, allCategories = [] }: { categories: C
 
             <ConfirmDialog
                 open={deleteTarget !== null}
-                onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
+                onOpenChange={(open: boolean) => { if (!open) setDeleteTarget(null) }}
                 onConfirm={handleConfirmDelete}
                 title={`Delete "${deleteTarget?.name}"?`}
                 description="This will permanently remove this category. Make sure it has no products assigned."

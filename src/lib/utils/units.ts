@@ -6,10 +6,10 @@ import { Decimal } from "@prisma/client/runtime/library";
  * If source and target are linked in a hierarchy, it uses the conversionFactor.
  */
 export async function convertQuantity(
-    quantity: number | Decimal,
+    quantity: number | any,
     fromUnitId: number,
     toUnitId: number
-): Promise<Decimal> {
+): Promise<any> {
     if (fromUnitId === toUnitId) return new Decimal(quantity.toString());
 
     const fromUnit = await prisma.unit.findUnique({ where: { id: fromUnitId } });
@@ -45,10 +45,10 @@ export async function convertQuantity(
  * If I buy a BOX (Factor 12) for $120, the base unit (Piece) cost is $10.
  */
 export async function normalizePriceToBaseUnit(
-    price: number | Decimal,
+    price: number | any,
     purchasedUnitId: number,
     baseUnitId: number
-): Promise<Decimal> {
+): Promise<any> {
     if (purchasedUnitId === baseUnitId) return new Decimal(price.toString());
 
     const pUnit = await prisma.unit.findUnique({ where: { id: purchasedUnitId } });

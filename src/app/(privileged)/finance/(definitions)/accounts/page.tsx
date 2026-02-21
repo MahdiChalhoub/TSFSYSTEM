@@ -273,7 +273,7 @@ function AssignUserDialog({ accountId, onAssign }: { accountId: number, onAssign
     }
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={(open: boolean) => setOpen(open)}>
             <DialogTrigger asChild>
                 <Button variant="outline" size="sm" className="h-6 text-xs">+ Assign</Button>
             </DialogTrigger>

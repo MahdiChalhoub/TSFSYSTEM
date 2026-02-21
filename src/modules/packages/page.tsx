@@ -345,7 +345,7 @@ export default function PackagesPage() {
 
             <ConfirmDialog
                 open={pendingAction !== null}
-                onOpenChange={(open) => { if (!open) setPendingAction(null) }}
+                onOpenChange={(open: boolean) => { if (!open) setPendingAction(null) }}
                 onConfirm={confirmAction}
                 title={
                     pendingAction?.type === 'apply' ? `Apply ${pendingAction.pkg.name} v${pendingAction.pkg.version}?` :

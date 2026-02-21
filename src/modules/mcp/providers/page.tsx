@@ -480,7 +480,7 @@ export default function MCPProvidersPage() {
 
             <ConfirmDialog
                 open={deleteProviderId !== null}
-                onOpenChange={(open) => { if (!open) setDeleteProviderId(null) }}
+                onOpenChange={(open: boolean) => { if (!open) setDeleteProviderId(null) }}
                 onConfirm={confirmDeleteProvider}
                 title="Delete Provider?"
                 description="This AI provider configuration will be permanently removed."

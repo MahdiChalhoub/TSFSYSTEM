@@ -200,7 +200,7 @@ export default function OrganizationsPage() {
                     <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">Organizations</h2>
                     <p className="text-gray-500 mt-1 md:mt-2 font-medium text-sm md:text-base">Provision and manage multi-tenant business instances</p>
                 </div>
-                <Dialog open={open} onOpenChange={setOpen}>
+                <Dialog open={open} onOpenChange={(open: boolean) => setOpen(open)}>
                     <DialogTrigger asChild>
                         <Button className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white px-4 md:px-6 py-4 md:py-6 rounded-2xl flex gap-2 font-bold shadow-lg shadow-emerald-900/20 transition-all hover:scale-[1.02] text-xs md:text-sm">
                             <Plus size={18} />

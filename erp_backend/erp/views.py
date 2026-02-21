@@ -83,11 +83,15 @@ class LoginView(APIView):
 
 class LogoutView(APIView):
     def post(self, request):
-        try:
-            request.user.auth_token.delete()
-        except Exception:
-            pass
-        logout(request)
+        if request.user.is_authenticated:
+            try:
+                # Use hasattr to check for auth_token to avoid potential AttributeErrors
+                if hasattr(request.user, 'auth_token'):
+                    request.user.auth_token.delete()
+            except Exception as e:
+                # Log but don't fail, we want the session to clear regardless
+                print(f"Token deletion error: {e}")
+            logout(request)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 class MeView(APIView):
