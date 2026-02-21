@@ -43,7 +43,8 @@ export default async function middleware(req: NextRequest) {
     // This prevents layout shells from rendering for unauthenticated visitors.
     const isAuthRoute = url.pathname.startsWith('/login') || url.pathname.startsWith('/register');
     const isPortalRoute = url.pathname.startsWith('/tenant') || url.pathname.startsWith('/supplier-portal');
-    const isPublicRoute = url.pathname === '/' || url.pathname.startsWith('/landing') || isAuthRoute || isPortalRoute;
+    const isStorefrontAlias = url.pathname === '/store' || url.pathname === '/home';
+    const isPublicRoute = url.pathname === '/' || url.pathname.startsWith('/landing') || isAuthRoute || isPortalRoute || isStorefrontAlias;
     const hasAuthToken = req.cookies.has('auth_token');
 
     if (!hasAuthToken && !isPublicRoute && !url.pathname.startsWith('/saas/login')) {
@@ -113,12 +114,13 @@ export default async function middleware(req: NextRequest) {
         return NextResponse.rewrite(new URL(`/landing${path === "/" ? "" : path}`, req.url));
     }
 
-    // On tenant subdomains, only rewrite the root "/" to the tenant welcome page.
+    // On tenant subdomains, rewrite storefront routes to the tenant page.
+    // "/", "/store", "/home" all map to the storefront.
     // All other routes (sales, dashboard, finance, etc.) pass through to the
     // regular app routes — the tenant context is established via cookies/headers.
-    if (url.pathname === '/') {
+    if (url.pathname === '/' || url.pathname === '/store' || url.pathname === '/home') {
         return NextResponse.rewrite(
-            new URL(`/tenant/${currentHost}${path}`, req.url)
+            new URL(`/tenant/${currentHost}${searchParams.length > 0 ? '?' + searchParams : ''}`, req.url)
         );
     }
 
