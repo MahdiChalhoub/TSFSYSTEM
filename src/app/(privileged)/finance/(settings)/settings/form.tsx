@@ -736,7 +736,7 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
 
             <ConfirmDialog
                 open={settingsPendingAction !== null}
-                onOpenChange={(open) => { if (!open) setSettingsPendingAction(null) }}
+                onOpenChange={(open: boolean) => { if (!open) setSettingsPendingAction(null) }}
                 onConfirm={() => {
                     if (!settingsPendingAction) return
                     if (settingsPendingAction.type === 'recalculate') {

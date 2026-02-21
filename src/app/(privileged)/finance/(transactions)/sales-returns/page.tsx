@@ -120,7 +120,7 @@ export default function SalesReturnsPage() {
             </div>
 
             {/* Confirm Dialog */}
-            <Dialog open={confirmDialog !== null} onOpenChange={(open) => { if (!open) setConfirmDialog(null) }}>
+            <Dialog open={confirmDialog !== null} onOpenChange={(open: boolean) => { if (!open) setConfirmDialog(null) }}>
                 <DialogContent className="sm:max-w-sm">
                     <DialogHeader>
                         <DialogTitle className={`flex items-center gap-2 ${confirmDialog?.action === 'approve' ? 'text-emerald-700' : 'text-red-700'}`}>

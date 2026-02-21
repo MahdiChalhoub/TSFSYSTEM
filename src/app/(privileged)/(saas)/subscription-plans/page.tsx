@@ -625,7 +625,7 @@ export default function SubscriptionPlansPage() {
 
             <ConfirmDialog
                 open={pendingDeleteAddon !== null}
-                onOpenChange={(open) => { if (!open) setPendingDeleteAddon(null) }}
+                onOpenChange={(open: boolean) => { if (!open) setPendingDeleteAddon(null) }}
                 onConfirm={async () => {
                     if (pendingDeleteAddon) {
                         await deleteAddon(String((pendingDeleteAddon as any).id))

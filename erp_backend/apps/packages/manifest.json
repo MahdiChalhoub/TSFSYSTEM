@@ -1,0 +1,65 @@
+{
+    "code": "packages",
+    "name": "Artifact Distribution Engine",
+    "version": "1.2.0-LTS",
+    "description": "High-performance distribution orchestrator for the platform. Handles binary lifecycle management, atomic kernel patching, and secure module distribution with built-in integrity checks.",
+    "is_core": true,
+    "author": "TSF Engineering",
+    "dependencies": [],
+    "minimum_kernel_version": "1.2.9",
+    "icon": "BoxSelect",
+    "category": "infrastructure",
+    "features": [
+        {
+            "code": "binary_lifecycle",
+            "name": "Binary Lifecycle Management",
+            "default": true
+        },
+        {
+            "code": "atomic_patch",
+            "name": "Atomic Kernel Patching",
+            "default": true
+        },
+        {
+            "code": "distribution",
+            "name": "Secure Distribution Hub",
+            "default": true
+        }
+    ],
+    "permissions": [
+        {
+            "code": "packages.view",
+            "label": "View Packages"
+        },
+        {
+            "code": "packages.upload",
+            "label": "Upload Packages"
+        },
+        {
+            "code": "packages.deploy",
+            "label": "Deploy Packages"
+        },
+        {
+            "code": "packages.rollback",
+            "label": "Rollback Packages"
+        }
+    ],
+    "models": [
+        "PackageUpload"
+    ],
+    "routes": [
+        {
+            "path": "/saas/packages",
+            "label": "Package Storage"
+        }
+    ],
+    "sidebar_items": [
+        {
+            "title": "Storage Cloud",
+            "icon": "Cloud",
+            "path": "/saas/packages",
+            "visibility": "saas"
+        }
+    ],
+    "settings_schema": {}
+}

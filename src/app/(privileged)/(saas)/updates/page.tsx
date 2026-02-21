@@ -260,7 +260,7 @@ export default function SystemUpdatesPage() {
 
             <ConfirmDialog
                 open={pendingUpdate !== null}
-                onOpenChange={(open) => { if (!open) setPendingUpdate(null) }}
+                onOpenChange={(open: boolean) => { if (!open) setPendingUpdate(null) }}
                 onConfirm={() => {
                     if (pendingUpdate) handleApply(pendingUpdate.id, pendingUpdate.version)
                     setPendingUpdate(null)

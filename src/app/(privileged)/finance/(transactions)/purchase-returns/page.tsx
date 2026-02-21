@@ -106,7 +106,7 @@ export default function PurchaseReturnsPage() {
             </div>
 
             {/* Confirm Dialog */}
-            <Dialog open={confirmId !== null} onOpenChange={(open) => { if (!open) setConfirmId(null) }}>
+            <Dialog open={confirmId !== null} onOpenChange={(open: boolean) => { if (!open) setConfirmId(null) }}>
                 <DialogContent className="sm:max-w-sm">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-emerald-700"><Send size={20} /> Complete Purchase Return</DialogTitle>

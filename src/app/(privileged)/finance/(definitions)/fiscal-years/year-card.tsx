@@ -247,7 +247,7 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
 
             <ConfirmDialog
                 open={pendingAction !== null}
-                onOpenChange={(open) => { if (!open) setPendingAction(null) }}
+                onOpenChange={(open: boolean) => { if (!open) setPendingAction(null) }}
                 onConfirm={handleConfirmAction}
                 title={pendingAction?.title ?? ''}
                 description={pendingAction?.description ?? ''}

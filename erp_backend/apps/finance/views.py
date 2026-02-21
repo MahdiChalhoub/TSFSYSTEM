@@ -391,8 +391,7 @@ class FiscalPeriodViewSet(TenantModelViewSet):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class JournalEntryViewSet(LifecycleViewSetMixin, UDLEViewSetMixin, TenantModelViewSet):
-    lifecycle_transaction_type = 'JOURNAL_ENTRY'
+class JournalEntryViewSet(UDLEViewSetMixin, TenantModelViewSet):
     queryset = JournalEntry.objects.all()
     serializer_class = JournalEntrySerializer
 
@@ -1209,8 +1208,7 @@ class TaxGroupViewSet(TenantModelViewSet):
 # PAYMENTS & BALANCES
 # =============================================================================
 
-class PaymentViewSet(LifecycleViewSetMixin, TenantModelViewSet):
-    lifecycle_transaction_type = 'PAYMENT'
+class PaymentViewSet(TenantModelViewSet):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
 
@@ -1355,8 +1353,7 @@ from apps.finance.serializers import (
 )
 
 
-class InvoiceViewSet(LifecycleViewSetMixin, TenantModelViewSet):
-    lifecycle_transaction_type = 'INVOICE'
+class InvoiceViewSet(TenantModelViewSet):
     queryset = Invoice.objects.all()
     serializer_class = InvoiceSerializer
 

@@ -444,7 +444,7 @@ export default function EncryptionPage() {
 
             <ConfirmDialog
                 open={showRotateConfirm}
-                onOpenChange={(open) => { if (!open) setShowRotateConfirm(false) }}
+                onOpenChange={(open: boolean) => { if (!open) setShowRotateConfirm(false) }}
                 onConfirm={() => {
                     handleRotateKey()
                     setShowRotateConfirm(false)

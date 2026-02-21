@@ -175,7 +175,7 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
 
             <ConfirmDialog
                 open={importTarget?.step === 'confirm'}
-                onOpenChange={(open) => { if (!open) setImportTarget(null) }}
+                onOpenChange={(open: boolean) => { if (!open) setImportTarget(null) }}
                 onConfirm={() => {
                     if (importTarget) setImportTarget({ ...importTarget, step: 'reset' })
                 }}
@@ -186,7 +186,7 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
             />
             <ConfirmDialog
                 open={importTarget?.step === 'reset'}
-                onOpenChange={(open) => { if (!open) { handleConfirmImport(false) } }}
+                onOpenChange={(open: boolean) => { if (!open) { handleConfirmImport(false) } }}
                 onConfirm={() => handleConfirmImport(true)}
                 title="Clean Reset?"
                 description="Perform a Clean Reset? This deletes ALL existing accounts first — only works if zero transactions exist. Press Cancel to keep existing accounts."

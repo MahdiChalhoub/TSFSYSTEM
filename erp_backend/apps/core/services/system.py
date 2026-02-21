@@ -9,9 +9,11 @@ class CoreService:
         """
         Ensures the system meets the philosophy requirements.
         """
-        # 1. PostgreSQL Check
+        # 1. PostgreSQL Check (skip if local SQLite mode)
         db_engine = settings.DATABASES.get('default', {}).get('ENGINE', '')
-        if 'postgresql' not in db_engine.lower():
+        if os.getenv('USE_SQLITE', '').lower() in ('1', 'true', 'yes'):
+            pass  # Allow SQLite for local development/testing
+        elif 'postgresql' not in db_engine.lower():
             raise ImproperlyConfigured("SYSTEM PHILOSOPHY VIOLATION: Only PostgreSQL is allowed.")
 
         # 2. Environment Detection

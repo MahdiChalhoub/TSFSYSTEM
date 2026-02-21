@@ -237,7 +237,7 @@ export default function VouchersPage() {
             </div>
 
             {/* ─── Create / Edit Dialog ────────────────────────────── */}
-            <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) closeDialog(); else setDialogOpen(true) }}>
+            <Dialog open={dialogOpen} onOpenChange={(open: boolean) => { if (!open) closeDialog(); else setDialogOpen(true) }}>
                 <DialogContent className="sm:max-w-lg">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
@@ -338,7 +338,7 @@ export default function VouchersPage() {
             </Dialog>
 
             {/* ─── Delete Confirmation Dialog ───────────────────────── */}
-            <Dialog open={deleteConfirm !== null} onOpenChange={(open) => { if (!open) setDeleteConfirm(null) }}>
+            <Dialog open={deleteConfirm !== null} onOpenChange={(open: boolean) => { if (!open) setDeleteConfirm(null) }}>
                 <DialogContent className="sm:max-w-sm">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-red-700"><Trash2 size={20} /> Delete Voucher</DialogTitle>
@@ -354,7 +354,7 @@ export default function VouchersPage() {
             </Dialog>
 
             {/* ─── Unlock Comment Dialog ────────────────────────────── */}
-            <Dialog open={commentDialog !== null} onOpenChange={(open) => { if (!open) setCommentDialog(null) }}>
+            <Dialog open={commentDialog !== null} onOpenChange={(open: boolean) => { if (!open) setCommentDialog(null) }}>
                 <DialogContent className="sm:max-w-sm">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2"><Unlock size={20} /> Unlock Voucher</DialogTitle>
@@ -373,7 +373,7 @@ export default function VouchersPage() {
             </Dialog>
 
             {/* ─── History Dialog ───────────────────────────────────── */}
-            <Dialog open={historyDialog !== null} onOpenChange={(open) => { if (!open) setHistoryDialog(null) }}>
+            <Dialog open={historyDialog !== null} onOpenChange={(open: boolean) => { if (!open) setHistoryDialog(null) }}>
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2"><History size={20} /> Lifecycle History</DialogTitle>

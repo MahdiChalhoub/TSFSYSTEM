@@ -87,7 +87,7 @@ export default function FinancialAccountsPage() {
 
             <ConfirmDialog
                 open={deleteTarget !== null}
-                onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
+                onOpenChange={(open: boolean) => { if (!open) setDeleteTarget(null) }}
                 onConfirm={confirmDelete}
                 title="Delete Financial Account?"
                 description="This cannot be undone if transactions exist."
@@ -240,7 +240,7 @@ function AccountCard({ account, onDelete, onRefresh }: { account: Record<string,
 
             <ConfirmDialog
                 open={unassignTarget !== null}
-                onOpenChange={(open) => { if (!open) setUnassignTarget(null) }}
+                onOpenChange={(open: boolean) => { if (!open) setUnassignTarget(null) }}
                 onConfirm={async () => {
                     if (unassignTarget) {
                         await unassignUser(unassignTarget.userId, account.id)

@@ -13,14 +13,14 @@ Integrates with:
 from django.db import models
 from django.core.exceptions import ValidationError
 from decimal import Decimal
-from erp.models import TenantModel, VerifiableModel, User
+from erp.models import TenantModel, User
 
 
 # =============================================================================
 # INVOICE
 # =============================================================================
 
-class Invoice(VerifiableModel):
+class Invoice(TenantModel):
     """
     Formal invoice document with lifecycle management.
     

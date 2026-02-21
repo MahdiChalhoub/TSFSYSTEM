@@ -500,7 +500,7 @@ export default function DiscountRulesPage() {
 
             <ConfirmDialog
                 open={deleteTarget !== null}
-                onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
+                onOpenChange={(open: boolean) => { if (!open) setDeleteTarget(null) }}
                 onConfirm={handleDelete}
                 title="Delete Discount Rule?"
                 description="This will permanently remove this discount rule and its usage history."

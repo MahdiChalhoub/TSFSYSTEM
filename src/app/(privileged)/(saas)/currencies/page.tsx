@@ -231,7 +231,7 @@ export default function CurrenciesPage() {
 
             <ConfirmDialog
                 open={pendingDelete !== null}
-                onOpenChange={(open) => { if (!open) setPendingDelete(null) }}
+                onOpenChange={(open: boolean) => { if (!open) setPendingDelete(null) }}
                 onConfirm={() => {
                     if (pendingDelete) handleDelete(pendingDelete.id, pendingDelete.code)
                     setPendingDelete(null)

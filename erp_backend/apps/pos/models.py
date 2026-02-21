@@ -5,10 +5,10 @@ Extracted from Kernel (erp/models.py) → Module Layer (apps/pos/models.py)
 from django.db import models
 from django.core.exceptions import ValidationError
 from decimal import Decimal
-from erp.models import TenantModel, VerifiableModel, User
+from erp.models import TenantModel, User
 
 
-class Order(VerifiableModel):
+class Order(TenantModel):
     TYPES = (
         ('SALE', 'Sale'),
         ('PURCHASE', 'Purchase'),

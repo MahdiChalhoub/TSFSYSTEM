@@ -144,7 +144,7 @@ export default function ProfitDistributionPage() {
                     <h1 className="text-4xl font-bold text-stone-900 font-serif tracking-tight">Profit Distribution</h1>
                     <p className="text-stone-500 font-medium mt-1">Year-end profit allocation across equity wallets</p>
                 </div>
-                <Dialog open={wizardOpen} onOpenChange={(open) => { setWizardOpen(open); if (!open) { setWizardStep(1); setPreview(null) } }}>
+                <Dialog open={wizardOpen} onOpenChange={(open: boolean) => { setWizardOpen(open); if (!open) { setWizardStep(1); setPreview(null) } }}>
                     <DialogTrigger asChild>
                         <Button className="rounded-xl gap-2 shadow-md hover:shadow-lg transition-all">
                             <Plus size={16} /> New Distribution

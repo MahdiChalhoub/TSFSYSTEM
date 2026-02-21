@@ -1466,7 +1466,7 @@ export default function OrganizationDetailPage() {
             </Dialog>
 
             {/* ─── Plan Switch Confirmation Dialog ─────────────────────── */}
-            <Dialog open={!!planSwitchTarget} onOpenChange={(open) => !open && setPlanSwitchTarget(null)}>
+            <Dialog open={!!planSwitchTarget} onOpenChange={(open: boolean) => !open && setPlanSwitchTarget(null)}>
                 <DialogContent className="rounded-2xl max-w-md">
                     <DialogHeader>
                         <DialogTitle className="font-black text-lg">Confirm Plan Switch</DialogTitle>
@@ -1570,7 +1570,7 @@ export default function OrganizationDetailPage() {
             </Dialog>
 
             {/* ─── Client Assignment Dialog ────────────────────────────── */}
-            <Dialog open={showClientDialog} onOpenChange={(open) => { if (!open) { setShowClientDialog(false); setShowNewClient(false) } }}>
+            <Dialog open={showClientDialog} onOpenChange={(open: boolean) => { if (!open) { setShowClientDialog(false); setShowNewClient(false) } }}>
                 <DialogContent className="rounded-2xl max-w-md">
                     <DialogHeader>
                         <DialogTitle className="font-black text-lg">Assign Account Owner</DialogTitle>

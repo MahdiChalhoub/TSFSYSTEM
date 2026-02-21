@@ -414,7 +414,7 @@ export default function SaaSModulesPage() {
 
             <ConfirmDialog
                 open={pendingUninstall !== null}
-                onOpenChange={(open) => { if (!open) setPendingUninstall(null) }}
+                onOpenChange={(open: boolean) => { if (!open) setPendingUninstall(null) }}
                 onConfirm={() => {
                     if (pendingUninstall) handleGlobalUninstall(pendingUninstall)
                     setPendingUninstall(null)
@@ -427,7 +427,7 @@ export default function SaaSModulesPage() {
 
             <ConfirmDialog
                 open={pendingDelete !== null}
-                onOpenChange={(open) => { if (!open) setPendingDelete(null) }}
+                onOpenChange={(open: boolean) => { if (!open) setPendingDelete(null) }}
                 onConfirm={() => {
                     if (pendingDelete) handleDelete(pendingDelete)
                     setPendingDelete(null)
@@ -440,7 +440,7 @@ export default function SaaSModulesPage() {
 
             <ConfirmDialog
                 open={pendingRollback !== null}
-                onOpenChange={(open) => { if (!open) setPendingRollback(null) }}
+                onOpenChange={(open: boolean) => { if (!open) setPendingRollback(null) }}
                 onConfirm={() => {
                     if (pendingRollback) handleRollback(pendingRollback.code, pendingRollback.version)
                     setPendingRollback(null)

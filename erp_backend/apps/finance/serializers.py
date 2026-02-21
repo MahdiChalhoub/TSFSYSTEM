@@ -92,15 +92,10 @@ class JournalEntryLineSerializer(serializers.ModelSerializer):
 class JournalEntrySerializer(serializers.ModelSerializer):
     organization = serializers.PrimaryKeyRelatedField(read_only=True)
     lines = JournalEntryLineSerializer(many=True, read_only=True)
-    locked_by_name = serializers.CharField(source='locked_by.username', read_only=True, default=None)
 
     class Meta:
         model = JournalEntry
         fields = '__all__'
-        read_only_fields = [
-            'organization', 'lifecycle_status', 'locked_by', 'locked_at',
-            'current_verification_level',
-        ]
 
 
 class TransactionSerializer(serializers.ModelSerializer):
@@ -252,11 +247,7 @@ class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
         fields = '__all__'
-        read_only_fields = [
-            'organization', 'reference',
-            'lifecycle_status', 'locked_by', 'locked_at',
-            'current_verification_level',
-        ]
+        read_only_fields = ['organization', 'reference']
 
     def get_allocation_count(self, obj):
         return obj.allocations.count() if hasattr(obj, 'allocations') else 0
@@ -318,8 +309,6 @@ class InvoiceSerializer(serializers.ModelSerializer):
             'total_in_functional_currency', 'paid_at',
             'fne_status', 'fne_reference', 'fne_token', 'fne_error', 'fne_raw_response',
             'previous_invoice_hash', 'invoice_hash',
-            'lifecycle_status', 'locked_by', 'locked_at',
-            'current_verification_level',
         ]
 
     def get_line_count(self, obj):

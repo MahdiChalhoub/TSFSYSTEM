@@ -17,15 +17,10 @@ class OrderSerializer(serializers.ModelSerializer):
     contact_name = serializers.ReadOnlyField(source='contact.name')
     user_name = serializers.ReadOnlyField(source='user.username')
     site_name = serializers.ReadOnlyField(source='site.name')
-    locked_by_name = serializers.CharField(source='locked_by.username', read_only=True, default=None)
     
     class Meta:
         model = Order
         fields = '__all__'
-        read_only_fields = [
-            'lifecycle_status', 'locked_by', 'locked_at',
-            'current_verification_level',
-        ]
 
 
 # ── Returns & Credit Notes ───────────────────────────────────────

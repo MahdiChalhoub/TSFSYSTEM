@@ -1,0 +1,8 @@
+{
+    "code": "hr",
+    "name": "Human Resources",
+    "version": "1.0.0",
+    "description": "Employee records, payroll, and performance management.",
+    "dependencies": [],
+    "required": false
+}

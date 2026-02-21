@@ -108,7 +108,7 @@ class FiscalPeriod(TenantModel):
 # JOURNAL ENTRIES (DOUBLE-ENTRY BOOKKEEPING)
 # =============================================================================
 
-class JournalEntry(VerifiableModel):
+class JournalEntry(TenantModel):
     transaction_date = models.DateTimeField(null=True, blank=True)
     description = models.TextField()
     fiscal_year = models.ForeignKey(FiscalYear, on_delete=models.PROTECT, null=True, blank=True)

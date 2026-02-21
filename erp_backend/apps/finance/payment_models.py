@@ -6,14 +6,14 @@ accounts receivable/payable and cash-basis VAT release.
 """
 from django.db import models
 from decimal import Decimal
-from erp.models import TenantModel, VerifiableModel
+from erp.models import TenantModel
 
 
 # =============================================================================
 # PAYMENTS
 # =============================================================================
 
-class Payment(VerifiableModel):
+class Payment(TenantModel):
     """
     Universal payment record for supplier payments, customer receipts, and refunds.
     Each payment posts a GL entry and optionally triggers cash-basis VAT release.

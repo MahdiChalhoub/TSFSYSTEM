@@ -7,7 +7,6 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from erp.middleware import get_current_tenant_id
 from erp.models import Organization
-from erp.lifecycle_mixin import LifecycleViewSetMixin
 
 # Gated cross-module imports
 try:
@@ -868,9 +867,8 @@ class ConsignmentSettlementViewSet(TenantModelViewSet):
         return Response(ConsignmentSettlementSerializer(settlement).data)
 
 
-class OrderViewSet(LifecycleViewSetMixin, TenantModelViewSet):
+class OrderViewSet(TenantModelViewSet):
     """CRUD for sales/purchase orders."""
-    lifecycle_transaction_type = 'POS_ORDER'
     queryset = Order.objects.select_related('contact', 'user', 'site').all()
     serializer_class = OrderSerializer
     filterset_fields = ['type', 'status', 'contact', 'user']

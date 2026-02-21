@@ -1,0 +1,10 @@
+{
+    "code": "workspace",
+    "name": "Workspace & Portals",
+    "version": "1.0.0",
+    "description": "Task management, checklists, performance tracking, supplier gate, and client gate.",
+    "dependencies": [
+        "core"
+    ],
+    "required": false
+}
