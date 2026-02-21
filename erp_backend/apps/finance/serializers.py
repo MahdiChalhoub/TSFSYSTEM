@@ -299,13 +299,16 @@ class InvoiceSerializer(serializers.ModelSerializer):
     site_name = serializers.ReadOnlyField(source='site.name')
     line_count = serializers.SerializerMethodField()
     is_overdue = serializers.SerializerMethodField()
+    zatca_qr_code_data = serializers.SerializerMethodField()
 
     class Meta:
         model = Invoice
         fields = '__all__'
         read_only_fields = [
             'organization', 'invoice_number', 'paid_amount', 'balance_due',
-            'total_in_functional_currency', 'paid_at'
+            'total_in_functional_currency', 'paid_at',
+            'fne_status', 'fne_reference', 'fne_token', 'fne_error', 'fne_raw_response',
+            'previous_invoice_hash', 'invoice_hash',
         ]
 
     def get_line_count(self, obj):
@@ -316,6 +319,18 @@ class InvoiceSerializer(serializers.ModelSerializer):
             from django.utils import timezone
             return obj.due_date < timezone.now().date()
         return False
+
+    def get_zatca_qr_code_data(self, obj):
+        """Generate ZATCA TLV QR code data if applicable."""
+        try:
+            if obj.invoice_hash or obj.fne_status:
+                from apps.finance.einvoicing_service import ZATCAService
+                service = ZATCAService(str(obj.organization_id))
+                return service.generate_qr_code_data(obj)
+        except Exception:
+            pass
+        return None
+
 
 
 class PaymentAllocationSerializer(serializers.ModelSerializer):

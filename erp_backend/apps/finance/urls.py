@@ -15,6 +15,7 @@ from apps.finance.views import (
     TaxGroupViewSet, PaymentViewSet, CustomerBalanceViewSet, SupplierBalanceViewSet,
     InvoiceViewSet, InvoiceLineViewSet, PaymentAllocationViewSet,
     GatewayConfigViewSet, ReportViewSet,
+    EInvoiceViewSet,
 )
 
 router = SimpleRouter()
@@ -43,6 +44,7 @@ router.register(r'invoice-lines', InvoiceLineViewSet, basename='invoice-line')
 router.register(r'payment-allocations', PaymentAllocationViewSet, basename='payment-allocation')
 router.register(r'gateway-configs', GatewayConfigViewSet, basename='gateway-config')
 router.register(r'reports', ReportViewSet, basename='report')
+router.register(r'einvoice', EInvoiceViewSet, basename='einvoice')
 
 urlpatterns = [
     path('', include(router.urls)),

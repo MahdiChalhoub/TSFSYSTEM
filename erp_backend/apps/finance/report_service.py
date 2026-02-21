@@ -23,41 +23,95 @@ def _build_registry():
     global MODEL_REGISTRY
     if MODEL_REGISTRY:
         return
+
+    # POS
     try:
-        from apps.pos.models import Order, OrderLine
-        MODEL_REGISTRY['Order'] = Order
-        MODEL_REGISTRY['OrderLine'] = OrderLine
-    except ImportError:
-        pass
+        from apps.pos.models import Order as POSOrder, OrderLine as POSOrderLine
+        MODEL_REGISTRY['POSOrder'] = POSOrder
+        MODEL_REGISTRY['Order'] = POSOrder  # Alias
+        MODEL_REGISTRY['OrderLine'] = POSOrderLine
+    except ImportError: pass
+
+    # Finance - Invoices
     try:
         from apps.finance.invoice_models import Invoice, InvoiceLine
         MODEL_REGISTRY['Invoice'] = Invoice
         MODEL_REGISTRY['InvoiceLine'] = InvoiceLine
-    except ImportError:
-        pass
+    except ImportError: pass
+
+    # Finance - Models
+    try:
+        from apps.finance.models import Voucher, Asset, DeferredExpense, FinancialAccount, ChartOfAccount
+        MODEL_REGISTRY['Voucher'] = Voucher
+        MODEL_REGISTRY['Asset'] = Asset
+        MODEL_REGISTRY['DeferredExpense'] = DeferredExpense
+        MODEL_REGISTRY['FinancialAccount'] = FinancialAccount
+        MODEL_REGISTRY['ChartOfAccount'] = ChartOfAccount
+    except ImportError: pass
+
+    # Finance - Payments
     try:
         from apps.finance.payment_models import Payment
         MODEL_REGISTRY['Payment'] = Payment
-    except ImportError:
-        pass
+    except ImportError: pass
+
+    # Inventory
     try:
-        from apps.inventory.models import Product, Category
+        from apps.inventory.models import Product, Category, Warehouse, Unit
         MODEL_REGISTRY['Product'] = Product
         MODEL_REGISTRY['Category'] = Category
-    except ImportError:
-        pass
+        MODEL_REGISTRY['Warehouse'] = Warehouse
+        MODEL_REGISTRY['Unit'] = Unit
+        from apps.inventory.alert_models import StockAlert
+        MODEL_REGISTRY['StockAlert'] = StockAlert
+    except ImportError: pass
+
+    # CRM
     try:
         from apps.crm.models import Contact
         MODEL_REGISTRY['Contact'] = Contact
-    except ImportError:
-        pass
+    except ImportError: pass
+
+    # HR
     try:
         from apps.hr.models import Employee, Attendance, Leave
         MODEL_REGISTRY['Employee'] = Employee
         MODEL_REGISTRY['Attendance'] = Attendance
         MODEL_REGISTRY['Leave'] = Leave
-    except ImportError:
-        pass
+    except ImportError: pass
+
+    # Integrations
+    try:
+        from apps.integrations.models import ExternalOrderMapping, ExternalProductMapping
+        MODEL_REGISTRY['ExternalOrderMapping'] = ExternalOrderMapping
+        MODEL_REGISTRY['ExternalProductMapping'] = ExternalProductMapping
+    except ImportError: pass
+
+
+def _resolve_field(obj, field_path):
+    """Resolve a dotted field path like 'contact.name' or 'invoice.balance_due'."""
+    parts = field_path.split('.')
+    current = obj
+    for part in parts:
+        if current is None:
+            return None
+        try:
+            current = getattr(current, part, None)
+            # If it's a callable (property/method with no args), call it
+            if callable(current) and not hasattr(current, 'pk'):
+                try:
+                    current = current()
+                except TypeError:
+                    pass
+        except Exception:
+            return None
+    if isinstance(current, Decimal):
+        return float(current)
+    elif isinstance(current, datetime):
+        return current.isoformat()
+    elif hasattr(current, 'pk'):
+        return str(current)
+    return current
 
 
 # Filter operator mapping
@@ -69,9 +123,12 @@ FILTER_OPS = {
     'lt': '__lt',
     'lte': '__lte',
     'contains': '__icontains',
+    'icontains': '__icontains',
     'startswith': '__istartswith',
+    'istartswith': '__istartswith',
     'in': '__in',
     'isnull': '__isnull',
+    'range': '__range',
 }
 
 
@@ -141,14 +198,7 @@ class ReportService:
             row = {}
             for field in column_fields:
                 try:
-                    val = getattr(obj, field, None)
-                    if isinstance(val, Decimal):
-                        val = float(val)
-                    elif isinstance(val, datetime):
-                        val = val.isoformat()
-                    elif hasattr(val, 'pk'):
-                        val = str(val)
-                    row[field] = val
+                    row[field] = _resolve_field(obj, field)
                 except Exception:
                     row[field] = None
             rows.append(row)

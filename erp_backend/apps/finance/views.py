@@ -1639,7 +1639,7 @@ class ReportViewSet(TenantModelViewSet):
     @action(detail=True, methods=['post'])
     def run(self, request, pk=None):
         """Execute a report and return results (or export to file).
-        Optional body: { "export_format": "EXCEL" }
+        Optional body: { "export_format": "EXCEL", "background": true }
         """
         from apps.finance.report_service import ReportService
         from apps.finance.report_models import ReportExecution
@@ -1649,7 +1649,25 @@ class ReportViewSet(TenantModelViewSet):
         report_def = self.get_object()
         org_id = get_current_tenant_id()
         export_format = request.data.get('export_format')
+        background = request.data.get('background', False)
 
+        # Background execution via Celery
+        if background:
+            try:
+                from erp.tasks import run_report_async
+                task = run_report_async.delay(
+                    str(report_def.pk), str(org_id),
+                    export_format=export_format or report_def.default_export_format
+                )
+                return Response({
+                    'status': 'QUEUED',
+                    'task_id': task.id,
+                    'message': f'Report "{report_def.name}" queued for background execution.'
+                }, status=202)
+            except Exception as e:
+                return Response({'error': f'Failed to queue: {str(e)}'}, status=500)
+
+        # Synchronous execution
         execution = ReportExecution.objects.create(
             organization_id=org_id,
             report=report_def,
@@ -1661,23 +1679,30 @@ class ReportViewSet(TenantModelViewSet):
 
         service = ReportService(org_id)
 
-        if export_format:
-            result = service.run_and_export(report_def, export_format=export_format)
-            execution.status = 'COMPLETED' if 'error' not in result else 'FAILED'
-            execution.row_count = result.get('row_count', 0)
-            execution.output_file = result.get('file_path')
-            execution.error_message = result.get('error')
+        try:
+            if export_format:
+                result = service.run_and_export(report_def, export_format=export_format)
+                execution.status = 'COMPLETED' if 'error' not in result else 'FAILED'
+                execution.row_count = result.get('row_count', 0)
+                execution.output_file = result.get('file_path')
+                execution.error_message = result.get('error')
+                execution.completed_at = timezone.now()
+                execution.save()
+                return Response(result)
+            else:
+                data = service.execute(report_def)
+                execution.status = 'COMPLETED' if 'error' not in data else 'FAILED'
+                execution.row_count = data.get('row_count', 0)
+                execution.error_message = data.get('error')
+                execution.completed_at = timezone.now()
+                execution.save()
+                return Response(data)
+        except Exception as e:
+            execution.status = 'FAILED'
+            execution.error_message = str(e)
             execution.completed_at = timezone.now()
             execution.save()
-            return Response(result)
-        else:
-            data = service.execute(report_def)
-            execution.status = 'COMPLETED' if 'error' not in data else 'FAILED'
-            execution.row_count = data.get('row_count', 0)
-            execution.error_message = data.get('error')
-            execution.completed_at = timezone.now()
-            execution.save()
-            return Response(data)
+            return Response({'error': str(e)}, status=500)
 
     @action(detail=True, methods=['get'])
     def executions(self, request, pk=None):
@@ -1707,3 +1732,79 @@ class ReportViewSet(TenantModelViewSet):
                       for f in model._meta.get_fields() if hasattr(f, 'column')]
             sources.append({'name': name, 'fields': fields})
         return Response(sources)
+
+
+# ── E-Invoicing Endpoints ───────────────────────────────────────
+
+class EInvoiceViewSet(viewsets.ViewSet):
+    """Manual e-invoice submission, status check, and QR code retrieval."""
+
+    @action(detail=False, methods=['post'], url_path='submit/(?P<invoice_id>[^/.]+)')
+    def submit(self, request, invoice_id=None):
+        """Manually submit an invoice for e-invoicing certification."""
+        from apps.finance.invoice_models import Invoice
+        from apps.finance.einvoicing_service import ZATCAService, FNEService
+        from erp.middleware import get_current_tenant_id
+
+        org_id = get_current_tenant_id()
+
+        try:
+            invoice = Invoice.objects.get(pk=invoice_id, organization_id=org_id)
+        except Invoice.DoesNotExist:
+            return Response({'error': 'Invoice not found'}, status=404)
+
+        org = invoice.organization
+        country_code = getattr(org, 'country_code', None) or org.settings.get('country_code', '')
+
+        if country_code == 'SA':
+            service = ZATCAService(str(org.id))
+            result = service.submit_for_clearance(invoice)
+        elif country_code in ('CI', 'CIV'):
+            service = FNEService(str(org.id))
+            result = service.submit_for_certification(invoice)
+        else:
+            return Response({'error': f'E-invoicing not configured for country: {country_code}'}, status=400)
+
+        return Response(result)
+
+    @action(detail=False, methods=['get'], url_path='status/(?P<invoice_id>[^/.]+)')
+    def status(self, request, invoice_id=None):
+        """Get e-invoicing status of an invoice."""
+        from apps.finance.invoice_models import Invoice
+        from erp.middleware import get_current_tenant_id
+
+        org_id = get_current_tenant_id()
+        try:
+            invoice = Invoice.objects.get(pk=invoice_id, organization_id=org_id)
+        except Invoice.DoesNotExist:
+            return Response({'error': 'Invoice not found'}, status=404)
+
+        return Response({
+            'invoice_id': str(invoice.id),
+            'fne_status': invoice.fne_status,
+            'fne_reference': invoice.fne_reference,
+            'fne_token': invoice.fne_token,
+            'fne_error': invoice.fne_error,
+            'invoice_hash': invoice.invoice_hash,
+            'previous_invoice_hash': invoice.previous_invoice_hash,
+        })
+
+    @action(detail=False, methods=['get'], url_path='qr/(?P<invoice_id>[^/.]+)')
+    def qr_code(self, request, invoice_id=None):
+        """Get QR code data for an e-invoice."""
+        from apps.finance.invoice_models import Invoice
+        from apps.finance.einvoicing_service import ZATCAService
+        from erp.middleware import get_current_tenant_id
+
+        org_id = get_current_tenant_id()
+        try:
+            invoice = Invoice.objects.get(pk=invoice_id, organization_id=org_id)
+        except Invoice.DoesNotExist:
+            return Response({'error': 'Invoice not found'}, status=404)
+
+        try:
+            service = ZATCAService(str(invoice.organization_id))
+            qr_data = service.generate_qr_code_data(invoice)
+            return Response({'qr_data': qr_data})
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
