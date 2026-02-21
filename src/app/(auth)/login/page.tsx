@@ -222,8 +222,17 @@ function LoginContent() {
                         )}
 
                         {!isRoot && (
-                            <div className="text-center">
-                                <a href="/register/user" className="text-sm font-medium text-emerald-400 hover:underline">Request Access</a>
+                            <div className="space-y-3 pt-2 border-t border-slate-700/50">
+                                <a href="/register/business">
+                                    <Button variant="outline" className="w-full h-12 border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300 font-bold uppercase tracking-tight text-sm">
+                                        <Building2 size={16} className="mr-2" />
+                                        Register My Business
+                                    </Button>
+                                </a>
+                                <p className="text-center text-[10px] text-slate-600">
+                                    Need access to an existing business?{' '}
+                                    <a href="/register/user" className="text-emerald-400 hover:text-emerald-300 font-bold underline">Request Employee Access</a>
+                                </p>
                             </div>
                         )}
 

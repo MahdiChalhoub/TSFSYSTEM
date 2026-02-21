@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react"
 import type { ChartOfAccount } from '@/types/erp'
-import { getFinancialAccounts, deleteFinancialAccount, assignUserToAccount, unassignUser } from "./actions"
+import { getFinancialAccounts, deleteFinancialAccount, assignUserToAccount, unassignUser, togglePosAccess } from "./actions"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Plus, Trash2, Wallet, User as UserIcon, Building, Smartphone, Link as LinkIcon, AlertCircle, BookOpen, BarChart3 } from "lucide-react"
+import { Plus, Trash2, Wallet, User as UserIcon, Building, Smartphone, Link as LinkIcon, AlertCircle, BookOpen, BarChart3, Monitor, Briefcase, PiggyBank, Globe2, Lock, TrendingUp } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
@@ -101,7 +101,12 @@ function AccountCard({ account, onDelete, onRefresh }: { account: Record<string,
     const icon: Record<string, any> = {
         'CASH': Wallet,
         'BANK': Building,
-        'MOBILE': Smartphone
+        'MOBILE': Smartphone,
+        'PETTY_CASH': Briefcase,
+        'SAVINGS': PiggyBank,
+        'FOREIGN': Globe2,
+        'ESCROW': Lock,
+        'INVESTMENT': TrendingUp,
     }
 
     // Check Config Health
@@ -183,6 +188,27 @@ function AccountCard({ account, onDelete, onRefresh }: { account: Record<string,
                         </Link>
                     </div>
                 )}
+                {/* POS Access Toggle */}
+                <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border">
+                    <div className="flex items-center gap-2">
+                        <Monitor className="h-4 w-4 text-slate-500" />
+                        <span className="text-xs font-medium">POS Access</span>
+                    </div>
+                    <button
+                        onClick={async () => {
+                            try {
+                                await togglePosAccess(account.id, !account.is_pos_enabled)
+                                onRefresh()
+                                toast.success(account.is_pos_enabled ? 'POS access disabled' : 'POS access enabled')
+                            } catch { toast.error('Failed to toggle POS access') }
+                        }}
+                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${account.is_pos_enabled ? 'bg-emerald-500' : 'bg-slate-300'
+                            }`}
+                    >
+                        <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform ${account.is_pos_enabled ? 'translate-x-4' : 'translate-x-0.5'
+                            }`} />
+                    </button>
+                </div>
 
                 {/* Assigned Users */}
                 <div>
