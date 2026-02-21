@@ -307,11 +307,7 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
 
             <ConfirmDialog
                 open={deleteTarget !== null}
-<<<<<<< HEAD
-                onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
-=======
                 onOpenChange={(open: boolean) => { if (!open) setDeleteTarget(null) }}
->>>>>>> update-modules
                 onConfirm={handleDeleteRole}
                 title="Delete Role?"
                 description="This will permanently remove this role. Users assigned to it may lose their permissions."

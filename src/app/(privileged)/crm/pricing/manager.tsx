@@ -408,11 +408,7 @@ export default function PricingManager({
 
             <ConfirmDialog
                 open={deleteTarget !== null}
-<<<<<<< HEAD
-                onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
-=======
                 onOpenChange={(open: boolean) => { if (!open) setDeleteTarget(null) }}
->>>>>>> update-modules
                 onConfirm={handleConfirmDelete}
                 title={deleteTarget?.title ?? ''}
                 description={deleteTarget?.description ?? ''}

@@ -176,11 +176,7 @@ export function RegistrationQueue({ initialUsers }: { initialUsers: Record<strin
                 </Card>
             ))}
 
-<<<<<<< HEAD
-            <Dialog open={correctionModal.open} onOpenChange={(open) => setCorrectionModal({ open, userId: open ? correctionModal.userId : null })}>
-=======
             <Dialog open={correctionModal.open} onOpenChange={(open: boolean) => setCorrectionModal({ open, userId: open ? correctionModal.userId : null })}>
->>>>>>> update-modules
                 <DialogContent className="max-w-md bg-white rounded-[2rem] p-8 border-none shadow-2xl">
                     <DialogHeader>
                         <DialogTitle className="text-2xl font-black text-gray-900 uppercase tracking-tighter">Request Correction</DialogTitle>
@@ -219,11 +215,7 @@ export function RegistrationQueue({ initialUsers }: { initialUsers: Record<strin
 
             <ConfirmDialog
                 open={pendingRejectId !== null}
-<<<<<<< HEAD
-                onOpenChange={(open) => { if (!open) setPendingRejectId(null) }}
-=======
                 onOpenChange={(open: boolean) => { if (!open) setPendingRejectId(null) }}
->>>>>>> update-modules
                 onConfirm={() => {
                     if (pendingRejectId) handleReject(pendingRejectId)
                     setPendingRejectId(null)

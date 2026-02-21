@@ -455,11 +455,7 @@ export default function QuotationManager({
             )}
             <ConfirmDialog
                 open={deleteTarget !== null}
-<<<<<<< HEAD
-                onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
-=======
                 onOpenChange={(open: boolean) => { if (!open) setDeleteTarget(null) }}
->>>>>>> update-modules
                 onConfirm={handleDelete}
                 title="Delete Quotation?"
                 description="This will permanently remove this quotation and all its line items."

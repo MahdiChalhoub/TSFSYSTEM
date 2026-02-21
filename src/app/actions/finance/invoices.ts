@@ -140,8 +140,6 @@ export async function deleteInvoiceLine(lineId: number | string) {
     revalidatePath('/finance/invoices')
     return result
 }
-<<<<<<< HEAD
-=======
 
 // ─── Lifecycle Actions ──────────────────────────────────────────
 
@@ -184,4 +182,3 @@ export async function confirmInvoice(id: number | string, comment?: string) {
 export async function getInvoiceHistory(id: number | string) {
     return await erpFetch(`invoices/${id}/lifecycle_history/`)
 }
->>>>>>> update-modules

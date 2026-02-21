@@ -114,8 +114,6 @@ export async function recordPaymentForInvoice(invoiceId: number | string, data: 
     revalidatePath('/finance/payments')
     return result
 }
-<<<<<<< HEAD
-=======
 
 // ─── Lifecycle Actions ──────────────────────────────────────────
 
@@ -158,4 +156,3 @@ export async function confirmPayment(id: number | string, comment?: string) {
 export async function getPaymentHistory(id: number | string) {
     return await erpFetch(`payments/${id}/lifecycle_history/`)
 }
->>>>>>> update-modules

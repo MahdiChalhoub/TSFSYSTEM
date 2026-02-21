@@ -563,11 +563,7 @@ export default function OrganizationsPage() {
 
             <ConfirmDialog
                 open={pendingDeleteOrg !== null}
-<<<<<<< HEAD
-                onOpenChange={(open) => { if (!open) setPendingDeleteOrg(null) }}
-=======
                 onOpenChange={(open: boolean) => { if (!open) setPendingDeleteOrg(null) }}
->>>>>>> update-modules
                 onConfirm={() => {
                     if (pendingDeleteOrg) handleDelete(pendingDeleteOrg)
                     setPendingDeleteOrg(null)

@@ -47,13 +47,10 @@ export interface JournalEntry {
     total_debit: number
     total_credit: number
     lines: JournalLine[]
-<<<<<<< HEAD
-=======
     lifecycle_status?: string
     locked_by_name?: string
     locked_at?: string
     current_verification_level?: number
->>>>>>> update-modules
     created_at?: string
     created_by?: string
     [key: string]: unknown
@@ -144,13 +141,10 @@ export interface Payment {
     account_name?: string
     payment_account_id?: number
     notes?: string
-<<<<<<< HEAD
-=======
     lifecycle_status?: string
     locked_by_name?: string
     locked_at?: string
     current_verification_level?: number
->>>>>>> update-modules
     [key: string]: unknown
 }
 
@@ -539,13 +533,10 @@ export interface SalesOrder {
     created_at?: string
     items?: SalesOrderLine[]
     lines?: Record<string, unknown>[]
-<<<<<<< HEAD
-=======
     lifecycle_status?: string
     locked_by_name?: string
     locked_at?: string
     current_verification_level?: number
->>>>>>> update-modules
     [key: string]: unknown
 }
 

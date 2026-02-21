@@ -13,15 +13,10 @@ import Link from "next/link"
 import {
     ShoppingCart, Download, Printer, FileText, Search,
     Filter, Calendar, ChevronRight, User, Hash, MoreVertical,
-<<<<<<< HEAD
-    History as HistoryIcon
-} from "lucide-react"
-=======
     History as HistoryIcon, Lock, Unlock, ShieldCheck, CheckCircle2, Clock
 } from "lucide-react"
 import { lockOrder, unlockOrder, verifyOrder, confirmOrder, getOrderHistory } from "@/app/actions/pos/orders"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
->>>>>>> update-modules
 
 function fmt(n: number) {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
@@ -41,11 +36,6 @@ const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
     RETURN: { label: 'Return', color: 'text-rose-600' },
 }
 
-<<<<<<< HEAD
-export default function OrderHistoryPage() {
-    const [orders, setOrders] = useState<SalesOrder[]>([])
-    const [loading, setLoading] = useState(true)
-=======
 interface TransactionHistory {
     action: string;
     comment?: string;
@@ -68,7 +58,6 @@ export default function OrderHistoryPage() {
     const [historyOpen, setHistoryOpen] = useState(false)
     const [historyData, setHistoryData] = useState<TransactionHistory[]>([])
     const [selectedOrder, setSelectedOrder] = useState<any>(null)
->>>>>>> update-modules
     const [filters, setFilters] = useState({
         search: '',
         type: 'ALL',
@@ -115,8 +104,6 @@ export default function OrderHistoryPage() {
         }
     }
 
-<<<<<<< HEAD
-=======
     // ── Lifecycle Handlers ──────────────────────
     async function handleLock(id: number) {
         setIsPending(true)
@@ -150,7 +137,6 @@ export default function OrderHistoryPage() {
         } catch { toast.error("Failed to load history") }
     }
 
->>>>>>> update-modules
     const filtered = orders.filter(o => {
         const matchesSearch = !filters.search ||
             o.ref_code?.toLowerCase().includes(filters.search.toLowerCase()) ||
@@ -246,11 +232,7 @@ export default function OrderHistoryPage() {
                                 <TableCell colSpan={7} className="text-center py-20 text-gray-400 italic">No transactions found matching filters</TableCell>
                             </TableRow>
                         ) : (
-<<<<<<< HEAD
-                            filtered.map(order => (
-=======
                             filtered.map((order: SalesOrder) => (
->>>>>>> update-modules
                                 <TableRow key={order.id} className="group hover:bg-gray-50/50 transition-colors">
                                     <TableCell>
                                         <div className="font-bold text-gray-900">#{order.ref_code || order.id}</div>
@@ -267,11 +249,7 @@ export default function OrderHistoryPage() {
                                         </div>
                                     </TableCell>
                                     <TableCell>
-<<<<<<< HEAD
-                                        <div className={`text-xs font-black uppercase tracking-widest ${TYPE_CONFIG[order.type ?? '']?.color || ''}`}>
-=======
                                         <div className={`text-xs font-black uppercase tracking-widest ${TYPE_CONFIG[order.type || '']?.color || ''}`}>
->>>>>>> update-modules
                                             {order.type}
                                         </div>
                                     </TableCell>
@@ -284,11 +262,6 @@ export default function OrderHistoryPage() {
                                         </div>
                                     </TableCell>
                                     <TableCell>
-<<<<<<< HEAD
-                                        <Badge variant="outline" className={`text-[10px] font-bold uppercase tracking-tighter ${STATUS_CONFIG[order.status ?? '']?.color || ''}`}>
-                                            {STATUS_CONFIG[order.status ?? '']?.label || order.status}
-                                        </Badge>
-=======
                                         <div className="flex flex-col gap-1">
                                             <Badge variant="outline" className={`text-[10px] font-bold uppercase tracking-tighter ${STATUS_CONFIG[order.status || '']?.color || ''}`}>
                                                 {STATUS_CONFIG[order.status || '']?.label || order.status}
@@ -299,30 +272,11 @@ export default function OrderHistoryPage() {
                                                 </Badge>
                                             )}
                                         </div>
->>>>>>> update-modules
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className="font-black text-gray-900">{fmt(parseFloat(String(order.total_amount ?? 0)))}</div>
                                     </TableCell>
                                     <TableCell className="text-right">
-<<<<<<< HEAD
-                                        <div className="flex items-center justify-end gap-2 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button
-                                                onClick={() => downloadInvoice(order.id, String(order.ref_code || order.id))}
-                                                className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
-                                                title="Download Invoice PDF"
-                                            >
-                                                <FileText size={18} />
-                                            </button>
-                                            <button className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all shadow-sm">
-                                                <Printer size={18} />
-                                            </button>
-                                            <Link
-                                                href={`/sales/${order.id}`}
-                                                className="p-2 bg-gray-50 text-gray-400 rounded-lg hover:bg-gray-200 transition-all"
-                                            >
-                                                <ChevronRight size={18} />
-=======
                                         <div className="flex items-center justify-end gap-1 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
                                             {/* Standard Actions */}
                                             <button
@@ -388,7 +342,6 @@ export default function OrderHistoryPage() {
                                                 className="p-1.5 bg-gray-50 text-gray-400 rounded-lg hover:bg-gray-200 transition-all"
                                             >
                                                 <ChevronRight size={16} />
->>>>>>> update-modules
                                             </Link>
                                         </div>
                                     </TableCell>
@@ -398,8 +351,6 @@ export default function OrderHistoryPage() {
                     </TableBody>
                 </Table>
             </Card>
-<<<<<<< HEAD
-=======
 
             {/* ─── Unlock Comment Dialog ────────────────────────── */}
             <Dialog open={commentOpen} onOpenChange={setCommentOpen}>
@@ -438,7 +389,6 @@ export default function OrderHistoryPage() {
                     </div>
                 </DialogContent>
             </Dialog>
->>>>>>> update-modules
         </div>
     )
 }

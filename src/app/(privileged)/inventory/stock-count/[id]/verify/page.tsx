@@ -354,11 +354,7 @@ export default function VerifyPage() {
 
             <ConfirmDialog
                 open={pendingAction !== null}
-<<<<<<< HEAD
-                onOpenChange={(open) => { if (!open) setPendingAction(null) }}
-=======
                 onOpenChange={(open: boolean) => { if (!open) setPendingAction(null) }}
->>>>>>> update-modules
                 onConfirm={handleConfirmAction}
                 title={pendingAction?.title ?? ''}
                 description={pendingAction?.description ?? ''}
