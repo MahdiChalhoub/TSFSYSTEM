@@ -129,8 +129,8 @@ class SaaSConfigView(APIView):
         orgs = Organization.objects.filter(is_active=True).values('id', 'name', 'slug')
         return Response({
             "organizations": list(orgs),
-            "platform_name": "TSF City",
-            "version": "1.2.3-b007"
+            "platform_name": "Enterprise ERP",
+            "version": "2.8.0"
         })
 
 class SaaSDashboardStatsView(APIView):
@@ -203,5 +203,7 @@ class UserViewSet(TenantModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+from django.http import JsonResponse
+
 def health_check(request):
-    return Response({"status": "healthy", "engine": "Blanc v1.0.0"})
+    return JsonResponse({"status": "healthy", "engine": "Blanc v1.0.0"})

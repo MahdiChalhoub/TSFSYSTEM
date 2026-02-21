@@ -4,6 +4,16 @@ import { headers } from 'next/headers';
 // Use 127.0.0.1 to avoid IPv6 resolution issues with localhost on Windows/Node 18+
 const DJANGO_URL = process.env.DJANGO_URL || 'http://127.0.0.1:8000';
 
+export class ErpApiError extends Error {
+    status: number;
+    data: any;
+    constructor(status: number, data: any) {
+        super(`ERP API Error ${status}`);
+        this.status = status;
+        this.data = data;
+    }
+}
+
 export async function getTenantContext() {
     const headerList = await headers();
     const host = headerList.get('host') || 'localhost:3000';

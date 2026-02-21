@@ -37,12 +37,8 @@ export default async function middleware(req: NextRequest) {
         // If on saas. domain, everything is an admin/saas route
         // If on saas. domain, everything is an admin/saas route
         if (isSaaSSubdomain) {
-            // Special handling for login
-            if (url.pathname === '/login' || url.pathname === '/') {
-                return NextResponse.rewrite(new URL(`/saas/login`, req.url));
-            }
             // Standard paths go to /saas/...
-            if (!url.pathname.startsWith('/admin') && !url.pathname.startsWith('/saas')) {
+            if (!url.pathname.startsWith('/admin') && !url.pathname.startsWith('/saas') && !url.pathname.startsWith('/login')) {
                 return NextResponse.rewrite(new URL(`/saas${path}`, req.url));
             }
         }

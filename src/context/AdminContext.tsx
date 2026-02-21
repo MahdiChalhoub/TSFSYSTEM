@@ -19,11 +19,21 @@ type AdminContextType = {
     clearTabs: () => void;
     viewScope: 'OFFICIAL' | 'INTERNAL';
     setViewScope: (scope: 'OFFICIAL' | 'INTERNAL') => void;
+    canToggleScope: boolean;
+    scopeAccess: 'OFFICIAL' | 'INTERNAL';
 };
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
-export function AdminProvider({ children, contextKey = 'default' }: { children: React.ReactNode, contextKey?: string }) {
+export function AdminProvider({
+    children,
+    contextKey = 'default',
+    initialScopeAccess = 'INTERNAL'
+}: {
+    children: React.ReactNode,
+    contextKey?: string,
+    initialScopeAccess?: 'OFFICIAL' | 'INTERNAL'
+}) {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [openTabs, setOpenTabs] = useState<Tab[]>([]);
     const [viewScope, setViewScope] = useState<'OFFICIAL' | 'INTERNAL'>('INTERNAL');
@@ -129,7 +139,9 @@ export function AdminProvider({ children, contextKey = 'default' }: { children: 
             closeTab,
             clearTabs,
             viewScope,
-            setViewScope: handleSetViewScope
+            setViewScope: handleSetViewScope,
+            canToggleScope: true, // For local dev, allow toggle
+            scopeAccess: initialScopeAccess
         }}>
             {children}
         </AdminContext.Provider>
