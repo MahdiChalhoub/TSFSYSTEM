@@ -272,3 +272,47 @@ def run_scheduled_reports():
 
     logger.info(f"[Task] run_scheduled_reports: {executed} reports executed")
     return {'executed': executed}
+
+
+# ── On-Demand Report Execution (Background) ──────────────────
+
+@shared_task(name='erp.tasks.run_report_async', bind=True, max_retries=2)
+def run_report_async(self, report_def_id, organization_id, export_format='EXCEL'):
+    """
+    Run a report in the background and store the result.
+    Called from ReportViewSet.run with background=True.
+    """
+    try:
+        from apps.finance.report_models import ReportDefinition, ReportExecution
+        from apps.finance.report_service import ReportService
+
+        report_def = ReportDefinition.objects.get(pk=report_def_id)
+        service = ReportService(organization_id)
+        result = service.run_and_export(report_def, export_format=export_format)
+
+        # Record execution
+        ReportExecution.objects.create(
+            report=report_def,
+            organization_id=organization_id,
+            status='SUCCESS' if 'file_path' in result else 'FAILED',
+            row_count=result.get('row_count', 0),
+            file_path=result.get('file_path', ''),
+            error_message=result.get('error', ''),
+        )
+
+        logger.info(f"[Task] run_report_async: {report_def.name} completed ({result.get('row_count', 0)} rows)")
+        return result
+
+    except Exception as exc:
+        logger.error(f"[Task] run_report_async failed: {exc}")
+        try:
+            from apps.finance.report_models import ReportDefinition, ReportExecution
+            ReportExecution.objects.create(
+                report_id=report_def_id,
+                organization_id=organization_id,
+                status='FAILED',
+                error_message=str(exc),
+            )
+        except Exception:
+            pass
+        raise self.retry(exc=exc, countdown=30)
