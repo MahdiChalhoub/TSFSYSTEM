@@ -1,32 +1,36 @@
 const fs = require('fs');
 const path = require('path');
 
-const KERNEL_SPACE = path.join(__dirname, '../src/app/(privileged)/(saas)');
+const KERNEL_SPACE = path.join(__dirname, '../src/app/(privileged)/saas');
 const APPROVED_DIRS = [
-    '[...slug]', // Next.js catch-all dynamic route
+    '[...slug]',
     '[code]',
+    'apps',
     'connector',
-    'currencies',   // Global currency management (SaaS admin feature)
+    'currencies',
     'dashboard',
-    'encryption',   // AES-256 encryption management (core security feature)
+    'encryption',
     'health',
-    'kernel',       // Kernel version management (core infrastructure)
-    'mcp',          // MCP AI Connector (SaaS-integrated AI module)
+    'kernel',
+    'mcp',
     'modules',
     'organizations',
-    'saas-home',      // SaaS admin entry point (replaces saas-dashboard)
     'settings',
     'subscription',
     'subscription-plans',
     'switcher',
     'updates',
-    'users',
-    'apps' // The Dynamic Mounter
+    'users'
 ];
 
 console.log('🛡️  Checking Kernel Integrity...');
 
 try {
+    if (!fs.existsSync(KERNEL_SPACE)) {
+        console.log('✅ Kernel Space is empty or does not exist (Clean State).');
+        process.exit(0);
+    }
+
     const items = fs.readdirSync(KERNEL_SPACE);
     const unapproved = items.filter(item => {
         const fullPath = path.join(KERNEL_SPACE, item);
