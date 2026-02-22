@@ -21,6 +21,7 @@ const TYPE_BADGE: Record<string, string> = {
 }
 
 export default function PayrollSummaryPage() {
+    const { fmt } = useCurrency()
     const [employees, setEmployees] = useState<Employee[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')

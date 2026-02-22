@@ -16,6 +16,7 @@ import { ArrowLeft, RotateCcw, AlertCircle, ShoppingBag, CheckCircle2 } from "lu
 import Link from "next/link"
 
 function CreateReturnForm() {
+    const { fmt } = useCurrency()
     const searchParams = useSearchParams()
     const router = useRouter()
     const orderId = searchParams.get('order_id')

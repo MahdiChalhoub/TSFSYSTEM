@@ -30,6 +30,7 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 export default function ContactDetailPage() {
+    const { fmt } = useCurrency()
     const params = useParams()
     const router = useRouter()
     const [data, setData] = useState<ContactSummaryData | null>(null)

@@ -25,6 +25,7 @@ const SEVERITY_CONFIG: Record<string, { color: string, bg: string, label: string
 type SortKey = 'product_name' | 'current_stock' | 'shortage' | 'restock_value'
 
 export default function LowStockPage() {
+    const { fmt } = useCurrency()
     const [data, setData] = useState<LowStockResponse | null>(null)
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
