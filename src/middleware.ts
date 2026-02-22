@@ -97,7 +97,7 @@ export default async function middleware(req: NextRequest) {
     // Skip for localhost/dev environments.
     const proto = req.headers.get('x-forwarded-proto') || 'https';
     const host = req.headers.get('host') || '';
-    const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
+    const isLocal = host.includes('localhost') || host.includes('127.0.0.1') || host.includes('0.0.0.0') || host.includes('.local');
 
     if (proto === 'http' && !isLocal) {
         const httpsUrl = new URL(req.url);
