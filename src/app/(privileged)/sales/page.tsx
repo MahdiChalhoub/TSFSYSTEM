@@ -3,13 +3,29 @@
 import { useState, useEffect } from 'react';
 import { ProductGrid } from '@/components/pos/ProductGrid';
 import { TicketSidebar } from '@/components/pos/TicketSidebar';
-import { Search } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 
 import { CartItem } from '@/types/pos';
+import { getCategories } from './actions';
 
 export default function POSPage() {
     const [cart, setCart] = useState<CartItem[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
+    const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
+    const [categories, setCategories] = useState<Array<{ id: number; name: string }>>([]);
+    const [categoriesLoading, setCategoriesLoading] = useState(true);
+
+    // Load actual categories from the database
+    useEffect(() => {
+        getCategories()
+            .then((data: any[]) => {
+                // Only show root-level or short list of categories for POS navigation
+                const cats = Array.isArray(data) ? data.slice(0, 12) : [];
+                setCategories(cats);
+            })
+            .catch(() => setCategories([]))
+            .finally(() => setCategoriesLoading(false));
+    }, []);
 
     // Add Item to Cart Logic
     const addToCart = (product: Record<string, any>) => {
@@ -65,21 +81,46 @@ export default function POSPage() {
                         </div>
                     </div>
 
+                    {/* Live Category Filter */}
                     <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                        <button className="px-5 py-2 bg-emerald-600 text-white shadow-lg shadow-emerald-900/20 rounded-xl font-medium text-sm transition-transform active:scale-95">
+                        <button
+                            onClick={() => setActiveCategoryId(null)}
+                            className={`px-5 py-2 rounded-xl font-medium text-sm transition-transform active:scale-95 whitespace-nowrap ${activeCategoryId === null
+                                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/20'
+                                    : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300'
+                                }`}
+                        >
                             All Items
                         </button>
-                        {['Fresh Produce', 'Dairy & Eggs', 'Beverages', 'Bakery', 'Snacks'].map((cat) => (
-                            <button key={cat} className="px-5 py-2 bg-white border border-gray-200 text-gray-600 font-medium text-sm hover:bg-gray-50 hover:border-gray-300 rounded-xl transition-all whitespace-nowrap active:scale-95">
-                                {cat}
-                            </button>
-                        ))}
+                        {categoriesLoading ? (
+                            <div className="flex items-center px-3 text-gray-400">
+                                <Loader2 size={14} className="animate-spin mr-1" />
+                                <span className="text-xs">Loading categories...</span>
+                            </div>
+                        ) : (
+                            categories.map((cat) => (
+                                <button
+                                    key={cat.id}
+                                    onClick={() => setActiveCategoryId(activeCategoryId === cat.id ? null : cat.id)}
+                                    className={`px-5 py-2 rounded-xl font-medium text-sm transition-all whitespace-nowrap active:scale-95 ${activeCategoryId === cat.id
+                                            ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/20'
+                                            : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300'
+                                        }`}
+                                >
+                                    {cat.name}
+                                </button>
+                            ))
+                        )}
                     </div>
                 </div>
 
                 {/* Grid */}
                 <div className="flex-1 overflow-y-auto p-5 custom-scrollbar">
-                    <ProductGrid searchQuery={searchQuery} onAddToCart={addToCart} />
+                    <ProductGrid
+                        searchQuery={searchQuery}
+                        onAddToCart={addToCart}
+                        categoryId={activeCategoryId}
+                    />
                 </div>
             </div>
 

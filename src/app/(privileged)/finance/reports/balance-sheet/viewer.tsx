@@ -21,8 +21,12 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
     }, [])
 
     const handleRefresh = () => {
+        const dateObj = new Date(asOfDate)
+        if (isNaN(dateObj.getTime())) {
+            return
+        }
         startTransition(async () => {
-            const report = await getBalanceSheetReport(new Date(asOfDate))
+            const report = await getBalanceSheetReport(dateObj)
             setData(report)
         })
     }

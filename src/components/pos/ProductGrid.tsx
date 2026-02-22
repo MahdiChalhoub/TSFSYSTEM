@@ -11,7 +11,7 @@ import { useOnlineStatus } from '@/lib/offline/hooks';
 const ITEMS_PER_LOAD = 50; // Load 50 products at a time
 const SEARCH_DEBOUNCE_MS = 300; // Wait 300ms after user stops typing
 
-export function ProductGrid({ searchQuery, onAddToCart }: { searchQuery: string, onAddToCart: (p: Record<string, any>) => void }) {
+export function ProductGrid({ searchQuery, onAddToCart, categoryId }: { searchQuery: string, onAddToCart: (p: Record<string, any>) => void, categoryId?: number | null }) {
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -110,7 +110,7 @@ export function ProductGrid({ searchQuery, onAddToCart }: { searchQuery: string,
             try {
                 setLoading(true);
                 setError(null);
-                const data = await getPosProducts({ limit: ITEMS_PER_LOAD });
+                const data = await getPosProducts({ limit: ITEMS_PER_LOAD, categoryId: categoryId ?? undefined });
                 setProducts(data);
                 setHasMore(data.length >= ITEMS_PER_LOAD);
                 setOfflineMode(false);
@@ -127,7 +127,7 @@ export function ProductGrid({ searchQuery, onAddToCart }: { searchQuery: string,
         };
 
         loadInitial();
-    }, [cacheToOffline, loadFromCache]);
+    }, [cacheToOffline, loadFromCache, categoryId]);
 
     // Handle search changes
     useEffect(() => {
@@ -136,7 +136,7 @@ export function ProductGrid({ searchQuery, onAddToCart }: { searchQuery: string,
         } else {
             // Reset to initial load when search is cleared
             setLoading(true);
-            getPosProducts({ limit: ITEMS_PER_LOAD })
+            getPosProducts({ limit: ITEMS_PER_LOAD, categoryId: categoryId ?? undefined })
                 .then(data => {
                     setProducts(data);
                     setHasMore(data.length >= ITEMS_PER_LOAD);
@@ -154,7 +154,7 @@ export function ProductGrid({ searchQuery, onAddToCart }: { searchQuery: string,
                 clearTimeout(searchTimeoutRef.current);
             }
         };
-    }, [searchQuery, debouncedSearch]);
+    }, [searchQuery, debouncedSearch, categoryId]);
 
     // Load more products
     const loadMore = useCallback(async () => {
