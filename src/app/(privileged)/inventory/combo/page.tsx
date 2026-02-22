@@ -1,4 +1,5 @@
 import { erpFetch } from '@/lib/erp-fetch'
+import { Package } from 'lucide-react'
 import ComboManager from './manager'
 
 interface Product {

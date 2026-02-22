@@ -29,11 +29,11 @@ export default async function CountryDetailPage({ params }: { params: Promise<{ 
                     <ChevronLeft size={24} />
                 </Link>
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                        <span className="w-10 h-10 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-lg font-bold text-indigo-700">{country.code}</span>
+                    <h1 className="text-4xl font-black text-gray-900 tracking-tighter flex items-center gap-4">
+                        <span className="w-14 h-14 rounded-2xl bg-indigo-600 flex items-center justify-center text-lg font-black text-white shadow-lg shadow-indigo-200">{country.code}</span>
                         {country.name}
                     </h1>
-                    <p className="text-gray-500 mt-1">Inventory breakdown by Brand.</p>
+                    <p className="text-gray-500 mt-2">Inventory breakdown by Brand.</p>
                 </div>
             </div>
 

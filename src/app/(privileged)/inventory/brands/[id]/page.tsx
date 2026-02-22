@@ -49,8 +49,11 @@ export default async function BrandDetailPage({ params }: { params: Promise<{ id
                 <Link href="/inventory/brands" className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                     <ChevronLeft size={24} />
                 </Link>
+                <div className="w-14 h-14 rounded-2xl bg-purple-600 flex items-center justify-center shadow-lg shadow-purple-200">
+                    <Globe size={28} className="text-white" />
+                </div>
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">{brand.name}</h1>
+                    <h1 className="text-4xl font-black text-gray-900 tracking-tighter">{brand.name}</h1>
                     {brand.short_name && <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded text-gray-600">{brand.short_name}</span>}
                 </div>
             </div>

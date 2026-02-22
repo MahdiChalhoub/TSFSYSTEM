@@ -74,7 +74,12 @@ export default async function MaintenancePage(props: {
                         <ArrowLeft size={20} />
                     </Link>
                     <div>
-                        <h1 className="text-xl font-bold text-gray-900">Inventory Maintenance</h1>
+                        <div className="w-14 h-14 rounded-2xl bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
+                            <Layers size={28} className="text-white" />
+                        </div>
+                    </div>
+                    <div>
+                        <h1 className="text-4xl font-black text-gray-900 tracking-tighter">Inventory <span className="text-emerald-600">Maintenance</span></h1>
                         <p className="text-sm text-gray-500">Reorganize your inventory structure.</p>
                     </div>
                 </div>

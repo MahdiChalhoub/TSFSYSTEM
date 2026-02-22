@@ -60,6 +60,7 @@ export interface POSLayoutProps {
     onSetActiveSessionId: (id: string) => void;
     onSetPaymentMethod: (m: string) => void;
     onSetCashReceived: (v: string) => void;
+    onSetDiscount: (v: number) => void;
     onSetOverrideOpen: (v: boolean) => void;
     onSetReceiptOpen: (v: boolean) => void;
     onAddToCart: (product: Record<string, any>) => void;

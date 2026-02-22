@@ -41,11 +41,14 @@ export function POSLayoutModern(props: POSLayoutProps) {
         isFullscreen, paymentMethod, cashReceived, isProcessing,
         isOverrideOpen, isReceiptOpen, lastOrder,
         onSetSearchQuery, onSetActiveCategoryId, onSetActiveSessionId,
-        onSetPaymentMethod, onSetCashReceived, onAddToCart, onUpdateQuantity,
+        onSetPaymentMethod, onSetCashReceived, onSetDiscount, onAddToCart, onUpdateQuantity,
         onClearCart, onCreateNewSession, onRemoveSession, onUpdateActiveSession,
         onToggleFullscreen, onCycleSidebarMode, onCharge,
         onSetOverrideOpen, onSetReceiptOpen, onOpenLayoutSelector
     } = props;
+
+    const receivedAmount = Number(cashReceived) || 0;
+    const changeDue = receivedAmount > totalAmount ? receivedAmount - totalAmount : 0;
 
     const [leftExpanded, setLeftExpanded] = useState(false);
 
@@ -341,39 +344,78 @@ export function POSLayoutModern(props: POSLayoutProps) {
                         )}
                     </div>
 
-                    {/* Cart Footer — Totals + Charge (always visible) */}
-                    <div className="border-t border-gray-200 bg-white px-5 py-3 shrink-0">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-6">
-                                <div className="text-center">
-                                    <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Subtotal</p>
-                                    <p className="text-sm font-black tabular-nums text-gray-600">{currency}{total.toFixed(2)}</p>
+                    {/* Cart Footer — Totals + Cash Received + Charge */}
+                    <div className="border-t border-gray-200 bg-white px-5 py-3 shrink-0 space-y-2.5">
+                        {/* Row 1: Subtotal, Discount input, Cash Received, Change */}
+                        <div className="flex items-end gap-4">
+                            {/* Subtotal */}
+                            <div className="shrink-0">
+                                <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest mb-1">Subtotal</p>
+                                <p className="text-sm font-black tabular-nums text-gray-700 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">{currency}{total.toFixed(2)}</p>
+                            </div>
+                            {/* Discount — Editable */}
+                            <div className="shrink-0 w-28">
+                                <p className="text-[7px] font-black text-amber-500 uppercase tracking-widest mb-1">Discount</p>
+                                <div className="relative">
+                                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-amber-400 text-xs font-bold">{currency}</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        value={discount || ''}
+                                        onChange={(e) => onSetDiscount(Math.max(0, Number(e.target.value) || 0))}
+                                        placeholder="0.00"
+                                        className="w-full pl-7 pr-2 py-1.5 bg-amber-50 border border-amber-200 rounded-lg text-sm font-black tabular-nums text-amber-700 outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-200 transition-all"
+                                    />
                                 </div>
-                                {discount > 0 && (
-                                    <div className="text-center">
-                                        <p className="text-[8px] font-bold text-amber-500 uppercase tracking-widest">Discount</p>
-                                        <p className="text-sm font-black tabular-nums text-amber-600">-{currency}{discount.toFixed(2)}</p>
-                                    </div>
+                            </div>
+                            {/* Cash Received — Editable */}
+                            <div className="shrink-0 w-32">
+                                <p className="text-[7px] font-black text-indigo-500 uppercase tracking-widest mb-1">Cash Received</p>
+                                <div className="relative">
+                                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-indigo-400 text-xs font-bold">{currency}</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        value={cashReceived}
+                                        onChange={(e) => onSetCashReceived(e.target.value)}
+                                        placeholder={totalAmount.toFixed(2)}
+                                        className="w-full pl-7 pr-2 py-1.5 bg-indigo-50 border border-indigo-200 rounded-lg text-sm font-black tabular-nums text-indigo-700 outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200 transition-all"
+                                    />
+                                </div>
+                            </div>
+                            {/* Change Due */}
+                            <div className="shrink-0">
+                                <p className="text-[7px] font-black text-emerald-500 uppercase tracking-widest mb-1">Change</p>
+                                <p className={clsx(
+                                    "text-sm font-black tabular-nums px-3 py-1.5 rounded-lg border",
+                                    changeDue > 0
+                                        ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                                        : "bg-gray-50 border-gray-100 text-gray-400"
+                                )}>{currency}{changeDue.toFixed(2)}</p>
+                            </div>
+
+                            {/* Spacer */}
+                            <div className="flex-1" />
+
+                            {/* Total + Charge */}
+                            <div className="text-right shrink-0">
+                                <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest mb-1">Total</p>
+                                <p className="text-xl font-black tabular-nums text-gray-900">{currency}{totalAmount.toFixed(2)}</p>
+                            </div>
+                            <button
+                                onClick={onCharge}
+                                disabled={cart.length === 0 || isProcessing}
+                                className={clsx(
+                                    "py-3 px-8 rounded-xl text-xs font-black uppercase tracking-widest transition-all shrink-0",
+                                    cart.length > 0 && !isProcessing
+                                        ? "bg-violet-600 text-white shadow-lg shadow-violet-200 hover:bg-violet-700 active:scale-[0.98]"
+                                        : "bg-gray-100 text-gray-300 cursor-not-allowed"
                                 )}
-                            </div>
-                            <div className="flex items-center gap-4">
-                                <div className="text-right">
-                                    <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Total</p>
-                                    <p className="text-xl font-black tabular-nums text-gray-900">{currency}{totalAmount.toFixed(2)}</p>
-                                </div>
-                                <button
-                                    onClick={onCharge}
-                                    disabled={cart.length === 0 || isProcessing}
-                                    className={clsx(
-                                        "py-3 px-8 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
-                                        cart.length > 0 && !isProcessing
-                                            ? "bg-violet-600 text-white shadow-lg shadow-violet-200 hover:bg-violet-700 active:scale-[0.98]"
-                                            : "bg-gray-100 text-gray-300 cursor-not-allowed"
-                                    )}
-                                >
-                                    {isProcessing ? 'Processing...' : `Charge ${currency}${totalAmount.toFixed(2)}`}
-                                </button>
-                            </div>
+                            >
+                                {isProcessing ? 'Processing...' : `Charge ${currency}${totalAmount.toFixed(2)}`}
+                            </button>
                         </div>
                     </div>
                 </main>

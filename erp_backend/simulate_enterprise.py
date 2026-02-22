@@ -487,8 +487,10 @@ def simulate():
             Attendance.objects.bulk_create(att_batch, ignore_conflicts=True)
 
         # ─── 2. DAILY: Sales Orders + Invoices + Payments ────────
-        for store_wh in [w for w in whs if w.type == 'STORE']:
-            daily_count = random.randint(3, 5)
+        store_whs = [w for w in whs if w.type == 'STORE']
+        active_store = store_whs[cur_date.toordinal() % len(store_whs)]
+        for store_wh in [active_store]:
+            daily_count = random.randint(2, 3)
             batch_refs = get_ref_batch(org, 'ORD', daily_count)
             inv_refs = get_ref_batch(org, 'INV', daily_count)
             pay_refs = get_ref_batch(org, 'PAY', daily_count)
@@ -588,15 +590,14 @@ def simulate():
                     reference=ref, site=store_wh.site
                 )
 
-        # ─── 3. WEEKLY: Purchase Restocks + Purchase Invoices (Mondays) ──
-        if cur_date.weekday() == 0:
-            for wh in [w for w in whs if w.type == 'GENERAL']:
-                batch_refs = get_ref_batch(org, 'PO', 2)
-                pinv_refs = get_ref_batch(org, 'PINV', 2)
-                ppay_refs = get_ref_batch(org, 'PPAY', 2)
-
-                for k in range(2):
-                    ref = batch_refs[k]
+        # ─── 3. BI-WEEKLY: Purchase Restocks + Purchase Invoices ──
+        if cur_date.weekday() == 0 and cur_date.day <= 14:
+            gen_whs_list = [w for w in whs if w.type == 'GENERAL']
+            wh = gen_whs_list[cur_date.month % len(gen_whs_list)]
+            for k in range(1):
+                    ref = get_ref_batch(org, 'PO', 1)[0]
+                    pinv_ref = get_ref_batch(org, 'PINV', 1)[0]
+                    ppay_ref = get_ref_batch(org, 'PPAY', 1)[0]
                     sup = random.choice(suppliers)
                     order = Order.objects.create(
                         organization=org, type='PURCHASE', status='DRAFT',
@@ -641,7 +642,7 @@ def simulate():
                     tax_amt = total_ttc - total_ht
                     pinv = Invoice.objects.create(
                         organization=org, type='PURCHASE',
-                        invoice_number=pinv_refs[k],
+                        invoice_number=pinv_ref,
                         contact=sup, contact_name=sup.name,
                         site=wh.site, source_order=order,
                         issue_date=cur_date, due_date=cur_date + timedelta(days=30),
@@ -671,41 +672,39 @@ def simulate():
                         contact=sup, amount=total_ttc,
                         payment_date=cur_date + timedelta(days=random.randint(7, 30)),
                         method=random.choice(['BANK', 'CHECK']),
-                        reference=ppay_refs[k],
+                        reference=ppay_ref,
                         description=f"Payment for {ref}",
                         supplier_invoice=order, invoice=pinv,
                         payment_account=fa_bank,
                         status='POSTED'
                     )
 
-        # ─── 4. WEEKLY: Stock Transfers (Fridays) ────────────────
-        if cur_date.weekday() == 4:
-            gen_whs = [w for w in whs if w.type == 'GENERAL']
-            store_whs = [w for w in whs if w.type == 'STORE']
-            for src in gen_whs:
-                for dest in store_whs:
-                    trf_ref = get_ref_batch(org, 'TRF', 1)[0]
-                    trf_order = StockTransferOrder.objects.create(
-                        organization=org, reference=trf_ref, date=cur_date,
-                        from_warehouse=src, to_warehouse=dest,
-                        reason='Weekly replenishment', is_posted=True,
-                        lifecycle_status='CONFIRMED')
-                    total_qty = 0
-                    for _ in range(random.randint(2, 4)):
-                        p = random.choice(products)
-                        qty = random.randint(10, 30)
-                        inv_src, _ = Inventory.objects.get_or_create(warehouse=src, product=p, organization=org)
-                        if Decimal(str(inv_src.quantity)) >= Decimal(qty):
-                            inv_src.quantity = Decimal(str(inv_src.quantity)) - Decimal(qty)
-                            inv_src.save()
-                            inv_dest, _ = Inventory.objects.get_or_create(warehouse=dest, product=p, organization=org)
-                            inv_dest.quantity = Decimal(str(inv_dest.quantity)) + Decimal(qty)
-                            inv_dest.save()
-                            StockTransferLine.objects.create(order=trf_order, product=p, qty_transferred=qty, from_warehouse=src, to_warehouse=dest)
-                            total_qty += qty
-                            InventoryMovement.objects.create(organization=org, product=p, warehouse=src, type='TRANSFER', quantity=-qty, reference=trf_ref, created_at=current_time)
-                            InventoryMovement.objects.create(organization=org, product=p, warehouse=dest, type='TRANSFER', quantity=qty, reference=trf_ref, created_at=current_time)
-                    StockTransferOrder.objects.filter(id=trf_order.id).update(total_qty_transferred=total_qty, created_at=current_time)
+        # ─── 4. BI-WEEKLY: Stock Transfers (1st & 3rd Fridays) ────
+        if cur_date.weekday() == 4 and cur_date.day <= 14:
+            gen_whs_list2 = [w for w in whs if w.type == 'GENERAL']
+            store_whs_list2 = [w for w in whs if w.type == 'STORE']
+            src = random.choice(gen_whs_list2)
+            dest = random.choice(store_whs_list2)
+            trf_ref = get_ref_batch(org, 'TRF', 1)[0]
+            trf_order = StockTransferOrder.objects.create(
+                organization=org, reference=trf_ref, date=cur_date,
+                from_warehouse=src, to_warehouse=dest,
+                reason='Replenishment', is_posted=True,
+                lifecycle_status='CONFIRMED')
+            total_qty = 0
+            for _ in range(random.randint(2, 3)):
+                p = random.choice(products)
+                qty = random.randint(10, 20)
+                inv_src, _ = Inventory.objects.get_or_create(warehouse=src, product=p, organization=org)
+                if Decimal(str(inv_src.quantity)) >= Decimal(qty):
+                    inv_src.quantity = Decimal(str(inv_src.quantity)) - Decimal(qty)
+                    inv_src.save()
+                    inv_dest, _ = Inventory.objects.get_or_create(warehouse=dest, product=p, organization=org)
+                    inv_dest.quantity = Decimal(str(inv_dest.quantity)) + Decimal(qty)
+                    inv_dest.save()
+                    StockTransferLine.objects.create(order=trf_order, product=p, qty_transferred=qty, from_warehouse=src, to_warehouse=dest)
+                    total_qty += qty
+            StockTransferOrder.objects.filter(id=trf_order.id).update(total_qty_transferred=total_qty, created_at=current_time)
 
         # ─── 5. BI-WEEKLY: Stock Adjustments ─────────────────────
         if cur_date.day in (15, 28):
