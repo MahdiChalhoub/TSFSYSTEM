@@ -18,6 +18,7 @@ import {
 } from "lucide-react"
 
 export default function BankReconciliationPage() {
+    const { fmt } = useCurrency()
     const [accounts, setAccounts] = useState<FinancialAccount[]>([])
     const [detail, setDetail] = useState<Record<string, unknown> | null>(null)
     const [loading, setLoading] = useState(true)

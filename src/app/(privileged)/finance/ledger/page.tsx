@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { getLedgerEntries } from '@/app/actions/finance/ledger'
 import { getFiscalYears } from '@/app/actions/finance/fiscal-year'
 import { LedgerEntryActions } from './ledger-actions'
+import { useCurrency } from '@/lib/utils/currency'
 import Link from 'next/link'
 import { Search, Filter, Calendar, BookOpen, ChevronDown } from 'lucide-react'
 
@@ -30,6 +31,7 @@ function getStatusStyle(status: string) {
 }
 
 export default function GeneralLedgerPage() {
+    const { fmt } = useCurrency()
     const [entries, setEntries] = useState<Record<string, any>[]>([])
     const [fiscalYears, setFiscalYears] = useState<Record<string, any>[]>([])
     const [loading, setLoading] = useState(true)
@@ -235,10 +237,10 @@ export default function GeneralLedgerPage() {
                                                     {line.account?.name}
                                                 </div>
                                                 <div className="col-span-3 text-right text-xs font-mono text-stone-900">
-                                                    {Number(line.debit) > 0 ? Number(line.debit).toLocaleString('en-US', { minimumFractionDigits: 2 }) : ''}
+                                                    {Number(line.debit) > 0 ? fmt(Number(line.debit)) : ''}
                                                 </div>
                                                 <div className="col-span-3 text-right text-xs font-mono text-stone-900">
-                                                    {Number(line.credit) > 0 ? Number(line.credit).toLocaleString('en-US', { minimumFractionDigits: 2 }) : ''}
+                                                    {Number(line.credit) > 0 ? fmt(Number(line.credit)) : ''}
                                                 </div>
                                             </div>
                                         ))}

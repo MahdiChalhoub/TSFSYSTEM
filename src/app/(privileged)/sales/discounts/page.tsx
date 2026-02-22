@@ -31,6 +31,7 @@ const SCOPE_CONFIG: Record<string, { label: string; icon: Record<string, any> }>
 }
 
 export default function DiscountRulesPage() {
+    const { fmt } = useCurrency()
     const [rules, setRules] = useState<DiscountRule[]>([])
     const [loading, setLoading] = useState(true)
     const [showForm, setShowForm] = useState(false)

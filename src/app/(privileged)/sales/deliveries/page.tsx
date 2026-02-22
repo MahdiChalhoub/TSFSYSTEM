@@ -25,6 +25,7 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; icon: Record<st
 }
 
 export default function DeliveryOrdersPage() {
+    const { fmt } = useCurrency()
     const [deliveries, setDeliveries] = useState<DeliveryOrder[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')

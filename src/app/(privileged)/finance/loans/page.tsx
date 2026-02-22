@@ -4,11 +4,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import Link from "next/link"
 import { format } from "date-fns"
-
+import { erpFetch } from "@/lib/erp-api"
 import { serialize } from "@/lib/utils/serialization"
 
+async function getOrgCurrency(): Promise<string> {
+    try {
+        const orgs = await erpFetch('organizations/')
+        const org = Array.isArray(orgs) ? orgs[0] : orgs
+        return org?.currency || org?.settings?.currency || 'USD'
+    } catch { return 'USD' }
+}
+
 export default async function LoansPage() {
-    const rawLoans = await getLoans()
+    const [rawLoans, currency] = await Promise.all([getLoans(), getOrgCurrency()])
     const loans = serialize(rawLoans)
 
     return (
@@ -42,7 +50,7 @@ export default async function LoansPage() {
                                 <TableRow key={loan.id}>
                                     <TableCell>{format(loan.startDate, "PPP")}</TableCell>
                                     <TableCell className="font-medium">{loan.contact.name}</TableCell>
-                                    <TableCell className="text-right">{Number(loan.principalAmount).toLocaleString()} USD</TableCell>
+                                    <TableCell className="text-right">{Number(loan.principalAmount).toLocaleString()} {currency}</TableCell>
                                     <TableCell className="text-right">{Number(loan.interestRate)}%</TableCell>
                                     <TableCell>{loan.termMonths} Months</TableCell>
                                     <TableCell>

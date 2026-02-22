@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 
 export default function DeliveryZonesPage() {
+    const { fmt } = useCurrency()
     const [zones, setZones] = useState<DeliveryZone[]>([])
     const [loading, setLoading] = useState(true)
     const [showForm, setShowForm] = useState(false)

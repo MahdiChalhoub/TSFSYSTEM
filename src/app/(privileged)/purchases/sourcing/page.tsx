@@ -7,6 +7,14 @@ import Link from "next/link";
 
 export const dynamic = 'force-dynamic';
 
+async function getOrgCurrency(): Promise<string> {
+    try {
+        const orgs = await erpFetch('organizations/')
+        const org = Array.isArray(orgs) ? orgs[0] : orgs
+        return org?.currency || org?.settings?.currency || 'USD'
+    } catch { return 'USD' }
+}
+
 async function getSourcingData() {
     try {
         return await erpFetch('sourcing/comparison/');
@@ -17,7 +25,7 @@ async function getSourcingData() {
 }
 
 export default async function SourcingDashboardPage() {
-    const data = await getSourcingData();
+    const [data, currency] = await Promise.all([getSourcingData(), getOrgCurrency()]);
 
     const stats = {
         totalProducts: data.length,
@@ -44,7 +52,7 @@ export default async function SourcingDashboardPage() {
                     { label: 'Qualified Items', value: stats.totalProducts, icon: ShieldCheck, color: 'emerald' },
                     { label: 'Multi-Vendor Items', value: stats.multiVendor, icon: Users, color: 'blue' },
                     { label: 'Avg Lead Time', value: `${stats.avgLeadTime} Days`, icon: Clock, color: 'amber' },
-                    { label: 'Savings Potential', value: `${stats.avgSavingsPotential.toLocaleString()} XOF`, icon: TrendingDown, color: 'rose' },
+                    { label: 'Savings Potential', value: `${stats.avgSavingsPotential.toLocaleString()} ${currency}`, icon: TrendingDown, color: 'rose' },
                 ].map((kpi, idx) => (
                     <div key={idx} className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 hover:shadow-xl hover:shadow-gray-100 transition-all group overflow-hidden relative">
                         <div className={`absolute top-0 right-0 w-32 h-32 bg-${kpi.color}-50 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-500`} />
@@ -101,16 +109,16 @@ export default async function SourcingDashboardPage() {
                                             </div>
                                         </td>
                                         <td className="p-8 text-right font-black text-emerald-600">
-                                            {parseFloat(item.min_price).toLocaleString()} XOF
+                                            {parseFloat(item.min_price).toLocaleString()} {currency}
                                         </td>
                                         <td className="p-8 text-right font-black text-rose-600">
-                                            {parseFloat(item.max_price).toLocaleString()} XOF
+                                            {parseFloat(item.max_price).toLocaleString()} {currency}
                                         </td>
                                         <td className="p-8 text-right">
                                             {delta > 0 ? (
                                                 <div className="flex flex-col items-end">
                                                     <span className="text-xs font-black text-emerald-500">-{pct}% Potential</span>
-                                                    <span className="text-[10px] text-gray-400">Save {delta.toLocaleString()} XOF/unit</span>
+                                                    <span className="text-[10px] text-gray-400">Save {delta.toLocaleString()} {currency}/unit</span>
                                                 </div>
                                             ) : (
                                                 <span className="text-[10px] text-gray-300 font-black uppercase">Optimized</span>

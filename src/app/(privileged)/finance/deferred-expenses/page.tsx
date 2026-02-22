@@ -1,5 +1,6 @@
 'use client'
 
+import { useCurrency } from '@/lib/utils/currency'
 import { useState, useEffect, useTransition } from "react"
 import type { DeferredExpense, FinancialAccount } from '@/types/erp'
 import { getDeferredExpenses, createDeferredExpense, recognizeDeferredExpense, DeferredExpenseInput } from "@/app/actions/finance/deferred-expenses"
@@ -18,6 +19,7 @@ import {
 } from "lucide-react"
 
 export default function DeferredExpensesPage() {
+    const { fmt } = useCurrency()
     const [expenses, setExpenses] = useState<DeferredExpense[]>([])
     const [accounts, setAccounts] = useState<FinancialAccount[]>([])
     const [loading, setLoading] = useState(true)
@@ -203,7 +205,7 @@ export default function DeferredExpensesPage() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-xs font-bold text-indigo-400 uppercase tracking-wider">Total Committed</p>
-                                <p className="text-3xl font-bold text-indigo-900 mt-1">{totalCommitted.toLocaleString()}</p>
+                                <p className="text-3xl font-bold text-indigo-900 mt-1">{fmt(totalCommitted)}</p>
                             </div>
                             <div className="w-12 h-12 rounded-2xl bg-indigo-200/60 flex items-center justify-center">
                                 <DollarSign size={22} className="text-indigo-500" />
@@ -216,7 +218,7 @@ export default function DeferredExpensesPage() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-xs font-bold text-amber-400 uppercase tracking-wider">Remaining</p>
-                                <p className="text-3xl font-bold text-amber-900 mt-1">{totalRemaining.toLocaleString()}</p>
+                                <p className="text-3xl font-bold text-amber-900 mt-1">{fmt(totalRemaining)}</p>
                             </div>
                             <div className="w-12 h-12 rounded-2xl bg-amber-200/60 flex items-center justify-center">
                                 <Timer size={22} className="text-amber-500" />
@@ -279,8 +281,8 @@ export default function DeferredExpensesPage() {
                                             {(exp.category || "").replace(/_/g, " ")}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell className="text-right text-sm">{Number(exp.total_amount).toLocaleString()}</TableCell>
-                                    <TableCell className="text-right text-sm text-stone-500">{Number(exp.monthly_amount).toLocaleString()}</TableCell>
+                                    <TableCell className="text-right text-sm">{fmt(Number(exp.total_amount))}</TableCell>
+                                    <TableCell className="text-right text-sm text-stone-500">{fmt(Number(exp.monthly_amount))}</TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2 justify-center">
                                             <div className="w-20 h-2.5 bg-stone-100 rounded-full overflow-hidden">
@@ -292,7 +294,7 @@ export default function DeferredExpensesPage() {
                                             <span className="text-xs font-semibold text-stone-400">{exp.months_recognized}/{exp.duration_months}</span>
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-right font-semibold text-stone-800">{Number(exp.remaining_amount).toLocaleString()}</TableCell>
+                                    <TableCell className="text-right font-semibold text-stone-800">{fmt(Number(exp.remaining_amount))}</TableCell>
                                     <TableCell className="text-center">
                                         <Badge variant="outline" className={`gap-1 rounded-lg border ${sc.bg} ${sc.color} font-semibold text-[11px]`}>
                                             <StatusIcon size={12} /> {exp.status}

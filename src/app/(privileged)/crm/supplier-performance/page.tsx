@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 
 export default function SupplierPerformancePage() {
+    const { fmt } = useCurrency()
     const [suppliers, setSuppliers] = useState<Contact[]>([])
     const [orders, setOrders] = useState<Record<string, unknown>[]>([])
     const [loading, setLoading] = useState(true)
