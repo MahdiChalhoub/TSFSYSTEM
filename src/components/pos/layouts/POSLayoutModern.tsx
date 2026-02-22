@@ -92,8 +92,6 @@ export function POSLayoutModern(props: POSLayoutProps) {
                 <div className="flex items-center gap-3 text-xs text-gray-500">
                     <span className="bg-gray-100 px-2 py-0.5 rounded font-semibold">{uniqueItems} items</span>
                     <span className="bg-gray-100 px-2 py-0.5 rounded font-semibold">{totalPieces} pcs</span>
-                    <span className="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded font-bold">Balance: {currency}{(selectedClient?.balance || 0).toFixed(2)}</span>
-                    <span className="bg-amber-50 text-amber-700 px-2 py-0.5 rounded font-bold flex items-center gap-0.5"><Star size={10} />{selectedClient?.loyalty || 0} pts</span>
                     <button onClick={onToggleFullscreen} className="h-7 px-2 bg-gray-100 text-gray-600 rounded-md text-[11px] font-semibold hover:bg-gray-200 transition-all flex items-center gap-1">
                         {isFullscreen ? <Minimize size={12} /> : <Maximize size={12} />}
                     </button>
@@ -116,7 +114,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 {selectedClient?.name?.charAt(0) || 'C'}
                             </div>
                             <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-1">
+                                <div className="flex items-center gap-1.5">
                                     <select
                                         value={selectedClientId}
                                         onChange={(e) => onUpdateActiveSession({ clientId: Number(e.target.value) })}
@@ -126,6 +124,8 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                     </select>
                                     <ChevronDown size={10} className="text-gray-400 -ml-2" />
                                     <span className="text-[10px] text-gray-400 ml-1">{selectedClient?.phone || '—'}</span>
+                                    <span className="bg-emerald-50 text-emerald-700 px-1.5 py-px rounded text-[10px] font-bold ml-1">Bal: {currency}{(selectedClient?.balance || 0).toFixed(2)}</span>
+                                    <span className="bg-amber-50 text-amber-700 px-1.5 py-px rounded text-[10px] font-bold flex items-center gap-0.5"><Star size={8} />{selectedClient?.loyalty || 0} pts</span>
                                 </div>
                                 <div className="flex items-center gap-3 text-[10px] text-gray-400 mt-0.5">
                                     <span className="flex items-center gap-0.5 truncate"><MapPin size={8} />{selectedClient?.address || 'No address'}</span>
