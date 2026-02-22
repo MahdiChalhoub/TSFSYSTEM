@@ -9,8 +9,9 @@ export default async function BalanceSheetPage() {
     const scope = (cookieStore.get('tsf_view_scope')?.value as 'OFFICIAL' | 'INTERNAL') || 'INTERNAL'
 
     const now = new Date()
-    const initialData = await getBalanceSheetReport(now, scope)
-    const fiscalYears = await getFiscalYears()
+    let initialData: any = {}, fiscalYears: any = []
+    try { initialData = await getBalanceSheetReport(now, scope) } catch { }
+    try { fiscalYears = await getFiscalYears() } catch { }
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">

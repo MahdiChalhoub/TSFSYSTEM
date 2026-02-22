@@ -3,7 +3,8 @@ import Link from 'next/link'
 import { Plus, Table, Calendar, ArrowUpRight, ArrowLeft } from 'lucide-react'
 
 export default async function OpeningBalancesListPage() {
-    const entries = await getOpeningEntries()
+    let entries: any = []
+    try { entries = await getOpeningEntries() } catch { /* empty fallback */ }
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">

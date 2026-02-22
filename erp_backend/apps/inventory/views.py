@@ -747,7 +747,15 @@ class WarehouseViewSet(TenantModelViewSet):
                 )
             site_id = site.id
 
-        serializer.save(organization_id=organization_id, site_id=site_id)
+        # Auto-generate warehouse code from TransactionSequence if not provided
+        code = self.request.data.get('code', '').strip()
+        if not code:
+            from apps.finance.models import TransactionSequence
+            code = TransactionSequence.next_value(
+                Organization.objects.get(id=organization_id), 'WAREHOUSE'
+            )
+
+        serializer.save(organization_id=organization_id, site_id=site_id, code=code)
 
 
 # =============================================================================

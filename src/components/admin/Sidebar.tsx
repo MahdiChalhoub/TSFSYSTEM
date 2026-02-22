@@ -167,16 +167,22 @@ export const MENU_ITEMS = [
                 icon: Warehouse,
                 children: [
                     { title: 'Warehouses & Zones', path: '/inventory/warehouses' },
-                    { title: 'Location Management', path: '/inventory/locations' },
+                    { title: 'Zones, Racks & Bins', path: '/inventory/locations' },
                     { title: 'Stock Adjustments', path: '/inventory/adjustments' },
-                    { title: 'Global Inventory', path: '/inventory/global' },
+                    { title: 'Multi-Site Stock View', path: '/inventory/global' },
                     { title: 'Barcode Configuration', path: '/inventory/barcode' },
+                    { title: 'Serial Numbers', path: '/inventory/serials' },
+                    { title: 'Stock Count', path: '/inventory/stock-count' },
+                ]
+            },
+            {
+                title: 'Alerts & Monitoring',
+                icon: Bell,
+                children: [
                     { title: 'Expiry Alerts', path: '/inventory/expiry-alerts' },
                     { title: 'Low Stock Alerts', path: '/inventory/low-stock' },
                     { title: 'Stock Movements', path: '/inventory/movements' },
                     { title: 'Inventory Alerts', path: '/inventory/alerts' },
-                    { title: 'Serial Numbers', path: '/inventory/serials' },
-                    { title: 'Stock Count', path: '/inventory/stock-count' },
                 ]
             },
             {

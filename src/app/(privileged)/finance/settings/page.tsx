@@ -3,9 +3,10 @@ import { getCurrencies } from '@/app/actions/currencies'
 import FinancialSettingsForm from './form'
 
 export default async function SettingsPage() {
-    const settings = await getFinancialSettings()
-    const lock = await getSettingsLockStatus()
-    const currencies = await getCurrencies()
+    let settings: any = {}, lock: any = {}, currencies: any = []
+    try { settings = await getFinancialSettings() } catch { }
+    try { lock = await getSettingsLockStatus() } catch { }
+    try { currencies = await getCurrencies() } catch { }
 
     return (
         <div className="p-6">

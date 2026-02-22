@@ -6,7 +6,8 @@ import { cookies } from 'next/headers'
 export default async function FinanceDashboardPage() {
     const cookieStore = await cookies()
     const scope = (cookieStore.get('tsf_view_scope')?.value as 'OFFICIAL' | 'INTERNAL') || 'INTERNAL'
-    const stats = await getFinancialDashboardStats(scope)
+    let stats: any = {}
+    try { stats = await getFinancialDashboardStats(scope) } catch { /* empty fallback */ }
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">

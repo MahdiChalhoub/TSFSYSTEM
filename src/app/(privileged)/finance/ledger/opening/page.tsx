@@ -2,7 +2,8 @@ import { getChartOfAccounts } from '@/app/actions/finance/accounts'
 import OpeningBalanceForm from './form'
 
 export default async function OpeningBalancePage() {
-    const accounts = await getChartOfAccounts()
+    let accounts: any = []
+    try { accounts = await getChartOfAccounts() } catch { /* empty fallback */ }
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
