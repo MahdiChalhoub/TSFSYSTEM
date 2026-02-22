@@ -4,7 +4,7 @@ Client Portal — Serializers
 from rest_framework import serializers
 from .models import (
     ClientPortalConfig, ClientPortalAccess, ClientWallet, WalletTransaction,
-    ClientOrder, ClientOrderLine, ClientTicket, QuoteRequest,
+    ClientOrder, ClientOrderLine, ClientTicket, QuoteRequest, QuoteItem
 )
 
 

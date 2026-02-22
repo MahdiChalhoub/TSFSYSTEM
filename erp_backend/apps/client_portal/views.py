@@ -20,7 +20,7 @@ from django.db.models import Sum, Count
 from erp.views import TenantModelViewSet
 from .models import (
     ClientPortalConfig, ClientPortalAccess, ClientWallet, WalletTransaction,
-    ClientOrder, ClientOrderLine, ClientTicket, QuoteRequest,
+    ClientOrder, ClientOrderLine, ClientTicket, QuoteRequest, QuoteItem
 )
 from .serializers import (
     ClientPortalAccessSerializer,
