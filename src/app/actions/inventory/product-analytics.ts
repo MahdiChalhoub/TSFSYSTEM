@@ -76,7 +76,7 @@ export async function getWarehouses() {
 
 export async function getCategories() {
     try {
-        return await erpFetch('categories/')
+        return await erpFetch('inventory/categories/')
     } catch (error) {
         console.error("Failed to fetch categories:", error)
         return []

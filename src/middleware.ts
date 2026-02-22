@@ -107,7 +107,17 @@ export default async function middleware(req: NextRequest) {
     }
 
     // TENANT SUBDOMAIN (e.g. pos.tsf.ci)
-    const currentHost = hostname.replace(`.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}`, "");
+    // Robust detection: use the same part-splitting logic as in erp-api.ts
+    const parts = hostname.split('.');
+    let currentHost = "";
+
+    if (parts.length > 2) {
+        // e.g. org.tsf.ci or org.tsf.localhost
+        currentHost = parts[0];
+    } else {
+        // Fallback or development (localhost)
+        currentHost = hostname.replace(`.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost'}`, "");
+    }
 
     // Check for reserved subdomains just in case
     if (currentHost === 'app' || currentHost === 'www') {

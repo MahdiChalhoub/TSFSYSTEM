@@ -14,7 +14,7 @@ async function getCountries() {
 }
 
 async function getCategories() {
-    try { return await erpFetch('categories/'); }
+    try { return await erpFetch('inventory/categories/'); }
     catch { return []; }
 }
 

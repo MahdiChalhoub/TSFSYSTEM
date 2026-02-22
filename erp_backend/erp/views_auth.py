@@ -281,7 +281,10 @@ def register_business_view(request):
         logger.info(f"✅ Business registered: '{data['business_name']}' [{slug}] by {data['admin_username']}")
 
         token, _ = Token.objects.get_or_create(user=admin_user)
-        login_url = f"/{slug}/login"
+        root_domain = getattr(settings, 'ROOT_DOMAIN', 'localhost')
+        # Use absolute URL to ensure correct subdomain redirect from root domain
+        login_url = f"https://{slug}.{root_domain}/login"
+        
         return Response({
             "message": f"Workspace '{slug}' created successfully!",
             "login_url": login_url,

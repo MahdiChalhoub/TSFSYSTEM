@@ -41,7 +41,7 @@ async function getProducts() {
 
 async function getCategories() {
     try {
-        return await erpFetch('categories/');
+        return await erpFetch('inventory/categories/');
     } catch (e) {
         return [];
     }

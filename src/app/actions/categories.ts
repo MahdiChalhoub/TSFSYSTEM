@@ -21,7 +21,7 @@ export async function createCategory(prevState: CategoryState, formData: FormDat
     }
 
     try {
-        const result = await erpFetch('categories/', {
+        const result = await erpFetch('inventory/categories/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -59,7 +59,7 @@ export async function updateCategory(id: number, prevState: CategoryState, formD
             return { message: 'Category cannot be its own parent' };
         }
 
-        await erpFetch(`categories/${id}/`, {
+        await erpFetch(`inventory/categories/${id}/`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -79,7 +79,7 @@ export async function updateCategory(id: number, prevState: CategoryState, formD
 
 export async function deleteCategory(id: number) {
     try {
-        await erpFetch(`categories/${id}/`, {
+        await erpFetch(`inventory/categories/${id}/`, {
             method: 'DELETE'
         });
         revalidatePath('/inventory/categories');
@@ -90,12 +90,12 @@ export async function deleteCategory(id: number) {
 }
 
 export async function getCategoryWithCounts() {
-    return await erpFetch('categories/with_counts/');
+    return await erpFetch('inventory/categories/with_counts/');
 }
 
 export async function moveProducts(productIds: number[], targetCategoryId: number) {
     try {
-        await erpFetch('categories/move_products/', {
+        await erpFetch('inventory/categories/move_products/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

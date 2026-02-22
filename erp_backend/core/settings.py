@@ -34,6 +34,8 @@ if not SECRET_KEY:
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'tsf.ci', 'saas.tsf.ci', '.tsf.ci']
 
+ROOT_DOMAIN = os.getenv('ROOT_DOMAIN', 'tsf.ci')
+
 
 # Application definition
 

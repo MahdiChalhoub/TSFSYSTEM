@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 
 async function getCategories() {
     try {
-        return await erpFetch('categories/');
+        return await erpFetch('inventory/categories/');
     } catch (e) {
         console.warn("Error fetching categories:", e);
         return [];
