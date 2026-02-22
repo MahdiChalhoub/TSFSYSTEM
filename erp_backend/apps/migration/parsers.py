@@ -163,89 +163,140 @@ class SQLDumpParser:
     def __init__(self, file_path=None, file_content=None):
         self.file_path = file_path
         self.file_content = file_content
-        self.tables_data = {}
+        # Map of table_name -> list of (start_offset, end_offset)
+        self.table_offsets = {}
+        # Cached counts
+        self.table_counts = {}
 
     def parse(self):
-        """Parse the SQL dump and extract all INSERT INTO data."""
-        if self.file_path:
-            with open(self.file_path, 'r', encoding='utf-8', errors='replace') as f:
-                content = f.read()
-        elif self.file_content:
-            content = self.file_content
-        else:
-            raise ValueError("Either file_path or file_content must be provided")
+        """
+        Scan the SQL dump to find INSERT INTO statements and record their locations.
+        Does NOT load row data into memory yet.
+        """
+        if self.file_content:
+            # Fallback for string content (not recommended for large files)
+            content_io = io.StringIO(self.file_content)
+            self._scan_stream(content_io)
+            return self.table_offsets
 
-        # Find all INSERT INTO statements — capture optional column list
-        # Pattern: INSERT INTO `table` (`col1`, `col2`, ...) VALUES (...)
-        pattern = r"INSERT\s+INTO\s+`?(\w+)`?\s*(?:\(([^)]+)\))?\s*VALUES\s*(.+?);"
-        matches = re.findall(pattern, content, re.IGNORECASE | re.DOTALL)
+        if not self.file_path or not os.path.exists(self.file_path):
+            raise ValueError(f"File not found: {self.file_path}")
 
-        for table_name, inline_cols_str, values_block in matches:
-            if table_name not in self.tables_data:
-                self.tables_data[table_name] = []
+        with open(self.file_path, 'r', encoding='utf-8', errors='replace') as f:
+            self._scan_stream(f)
 
-            rows = self._parse_values_block(values_block)
+        return self.table_offsets
 
-            # Determine column names: inline > TABLE_COLUMNS > auto-numbered
-            if inline_cols_str and '`' in inline_cols_str:
-                columns = [c.strip().strip('`').strip() for c in inline_cols_str.split(',')]
-            else:
-                columns = self.TABLE_COLUMNS.get(table_name)
+    def _scan_stream(self, stream):
+        """Scan a stream for INSERT statements and record offsets."""
+        import os
+        # Pattern to find start of INSERT
+        # We look for "INSERT INTO `table`"
+        pattern = re.compile(r"INSERT\s+INTO\s+`?(\w+)`?", re.IGNORECASE)
+        
+        self.table_offsets = {}
+        self.table_counts = {}
+        
+        # We read line-by-line to find INSERT starts
+        # For large multi-line INSERTs, we need to find the ending semicolon
+        while True:
+            offset = stream.tell()
+            line = stream.readline()
+            if not line:
+                break
+            
+            match = pattern.search(line)
+            if match:
+                table_name = match.group(1)
+                if table_name not in self.table_offsets:
+                    self.table_offsets[table_name] = []
+                
+                # Find the end of this statement (semicolon)
+                statement_start = offset
+                statement_end = -1
+                
+                # Check if semicolon is on the same line
+                if ';' in line:
+                    statement_end = offset + line.find(';') + 1
+                else:
+                    # Scan subsequent lines for the semicolon
+                    while True:
+                        inner_offset = stream.tell()
+                        inner_line = stream.readline()
+                        if not inner_line:
+                            break
+                        if ';' in inner_line:
+                            statement_end = inner_offset + inner_line.find(';') + 1
+                            break
+                
+                if statement_end != -1:
+                    self.table_offsets[table_name].append((statement_start, statement_end))
+        
+        logger.info(f"Scanned SQL dump. Found {len(self.table_offsets)} tables with INSERT statements.")
 
-            if columns:
-                for row_values in rows:
+    def stream_rows(self, table_name, business_id=None):
+        """
+        Generator that yields parsed rows for a specific table.
+        Optionally filters by business_id in-stream.
+        """
+        offsets = self.table_offsets.get(table_name, [])
+        if not offsets:
+            return
+
+        with open(self.file_path, 'r', encoding='utf-8', errors='replace') as f:
+            for start, end in offsets:
+                f.seek(start)
+                content = f.read(end - start)
+                
+                # Parse this specific statement
+                pattern = r"INSERT\s+INTO\s+`?(\w+)`?\s*(?:\(([^)]+)\))?\s*VALUES\s*(.+?);"
+                match = re.search(pattern, content, re.IGNORECASE | re.DOTALL)
+                if not match:
+                    continue
+                
+                _, inline_cols_str, values_block = match.groups()
+                rows_data = self._parse_values_block(values_block)
+                
+                # Determine columns
+                if inline_cols_str and '`' in inline_cols_str:
+                    columns = [c.strip().strip('`').strip() for c in inline_cols_str.split(',')]
+                else:
+                    columns = self.TABLE_COLUMNS.get(table_name)
+                
+                for row_values in rows_data:
                     row_dict = {}
-                    for i, val in enumerate(row_values):
-                        col = columns[i] if i < len(columns) else f'_extra_{i}'
-                        row_dict[col] = self._clean_value(val)
-                    self.tables_data[table_name].append(row_dict)
-            else:
-                # Completely unknown table — store with numbered keys
-                for row_values in rows:
-                    row_dict = {f'col_{i}': self._clean_value(v) for i, v in enumerate(row_values)}
-                    self.tables_data[table_name].append(row_dict)
-
-        logger.info(f"Parsed {len(self.tables_data)} tables from SQL dump")
-        for table, rows in self.tables_data.items():
-            logger.info(f"  {table}: {len(rows)} rows")
-
-        return self.tables_data
-
-    def get_table_data(self, table_name):
-        """Get parsed data for a specific table."""
-        return self.tables_data.get(table_name, [])
-
-    def get_table_counts(self):
-        """Get row counts per table."""
-        return {table: len(rows) for table, rows in self.tables_data.items()}
+                    if columns:
+                        for i, val in enumerate(row_values):
+                            col = columns[i] if i < len(columns) else f'_extra_{i}'
+                            row_dict[col] = self._clean_value(val)
+                    else:
+                        row_dict = {f'col_{i}': self._clean_value(v) for i, v in enumerate(row_values)}
+                    
+                    # Filter by business_id if requested
+                    if business_id is not None and 'business_id' in row_dict:
+                        if str(row_dict['business_id']) != str(business_id):
+                            continue
+                    
+                    yield row_dict
 
     def get_businesses(self):
-        """
-        Extract business id/name pairs from parsed data.
-        Returns list of dicts: [{'id': 1, 'name': 'Business Name'}, ...]
-        """
-        businesses = self.get_table_data('business')
-        result = []
-        for b in businesses:
-            result.append({
-                'id': b.get('id'),
-                'name': b.get('name', f"Business #{b.get('id', '?')}"),
-                'currency_id': b.get('currency_id'),
-                'start_date': b.get('start_date'),
-                'owner_id': b.get('owner_id'),
-            })
-        return result
+        """Extract business records by streaming the 'business' table."""
+        return list(self.stream_rows('business'))
 
-    def get_table_data_for_business(self, table_name, business_id):
-        """Get parsed data filtered by business_id."""
-        rows = self.get_table_data(table_name)
-        if not rows:
-            return []
-        # Only filter tables that have business_id column
-        first = rows[0]
-        if 'business_id' in first:
-            return [r for r in rows if str(r.get('business_id')) == str(business_id)]
-        return rows  # Tables without business_id (e.g. currencies) return all
+    def get_table_counts(self, business_id=None):
+        """Get counts per table (estimates based on scan if business_id is None, exact if business_id is set)."""
+        counts = {}
+        for table in self.table_offsets.keys():
+            if business_id:
+                # Need to count exactly
+                count = 0
+                for _ in self.stream_rows(table, business_id):
+                    count += 1
+                counts[table] = count
+            else:
+                # Heuristic: count Statements (not rows) initially, or just return placeholder
+                counts[table] = len(self.table_offsets[table])
+        return counts
 
     def _parse_values_block(self, values_block):
         """Parse the VALUES (...), (...), ... block into list of tuples."""

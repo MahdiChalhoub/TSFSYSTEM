@@ -161,6 +161,46 @@ def delete_from_cloud(provider, storage_key, bucket):
     logger.info(f"Deleted {storage_key} from {bucket}")
 
 
+def get_file_stream(provider, storage_key, bucket):
+    """
+    Returns a stream-aware object for reading a file.
+    For LOCAL: returns a file handle.
+    For Cloud: returns the boto3 StreamingBody.
+    """
+    provider_type = provider.provider_type if provider else getattr(settings, 'STORAGE_DEFAULT_PROVIDER', 'LOCAL')
+
+    if provider_type == 'LOCAL':
+        file_path = os.path.join(settings.MEDIA_ROOT, storage_key)
+        return open(file_path, 'rb')
+
+    client = _get_boto3_client(provider)
+    response = client.get_object(Bucket=bucket, Key=storage_key)
+    return response['Body']
+
+
+def get_local_path(provider, storage_key, bucket):
+    """
+    Returns an absolute path to the file.
+    If cloud-stored, downloads it to a temporary location first.
+    """
+    provider_type = provider.provider_type if provider else getattr(settings, 'STORAGE_DEFAULT_PROVIDER', 'LOCAL')
+
+    if provider_type == 'LOCAL':
+        return os.path.abspath(os.path.join(settings.MEDIA_ROOT, storage_key))
+
+    # Download to temp file
+    import tempfile
+    suffix = os.path.splitext(storage_key)[1]
+    # We use delete=False because we want the path to remain valid after close
+    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+    
+    client = _get_boto3_client(provider)
+    client.download_fileobj(bucket, storage_key, tmp)
+    tmp.close()
+    
+    return tmp.name
+
+
 def test_connection(provider):
     """
     Test connectivity to the configured storage provider.

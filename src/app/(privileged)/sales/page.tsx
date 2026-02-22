@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ProductGrid } from '@/components/pos/ProductGrid';
 import { TicketSidebar } from '@/components/pos/TicketSidebar';
-import { Search, Loader2, Zap, Keyboard, Plus, User, MapPin, Calendar, FileText, Settings, Wallet, Save, Book, File, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Loader2, Zap, Keyboard, Plus, User, MapPin, Calendar, FileText, Settings, Wallet, Save, Book, File, ArrowLeft, ChevronLeft, ChevronRight, Maximize, Minimize } from 'lucide-react';
 import { toast } from 'sonner';
 import { QuickProducts } from '@/components/pos/QuickProducts';
 import { CartItem } from '@/types/pos';
@@ -14,6 +14,9 @@ export default function POSPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    const [cartWidth, setCartWidth] = useState(550);
+    const [isResizing, setIsResizing] = useState(false);
     const [categories, setCategories] = useState<Array<{ id: number; name: string }>>([]);
     const [categoriesLoading, setCategoriesLoading] = useState(true);
 
@@ -66,6 +69,48 @@ export default function POSPage() {
         toast.info("Ticket cleared");
     }, []);
 
+    const toggleFullscreen = useCallback(() => {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch((err) => {
+                toast.error(`Error attempting to enable full-screen mode: ${err.message}`);
+            });
+            setIsFullscreen(true);
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+                setIsFullscreen(false);
+            }
+        }
+    }, []);
+
+    // Resizing Logic
+    const startResizing = useCallback((e: React.MouseEvent) => {
+        e.preventDefault();
+        setIsResizing(true);
+    }, []);
+
+    useEffect(() => {
+        if (!isResizing) return;
+
+        const handleMouseMove = (e: MouseEvent) => {
+            const newWidth = window.innerWidth - e.clientX;
+            if (newWidth > 400 && newWidth < 800) {
+                setCartWidth(newWidth);
+            }
+        };
+
+        const handleMouseUp = () => {
+            setIsResizing(false);
+        };
+
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', handleMouseUp);
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [isResizing]);
+
     // Keyboard Shortcuts Logic
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -73,6 +118,12 @@ export default function POSPage() {
             if (e.key === '/' && (e.target as HTMLElement).tagName !== 'INPUT') {
                 e.preventDefault();
                 document.getElementById('pos-search')?.focus();
+            }
+
+            // Fullscreen on F11 (standard but we add helper)
+            if (e.key === 'f' && e.ctrlKey) {
+                e.preventDefault();
+                toggleFullscreen();
             }
 
             // Clear Cart on Ctrl + Delete
@@ -84,17 +135,24 @@ export default function POSPage() {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [clearCart]);
+    }, [clearCart, toggleFullscreen]);
 
     return (
         <div className="absolute inset-0 flex flex-col bg-[#F1F5F9] overflow-hidden select-none">
             {/* TOP BAR: Utility Actions */}
-            <div className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 shrink-0">
+            <div className={`h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 shrink-0 z-50 ${isFullscreen ? 'shadow-sm' : ''}`}>
                 <div className="flex items-center gap-4">
                     <button className="p-2.5 bg-gray-50 border border-gray-100 rounded-lg text-gray-400 hover:bg-gray-100 transition-all"><ArrowLeft size={18} /></button>
                     <div className="font-black text-gray-900 tracking-tighter text-lg uppercase italic">POS <span className="text-indigo-600">Terminal V2</span></div>
                 </div>
                 <div className="flex items-center gap-2">
+                    <button
+                        onClick={toggleFullscreen}
+                        className="p-2.5 bg-indigo-50 border border-indigo-100 rounded-lg text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all mr-2 flex items-center gap-2 px-4 shadow-sm"
+                    >
+                        {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
+                        <span className="text-[10px] font-black uppercase tracking-widest">{isFullscreen ? 'Exit Full' : 'Fullscreen'}</span>
+                    </button>
                     {[FileText, Settings, Wallet, Save, Book, File].map((Icon, i) => (
                         <button key={i} className="p-2.5 bg-white border border-gray-100 rounded-lg text-gray-400 hover:text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50 transition-all">
                             <Icon size={18} />
@@ -175,16 +233,38 @@ export default function POSPage() {
                     </div>
                 </aside>
 
-                {/* CENTER & RIGHT: Integrated Cart & Payment */}
-                <main className="flex-1 flex flex-col overflow-hidden">
-                    <div className="flex-1 p-6 overflow-hidden">
+                {/* CENTER: Product Discovery */}
+                <main className="flex-1 flex flex-col min-w-0 bg-gray-50/30">
+                    <div className="flex-1 overflow-hidden p-6">
+                        <ProductGrid
+                            searchQuery={searchQuery}
+                            categoryId={activeCategoryId}
+                            onAddToCart={addToCart}
+                        />
+                    </div>
+                </main>
+
+                {/* RESIZER HANDLE */}
+                <div
+                    onMouseDown={startResizing}
+                    className={`w-1.5 cursor-col-resize hover:bg-indigo-400 group relative z-40 transition-colors ${isResizing ? 'bg-indigo-500' : 'bg-transparent'}`}
+                >
+                    <div className="absolute inset-y-0 -left-1 -right-1 group-hover:block" />
+                </div>
+
+                {/* RIGHT SIDEBAR: Balanced Cart View */}
+                <aside
+                    className="shrink-0 flex flex-col bg-white border-l border-gray-100"
+                    style={{ width: `${cartWidth}px` }}
+                >
+                    <div className="flex-1 p-6 pl-0 overflow-hidden">
                         <TicketSidebar
                             cart={cart}
                             onUpdateQuantity={updateQuantity}
                             onClear={clearCart}
                         />
                     </div>
-                </main>
+                </aside>
             </div>
         </div>
     );

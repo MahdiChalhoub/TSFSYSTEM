@@ -5,6 +5,7 @@ Provides endpoints for uploading SQL dumps, running migrations, checking status,
 import os
 import threading
 import logging
+import re
 
 from django.conf import settings
 from rest_framework import viewsets, status
@@ -58,37 +59,62 @@ class MigrationViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'], url_path='upload')
     def upload(self, request):
-        """Upload a SQL dump file and create a pending migration job."""
+        """Upload a SQL dump file and create a pending migration job via Cloud Storage."""
         serializer = MigrationUploadSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         uploaded_file = serializer.validated_data['file']
         name = serializer.validated_data.get('name', 'UltimatePOS Migration')
 
-        # Ensure upload directory exists
-        os.makedirs(MIGRATION_UPLOAD_DIR, exist_ok=True)
-
-        # Save file
-        import uuid
-        filename = f"{uuid.uuid4().hex}_{uploaded_file.name}"
-        file_path = os.path.join(MIGRATION_UPLOAD_DIR, filename)
-
-        with open(file_path, 'wb+') as f:
-            for chunk in uploaded_file.chunks():
-                f.write(chunk)
-
-        # Get org_id
+        # Get tenant context
         org_id = request.headers.get('X-Tenant-Id') or \
                  getattr(request.user, 'organization_id', None)
+        
+        from erp.models import Organization
+        org = Organization.objects.filter(id=org_id).first()
+        org_slug = org.slug if org else 'default'
 
-        # Create job
+        # Upload to Cloud Storage
+        from apps.storage.backends import upload_to_cloud
+        from apps.storage.models import StoredFile, StorageProvider
+        
+        provider = StorageProvider.objects.filter(organization_id=org_id).first()
+        
+        # Use the universal storage logic
+        storage_key, bucket, checksum, file_size = upload_to_cloud(
+            uploaded_file,
+            category='MIGRATION',
+            provider=provider,
+            org_slug=org_slug,
+            linked_model='data_migration.MigrationJob',
+            # linked_id will be set after job creation
+        )
+
+        # Create StoredFile record
+        stored_file = StoredFile.objects.create(
+            organization_id=org_id,
+            original_filename=uploaded_file.name,
+            storage_key=storage_key,
+            bucket=bucket,
+            checksum=checksum,
+            file_size=file_size,
+            category='MIGRATION',
+            uploaded_by=request.user if request.user.is_authenticated else None,
+            linked_model='data_migration.MigrationJob',
+        )
+
+        # Create migration job linked to stored_file
         job = MigrationJob.objects.create(
             organization_id=org_id,
             name=name,
             source_type='SQL_DUMP',
-            file_path=file_path,
+            stored_file=stored_file,
             created_by=request.user if request.user.is_authenticated else None,
         )
+
+        # Update stored_file with job ID
+        stored_file.linked_id = job.id
+        stored_file.save()
 
         return Response(
             MigrationJobSerializer(job).data,
@@ -127,17 +153,20 @@ class MigrationViewSet(viewsets.ModelViewSet):
         job = self.get_object()
 
         if job.source_type == 'SQL_DUMP':
-            parser = SQLDumpParser(file_path=job.file_path)
+            file_path = self._get_job_file_path(job)
+            parser = SQLDumpParser(file_path=file_path)
             parser.parse()
             businesses = parser.get_businesses()
 
             # Also count records per business for context
             for biz in businesses:
                 biz_id = biz['id']
-                biz['products'] = len(parser.get_table_data_for_business('products', biz_id))
-                biz['contacts'] = len(parser.get_table_data_for_business('contacts', biz_id))
-                biz['transactions'] = len(parser.get_table_data_for_business('transactions', biz_id))
-                biz['locations'] = len(parser.get_table_data_for_business('business_locations', biz_id))
+                # Use streaming counts
+                counts = parser.get_table_counts(business_id=biz_id)
+                biz['products'] = counts.get('products', 0)
+                biz['contacts'] = counts.get('contacts', 0)
+                biz['transactions'] = counts.get('transactions', 0)
+                biz['locations'] = counts.get('business_locations', 0)
         else:
             # For direct DB, query the business table
             from apps.migration.parsers import DirectDBReader
@@ -162,15 +191,10 @@ class MigrationViewSet(viewsets.ModelViewSet):
         business_id = request.query_params.get('business_id') or job.source_business_id
 
         if job.source_type == 'SQL_DUMP':
-            parser = SQLDumpParser(file_path=job.file_path)
+            file_path = self._get_job_file_path(job)
+            parser = SQLDumpParser(file_path=file_path)
             parser.parse()
-            if business_id:
-                counts = {}
-                for table_name in parser.tables_data.keys():
-                    filtered = parser.get_table_data_for_business(table_name, business_id)
-                    counts[table_name] = len(filtered)
-            else:
-                counts = parser.get_table_counts()
+            counts = parser.get_table_counts(business_id=business_id)
         else:
             from apps.migration.parsers import DirectDBReader
             reader = DirectDBReader(
@@ -210,19 +234,8 @@ class MigrationViewSet(viewsets.ModelViewSet):
         org_id = request.headers.get('X-Tenant-Id') or \
                  getattr(request.user, 'organization_id', None)
 
-        # Run migration in background thread
-        def run_migration():
-            try:
-                service = MigrationService(job, organization_id=org_id)
-                service.run()
-            except Exception as e:
-                logger.exception(f"Background migration failed: {str(e)}")
-
-        thread = threading.Thread(target=run_migration, daemon=True)
-        thread.start()
-
-        job.status = 'PARSING'
-        job.save()
+        from apps.migration.tasks import run_migration_task
+        run_migration_task.delay(job.id, org_id)
 
         return Response(MigrationJobSerializer(job).data)
 
@@ -259,3 +272,14 @@ class MigrationViewSet(viewsets.ModelViewSet):
             'status': 'rolled_back',
             'deleted_count': deleted,
         })
+
+    def _get_job_file_path(self, job):
+        """Helper to get a local path for the migration file."""
+        if job.stored_file:
+            from apps.storage.backends import get_local_path
+            return get_local_path(
+                job.stored_file.storage_provider,
+                job.stored_file.storage_key,
+                job.stored_file.bucket
+            )
+        return job.file_path

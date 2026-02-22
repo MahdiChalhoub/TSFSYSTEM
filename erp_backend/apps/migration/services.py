@@ -48,7 +48,7 @@ class MigrationService:
         self.job = job
         self.organization_id = organization_id
         self.errors = []
-        self.tables_data = {}
+        self.parser = None
         self.id_maps = {
             'units': {},
             'categories': {},
@@ -107,25 +107,32 @@ class MigrationService:
             raise
 
     def _parse_source(self):
-        """Parse the data source into self.tables_data, filtered by business_id if set."""
+        """Parse the data source: scan SQL offsets or connect to Direct DB."""
         if self.job.source_type == 'SQL_DUMP':
-            parser = SQLDumpParser(file_path=self.job.file_path)
-            parser.parse()
-
-            # If a specific business is selected, filter all data
-            biz_id = self.job.source_business_id
-            if biz_id:
-                logger.info(f"Filtering data for business_id={biz_id}")
-                for table_name in parser.tables_data.keys():
-                    self.tables_data[table_name] = parser.get_table_data_for_business(
-                        table_name, biz_id
-                    )
+            from apps.storage.backends import get_local_path
+            
+            # Use stored_file if available, else fallback to legacy file_path
+            file_path = None
+            if self.job.stored_file:
+                logger.info(f"Using StoredFile {self.job.stored_file_id} for migration")
+                file_path = get_local_path(
+                    self.job.stored_file.storage_provider,
+                    self.job.stored_file.storage_key,
+                    self.job.stored_file.bucket
+                )
             else:
-                self.tables_data = parser.tables_data
+                file_path = self.job.file_path
+
+            if not file_path:
+                raise ValueError("No migration file found (stored_file and file_path are both null)")
+
+            self.parser = SQLDumpParser(file_path=file_path)
+            self.parser.parse()
+            logger.info("SQL dump parser initialized (streaming mode)")
 
         elif self.job.source_type == 'DIRECT_DB':
-            biz_id = self.job.source_business_id
-            where = f"business_id = {int(biz_id)}" if biz_id else None
+            # For direct DB, we still load into memory for now as it's usually smaller
+            # or we could implement streaming here too if needed.
             reader = DirectDBReader(
                 host=self.job.db_host,
                 port=self.job.db_port or 3306,
@@ -134,19 +141,22 @@ class MigrationService:
                 password=self.job.db_password,
             )
             reader.connect()
+            self.tables_data = {}
             try:
                 for table_name in SQLDumpParser.TABLE_COLUMNS.keys():
                     try:
-                        self.tables_data[table_name] = reader.read_table(table_name, where)
+                        self.tables_data[table_name] = reader.read_table(table_name, None)
                     except Exception as e:
                         self._log_error(f"Failed to read table {table_name}: {str(e)}")
             finally:
                 reader.close()
 
-        logger.info(f"Parsed {len(self.tables_data)} tables")
-        for t, rows in self.tables_data.items():
-            if rows:
-                logger.info(f"  {t}: {len(rows)} rows")
+    def _get_rows(self, table_name):
+        """Helper to get rows: either from streaming parser or memory (Direct DB fallback)."""
+        biz_id = self.job.source_business_id
+        if self.parser:
+            return self.parser.stream_rows(table_name, business_id=biz_id)
+        return self.tables_data.get(table_name, [])
 
     def _log_error(self, message):
         """Log an error for reporting."""
@@ -208,7 +218,7 @@ class MigrationService:
         """Migrate business_locations → Site."""
         from erp.models import Site
 
-        rows = self.tables_data.get('business_locations', [])
+        rows = self._get_rows('business_locations')
         count = 0
 
         for row in rows:
@@ -243,7 +253,7 @@ class MigrationService:
         """Migrate units → Unit."""
         from apps.inventory.models import Unit
 
-        rows = self.tables_data.get('units', [])
+        rows = self._get_rows('units')
         count = 0
 
         for row in rows:
@@ -284,7 +294,8 @@ class MigrationService:
         """Migrate categories → Category (handles hierarchical parent_id)."""
         from apps.inventory.models import Category
 
-        rows = self.tables_data.get('categories', [])
+        # We buffer categories because we need two passes for parents
+        rows = list(self._get_rows('categories'))
         count = 0
 
         # First pass: create all categories without parents
@@ -342,7 +353,7 @@ class MigrationService:
         """Migrate brands → Brand."""
         from apps.inventory.models import Brand
 
-        rows = self.tables_data.get('brands', [])
+        rows = self._get_rows('brands')
         count = 0
 
         for row in rows:
@@ -381,18 +392,16 @@ class MigrationService:
         """Migrate products + variations → Product."""
         from apps.inventory.models import Product
 
-        product_rows = self.tables_data.get('products', [])
-        variation_rows = self.tables_data.get('variations', [])
-
         # Index variations by product_id for fast lookup
         variations_by_product = {}
-        for v in variation_rows:
+        for v in self._get_rows('variations'):
             pid = safe_int(v.get('product_id'))
             if pid:
                 if pid not in variations_by_product:
                     variations_by_product[pid] = []
                 variations_by_product[pid].append(v)
 
+        product_rows = self._get_rows('products')
         count = 0
         for row in product_rows:
             source_id = safe_int(row.get('id'))
@@ -470,7 +479,7 @@ class MigrationService:
         """Migrate contacts → Contact."""
         from apps.crm.models import Contact
 
-        rows = self.tables_data.get('contacts', [])
+        rows = self._get_rows('contacts')
         count = 0
 
         for row in rows:
@@ -518,7 +527,7 @@ class MigrationService:
         """Migrate accounts → FinancialAccount."""
         from apps.finance.models import FinancialAccount
 
-        rows = self.tables_data.get('accounts', [])
+        rows = self._get_rows('accounts')
         count = 0
 
         for row in rows:
@@ -554,7 +563,7 @@ class MigrationService:
         """Migrate transactions → Order."""
         from apps.pos.models import Order
 
-        rows = self.tables_data.get('transactions', [])
+        rows = self._get_rows('transactions')
         count = 0
 
         for row in rows:
@@ -614,7 +623,7 @@ class MigrationService:
         """Migrate transaction_sell_lines → OrderLine."""
         from apps.pos.models import OrderLine
 
-        rows = self.tables_data.get('transaction_sell_lines', [])
+        rows = self._get_rows('transaction_sell_lines')
         count = 0
 
         for row in rows:
@@ -651,7 +660,7 @@ class MigrationService:
         """Migrate purchase_lines → OrderLine."""
         from apps.pos.models import OrderLine
 
-        rows = self.tables_data.get('purchase_lines', [])
+        rows = self._get_rows('purchase_lines')
         count = 0
 
         for row in rows:
