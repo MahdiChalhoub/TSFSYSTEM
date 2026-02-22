@@ -1,6 +1,6 @@
 'use client';
 
-import { Trash2, Plus, Minus, CreditCard, ShoppingCart, Loader2, CheckCircle, Wallet, Landmark, Banknote, History, Gift, Truck, Smartphone, Save } from 'lucide-react';
+import { Trash2, Plus, Minus, CreditCard, ShoppingCart, Loader2, CheckCircle, Wallet, Landmark, Banknote, History, Gift, Truck, Smartphone, Save, MapPin } from 'lucide-react';
 import { CartItem } from '@/types/pos';
 import { useTransition, useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
@@ -64,45 +64,52 @@ export function TicketSidebar({ cart, onUpdateQuantity, onClear, currency = '$',
     }, [cart, isPending, paymentMethod, totalAmount, onClear]);
 
     return (
-        <div className="flex flex-col h-full bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden">
-            {/* Header / Client Info */}
-            <div className="p-6 bg-gray-50/50 border-b border-gray-100">
-                <div className="flex justify-between items-center mb-4">
-                    <div className="flex gap-4">
+        <div className="flex flex-col h-full bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden animate-in slide-in-from-right-4 duration-500">
+            {/* Header / Client Info - Compact Single Line */}
+            <div className="px-5 py-3 bg-gray-50/80 border-b border-gray-200 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-6 divide-x divide-gray-200">
+                    <div className="flex items-center gap-3">
                         <div className="flex flex-col">
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Client Name</span>
-                            <span className="font-extrabold text-gray-900 text-sm italic">{client.name}</span>
+                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none">Client</span>
+                            <span className="font-black text-gray-900 text-sm uppercase tracking-tight truncate max-w-[140px]">{client.name}</span>
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Phone</span>
-                            <span className="font-bold text-gray-500 text-xs">{client.phone}</span>
+                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none">Phone</span>
+                            <span className="font-bold text-gray-500 text-[10px] tabular-nums whitespace-nowrap">{client.phone}</span>
                         </div>
                     </div>
-                    <div className="flex gap-6 text-right">
-                        <div className="flex flex-col">
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Balance</span>
-                            <span className={clsx("font-black text-xl tracking-tighter", client.balance > 0 ? "text-rose-500" : "text-green-500")}>
-                                {currency}{client.balance.toLocaleString()}
-                            </span>
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Loyalty</span>
-                            <span className="font-black text-amber-500 text-xl tracking-tighter">{client.loyalty} pts</span>
+
+                    <div className="pl-6 flex flex-col">
+                        <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none">Delivery Address</span>
+                        <div className="flex items-center gap-1 text-[10px] font-bold text-gray-500">
+                            <MapPin size={10} className="text-gray-300 shrink-0" />
+                            <span className="truncate max-w-[180px]">{client.address}</span>
                         </div>
                     </div>
                 </div>
-                <div className="flex items-center justify-between">
-                    <div className="text-[10px] font-bold text-gray-400">
-                        <span className="uppercase tracking-widest mr-1 opacity-50">Delivery Address:</span> {client.address}
-                    </div>
-                    <div className="flex gap-3">
-                        <div className="flex items-center gap-1.5 px-3 py-1 bg-white border border-gray-100 rounded-full">
-                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Lines</span>
-                            <span className="text-xs font-black text-indigo-600 tabular-nums">{uniqueItems}</span>
+
+                <div className="flex items-center gap-6 ml-auto">
+                    <div className="flex gap-1.5 ">
+                        <div className="flex flex-col items-center px-2 py-0.5 bg-indigo-50 border border-indigo-100 rounded-lg">
+                            <span className="text-[7px] font-black text-indigo-400 uppercase tracking-tighter">Lines</span>
+                            <span className="text-[11px] font-black tabular-nums text-indigo-600 leading-tight">{uniqueItems}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 px-3 py-1 bg-white border border-gray-100 rounded-full">
-                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Units</span>
-                            <span className="text-xs font-black text-indigo-600 tabular-nums">{totalPieces}</span>
+                        <div className="flex flex-col items-center px-2 py-0.5 bg-gray-100/50 border border-gray-200 rounded-lg">
+                            <span className="text-[7px] font-black text-gray-400 uppercase tracking-tighter">Units</span>
+                            <span className="text-[11px] font-black tabular-nums text-gray-700 leading-tight">{totalPieces}</span>
+                        </div>
+                    </div>
+
+                    <div className="flex gap-6 divide-x divide-gray-200">
+                        <div className="flex flex-col text-right">
+                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none">Balance</span>
+                            <span className={clsx("font-black text-lg tracking-tighter tabular-nums leading-tight", client.balance > 0 ? "text-rose-600" : "text-emerald-600")}>
+                                {currency}{client.balance.toLocaleString()}
+                            </span>
+                        </div>
+                        <div className="pl-6 flex flex-col text-right">
+                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none">Loyalty</span>
+                            <span className="font-black text-amber-500 text-lg tracking-tighter tabular-nums leading-tight">{client.loyalty}<span className="text-[10px] ml-0.5">pts</span></span>
                         </div>
                     </div>
                 </div>
@@ -242,30 +249,30 @@ export function TicketSidebar({ cart, onUpdateQuantity, onClear, currency = '$',
                             <button
                                 key={m.id}
                                 onClick={() => setPaymentMethod(m.id)}
-                                className={`flex items-center justify-center gap-3 p-4 rounded-2xl border transition-all ${paymentMethod === m.id ? 'bg-white border-indigo-500 shadow-xl shadow-indigo-500/10 ring-1 ring-indigo-500 ring-offset-0' : 'bg-white border-gray-100 text-gray-400 hover:border-indigo-100 hover:bg-gray-50'}`}
+                                className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border transition-all ${paymentMethod === m.id ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100' : 'bg-white border-gray-100 text-gray-400 hover:border-indigo-100 hover:bg-gray-50'}`}
                             >
-                                <m.icon size={18} className={paymentMethod === m.id ? 'text-indigo-600' : ''} />
-                                <span className={`text-[10px] font-black uppercase tracking-widest ${paymentMethod === m.id ? 'text-gray-900' : ''}`}>{m.label}</span>
+                                <m.icon size={20} className={paymentMethod === m.id ? 'text-white' : 'text-gray-300'} />
+                                <span className={`text-[8px] font-black uppercase tracking-widest ${paymentMethod === m.id ? 'text-white' : 'text-gray-500'}`}>{m.label}</span>
                             </button>
                         ))}
                     </div>
 
                     <div className="grid grid-cols-3 gap-3">
-                        <button className="flex items-center justify-center gap-3 p-3.5 rounded-2xl border border-gray-100 text-gray-400 hover:bg-gray-50 transition-all">
+                        <button className="flex items-center justify-center gap-3 h-14 rounded-2xl border border-gray-100 text-gray-400 hover:bg-gray-50 transition-all font-black text-[9px] uppercase tracking-widest">
                             <History size={16} />
-                            <span className="text-[10px] font-black uppercase tracking-widest">Multi Payment</span>
+                            Multi Payment
                         </button>
-                        <button className="flex items-center justify-center gap-3 p-3.5 rounded-2xl border border-gray-100 text-gray-400 hover:bg-gray-50 transition-all">
+                        <button className="flex items-center justify-center gap-3 h-14 rounded-2xl border border-gray-100 text-gray-400 hover:bg-gray-50 transition-all font-black text-[9px] uppercase tracking-widest">
                             <Truck size={16} />
-                            <span className="text-[10px] font-black uppercase tracking-widest">Delivery</span>
+                            Delivery
                         </button>
                         <button
                             onClick={handleCharge}
                             disabled={isPending || cart.length === 0}
-                            className="bg-indigo-500 text-white rounded-2xl p-3.5 flex items-center justify-center gap-3 font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-indigo-500/20 hover:bg-indigo-600 active:scale-95 transition-all disabled:opacity-50"
+                            className="bg-indigo-600 text-white rounded-2xl h-14 flex items-center justify-center gap-3 font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-indigo-100 hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50 border-0"
                         >
                             {isPending ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                            Save as Draft
+                            Save & Close
                         </button>
                     </div>
                 </div>
