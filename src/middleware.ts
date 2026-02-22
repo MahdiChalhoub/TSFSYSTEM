@@ -102,7 +102,8 @@ export default async function middleware(req: NextRequest) {
     if (proto === 'http' && !isLocal) {
         const httpsUrl = url.clone();
         httpsUrl.protocol = 'https:';
-        httpsUrl.host = hostname;
+        httpsUrl.hostname = hostname;
+        httpsUrl.port = "";
         return NextResponse.redirect(httpsUrl, 301);
     }
 
@@ -118,7 +119,8 @@ export default async function middleware(req: NextRequest) {
     if (!hasAuthToken && !isPublicRoute && !url.pathname.startsWith('/saas/login')) {
         const loginUrl = url.clone();
         loginUrl.pathname = '/login';
-        loginUrl.host = hostname;
+        loginUrl.hostname = hostname;
+        loginUrl.port = "";
         loginUrl.searchParams.set('error', 'session_expired');
         return NextResponse.redirect(loginUrl);
     }
@@ -140,7 +142,8 @@ export default async function middleware(req: NextRequest) {
                 const cleanPath = url.pathname.replace('/saas', '') || '/';
                 const redirectUrl = url.clone();
                 redirectUrl.pathname = cleanPath;
-                redirectUrl.host = hostname;
+                redirectUrl.hostname = hostname;
+                redirectUrl.port = "";
                 return NextResponse.redirect(redirectUrl);
             }
 
@@ -148,7 +151,8 @@ export default async function middleware(req: NextRequest) {
             if (url.pathname === '/') {
                 const dashboardUrl = url.clone();
                 dashboardUrl.pathname = '/dashboard';
-                dashboardUrl.host = hostname;
+                dashboardUrl.hostname = hostname;
+                dashboardUrl.port = "";
                 return NextResponse.redirect(dashboardUrl);
             }
 
