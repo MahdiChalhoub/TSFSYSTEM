@@ -29,8 +29,9 @@ async function getUnitsData() {
         // Link Children to Parents
         mappedUnits.forEach((u: Record<string, any>) => {
             const node = unitMap.get(u.id);
-            if (u.baseUnitId) {
-                const parent = unitMap.get(u.baseUnitId);
+            const parentId = u.base_unit; // Backend field is base_unit
+            if (parentId) {
+                const parent = unitMap.get(parentId);
                 if (parent) {
                     parent.children.push(node);
                 } else {

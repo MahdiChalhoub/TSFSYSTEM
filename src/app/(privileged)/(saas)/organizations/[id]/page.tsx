@@ -253,7 +253,14 @@ export default function OrganizationDetailPage() {
             const usersData = await getOrgUsers(orgId)
             setUsers(Array.isArray(usersData) ? usersData : [])
         } catch (e: unknown) {
-            const msg = (e instanceof Error ? e.message : String(e)) ? JSON.parse((e instanceof Error ? e.message : String(e)))?.error : 'Failed to create user'
+            let msg = 'Failed to create user'
+            try {
+                const errText = e instanceof Error ? e.message : String(e)
+                const parsed = JSON.parse(errText)
+                msg = parsed.error || parsed.detail || errText
+            } catch {
+                msg = e instanceof Error ? e.message : String(e)
+            }
             toast.error(msg)
         } finally { setCreating(false) }
     }
@@ -267,7 +274,14 @@ export default function OrganizationDetailPage() {
             setResetTarget(null)
             setNewPassword('')
         } catch (e: unknown) {
-            const msg = (e instanceof Error ? e.message : String(e)) ? JSON.parse((e instanceof Error ? e.message : String(e)))?.error : 'Failed to reset password'
+            let msg = 'Failed to reset password'
+            try {
+                const errText = e instanceof Error ? e.message : String(e)
+                const parsed = JSON.parse(errText)
+                msg = parsed.error || parsed.detail || errText
+            } catch {
+                msg = e instanceof Error ? e.message : String(e)
+            }
             toast.error(msg)
         } finally { setResetting(false) }
     }
@@ -283,7 +297,14 @@ export default function OrganizationDetailPage() {
             const sitesData = await getOrgSites(orgId)
             setSites(Array.isArray(sitesData) ? sitesData : [])
         } catch (e: unknown) {
-            const msg = (e instanceof Error ? e.message : String(e)) ? JSON.parse((e instanceof Error ? e.message : String(e)))?.error : 'Failed to create site'
+            let msg = 'Failed to create site'
+            try {
+                const errText = e instanceof Error ? e.message : String(e)
+                const parsed = JSON.parse(errText)
+                msg = parsed.error || parsed.detail || errText
+            } catch {
+                msg = e instanceof Error ? e.message : String(e)
+            }
             toast.error(msg)
         } finally { setCreatingSite(false) }
     }

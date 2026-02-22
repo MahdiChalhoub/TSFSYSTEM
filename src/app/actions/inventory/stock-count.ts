@@ -103,3 +103,25 @@ export async function unverifyLine(lineId: number) {
     revalidatePath('/inventory/stock-count')
     return result
 }
+
+// ─── Legacy Sync ────────────────────────────────────────────────
+const SYNC = 'inventory/sync'
+
+export async function syncLegacyProducts(last_id = 0) {
+    const result = await erpFetch(`${SYNC}/products/`, {
+        method: 'POST',
+        body: JSON.stringify({ last_id })
+    })
+    revalidatePath('/inventory/stock-count')
+    return result
+}
+
+export async function syncLegacyLocations() {
+    const result = await erpFetch(`${SYNC}/locations/`, { method: 'POST' })
+    revalidatePath('/inventory/stock-count')
+    return result
+}
+
+export async function getLegacyLiveQty(barcode: string, locationId: number) {
+    return await erpFetch(`${SYNC}/live-qty/?barcode=${barcode}&location_id=${locationId}`)
+}

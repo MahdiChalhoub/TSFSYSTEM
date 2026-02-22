@@ -19,10 +19,20 @@ from erp.models import Country, Site
 # =============================================================================
 
 class UnitSerializer(serializers.ModelSerializer):
+    product_count = serializers.SerializerMethodField()
+
     class Meta:
         model = Unit
-        fields = '__all__'
+        fields = [
+            'id', 'code', 'name', 'short_name', 'type', 
+            'conversion_factor', 'base_unit', 'allow_fraction', 
+            'needs_balance', 'balance_code_structure', 'product_count',
+            'organization'
+        ]
         read_only_fields = ['organization']
+
+    def get_product_count(self, obj):
+        return obj.product_set.count() if hasattr(obj, 'product_set') else 0
 
 
 class CountrySimpleSerializer(serializers.ModelSerializer):

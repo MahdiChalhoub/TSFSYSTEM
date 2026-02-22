@@ -1278,6 +1278,8 @@ class OrgModuleViewSet(viewsets.ViewSet):
                 last_name=last_name,
                 is_superuser=is_superuser,
                 is_staff=is_superuser,  # superusers are also staff
+                registration_status='APPROVED', # SaaS-created users are pre-approved
+                is_active=True,
             )
             return Response({
                 'message': f'User "{username}" created successfully',
@@ -1307,7 +1309,12 @@ class OrgModuleViewSet(viewsets.ViewSet):
         try:
             user = User.objects.get(id=user_id, organization_id=pk)
             user.set_password(new_password)
-            user.save(update_fields=['password'])
+            user.save() # Full save to ensure all auth signals fire
+            
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.info(f"SaaS Admin Reset Password for user {user.username} (ID: {user.id})")
+            
             return Response({'message': f'Password reset for "{user.username}"'})
         except User.DoesNotExist:
             return Response({'error': 'User not found in this organization'}, status=status.HTTP_404_NOT_FOUND)

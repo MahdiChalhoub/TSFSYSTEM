@@ -140,16 +140,33 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
 
     try {
         // [SMART CACHE]
-        // GET requests: allow Next.js to revalidate (stale-while-revalidate pattern, 30s)
-        // Mutating requests (POST/PUT/PATCH/DELETE): always no-store
-        const fetchOptions: Record<string, unknown> = {
+        // 1. Critical Security Fix: Disable default 30s revalidation for sensitive routes
+        // 2. Default to no-store for authenticated requests to avoid cross-user leakage in Next.js Data Cache
+        // 3. Allow manual override via options.cache
+
+        const sensitivePaths = ['auth/', 'users/', 'organizations/', 'saas/', 'settings/'];
+        const isSensitive = sensitivePaths.some(p => path.includes(p));
+
+        const fetchOptions: RequestInit & { next?: { revalidate?: number | false } } = {
             ...options,
             headers: headersRaw,
         };
 
-        if (isReadRequest) {
+        // Priority 1: Manual override
+        if (options.cache) {
+            fetchOptions.cache = options.cache;
+        }
+        // Priority 2: Sensitive or Authenticated Read requests -> no-store
+        // We use no-store for all authenticated reads to be absolutely safe from session leakage
+        else if (isReadRequest && (isSensitive || headersRaw.has('Authorization'))) {
+            fetchOptions.cache = 'no-store';
+        }
+        // Priority 3: General Read requests -> 30s revalidation
+        else if (isReadRequest) {
             fetchOptions.next = { revalidate: 30 };
-        } else {
+        }
+        // Priority 4: Mutations -> no-store (fetch default)
+        else {
             fetchOptions.cache = 'no-store';
         }
 

@@ -181,6 +181,9 @@ class Product(TenantModel):
     size = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     size_unit = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True, blank=True, related_name='sized_products')
 
+    legacy_id = models.IntegerField(null=True, blank=True, help_text='ID from legacy tsfci.com system')
+    image_url = models.CharField(max_length=500, null=True, blank=True)
+
     cost_price = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     cost_price_ht = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     cost_price_ttc = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
@@ -253,6 +256,7 @@ class Warehouse(TenantModel):
     type = models.CharField(max_length=50, default='GENERAL')
     can_sell = models.BooleanField(default=True)
     is_active = models.BooleanField(default=True)
+    legacy_id = models.IntegerField(null=True, blank=True, help_text='ID from legacy tsfci.com system')
 
     class Meta:
         db_table = 'warehouse'

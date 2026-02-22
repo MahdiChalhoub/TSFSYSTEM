@@ -115,6 +115,7 @@ export const MENU_ITEMS = [
                 children: [
                     { title: 'POS Terminal', path: '/sales' },
                     { title: 'Order History', path: '/sales/history' },
+                    { title: 'Daily Summary', path: '/sales/summary' },
                     { title: 'Sales Analytics', path: '/sales/analytics' },
                     { title: 'Quotations', path: '/sales/quotations' },
                     { title: 'Deliveries', path: '/sales/deliveries' },
@@ -191,7 +192,8 @@ export const MENU_ITEMS = [
                     { title: 'Units & Packaging', path: '/inventory/units' },
                     { title: 'Brands', path: '/inventory/brands' },
                     { title: 'Countries', path: '/inventory/countries' },
-                    { title: 'Attributes', path: '/inventory/attributes' },
+                    { title: 'Types Management', path: '/inventory/attributes' },
+                    { title: 'Price Groups', path: '/crm/pricing' },
                 ]
             },
             {
@@ -244,7 +246,7 @@ export const MENU_ITEMS = [
                     { title: 'Trial Balance', path: '/finance/reports/trial-balance' },
                     { title: 'Profit & Loss', path: '/finance/reports/pnl' },
                     { title: 'Balance Sheet', path: '/finance/reports/balance-sheet' },
-                    { title: 'Aging Report', path: '/finance/aging' },
+                    { title: 'Aging Report', path: '/finance/reports/aging' },
                     { title: 'Audit Trail', path: '/finance/audit-trail' },
                     { title: 'Cash Register', path: '/finance/cash-register' },
                     { title: 'Bank Reconciliation', path: '/finance/bank-reconciliation' },
@@ -312,6 +314,7 @@ export const MENU_ITEMS = [
                     { title: 'Client Orders', path: '/workspace/client-orders' },
                     { title: 'Client Tickets', path: '/workspace/client-tickets' },
                     { title: 'Quote Inbox', path: '/workspace/quote-inbox' },
+                    { title: 'Tender Inbox', path: '/workspace/tenders' },
                     { title: 'Gate Preview', path: '/crm/client-gate-preview', icon: Eye },
                 ]
             },
@@ -359,6 +362,17 @@ export const MENU_ITEMS = [
         path: '/migration',
     },
     {
+        title: 'AI & Intelligence',
+        icon: Bot,
+        module: 'mcp',
+        children: [
+            { title: 'AI Assistant', path: '/mcp/chat', icon: Bot },
+            { title: 'AI Tool Registry', path: '/mcp/tools', icon: Wrench },
+            { title: 'Conversations', path: '/mcp/conversations', icon: MessageSquare },
+            { title: 'Usage Stats', path: '/mcp/usage', icon: BarChart3 },
+        ]
+    },
+    {
         title: 'SaaS Control',
         icon: ShieldCheck,
         visibility: 'saas',
@@ -390,19 +404,6 @@ export const MENU_ITEMS = [
                             { title: 'Connector Buffer', path: '/connector/buffer' },
                             { title: 'Connector Logs', path: '/connector/logs' },
                             { title: 'Connector Policies', path: '/connector/policies' },
-                        ]
-                    },
-                    {
-                        title: 'MCP AI',
-                        icon: Bot,
-                        children: [
-                            { title: 'MCP Dashboard', path: '/mcp' },
-                            { title: 'MCP Chat', path: '/mcp/chat' },
-                            { title: 'Conversations', path: '/mcp/conversations' },
-                            { title: 'Providers', path: '/mcp/providers' },
-                            { title: 'Tools', path: '/mcp/tools' },
-                            { title: 'Usage', path: '/mcp/usage' },
-                            { title: 'MCP Settings', path: '/mcp/settings' },
                         ]
                     },
                     { title: 'AES-256 Encryption', path: '/encryption' },
@@ -588,7 +589,7 @@ function MenuItem({
     level = 0
 }: {
     item: Record<string, any>,
-    openTab: Record<string, any>,
+    openTab: (title: string, path: string) => void,
     activeTab: string,
     installedModules: Set<string>,
     level?: number
