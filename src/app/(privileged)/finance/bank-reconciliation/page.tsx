@@ -15,7 +15,7 @@ import { toast } from "sonner"
 import {
     Landmark, ArrowLeft, Search, DollarSign,
     ArrowUpRight, ArrowDownRight, Hash, FileText, Calendar
-} from "lucide-react"
+, Building } from "lucide-react"
 
 export default function BankReconciliationPage() {
     const { fmt } = useCurrency()
@@ -193,13 +193,13 @@ export default function BankReconciliationPage() {
     return (
         <div className="p-6 space-y-6">
             <header>
-                <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center">
-                        <Landmark size={20} className="text-white" />
+                <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-[1.5rem] bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
+                        <Building size={28} className="text-white" />
                     </div>
-                    Bank Reconciliation
+                    Bank <span className="text-blue-600">Reconciliation</span>
                 </h1>
-                <p className="text-sm text-gray-500 mt-1">Review bank & cash accounts, drill into entries</p>
+                <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Match Transactions</p>
             </header>
 
             {/* Total Balance */}

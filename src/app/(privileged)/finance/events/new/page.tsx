@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { ContactPicker } from "@/components/finance/contact-picker"
 import { FinanceAccountSelector } from "@/components/finance/finance-account-selector"
-import { ArrowLeft, Wallet, ArrowDownLeft, ArrowUpRight, RotateCcw } from "lucide-react"
+import { ArrowLeft, Wallet, ArrowDownLeft, ArrowUpRight, RotateCcw , CalendarPlus } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner" // Assuming sonner or similar toast exists, otherwise handled simply
 
@@ -115,7 +115,13 @@ export default function NewFinancialEventPage() {
                 <Link href="/finance/events">
                     <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
                 </Link>
-                <h1 className="text-2xl font-bold">New Financial Event</h1>
+                <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
+                        <CalendarPlus size={28} className="text-white" />
+                    </div>
+                    New <span className="text-indigo-600">Event</span>
+                </h1>
+                <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Create Financial Event</p>
             </div>
 
             {!selectedType ? (

@@ -1,4 +1,5 @@
 import { erpFetch } from '@/lib/erp-fetch'
+import { FileText } from 'lucide-react';
 import QuotationManager from './manager'
 
 interface Contact {
@@ -43,8 +44,13 @@ export default async function QuotationsPage() {
     return (
         <div className="p-6 space-y-6">
             <div>
-                <h1 className="text-2xl font-bold">Quotations & Proforma</h1>
-                <p className="text-sm text-gray-500 mt-1">
+                <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-[1.5rem] bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
+                        <FileText size={28} className="text-white" />
+                    </div>
+                    Quote <span className="text-blue-600">Management</span>
+                </h1>
+                <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Proposals & Estimates</p>
                     Create proformas, manage line items, and convert accepted quotations into sale orders.
                 </p>
             </div>

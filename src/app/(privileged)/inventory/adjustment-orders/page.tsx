@@ -9,6 +9,7 @@ import {
 import { getWarehouses } from '@/app/actions/inventory/valuation'
 import { TypicalListView, type ColumnDef } from '@/components/common/TypicalListView'
 import { TypicalFilter } from '@/components/common/TypicalFilter'
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { useCurrency } from '@/lib/utils/currency'
 import { toast } from 'sonner'
 import { Eye, Pencil } from 'lucide-react'
@@ -25,8 +26,25 @@ type AdjustmentLine = {
     added_by_name?: string; added_by?: { username?: string; first_name?: string }
 }
 
+const ALL_COLUMNS: ColumnDef<any>[] = [
+    { key: 'date', label: 'Date', sortable: true, alwaysVisible: true },
+    { key: 'supplier', label: 'Supplier' },
+    { key: 'reference', label: 'Reference', sortable: true, alwaysVisible: true },
+    { key: 'qty', label: 'QTY Adj.', align: 'right' },
+    { key: 'amt', label: 'Amt Adj', align: 'right' },
+    { key: 'wh', label: 'Location' },
+    { key: 'reason', label: 'Reason' },
+]
+
 export default function AdjustmentOrdersPage() {
     const { fmt } = useCurrency()
+    const settings = useListViewSettings('inventory_adjustments', {
+        columns: ALL_COLUMNS.map(c => c.key),
+        pageSize: 25,
+        sortKey: 'date',
+        sortDir: 'desc',
+    })
+
     const [orders, setOrders] = useState<any[]>([])
     const [warehouses, setWarehouses] = useState<WarehouseType[]>([])
     const [loading, setLoading] = useState(true)
@@ -59,15 +77,17 @@ export default function AdjustmentOrdersPage() {
 
     useEffect(() => { loadData() }, [loadData])
 
-    const columns: ColumnDef<any>[] = [
-        { key: 'date', label: 'Date', render: r => new Date(r.date || r.created_at).toLocaleDateString() },
-        { key: 'supplier', label: 'Supplier', render: r => r.supplier_name || r.supplier?.name || '—' },
-        { key: 'reference', label: 'Reference' },
-        { key: 'qty', label: 'QTY Adj.', align: 'right', render: r => r.total_qty_adjustment ?? r.lines?.length ?? 0 },
-        { key: 'amt', label: 'Amt Adj', align: 'right', render: r => fmt(r.total_amount_adjustment || 0) },
-        { key: 'wh', label: 'Location', render: r => r.warehouse_name || r.warehouse?.name || '—' },
-        { key: 'reason', label: 'Reason', render: r => r.reason || '—' },
-    ]
+    const columns: ColumnDef<any>[] = ALL_COLUMNS.map(c => {
+        const renderers: Record<string, (r: any) => React.ReactNode> = {
+            date: r => new Date(r.date || r.created_at).toLocaleDateString(),
+            supplier: r => r.supplier_name || r.supplier?.name || '—',
+            qty: r => r.total_qty_adjustment ?? r.lines?.length ?? 0,
+            amt: r => fmt(r.total_amount_adjustment || 0),
+            wh: r => r.warehouse_name || r.warehouse?.name || '—',
+            reason: r => r.reason || '—',
+        }
+        return { ...c, render: renderers[c.key] }
+    })
 
     const filtered = orders.filter(o => {
         if (filterStatus && o.lifecycle_status !== filterStatus) return false
@@ -104,6 +124,13 @@ export default function AdjustmentOrdersPage() {
                 loading={loading}
                 getRowId={r => r.id}
                 columns={columns}
+                visibleColumns={settings.visibleColumns}
+                onToggleColumn={settings.toggleColumn}
+                pageSize={settings.pageSize}
+                onPageSizeChange={settings.setPageSize}
+                sortKey={settings.sortKey}
+                sortDir={settings.sortDir}
+                onSort={k => settings.setSort(k)}
                 expandable={{
                     columns: [
                         { key: 'wh', label: 'Location', render: (d: AdjustmentLine) => d.warehouse_name || '—' },
@@ -114,7 +141,7 @@ export default function AdjustmentOrdersPage() {
                         { key: 'by', label: 'Added By', render: (d: AdjustmentLine) => d.added_by_name || d.added_by?.username || '—' },
                     ],
                     getDetails: r => r.lines || [],
-                    renderActions: (d, row) => (
+                    renderActions: (d) => (
                         <div className="flex gap-1">
                             <button className="p-1 rounded hover:bg-emerald-100"><Eye className="h-3.5 w-3.5 text-emerald-600" /></button>
                             <button className="p-1 rounded hover:bg-emerald-100"><Pencil className="h-3.5 w-3.5 text-emerald-600" /></button>

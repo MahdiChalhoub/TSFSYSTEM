@@ -13,7 +13,7 @@ import { toast } from "sonner"
 import {
     History, Search, Plus, Edit, Trash2, Send, RotateCcw,
     User, Clock, ChevronLeft, ChevronRight, FileText, Filter, Eye
-} from "lucide-react"
+, Shield } from "lucide-react"
 
 const ACTION_CONFIG: Record<string, { icon: Record<string, any>, color: string, bg: string }> = {
     CREATE: { icon: Plus, color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
@@ -73,13 +73,13 @@ export default function AuditTrailPage() {
         <div className="p-6 space-y-6">
             {/* Header */}
             <header>
-                <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gray-900 flex items-center justify-center">
-                        <History size={20} className="text-white" />
+                <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-[1.5rem] bg-slate-600 flex items-center justify-center shadow-lg shadow-slate-200">
+                        <Shield size={28} className="text-white" />
                     </div>
-                    Audit Trail
+                    Audit <span className="text-slate-600">Trail</span>
                 </h1>
-                <p className="text-sm text-gray-500 mt-2">Track all changes — who changed what, when</p>
+                <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Financial Activity Log</p>
             </header>
 
             {/* Filters */}

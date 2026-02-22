@@ -5,7 +5,7 @@ import { getFiscalYears, getFiscalGaps } from '@/app/actions/finance/fiscal-year
 import type { FiscalYear } from '@/types/erp'
 import FiscalYearWizard from './wizard'
 import FiscalYearCard from './year-card'
-import { AlertTriangle, Loader2 } from 'lucide-react'
+import { AlertTriangle, Loader2 , CalendarDays } from 'lucide-react'
 
 export default function FiscalYearsPage() {
     const [years, setYears] = useState<FiscalYear[]>([])
@@ -45,7 +45,13 @@ export default function FiscalYearsPage() {
         <div className="p-6">
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h1 className="text-2xl font-bold text-stone-900 font-serif">Fiscal Years</h1>
+                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-[1.5rem] bg-stone-600 flex items-center justify-center shadow-lg shadow-stone-200">
+                            <CalendarDays size={28} className="text-white" />
+                        </div>
+                        Fiscal <span className="text-stone-600">Years</span>
+                    </h1>
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Periods & Closing</p>
                     <p className="text-sm text-stone-500">Manage your accounting periods and closing cycles.</p>
                 </div>
                 <FiscalYearWizard lastCreatedYear={years[0]} />

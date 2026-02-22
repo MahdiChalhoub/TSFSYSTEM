@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import {
     Truck, DollarSign, Package, Star, Search, TrendingUp, Clock
-} from "lucide-react"
+, Award } from "lucide-react"
 
 export default function SupplierPerformancePage() {
     const { fmt } = useCurrency()
@@ -93,13 +93,13 @@ export default function SupplierPerformancePage() {
         <div className="p-6 space-y-6">
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-teal-600 flex items-center justify-center">
-                            <Truck size={20} className="text-white" />
+                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
+                            <Award size={28} className="text-white" />
                         </div>
-                        Supplier Performance
+                        Supplier <span className="text-emerald-600">Performance</span>
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">Vendor analysis, spend tracking & delivery rates</p>
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Vendor Analytics</p>
                 </div>
                 <div className="relative w-64">
                     <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />

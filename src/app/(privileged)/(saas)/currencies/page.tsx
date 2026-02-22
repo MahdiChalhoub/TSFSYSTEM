@@ -80,7 +80,13 @@ export default function CurrenciesPage() {
                         <Coins size={22} />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-stone-900 font-serif">Currency Management</h1>
+                        <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-[1.5rem] bg-amber-600 flex items-center justify-center shadow-lg shadow-amber-200">
+                                <Coins size={28} className="text-white" />
+                            </div>
+                            Currency <span className="text-amber-600">Management</span>
+                        </h1>
+                        <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Exchange Rates</p>
                         <p className="text-sm text-stone-500">Manage available currencies across the platform</p>
                     </div>
                 </div>

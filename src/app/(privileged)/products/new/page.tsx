@@ -1,4 +1,5 @@
 import AddProductForm from './form';
+import { PackagePlus } from 'lucide-react';
 import { erpFetch } from '@/lib/erp-api';
 import { getProductNamingRule } from '@/app/actions/settings';
 import { getFinancialSettings } from '@/app/actions/finance/settings';
@@ -73,9 +74,13 @@ export default async function NewProductPage(props: { searchParams: Promise<{ cl
     return (
         <div>
             <div className="mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">
-                    {cloneId ? 'Clone Product' : 'Add New Product'}
+                <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
+                        <PackagePlus size={28} className="text-white" />
+                    </div>
+                    New <span className="text-emerald-600">Product</span>
                 </h1>
+                <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Create Product</p>
                 <p className="text-gray-500">
                     {cloneId ? `Creating a copy of "${clonedProduct?.name}"` : 'Create a new item in the TSF Catalog.'}
                 </p>

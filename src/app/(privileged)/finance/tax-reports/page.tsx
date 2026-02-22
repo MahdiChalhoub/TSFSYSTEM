@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import {
     Receipt, Percent, DollarSign, TrendingUp, CheckCircle, AlertCircle, BarChart3
-} from "lucide-react"
+, FileSpreadsheet } from "lucide-react"
 
 export default function TaxReportsPage() {
     const { fmt } = useCurrency()
@@ -56,13 +56,13 @@ export default function TaxReportsPage() {
     return (
         <div className="p-6 space-y-6">
             <header>
-                <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-rose-600 flex items-center justify-center">
-                        <Receipt size={20} className="text-white" />
+                <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-[1.5rem] bg-rose-600 flex items-center justify-center shadow-lg shadow-rose-200">
+                        <FileSpreadsheet size={28} className="text-white" />
                     </div>
-                    Tax Reports
+                    Tax <span className="text-rose-600">Reports</span>
                 </h1>
-                <p className="text-sm text-gray-500 mt-1">Tax groups, rates & collection summary (last 30 days)</p>
+                <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">VAT & Tax Summary</p>
             </header>
 
             {/* KPI Cards */}

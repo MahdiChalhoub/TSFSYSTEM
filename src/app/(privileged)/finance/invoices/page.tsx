@@ -194,7 +194,13 @@ export default function InvoicesPage() {
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-4xl font-bold text-stone-900 font-serif tracking-tight">Invoices</h1>
+                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-[1.5rem] bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
+                            <FileText size={28} className="text-white" />
+                        </div>
+                        Invoice <span className="text-blue-600">Management</span>
+                    </h1>
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Sales & Purchase Invoices</p>
                     <p className="text-stone-500 font-medium mt-1">Create, manage, and track sales &amp; purchase invoices</p>
                 </div>
                 <Button onClick={() => setCreateOpen(true)} className="rounded-xl gap-2 shadow-md hover:shadow-lg transition-all">

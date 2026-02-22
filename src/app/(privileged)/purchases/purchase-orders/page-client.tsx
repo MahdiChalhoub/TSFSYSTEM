@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { getPurchaseOrders, getPurchaseOrder } from '@/app/actions/inventory/locations'
-import { ShoppingBag, RefreshCw, ChevronRight, Clock, CheckCircle, XCircle, Package, Truck, Calendar, User, Building2, FileText } from 'lucide-react'
+import { ShoppingBag, RefreshCw, ChevronRight, Clock, CheckCircle, XCircle, Package, Truck, Calendar, User, Building2, FileText , ClipboardList } from 'lucide-react'
 
 type PO = {
     id: number
@@ -68,8 +68,13 @@ export default function PurchaseOrdersPage() {
                         <ShoppingBag size={22} className="text-white" />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-white tracking-tight">Purchase Orders</h1>
-                        <p className="text-sm text-gray-400 mt-0.5">Track all formal procurement orders to suppliers</p>
+                        <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-[1.5rem] bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
+                                <ClipboardList size={28} className="text-white" />
+                            </div>
+                            Purchase <span className="text-blue-600">Orders</span>
+                        </h1>
+                        <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Order Management</p>
                     </div>
                 </div>
                 <button onClick={load} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm">

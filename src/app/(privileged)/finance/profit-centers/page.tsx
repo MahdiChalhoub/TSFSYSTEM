@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import {
     Building2, DollarSign, TrendingUp, TrendingDown, Percent
-} from "lucide-react"
+, Target } from "lucide-react"
 
 export default function ProfitCentersPage() {
     const { fmt } = useCurrency()
@@ -97,13 +97,13 @@ export default function ProfitCentersPage() {
     return (
         <div className="p-6 space-y-6">
             <header>
-                <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-purple-600 flex items-center justify-center">
-                        <Building2 size={20} className="text-white" />
+                <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-[1.5rem] bg-purple-600 flex items-center justify-center shadow-lg shadow-purple-200">
+                        <Target size={28} className="text-white" />
                     </div>
-                    Profit Centers
+                    Profit <span className="text-purple-600">Centers</span>
                 </h1>
-                <p className="text-sm text-gray-500 mt-1">SYSCOHADA class-based profit center analysis</p>
+                <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Departmental Tracking</p>
             </header>
 
             <div className="grid grid-cols-4 gap-4">

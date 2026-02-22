@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { getCustomerBalances, getSupplierBalances } from '@/app/actions/finance/reports'
-import { Users, Briefcase, TrendingUp, TrendingDown, RefreshCw, Search, ArrowUpRight, ArrowDownRight } from 'lucide-react'
+import { Users, Briefcase, TrendingUp, TrendingDown, RefreshCw, Search, ArrowUpRight, ArrowDownRight , Scale } from 'lucide-react'
 
 type Balance = {
     id: number
@@ -52,8 +52,13 @@ export default function BalancesPage() {
                         {tab === 'customer' ? <Users size={22} className="text-white" /> : <Briefcase size={22} className="text-white" />}
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-white tracking-tight">Contact Balances</h1>
-                        <p className="text-sm text-gray-400 mt-0.5">Customer receivables and supplier payables</p>
+                        <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-[1.5rem] bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
+                                <Scale size={28} className="text-white" />
+                            </div>
+                            Account <span className="text-blue-600">Balances</span>
+                        </h1>
+                        <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Real-time Positions</p>
                     </div>
                 </div>
                 <button onClick={loadAll} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm transition-colors">

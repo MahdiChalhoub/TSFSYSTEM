@@ -1,48 +1,39 @@
 'use client'
 
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from '@/components/ui/table'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Checkbox } from '@/components/ui/checkbox'
+import {
+    Popover, PopoverContent, PopoverTrigger
+} from '@/components/ui/popover'
+import {
+    Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+} from '@/components/ui/select'
 import {
     Download, Plus, ChevronDown, ChevronUp, Lock, LockOpen,
     CheckCircle2, Eye, Pencil, Trash2, ArrowUpDown, ArrowUp, ArrowDown,
+    Columns3, ChevronLeft, ChevronRight,
 } from 'lucide-react'
 
 /* ═══════════════════════════════════════════════════════
-   TypicalListView — Reusable list/table for any page
+   TypicalListView — Fully customizable list/table
    
-   Usage:
-     <TypicalListView
-       title="Stock Transfer"
-       addLabel="Add Transfer"
-       onAdd={() => ...}
-       data={orders}
-       columns={[
-         { key: 'date', label: 'Date', render: r => ... },
-         { key: 'ref',  label: 'Reference' },
-       ]}
-       getRowId={r => r.id}
-       expandable={{
-         columns: [{ key: 'location', label: 'Location' }],
-         getDetails: r => r.lines,
-         renderActions: (detail, row) => <button>View</button>,
-       }}
-       lifecycle={{
-         getStatus: r => ({ label: 'Approved', variant: 'success' }),
-         getVerified: r => r.verified,
-         getLocked: r => r.locked,
-         onLockToggle: r => ...,
-       }}
-       actions={{
-         onView: r => ...,
-         onEdit: r => ...,
-         onDelete: r => ...,
-         extra: r => <button>Post</button>,
-       }}
-     />
+   Features:
+   ✓ Column definitions with custom renderers
+   ✓ Column visibility dropdown (show/hide columns)
+   ✓ Record count badge in header
+   ✓ Pagination bar with "Showing X–Y of Z" + page nav
+   ✓ Page size selector
+   ✓ Expandable detail sub-rows
+   ✓ Lifecycle columns (status, verified, lock)
+   ✓ Row actions (view, edit, delete, custom)
+   ✓ Row selection + bulk actions
+   ✓ Sorting
+   ✓ Compact / striped / hoverable modes
    ═══════════════════════════════════════════════════════ */
 
 /* ─── Types ──────────────────────────────────────────── */
@@ -54,8 +45,9 @@ export type ColumnDef<T> = {
     render?: (row: T) => React.ReactNode
     sortable?: boolean
     width?: string
-    /** Hide this column on mobile */
     hideMobile?: boolean
+    /** If false, column cannot be hidden via visibility dropdown */
+    alwaysVisible?: boolean
 }
 
 export type DetailColumnDef<D> = {
@@ -66,28 +58,18 @@ export type DetailColumnDef<D> = {
 }
 
 export type ExpandableConfig<T, D> = {
-    /** Columns for the detail sub-table */
     columns: DetailColumnDef<D>[]
-    /** Extract detail items from a master row */
     getDetails: (row: T) => D[]
-    /** Optional actions column in detail rows */
     renderActions?: (detail: D, row: T) => React.ReactNode
-    /** Detail sub-table border color (tailwind) */
     borderColor?: string
-    /** Detail sub-table header bg color (tailwind) */
     headerColor?: string
-    /** Detail sub-table header text color (tailwind) */
     headerTextColor?: string
 }
 
 export type LifecycleConfig<T> = {
-    /** Get display status for a row */
     getStatus: (row: T) => { label: string; variant: 'default' | 'success' | 'warning' | 'destructive' }
-    /** Whether row is verified (shows checkmark) */
     getVerified?: (row: T) => boolean
-    /** Whether row is locked (shows lock icon) */
     getLocked?: (row: T) => boolean
-    /** Toggle lock on a row */
     onLockToggle?: (row: T) => void
 }
 
@@ -95,83 +77,63 @@ export type ActionsConfig<T> = {
     onView?: (row: T) => void
     onEdit?: (row: T) => void
     onDelete?: (row: T) => void
-    /** Extra action buttons per row */
     extra?: (row: T) => React.ReactNode
 }
 
 export type TypicalListViewProps<T, D = any> = {
-    /* ── Header settings ─── */
-    /** Page title */
+    /* Header */
     title: string
-    /** Label for the add button */
     addLabel?: string
-    /** Called when add button is clicked */
     onAdd?: () => void
-    /** Called when export button is clicked */
     onExport?: () => void
-    /** Extra buttons in the header area */
     headerExtra?: React.ReactNode
 
-    /* ── Data ─── */
-    /** Array of data rows */
+    /* Data */
     data: T[]
-    /** Loading state */
     loading?: boolean
-    /** Unique ID for each row */
     getRowId: (row: T) => string | number
-    /** Empty state message */
     emptyMessage?: string
 
-    /* ── Columns ─── */
-    /** Column definitions for the main table */
+    /* Columns */
     columns: ColumnDef<T>[]
 
-    /* ── Expandable detail rows ─── */
+    /* Column visibility */
+    visibleColumns?: string[]
+    onToggleColumn?: (key: string) => void
+
+    /* Expandable */
     expandable?: ExpandableConfig<T, D>
 
-    /* ── Lifecycle (status, verified, lock) ─── */
+    /* Lifecycle */
     lifecycle?: LifecycleConfig<T>
 
-    /* ── Row actions ─── */
+    /* Actions */
     actions?: ActionsConfig<T>
 
-    /* ── Visual settings ─── */
-    /** Custom class for the table container */
+    /* Visual */
     className?: string
-    /** Strip rows with alternating background */
     striped?: boolean
-    /** Compact row height */
     compact?: boolean
-    /** Show row hover effect */
     hoverable?: boolean
 
-    /* ── Bulk actions ─── */
-    /** Enable row selection checkboxes */
+    /* Selection */
     selectable?: boolean
-    /** Called with selected row IDs */
     onSelectionChange?: (ids: (string | number)[]) => void
-    /** Render bulk action bar when items selected */
     renderBulkActions?: (selectedIds: (string | number)[]) => React.ReactNode
 
-    /* ── Sorting ─── */
-    /** Current sort key */
+    /* Sorting */
     sortKey?: string
-    /** Current sort direction */
     sortDir?: 'asc' | 'desc'
-    /** Called when user clicks sortable column header */
     onSort?: (key: string) => void
 
-    /* ── Pagination ─── */
-    /** Total number of items (for pagination display) */
-    totalCount?: number
-    /** Current page (1-indexed) */
-    currentPage?: number
-    /** Items per page */
+    /* Pagination (client-side auto-paginate OR server-side) */
     pageSize?: number
-    /** Called when page changes */
+    onPageSizeChange?: (size: number) => void
+    /** For server-side pagination */
+    totalCount?: number
+    currentPage?: number
     onPageChange?: (page: number) => void
 
-    /** Children rendered below the table (e.g. TypicalFilter, extra UI) */
     children?: React.ReactNode
 }
 
@@ -192,7 +154,7 @@ function StatusBadge({ label, variant }: { label: string; variant: string }) {
     )
 }
 
-/* ─── Loading Skeleton ──────────────────────────────── */
+/* ─── Skeleton ──────────────────────────────────────── */
 
 function LoadingSkeleton({ columns, compact }: { columns: number; compact: boolean }) {
     return (
@@ -210,12 +172,16 @@ function LoadingSkeleton({ columns, compact }: { columns: number; compact: boole
     )
 }
 
-/* ─── Main Component ────────────────────────────────── */
+/* ─── Page Size Options ─────────────────────────────── */
+const PAGE_SIZES = [10, 25, 50, 100]
+
+/* ═══════════════ MAIN COMPONENT ═════════════════════ */
 
 export function TypicalListView<T extends Record<string, any>, D extends Record<string, any> = any>({
     title, addLabel, onAdd, onExport, headerExtra,
     data, loading, getRowId, emptyMessage,
     columns,
+    visibleColumns, onToggleColumn,
     expandable,
     lifecycle,
     actions,
@@ -227,43 +193,59 @@ export function TypicalListView<T extends Record<string, any>, D extends Record<
     onSelectionChange,
     renderBulkActions,
     sortKey, sortDir, onSort,
-    totalCount, currentPage, pageSize, onPageChange,
+    pageSize: pageSizeProp = 25,
+    onPageSizeChange,
+    totalCount: totalCountProp,
+    currentPage: currentPageProp,
+    onPageChange: onPageChangeProp,
     children,
 }: TypicalListViewProps<T, D>) {
 
     const [expandedRows, setExpandedRows] = useState<Set<string | number>>(new Set())
     const [selectedRows, setSelectedRows] = useState<Set<string | number>>(new Set())
+    const [localPage, setLocalPage] = useState(1)
 
-    const toggleRow = useCallback((id: string | number) => {
-        setExpandedRows(prev => {
-            const next = new Set(prev)
-            if (next.has(id)) next.delete(id)
-            else next.add(id)
-            return next
-        })
-    }, [])
+    /* ─── Column Visibility ─────────────── */
+    const activeColumns = useMemo(() => {
+        if (!visibleColumns) return columns
+        return columns.filter(c => visibleColumns.includes(c.key) || c.alwaysVisible)
+    }, [columns, visibleColumns])
 
-    const toggleSelect = useCallback((id: string | number) => {
-        setSelectedRows(prev => {
-            const next = new Set(prev)
-            if (next.has(id)) next.delete(id)
-            else next.add(id)
-            const ids = Array.from(next)
-            onSelectionChange?.(ids)
-            return next
-        })
-    }, [onSelectionChange])
+    /* ─── Client-side pagination ─────────── */
+    const isServerPaginated = !!onPageChangeProp
+    const currentPage = isServerPaginated ? (currentPageProp || 1) : localPage
+    const totalRecords = isServerPaginated ? (totalCountProp || data.length) : data.length
+    const totalPages = Math.max(1, Math.ceil(totalRecords / pageSizeProp))
 
-    const toggleSelectAll = useCallback(() => {
-        if (selectedRows.size === data.length) {
-            setSelectedRows(new Set())
-            onSelectionChange?.([])
+    const paginatedData = useMemo(() => {
+        if (isServerPaginated) return data // server already sliced
+        const start = (currentPage - 1) * pageSizeProp
+        return data.slice(start, start + pageSizeProp)
+    }, [data, currentPage, pageSizeProp, isServerPaginated])
+
+    const handlePageChange = useCallback((page: number) => {
+        const clamped = Math.max(1, Math.min(totalPages, page))
+        if (isServerPaginated) {
+            onPageChangeProp?.(clamped)
         } else {
-            const allIds = data.map(getRowId)
-            setSelectedRows(new Set(allIds))
-            onSelectionChange?.(allIds)
+            setLocalPage(clamped)
         }
-    }, [data, getRowId, selectedRows.size, onSelectionChange])
+    }, [totalPages, isServerPaginated, onPageChangeProp])
+
+    // Reset to page 1 when data changes
+    useEffect(() => { if (!isServerPaginated) setLocalPage(1) }, [data.length, isServerPaginated])
+
+    /* ─── Row expand / select ────────────── */
+    const toggleRow = useCallback((id: string | number) => {
+        setExpandedRows(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
+    }, [])
+    const toggleSelect = useCallback((id: string | number) => {
+        setSelectedRows(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); onSelectionChange?.(Array.from(n)); return n })
+    }, [onSelectionChange])
+    const toggleSelectAll = useCallback(() => {
+        if (selectedRows.size === paginatedData.length) { setSelectedRows(new Set()); onSelectionChange?.([]) }
+        else { const ids = paginatedData.map(getRowId); setSelectedRows(new Set(ids)); onSelectionChange?.(ids) }
+    }, [paginatedData, getRowId, selectedRows.size, onSelectionChange])
 
     const hasExpandable = !!expandable
     const hasLifecycle = !!lifecycle
@@ -271,49 +253,75 @@ export function TypicalListView<T extends Record<string, any>, D extends Record<
     const hasVerified = !!lifecycle?.getVerified
     const hasLock = !!lifecycle?.getLocked
 
-    /* Total column count */
-    const totalCols =
-        (selectable ? 1 : 0)
-        + columns.length
-        + (hasLifecycle ? 1 : 0)
-        + (hasVerified ? 1 : 0)
-        + (hasLock ? 1 : 0)
-        + (hasExpandable ? 1 : 0)
-        + (hasActions ? 1 : 0)
+    const totalCols = (selectable ? 1 : 0) + activeColumns.length +
+        (hasLifecycle ? 1 : 0) + (hasVerified ? 1 : 0) + (hasLock ? 1 : 0) +
+        (hasExpandable ? 1 : 0) + (hasActions ? 1 : 0)
 
-    const cellPadding = compact ? 'py-1.5 px-2' : 'py-2.5 px-3'
-    const headerPadding = compact ? 'py-1 px-2' : 'py-2 px-3'
-
-    /* Detail sub-table colors */
+    const cp = compact ? 'py-1.5 px-2' : 'py-2.5 px-3'
+    const hp = compact ? 'py-1 px-2' : 'py-2 px-3'
     const detailBorder = expandable?.borderColor || 'border-emerald-200'
     const detailHeader = expandable?.headerColor || 'bg-emerald-50/80'
     const detailText = expandable?.headerTextColor || 'text-emerald-700'
 
+    /* Showing range */
+    const showStart = totalRecords === 0 ? 0 : (currentPage - 1) * pageSizeProp + 1
+    const showEnd = Math.min(currentPage * pageSizeProp, totalRecords)
+
     return (
         <div className={`space-y-4 ${className}`}>
-            {/* ─── HEADER ─────────────────────────────── */}
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+            {/* ═══ HEADER ═════════════════════════════ */}
+            <div className="flex items-center justify-between flex-wrap gap-3">
+                <div className="flex items-center gap-3">
+                    <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
+                        {totalRecords} records
+                    </span>
+                </div>
                 <div className="flex items-center gap-2">
+                    {/* Column Visibility Dropdown */}
+                    {onToggleColumn && (
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button variant="outline" size="sm" className="gap-1.5">
+                                    <Columns3 className="h-4 w-4" /> Columns
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-56 p-3" align="end">
+                                <p className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider">Show / Hide Columns</p>
+                                <div className="space-y-1.5 max-h-64 overflow-auto">
+                                    {columns.map(col => (
+                                        <label key={col.key}
+                                            className={`flex items-center gap-2 px-2 py-1.5 rounded text-sm cursor-pointer hover:bg-gray-50 transition-colors ${col.alwaysVisible ? 'opacity-50' : ''}`}>
+                                            <Checkbox
+                                                checked={visibleColumns?.includes(col.key) ?? true}
+                                                onCheckedChange={() => !col.alwaysVisible && onToggleColumn(col.key)}
+                                                disabled={col.alwaysVisible}
+                                            />
+                                            <span>{col.label}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </PopoverContent>
+                        </Popover>
+                    )}
                     {headerExtra}
                     {onExport && (
-                        <Button variant="outline" size={compact ? 'sm' : 'sm'} onClick={onExport}>
+                        <Button variant="outline" size="sm" onClick={onExport}>
                             <Download className="h-4 w-4 mr-1.5" /> Export
                         </Button>
                     )}
                     {onAdd && addLabel && (
-                        <Button size="sm" onClick={onAdd}
-                            className="bg-emerald-500 hover:bg-emerald-600 text-white">
+                        <Button size="sm" onClick={onAdd} className="bg-emerald-500 hover:bg-emerald-600 text-white">
                             <Plus className="h-4 w-4 mr-1.5" /> {addLabel}
                         </Button>
                     )}
                 </div>
             </div>
 
-            {/* ─── CHILDREN (e.g. TypicalFilter) ──────── */}
+            {/* ═══ CHILDREN (TypicalFilter) ═══════════ */}
             {children}
 
-            {/* ─── BULK ACTIONS BAR ───────────────────── */}
+            {/* ═══ BULK ACTIONS ═══════════════════════ */}
             {selectable && selectedRows.size > 0 && renderBulkActions && (
                 <div className="flex items-center gap-3 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg animate-in slide-in-from-top-2">
                     <span className="text-sm font-medium text-blue-700">{selectedRows.size} selected</span>
@@ -321,25 +329,21 @@ export function TypicalListView<T extends Record<string, any>, D extends Record<
                 </div>
             )}
 
-            {/* ─── TABLE ──────────────────────────────── */}
+            {/* ═══ TABLE ═════════════════════════════ */}
             <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                 <Table>
                     <TableHeader>
                         <TableRow className="bg-gray-50/60">
                             {selectable && (
-                                <TableHead className={`${headerPadding} w-10`}>
-                                    <input type="checkbox"
-                                        checked={data.length > 0 && selectedRows.size === data.length}
-                                        onChange={toggleSelectAll}
-                                        className="rounded border-gray-300"
-                                    />
+                                <TableHead className={`${hp} w-10`}>
+                                    <input type="checkbox" checked={paginatedData.length > 0 && selectedRows.size === paginatedData.length}
+                                        onChange={toggleSelectAll} className="rounded border-gray-300" />
                                 </TableHead>
                             )}
-                            {columns.map(col => (
+                            {activeColumns.map(col => (
                                 <TableHead key={col.key}
-                                    className={`${headerPadding} text-xs font-semibold text-gray-600 ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : ''} ${col.hideMobile ? 'hidden md:table-cell' : ''}`}
-                                    style={col.width ? { width: col.width } : undefined}
-                                >
+                                    className={`${hp} text-xs font-semibold text-gray-600 ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : ''} ${col.hideMobile ? 'hidden md:table-cell' : ''}`}
+                                    style={col.width ? { width: col.width } : undefined}>
                                     {col.sortable && onSort ? (
                                         <button onClick={() => onSort(col.key)}
                                             className="flex items-center gap-1 hover:text-gray-900 transition-colors">
@@ -351,23 +355,23 @@ export function TypicalListView<T extends Record<string, any>, D extends Record<
                                     ) : col.label}
                                 </TableHead>
                             ))}
-                            {hasLifecycle && <TableHead className={`${headerPadding} text-xs font-semibold text-gray-600`}>Status</TableHead>}
-                            {hasVerified && <TableHead className={`${headerPadding} text-xs font-semibold text-gray-600 text-center`}>Verified</TableHead>}
-                            {hasLock && <TableHead className={`${headerPadding} text-xs font-semibold text-gray-600 text-center`}>Lock</TableHead>}
-                            {hasExpandable && <TableHead className={`${headerPadding} text-xs font-semibold text-gray-600 text-center`}>Details</TableHead>}
-                            {hasActions && <TableHead className={`${headerPadding} text-xs font-semibold text-gray-600 text-center`}>Action</TableHead>}
+                            {hasLifecycle && <TableHead className={`${hp} text-xs font-semibold text-gray-600`}>Status</TableHead>}
+                            {hasVerified && <TableHead className={`${hp} text-xs font-semibold text-gray-600 text-center`}>Verified</TableHead>}
+                            {hasLock && <TableHead className={`${hp} text-xs font-semibold text-gray-600 text-center`}>Lock</TableHead>}
+                            {hasExpandable && <TableHead className={`${hp} text-xs font-semibold text-gray-600 text-center`}>Details</TableHead>}
+                            {hasActions && <TableHead className={`${hp} text-xs font-semibold text-gray-600 text-center`}>Action</TableHead>}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {loading ? (
                             <LoadingSkeleton columns={totalCols} compact={compact} />
-                        ) : data.length === 0 ? (
+                        ) : paginatedData.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={totalCols} className="text-center py-12 text-gray-400">
                                     {emptyMessage || 'No records found'}
                                 </TableCell>
                             </TableRow>
-                        ) : data.map((row, rowIdx) => {
+                        ) : paginatedData.map((row, rowIdx) => {
                             const rowId = getRowId(row)
                             const isExpanded = expandedRows.has(rowId)
                             const isSelected = selectedRows.has(rowId)
@@ -375,41 +379,37 @@ export function TypicalListView<T extends Record<string, any>, D extends Record<
 
                             return (
                                 <React.Fragment key={rowId}>
-                                    {/* ─── Master Row ─── */}
                                     <TableRow className={`
                                         ${hoverable ? 'hover:bg-gray-50/50' : ''} transition-colors
-                                        ${striped && rowIdx % 2 === 1 ? 'bg-gray-25' : ''}
+                                        ${striped && rowIdx % 2 === 1 ? 'bg-gray-50/30' : ''}
                                         ${isSelected ? 'bg-blue-50/50' : ''}
                                     `}>
                                         {selectable && (
-                                            <TableCell className={cellPadding}>
-                                                <input type="checkbox"
-                                                    checked={isSelected}
-                                                    onChange={() => toggleSelect(rowId)}
-                                                    className="rounded border-gray-300"
-                                                />
+                                            <TableCell className={cp}>
+                                                <input type="checkbox" checked={isSelected}
+                                                    onChange={() => toggleSelect(rowId)} className="rounded border-gray-300" />
                                             </TableCell>
                                         )}
-                                        {columns.map(col => (
+                                        {activeColumns.map(col => (
                                             <TableCell key={col.key}
-                                                className={`${cellPadding} ${compact ? 'text-xs' : 'text-sm'} ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : ''} ${col.hideMobile ? 'hidden md:table-cell' : ''}`}>
+                                                className={`${cp} ${compact ? 'text-xs' : 'text-sm'} ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : ''} ${col.hideMobile ? 'hidden md:table-cell' : ''}`}>
                                                 {col.render ? col.render(row) : String(row[col.key] ?? '')}
                                             </TableCell>
                                         ))}
                                         {hasLifecycle && (
-                                            <TableCell className={cellPadding}>
+                                            <TableCell className={cp}>
                                                 {(() => { const s = lifecycle!.getStatus(row); return <StatusBadge label={s.label} variant={s.variant} /> })()}
                                             </TableCell>
                                         )}
                                         {hasVerified && (
-                                            <TableCell className={`${cellPadding} text-center`}>
+                                            <TableCell className={`${cp} text-center`}>
                                                 {lifecycle!.getVerified!(row)
                                                     ? <CheckCircle2 className="h-5 w-5 text-emerald-500 mx-auto" />
                                                     : <div className="h-5 w-5 rounded-full border-2 border-gray-200 mx-auto" />}
                                             </TableCell>
                                         )}
                                         {hasLock && (
-                                            <TableCell className={`${cellPadding} text-center`}>
+                                            <TableCell className={`${cp} text-center`}>
                                                 <button onClick={() => lifecycle?.onLockToggle?.(row)}
                                                     className="p-1 rounded hover:bg-gray-100 transition-colors mx-auto block">
                                                     {lifecycle!.getLocked!(row)
@@ -419,7 +419,7 @@ export function TypicalListView<T extends Record<string, any>, D extends Record<
                                             </TableCell>
                                         )}
                                         {hasExpandable && (
-                                            <TableCell className={`${cellPadding} text-center`}>
+                                            <TableCell className={`${cp} text-center`}>
                                                 <button onClick={() => toggleRow(rowId)}
                                                     className="p-1 rounded hover:bg-gray-100 transition-colors mx-auto block">
                                                     {isExpanded
@@ -429,33 +429,18 @@ export function TypicalListView<T extends Record<string, any>, D extends Record<
                                             </TableCell>
                                         )}
                                         {hasActions && (
-                                            <TableCell className={`${cellPadding} text-center`}>
+                                            <TableCell className={`${cp} text-center`}>
                                                 <div className="flex items-center justify-center gap-1">
                                                     {actions?.extra?.(row)}
-                                                    {actions?.onView && (
-                                                        <button onClick={() => actions.onView!(row)}
-                                                            className="p-1 rounded hover:bg-gray-100 transition-colors">
-                                                            <Eye className="h-4 w-4 text-gray-500" />
-                                                        </button>
-                                                    )}
-                                                    {actions?.onEdit && (
-                                                        <button onClick={() => actions.onEdit!(row)}
-                                                            className="p-1 rounded hover:bg-blue-50 transition-colors">
-                                                            <Pencil className="h-4 w-4 text-blue-500" />
-                                                        </button>
-                                                    )}
-                                                    {actions?.onDelete && (
-                                                        <button onClick={() => actions.onDelete!(row)}
-                                                            className="p-1 rounded hover:bg-red-50 transition-colors">
-                                                            <Trash2 className="h-4 w-4 text-red-400" />
-                                                        </button>
-                                                    )}
+                                                    {actions?.onView && <button onClick={() => actions.onView!(row)} className="p-1 rounded hover:bg-gray-100 transition-colors"><Eye className="h-4 w-4 text-gray-500" /></button>}
+                                                    {actions?.onEdit && <button onClick={() => actions.onEdit!(row)} className="p-1 rounded hover:bg-blue-50 transition-colors"><Pencil className="h-4 w-4 text-blue-500" /></button>}
+                                                    {actions?.onDelete && <button onClick={() => actions.onDelete!(row)} className="p-1 rounded hover:bg-red-50 transition-colors"><Trash2 className="h-4 w-4 text-red-400" /></button>}
                                                 </div>
                                             </TableCell>
                                         )}
                                     </TableRow>
 
-                                    {/* ─── Detail Rows ─── */}
+                                    {/* Detail sub-rows */}
                                     {hasExpandable && isExpanded && details.length > 0 && (
                                         <TableRow>
                                             <TableCell colSpan={totalCols} className="p-0 bg-gray-50/30">
@@ -463,12 +448,9 @@ export function TypicalListView<T extends Record<string, any>, D extends Record<
                                                     <Table>
                                                         <TableHeader>
                                                             <TableRow className={detailHeader}>
-                                                                {expandable!.renderActions && (
-                                                                    <TableHead className={`${headerPadding} text-xs font-semibold ${detailText}`}>Action</TableHead>
-                                                                )}
+                                                                {expandable!.renderActions && <TableHead className={`${hp} text-xs font-semibold ${detailText}`}>Action</TableHead>}
                                                                 {expandable!.columns.map(dc => (
-                                                                    <TableHead key={dc.key}
-                                                                        className={`${headerPadding} text-xs font-semibold ${detailText} ${dc.align === 'right' ? 'text-right' : dc.align === 'center' ? 'text-center' : ''}`}>
+                                                                    <TableHead key={dc.key} className={`${hp} text-xs font-semibold ${detailText} ${dc.align === 'right' ? 'text-right' : dc.align === 'center' ? 'text-center' : ''}`}>
                                                                         {dc.label}
                                                                     </TableHead>
                                                                 ))}
@@ -477,14 +459,9 @@ export function TypicalListView<T extends Record<string, any>, D extends Record<
                                                         <TableBody>
                                                             {details.map((d, idx) => (
                                                                 <TableRow key={idx} className="hover:bg-emerald-50/30">
-                                                                    {expandable!.renderActions && (
-                                                                        <TableCell className={`${cellPadding} ${compact ? 'text-xs' : 'text-sm'}`}>
-                                                                            {expandable!.renderActions(d, row)}
-                                                                        </TableCell>
-                                                                    )}
+                                                                    {expandable!.renderActions && <TableCell className={`${cp} ${compact ? 'text-xs' : 'text-sm'}`}>{expandable!.renderActions(d, row)}</TableCell>}
                                                                     {expandable!.columns.map(dc => (
-                                                                        <TableCell key={dc.key}
-                                                                            className={`${cellPadding} ${compact ? 'text-xs' : 'text-sm'} ${dc.align === 'right' ? 'text-right' : dc.align === 'center' ? 'text-center' : ''}`}>
+                                                                        <TableCell key={dc.key} className={`${cp} ${compact ? 'text-xs' : 'text-sm'} ${dc.align === 'right' ? 'text-right' : dc.align === 'center' ? 'text-center' : ''}`}>
                                                                             {dc.render ? dc.render(d) : String((d as any)[dc.key] ?? '')}
                                                                         </TableCell>
                                                                     ))}
@@ -502,23 +479,53 @@ export function TypicalListView<T extends Record<string, any>, D extends Record<
                     </TableBody>
                 </Table>
 
-                {/* ─── PAGINATION ──────────────────────── */}
-                {onPageChange && totalCount != null && pageSize && currentPage && (
-                    <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
+                {/* ═══ PAGINATION BAR ═════════════════ */}
+                <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 bg-gray-50/30">
+                    <div className="flex items-center gap-3">
                         <span className="text-xs text-gray-500">
-                            Showing {Math.min((currentPage - 1) * pageSize + 1, totalCount)}–{Math.min(currentPage * pageSize, totalCount)} of {totalCount}
+                            Showing <span className="font-medium text-gray-700">{showStart}–{showEnd}</span> of <span className="font-medium text-gray-700">{totalRecords}</span>
                         </span>
-                        <div className="flex items-center gap-1">
-                            <Button variant="outline" size="sm" disabled={currentPage <= 1}
-                                onClick={() => onPageChange(currentPage - 1)}
-                                className="h-7 text-xs">Previous</Button>
-                            <span className="text-xs text-gray-500 px-2">Page {currentPage}</span>
-                            <Button variant="outline" size="sm" disabled={currentPage * pageSize >= totalCount}
-                                onClick={() => onPageChange(currentPage + 1)}
-                                className="h-7 text-xs">Next</Button>
-                        </div>
+                        {onPageSizeChange && (
+                            <Select value={String(pageSizeProp)} onValueChange={v => onPageSizeChange(parseInt(v))}>
+                                <SelectTrigger className="h-7 w-auto min-w-[70px] text-xs gap-1">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {PAGE_SIZES.map(s => (
+                                        <SelectItem key={s} value={String(s)}>{s} / page</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        )}
                     </div>
-                )}
+                    <div className="flex items-center gap-1">
+                        <Button variant="outline" size="sm" disabled={currentPage <= 1}
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            className="h-7 w-7 p-0">
+                            <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        {/* Page number buttons */}
+                        {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
+                            let page: number
+                            if (totalPages <= 5) { page = i + 1 }
+                            else if (currentPage <= 3) { page = i + 1 }
+                            else if (currentPage >= totalPages - 2) { page = totalPages - 4 + i }
+                            else { page = currentPage - 2 + i }
+                            return (
+                                <Button key={page} variant={page === currentPage ? 'default' : 'outline'} size="sm"
+                                    onClick={() => handlePageChange(page)}
+                                    className={`h-7 w-7 p-0 text-xs ${page === currentPage ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : ''}`}>
+                                    {page}
+                                </Button>
+                            )
+                        })}
+                        <Button variant="outline" size="sm" disabled={currentPage >= totalPages}
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            className="h-7 w-7 p-0">
+                            <ChevronRight className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
             </div>
         </div>
     )

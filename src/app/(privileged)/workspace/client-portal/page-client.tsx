@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { getClientWallets, getClientTickets, getQuoteRequests, getClientAccess, updateClientTicket } from '@/app/actions/portal'
-import { Monitor, Wallet, Ticket, FileQuestion, Users, RefreshCw, CheckCircle, XCircle, Clock, ChevronRight, DollarSign, MessageSquare } from 'lucide-react'
+import { Monitor, Wallet, Ticket, FileQuestion, Users, RefreshCw, CheckCircle, XCircle, Clock, ChevronRight, DollarSign, MessageSquare , Globe } from 'lucide-react'
 
 type ClientWallet = { id: number; client?: { name: string }; client_name?: string; balance: number; currency?: string }
 type Ticket = { id: number; subject: string; status: string; priority?: string; client?: { name: string }; client_name?: string; created_at?: string }
@@ -70,8 +70,13 @@ export default function ClientPortalAdminPage() {
                         <Monitor size={22} className="text-white" />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-white tracking-tight">Client Portal Admin</h1>
-                        <p className="text-sm text-gray-400 mt-0.5">Manage wallets, support tickets, and quote requests</p>
+                        <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-[1.5rem] bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
+                                <Globe size={28} className="text-white" />
+                            </div>
+                            Client <span className="text-blue-600">Portal</span>
+                        </h1>
+                        <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Customer Self-Service</p>
                     </div>
                 </div>
                 <button onClick={load} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm">

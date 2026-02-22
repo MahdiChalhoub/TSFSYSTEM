@@ -67,13 +67,13 @@ export default function RevenueBreakdownPage() {
     return (
         <div className="p-6 space-y-6">
             <header>
-                <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center">
-                        <TrendingUp size={20} className="text-white" />
+                <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-[1.5rem] bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
+                        <TrendingUp size={28} className="text-white" />
                     </div>
-                    Revenue Breakdown
+                    Revenue <span className="text-blue-600">Accounts</span>
                 </h1>
-                <p className="text-sm text-gray-500 mt-1">Detailed analysis of all income accounts</p>
+                <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Income Tracking</p>
             </header>
 
             <div className="grid grid-cols-4 gap-4">
