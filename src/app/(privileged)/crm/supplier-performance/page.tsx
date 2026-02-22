@@ -1,6 +1,7 @@
 'use client'
 
 import { useCurrency } from '@/lib/utils/currency'
+import { safeDateSort } from '@/lib/utils/safe-date'
 
 import { useState, useEffect, useMemo } from "react"
 import { Contact } from "@/types/erp"
@@ -50,7 +51,7 @@ export default function SupplierPerformancePage() {
             const totalSpent = sOrders.reduce((sum, o) => sum + parseFloat(o.total_amount || 0), 0)
             const completedOrders = sOrders.filter(o => o.status === 'COMPLETED')
             const completionRate = sOrders.length > 0 ? (completedOrders.length / sOrders.length * 100) : 0
-            const lastOrder = sOrders.sort((a: Record<string, any>, b: Record<string, any>) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
+            const lastOrder = sOrders.sort((a: Record<string, any>, b: Record<string, any>) => (safeDateSort(b.created_at)) - (safeDateSort(a.created_at)))[0]
 
             return {
                 ...s,

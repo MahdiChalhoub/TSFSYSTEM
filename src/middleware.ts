@@ -1,7 +1,74 @@
 import { NextRequest, NextResponse } from "next/server";
+import { MODULE_ROUTES } from "@/lib/module-routes";
 
 export default async function middleware(req: NextRequest) {
     const url = req.nextUrl;
+
+    // ─── DEV MODULE GUARD ────────────────────────────────────────────────────
+    // When DEV_MODULE is set, only allow routes for the active module + core routes.
+    // This is only set locally via `npm run dev:module -- <module>`.
+    // In production, DEV_MODULE is never set, so this block is skipped entirely.
+    const devModule = process.env.DEV_MODULE;
+    if (devModule) {
+        const pathname = url.pathname;
+
+        // Always allow: static files, API, Next.js internals, auth, core
+        const isCorePath =
+            pathname === '/' ||
+            pathname.includes('.') ||
+            pathname.startsWith('/api') ||
+            pathname.startsWith('/_next') ||
+            pathname.startsWith('/login') ||
+            pathname.startsWith('/register') ||
+            pathname.startsWith('/dashboard') ||
+            pathname.startsWith('/settings') ||
+            pathname.startsWith('/saas') ||
+            pathname.startsWith('/workspace') ||
+            pathname.startsWith('/users') ||
+            pathname.startsWith('/landing') ||
+            pathname.startsWith('/tenant') ||
+            pathname.startsWith('/supplier-portal') ||
+            pathname.startsWith('/monitoring');
+
+        if (!isCorePath) {
+            // Check if this route belongs to ANY module
+            const routeModule = Object.entries(MODULE_ROUTES).find(([, prefixes]) =>
+                prefixes.some(prefix => pathname.startsWith(prefix))
+            );
+
+            // If it belongs to a module that is NOT the active dev module → block it
+            if (routeModule && routeModule[0] !== devModule) {
+                const blockedModule = routeModule[0];
+                return new NextResponse(
+                    `<!DOCTYPE html>
+                    <html>
+                    <head><title>Module Locked</title></head>
+                    <body style="margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f8fafc;font-family:system-ui,-apple-system,sans-serif">
+                        <div style="text-align:center;max-width:480px;padding:40px">
+                            <div style="font-size:64px;margin-bottom:16px">🔒</div>
+                            <h1 style="font-size:24px;font-weight:800;color:#0f172a;margin:0 0 8px">Module Locked</h1>
+                            <p style="color:#64748b;font-size:16px;margin:0 0 24px">
+                                You're in <strong style="color:#059669">DEV MODE: ${devModule.toUpperCase()}</strong>.
+                                <br/>The <strong>${blockedModule}</strong> module is not active.
+                            </p>
+                            <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px;text-align:left;font-size:14px;color:#166534">
+                                <strong>To switch modules:</strong><br/>
+                                <code style="background:#dcfce7;padding:2px 6px;border-radius:4px;font-size:13px">
+                                    npm run dev:module -- ${blockedModule}
+                                </code>
+                            </div>
+                            <a href="/dashboard" style="display:inline-block;margin-top:20px;padding:10px 24px;background:#059669;color:white;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px">
+                                ← Go to Dashboard
+                            </a>
+                        </div>
+                    </body>
+                    </html>`,
+                    { status: 200, headers: { 'Content-Type': 'text/html' } }
+                );
+            }
+        }
+    }
+    // ─── END DEV MODULE GUARD ────────────────────────────────────────────────
 
     // Get hostname (e.g. "tenant.tsfcloud.com" or "localhost:3000")
     let hostname = req.headers.get("host")!;

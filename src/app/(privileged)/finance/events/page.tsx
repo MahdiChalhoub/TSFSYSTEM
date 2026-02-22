@@ -1,6 +1,7 @@
 'use client'
 
 import { useCurrency } from '@/lib/utils/currency'
+import { safeDateSort } from '@/lib/utils/safe-date'
 
 import { useState, useEffect, useMemo } from "react"
 import type { FinancialEvent } from '@/types/erp'
@@ -72,7 +73,7 @@ export default function FinancialEventsPage() {
                 e.event_type?.toLowerCase().includes(s)
             )
         }
-        return items.sort((a: Record<string, any>, b: Record<string, any>) => new Date(b.date || b.created_at).getTime() - new Date(a.date || a.created_at).getTime())
+        return items.sort((a: Record<string, any>, b: Record<string, any>) => (safeDateSort(b.date || b.created_at)) - (safeDateSort(a.date || a.created_at)))
     }, [events, typeFilter, search])
 
     const totalInflows = events

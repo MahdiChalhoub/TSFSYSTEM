@@ -4,6 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:module": "bash scripts/dev-module.sh",
+    "deploy:module": "bash scripts/deploy-module.sh",
+    "package:kernel": "bash scripts/package-kernel.sh",
+    "package:frontend": "bash scripts/package-frontend.sh",
+    "package:module": "bash scripts/package-module.sh",
     "build": "node scripts/check-kernel-integrity.js && next build",
     "start": "next start",
     "lint": "eslint",

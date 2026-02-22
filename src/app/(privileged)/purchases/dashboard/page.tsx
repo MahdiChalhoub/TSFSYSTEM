@@ -1,6 +1,7 @@
 'use client'
 
 import { useCurrency } from '@/lib/utils/currency'
+import { safeDateSort } from '@/lib/utils/safe-date'
 
 import { useState, useEffect, useMemo } from "react"
 import type { PurchaseOrder } from '@/types/erp'
@@ -24,6 +25,7 @@ const STATUS_COLOR: Record<string, string> = {
 }
 
 export default function PurchaseDashboardPage() {
+    const { fmt } = useCurrency()
     const [orders, setOrders] = useState<PurchaseOrder[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
@@ -54,7 +56,7 @@ export default function PurchaseDashboardPage() {
                 (o.supplier_name || o.contact_name || '').toLowerCase().includes(s)
             )
         }
-        return items.sort((a: Record<string, any>, b: Record<string, any>) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        return items.sort((a: Record<string, any>, b: Record<string, any>) => (safeDateSort(b.created_at)) - (safeDateSort(a.created_at)))
     }, [orders, statusFilter, search])
 
     const totalValue = orders.reduce((s, o) => s + parseFloat(String(o.total_amount || 0)), 0)
