@@ -63,8 +63,8 @@ export default async function PricingPage() {
                 <div className="flex flex-col md:flex-row justify-between items-end gap-6">
                     <div>
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-xl bg-violet-600 flex items-center justify-center text-white shadow-lg shadow-violet-100">
-                                <Tag size={20} />
+                            <div className="w-14 h-14 rounded-2xl bg-violet-600 flex items-center justify-center text-white shadow-lg shadow-violet-200">
+                                <Tag size={28} />
                             </div>
                             <span className="text-xs font-black text-violet-600 uppercase tracking-[0.3em]">Revenue Optimization</span>
                         </div>
