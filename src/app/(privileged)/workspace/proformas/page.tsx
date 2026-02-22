@@ -17,33 +17,36 @@ export default async function ProformaReviewPage() {
     const rejected = proformas.filter((p: any) => p.status === 'REJECTED').length;
 
     const stats = [
-        { label: 'Total Proformas', value: proformas.length, icon: FileText, color: '#6366f1' },
-        { label: 'Pending Review', value: pending, icon: Clock, color: '#f59e0b' },
-        { label: 'Approved', value: approved, icon: CheckCheck, color: '#22c55e' },
-        { label: 'Rejected', value: rejected, icon: XCircle, color: '#ef4444' },
+        { label: 'Total Proformas', value: proformas.length, icon: FileText, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-100' },
+        { label: 'Pending Review', value: pending, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100' },
+        { label: 'Approved', value: approved, icon: CheckCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
+        { label: 'Rejected', value: rejected, icon: XCircle, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-100' },
     ];
 
     return (
-        <div style={{ padding: '2rem', maxWidth: 1400, margin: '0 auto' }}>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                📋 Supplier Proforma Review
-            </h1>
-            <p style={{ color: '#94a3b8', marginBottom: '1.5rem' }}>
-                Review, approve, negotiate, or reject supplier proformas. Approved proformas convert to Purchase Orders.
-            </p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
-                {stats.map(s => (
-                    <div key={s.label} style={{
-                        background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-                        borderRadius: 12, padding: '1.25rem', border: '1px solid rgba(255,255,255,0.06)',
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                            <s.icon size={18} color={s.color} />
-                            <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>{s.label}</span>
+        <div className="p-6 max-w-7xl mx-auto">
+            <div className="mb-6">
+                <h1 className="text-3xl font-bold text-stone-900 font-serif tracking-tight">
+                    📋 Supplier Proforma Review
+                </h1>
+                <p className="text-stone-500 mt-1">
+                    Review, approve, negotiate, or reject supplier proformas. Approved proformas convert to Purchase Orders.
+                </p>
+            </div>
+
+            <div className="grid grid-cols-4 gap-4 mb-8">
+                {stats.map(s => {
+                    const Icon = s.icon;
+                    return (
+                        <div key={s.label} className={`${s.bg} border ${s.border} rounded-2xl p-5 shadow-sm`}>
+                            <div className="flex items-center gap-2 mb-3">
+                                <Icon size={18} className={s.color} />
+                                <span className="text-xs font-bold text-stone-500 uppercase tracking-wider">{s.label}</span>
+                            </div>
+                            <div className={`text-3xl font-bold ${s.color}`}>{s.value}</div>
                         </div>
-                        <div style={{ fontSize: '1.75rem', fontWeight: 700, color: s.color }}>{s.value}</div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
             <ProformaReviewClient proformas={proformas} />
         </div>
