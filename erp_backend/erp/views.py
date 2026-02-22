@@ -87,15 +87,18 @@ class TenantModelViewSet(AuditLogMixin, viewsets.ModelViewSet):
 
         # 1. Global Platform Admin Access (Managed Scope)
         if user.is_staff or user.is_superuser:
-            if tenant_id:
-                return self.queryset.filter(organization_id=tenant_id)
+            if tenant_id and hasattr(self.queryset.model, 'organization'):
+                return self.queryset.filter(organization=tenant_id)
             # SaaS Root & Global Admin: Allow cross-tenant data visibility
             return self.queryset.all()
         
         # 2. Strict Tenant Isolation for Regular Users
         if not user.organization_id:
              return self.queryset.none()
-        return self.queryset.filter(organization_id=user.organization_id)
+        
+        if hasattr(self.queryset.model, 'organization'):
+            return self.queryset.filter(organization=user.organization_id)
+        return self.queryset.all()
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -713,7 +716,7 @@ class SiteViewSet(TenantModelViewSet):
     serializer_class = SiteSerializer
 
 
-class CountryViewSet(TenantModelViewSet):
+class CountryViewSet(viewsets.ModelViewSet):
     queryset = Country.objects.all()
     serializer_class = CountrySerializer
 

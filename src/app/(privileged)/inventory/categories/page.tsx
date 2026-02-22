@@ -67,6 +67,10 @@ async function getOrgContext() {
 }
 
 export default async function CategoriesPage() {
+    const { cookies } = await import('next/headers');
+    const cookieStore = await cookies();
+    const token = cookieStore.get('auth_token')?.value;
+
     const [{ hierarchicalCategories, flatCategories }, orgContext] = await Promise.all([
         getCategoriesData(),
         getOrgContext()
@@ -113,7 +117,11 @@ export default async function CategoriesPage() {
                 </div>
 
                 {hierarchicalCategories.length > 0 ? (
-                    <CategoryTree categories={hierarchicalCategories} allCategories={flatCategories || []} />
+                    <CategoryTree
+                        categories={hierarchicalCategories}
+                        allCategories={flatCategories || []}
+                        authToken={token}
+                    />
                 ) : (
                     <div className="py-12 text-center text-gray-400">
                         <p>No categories defined yet.</p>

@@ -21,7 +21,7 @@ type CategoryNode = {
     short_name?: string;
 };
 
-export function CategoryTree({ categories, allCategories = [] }: { categories: CategoryNode[], allCategories?: Record<string, any>[] }) {
+export function CategoryTree({ categories, allCategories = [], authToken }: { categories: CategoryNode[], allCategories?: Record<string, any>[], authToken?: string }) {
     const [activeModal, setActiveModal] = useState<{ type: 'edit' | 'add-child' | 'none', category?: CategoryNode, parentId?: number }>({ type: 'none' });
     const [explorerTarget, setExplorerTarget] = useState<{ id: number; name: string } | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<CategoryNode | null>(null);
@@ -97,6 +97,7 @@ export function CategoryTree({ categories, allCategories = [] }: { categories: C
                 categoryName={explorerTarget?.name || null}
                 isOpen={explorerTarget !== null}
                 onClose={() => setExplorerTarget(null)}
+                authToken={authToken}
             />
 
             <ConfirmDialog
