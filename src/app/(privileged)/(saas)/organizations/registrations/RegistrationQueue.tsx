@@ -115,7 +115,7 @@ export function RegistrationQueue({ initialUsers }: { initialUsers: Record<strin
                                     </div>
                                     <div className="flex items-center gap-2 text-xs text-gray-500 font-medium">
                                         <Calendar size={14} className="text-gray-400" />
-                                        Requested {format(new Date(user.date_joined), 'PPP')}
+                                        Requested {user.date_joined ? format(new Date(user.date_joined), 'PPP') : '—'}
                                     </div>
                                 </div>
                             </div>

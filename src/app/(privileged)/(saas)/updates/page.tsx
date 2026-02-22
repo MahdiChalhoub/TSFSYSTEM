@@ -290,7 +290,7 @@ export default function SystemUpdatesPage() {
                                         <div className="mt-6 flex flex-wrap items-center gap-6 text-[9px] font-black tracking-[0.1em] text-gray-400 border-t border-gray-50 pt-4">
                                             <span className="flex items-center gap-2">STAGED: {update.created_at ? format(new Date(update.created_at), 'PPP') : '---'}</span>
                                             {update.is_applied && update.applied_at && (
-                                                <span className="flex items-center gap-2 text-emerald-600/80">INSTALLED: {format(new Date(update.applied_at), 'PPP')}</span>
+                                                <span className="flex items-center gap-2 text-emerald-600/80">INSTALLED: {update.applied_at ? format(new Date(update.applied_at), 'PPP') : '—'}</span>
                                             )}
                                             <span className="ml-auto text-indigo-600/50">#ID-{update.id.toString().padStart(4, '0')}</span>
                                         </div>
