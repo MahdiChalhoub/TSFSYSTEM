@@ -21,8 +21,10 @@ async function getCategoriesData() {
             categoryMap.set(c.id, {
                 ...c,
                 children: [],
-                // Normalize: backend may send productCount (camelCase from with_counts) or product_count
+                // Normalize counts
                 product_count: c.product_count ?? c.productCount ?? 0,
+                brand_count: c.brand_count ?? 0,
+                parfum_count: c.parfum_count ?? 0,
             });
         });
 

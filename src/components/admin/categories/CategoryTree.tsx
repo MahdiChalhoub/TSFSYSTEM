@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, memo } from 'react';
-import { ChevronRight, ChevronDown, Edit2, Trash2, Plus, Folder, AlertCircle, Bookmark } from 'lucide-react';
+import { ChevronRight, ChevronDown, Edit2, Trash2, Plus, Folder, AlertCircle, Bookmark, Tag, Box } from 'lucide-react';
 import { CategoryFormModal } from './CategoryFormModal';
 import { deleteCategory } from '@/app/actions/categories';
 import { toast } from 'sonner';
@@ -14,6 +14,8 @@ type CategoryNode = {
     parent: number | null;
     children?: CategoryNode[];
     product_count?: number;
+    brand_count?: number;
+    parfum_count?: number;
     code?: string;
     short_name?: string;
 };
@@ -187,6 +189,18 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
                             {category.product_count != null && category.product_count > 0 && (
                                 <span className="flex items-center gap-1.5 text-emerald-600 font-bold bg-emerald-50/50 px-2 py-0.5 rounded-lg text-xs border border-emerald-100/50 shadow-sm">
                                     {category.product_count} Products
+                                </span>
+                            )}
+                            {category.brand_count != null && category.brand_count > 0 && (
+                                <span className="flex items-center gap-1.5 text-blue-600 font-bold bg-blue-50/50 px-2 py-0.5 rounded-lg text-xs border border-blue-100/50 shadow-sm">
+                                    <Tag size={12} strokeWidth={3} />
+                                    {category.brand_count} Brands
+                                </span>
+                            )}
+                            {category.parfum_count != null && category.parfum_count > 0 && (
+                                <span className="flex items-center gap-1.5 text-purple-600 font-bold bg-purple-50/50 px-2 py-0.5 rounded-lg text-xs border border-purple-100/50 shadow-sm">
+                                    <Box size={12} strokeWidth={3} />
+                                    {category.parfum_count} Attributes
                                 </span>
                             )}
                         </p>

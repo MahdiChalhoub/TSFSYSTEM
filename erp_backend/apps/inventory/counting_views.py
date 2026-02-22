@@ -47,57 +47,12 @@ class InventorySessionViewSet(viewsets.ModelViewSet):
         return InventorySessionSerializer
 
     def perform_create(self, serializer):
-        """Create session and auto-populate counting lines from inventory."""
+        """Create session without auto-populating lines (now handled by Populator/Sync panel)."""
         org = getattr(self.request, 'organization', None)
-        session = serializer.save(
+        serializer.save(
             organization=org,
             created_by=self.request.user,
         )
-
-        # Build product queryset based on filters
-        products = Product.objects.filter(organization=org, is_active=True)
-
-        if session.category_filter:
-            products = products.filter(category__name=session.category_filter)
-        if session.supplier_filter:
-            products = products.filter(supplier=session.supplier_filter)
-
-        # Qty filters (based on inventory totals)
-        if session.qty_filter == 'zero':
-            zero_ids = Inventory.objects.filter(
-                organization=org, quantity=0
-            ).values_list('product_id', flat=True)
-            products = products.filter(id__in=zero_ids)
-        elif session.qty_filter == 'non_zero':
-            nonzero_ids = Inventory.objects.filter(
-                organization=org, quantity__gt=0
-            ).values_list('product_id', flat=True)
-            products = products.filter(id__in=nonzero_ids)
-        elif session.qty_filter == 'custom':
-            inv_qs = Inventory.objects.filter(organization=org)
-            if session.qty_min is not None:
-                inv_qs = inv_qs.filter(quantity__gte=session.qty_min)
-            if session.qty_max is not None:
-                inv_qs = inv_qs.filter(quantity__lte=session.qty_max)
-            custom_ids = inv_qs.values_list('product_id', flat=True)
-            products = products.filter(id__in=custom_ids)
-
-        # Create counting lines with system qty from inventory
-        lines_to_create = []
-        for product in products:
-            # Get system qty from inventory for the target warehouse
-            inv_qs = Inventory.objects.filter(product=product, organization=org)
-            if session.warehouse:
-                inv_qs = inv_qs.filter(warehouse=session.warehouse)
-            system_qty = inv_qs.aggregate(total=Sum('quantity'))['total'] or Decimal('0')
-
-            lines_to_create.append(InventorySessionLine(
-                session=session,
-                product=product,
-                system_qty=system_qty,
-            ))
-
-        InventorySessionLine.objects.bulk_create(lines_to_create)
 
     @action(detail=True, methods=['post'])
     def complete(self, request, pk=None):
@@ -347,45 +302,89 @@ class InventorySessionLineViewSet(viewsets.ModelViewSet):
 
 class SyncViewSet(viewsets.ViewSet):
     """
-    SaaS/Legacy Bridge: Synchronize data from tsfci.com.
+    Internal Session Populator: Populates counting sessions in batches for better UX.
     """
-    def get_api_key(self, request):
-        # Prefer API key from organization settings or environment
-        # For now, we'll try to get it from a setting or header
-        return getattr(settings, 'TSFCI_API_KEY', None)
-
-    @action(detail=False, methods=['post'], url_path='products')
-    def sync_products(self, request):
+    @action(detail=False, methods=['post'], url_path='populate')
+    def populate_session(self, request):
         org = getattr(request, 'organization', None)
-        api_key = self.get_api_key(request)
-        if not api_key:
-            return Response({"error": "TSFCI_API_KEY not configured"}, status=400)
-        
+        session_id = request.data.get('session_id')
         last_id = request.data.get('last_id', 0)
-        from .stock_count_sync import StockCountSyncService
-        result = StockCountSyncService.sync_products(org, api_key, last_id)
-        return Response(result)
+        batch_limit = 500
 
-    @action(detail=False, methods=['post'], url_path='locations')
-    def sync_locations(self, request):
-        org = getattr(request, 'organization', None)
-        api_key = self.get_api_key(request)
-        if not api_key:
-            return Response({"error": "TSFCI_API_KEY not configured"}, status=400)
+        try:
+            session = InventorySession.objects.get(id=session_id, organization=org)
+        except InventorySession.DoesNotExist:
+            return Response({"error": "Session not found"}, status=404)
+
+        # Build product queryset based on session filters
+        products = Product.objects.filter(organization=org, is_active=True, id__gt=last_id).order_by('id')
+
+        if session.category_filter:
+            products = products.filter(category__name=session.category_filter)
+        if session.supplier_filter:
+            products = products.filter(supplier=session.supplier_filter)
+
+        # Apply Qty filters from session
+        if session.qty_filter == 'zero':
+            products = products.filter(id__in=Inventory.objects.filter(organization=org, quantity=0).values_list('product_id', flat=True))
+        elif session.qty_filter == 'non_zero':
+            products = products.filter(id__in=Inventory.objects.filter(organization=org, quantity__gt=0).values_list('product_id', flat=True))
+        elif session.qty_filter == 'custom':
+            inv_qs = Inventory.objects.filter(organization=org)
+            if session.qty_min is not None: inv_qs = inv_qs.filter(quantity__gte=session.qty_min)
+            if session.qty_max is not None: inv_qs = inv_qs.filter(quantity__lte=session.qty_max)
+            products = products.filter(id__in=inv_qs.values_list('product_id', flat=True))
+
+        batch = products[:batch_limit]
+        lines_to_create = []
+        new_last_id = last_id
+
+        for product in batch:
+            inv_qs = Inventory.objects.filter(product=product, organization=org)
+            if session.warehouse:
+                inv_qs = inv_qs.filter(warehouse=session.warehouse)
+            system_qty = inv_qs.aggregate(total=Sum('quantity'))['total'] or Decimal('0')
+
+            lines_to_create.append(InventorySessionLine(
+                session=session,
+                product=product,
+                system_qty=system_qty,
+            ))
+            new_last_id = product.id
+
+        InventorySessionLine.objects.bulk_create(lines_to_create)
         
-        from .stock_count_sync import StockCountSyncService
-        result = StockCountSyncService.sync_locations(org, api_key)
-        return Response(result)
+        done = products.count() <= batch_limit
+
+        return Response({
+            "success": True,
+            "batch_synced": len(lines_to_create),
+            "last_id": new_last_id,
+            "done": done
+        })
 
     @action(detail=False, methods=['get'], url_path='live-qty')
     def live_qty(self, request):
-        api_key = self.get_api_key(request)
+        org = getattr(request, 'organization', None)
         barcode = request.query_params.get('barcode')
-        legacy_location_id = request.query_params.get('location_id')
+        warehouse_id = request.query_params.get('warehouse_id')
         
-        if not all([api_key, barcode, legacy_location_id]):
-            return Response({"error": "Missing parameters"}, status=400)
+        if not barcode:
+            return Response({"error": "Barcode required"}, status=400)
             
-        from .stock_count_sync import StockCountSyncService
-        result = StockCountSyncService.get_live_qty(api_key, barcode, legacy_location_id)
-        return Response(result)
+        try:
+            product = Product.objects.get(Q(barcode=barcode) | Q(sku=barcode), organization=org)
+            inv_qs = Inventory.objects.filter(product=product, organization=org)
+            if warehouse_id:
+                inv_qs = inv_qs.filter(warehouse_id=warehouse_id)
+            
+            qty = inv_qs.aggregate(total=Sum('quantity'))['total'] or Decimal('0')
+            
+            return Response({
+                "success": True,
+                "name": product.name,
+                "sku": product.sku,
+                "quantity": qty
+            })
+        except Product.DoesNotExist:
+            return Response({"error": "Product not found"}, status=404)
