@@ -32,7 +32,7 @@ class UnitSerializer(serializers.ModelSerializer):
         read_only_fields = ['organization']
 
     def get_product_count(self, obj):
-        return obj.product_set.count() if hasattr(obj, 'product_set') else 0
+        return obj.products.count()
 
 
 class CountrySimpleSerializer(serializers.ModelSerializer):
@@ -57,7 +57,7 @@ class CategorySerializer(serializers.ModelSerializer):
         read_only_fields = ['organization', 'level', 'full_path', 'products_count']
 
     def get_product_count(self, obj):
-        return obj.product_set.count() if hasattr(obj, 'product_set') else 0
+        return obj.products.count()
 
     def get_brand_count(self, obj):
         return obj.brands.count()
@@ -133,7 +133,7 @@ class ParfumSerializer(serializers.ModelSerializer):
         read_only_fields = ['organization']
 
     def get_product_count(self, obj):
-        return obj.product_set.count() if hasattr(obj, 'product_set') else 0
+        return obj.products.count()
 
     def get_category_names(self, obj):
         return list(obj.categories.values_list('name', flat=True))
@@ -160,7 +160,7 @@ class ProductGroupSerializer(serializers.ModelSerializer):
         read_only_fields = ['organization']
 
     def get_product_count(self, obj):
-        return obj.product_set.count()
+        return obj.products.count()
 
 
 # =============================================================================
