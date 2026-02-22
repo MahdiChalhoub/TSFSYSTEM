@@ -76,7 +76,7 @@ export default async function AdminLayout({
 
     if (!user) {
         if (isSaas) {
-            redirect('/saas/login?error=session_expired');
+            redirect('/login?error=session_expired');
         }
         redirect('/login?error=session_expired');
     }
