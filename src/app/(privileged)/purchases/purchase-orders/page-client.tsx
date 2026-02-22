@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { getPurchaseOrders, getPurchaseOrder } from '@/app/actions/inventory/locations'
-import { ShoppingBag, RefreshCw, ChevronRight, Clock, CheckCircle, XCircle, Package, Truck, Calendar, User, Building2, FileText , ClipboardList } from 'lucide-react'
+import { ShoppingBag, RefreshCw, ChevronRight, Clock, CheckCircle, XCircle, Package, Truck, Calendar, User, Building2, FileText, ClipboardList } from 'lucide-react'
 
 type PO = {
     id: number
@@ -63,19 +63,14 @@ export default function PurchaseOrdersPage() {
     return (
         <div className="min-h-screen bg-[#070D1B] text-gray-100 p-6 flex flex-col gap-6">
             <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-700 flex items-center justify-center shadow-lg shadow-purple-900/40">
-                        <ShoppingBag size={22} className="text-white" />
-                    </div>
-                    <div>
-                        <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-[1.5rem] bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
-                                <ClipboardList size={28} className="text-white" />
-                            </div>
-                            Purchase <span className="text-blue-600">Orders</span>
-                        </h1>
-                        <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Order Management</p>
-                    </div>
+                <div>
+                    <h1 className="text-4xl font-black tracking-tighter text-gray-100 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-[1.5rem] bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-900/40">
+                            <ClipboardList size={28} className="text-white" />
+                        </div>
+                        Purchase <span className="text-blue-400">Orders</span>
+                    </h1>
+                    <p className="text-sm font-medium text-gray-500 mt-2 uppercase tracking-widest">Order Management & Fulfillment Tracking</p>
                 </div>
                 <button onClick={load} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm">
                     <RefreshCw size={14} />

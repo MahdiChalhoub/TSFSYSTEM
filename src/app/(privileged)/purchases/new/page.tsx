@@ -34,19 +34,15 @@ export default async function NewPurchasePage() {
         <div className="space-y-6 animate-in fade-in duration-500">
 
             {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                <div>
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-emerald-500 rounded-lg text-white font-bold text-xs">
-                            PUR
-                        </div>
-                        <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em]">Commercial Operations</span>
+            <header>
+                <h1 className="text-4xl font-black text-gray-900 tracking-tighter flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
+                        <ShoppingCart size={28} className="text-white" />
                     </div>
-                    <h1 className="text-3xl lg:text-4xl font-black text-gray-900 tracking-tighter">
-                        Inventory <span className="text-emerald-500">Replenishment</span>
-                    </h1>
-                </div>
-            </div>
+                    Inventory <span className="text-emerald-500">Replenishment</span>
+                </h1>
+                <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Commercial Operations & Stock Procurement</p>
+            </header>
 
             <PurchaseForm
                 suppliers={serializeDecimals(suppliers)}
