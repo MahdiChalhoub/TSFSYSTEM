@@ -293,139 +293,61 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 <p className="text-xs text-gray-400">Browse products to start adding</p>
                             </div>
                         ) : (
-                            <div className="divide-y divide-gray-100/80">
+                            <div className="divide-y divide-gray-50">
                                 {cart.map((item: any, idx: number) => (
-                                    <div key={item.productId} className="px-4 py-3 group hover:bg-white transition-colors">
-                                        <div className="flex items-start justify-between gap-2">
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-xs text-gray-300 font-mono w-4">{idx + 1}</span>
-                                                    <p className="text-sm font-semibold text-gray-900 truncate">{item.name}</p>
-                                                </div>
-                                                <div className="flex items-center gap-3 mt-1 ml-6">
-                                                    <span className="text-xs text-gray-400">{currency}{Number(item.price).toFixed(2)} × {item.quantity}</span>
-                                                    {(item.taxRate || 0) > 0 && (
-                                                        <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded font-medium">Tax {item.taxRate}%</span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <p className="text-sm font-bold text-gray-900 tabular-nums shrink-0">
-                                                {currency}{(Number(item.price) * item.quantity).toFixed(2)}
-                                            </p>
-                                        </div>
-                                        <div className="flex items-center justify-between mt-2 ml-6">
-                                            <div className="flex items-center gap-1">
-                                                <button onClick={() => onUpdateQuantity(item.productId, -1)} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-center text-gray-400 transition-all active:scale-90">
-                                                    <Minus size={12} />
-                                                </button>
-                                                <span className="w-9 text-center text-sm font-bold tabular-nums text-gray-900">{item.quantity}</span>
-                                                <button onClick={() => onUpdateQuantity(item.productId, 1)} className="w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600 flex items-center justify-center transition-all active:scale-90">
-                                                    <Plus size={12} />
-                                                </button>
-                                            </div>
-                                            <button onClick={() => onUpdateQuantity(item.productId, -100)} className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-rose-500 transition-all p-1">
-                                                <Trash2 size={13} />
+                                    <div key={item.productId} className="px-3 py-1.5 group hover:bg-white transition-colors flex items-center gap-2">
+                                        {/* Line # */}
+                                        <span className="text-[10px] text-gray-300 font-mono w-3 shrink-0">{idx + 1}</span>
+                                        {/* Name */}
+                                        <p className="text-xs font-semibold text-gray-900 truncate flex-1 min-w-0">{item.name}</p>
+                                        {/* Price */}
+                                        <span className="text-[10px] text-gray-400 shrink-0">{currency}{Number(item.price).toFixed(2)}</span>
+                                        {/* Qty controls */}
+                                        <div className="flex items-center gap-0.5 shrink-0">
+                                            <button onClick={() => onUpdateQuantity(item.productId, -1)} className="w-5 h-5 rounded bg-gray-100 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-center text-gray-400 transition-all active:scale-90">
+                                                <Minus size={10} />
+                                            </button>
+                                            <span className="w-6 text-center text-xs font-bold tabular-nums">{item.quantity}</span>
+                                            <button onClick={() => onUpdateQuantity(item.productId, 1)} className="w-5 h-5 rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-600 flex items-center justify-center transition-all active:scale-90">
+                                                <Plus size={10} />
                                             </button>
                                         </div>
+                                        {/* Tax badge */}
+                                        {(item.taxRate || 0) > 0 && (
+                                            <span className="text-[8px] text-gray-400 bg-gray-100 px-1 py-0.5 rounded shrink-0">{item.taxRate}%</span>
+                                        )}
+                                        {/* Line total */}
+                                        <p className="text-xs font-bold text-gray-900 tabular-nums shrink-0 w-14 text-right">
+                                            {currency}{(Number(item.price) * item.quantity).toFixed(2)}
+                                        </p>
+                                        {/* Delete */}
+                                        <button onClick={() => onUpdateQuantity(item.productId, -100)} className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-rose-500 transition-all shrink-0">
+                                            <Trash2 size={11} />
+                                        </button>
                                     </div>
                                 ))}
                             </div>
                         )}
                     </div>
 
-                    {/* ── Cart Footer: Totals + Payment + Charge ── */}
-                    <div className="border-t border-gray-200 bg-white shrink-0">
-                        <div className="px-4 py-3 space-y-1.5">
-                            {/* Subtotal */}
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm text-gray-500">Subtotal</span>
-                                <span className="text-sm font-semibold tabular-nums">{currency}{total.toFixed(2)}</span>
-                            </div>
-                            {/* Discount */}
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm text-gray-500">Discount</span>
-                                <div className="relative w-24">
-                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-amber-500">{currency}</span>
-                                    <input
-                                        type="number" min="0" step="0.01"
-                                        value={discount || ''}
-                                        onChange={(e) => onSetDiscount(Math.max(0, Number(e.target.value) || 0))}
-                                        placeholder="0.00"
-                                        className="w-full pl-5 pr-2 py-1 text-right bg-amber-50/50 border border-gray-200 rounded-md text-sm font-semibold tabular-nums text-amber-600 outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-100 transition-all"
-                                    />
-                                </div>
-                            </div>
-                            {/* Divider + Total */}
-                            <div className="border-t border-gray-100 pt-1.5">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-base font-bold text-gray-900">Total</span>
-                                    <span className="text-xl font-extrabold tabular-nums text-gray-900">{currency}{totalAmount.toFixed(2)}</span>
-                                </div>
-                            </div>
-                            {/* Cash Received */}
-                            <div className="flex items-center justify-between pt-0.5">
-                                <span className="text-sm text-gray-500">Cash Received</span>
-                                <div className="relative w-28">
-                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">{currency}</span>
-                                    <input
-                                        type="number" min="0" step="0.01"
-                                        value={cashReceived}
-                                        onChange={(e) => onSetCashReceived(e.target.value)}
-                                        placeholder={totalAmount.toFixed(2)}
-                                        className="w-full pl-5 pr-2 py-1 text-right bg-gray-50 border border-gray-200 rounded-md text-sm font-semibold tabular-nums outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-100 transition-all"
-                                    />
-                                </div>
-                            </div>
-                            {/* Change Due */}
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm text-gray-500">Change</span>
-                                <span className={clsx(
-                                    "text-sm font-bold tabular-nums",
-                                    changeDue > 0 ? "text-emerald-600" : "text-gray-400"
-                                )}>{currency}{changeDue.toFixed(2)}</span>
-                            </div>
+                    {/* ── Cart Footer: Just Total + Charge (payment is in left panel) ── */}
+                    <div className="border-t border-gray-200 bg-white px-4 py-3 shrink-0">
+                        <div className="flex items-center justify-between mb-3">
+                            <span className="text-base font-bold text-gray-900">Total</span>
+                            <span className="text-xl font-extrabold tabular-nums text-gray-900">{currency}{totalAmount.toFixed(2)}</span>
                         </div>
-
-                        {/* Payment Methods */}
-                        <div className="px-4 pb-2">
-                            <div className="flex gap-1.5">
-                                {[
-                                    { key: 'CASH', label: 'Cash', icon: Banknote },
-                                    { key: 'CARD', label: 'Card', icon: CreditCard },
-                                    { key: 'WALLET', label: 'Wallet', icon: Wallet },
-                                ].map(m => (
-                                    <button
-                                        key={m.key}
-                                        onClick={() => onSetPaymentMethod(m.key)}
-                                        className={clsx(
-                                            "flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all border",
-                                            paymentMethod === m.key
-                                                ? "bg-emerald-50 border-emerald-200 text-emerald-700"
-                                                : "bg-gray-50 border-gray-200 text-gray-400 hover:border-gray-300"
-                                        )}
-                                    >
-                                        <m.icon size={13} />
-                                        {m.label}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Charge Button */}
-                        <div className="px-4 pb-3 pt-1">
-                            <button
-                                onClick={onCharge}
-                                disabled={cart.length === 0 || isProcessing}
-                                className={clsx(
-                                    "w-full py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2",
-                                    cart.length > 0 && !isProcessing
-                                        ? "bg-emerald-500 text-white shadow-lg shadow-emerald-200 hover:bg-emerald-600 active:scale-[0.98]"
-                                        : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                                )}
-                            >
-                                {isProcessing ? 'Processing...' : `Charge ${currency}${totalAmount.toFixed(2)}`}
-                            </button>
-                        </div>
+                        <button
+                            onClick={onCharge}
+                            disabled={cart.length === 0 || isProcessing}
+                            className={clsx(
+                                "w-full py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2",
+                                cart.length > 0 && !isProcessing
+                                    ? "bg-emerald-500 text-white shadow-lg shadow-emerald-200 hover:bg-emerald-600 active:scale-[0.98]"
+                                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                            )}
+                        >
+                            {isProcessing ? 'Processing...' : `Charge ${currency}${totalAmount.toFixed(2)}`}
+                        </button>
                     </div>
                 </main>
             </div>

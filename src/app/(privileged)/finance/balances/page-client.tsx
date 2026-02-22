@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { getCustomerBalances, getSupplierBalances } from '@/app/actions/finance/reports'
 import { Users, Briefcase, TrendingUp, TrendingDown, RefreshCw, Search, ArrowUpRight, ArrowDownRight, Scale, Mail, DollarSign } from 'lucide-react'
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { useCurrency } from "@/lib/utils/currency"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -26,6 +27,10 @@ export default function BalancesPage() {
     const [customers, setCustomers] = useState<Balance[]>([])
     const [suppliers, setSuppliers] = useState<Balance[]>([])
     const [loading, setLoading] = useState(true)
+    const settings = useListViewSettings('fin_balances', {
+        columns: ['contact', 'balance', 'credit_limit', 'last_transaction_date'],
+        pageSize: 25, sortKey: 'balance', sortDir: 'desc'
+    })
 
     useEffect(() => {
         loadAll()
@@ -197,6 +202,13 @@ export default function BalancesPage() {
                 getRowId={(b) => b.id}
                 columns={columns}
                 className="rounded-3xl border-0 shadow-sm overflow-hidden"
+                visibleColumns={settings.visibleColumns}
+                onToggleColumn={settings.toggleColumn}
+                pageSize={settings.pageSize}
+                onPageSizeChange={settings.setPageSize}
+                sortKey={settings.sortKey}
+                sortDir={settings.sortDir}
+                onSort={settings.setSort}
                 headerExtra={
                     <button
                         onClick={loadAll}
