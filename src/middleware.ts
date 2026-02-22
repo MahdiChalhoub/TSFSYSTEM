@@ -100,8 +100,9 @@ export default async function middleware(req: NextRequest) {
     const isLocal = host.includes('localhost') || host.includes('127.0.0.1') || host.includes('0.0.0.0') || host.includes('.local');
 
     if (proto === 'http' && !isLocal) {
-        const httpsUrl = new URL(req.url);
+        const httpsUrl = url.clone();
         httpsUrl.protocol = 'https:';
+        httpsUrl.host = hostname;
         return NextResponse.redirect(httpsUrl, 301);
     }
 
@@ -115,7 +116,9 @@ export default async function middleware(req: NextRequest) {
     const hasAuthToken = req.cookies.get('auth_token')?.value && req.cookies.get('auth_token')?.value !== '';
 
     if (!hasAuthToken && !isPublicRoute && !url.pathname.startsWith('/saas/login')) {
-        const loginUrl = new URL('/login', req.url);
+        const loginUrl = url.clone();
+        loginUrl.pathname = '/login';
+        loginUrl.host = hostname;
         loginUrl.searchParams.set('error', 'session_expired');
         return NextResponse.redirect(loginUrl);
     }
@@ -135,12 +138,18 @@ export default async function middleware(req: NextRequest) {
             // 1. Redirect legacy /saas/xxx to /xxx (Clean URL enforcement)
             if (url.pathname.startsWith('/saas')) {
                 const cleanPath = url.pathname.replace('/saas', '') || '/';
-                return NextResponse.redirect(new URL(`${cleanPath}${searchParams ? '?' + searchParams : ''}`, req.url));
+                const redirectUrl = url.clone();
+                redirectUrl.pathname = cleanPath;
+                redirectUrl.host = hostname;
+                return NextResponse.redirect(redirectUrl);
             }
 
             // 2. Redirect root / to /dashboard for SaaS subdomain
             if (url.pathname === '/') {
-                return NextResponse.redirect(new URL(`/dashboard${searchParams ? '?' + searchParams : ''}`, req.url));
+                const dashboardUrl = url.clone();
+                dashboardUrl.pathname = '/dashboard';
+                dashboardUrl.host = hostname;
+                return NextResponse.redirect(dashboardUrl);
             }
 
             // 3. Rewrite /dashboard to SaaS-specific dashboard on SaaS subdomain
