@@ -43,7 +43,8 @@ import {
     ListChecks,
     Trophy,
     Eye,
-    FileCheck
+    FileCheck,
+    Percent
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
@@ -296,6 +297,7 @@ export const MENU_ITEMS = [
                     { title: 'Posting Rules', path: '/finance/settings/posting-rules' },
                 ]
             },
+            { title: 'Tax Groups', path: '/finance/tax-groups', icon: Percent },
             { title: 'Financial Settings', path: '/finance/settings', icon: Settings },
 
         ]

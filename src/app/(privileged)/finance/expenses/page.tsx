@@ -14,6 +14,7 @@ import {
 } from "lucide-react"
 
 export default function ExpenseTrackerPage() {
+    const { fmt } = useCurrency()
     const [accounts, setAccounts] = useState<ChartOfAccount[]>([])
     const [journals, setJournals] = useState<JournalEntry[]>([])
     const [loading, setLoading] = useState(true)
