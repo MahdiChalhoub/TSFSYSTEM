@@ -17,6 +17,7 @@ import {
     ShieldCheck, Wallet, Landmark as BankIcon
 } from "lucide-react"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 
 export default function BankReconciliationPage() {
     const { fmt } = useCurrency()
@@ -26,6 +27,10 @@ export default function BankReconciliationPage() {
     const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null)
     const [search, setSearch] = useState('')
     const [startDate, setStartDate] = useState('')
+    const settings = useListViewSettings('fin_bank_recon', {
+        columns: ['code', 'name', 'entry_count', 'book_balance', 'actions'],
+        pageSize: 25, sortKey: 'name', sortDir: 'asc'
+    })
     const [endDate, setEndDate] = useState('')
 
     useEffect(() => { loadAccounts() }, [])
@@ -261,7 +266,13 @@ export default function BankReconciliationPage() {
                     getRowId={(e) => e.id}
                     columns={entryColumns}
                     className="rounded-3xl border-0 shadow-sm overflow-hidden"
-                    pageSize={15}
+                    visibleColumns={settings.visibleColumns}
+                    onToggleColumn={settings.toggleColumn}
+                    pageSize={settings.pageSize}
+                    onPageSizeChange={settings.setPageSize}
+                    sortKey={settings.sortKey}
+                    sortDir={settings.sortDir}
+                    onSort={settings.setSort}
                     compact
                 />
             </div>
@@ -312,7 +323,13 @@ export default function BankReconciliationPage() {
                 getRowId={(acc) => acc.id}
                 columns={accountColumns}
                 className="rounded-3xl border-0 shadow-sm overflow-hidden"
-                pageSize={25}
+                visibleColumns={settings.visibleColumns}
+                onToggleColumn={settings.toggleColumn}
+                pageSize={settings.pageSize}
+                onPageSizeChange={settings.setPageSize}
+                sortKey={settings.sortKey}
+                sortDir={settings.sortDir}
+                onSort={settings.setSort}
                 headerExtra={
                     <Button onClick={loadAccounts} variant="ghost" className="h-8 w-8 p-0 text-stone-400 hover:text-blue-600">
                         <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />

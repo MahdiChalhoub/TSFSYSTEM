@@ -22,6 +22,7 @@ import {
     Lock, Unlock, ShieldCheck, History
 } from "lucide-react"
 import { TypicalListView, ColumnDef, LifecycleConfig } from "@/components/common/TypicalListView"
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { useCurrency } from "@/lib/utils/currency"
 
 // Sort logic handled by TypicalListView
@@ -49,6 +50,10 @@ export default function VouchersPage() {
     const [searchQuery, setSearchQuery] = useState("")
     const [sortKey, setSortKey] = useState<string>('date')
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+    const settings = useListViewSettings('fin_vouchers', {
+        columns: ['id', 'date', 'reference', 'description', 'amount', 'postedDate', 'status', 'actions'],
+        pageSize: 25, sortKey: 'date', sortDir: 'desc'
+    })
     const [isPending, startTransition] = useTransition()
 
     useEffect(() => { loadData() }, [])
@@ -560,6 +565,13 @@ export default function VouchersPage() {
                 columns={columns}
                 lifecycle={lifecycle}
                 actions={actions}
+                visibleColumns={settings.visibleColumns}
+                onToggleColumn={settings.toggleColumn}
+                pageSize={settings.pageSize}
+                onPageSizeChange={settings.setPageSize}
+                sortKey={settings.sortKey}
+                sortDir={settings.sortDir}
+                onSort={settings.setSort}
                 className="rounded-[2.5rem] border-0 shadow-sm overflow-hidden bg-white"
                 headerExtra={
                     <div className="flex flex-col md:flex-row items-center gap-4">

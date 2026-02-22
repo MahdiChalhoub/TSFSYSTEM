@@ -463,12 +463,18 @@ else:
 # ── Customer Balances ──
 if not CustomerBalance.objects.filter(organization=org).exists():
     for cust in customers:
-        CustomerBalance.objects.create(
-            organization=org, contact=cust,
-            total_invoiced=Decimal(str(random.randint(100000, 5000000))),
-            total_paid=Decimal(str(random.randint(50000, 4000000))),
-        )
-    print(f"  ✅ {len(customers)} Customer Balances")
+        bal = Decimal(str(random.randint(0, 500000)))
+        try:
+            CustomerBalance.objects.create(
+                organization=org, contact=cust,
+                current_balance=bal,
+                credit_limit=Decimal(str(random.randint(100000, 2000000))),
+                last_payment_date=rand_past_date(),
+                last_invoice_date=rand_past_date(),
+            )
+        except Exception:
+            pass
+    print(f"  ✅ {CustomerBalance.objects.filter(organization=org).count()} Customer Balances")
 else:
     print("  ⏭ Customer Balances exist")
 
@@ -873,10 +879,12 @@ if not ClientWallet.objects.filter(organization=org).exists():
             loyalty_points=random.randint(0, 500),
         )
         for _ in range(random.randint(1, 4)):
+            amt = Decimal(str(random.randint(500, 10000)))
             WalletTransaction.objects.create(
                 organization=org, wallet=wallet,
                 transaction_type=random.choice(['CREDIT', 'DEBIT']),
-                amount=Decimal(str(random.randint(500, 10000))),
+                amount=amt,
+                balance_after=wallet.balance,
                 reason=random.choice(['POS Change', 'Loyalty Redemption', 'Refund Credit', 'Manual Top-up']),
             )
     print(f"  ✅ {ClientWallet.objects.filter(organization=org).count()} Client Wallets")
@@ -892,7 +900,7 @@ if not SupplierProforma.objects.filter(organization=org).exists():
         sp = SupplierProforma(
             organization=org, supplier=sup,
             status=random.choice(['DRAFT', 'SUBMITTED', 'APPROVED']),
-            notes=f'Proforma invoice from {sup.name}',
+            supplier_notes=f'Proforma invoice from {sup.name}',
             currency='XOF',
         )
         sp.save()

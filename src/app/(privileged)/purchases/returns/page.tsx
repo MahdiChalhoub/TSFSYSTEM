@@ -14,6 +14,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
     PENDING: { label: 'Pending Processing', color: 'bg-amber-50 text-amber-700 border-amber-100' },
@@ -25,6 +26,10 @@ export default function PurchaseReturnsPage() {
     const { fmt } = useCurrency()
     const [returns, setReturns] = useState<PurchaseReturn[]>([])
     const [loading, setLoading] = useState(true)
+    const settings = useListViewSettings('purch_returns', {
+        columns: ['id', 'original_order', 'supplier_name', 'status', 'total_amount', 'actions'],
+        pageSize: 25, sortKey: 'id', sortDir: 'desc'
+    })
 
     useEffect(() => { loadReturns() }, [])
 
@@ -158,8 +163,14 @@ export default function PurchaseReturnsPage() {
                 loading={loading}
                 getRowId={(ret) => ret.id}
                 columns={columns}
+                visibleColumns={settings.visibleColumns}
+                onToggleColumn={settings.toggleColumn}
+                pageSize={settings.pageSize}
+                onPageSizeChange={settings.setPageSize}
+                sortKey={settings.sortKey}
+                sortDir={settings.sortDir}
+                onSort={settings.setSort}
                 className="rounded-3xl border-0 shadow-sm overflow-hidden"
-                pageSize={25}
                 headerExtra={
                     <div className="flex items-center gap-3">
                         <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-100 text-[10px] font-black uppercase px-3 h-6">

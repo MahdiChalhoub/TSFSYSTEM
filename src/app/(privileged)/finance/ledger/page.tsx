@@ -12,6 +12,7 @@ import {
     ArrowUpRight, ArrowDownRight, Hash, X
 } from 'lucide-react'
 import { TypicalListView, ColumnDef } from '@/components/common/TypicalListView'
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -36,6 +37,10 @@ export default function GeneralLedgerPage() {
     const [entries, setEntries] = useState<any[]>([])
     const [fiscalYears, setFiscalYears] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
+    const settings = useListViewSettings('fin_ledger', {
+        columns: ['id', 'transactionDate', 'reference', 'description', 'amount', 'balance', 'status', 'actions'],
+        pageSize: 25, sortKey: 'transactionDate', sortDir: 'desc'
+    })
 
     // Filters
     const [status, setStatus] = useState('ALL')
@@ -296,6 +301,13 @@ export default function GeneralLedgerPage() {
                         )
                     }
                 }}
+                visibleColumns={settings.visibleColumns}
+                onToggleColumn={settings.toggleColumn}
+                pageSize={settings.pageSize}
+                onPageSizeChange={settings.setPageSize}
+                sortKey={settings.sortKey}
+                sortDir={settings.sortDir}
+                onSort={settings.setSort}
                 className="rounded-[2.5rem] border-0 shadow-sm overflow-hidden bg-white"
             />
         </div>

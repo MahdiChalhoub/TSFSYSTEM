@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { TypicalListView, ColumnDef, LifecycleConfig } from '@/components/common/TypicalListView'
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { Calendar, AlertTriangle, Clock } from 'lucide-react'
 import Link from 'next/link'
 import { TypicalFilter } from '@/components/common/TypicalFilter'
@@ -55,6 +56,10 @@ const PO_SUB_TYPE_CONFIG: Record<string, { label: string; color: string }> = {
 export function PurchasesRegistryClient({ orders, currency, tradeSubTypesEnabled }: PurchasesRegistryClientProps) {
     const router = useRouter()
     const searchParams = useSearchParams()
+    const settings = useListViewSettings('purch_registry', {
+        columns: ['po_number', 'supplier_display', 'purchase_sub_type', 'priority', 'total_amount', 'expected_date'],
+        pageSize: 25, sortKey: 'created_at', sortDir: 'desc'
+    })
 
     const columns: ColumnDef<PurchaseOrder>[] = [
         {
@@ -168,6 +173,13 @@ export function PurchasesRegistryClient({ orders, currency, tradeSubTypesEnabled
                 )
             }}
             className="rounded-2xl shadow-sm bg-white overflow-hidden border-0"
+            visibleColumns={settings.visibleColumns}
+            onToggleColumn={settings.toggleColumn}
+            pageSize={settings.pageSize}
+            onPageSizeChange={settings.setPageSize}
+            sortKey={settings.sortKey}
+            sortDir={settings.sortDir}
+            onSort={settings.setSort}
         >
             <TypicalFilter
                 search={{
