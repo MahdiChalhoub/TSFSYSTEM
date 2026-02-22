@@ -39,6 +39,7 @@ def handle_event(event_name: str, payload: dict, organization_id: int):
         'order:completed': _on_order_completed,
         'inventory:adjusted': _on_inventory_adjusted,
         'subscription:renewed': _on_subscription_renewed,
+        'subscription:updated': _on_subscription_updated,
     }
     
     handler = handlers.get(event_name)
@@ -254,3 +255,78 @@ def _on_subscription_renewed(payload: dict, organization_id: int):
     """React to subscription renewals — record revenue."""
     logger.info(f"🔄 Finance: Subscription renewal for org {organization_id}")
     # Future: Create revenue recognition journal entries
+
+
+def _on_subscription_updated(payload: dict, organization_id: int):
+    """
+    React to subscription updates (purchases/credits) — record ledger entry.
+    Triggered by SaaS layer when a tenant changes their plan.
+    """
+    from .services import LedgerService
+    from .models import ChartOfAccount
+    from erp.models import Organization
+    
+    amount = Decimal(str(payload.get('amount', '0')))
+    txn_type = payload.get('type') # PURCHASE or CREDIT_NOTE
+    description = payload.get('description')
+    target_org_id = payload.get('target_org_id')
+    
+    if amount <= 0:
+        return {'success': True, 'skipped': True}
+
+    try:
+        # 1. Identify context (should be SaaS org)
+        org = Organization.objects.get(id=organization_id)
+        
+        # 2. Find target organization (tenant) and its client
+        target_org = Organization.objects.filter(id=target_org_id).select_related('client').first()
+        client = target_org.client if target_org else None
+        
+        contact_id = None
+        if client:
+            from apps.crm.models import Contact
+            billing_contact = Contact.objects.filter(organization=org, email=client.email).first()
+            if billing_contact:
+                contact_id = billing_contact.id
+        
+        if not contact_id:
+            logger.warning(f"Finance: No billing contact found for tenant {target_org_id}. Ledger entry may be unlinked.")
+
+        # 3. Resolve accounts
+        # Standard: 1110 (AR) and 4100 (Sales Revenue)
+        ar_acc = ChartOfAccount.objects.filter(organization=org, code='1110').first()
+        rev_acc = ChartOfAccount.objects.filter(organization=org, code='4100').first()
+        
+        if not ar_acc or not rev_acc:
+            logger.error(f"Finance: Missing accounts 1110 (AR) or 4100 (Revenue) in SaaS org {organization_id}.")
+            return {'success': False, 'error': "Missing core accounts"}
+
+        # 4. Create Journal Entry lines
+        # If PURCHASE (Billing): AR Debit, Revenue Credit
+        # If CREDIT_NOTE (Refund): Revenue Debit, AR Credit
+        if txn_type == 'PURCHASE':
+            lines = [
+                {'account_id': ar_acc.id, 'debit': amount, 'credit': 0, 'description': description, 'contact_id': contact_id},
+                {'account_id': rev_acc.id, 'debit': 0, 'credit': amount, 'description': description}
+            ]
+        else: # CREDIT_NOTE
+            lines = [
+                {'account_id': rev_acc.id, 'debit': amount, 'credit': 0, 'description': description},
+                {'account_id': ar_acc.id, 'debit': 0, 'credit': amount, 'description': description, 'contact_id': contact_id}
+            ]
+
+        # 5. Create Entry
+        entry = LedgerService.create_journal_entry(
+            organization=org,
+            transaction_date=timezone.now(),
+            description=description,
+            status='POSTED', # Auto-post billing entries
+            lines=lines
+        )
+        
+        logger.info(f"✅ Finance: Created journal entry {entry.reference} for subscription {txn_type}")
+        return {'success': True, 'entry_id': str(entry.id)}
+        
+    except Exception as e:
+        logger.error(f"Finance: Failed to process subscription update: {e}")
+        return {'success': False, 'error': str(e)}

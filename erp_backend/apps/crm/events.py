@@ -32,6 +32,7 @@ def handle_event(event_name: str, payload: dict, organization_id: int):
     """
     handlers = {
         'org:provisioned': _on_org_provisioned,
+        'subscription:updated': _on_subscription_updated,
     }
     
     handler = handlers.get(event_name)
@@ -93,12 +94,8 @@ def _on_org_provisioned(payload: dict, organization_id: int) -> dict:
             credit_limit=Decimal('0.00')
         )
         
-        # Link the billing contact back to the new organization
-        new_org = Organization.objects.filter(id=org_id).first()
-        if new_org:
-            new_org.billing_contact_id = client_contact.id
-            new_org.save(update_fields=['billing_contact_id'])
-        
+        # The billing contact is now strictly resolved via the SaaSClient relationship
+        # No direct field 'billing_contact_id' exists on Organization.
         logger.info(
             f"✅ CRM: Created billing contact '{client_contact.name}' "
             f"(id={client_contact.id}) in SaaS org for tenant '{org_slug}'"
@@ -115,4 +112,64 @@ def _on_org_provisioned(payload: dict, organization_id: int) -> dict:
         
     except Exception as e:
         logger.error(f"CRM: Failed to create billing contact for '{org_slug}': {e}")
+        return {'success': False, 'error': str(e)}
+
+
+def _on_subscription_updated(payload: dict, organization_id: int):
+    """
+    React to subscription updates — update Contact balance.
+    Triggered by SaaS layer when a tenant changes their plan.
+    """
+    from .models import Contact
+    from erp.models import Organization
+    
+    amount = Decimal(str(payload.get('amount', '0')))
+    txn_type = payload.get('type') # PURCHASE or CREDIT_NOTE
+    target_org_id = payload.get('target_org_id')
+
+    if amount <= 0:
+        return {'success': True, 'skipped': True}
+
+    try:
+        # 1. Identify context (should be SaaS org)
+        saas_org = Organization.objects.filter(slug='saas').first()
+        if not saas_org:
+            logger.error("CRM: SaaS master org not found.")
+            return {'success': False, 'error': "SaaS org not found"}
+
+        # 2. Find tenant organization and its client
+        target_org = Organization.objects.filter(id=target_org_id).select_related('client').first()
+        if not target_org or not target_org.client:
+            logger.warning(f"CRM: No client found for tenant {target_org_id}. Balance sync skipped.")
+            return {'success': True, 'skipped': True, 'reason': 'No client linked'}
+
+        # 3. Resolve Contact via Client email
+        contact = Contact.objects.filter(organization=saas_org, email=target_org.client.email).first()
+        
+        if not contact:
+            logger.warning(f"CRM: No CRM contact found for client {target_org.client.email}. Sync skipped.")
+            return {'success': True, 'skipped': True, 'reason': 'Contact not found'}
+
+        # 4. Update Contact balance
+        old_balance = contact.balance
+        if txn_type == 'PURCHASE':
+            contact.balance += amount
+        else: # CREDIT_NOTE
+            contact.balance -= amount
+            
+        contact.save(update_fields=['balance', 'updated_at'])
+        
+        logger.info(
+            f"✅ CRM: Updated balance for contact '{contact.name}' "
+            f"({old_balance} -> {contact.balance}) for subscription {txn_type}"
+        )
+        return {
+            'success': True,
+            'contact_id': str(contact.id),
+            'old_balance': str(old_balance),
+            'new_balance': str(contact.balance)
+        }
+        
+    except Exception as e:
+        logger.error(f"CRM: Failed to process subscription update: {e}")
         return {'success': False, 'error': str(e)}
