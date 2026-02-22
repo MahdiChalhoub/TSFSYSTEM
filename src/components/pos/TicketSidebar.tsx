@@ -7,10 +7,11 @@ import { toast } from 'sonner';
 import { processSale } from '@/app/(privileged)/sales/actions';
 import { ReceiptModal } from './ReceiptModal';
 
-export function TicketSidebar({ cart, onUpdateQuantity, onClear }: {
+export function TicketSidebar({ cart, onUpdateQuantity, onClear, currency = '$' }: {
     cart: CartItem[],
     onUpdateQuantity: (id: number, delta: number) => void,
-    onClear: () => void
+    onClear: () => void,
+    currency?: string
 }) {
     const [isPending, startTransition] = useTransition();
     const [paymentMethod, setPaymentMethod] = useState<string>('CASH');
@@ -19,9 +20,12 @@ export function TicketSidebar({ cart, onUpdateQuantity, onClear }: {
     const [lastOrder, setLastOrder] = useState<{ id: number; ref: string } | null>(null);
     const [isReceiptOpen, setIsReceiptOpen] = useState(false);
 
-    const total = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+    const total = cart.reduce((acc, item) => {
+        const itemPrice = Number(item.price) || 0;
+        return acc + (itemPrice * item.quantity);
+    }, 0);
     const discount = 0; // Mocked for UI
-    const totalAmount = total - discount;
+    const totalAmount = Math.max(0, total - discount);
     const receivedAmount = totalAmount; // Mocked
 
     const handleCharge = useCallback(() => {
@@ -65,7 +69,7 @@ export function TicketSidebar({ cart, onUpdateQuantity, onClear }: {
                     <div className="flex gap-4 text-right">
                         <div className="flex flex-col">
                             <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Balance</span>
-                            <span className="font-black text-indigo-600 text-xl tracking-tighter">$120</span>
+                            <span className="font-black text-indigo-600 text-xl tracking-tighter">{currency}120</span>
                         </div>
                         <div className="flex flex-col">
                             <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Loyalty Points</span>
@@ -114,10 +118,10 @@ export function TicketSidebar({ cart, onUpdateQuantity, onClear }: {
                                             <button onClick={() => onUpdateQuantity(item.productId, 1)} className="w-6 h-6 flex items-center justify-center border border-gray-200 rounded-lg text-gray-400 hover:bg-gray-100"><Plus size={12} /></button>
                                         </div>
                                     </td>
-                                    <td className="p-4 text-right tabular-nums">${item.price.toFixed(2)}</td>
-                                    <td className="p-4 text-center text-gray-400">10%</td>
-                                    <td className="p-4 text-right tabular-nums">${(item.price * 0.9).toFixed(2)}</td>
-                                    <td className="p-4 text-right tabular-nums font-black text-gray-900">${(item.price * 0.9 * item.quantity).toFixed(2)}</td>
+                                    <td className="p-4 text-right tabular-nums">{currency}{(Number(item.price) || 0).toFixed(2)}</td>
+                                    <td className="p-4 text-center text-gray-400">0%</td>
+                                    <td className="p-4 text-right tabular-nums">{currency}{(Number(item.price) || 0).toFixed(2)}</td>
+                                    <td className="p-4 text-right tabular-nums font-black text-gray-900">{currency}{((Number(item.price) || 0) * item.quantity).toFixed(2)}</td>
                                     <td className="p-4 pr-6 text-center">
                                         <button onClick={() => onUpdateQuantity(item.productId, -item.quantity)} className="p-1.5 text-gray-300 hover:text-rose-500 transition-all">
                                             <Trash2 size={16} />
@@ -131,7 +135,7 @@ export function TicketSidebar({ cart, onUpdateQuantity, onClear }: {
                         <tfoot>
                             <tr className="bg-[#F8FAFC]">
                                 <td colSpan={5} className="p-4 pl-6 font-black text-gray-400 uppercase tracking-widest text-right">Total</td>
-                                <td className="p-4 text-right font-black text-xl text-gray-900 tabular-nums">${totalAmount.toFixed(2)}</td>
+                                <td className="p-4 text-right font-black text-xl text-gray-900 tabular-nums">{currency}{totalAmount.toFixed(2)}</td>
                                 <td className="p-4"></td>
                             </tr>
                         </tfoot>
@@ -145,24 +149,24 @@ export function TicketSidebar({ cart, onUpdateQuantity, onClear }: {
                 <div className="w-72 space-y-3 font-bold text-xs uppercase tracking-tight text-gray-500">
                     <div className="flex justify-between items-center">
                         <span>Amount Before Discount</span>
-                        <span className="text-gray-900">${total.toFixed(2)}</span>
+                        <span className="text-gray-900">{currency}{total.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center">
                         <span>Discount</span>
-                        <span className="text-gray-900">${discount.toFixed(2)}</span>
+                        <span className="text-gray-900">{currency}{discount.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center">
                         <span>Total Amount</span>
-                        <span className="text-gray-900">${totalAmount.toFixed(2)}</span>
+                        <span className="text-gray-900">{currency}{totalAmount.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center">
                         <span>Received Amount</span>
-                        <span className="text-gray-900">${receivedAmount.toFixed(2)}</span>
+                        <span className="text-gray-900">{currency}{receivedAmount.toFixed(2)}</span>
                     </div>
                     <div className="pt-2">
                         <div className="bg-indigo-500 rounded-xl p-4 flex justify-between items-center shadow-lg shadow-indigo-100">
                             <span className="text-white font-black">Change Due</span>
-                            <span className="text-white font-black text-xl">$0.00</span>
+                            <span className="text-white font-black text-xl">{currency}0.00</span>
                         </div>
                     </div>
                 </div>
