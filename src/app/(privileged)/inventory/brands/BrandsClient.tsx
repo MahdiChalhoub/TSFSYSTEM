@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { TypicalListView } from '@/components/common/TypicalListView'
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { TypicalFilter } from '@/components/common/TypicalFilter'
 import { getBrandHierarchy } from '@/app/actions/inventory/brands'
 import { BrandFormModal } from '@/components/admin/BrandFormModal'
@@ -11,6 +12,12 @@ import { toast } from 'sonner'
 import Link from 'next/link'
 
 export function BrandsClient({ initialBrands, countries, categories }: { initialBrands: any[], countries: any[], categories: any[] }) {
+    const settings = useListViewSettings('inv_brands', {
+        columns: ['name', 'origins', 'product_count'],
+        pageSize: 25,
+        sortKey: 'name',
+        sortDir: 'asc',
+    })
     const [data, setData] = useState(initialBrands)
     const [loading, setLoading] = useState(false)
     const [isFormOpen, setIsFormOpen] = useState(false)
@@ -110,6 +117,13 @@ export function BrandsClient({ initialBrands, countries, categories }: { initial
                 loading={loading}
                 getRowId={r => r.id}
                 columns={columns}
+                visibleColumns={settings.visibleColumns}
+                onToggleColumn={settings.toggleColumn}
+                pageSize={settings.pageSize}
+                onPageSizeChange={settings.setPageSize}
+                sortKey={settings.sortKey}
+                sortDir={settings.sortDir}
+                onSort={settings.setSort}
                 onAdd={() => { setEditingBrand(null); setIsFormOpen(true); }}
                 addLabel="ADD BRAND"
                 renderCard={renderCard}

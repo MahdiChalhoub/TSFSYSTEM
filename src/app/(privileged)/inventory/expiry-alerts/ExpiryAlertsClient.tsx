@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useTransition } from 'react'
 import { TypicalListView } from '@/components/common/TypicalListView'
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { TypicalFilter } from '@/components/common/TypicalFilter'
 import { getExpiryAlerts, scanForExpiry, acknowledgeAlert } from "@/app/actions/inventory/expiry-alerts"
 import { Badge } from '@/components/ui/badge'
@@ -22,6 +23,12 @@ const SEVERITY_CONFIG: Record<string, { label: string; color: string; bg: string
 
 export function ExpiryAlertsClient({ initialData }: { initialData: any }) {
     const { fmt } = useCurrency()
+    const settings = useListViewSettings('inv_expiry_alerts', {
+        columns: ['batch', 'timeline', 'risk'],
+        pageSize: 25,
+        sortKey: 'timeline',
+        sortDir: 'asc',
+    })
     const [data, setData] = useState<any[]>(initialData?.alerts || [])
     const [loading, setLoading] = useState(false)
     const [isPending, startTransition] = useTransition()
@@ -82,7 +89,7 @@ export function ExpiryAlertsClient({ initialData }: { initialData: any }) {
                         <span className="text-xs font-bold text-gray-700">{row.expiry_date}</span>
                     </div>
                     <Badge variant="outline" className={`text-[9px] uppercase font-black px-1.5 py-0 border-0 ${row.days_until_expiry <= 0 ? 'text-rose-600' :
-                            row.days_until_expiry <= 30 ? 'text-orange-600' : 'text-amber-600'
+                        row.days_until_expiry <= 30 ? 'text-orange-600' : 'text-amber-600'
                         }`}>
                         {row.days_until_expiry <= 0 ? 'OVERDUE' : `${row.days_until_expiry} DAYS REMAINING`}
                     </Badge>
@@ -109,6 +116,13 @@ export function ExpiryAlertsClient({ initialData }: { initialData: any }) {
             loading={loading}
             getRowId={r => r.id}
             columns={columns}
+            visibleColumns={settings.visibleColumns}
+            onToggleColumn={settings.toggleColumn}
+            pageSize={settings.pageSize}
+            onPageSizeChange={settings.setPageSize}
+            sortKey={settings.sortKey}
+            sortDir={settings.sortDir}
+            onSort={settings.setSort}
             addLabel="SCAN BATCH LIFECYCLES"
             onAdd={() => startTransition(async () => { await scanForExpiry(); loadData() })}
             headerExtras={

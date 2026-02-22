@@ -21,6 +21,7 @@ import {
     Activity, ClipboardList
 } from "lucide-react"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { TypicalFilter } from "@/components/common/TypicalFilter"
 
 const TYPE_CONFIG: Record<string, { label: string; icon: any; color: string; bg: string }> = {
@@ -37,6 +38,12 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; variant: any
 }
 
 export default function OperationalRequestsPage() {
+    const settings = useListViewSettings('inv_requests', {
+        columns: ['reference', 'date', 'priority', 'items'],
+        pageSize: 25,
+        sortKey: 'date',
+        sortDir: 'desc',
+    })
     const [requests, setRequests] = useState<OperationalRequest[]>([])
     const [warehouses, setWarehouses] = useState<Warehouse[]>([])
     const [products, setProducts] = useState<Product[]>([])
@@ -177,6 +184,13 @@ export default function OperationalRequestsPage() {
                 loading={loading}
                 getRowId={r => r.id}
                 columns={columns}
+                visibleColumns={settings.visibleColumns}
+                onToggleColumn={settings.toggleColumn}
+                pageSize={settings.pageSize}
+                onPageSizeChange={settings.setPageSize}
+                sortKey={settings.sortKey}
+                sortDir={settings.sortDir}
+                onSort={settings.setSort}
                 expandable={{
                     columns: detailColumns,
                     getDetails: r => r.lines || []

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { TypicalListView } from '@/components/common/TypicalListView'
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { TypicalFilter } from '@/components/common/TypicalFilter'
 import { deleteCategory } from '@/app/actions/inventory/categories'
 import { CategoryFormModal } from '@/components/admin/categories/CategoryFormModal'
@@ -13,6 +14,12 @@ import { Button } from '@/components/ui/button'
 import { ProductList } from '@/components/inventory/ProductList'
 
 export function CategoriesClient({ initialData, industryVector }: { initialData: any[], industryVector?: string }) {
+    const settings = useListViewSettings('inv_categories', {
+        columns: ['name', 'parent_name', 'product_count', 'brand_count'],
+        pageSize: 25,
+        sortKey: 'name',
+        sortDir: 'asc',
+    })
     const [data, setData] = useState(initialData)
     const [loading, setLoading] = useState(false)
     const [formModal, setFormModal] = useState<{ open: boolean, category?: any }>({ open: false })
@@ -138,6 +145,13 @@ export function CategoriesClient({ initialData, industryVector }: { initialData:
                 loading={loading}
                 getRowId={r => r.id}
                 columns={columns}
+                visibleColumns={settings.visibleColumns}
+                onToggleColumn={settings.toggleColumn}
+                pageSize={settings.pageSize}
+                onPageSizeChange={settings.setPageSize}
+                sortKey={settings.sortKey}
+                sortDir={settings.sortDir}
+                onSort={settings.setSort}
                 onAdd={() => setFormModal({ open: true })}
                 addLabel="ADD CATEGORY"
                 renderCard={renderCard}

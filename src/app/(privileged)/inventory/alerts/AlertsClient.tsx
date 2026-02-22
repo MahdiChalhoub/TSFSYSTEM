@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useTransition } from 'react'
 import { TypicalListView } from '@/components/common/TypicalListView'
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { TypicalFilter } from '@/components/common/TypicalFilter'
 import { erpFetch } from '@/lib/erp-api'
 import { Badge } from '@/components/ui/badge'
@@ -24,6 +25,12 @@ const SEVERITY_CONFIG: Record<string, { label: string; color: string; bg: string
 
 export function AlertsClient({ initialAlerts }: { initialAlerts: any[] }) {
     const router = useRouter()
+    const settings = useListViewSettings('inv_alerts', {
+        columns: ['product', 'levels', 'created_at'],
+        pageSize: 25,
+        sortKey: 'created_at',
+        sortDir: 'desc',
+    })
     const [data, setData] = useState<any[]>(initialAlerts || [])
     const [loading, setLoading] = useState(false)
     const [isPending, startTransition] = useTransition()
@@ -117,6 +124,13 @@ export function AlertsClient({ initialAlerts }: { initialAlerts: any[] }) {
             loading={loading}
             getRowId={r => r.id}
             columns={columns}
+            visibleColumns={settings.visibleColumns}
+            onToggleColumn={settings.toggleColumn}
+            pageSize={settings.pageSize}
+            onPageSizeChange={settings.setPageSize}
+            sortKey={settings.sortKey}
+            sortDir={settings.sortDir}
+            onSort={settings.setSort}
             addLabel="RUN GLOBAL SCAN"
             onAdd={() => toast.promise(loadData(), { loading: 'Scanning...', success: 'Scan complete', error: 'Scan failed' })}
             headerExtras={

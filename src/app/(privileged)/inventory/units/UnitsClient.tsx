@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { TypicalListView } from '@/components/common/TypicalListView'
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { TypicalFilter } from '@/components/common/TypicalFilter'
 import { createUnit, updateUnit, deleteUnit } from '@/app/actions/inventory/units'
 import { Badge } from '@/components/ui/badge'
@@ -13,6 +14,12 @@ import { Button } from '@/components/ui/button'
 import { ProductList } from '@/components/inventory/ProductList'
 
 export function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
+    const settings = useListViewSettings('inv_units', {
+        columns: ['name', 'multiplier', 'product_count'],
+        pageSize: 25,
+        sortKey: 'name',
+        sortDir: 'asc',
+    })
     const [data, setData] = useState(initialUnits)
     const [loading, setLoading] = useState(false)
     const [isFormOpen, setIsFormOpen] = useState(false)
@@ -129,6 +136,13 @@ export function UnitsClient({ initialUnits }: { initialUnits: any[] }) {
                 loading={loading}
                 getRowId={r => r.id}
                 columns={columns}
+                visibleColumns={settings.visibleColumns}
+                onToggleColumn={settings.toggleColumn}
+                pageSize={settings.pageSize}
+                onPageSizeChange={settings.setPageSize}
+                sortKey={settings.sortKey}
+                sortDir={settings.sortDir}
+                onSort={settings.setSort}
                 onAdd={() => { setEditingUnit(null); setIsFormOpen(true); }}
                 addLabel="ADD UNIT"
                 renderCard={renderCard}

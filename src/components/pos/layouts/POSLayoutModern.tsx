@@ -11,28 +11,30 @@ import {
     Search, ShoppingCart, Plus, Minus, Trash2, X, Layout, User,
     ChevronDown, Maximize, Minimize, FileText, Settings, Wallet,
     Save, Book, File, ArrowLeft, Eye, EyeOff, Package, Tag,
-    DollarSign, Hash, CreditCard
+    CreditCard, Banknote
 } from 'lucide-react';
 import clsx from 'clsx';
 import { toast } from 'sonner';
 
-/**
- * Layout B: "Modern" — Cart-Focused Layout (per user wireframe)
- * ┌──────────────────────────────────────────────────────────┐
- * │ HEADER (full width)                                      │
- * ├────────────────────────────┬──────────────────────────────┤
- * │ Client Info                │                              │
- * ├────────────────────────────┤                              │
- * │ Search + Category Pills    │       CART                   │
- * ├──────────┬─────────────────┤    (full height,             │
- * │ Category │ Payment Info    │     all item info,           │
- * │ Tiles    │ & Finalize      │     quantities, totals,      │
- * │ (normal) │ Payment         │     charge at bottom)        │
- * │          │                 │                              │
- * │ When expanded → Products   │                              │
- * │ (payment hides)            │                              │
- * └──────────┴─────────────────┴──────────────────────────────┘
- */
+/* ═══════════════════════════════════════════════════════════════
+ * MODERN POS — Redesigned (Per User Wireframe)
+ * ┌──────────────────────────────────────────────────────────────┐
+ * │ HEADER (full width)                                          │
+ * ├─────────────────────────────┬────────────────────────────────┤
+ * │ Client Info                 │                                │
+ * ├─────────────────────────────┤         CART                   │
+ * │ Search + Category Pills     │    (full height from           │
+ * ├─────────────┬───────────────┤     header to bottom)          │
+ * │ Category    │ Payment &     │                                │
+ * │ Tiles       │ Finalize      │     items, qty, tax,           │
+ * │             │               │     totals                     │
+ * │             │               │                                │
+ * │ When expanded → Products    │  ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─  │
+ * │ (payment hides)             │  Subtotal · Discount · Cash    │
+ * │                             │  [████ CHARGE ████]            │
+ * └─────────────┴───────────────┴────────────────────────────────┘
+ * ═══════════════════════════════════════════════════════════════ */
+
 export function POSLayoutModern(props: POSLayoutProps) {
     const {
         cart, clients, selectedClient, selectedClientId, categories,
@@ -47,131 +49,124 @@ export function POSLayoutModern(props: POSLayoutProps) {
         onSetOverrideOpen, onSetReceiptOpen, onOpenLayoutSelector
     } = props;
 
-    const receivedAmount = Number(cashReceived) || 0;
-    const changeDue = receivedAmount > totalAmount ? receivedAmount - totalAmount : 0;
-
+    const receivedNum = Number(cashReceived) || 0;
+    const changeDue = receivedNum > totalAmount ? receivedNum - totalAmount : 0;
     const [leftExpanded, setLeftExpanded] = useState(false);
 
     return (
         <div className={clsx(
-            "flex flex-col bg-[#F1F5F9] overflow-hidden select-none h-full",
-            isFullscreen ? "fixed inset-0 z-[1000] h-screen w-screen" : "absolute inset-0"
+            "flex flex-col overflow-hidden select-none h-full",
+            isFullscreen ? "fixed inset-0 z-[1000] h-screen w-screen bg-[#f4f6f8]" : "absolute inset-0 bg-[#f4f6f8]"
         )}>
-            {/* ═══════ HEADER — FULL WIDTH ═══════ */}
-            <header className="h-14 bg-white border-b border-gray-100 flex items-center justify-between px-5 shrink-0 z-50 shadow-sm">
-                <div className="flex items-center gap-5">
-                    <h1 className="text-xl font-black tracking-tighter text-gray-900 flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-100">
-                            <ShoppingCart size={18} className="text-white" />
+
+            {/* ═══════════ HEADER — FULL WIDTH ═══════════ */}
+            <header className="h-[52px] bg-white border-b border-gray-200/80 flex items-center justify-between px-4 shrink-0 z-50 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+                <div className="flex items-center gap-4">
+                    <h1 className="text-lg font-extrabold tracking-tight text-gray-900 flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-md">
+                            <ShoppingCart size={16} className="text-white" />
                         </div>
-                        Sales <span className="text-violet-600">Terminal</span>
+                        <span>POS</span>
                     </h1>
 
                     {/* Session Tabs */}
-                    <div className="flex gap-1.5 ml-2 overflow-x-auto max-w-md no-scrollbar">
+                    <div className="flex gap-1 ml-2 overflow-x-auto max-w-md no-scrollbar">
                         {sessions.map(s => (
                             <div key={s.id} className="flex shrink-0 group">
                                 <button
                                     onClick={() => onSetActiveSessionId(s.id)}
                                     className={clsx(
-                                        "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all",
+                                        "flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all",
                                         activeSessionId === s.id
-                                            ? "bg-violet-600 text-white shadow-lg shadow-violet-100"
-                                            : "bg-gray-50 text-gray-400 hover:bg-gray-100"
+                                            ? "bg-emerald-500 text-white shadow-md"
+                                            : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                                     )}
                                 >
-                                    <ShoppingCart size={10} className={activeSessionId === s.id ? "text-white" : "text-gray-300"} />
+                                    <ShoppingCart size={11} />
                                     {s.name}
                                 </button>
-                                <button onClick={() => onRemoveSession(s.id)} className="ml-[-6px] p-0.5 text-gray-300 hover:text-rose-500 transition-all opacity-0 group-hover:opacity-100">
+                                <button onClick={() => onRemoveSession(s.id)} className="ml-[-4px] p-0.5 text-gray-300 hover:text-rose-500 transition-all opacity-0 group-hover:opacity-100">
                                     <X size={9} />
                                 </button>
                             </div>
                         ))}
-                        <button onClick={onCreateNewSession} className="w-7 h-7 flex items-center justify-center bg-gray-50 text-gray-400 rounded-lg hover:bg-violet-50 hover:text-violet-600 transition-all">
+                        <button onClick={onCreateNewSession} className="w-7 h-7 flex items-center justify-center bg-gray-100 text-gray-400 rounded-lg hover:bg-emerald-50 hover:text-emerald-600 transition-all">
                             <Plus size={13} />
                         </button>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                    <button onClick={onToggleFullscreen} className="bg-violet-50 border border-violet-100 text-violet-600 h-9 px-3 rounded-xl font-bold shadow-sm hover:bg-violet-600 hover:text-white transition-all flex items-center gap-1.5">
-                        {isFullscreen ? <Minimize size={14} /> : <Maximize size={14} />}
-                        <span className="text-[9px] uppercase tracking-widest font-black">{isFullscreen ? 'Exit' : 'Fullscreen'}</span>
+                <div className="flex items-center gap-1.5">
+                    <button onClick={onToggleFullscreen} className="h-8 px-3 bg-gray-100 text-gray-600 rounded-lg text-xs font-semibold hover:bg-gray-200 transition-all flex items-center gap-1.5">
+                        {isFullscreen ? <Minimize size={13} /> : <Maximize size={13} />}
+                        {isFullscreen ? 'Exit' : 'Fullscreen'}
                     </button>
-                    <div className="h-5 w-px bg-gray-100 mx-0.5" />
-                    <button onClick={onOpenLayoutSelector} className="w-8 h-8 flex items-center justify-center bg-white border border-gray-100 rounded-lg text-gray-400 hover:text-violet-600 hover:border-violet-100 hover:bg-violet-50 transition-all shadow-sm" title="Switch Layout">
-                        <Layout size={15} />
-                    </button>
-                    {[FileText, Settings, Wallet, Save, Book, File].map((Icon, i) => (
-                        <button key={i} className="w-8 h-8 flex items-center justify-center bg-white border border-gray-100 rounded-lg text-gray-400 hover:text-violet-600 hover:border-violet-100 hover:bg-violet-50 transition-all shadow-sm">
-                            <Icon size={15} />
-                        </button>
-                    ))}
-                    <button className="w-8 h-8 flex items-center justify-center bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-all shadow-lg shadow-gray-200 ml-0.5">
-                        <ArrowLeft size={15} />
+                    <button onClick={onOpenLayoutSelector} className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-lg text-gray-500 hover:bg-gray-200 transition-all" title="Switch Layout">
+                        <Layout size={14} />
                     </button>
                 </div>
             </header>
 
-            {/* ═══════ MAIN SPLIT — LEFT (everything) + RIGHT (cart full height) ═══════ */}
+            {/* ═══════════ MAIN SPLIT — LEFT + RIGHT (CART FULL HEIGHT) ═══════════ */}
             <div className="flex-1 flex overflow-hidden">
 
-                {/* ════ LEFT COLUMN: Client Info → Search → Categories/Payment ════ */}
+                {/* ════ LEFT COLUMN ════ */}
                 <aside className={clsx(
-                    "flex flex-col bg-white border-r border-gray-100 shrink-0 transition-all duration-500 overflow-hidden",
-                    leftExpanded ? "w-[65%]" : "w-[65%]"
+                    "flex flex-col bg-white border-r border-gray-200/80 shrink-0 transition-all duration-300 overflow-hidden",
+                    leftExpanded ? "w-[62%]" : "w-[62%]"
                 )}>
-                    {/* Client Info Bar */}
-                    <CompactClientHeader
-                        client={selectedClient}
-                        currency={currency}
-                        uniqueItems={uniqueItems}
-                        totalPieces={totalPieces}
-                    />
 
-                    {/* Search + Client Selector + Category Pills */}
-                    <div className="bg-white border-b border-gray-100 px-4 py-2.5 space-y-2 shrink-0">
-                        {/* Client selector + Search row */}
-                        <div className="flex items-center gap-2">
-                            <div className="w-44 shrink-0">
-                                <div className="relative group">
-                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-violet-600 transition-colors" size={13} />
-                                    <select
-                                        value={selectedClientId}
-                                        onChange={(e) => onUpdateActiveSession({ clientId: Number(e.target.value) })}
-                                        className="w-full pl-8 pr-6 py-1.5 bg-gray-50/50 border border-gray-100 rounded-lg text-[10px] font-black appearance-none outline-none focus:bg-white focus:border-violet-500 transition-all cursor-pointer uppercase tracking-widest"
-                                    >
-                                        {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                    </select>
-                                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={10} />
+                    {/* ── Client Info Bar ── */}
+                    <div className="px-4 py-2.5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white shrink-0">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white text-sm font-bold shadow-sm">
+                                    {selectedClient?.name?.charAt(0) || 'C'}
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <select
+                                            value={selectedClientId}
+                                            onChange={(e) => onUpdateActiveSession({ clientId: Number(e.target.value) })}
+                                            className="text-sm font-bold text-gray-900 bg-transparent border-none outline-none cursor-pointer appearance-none pr-4"
+                                        >
+                                            {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                        </select>
+                                        <ChevronDown size={12} className="text-gray-400 -ml-3" />
+                                    </div>
+                                    <div className="flex items-center gap-3 text-xs text-gray-400 mt-0.5">
+                                        <span>{selectedClient?.phone || '—'}</span>
+                                        <span className="text-emerald-500 font-semibold">Balance: {currency}{(selectedClient?.balance || 0).toFixed(2)}</span>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="relative flex-1 group">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-violet-500 transition-colors" size={14} />
-                                <input
-                                    type="text"
-                                    placeholder="Search products, scan barcode..."
-                                    className="w-full pl-9 pr-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs font-bold outline-none focus:bg-white focus:border-violet-500 transition-all"
-                                    value={searchQuery}
-                                    onChange={(e) => onSetSearchQuery(e.target.value)}
-                                />
+                            <div className="flex items-center gap-2 text-xs text-gray-400">
+                                <span className="bg-gray-100 px-2.5 py-1 rounded-md font-medium">{uniqueItems} items</span>
+                                <span className="bg-gray-100 px-2.5 py-1 rounded-md font-medium">{totalPieces} pcs</span>
                             </div>
-                            <button className="h-8 px-3 bg-violet-600 text-white rounded-lg text-[8px] font-black uppercase tracking-widest shadow-md shadow-violet-100 hover:bg-violet-700 transition-all flex items-center gap-1 shrink-0">
-                                <Plus size={12} />
-                                Add
-                            </button>
                         </div>
+                    </div>
 
-                        {/* Category pills */}
-                        <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
+                    {/* ── Search + Category Pills ── */}
+                    <div className="px-4 py-2.5 border-b border-gray-100 space-y-2 shrink-0">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
+                            <input
+                                type="text"
+                                placeholder="Search products, scan barcode..."
+                                className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-50 transition-all"
+                                value={searchQuery}
+                                onChange={(e) => onSetSearchQuery(e.target.value)}
+                            />
+                        </div>
+                        <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
                             <button
                                 onClick={() => onSetActiveCategoryId(null)}
                                 className={clsx(
-                                    "px-2.5 py-1 whitespace-nowrap rounded-full text-[8px] font-black uppercase tracking-widest transition-all border",
+                                    "px-3 py-1 whitespace-nowrap rounded-full text-xs font-semibold transition-all",
                                     activeCategoryId === null
-                                        ? 'bg-violet-600 text-white border-violet-600 shadow-md shadow-violet-100'
-                                        : 'bg-white text-gray-500 border-gray-200 hover:border-violet-200 hover:text-violet-600'
+                                        ? 'bg-emerald-500 text-white shadow-sm'
+                                        : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                                 )}
                             >
                                 All
@@ -181,10 +176,10 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                     key={cat.id}
                                     onClick={() => onSetActiveCategoryId(cat.id)}
                                     className={clsx(
-                                        "px-2.5 py-1 whitespace-nowrap rounded-full text-[8px] font-black uppercase tracking-widest transition-all border",
+                                        "px-3 py-1 whitespace-nowrap rounded-full text-xs font-semibold transition-all",
                                         activeCategoryId === cat.id
-                                            ? 'bg-violet-600 text-white border-violet-600 shadow-md shadow-violet-100'
-                                            : 'bg-white text-gray-500 border-gray-200 hover:border-violet-200 hover:text-violet-600'
+                                            ? 'bg-emerald-500 text-white shadow-sm'
+                                            : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                                     )}
                                 >
                                     {cat.name}
@@ -193,24 +188,24 @@ export function POSLayoutModern(props: POSLayoutProps) {
                         </div>
                     </div>
 
-                    {/* Toggle bar */}
-                    <div className="px-4 py-2 border-b border-gray-50 flex items-center justify-between shrink-0 bg-gray-50/30">
-                        <h3 className="text-[8px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 bg-violet-600 rounded-full"></span>
-                            {leftExpanded ? 'Product Discovery' : 'Categories & Payment'}
-                        </h3>
+                    {/* ── Toggle Bar ── */}
+                    <div className="px-4 py-1.5 border-b border-gray-50 flex items-center justify-between shrink-0 bg-gray-50/50">
+                        <span className="text-xs font-semibold text-gray-500 flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                            {leftExpanded ? 'Products' : 'Quick Access'}
+                        </span>
                         <button
                             onClick={() => setLeftExpanded(!leftExpanded)}
-                            className="text-[8px] font-bold text-violet-600 hover:text-violet-800 uppercase tracking-widest flex items-center gap-1 transition-colors"
+                            className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 transition-colors"
                         >
-                            {leftExpanded ? <EyeOff size={10} /> : <Eye size={10} />}
-                            {leftExpanded ? 'Collapse' : 'Expand'}
+                            {leftExpanded ? <EyeOff size={12} /> : <Eye size={12} />}
+                            {leftExpanded ? 'Show Categories' : 'Browse Products'}
                         </button>
                     </div>
 
-                    {/* Expanded: Product Grid */}
+                    {/* ── Expanded: Product Grid ── */}
                     {leftExpanded && (
-                        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar bg-gray-50/30">
                             <ProductGrid
                                 searchQuery={searchQuery}
                                 categoryId={activeCategoryId}
@@ -220,19 +215,18 @@ export function POSLayoutModern(props: POSLayoutProps) {
                         </div>
                     )}
 
-                    {/* Collapsed: Categories + Payment SIDE BY SIDE */}
+                    {/* ── Collapsed: Categories + Payment SIDE BY SIDE ── */}
                     {!leftExpanded && (
                         <div className="flex-1 flex overflow-hidden">
-                            {/* LEFT SUB-COLUMN: Category Tiles */}
+                            {/* LEFT: Category Tiles */}
                             <div className="w-1/2 border-r border-gray-100 p-3 overflow-y-auto custom-scrollbar">
-                                <h4 className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-2.5">Categories</h4>
                                 <div className="grid grid-cols-2 gap-2">
                                     <button
                                         onClick={() => { onSetActiveCategoryId(null); setLeftExpanded(true); }}
-                                        className="p-3 rounded-xl bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-100 text-center group hover:shadow-md transition-all"
+                                        className="p-3 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 text-center group hover:shadow-md hover:border-emerald-200 transition-all"
                                     >
-                                        <Package size={18} className="mx-auto text-violet-500 mb-1" />
-                                        <span className="text-[8px] font-black text-gray-700 uppercase tracking-widest">All</span>
+                                        <Package size={20} className="mx-auto text-emerald-500 mb-1.5" />
+                                        <span className="text-xs font-semibold text-gray-700">All Products</span>
                                     </button>
                                     {categories.map(cat => (
                                         <button
@@ -241,19 +235,20 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                             className={clsx(
                                                 "p-3 rounded-xl border text-center group hover:shadow-md transition-all",
                                                 activeCategoryId === cat.id
-                                                    ? "bg-violet-50 border-violet-200"
-                                                    : "bg-white border-gray-100 hover:border-violet-100"
+                                                    ? "bg-emerald-50 border-emerald-200"
+                                                    : "bg-white border-gray-100 hover:border-emerald-100"
                                             )}
                                         >
-                                            <Tag size={14} className={clsx("mx-auto mb-1", activeCategoryId === cat.id ? "text-violet-500" : "text-gray-300 group-hover:text-violet-400")} />
-                                            <span className="text-[8px] font-black text-gray-700 uppercase tracking-widest">{cat.name}</span>
+                                            <Tag size={16} className={clsx("mx-auto mb-1.5", activeCategoryId === cat.id ? "text-emerald-500" : "text-gray-300 group-hover:text-emerald-400")} />
+                                            <span className="text-xs font-semibold text-gray-700">{cat.name}</span>
                                         </button>
                                     ))}
                                 </div>
                             </div>
-                            {/* RIGHT SUB-COLUMN: Payment & Finalize */}
+
+                            {/* RIGHT: Payment & Finalize */}
                             <div className="w-1/2 p-3 overflow-y-auto custom-scrollbar bg-gray-50/30">
-                                <h4 className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-2.5">Payment</h4>
+                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Payment</h4>
                                 <CartTotals
                                     subtotal={total}
                                     discount={discount}
@@ -272,146 +267,160 @@ export function POSLayoutModern(props: POSLayoutProps) {
                     )}
                 </aside>
 
-                {/* ════ RIGHT COLUMN: CART (35%) ════ */}
-                <main className="w-[35%] flex flex-col bg-[#FAFBFC] overflow-hidden">
+                {/* ════ RIGHT COLUMN: CART (FULL HEIGHT from header to bottom) ════ */}
+                <main className="flex-1 flex flex-col bg-[#fafbfc] overflow-hidden">
+
                     {/* Cart Header */}
-                    <div className="px-5 py-3 border-b border-gray-100 bg-white flex items-center justify-between shrink-0">
+                    <div className="px-4 py-2.5 border-b border-gray-200/80 bg-white flex items-center justify-between shrink-0">
                         <div className="flex items-center gap-2">
                             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <h2 className="text-xs font-black uppercase tracking-widest text-gray-900 italic">Cart</h2>
+                            <h2 className="text-sm font-bold text-gray-900">Order</h2>
+                            <span className="text-xs text-gray-400 font-medium ml-1">{uniqueItems} lines · {totalPieces} pcs</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-[9px] font-black text-violet-600 bg-violet-50 px-2.5 py-1 rounded-lg">{uniqueItems} lines · {totalPieces} pcs</span>
-                            {cart.length > 0 && (
-                                <button onClick={onClearCart} className="text-[8px] font-bold text-gray-400 hover:text-rose-500 uppercase tracking-widest transition-colors">
-                                    Clear
-                                </button>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Cart Table */}
-                    <div className="flex-1 overflow-y-auto custom-scrollbar">
-                        {cart.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center h-full text-gray-300 gap-3">
-                                <ShoppingCart size={48} strokeWidth={1} />
-                                <p className="text-sm font-bold">No items yet</p>
-                                <p className="text-xs text-gray-400">Select a category or search to add products</p>
-                            </div>
-                        ) : (
-                            <table className="w-full text-sm">
-                                <thead className="sticky top-0 bg-white z-10 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-                                    <tr className="text-[9px] font-black uppercase tracking-widest text-gray-400 border-b border-gray-100">
-                                        <th className="text-left px-5 py-3 w-8">#</th>
-                                        <th className="text-left px-3 py-3">Product</th>
-                                        <th className="text-center px-3 py-3 w-20">Price</th>
-                                        <th className="text-center px-3 py-3 w-28">Qty</th>
-                                        <th className="text-center px-3 py-3 w-14">Tax</th>
-                                        <th className="text-right px-5 py-3 w-24">Total</th>
-                                        <th className="w-10"></th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-50">
-                                    {cart.map((item: any, idx: number) => (
-                                        <tr key={item.productId} className="group hover:bg-violet-50/30 transition-colors">
-                                            <td className="px-5 py-3 text-xs text-gray-300 font-mono">{idx + 1}</td>
-                                            <td className="px-3 py-3">
-                                                <span className="font-bold text-gray-900">{item.name}</span>
-                                            </td>
-                                            <td className="px-3 py-3 text-center font-mono tabular-nums text-gray-500">{currency}{Number(item.price).toFixed(2)}</td>
-                                            <td className="px-3 py-3">
-                                                <div className="flex items-center justify-center gap-1">
-                                                    <button onClick={() => onUpdateQuantity(item.productId, -1)} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-rose-100 hover:text-rose-600 flex items-center justify-center text-gray-400 transition-all active:scale-90">
-                                                        <Minus size={12} />
-                                                    </button>
-                                                    <span className="w-10 text-center font-black tabular-nums text-gray-900">{item.quantity}</span>
-                                                    <button onClick={() => onUpdateQuantity(item.productId, 1)} className="w-7 h-7 rounded-lg bg-violet-50 hover:bg-violet-100 text-violet-600 flex items-center justify-center transition-all active:scale-90">
-                                                        <Plus size={12} />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                            <td className="px-3 py-3 text-center text-[10px] font-mono text-gray-400">{(item.taxRate || 0)}%</td>
-                                            <td className="px-5 py-3 text-right font-black tabular-nums text-gray-900">{currency}{(Number(item.price) * item.quantity).toFixed(2)}</td>
-                                            <td className="pr-3 py-3">
-                                                <button onClick={() => onUpdateQuantity(item.productId, -100)} className="opacity-0 group-hover:opacity-100 w-6 h-6 flex items-center justify-center text-gray-300 hover:text-rose-500 transition-all">
-                                                    <Trash2 size={13} />
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                        {cart.length > 0 && (
+                            <button onClick={onClearCart} className="text-xs text-gray-400 hover:text-rose-500 font-medium transition-colors">
+                                Clear All
+                            </button>
                         )}
                     </div>
 
-                    {/* Cart Footer — Totals + Cash Received + Charge */}
-                    <div className="border-t border-gray-200 bg-white px-5 py-3 shrink-0 space-y-2.5">
-                        {/* Row 1: Subtotal, Discount input, Cash Received, Change */}
-                        <div className="flex items-end gap-4">
-                            {/* Subtotal */}
-                            <div className="shrink-0">
-                                <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest mb-1">Subtotal</p>
-                                <p className="text-sm font-black tabular-nums text-gray-700 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">{currency}{total.toFixed(2)}</p>
+                    {/* Cart Items */}
+                    <div className="flex-1 overflow-y-auto custom-scrollbar">
+                        {cart.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center h-full text-gray-300 gap-3">
+                                <ShoppingCart size={44} strokeWidth={1} className="text-gray-200" />
+                                <p className="text-sm font-medium text-gray-400">No items in cart</p>
+                                <p className="text-xs text-gray-400">Browse products to start adding</p>
                             </div>
-                            {/* Discount — Editable */}
-                            <div className="shrink-0 w-28">
-                                <p className="text-[7px] font-black text-amber-500 uppercase tracking-widest mb-1">Discount</p>
-                                <div className="relative">
-                                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-amber-400 text-xs font-bold">{currency}</span>
+                        ) : (
+                            <div className="divide-y divide-gray-100/80">
+                                {cart.map((item: any, idx: number) => (
+                                    <div key={item.productId} className="px-4 py-3 group hover:bg-white transition-colors">
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xs text-gray-300 font-mono w-4">{idx + 1}</span>
+                                                    <p className="text-sm font-semibold text-gray-900 truncate">{item.name}</p>
+                                                </div>
+                                                <div className="flex items-center gap-3 mt-1 ml-6">
+                                                    <span className="text-xs text-gray-400">{currency}{Number(item.price).toFixed(2)} × {item.quantity}</span>
+                                                    {(item.taxRate || 0) > 0 && (
+                                                        <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded font-medium">Tax {item.taxRate}%</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <p className="text-sm font-bold text-gray-900 tabular-nums shrink-0">
+                                                {currency}{(Number(item.price) * item.quantity).toFixed(2)}
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center justify-between mt-2 ml-6">
+                                            <div className="flex items-center gap-1">
+                                                <button onClick={() => onUpdateQuantity(item.productId, -1)} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-center text-gray-400 transition-all active:scale-90">
+                                                    <Minus size={12} />
+                                                </button>
+                                                <span className="w-9 text-center text-sm font-bold tabular-nums text-gray-900">{item.quantity}</span>
+                                                <button onClick={() => onUpdateQuantity(item.productId, 1)} className="w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600 flex items-center justify-center transition-all active:scale-90">
+                                                    <Plus size={12} />
+                                                </button>
+                                            </div>
+                                            <button onClick={() => onUpdateQuantity(item.productId, -100)} className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-rose-500 transition-all p-1">
+                                                <Trash2 size={13} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* ── Cart Footer: Totals + Payment + Charge ── */}
+                    <div className="border-t border-gray-200 bg-white shrink-0">
+                        <div className="px-4 py-3 space-y-1.5">
+                            {/* Subtotal */}
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm text-gray-500">Subtotal</span>
+                                <span className="text-sm font-semibold tabular-nums">{currency}{total.toFixed(2)}</span>
+                            </div>
+                            {/* Discount */}
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm text-gray-500">Discount</span>
+                                <div className="relative w-24">
+                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-amber-500">{currency}</span>
                                     <input
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
+                                        type="number" min="0" step="0.01"
                                         value={discount || ''}
                                         onChange={(e) => onSetDiscount(Math.max(0, Number(e.target.value) || 0))}
                                         placeholder="0.00"
-                                        className="w-full pl-7 pr-2 py-1.5 bg-amber-50 border border-amber-200 rounded-lg text-sm font-black tabular-nums text-amber-700 outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-200 transition-all"
+                                        className="w-full pl-5 pr-2 py-1 text-right bg-amber-50/50 border border-gray-200 rounded-md text-sm font-semibold tabular-nums text-amber-600 outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-100 transition-all"
                                     />
                                 </div>
                             </div>
-                            {/* Cash Received — Editable */}
-                            <div className="shrink-0 w-32">
-                                <p className="text-[7px] font-black text-indigo-500 uppercase tracking-widest mb-1">Cash Received</p>
-                                <div className="relative">
-                                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-indigo-400 text-xs font-bold">{currency}</span>
+                            {/* Divider + Total */}
+                            <div className="border-t border-gray-100 pt-1.5">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-base font-bold text-gray-900">Total</span>
+                                    <span className="text-xl font-extrabold tabular-nums text-gray-900">{currency}{totalAmount.toFixed(2)}</span>
+                                </div>
+                            </div>
+                            {/* Cash Received */}
+                            <div className="flex items-center justify-between pt-0.5">
+                                <span className="text-sm text-gray-500">Cash Received</span>
+                                <div className="relative w-28">
+                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">{currency}</span>
                                     <input
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
+                                        type="number" min="0" step="0.01"
                                         value={cashReceived}
                                         onChange={(e) => onSetCashReceived(e.target.value)}
                                         placeholder={totalAmount.toFixed(2)}
-                                        className="w-full pl-7 pr-2 py-1.5 bg-indigo-50 border border-indigo-200 rounded-lg text-sm font-black tabular-nums text-indigo-700 outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200 transition-all"
+                                        className="w-full pl-5 pr-2 py-1 text-right bg-gray-50 border border-gray-200 rounded-md text-sm font-semibold tabular-nums outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-100 transition-all"
                                     />
                                 </div>
                             </div>
                             {/* Change Due */}
-                            <div className="shrink-0">
-                                <p className="text-[7px] font-black text-emerald-500 uppercase tracking-widest mb-1">Change</p>
-                                <p className={clsx(
-                                    "text-sm font-black tabular-nums px-3 py-1.5 rounded-lg border",
-                                    changeDue > 0
-                                        ? "bg-emerald-50 border-emerald-200 text-emerald-700"
-                                        : "bg-gray-50 border-gray-100 text-gray-400"
-                                )}>{currency}{changeDue.toFixed(2)}</p>
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm text-gray-500">Change</span>
+                                <span className={clsx(
+                                    "text-sm font-bold tabular-nums",
+                                    changeDue > 0 ? "text-emerald-600" : "text-gray-400"
+                                )}>{currency}{changeDue.toFixed(2)}</span>
                             </div>
+                        </div>
 
-                            {/* Spacer */}
-                            <div className="flex-1" />
-
-                            {/* Total + Charge */}
-                            <div className="text-right shrink-0">
-                                <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest mb-1">Total</p>
-                                <p className="text-xl font-black tabular-nums text-gray-900">{currency}{totalAmount.toFixed(2)}</p>
+                        {/* Payment Methods */}
+                        <div className="px-4 pb-2">
+                            <div className="flex gap-1.5">
+                                {[
+                                    { key: 'CASH', label: 'Cash', icon: Banknote },
+                                    { key: 'CARD', label: 'Card', icon: CreditCard },
+                                    { key: 'WALLET', label: 'Wallet', icon: Wallet },
+                                ].map(m => (
+                                    <button
+                                        key={m.key}
+                                        onClick={() => onSetPaymentMethod(m.key)}
+                                        className={clsx(
+                                            "flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all border",
+                                            paymentMethod === m.key
+                                                ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                                                : "bg-gray-50 border-gray-200 text-gray-400 hover:border-gray-300"
+                                        )}
+                                    >
+                                        <m.icon size={13} />
+                                        {m.label}
+                                    </button>
+                                ))}
                             </div>
+                        </div>
+
+                        {/* Charge Button */}
+                        <div className="px-4 pb-3 pt-1">
                             <button
                                 onClick={onCharge}
                                 disabled={cart.length === 0 || isProcessing}
                                 className={clsx(
-                                    "py-3 px-8 rounded-xl text-xs font-black uppercase tracking-widest transition-all shrink-0",
+                                    "w-full py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2",
                                     cart.length > 0 && !isProcessing
-                                        ? "bg-violet-600 text-white shadow-lg shadow-violet-200 hover:bg-violet-700 active:scale-[0.98]"
-                                        : "bg-gray-100 text-gray-300 cursor-not-allowed"
+                                        ? "bg-emerald-500 text-white shadow-lg shadow-emerald-200 hover:bg-emerald-600 active:scale-[0.98]"
+                                        : "bg-gray-200 text-gray-400 cursor-not-allowed"
                                 )}
                             >
                                 {isProcessing ? 'Processing...' : `Charge ${currency}${totalAmount.toFixed(2)}`}
@@ -421,6 +430,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                 </main>
             </div>
 
+            {/* Modals */}
             <ManagerOverride
                 isOpen={isOverrideOpen}
                 actionLabel="Authorize Change"
