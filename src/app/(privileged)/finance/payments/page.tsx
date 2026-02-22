@@ -19,6 +19,7 @@ import {
     BarChart3, FileText
 } from "lucide-react"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { useCurrency } from "@/lib/utils/currency"
 
 type ActiveView = 'ALL' | 'SUPPLIER_PAYMENT' | 'CUSTOMER_RECEIPT' | 'AGED_AR' | 'AGED_AP' | 'BALANCES'
@@ -58,6 +59,10 @@ export default function PaymentsPage() {
     const [activeView, setActiveView] = useState<ActiveView>('ALL')
     const [searchQuery, setSearchQuery] = useState("")
     const [isPending, startTransition] = useTransition()
+    const settings = useListViewSettings('fin_payments', {
+        columns: ['payment_date', 'type', 'contact_name', 'method', 'reference', 'amount'],
+        pageSize: 25, sortKey: 'payment_date', sortDir: 'desc'
+    })
 
     useEffect(() => { loadData() }, [])
 
@@ -392,6 +397,13 @@ export default function PaymentsPage() {
                 lifecycle={{
                     getStatus: (row) => row.status ? (STATUS_CONFIG[row.status] || STATUS_CONFIG.DRAFT) : undefined
                 }}
+                visibleColumns={settings.visibleColumns}
+                onToggleColumn={settings.toggleColumn}
+                pageSize={settings.pageSize}
+                onPageSizeChange={settings.setPageSize}
+                sortKey={settings.sortKey}
+                sortDir={settings.sortDir}
+                onSort={settings.setSort}
                 className="rounded-2xl shadow-sm border overflow-hidden"
             >
                 <div className="px-5 py-3 border-b flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between bg-stone-50/50">

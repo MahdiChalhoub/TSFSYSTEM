@@ -14,6 +14,7 @@ import {
     RefreshCw, ArrowRight, User
 } from "lucide-react"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { useCurrency } from '@/lib/utils/currency'
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
@@ -31,6 +32,10 @@ export default function SalesReturnsPage() {
     const [activeTab, setActiveTab] = useState<'RETURNS' | 'CREDIT_NOTES'>('RETURNS')
     const [confirmDialog, setConfirmDialog] = useState<{ id: number; action: 'approve' | 'cancel' } | null>(null)
     const [isPending, startTransition] = useTransition()
+    const settings = useListViewSettings('fin_sales_returns', {
+        columns: ['return_date', 'customer', 'reason', 'status', 'actions'],
+        pageSize: 25, sortKey: 'return_date', sortDir: 'desc'
+    })
 
     useEffect(() => { loadData() }, [])
 
@@ -274,6 +279,13 @@ export default function SalesReturnsPage() {
                 loading={loading}
                 getRowId={(item) => item.id}
                 columns={activeTab === 'RETURNS' ? returnColumns : creditNoteColumns}
+                visibleColumns={settings.visibleColumns}
+                onToggleColumn={settings.toggleColumn}
+                pageSize={settings.pageSize}
+                onPageSizeChange={settings.setPageSize}
+                sortKey={settings.sortKey}
+                sortDir={settings.sortDir}
+                onSort={settings.setSort}
                 className="rounded-3xl border-0 shadow-sm overflow-hidden"
                 headerExtra={
                     <div className="flex items-center gap-1 bg-stone-100 p-1 rounded-2xl">

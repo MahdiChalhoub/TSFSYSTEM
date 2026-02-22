@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useTransition } from "react"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { useCurrency } from "@/lib/utils/currency"
 import {
     Cloud, FileText, Plus, DollarSign, AlertTriangle,
@@ -70,6 +71,10 @@ export default function InvoicesPage() {
     const [tradeSubTypesEnabled, setTradeSubTypesEnabled] = useState(false)
     const [searchQuery, setSearchQuery] = useState("")
     const [isPending, startTransition] = useTransition()
+    const settings = useListViewSettings('fin_invoices', {
+        columns: ['invoice_number', 'type', 'sub_type', 'contact_name', 'issue_date', 'due_date', 'total_amount', 'balance_due'],
+        pageSize: 25, sortKey: 'issue_date', sortDir: 'desc'
+    })
 
     useEffect(() => { loadData() }, [])
 
@@ -489,6 +494,13 @@ export default function InvoicesPage() {
                         variant: (STATUS_CONFIG[i.status]?.variant as any) || 'default'
                     })
                 }}
+                visibleColumns={settings.visibleColumns}
+                onToggleColumn={settings.toggleColumn}
+                pageSize={settings.pageSize}
+                onPageSizeChange={settings.setPageSize}
+                sortKey={settings.sortKey}
+                sortDir={settings.sortDir}
+                onSort={settings.setSort}
                 className="rounded-[2.5rem] border-0 shadow-sm overflow-hidden bg-white"
                 headerExtra={
                     <div className="flex flex-col md:flex-row items-center gap-4">

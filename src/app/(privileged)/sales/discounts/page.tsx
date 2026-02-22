@@ -16,6 +16,7 @@ import {
     Tags, RefreshCw, Zap, TrendingUp, Activity
 } from "lucide-react"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 
 const TYPE_CONFIG: Record<string, { label: string; icon: any; color: string; bg: string }> = {
     PERCENTAGE: { label: 'Percentage Off', icon: Percent, color: 'text-blue-600', bg: 'bg-blue-50' },
@@ -36,6 +37,10 @@ export default function DiscountRulesPage() {
     const [loading, setLoading] = useState(true)
     const [showForm, setShowForm] = useState(false)
     const [editId, setEditId] = useState<number | null>(null)
+    const settings = useListViewSettings('sales_discounts', {
+        columns: ['name', 'discount_type', 'value', 'scope', 'times_used', 'status', 'actions'],
+        pageSize: 25, sortKey: 'name', sortDir: 'asc'
+    })
     const [usageRuleId, setUsageRuleId] = useState<number | null>(null)
     const [usageLogs, setUsageLogs] = useState<UsageLog[]>([])
     const [loadingLogs, setLoadingLogs] = useState(false)
@@ -523,8 +528,14 @@ export default function DiscountRulesPage() {
                 loading={loading}
                 getRowId={(r) => r.id}
                 columns={columns}
+                visibleColumns={settings.visibleColumns}
+                onToggleColumn={settings.toggleColumn}
+                pageSize={settings.pageSize}
+                onPageSizeChange={settings.setPageSize}
+                sortKey={settings.sortKey}
+                sortDir={settings.sortDir}
+                onSort={settings.setSort}
                 className="rounded-3xl border-0 shadow-sm overflow-hidden"
-                pageSize={25}
                 headerExtra={
                     <div className="flex items-center gap-3">
                         <div className="flex items-center gap-2 bg-amber-50 px-4 py-1.5 rounded-2xl border border-amber-100 text-amber-700">

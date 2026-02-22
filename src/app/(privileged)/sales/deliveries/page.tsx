@@ -14,6 +14,7 @@ import {
     ChevronRight, ExternalLink, ShieldCheck, Activity
 } from "lucide-react"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 
 const STATUS_CONFIG: Record<string, { label: string; bg: string; icon: any; color: string }> = {
     PENDING: { label: 'Pending', bg: 'bg-stone-50', icon: Clock, color: 'text-stone-500 border-stone-100' },
@@ -30,6 +31,10 @@ export default function DeliveryOrdersPage() {
     const [loading, setLoading] = useState(true)
     const [statusFilter, setStatusFilter] = useState<string | null>(null)
     const [actionLoading, setActionLoading] = useState<number | null>(null)
+    const settings = useListViewSettings('sales_deliveries', {
+        columns: ['id', 'status', 'order_ref', 'recipient_name', 'zone_name', 'driver_name', 'tracking_code', 'delivery_fee', 'actions'],
+        pageSize: 15, sortKey: 'id', sortDir: 'desc'
+    })
 
     useEffect(() => { loadData() }, [])
 
@@ -275,8 +280,14 @@ export default function DeliveryOrdersPage() {
                 loading={loading}
                 getRowId={(d) => d.id}
                 columns={columns}
+                visibleColumns={settings.visibleColumns}
+                onToggleColumn={settings.toggleColumn}
+                pageSize={settings.pageSize}
+                onPageSizeChange={settings.setPageSize}
+                sortKey={settings.sortKey}
+                sortDir={settings.sortDir}
+                onSort={settings.setSort}
                 className="rounded-3xl border-0 shadow-sm overflow-hidden"
-                pageSize={15}
                 headerExtra={
                     <div className="flex items-center gap-1 bg-stone-100 p-1 rounded-2xl">
                         <Button

@@ -15,6 +15,7 @@ import {
     ArrowUpRight, Target, Activity, Zap, Building
 } from "lucide-react"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
     PENDING: { label: 'Pending Approval', color: 'bg-amber-50 text-amber-700 border-amber-100' },
@@ -29,6 +30,10 @@ export default function PurchaseDashboardPage() {
     const [orders, setOrders] = useState<PurchaseOrder[]>([])
     const [loading, setLoading] = useState(true)
     const [statusFilter, setStatusFilter] = useState<string | null>(null)
+    const settings = useListViewSettings('purch_dashboard', {
+        columns: ['ref_code', 'created_at', 'supplier_name', 'status', 'payment_method', 'total_amount'],
+        pageSize: 15, sortKey: 'created_at', sortDir: 'desc'
+    })
 
     useEffect(() => { loadOrders() }, [])
 
@@ -215,8 +220,14 @@ export default function PurchaseDashboardPage() {
                 loading={loading}
                 getRowId={(o) => o.id}
                 columns={columns}
+                visibleColumns={settings.visibleColumns}
+                onToggleColumn={settings.toggleColumn}
+                pageSize={settings.pageSize}
+                onPageSizeChange={settings.setPageSize}
+                sortKey={settings.sortKey}
+                sortDir={settings.sortDir}
+                onSort={settings.setSort}
                 className="rounded-3xl border-0 shadow-sm overflow-hidden"
-                pageSize={15}
                 headerExtra={
                     <div className="flex items-center gap-1 bg-stone-100 p-1 rounded-2xl">
                         <Button

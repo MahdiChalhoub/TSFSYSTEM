@@ -16,6 +16,7 @@ import {
     Download, TrendingUp, DollarSign, Activity, AlertCircle
 } from "lucide-react"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { Card, CardContent } from "@/components/ui/card"
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
@@ -37,6 +38,10 @@ export default function OrderHistoryPage() {
     const [orders, setOrders] = useState<SalesOrder[]>([])
     const [loading, setLoading] = useState(true)
     const [searchQuery, setSearchQuery] = useState('')
+    const settings = useListViewSettings('sales_history', {
+        columns: ['ref_code', 'created_at', 'type', 'contact_name', 'status', 'total_amount', 'actions'],
+        pageSize: 25, sortKey: 'created_at', sortDir: 'desc'
+    })
 
     useEffect(() => { loadOrders() }, [])
 
@@ -284,8 +289,14 @@ export default function OrderHistoryPage() {
                 loading={loading}
                 getRowId={(o) => o.id}
                 columns={columns}
+                visibleColumns={settings.visibleColumns}
+                onToggleColumn={settings.toggleColumn}
+                pageSize={settings.pageSize}
+                onPageSizeChange={settings.setPageSize}
+                sortKey={settings.sortKey}
+                sortDir={settings.sortDir}
+                onSort={settings.setSort}
                 className="rounded-[2.5rem] border-0 shadow-sm overflow-hidden bg-white"
-                pageSize={25}
                 headerExtra={
                     <div className="flex items-center gap-3">
                         <div className="relative w-64">

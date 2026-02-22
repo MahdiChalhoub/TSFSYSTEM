@@ -8,12 +8,17 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import { TrendingUp, DollarSign, BarChart3, Percent } from "lucide-react"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 
 export default function RevenueBreakdownPage() {
     const { fmt } = useCurrency()
     const [accounts, setAccounts] = useState<ChartOfAccount[]>([])
     const [journals, setJournals] = useState<JournalEntry[]>([])
     const [loading, setLoading] = useState(true)
+    const settings = useListViewSettings('fin_revenue', {
+        columns: ['code', 'name', 'balance', 'pct', 'journalCount'],
+        pageSize: 25, sortKey: 'balance', sortDir: 'desc'
+    })
 
     useEffect(() => { loadData() }, [])
 
@@ -193,6 +198,13 @@ export default function RevenueBreakdownPage() {
                 loading={loading}
                 getRowId={(item) => item.id || item.code}
                 columns={columns}
+                visibleColumns={settings.visibleColumns}
+                onToggleColumn={settings.toggleColumn}
+                pageSize={settings.pageSize}
+                onPageSizeChange={settings.setPageSize}
+                sortKey={settings.sortKey}
+                sortDir={settings.sortDir}
+                onSort={settings.setSort}
                 className="rounded-2xl shadow-sm border-0 overflow-hidden"
             />
         </div>

@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 import { getContactStatement } from "@/app/actions/finance/bank-reconciliation"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { Input } from "@/components/ui/input"
 
 const TAB_CONFIG: Record<string, { label: string; icon: any; color: string }> = {
@@ -31,6 +32,10 @@ export default function StatementsPage() {
     const [selectedContact, setSelectedContact] = useState<any | null>(null)
     const [detail, setDetail] = useState<any | null>(null)
     const [activeTab, setActiveTab] = useState<'orders' | 'payments' | 'journal'>('orders')
+    const settings = useListViewSettings('fin_statements', {
+        columns: ['name', 'type', 'phone', 'actions'],
+        pageSize: 25, sortKey: 'name', sortDir: 'asc'
+    })
 
     useEffect(() => { loadContacts() }, [])
 
@@ -327,7 +332,13 @@ export default function StatementsPage() {
                     getRowId={(item, idx) => item.id || idx}
                     columns={activeTab === 'orders' ? orderColumns : activeTab === 'payments' ? paymentColumns : journalColumns}
                     className="rounded-3xl border-0 shadow-sm overflow-hidden"
-                    pageSize={10}
+                    visibleColumns={settings.visibleColumns}
+                    onToggleColumn={settings.toggleColumn}
+                    pageSize={settings.pageSize}
+                    onPageSizeChange={settings.setPageSize}
+                    sortKey={settings.sortKey}
+                    sortDir={settings.sortDir}
+                    onSort={settings.setSort}
                     compact
                 />
             </div>
@@ -370,7 +381,13 @@ export default function StatementsPage() {
                 getRowId={(c) => c.id}
                 columns={contactColumns}
                 className="rounded-3xl border-0 shadow-sm overflow-hidden"
-                pageSize={25}
+                visibleColumns={settings.visibleColumns}
+                onToggleColumn={settings.toggleColumn}
+                pageSize={settings.pageSize}
+                onPageSizeChange={settings.setPageSize}
+                sortKey={settings.sortKey}
+                sortDir={settings.sortDir}
+                onSort={settings.setSort}
                 headerExtra={
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-stone-100 rounded-xl border border-stone-200">
                         <UserCheck size={14} className="text-stone-400" />
