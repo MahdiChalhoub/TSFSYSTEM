@@ -53,10 +53,10 @@ interface ActiveUpload {
 
 // ─── Constants ───────────────────────────────────────────────────
 const PROVIDER_OPTIONS = [
-    { value: 'R2', label: 'Cloudflare R2', icon: Cloud, color: 'text-orange-400' },
-    { value: 'S3', label: 'AWS S3', icon: Cloud, color: 'text-yellow-400' },
-    { value: 'MINIO', label: 'MinIO', icon: Database, color: 'text-purple-400' },
-    { value: 'LOCAL', label: 'Local Server', icon: HardDrive, color: 'text-slate-400' },
+    { value: 'R2', label: 'Cloudflare R2', icon: Cloud, color: 'text-orange-500' },
+    { value: 'S3', label: 'AWS S3', icon: Cloud, color: 'text-yellow-600' },
+    { value: 'MINIO', label: 'MinIO', icon: Database, color: 'text-purple-500' },
+    { value: 'LOCAL', label: 'Local Server', icon: HardDrive, color: 'text-gray-500' },
 ];
 
 const CATEGORY_OPTIONS = [
@@ -75,17 +75,17 @@ const CATEGORY_OPTIONS = [
 ];
 
 const CATEGORY_COLORS: Record<string, string> = {
-    ATTACHMENT: 'bg-blue-500/20 text-blue-400',
-    RECEIPT: 'bg-green-500/20 text-green-400',
-    INVOICE: 'bg-amber-500/20 text-amber-400',
-    PROFORMA: 'bg-orange-500/20 text-orange-400',
-    SIGNED_ORDER: 'bg-purple-500/20 text-purple-400',
-    PURCHASE_DOC: 'bg-cyan-500/20 text-cyan-400',
-    EMPLOYEE_DOC: 'bg-rose-500/20 text-rose-400',
-    PRODUCT_IMAGE: 'bg-pink-500/20 text-pink-400',
-    PAYMENT_RECEIPT: 'bg-emerald-500/20 text-emerald-400',
-    LOGO: 'bg-indigo-500/20 text-indigo-400',
-    OTHER: 'bg-gray-500/20 text-gray-400',
+    ATTACHMENT: 'bg-blue-50 text-blue-600 border-blue-200',
+    RECEIPT: 'bg-green-50 text-green-600 border-green-200',
+    INVOICE: 'bg-amber-50 text-amber-600 border-amber-200',
+    PROFORMA: 'bg-orange-50 text-orange-600 border-orange-200',
+    SIGNED_ORDER: 'bg-purple-50 text-purple-600 border-purple-200',
+    PURCHASE_DOC: 'bg-cyan-50 text-cyan-600 border-cyan-200',
+    EMPLOYEE_DOC: 'bg-rose-50 text-rose-600 border-rose-200',
+    PRODUCT_IMAGE: 'bg-pink-50 text-pink-600 border-pink-200',
+    PAYMENT_RECEIPT: 'bg-emerald-50 text-emerald-600 border-emerald-200',
+    LOGO: 'bg-indigo-50 text-indigo-600 border-indigo-200',
+    OTHER: 'bg-gray-50 text-gray-600 border-gray-200',
 };
 
 function getFileIcon(mime: string) {
@@ -121,7 +121,6 @@ function useChunkedUpload() {
         const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
         try {
-            // 1. Init session
             const session = await initChunkedUpload({
                 filename: file.name,
                 total_size: file.size,
@@ -134,7 +133,6 @@ function useChunkedUpload() {
                 throw new Error(session?.error || 'Failed to initialize upload');
             }
 
-            // 2. Send chunks
             let bytesSent = 0;
             const startTime = Date.now();
 
@@ -163,7 +161,6 @@ function useChunkedUpload() {
                 const pct = Math.round((bytesSent / file.size) * 100);
                 setProgress(pct);
 
-                // Calculate speed
                 const elapsed = (Date.now() - startTime) / 1000;
                 if (elapsed > 0) {
                     const bytesPerSec = bytesSent / elapsed;
@@ -171,7 +168,6 @@ function useChunkedUpload() {
                 }
             }
 
-            // 3. Complete
             const result = await completeChunkedUpload(session.session_id);
             setProgress(100);
             setUploading(false);
@@ -190,7 +186,7 @@ function useChunkedUpload() {
     return { upload, abort, uploading, progress, speed, error };
 }
 
-// ─── Tab: Files ──────────────────────────────────────────────────
+// ─── Tab type ────────────────────────────────────────────────────
 type ViewTab = 'files' | 'settings';
 
 // ─── Main Page ───────────────────────────────────────────────────
@@ -313,32 +309,32 @@ export default function StoragePage() {
     if (loading) {
         return (
             <div className="flex items-center justify-center h-96">
-                <Loader2 size={32} className="animate-spin text-emerald-400" />
+                <RefreshCcw size={32} className="animate-spin text-emerald-500" />
             </div>
         );
     }
 
     return (
-        <div className="max-w-7xl mx-auto space-y-6">
+        <div className="space-y-8 animate-in fade-in duration-500">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-900/30">
+                    <h2 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-200/50">
                             <Cloud size={24} className="text-white" />
                         </div>
                         Cloud Storage
-                    </h1>
-                    <p className="text-gray-400 mt-1">Manage files, configure storage provider, and monitor uploads</p>
+                    </h2>
+                    <p className="text-gray-500 mt-1 font-medium">Manage files, configure storage provider, and monitor uploads</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <button onClick={() => uploadInputRef.current?.click()}
-                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white hover:from-emerald-500 hover:to-emerald-400 shadow-lg shadow-emerald-900/30 transition-all text-sm font-medium">
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white hover:from-emerald-500 hover:to-emerald-400 shadow-lg shadow-emerald-200/50 transition-all text-sm font-semibold">
                         <Upload size={16} /> Upload File
                     </button>
                     <input ref={uploadInputRef} type="file" className="hidden" onChange={handleUpload} />
                     <button onClick={fetchData}
-                        className="flex items-center gap-2 p-2.5 rounded-xl bg-gray-800 text-gray-300 hover:text-white hover:bg-gray-700 border border-gray-700 transition-all">
+                        className="p-2.5 rounded-xl bg-white hover:bg-gray-50 text-gray-400 hover:text-gray-700 transition-all border border-gray-200 shadow-sm">
                         <RefreshCcw size={16} />
                     </button>
                 </div>
@@ -346,33 +342,33 @@ export default function StoragePage() {
 
             {/* Stats Row */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <StatCard label="Total Files" value={String(files.length)} icon={FolderOpen} accent="text-blue-400 bg-blue-500/10" />
-                <StatCard label="Total Size" value={formatBytes(totalSize)} icon={HardDrive} accent="text-purple-400 bg-purple-500/10" />
-                <StatCard label="Provider" value={currentProvider?.label || 'Local'} icon={currentProvider?.icon || Cloud} accent="text-orange-400 bg-orange-500/10" />
-                <StatCard label="Active Uploads" value={String(activeUploads.length)} icon={Upload} accent={activeUploads.length > 0 ? 'text-amber-400 bg-amber-500/10' : 'text-gray-400 bg-gray-500/10'} />
+                <StatCard label="Total Files" value={String(files.length)} icon={FolderOpen} color="text-blue-500" bg="bg-blue-50" />
+                <StatCard label="Total Size" value={formatBytes(totalSize)} icon={HardDrive} color="text-purple-500" bg="bg-purple-50" />
+                <StatCard label="Provider" value={currentProvider?.label || 'Local'} icon={currentProvider?.icon || Cloud} color="text-orange-500" bg="bg-orange-50" />
+                <StatCard label="Active Uploads" value={String(activeUploads.length)} icon={Upload} color={activeUploads.length > 0 ? 'text-amber-500' : 'text-gray-400'} bg={activeUploads.length > 0 ? 'bg-amber-50' : 'bg-gray-50'} />
             </div>
 
-            {/* Upload Progress Bar (when active) */}
+            {/* Upload Progress Bar */}
             {(showUpload || chunked.uploading) && (
-                <div className="bg-gray-900/80 border border-blue-500/30 rounded-2xl p-5 backdrop-blur-xl">
+                <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5">
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
-                            <Loader2 size={18} className="animate-spin text-blue-400" />
-                            <span className="text-sm text-white font-medium">Uploading...</span>
+                            <Loader2 size={18} className="animate-spin text-blue-500" />
+                            <span className="text-sm text-gray-900 font-semibold">Uploading...</span>
                         </div>
                         <div className="flex items-center gap-3">
-                            {chunked.speed && <span className="text-xs text-gray-400">{chunked.speed}</span>}
-                            <span className="text-sm text-blue-400 font-mono">{chunked.progress}%</span>
+                            {chunked.speed && <span className="text-xs text-gray-500">{chunked.speed}</span>}
+                            <span className="text-sm text-blue-600 font-mono font-bold">{chunked.progress}%</span>
                         </div>
                     </div>
-                    <div className="w-full bg-gray-800 rounded-full h-2 overflow-hidden">
+                    <div className="w-full bg-blue-100 rounded-full h-2.5 overflow-hidden">
                         <div className="bg-gradient-to-r from-blue-500 to-emerald-500 h-full rounded-full transition-all duration-300"
                             style={{ width: `${chunked.progress}%` }} />
                     </div>
                     {chunked.error && (
-                        <div className="mt-3 flex items-center gap-2 text-sm text-red-400">
+                        <div className="mt-3 flex items-center gap-2 text-sm text-red-600">
                             <AlertTriangle size={14} /> {chunked.error}
-                            <button onClick={() => setShowUpload(false)} className="ml-auto text-gray-500 hover:text-white"><X size={14} /></button>
+                            <button onClick={() => setShowUpload(false)} className="ml-auto text-gray-400 hover:text-gray-700"><X size={14} /></button>
                         </div>
                     )}
                 </div>
@@ -380,21 +376,21 @@ export default function StoragePage() {
 
             {/* Active Interrupted Uploads */}
             {activeUploads.length > 0 && (
-                <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-4">
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
                     <div className="flex items-center gap-2 mb-3">
-                        <AlertTriangle size={16} className="text-amber-400" />
-                        <span className="text-sm font-medium text-amber-400">Interrupted Uploads — Action Required</span>
+                        <AlertTriangle size={16} className="text-amber-500" />
+                        <span className="text-sm font-semibold text-amber-700">Interrupted Uploads — Action Required</span>
                     </div>
                     <div className="space-y-2">
                         {activeUploads.map(u => (
-                            <div key={u.session_id} className="flex items-center gap-3 bg-gray-900/50 rounded-xl p-3">
+                            <div key={u.session_id} className="flex items-center gap-3 bg-white rounded-xl p-3 border border-amber-100">
                                 <File size={16} className="text-gray-400" />
-                                <span className="text-sm text-gray-200 flex-1 truncate">{u.filename}</span>
-                                <div className="w-24 bg-gray-800 rounded-full h-1.5">
+                                <span className="text-sm text-gray-700 flex-1 truncate">{u.filename}</span>
+                                <div className="w-24 bg-gray-100 rounded-full h-1.5">
                                     <div className="bg-amber-500 h-full rounded-full" style={{ width: `${u.progress}%` }} />
                                 </div>
-                                <span className="text-xs text-amber-400 font-mono w-10 text-right">{u.progress}%</span>
-                                <span className="text-xs text-gray-500">{formatBytes(u.bytes_received)} / {formatBytes(u.total_size)}</span>
+                                <span className="text-xs text-amber-600 font-mono w-10 text-right">{u.progress}%</span>
+                                <span className="text-xs text-gray-400">{formatBytes(u.bytes_received)} / {formatBytes(u.total_size)}</span>
                             </div>
                         ))}
                     </div>
@@ -402,10 +398,10 @@ export default function StoragePage() {
             )}
 
             {/* Tabs */}
-            <div className="flex items-center gap-1 bg-gray-900/50 p-1 rounded-xl border border-gray-800 w-fit">
+            <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl w-fit">
                 {(['files', 'settings'] as ViewTab[]).map(tab => (
                     <button key={tab} onClick={() => setActiveTab(tab)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === tab ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-400 hover:text-gray-200'}`}>
+                        className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === tab ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
                         {tab === 'files' ? 'Files' : 'Settings'}
                     </button>
                 ))}
@@ -416,66 +412,66 @@ export default function StoragePage() {
                     {/* Search & Filter Bar */}
                     <div className="flex items-center gap-3">
                         <div className="relative flex-1">
-                            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" />
+                            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                             <input value={search} onChange={e => setSearch(e.target.value)}
                                 placeholder="Search files..."
-                                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-gray-900/60 border border-gray-800 text-white text-sm placeholder-gray-600 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 outline-none transition-all" />
+                                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-900 text-sm placeholder-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all shadow-sm" />
                         </div>
                         <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)}
-                            className="px-4 py-2.5 rounded-xl bg-gray-900/60 border border-gray-800 text-gray-300 text-sm outline-none focus:border-blue-500/50 transition-all appearance-none cursor-pointer pr-8">
+                            className="px-4 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-700 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all appearance-none cursor-pointer pr-8 shadow-sm">
                             {CATEGORY_OPTIONS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                         </select>
                     </div>
 
                     {/* File List */}
-                    <div className="bg-gray-900/60 border border-gray-800 rounded-2xl overflow-hidden backdrop-blur-xl">
+                    <div className="bg-white border border-gray-100 rounded-[2rem] shadow-xl overflow-hidden">
                         {/* Table Header */}
-                        <div className="grid grid-cols-[1fr_120px_120px_140px_80px] gap-4 px-6 py-3 border-b border-gray-800 bg-gray-900/40">
-                            <span className="text-xs text-gray-500 uppercase tracking-wider font-medium">Name</span>
-                            <span className="text-xs text-gray-500 uppercase tracking-wider font-medium">Category</span>
-                            <span className="text-xs text-gray-500 uppercase tracking-wider font-medium">Size</span>
-                            <span className="text-xs text-gray-500 uppercase tracking-wider font-medium">Date</span>
-                            <span className="text-xs text-gray-500 uppercase tracking-wider font-medium text-right">Actions</span>
+                        <div className="grid grid-cols-[1fr_120px_120px_140px_80px] gap-4 px-6 py-3 border-b border-gray-100 bg-gray-50/50">
+                            <span className="text-xs text-gray-500 uppercase tracking-wider font-bold">Name</span>
+                            <span className="text-xs text-gray-500 uppercase tracking-wider font-bold">Category</span>
+                            <span className="text-xs text-gray-500 uppercase tracking-wider font-bold">Size</span>
+                            <span className="text-xs text-gray-500 uppercase tracking-wider font-bold">Date</span>
+                            <span className="text-xs text-gray-500 uppercase tracking-wider font-bold text-right">Actions</span>
                         </div>
 
                         {filteredFiles.length === 0 ? (
                             <div className="p-16 text-center">
-                                <FolderOpen size={48} className="mx-auto text-gray-700 mb-4" />
-                                <p className="text-gray-500 text-lg">No files found</p>
-                                <p className="text-xs text-gray-600 mt-2">Upload your first file to get started</p>
+                                <FolderOpen size={48} className="mx-auto text-gray-300 mb-4" />
+                                <p className="text-gray-500 text-lg font-medium">No files found</p>
+                                <p className="text-xs text-gray-400 mt-2">Upload your first file to get started</p>
                             </div>
                         ) : (
-                            <div className="divide-y divide-gray-800/50">
+                            <div className="divide-y divide-gray-100">
                                 {filteredFiles.map(f => {
                                     const Icon = getFileIcon(f.content_type);
                                     const catColor = CATEGORY_COLORS[f.category] || CATEGORY_COLORS.OTHER;
                                     return (
                                         <div key={f.uuid}
                                             onClick={() => setSelectedFile(selectedFile?.uuid === f.uuid ? null : f)}
-                                            className={`grid grid-cols-[1fr_120px_120px_140px_80px] gap-4 px-6 py-3.5 hover:bg-gray-800/30 transition-colors cursor-pointer ${selectedFile?.uuid === f.uuid ? 'bg-blue-500/5 border-l-2 border-l-blue-500' : ''}`}>
+                                            className={`grid grid-cols-[1fr_120px_120px_140px_80px] gap-4 px-6 py-3.5 hover:bg-gray-50 transition-colors cursor-pointer ${selectedFile?.uuid === f.uuid ? 'bg-blue-50/50 border-l-2 border-l-blue-500' : ''}`}>
                                             <div className="flex items-center gap-3 min-w-0">
-                                                <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${f.content_type?.startsWith('image/') ? 'bg-purple-500/15' : 'bg-blue-500/15'}`}>
-                                                    <Icon size={16} className={f.content_type?.startsWith('image/') ? 'text-purple-400' : 'text-blue-400'} />
+                                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${f.content_type?.startsWith('image/') ? 'bg-purple-50' : 'bg-blue-50'}`}>
+                                                    <Icon size={16} className={f.content_type?.startsWith('image/') ? 'text-purple-500' : 'text-blue-500'} />
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <p className="text-sm text-gray-200 truncate">{f.original_filename}</p>
-                                                    <p className="text-xs text-gray-600 truncate">{f.uploaded_by_name || 'System'}</p>
+                                                    <p className="text-sm text-gray-900 font-medium truncate">{f.original_filename}</p>
+                                                    <p className="text-xs text-gray-400 truncate">{f.uploaded_by_name || 'System'}</p>
                                                 </div>
                                             </div>
                                             <div className="flex items-center">
-                                                <span className={`text-xs px-2 py-1 rounded-md font-medium ${catColor}`}>
+                                                <span className={`text-[10px] px-2.5 py-1 rounded-lg font-semibold uppercase tracking-wide border ${catColor}`}>
                                                     {f.category.replace('_', ' ')}
                                                 </span>
                                             </div>
-                                            <div className="flex items-center text-sm text-gray-400">{f.file_size_display || formatBytes(f.file_size)}</div>
+                                            <div className="flex items-center text-sm text-gray-600">{f.file_size_display || formatBytes(f.file_size)}</div>
                                             <div className="flex items-center text-xs text-gray-500">{new Date(f.uploaded_at).toLocaleDateString()}</div>
                                             <div className="flex items-center justify-end gap-1">
                                                 <button onClick={e => { e.stopPropagation(); handleDownload(f); }}
-                                                    className="p-1.5 rounded-lg text-gray-500 hover:text-blue-400 hover:bg-blue-500/10 transition-all" title="Download">
+                                                    className="p-1.5 rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-all" title="Download">
                                                     <Download size={14} />
                                                 </button>
                                                 <button onClick={e => { e.stopPropagation(); handleDelete(f); }}
-                                                    className="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-all" title="Delete">
+                                                    className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all" title="Delete">
                                                     <Trash2 size={14} />
                                                 </button>
                                             </div>
@@ -488,13 +484,13 @@ export default function StoragePage() {
 
                     {/* File Detail Panel */}
                     {selectedFile && (
-                        <div className="bg-gray-900/60 border border-gray-800 rounded-2xl p-6 backdrop-blur-xl">
+                        <div className="bg-white border border-gray-100 rounded-[2rem] shadow-xl p-6">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                                     <Eye size={18} className="text-gray-400" />
                                     File Details
                                 </h3>
-                                <button onClick={() => setSelectedFile(null)} className="text-gray-500 hover:text-white"><X size={16} /></button>
+                                <button onClick={() => setSelectedFile(null)} className="text-gray-400 hover:text-gray-700 transition-colors"><X size={16} /></button>
                             </div>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <DetailItem label="Filename" value={selectedFile.original_filename} />
@@ -511,24 +507,24 @@ export default function StoragePage() {
                 </>
             ) : (
                 /* Settings Tab */
-                <div className="bg-gray-900/60 border border-gray-800 rounded-2xl overflow-hidden backdrop-blur-xl">
-                    <div className="px-6 py-5 border-b border-gray-800 flex items-center justify-between">
+                <div className="bg-white border border-gray-100 rounded-[2rem] shadow-xl overflow-hidden">
+                    <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <Settings size={18} className="text-gray-400" />
-                            <h2 className="text-lg font-semibold text-white">Provider Configuration</h2>
+                            <h2 className="text-lg font-bold text-gray-900">Provider Configuration</h2>
                         </div>
                         <div className="flex items-center gap-3">
                             {!editMode ? (
                                 <button onClick={() => setEditMode(true)}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-800 text-gray-300 hover:text-white hover:bg-gray-700 border border-gray-700 transition-all text-sm">
+                                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-gray-600 hover:text-gray-900 hover:bg-gray-50 border border-gray-200 transition-all text-sm font-medium shadow-sm">
                                     <Unlock size={14} /> Edit
                                 </button>
                             ) : (
                                 <>
                                     <button onClick={() => setEditMode(false)}
-                                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-800 text-gray-400 hover:text-white border border-gray-700 transition-all text-sm">Cancel</button>
+                                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-gray-500 hover:text-gray-700 border border-gray-200 transition-all text-sm">Cancel</button>
                                     <button onClick={handleSave} disabled={saving}
-                                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 transition-all text-sm font-medium disabled:opacity-50">
+                                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 transition-all text-sm font-semibold disabled:opacity-50 shadow-sm">
                                         {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Save
                                     </button>
                                 </>
@@ -537,20 +533,20 @@ export default function StoragePage() {
                     </div>
                     <div className="p-6 space-y-6">
                         {/* Status Banner */}
-                        <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${config?.is_active ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
+                        <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${config?.is_active ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
                             {config?.is_active ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
-                            <span className="text-sm font-medium">{currentProvider?.label || 'Local'} — {config?.is_active ? 'Active' : 'Inactive'}</span>
-                            {config?.provider_type !== 'LOCAL' && <span className="ml-auto text-xs text-gray-500">Bucket: <span className="text-gray-300">{config?.bucket_name}</span></span>}
+                            <span className="text-sm font-semibold">{currentProvider?.label || 'Local'} — {config?.is_active ? 'Active' : 'Inactive'}</span>
+                            {config?.provider_type !== 'LOCAL' && <span className="ml-auto text-xs text-gray-500">Bucket: <span className="text-gray-700 font-medium">{config?.bucket_name}</span></span>}
                         </div>
 
                         {editMode ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">Provider Type</label>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Provider Type</label>
                                     <div className="grid grid-cols-2 gap-2">
                                         {PROVIDER_OPTIONS.map(p => (
                                             <button key={p.value} onClick={() => setDraft(d => ({ ...d, provider_type: p.value }))}
-                                                className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm transition-all ${draft.provider_type === p.value ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400' : 'border-gray-700 bg-gray-800/50 text-gray-400 hover:border-gray-600'}`}>
+                                                className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm transition-all ${draft.provider_type === p.value ? 'border-emerald-400 bg-emerald-50 text-emerald-700 font-semibold ring-1 ring-emerald-200' : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'}`}>
                                                 <p.icon size={16} className={p.color} /> {p.label}
                                             </button>
                                         ))}
@@ -569,9 +565,9 @@ export default function StoragePage() {
                                 )}
                                 <SettingsInput label="Path Prefix" value={draft.path_prefix} onChange={v => setDraft(d => ({ ...d, path_prefix: v }))} placeholder="Auto: {org-slug}/" />
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-2">Max File Size (MB)</label>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Max File Size (MB)</label>
                                     <input type="number" value={draft.max_file_size_mb} onChange={e => setDraft(d => ({ ...d, max_file_size_mb: parseInt(e.target.value) || 50 }))}
-                                        className="w-full px-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 outline-none transition-all" />
+                                        className="w-full px-4 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-900 text-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all shadow-sm" />
                                 </div>
                                 <div className="md:col-span-2">
                                     <SettingsInput label="Allowed Extensions (comma-separated)" value={draft.allowed_extensions} onChange={v => setDraft(d => ({ ...d, allowed_extensions: v }))} placeholder="pdf, jpg, jpeg, png, doc, docx, xls, xlsx" />
@@ -588,13 +584,13 @@ export default function StoragePage() {
                             </div>
                         )}
 
-                        <div className="flex items-center gap-4 pt-4 border-t border-gray-800">
+                        <div className="flex items-center gap-4 pt-4 border-t border-gray-100">
                             <button onClick={handleTest} disabled={testing}
-                                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 border border-blue-500/30 transition-all text-sm font-medium disabled:opacity-50">
+                                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 transition-all text-sm font-semibold disabled:opacity-50">
                                 {testing ? <Loader2 size={14} className="animate-spin" /> : <TestTube size={14} />} Test Connection
                             </button>
                             {testResult && (
-                                <span className={`flex items-center gap-2 text-sm ${testResult.success ? 'text-emerald-400' : 'text-red-400'}`}>
+                                <span className={`flex items-center gap-2 text-sm font-medium ${testResult.success ? 'text-emerald-600' : 'text-red-600'}`}>
                                     {testResult.success ? <CheckCircle2 size={16} /> : <XCircle size={16} />} {testResult.message}
                                 </span>
                             )}
@@ -607,16 +603,16 @@ export default function StoragePage() {
 }
 
 // ─── Sub-components ──────────────────────────────────────────────
-function StatCard({ label, value, icon: Icon, accent }: { label: string; value: string; icon: React.ComponentType<{ size?: number; className?: string }>; accent: string }) {
+function StatCard({ label, value, icon: Icon, color, bg }: { label: string; value: string; icon: React.ComponentType<{ size?: number; className?: string }>; color: string; bg: string }) {
     return (
-        <div className="bg-gray-900/60 border border-gray-800 rounded-2xl p-4 backdrop-blur-xl">
+        <div className="bg-white border border-gray-100 rounded-[2rem] shadow-xl p-5">
             <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${accent.split(' ').find(c => c.startsWith('bg-')) || 'bg-gray-800'}`}>
-                    <Icon size={18} className={accent.split(' ').find(c => c.startsWith('text-')) || 'text-gray-400'} />
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${bg}`}>
+                    <Icon size={20} className={color} />
                 </div>
                 <div>
-                    <p className="text-2xl font-bold text-white">{value}</p>
-                    <p className="text-xs text-gray-500">{label}</p>
+                    <p className="text-2xl font-black text-gray-900 tabular-nums">{value}</p>
+                    <p className="text-xs text-gray-500 font-medium">{label}</p>
                 </div>
             </div>
         </div>
@@ -625,12 +621,12 @@ function StatCard({ label, value, icon: Icon, accent }: { label: string; value: 
 
 function InfoCard({ label, value, icon: Icon }: { label: string; value: string; icon: React.ComponentType<{ size?: number; className?: string }> }) {
     return (
-        <div className="bg-gray-800/40 rounded-xl p-4 border border-gray-800">
+        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
             <div className="flex items-center gap-2 mb-2">
-                <Icon size={14} className="text-gray-500" />
-                <span className="text-xs text-gray-500 uppercase tracking-wide">{label}</span>
+                <Icon size={14} className="text-gray-400" />
+                <span className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">{label}</span>
             </div>
-            <p className="text-sm text-white font-medium truncate">{value}</p>
+            <p className="text-sm text-gray-900 font-semibold truncate">{value}</p>
         </div>
     );
 }
@@ -638,8 +634,8 @@ function InfoCard({ label, value, icon: Icon }: { label: string; value: string; 
 function DetailItem({ label, value }: { label: string; value: string }) {
     return (
         <div>
-            <p className="text-xs text-gray-500 mb-1">{label}</p>
-            <p className="text-sm text-gray-200 truncate" title={value}>{value}</p>
+            <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-1">{label}</p>
+            <p className="text-sm text-gray-700 truncate font-medium" title={value}>{value}</p>
         </div>
     );
 }
@@ -649,9 +645,9 @@ function SettingsInput({ label, value, onChange, placeholder = '', type = 'text'
 }) {
     return (
         <div>
-            <label className="block text-sm font-medium text-gray-400 mb-2">{label}</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">{label}</label>
             <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-                className="w-full px-4 py-2.5 rounded-xl bg-gray-800 border border-gray-700 text-white text-sm placeholder-gray-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 outline-none transition-all" />
+                className="w-full px-4 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-900 text-sm placeholder-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all shadow-sm" />
         </div>
     );
 }
