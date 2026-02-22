@@ -7,48 +7,58 @@ import Link from 'next/link';
 export const dynamic = 'force-dynamic';
 
 async function getCategoriesData() {
-    // erpFetch returns raw array for standard ViewSet list, but we implemented 'with_counts'
-    // which returns the enriched list.
-    const categories = await erpFetch('inventory/categories/with_counts/');
+    try {
+        // erpFetch returns raw array for standard ViewSet list, but we implemented 'with_counts'
+        // which returns the enriched list.
+        const categories = await erpFetch('inventory/categories/with_counts/');
 
-    // Build Tree (Client-side logic moved here or kept? Logic is pure JS, can stay)
-    const categoryMap = new Map();
-    const roots: Record<string, any>[] = [];
+        // Build Tree (Client-side logic moved here or kept? Logic is pure JS, can stay)
+        const categoryMap = new Map();
+        const roots: Record<string, any>[] = [];
 
-    if (Array.isArray(categories)) {
-        // Initialize Map with empty children array
-        categories.forEach((c: Record<string, any>) => {
-            categoryMap.set(c.id, {
-                ...c,
-                children: [],
-                // Normalize counts
-                product_count: c.product_count ?? c.productCount ?? 0,
-                brand_count: c.brand_count ?? 0,
-                parfum_count: c.parfum_count ?? 0,
+        if (Array.isArray(categories)) {
+            // Initialize Map with empty children array
+            categories.forEach((c: Record<string, any>) => {
+                categoryMap.set(c.id, {
+                    ...c,
+                    children: [],
+                    // Normalize counts
+                    product_count: c.product_count ?? c.productCount ?? 0,
+                    brand_count: c.brand_count ?? 0,
+                    parfum_count: c.parfum_count ?? 0,
+                });
             });
-        });
 
-        // Link Children to Parents
-        // DRF sends FK as 'parent' (the field name on the model), value is the parent's PK
-        categories.forEach((c: Record<string, any>) => {
-            const node = categoryMap.get(c.id);
-            const parentId = c.parent; // DRF FK field = model field name = 'parent'
-            if (parentId) {
-                const parent = categoryMap.get(parentId);
-                if (parent) {
-                    parent.children.push(node);
+            // Link Children to Parents
+            // DRF sends FK as 'parent' (the field name on the model), value is the parent's PK
+            categories.forEach((c: Record<string, any>) => {
+                const node = categoryMap.get(c.id);
+                const parentId = c.parent; // DRF FK field = model field name = 'parent'
+                if (parentId) {
+                    const parent = categoryMap.get(parentId);
+                    if (parent) {
+                        parent.children.push(node);
+                    } else {
+                        roots.push(node); // Parent not in current org's data
+                    }
                 } else {
-                    roots.push(node); // Parent not in current org's data
+                    roots.push(node); // Root category (no parent)
                 }
-            } else {
-                roots.push(node); // Root category (no parent)
-            }
-        });
+            });
+
+            return {
+                hierarchicalCategories: JSON.parse(JSON.stringify(roots)),
+                flatCategories: JSON.parse(JSON.stringify(categories))
+            };
+        }
+    } catch (err) {
+        console.error('[CategoriesPage] Failed to load categories:', err);
     }
 
+    // Return empty state on any error — page still renders gracefully
     return {
-        hierarchicalCategories: JSON.parse(JSON.stringify(roots)),
-        flatCategories: JSON.parse(JSON.stringify(categories))
+        hierarchicalCategories: [],
+        flatCategories: []
     };
 }
 
