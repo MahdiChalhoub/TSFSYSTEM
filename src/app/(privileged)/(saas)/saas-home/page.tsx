@@ -15,7 +15,8 @@ import Link from "next/link"
 import { getSaasStats } from "./actions";
 
 export default async function SaasMasterDashboard() {
-    const stats = await getSaasStats();
+    let stats: any = {};
+    try { stats = await getSaasStats(); } catch { }
 
     const quickStats = [
         { label: "Provisioned Tenants", value: stats?.tenants || "0", icon: Building, color: "emerald", trend: "Stable" },

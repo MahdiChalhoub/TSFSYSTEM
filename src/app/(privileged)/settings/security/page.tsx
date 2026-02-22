@@ -6,7 +6,8 @@ import { headers } from 'next/headers';
 
 export default async function SecurityPage() {
     // We need to know if 2FA is already enabled for the current user
-    const user = await meAction();
+    let user: any = { is_2fa_enabled: false };
+    try { user = await meAction(); } catch { }
     const headerStore = await headers();
     const userAgent = headerStore.get('user-agent') || 'Unknown device';
     // Derive a readable browser/OS label from user-agent

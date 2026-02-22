@@ -6,7 +6,8 @@ import { serializeDecimals } from "@/lib/utils/serialization";
 export const dynamic = 'force-dynamic';
 
 export default async function GlobalInventoryPage() {
-    const initialData = await getGlobalInventory();
+    let initialData: any = [];
+    try { initialData = await getGlobalInventory(); } catch { }
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">

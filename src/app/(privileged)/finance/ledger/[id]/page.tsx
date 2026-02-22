@@ -8,7 +8,8 @@ export default async function ViewJournalEntryPage({ params }: { params: Promise
     const entryId = parseInt(id)
     if (isNaN(entryId)) notFound()
 
-    const entry = await getJournalEntry(entryId) as any
+    let entry: any = null
+    try { entry = await getJournalEntry(entryId) } catch { }
     if (!entry) notFound()
 
     const totalDebit = entry.lines.reduce((sum: number, l: Record<string, any>) => sum + Number(l.debit), 0)

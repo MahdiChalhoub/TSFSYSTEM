@@ -28,10 +28,10 @@ export default async function AccountStatementPage({
     const startDate = resolvedSearchParams.start ? new Date(resolvedSearchParams.start) : new Date(defaultStart)
     const endDate = resolvedSearchParams.end ? new Date(resolvedSearchParams.end) : new Date(defaultEnd)
 
-    const data = await getAccountStatement(accountId, {
-        startDate,
-        endDate
-    }, scope)
+    let data: any = { account: {}, openingBalance: 0, lines: [] }
+    try {
+        data = await getAccountStatement(accountId, { startDate, endDate }, scope)
+    } catch { /* graceful fallback */ }
 
     return (
         <div className="p-6 max-w-5xl mx-auto">

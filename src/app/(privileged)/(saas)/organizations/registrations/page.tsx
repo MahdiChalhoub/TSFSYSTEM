@@ -5,7 +5,7 @@ import { ClipboardList } from 'lucide-react';
 
 export default async function RegistrationsPage() {
     const [pendingUsers, me] = await Promise.all([
-        getPendingUsers(),
+        getPendingUsers().catch(() => []),
         meAction().catch(() => null),
     ]);
 
