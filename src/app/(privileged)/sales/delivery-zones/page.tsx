@@ -110,7 +110,7 @@ export default function DeliveryZonesPage() {
     }
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
             <header className="flex items-center justify-between">
                 <div>
                     <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
@@ -119,48 +119,49 @@ export default function DeliveryZonesPage() {
                         </div>
                         Delivery <span className="text-emerald-600">Zones</span>
                     </h1>
-                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Coverage Areas</p>
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Coverage Areas & Fulfillment Topology</p>
                 </div>
                 <button onClick={startCreate}
-                    className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-bold hover:bg-teal-700 transition-all flex items-center gap-2">
-                    <Plus size={16} /> Add Zone
+                    className="h-12 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-xs shadow-lg shadow-emerald-200 flex items-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                    <Plus size={18} /> Add Zone
                 </button>
             </header>
 
-            <div className="grid grid-cols-3 gap-4">
-                <Card className="border-l-4 border-l-teal-500 bg-gradient-to-r from-teal-50 to-white">
-                    <CardContent className="py-4">
-                        <div className="flex items-center gap-3">
-                            <Layers size={24} className="text-teal-500" />
-                            <div>
-                                <p className="text-xs text-gray-500 uppercase">Total Zones</p>
-                                <p className="text-2xl font-bold">{zones.length}</p>
-                                <p className="text-[10px] text-gray-400">{activeZones} active</p>
-                            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden group">
+                    <CardContent className="p-6 flex items-center gap-5">
+                        <div className="w-16 h-16 rounded-[1.5rem] bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Layers size={32} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-stone-400">Total Zones</p>
+                            <p className="text-3xl font-black mt-1 tracking-tighter text-stone-900">{zones.length}</p>
+                            <p className="text-[10px] text-emerald-600 font-bold uppercase mt-1">{activeZones} Active</p>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-emerald-500 bg-gradient-to-r from-emerald-50 to-white">
-                    <CardContent className="py-4">
-                        <div className="flex items-center gap-3">
-                            <DollarSign size={24} className="text-emerald-500" />
-                            <div>
-                                <p className="text-xs text-gray-500 uppercase">Avg Base Fee</p>
-                                <p className="text-xl font-bold text-emerald-700">{fmt(avgFee)}</p>
-                            </div>
+                <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden group">
+                    <CardContent className="p-6 flex items-center gap-5">
+                        <div className="w-16 h-16 rounded-[1.5rem] bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <DollarSign size={32} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-stone-400">Avg Base Fee</p>
+                            <p className="text-xl font-black mt-1 tracking-tighter text-indigo-700">{fmt(avgFee)}</p>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50 to-white">
-                    <CardContent className="py-4">
-                        <div className="flex items-center gap-3">
-                            <Clock size={24} className="text-blue-500" />
-                            <div>
-                                <p className="text-xs text-gray-500 uppercase">Avg Transit</p>
-                                <p className="text-2xl font-bold text-blue-700">
-                                    {zones.length > 0 ? (zones.reduce((s, z) => s + (z.estimated_days || 0), 0) / zones.length).toFixed(1) : '0'} days
-                                </p>
-                            </div>
+                <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden group">
+                    <CardContent className="p-6 flex items-center gap-5">
+                        <div className="w-16 h-16 rounded-[1.5rem] bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Clock size={32} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-stone-400">Avg Transit</p>
+                            <p className="text-3xl font-black mt-1 tracking-tighter text-blue-700">
+                                {zones.length > 0 ? (zones.reduce((s, z) => s + (z.estimated_days || 0), 0) / zones.length).toFixed(1) : '0'}
+                            </p>
+                            <p className="text-[10px] text-blue-600 font-bold uppercase mt-1">Days Est.</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -168,43 +169,48 @@ export default function DeliveryZonesPage() {
 
             {/* Create/Edit Form */}
             {showForm && (
-                <Card className="border-2 border-teal-200">
-                    <CardHeader className="py-3 flex flex-row items-center justify-between">
-                        <CardTitle className="text-base">{editId ? 'Edit Zone' : 'New Zone'}</CardTitle>
-                        <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
+                <Card className="rounded-[2.5rem] border-0 shadow-md bg-white overflow-hidden">
+                    <CardHeader className="p-8 border-b border-stone-50 flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle className="text-xl font-black tracking-tight text-stone-900">
+                                {editId ? 'Modify Zone Architecture' : 'Deploy New Zone'}
+                            </CardTitle>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mt-1">Coverage Engineering Terminal</p>
+                        </div>
+                        <button onClick={() => setShowForm(false)} className="w-10 h-10 rounded-2xl hover:bg-stone-50 flex items-center justify-center text-stone-300 hover:text-stone-900 transition-all"><X size={20} /></button>
                     </CardHeader>
-                    <CardContent>
-                        <div className="grid grid-cols-2 gap-4">
+                    <CardContent className="p-8">
+                        <div className="grid grid-cols-2 gap-6">
                             <div>
-                                <label className="text-xs font-medium text-gray-500 block mb-1">Zone Name *</label>
-                                <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Abidjan Nord" />
+                                <label className="text-[10px] font-black uppercase text-stone-400 mb-1.5 block">Zone Designation *</label>
+                                <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Abidjan Nord" className="h-10 rounded-xl bg-stone-50 border-stone-100" />
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-gray-500 block mb-1">Description</label>
-                                <Input value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Zone description" />
+                                <label className="text-[10px] font-black uppercase text-stone-400 mb-1.5 block">Description</label>
+                                <Input value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Zone description" className="h-10 rounded-xl bg-stone-50 border-stone-100" />
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-gray-500 block mb-1">Base Fee (XOF)</label>
-                                <Input type="number" value={form.base_fee} onChange={e => setForm({ ...form, base_fee: e.target.value })} />
+                                <label className="text-[10px] font-black uppercase text-stone-400 mb-1.5 block">Base Fee</label>
+                                <Input type="number" value={form.base_fee} onChange={e => setForm({ ...form, base_fee: e.target.value })} className="h-10 rounded-xl font-black text-sm" />
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-gray-500 block mb-1">Estimated Days</label>
-                                <Input type="number" value={form.estimated_days} onChange={e => setForm({ ...form, estimated_days: e.target.value })} />
+                                <label className="text-[10px] font-black uppercase text-stone-400 mb-1.5 block">Estimated Days</label>
+                                <Input type="number" value={form.estimated_days} onChange={e => setForm({ ...form, estimated_days: e.target.value })} className="h-10 rounded-xl font-black text-sm" />
                             </div>
                         </div>
-                        <div className="flex items-center gap-3 mt-4">
-                            <label className="flex items-center gap-2 text-sm">
-                                <input type="checkbox" checked={form.is_active} onChange={e => setForm({ ...form, is_active: e.target.checked })} className="rounded" />
-                                Active
-                            </label>
-                            <div className="ml-auto flex gap-2">
+                        <div className="flex items-center gap-4 mt-8 pt-6 border-t border-stone-50">
+                            <div className="flex items-center gap-3 bg-stone-50 p-3 rounded-2xl border border-stone-100">
+                                <input type="checkbox" checked={form.is_active} onChange={e => setForm({ ...form, is_active: e.target.checked })} className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500" />
+                                <label className="text-[10px] font-black uppercase text-stone-700 tracking-wider">Zone Status: LIVE</label>
+                            </div>
+                            <div className="ml-auto flex gap-3">
                                 <button onClick={() => setShowForm(false)}
-                                    className="px-4 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium hover:bg-gray-200">
-                                    Cancel
+                                    className="h-11 px-6 rounded-2xl font-black text-stone-400 uppercase tracking-widest text-[10px] hover:bg-stone-50 transition-all">
+                                    Abandon
                                 </button>
                                 <button onClick={handleSave}
-                                    className="px-4 py-1.5 bg-teal-600 text-white rounded-lg text-xs font-bold hover:bg-teal-700 flex items-center gap-1">
-                                    <Check size={14} /> {editId ? 'Update' : 'Create'}
+                                    className="h-11 px-8 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest text-xs shadow-lg shadow-emerald-100 flex items-center gap-2 transition-all hover:scale-[1.02]">
+                                    <Check size={16} /> {editId ? 'Commit Changes' : 'Initialize Zone'}
                                 </button>
                             </div>
                         </div>
@@ -214,52 +220,52 @@ export default function DeliveryZonesPage() {
 
             {/* Zone Cards */}
             {zones.length === 0 ? (
-                <Card>
-                    <CardContent className="text-center py-16 text-gray-400">
-                        <MapPin size={48} className="mx-auto mb-3 opacity-30" />
-                        <p>No delivery zones configured</p>
-                        <button onClick={startCreate} className="mt-3 text-teal-600 text-sm font-medium hover:underline">Create your first zone</button>
+                <Card className="rounded-[2.5rem] border-0 shadow-sm">
+                    <CardContent className="text-center py-20 text-stone-400">
+                        <MapPin size={48} className="mx-auto mb-4 opacity-20" />
+                        <p className="font-black text-stone-300 uppercase tracking-widest text-xs">No delivery zones configured</p>
+                        <button onClick={startCreate} className="mt-4 text-emerald-600 text-xs font-black uppercase tracking-widest hover:underline">Create your first zone</button>
                     </CardContent>
                 </Card>
             ) : (
-                <div className="grid grid-cols-2 xl:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     {zones.map(z => (
-                        <Card key={z.id} className={`hover:shadow-md transition-all ${z.is_active === false ? 'opacity-50' : ''}`}>
-                            <CardContent className="py-4">
-                                <div className="flex items-start justify-between mb-3">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center">
-                                            <MapPin size={16} className="text-teal-600" />
+                        <Card key={z.id} className={`rounded-3xl border-0 shadow-sm bg-white overflow-hidden group hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 ${z.is_active === false ? 'opacity-50' : ''}`}>
+                            <CardContent className="p-6">
+                                <div className="flex items-start justify-between mb-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                            <MapPin size={18} />
                                         </div>
                                         <div>
-                                            <p className="font-bold text-sm">{z.name}</p>
-                                            {z.description && <p className="text-[10px] text-gray-400">{z.description}</p>}
+                                            <p className="font-black text-sm text-gray-900 uppercase tracking-tight">{z.name}</p>
+                                            {z.description && <p className="text-[10px] font-medium text-stone-400">{z.description}</p>}
                                         </div>
                                     </div>
-                                    <div className="flex gap-1">
+                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <button onClick={() => startEdit(z)}
-                                            className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600">
+                                            className="w-7 h-7 rounded-lg flex items-center justify-center text-stone-300 hover:text-blue-600 hover:bg-blue-50 transition-all">
                                             <Edit2 size={14} />
                                         </button>
                                         <button onClick={() => setDeleteTarget(z.id)}
-                                            className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500">
+                                            className="w-7 h-7 rounded-lg flex items-center justify-center text-stone-300 hover:text-rose-600 hover:bg-rose-50 transition-all">
                                             <Trash2 size={14} />
                                         </button>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
-                                    <div className="bg-gray-50 rounded-lg p-2 text-center">
-                                        <p className="text-xs text-gray-400">Base Fee</p>
-                                        <p className="font-bold text-sm text-emerald-600">{fmt(parseFloat(String(z.base_fee || 0)))}</p>
+                                    <div className="bg-stone-50 rounded-2xl p-3 text-center">
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-stone-400">Base Fee</p>
+                                        <p className="font-black text-sm text-emerald-600 mt-1">{fmt(parseFloat(String(z.base_fee || 0)))}</p>
                                     </div>
-                                    <div className="bg-gray-50 rounded-lg p-2 text-center">
-                                        <p className="text-xs text-gray-400">Est. Transit</p>
-                                        <p className="font-bold text-sm text-blue-600">{z.estimated_days || 1} day(s)</p>
+                                    <div className="bg-stone-50 rounded-2xl p-3 text-center">
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-stone-400">Est. Transit</p>
+                                        <p className="font-black text-sm text-blue-600 mt-1">{z.estimated_days || 1} day(s)</p>
                                     </div>
                                 </div>
-                                <div className="mt-2 flex items-center justify-between">
-                                    <Badge className={z.is_active !== false ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}>
-                                        {z.is_active !== false ? 'Active' : 'Inactive'}
+                                <div className="mt-4 flex items-center">
+                                    <Badge className={`text-[9px] font-black uppercase tracking-widest border ${z.is_active !== false ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-stone-50 text-stone-400 border-stone-100'}`}>
+                                        {z.is_active !== false ? 'Live' : 'Inactive'}
                                     </Badge>
                                 </div>
                             </CardContent>
