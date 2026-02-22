@@ -28,8 +28,8 @@ if [ -n "$GITHUB_TOKEN" ]; then
     git remote set-url origin "https://${GITHUB_TOKEN}@github.com/MahdiChalhoub/TSFSYSTEM.git"
 fi
 
-git fetch origin engine-stable
-git reset --hard origin/engine-stable
+git fetch origin main
+git reset --hard origin/main
 
 # 2. Nuclear Clean (Fixes 'ContainerConfig' errors)
 echo ""
@@ -92,4 +92,4 @@ echo "==========================================="
 echo "   DEPLOYMENT FINISHED"
 echo "==========================================="
 SERVER_IP=$(hostname -I | awk '{print $1}')
-echo "Access your panel: http://${SERVER_IP}/saas/login"
+echo "Access your panel: http://tsf.ci/saas/login"

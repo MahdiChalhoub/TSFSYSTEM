@@ -22,7 +22,7 @@ set -euo pipefail
 
 # ── Server Config (matches deploy-smart.md) ───────────────────────────────────
 SSH_KEY="${SSH_KEY:-~/.ssh/id_deploy}"
-SSH_HOST="${SSH_HOST:-root@91.99.186.183}"
+SSH_HOST="${SSH_HOST:-root@tsf.ci}"
 REMOTE_DIR="/root/TSFSYSTEM"
 BRANCH="main"
 
