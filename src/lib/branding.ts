@@ -1,11 +1,11 @@
 export const PLATFORM_CONFIG = {
-    name: "Enterprise ERP",
+    name: "TSF System",
     tagline: "The Unified Business Orchestration Engine",
     federation_name: "TSF Platform",
-    domain: "localhost:3000",
-    suffix: ".tsf-city.com",
-    version: "2.8.0",
-    support_email: "support@platform.com"
+    domain: "tsf.ci",
+    suffix: ".tsf.ci",
+    version: "2.8.2",
+    support_email: "support@tsf.ci"
 };
 
 /**
