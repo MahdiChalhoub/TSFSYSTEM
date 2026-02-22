@@ -743,6 +743,9 @@ try:
 except ImportError:
     pass
 
+# List Preferences
+from .list_preferences import OrgListDefault, UserListPreference  # noqa: E402, F401
+
 class Notification(models.Model):
     NOTIFICATION_TYPES = (
         ('INFO', 'Information'),

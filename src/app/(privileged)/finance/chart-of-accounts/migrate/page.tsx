@@ -3,11 +3,9 @@ import { getAllTemplates } from '@/app/actions/finance/coa-templates'
 import CoaMigrationTool from '@/app/(privileged)/finance/chart-of-accounts/migrate/viewer'
 
 export default async function CoaMigrationPage() {
-    // We get ALL accounts (including inactive) to catch balances stuck in old accounts
-    const accounts = await getChartOfAccounts(true)
-
-    // Get all available templates
-    const templates = await getAllTemplates()
+    let accounts: any = [], templates: any = []
+    try { accounts = await getChartOfAccounts(true) } catch { }
+    try { templates = await getAllTemplates() } catch { }
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">

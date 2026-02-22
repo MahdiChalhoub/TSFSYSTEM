@@ -1,150 +1,114 @@
-# TSFSYSTEM Module Inventory Guide
+# TSFSYSTEM — Inventory Module Guide
 
-**Generated:** 2026-02-04  
-**Version:** v8.3.5
-
----
-
-## 1. Backend Modules (Django)
-
-### Engine Modules (`erp_backend/apps/`)
-| Module | Path | Status | Description |
-|--------|------|--------|-------------|
-| **core** | `apps/core/` | ✅ Active | Core platform services |
-| **finance** | `apps/finance/` | ✅ Active | Chart of Accounts, Journal Entries, Ledger, Loans |
-
-### Kernel Modules (`erp_backend/erp/modules/`)
-| Module | Path | Status | Description |
-|--------|------|--------|-------------|
-| **coreplatform** | `erp/modules/coreplatform/` | ✅ Active | Multi-tenancy, modular injection, security |
-
-### Core Services (`erp_backend/erp/`)
-| Service | File | Description |
-|---------|------|-------------|
-| `ModuleManager` | `module_manager.py` | Module lifecycle: sync, upgrade, rollback |
-| `KernelManager` | `kernel_manager.py` | Kernel updates: stage, apply |
-| `AuditService` | `services_audit.py` | Universal audit logging |
-| `WorkflowService` | `services_workflow.py` | Conditional approval workflows |
+**Updated:** 2026-02-22  
+**Module:** inventory  
+**Backend:** `erp_backend/apps/inventory/`  
+**Frontend:** `src/app/(privileged)/inventory/`  
+**Actions:** `src/app/actions/inventory/` + `src/app/actions/barcode-settings.ts` + `src/app/actions/attributes.ts`
 
 ---
 
-## 2. Frontend Pages
+## 1. Backend Structure (`erp_backend/apps/inventory/`)
 
-### Admin Routes (`src/app/(privileged)/admin/`)
-| Route | Path | Status |
-|-------|------|--------|
-| Dashboard | `/admin/` | ✅ Active |
-| **Inventory** | `/admin/inventory/` | ✅ Active |
-| ├── Adjustments | `/admin/inventory/adjustments/` | ✅ Active |
-| ├── Attributes | `/admin/inventory/attributes/` | ⚠️ Missing action file |
-| ├── Barcode | `/admin/inventory/barcode/` | ⚠️ Missing action file |
-| ├── Brands | `/admin/inventory/brands/` | ⚠️ Missing action file |
-| ├── Categories | `/admin/inventory/categories/` | ⚠️ Missing components |
-| ├── Countries | `/admin/inventory/countries/` | ⚠️ Missing action file |
-| ├── Global | `/admin/inventory/global/` | ✅ Active |
-| ├── Maintenance | `/admin/inventory/maintenance/` | ⚠️ Missing components |
-| ├── Units | `/admin/inventory/units/` | ⚠️ Missing action file |
-| └── Warehouses | `/admin/inventory/warehouses/` | ✅ Active |
-| **Products** | `/admin/products/` | ⚠️ Missing action files |
-| **Settings** | `/admin/settings/` | ✅ Active |
-
-### SaaS Routes (`src/app/(privileged)/saas/`)
-| Route | Path | Status |
-|-------|------|--------|
-| Dashboard | `/saas/dashboard/` | ✅ Active |
-| **Finance** (48 files) | `/saas/finance/` | ✅ Active |
-| ├── Ledger | `/saas/finance/ledger/` | ✅ Active |
-| ├── Chart of Accounts | `/saas/finance/coa/` | ✅ Active |
-| ├── Accounts | `/saas/finance/accounts/` | ✅ Active |
-| └── Reports | `/saas/finance/reports/` | ✅ Active |
-| Modules | `/saas/modules/` | ✅ Active |
-| Organizations | `/saas/organizations/` | ✅ Active |
-| Updates | `/saas/updates/` | ✅ Active |
-| **demo** | `/saas/demo/` | 🗑️ Ghost (DELETE) |
-| **test_vantage** | `/saas/test_vantage/` | 🗑️ Ghost (DELETE) |
-
----
-
-## 3. Frontend Action Files
-
-### Root Actions (`src/app/actions/`)
 | File | Purpose |
 |------|---------|
-| `auth.ts` | Authentication actions |
-| `context.ts` | Context utilities |
-| `manager.ts` | Management utilities |
-| `modules.ts` | Module management |
-| `onboarding.ts` | Onboarding flow |
-| `people.ts` | People/user management |
-| `sequences.ts` | Sequence generators |
-| `settings.ts` | Application settings |
-| `sites.ts` | Site management |
-
-### Finance Actions (`src/app/actions/finance/`)
-| File | Purpose |
-|------|---------|
-| `accounts.ts` | Account management |
-| `coa-templates.ts` | Chart of Accounts templates |
-| `dashboard.ts` | Finance dashboard |
-| `diagnostics.ts` | Diagnostic utilities |
-| `financial-accounts.ts` | Financial accounts |
-| `financial-events.ts` | Transaction events |
-| `fiscal-year.ts` | Fiscal year management |
-| `inventory-integration.ts` | Finance-Inventory integration |
-| `ledger.ts` | Journal entries |
-| `loans.ts` | Loan management |
-| `posting-rules.ts` | Posting rules |
-| `pricing.ts` | Pricing rules |
-| `settings.ts` | Finance settings |
-| `system.ts` | System utilities |
-| `ui-actions.ts` | UI actions |
-
-### Inventory Actions (`src/app/actions/inventory/`)
-| File | Purpose |
-|------|---------|
-| `movements.ts` | Stock movements |
-| `product-actions.ts` | Product search |
-| `viewer.ts` | Inventory viewer |
-| `warehouses.ts` | Warehouse management |
-
-### SaaS Actions (`src/app/actions/saas/`)
-| File | Purpose |
-|------|---------|
-| `modules.ts` | SaaS module management |
-| `registration.ts` | Tenant registration |
-| `system.ts` | System management |
+| `models.py` (22KB) | Product, Unit, Warehouse, Inventory, InventoryMovement, Brand, Category, Parfum, ProductGroup, StockAdjustmentOrder/Line, StockTransferOrder/Line |
+| `advanced_models.py` (8.5KB) | ComboProduct, OperationalRequest, DataQualityIssue |
+| `alert_models.py` (9.5KB) | StockAlert, ExpiryAlert configurations |
+| `counting_models.py` (6KB) | StockCount, StockCountLine, StockCountSchedule |
+| `location_models.py` (5KB) | WarehouseZone, WarehouseLocation |
+| `views.py` (88KB, 2105 lines) | All ViewSets: Product, Unit, Warehouse, Inventory, Brand, Category, Country, etc. |
+| `serializers.py` (21KB) | All DRF serializers with computed fields |
+| `services.py` (24KB) | Business logic: stock movements, valuation, adjustments |
+| `valuation_service.py` (10KB) | FIFO/LIFO/WAC inventory valuation |
+| `events.py` (3.4KB) | Cross-module event definitions |
+| `signals.py` (1.3KB) | Signal receivers |
+| `urls.py` (2.5KB) | URL routing for all ViewSets |
+| `manifest.json` | Module identity |
 
 ---
 
-## 4. Missing/Required Files
+## 2. Frontend Pages (24 directories)
 
-### Action Files Needed (Inventory Module)
-```
-src/app/actions/inventory/
-├── brands.ts           # getBrands, getBrandsByCategory
-├── categories.ts       # getCategories, getCategoryTree
-├── countries.ts        # getCountries
-├── units.ts            # getUnits
-└── barcode-settings.ts # getBarcodeSettings
-```
-
-### Components Needed
-```
-src/components/admin/
-├── ProductReassignmentTable.tsx
-├── AttributeManager.tsx (if missing)
-└── CategorySelector.tsx (if missing)
-```
+| Page | Path | Data Source | Status |
+|------|------|------------|--------|
+| Adjustment Orders | `/inventory/adjustment-orders/` | `actions/inventory/adjustment-orders.ts` | ✅ |
+| Adjustments | `/inventory/adjustments/` | Inline erpFetch | ✅ |
+| Alerts | `/inventory/alerts/` | `actions/inventory/stock-alerts.ts` | ✅ |
+| Analytics | `/inventory/analytics/` | `actions/inventory/product-analytics.ts` | ✅ |
+| Attributes | `/inventory/attributes/` | `actions/attributes.ts` | ✅ |
+| Barcode | `/inventory/barcode/` | `actions/barcode-settings.ts` | ✅ |
+| Brands | `/inventory/brands/` | Inline erpFetch | ✅ |
+| Categories | `/inventory/categories/` | Inline erpFetch | ✅ |
+| Combo | `/inventory/combo/` | `lib/erp-fetch` | ✅ |
+| Countries | `/inventory/countries/` | Inline erpFetch | ✅ |
+| Expiry Alerts | `/inventory/expiry-alerts/` | `actions/inventory/expiry-alerts.ts` | ✅ |
+| Global | `/inventory/global/` | `actions/inventory/viewer.ts` | ✅ |
+| Labels | `/inventory/labels/` | Client-side fetch | ✅ |
+| Locations | `/inventory/locations/` | `actions/inventory/locations.ts` | ✅ |
+| Low Stock | `/inventory/low-stock/` | `actions/inventory/low-stock.ts` | ✅ |
+| Maintenance | `/inventory/maintenance/` | Inline erpFetch | ✅ |
+| Movements | `/inventory/movements/` | `actions/inventory/movements.ts` | ✅ |
+| Requests | `/inventory/requests/` | `actions/inventory/operational-requests.ts` | ✅ |
+| Serials | `/inventory/serials/` | `SerialTracker` component | ✅ |
+| Stock Count | `/inventory/stock-count/` | `actions/inventory/stock-count.ts` | ✅ |
+| Transfer Orders | `/inventory/transfer-orders/` | `actions/inventory/transfer-orders.ts` | ✅ |
+| Units | `/inventory/units/` | Inline erpFetch | ✅ |
+| Valuation | `/inventory/valuation/` | `actions/inventory/valuation.ts` | ✅ |
+| Warehouses | `/inventory/warehouses/` | `actions/inventory/warehouses.ts` | ✅ |
 
 ---
 
-## 5. Ghost Routes to Delete
+## 3. Frontend Action Files (16 + 2 root-level)
 
-| Route | Path | Reason |
-|-------|------|--------|
-| `/saas/demo/` | `src/app/(privileged)/saas/demo/` | Test module removed |
-| `/saas/test_vantage/` | `src/app/(privileged)/saas/test_vantage/` | Test module removed |
+### Module Actions (`src/app/actions/inventory/`)
+| File | Functions |
+|------|-----------|
+| `adjustment-orders.ts` | CRUD for stock adjustment orders |
+| `data-quality.ts` | Product data quality checks |
+| `expiry-alerts.ts` | Expiry alert management |
+| `locations.ts` | Warehouse location/zone management |
+| `low-stock.ts` | Low stock detection and alerts |
+| `movements.ts` | Stock movement tracking |
+| `operational-requests.ts` | Operational request lifecycle |
+| `product-actions.ts` | Product search and CRUD |
+| `product-analytics.ts` | Product analytics dashboard data |
+| `stock-alerts.ts` | Stock alert configuration |
+| `stock-count.ts` | Physical stock counting workflows |
+| `transfer-orders.ts` | Inter-warehouse transfer orders |
+| `valuation.ts` | Inventory valuation reports |
+| `viewer.ts` | Global inventory viewer |
+| `warehouse-locations.ts` | Warehouse location assignments |
+| `warehouses.ts` | Warehouse CRUD |
+
+### Root-Level Actions
+| File | Used By |
+|------|---------|
+| `src/app/actions/barcode-settings.ts` | Barcode configuration page |
+| `src/app/actions/attributes.ts` | Product attributes page |
 
 ---
 
-*This guide should be updated when adding new modules.*
+## 4. Key Components
+
+| Component | Path | Used By |
+|-----------|------|---------|
+| `BrandManager` | `src/components/admin/BrandManager.tsx` | Brands page |
+| `CountryManager` | `src/components/admin/CountryManager.tsx` | Countries page |
+| `AttributeManager` | `src/components/admin/AttributeManager.tsx` | Attributes page |
+| `UnitTree` | `src/components/admin/UnitTree.tsx` | Units page |
+| `CategoryTree` | `src/components/admin/categories/CategoryTree.tsx` | Categories page |
+| `CreateUnitButton` | `src/components/admin/CreateUnitButton.tsx` | Units page |
+| `CreateCategoryButton` | `src/components/admin/categories/CreateCategoryButton.tsx` | Categories page |
+| `UnitCalculator` | `src/components/admin/UnitCalculator.tsx` | Units page |
+| `SerialTracker` | `src/components/modules/inventory/SerialTracker.tsx` | Serials page |
+
+---
+
+## 5. Build Status
+
+✅ **All 24 inventory pages compile successfully** (`npm run build` exit code 0, verified 2026-02-22)
+
+---
+
+*This guide should be updated when modifying the inventory module.*

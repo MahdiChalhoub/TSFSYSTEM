@@ -53,8 +53,9 @@ export default function WarehouseModal({
                                 name="code"
                                 defaultValue={warehouse?.code}
                                 className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
-                                placeholder="WH-01"
+                                placeholder="Auto-generated if empty"
                             />
+                            <p className="mt-1 text-[10px] text-gray-400">Leave blank for auto-increment (e.g., WAR-000001)</p>
                         </div>
 
                         <div>

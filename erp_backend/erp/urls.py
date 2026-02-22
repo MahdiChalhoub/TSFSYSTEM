@@ -22,6 +22,10 @@ from .views_kernel import KernelViewSet
 from .views_packages import PackageViewSet
 from .views_encryption import EncryptionViewSet
 from .views_udle import UDLESavedViewViewSet
+from .list_preferences_views import (
+    user_list_preference as list_pref_user_view,
+    org_list_default as list_pref_org_view,
+)
 
 # ── Kernel Router (infrastructure only) ──────────────────────────────────────
 router = DefaultRouter()
@@ -71,6 +75,10 @@ urlpatterns = [
     path('modules/', ModuleListView.as_view(), name='module_list'),
     path('modules/<str:code>/enable/', ModuleEnableView.as_view(), name='module_enable'),
     path('modules/<str:code>/disable/', ModuleDisableView.as_view(), name='module_disable'),
+
+    # List Preferences
+    path('list-preferences/<str:list_key>/', list_pref_user_view, name='list_pref_user'),
+    path('list-defaults/<str:list_key>/', list_pref_org_view, name='list_pref_org'),
 
     # Kernel Router
     path('', include(router.urls)),

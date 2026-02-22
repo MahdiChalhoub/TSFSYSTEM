@@ -3,8 +3,9 @@ import { getFiscalYears } from '@/app/actions/finance/fiscal-year'
 import JournalEntryForm from './form'
 
 export default async function NewJournalEntryPage() {
-    const accounts = await getChartOfAccounts()
-    const fiscalYears = await getFiscalYears()
+    let accounts: any = [], fiscalYears: any = []
+    try { accounts = await getChartOfAccounts() } catch { }
+    try { fiscalYears = await getFiscalYears() } catch { }
 
     return (
         <div className="p-6">

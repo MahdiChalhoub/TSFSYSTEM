@@ -2,7 +2,8 @@ import { getPriceLists } from '@/app/actions/finance/pricing'
 import PriceListManager from './manager'
 
 export default async function PricingPage() {
-    const priceLists = await getPriceLists()
+    let priceLists: any = []
+    try { priceLists = await getPriceLists() } catch { /* empty fallback */ }
 
     return (
         <div className="p-6">

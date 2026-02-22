@@ -34,6 +34,18 @@
 - **Files**: `erp_backend/erp/models.py` (sync_to_crm_contact), `apps/crm/models.py`
 - **Depends On**: Finance module integration
 
+### [OPEN] Inventory Module — Page Audit & Fix
+- **Discovered**: 2026-02-22
+- **Impact**: 24 inventory pages exist but some may lack proper server actions or have broken components
+- **Files**: `src/app/(privileged)/inventory/`, `src/app/actions/inventory/`
+- **Notes**: MODULE_INVENTORY.md is outdated (lists 4 actions, 16 actually exist). Full audit needed.
+
+### [DONE 2026-02-22] Inventory Documentation Outdated
+- **Discovered**: 2026-02-22
+- **Impact**: MODULE_INVENTORY.md doesn't reflect current state of inventory module
+- **Files**: `DOCUMENTATION/MODULE_INVENTORY.md`
+- **Notes**: Fully rewritten — now documents all 24 pages, 18 action files, 9 components
+
 ---
 
 ## 🟡 MEDIUM

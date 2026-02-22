@@ -3,8 +3,9 @@ import { getChartOfAccounts } from '@/app/actions/finance/accounts'
 import PostingRulesForm from './form'
 
 export default async function PostingRulesPage() {
-    const config = await getPostingRules()
-    const accounts = await getChartOfAccounts()
+    let config: any = {}, accounts: any = []
+    try { config = await getPostingRules() } catch { }
+    try { accounts = await getChartOfAccounts() } catch { }
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">

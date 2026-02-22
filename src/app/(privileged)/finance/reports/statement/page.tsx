@@ -8,8 +8,9 @@ import { cookies } from 'next/headers'
 export default async function StatementReportPage() {
     const cookieStore = await cookies()
     const scope = (cookieStore.get('tsf_view_scope')?.value as 'OFFICIAL' | 'INTERNAL') || 'INTERNAL'
-    const accounts = await getChartOfAccounts(false, scope)
-    const fiscalYears = await getFiscalYears()
+    let accounts: any = [], fiscalYears: any = []
+    try { accounts = await getChartOfAccounts(false, scope) } catch { }
+    try { fiscalYears = await getFiscalYears() } catch { }
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">

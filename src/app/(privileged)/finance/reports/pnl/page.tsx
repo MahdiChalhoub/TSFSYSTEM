@@ -13,8 +13,9 @@ export default async function ProfitAndLossPage() {
     const start = new Date(now.getFullYear(), now.getMonth(), 1)
     const end = new Date(now.getFullYear(), now.getMonth() + 1, 0)
 
-    const initialData = await getProfitAndLossReport(start, end, scope)
-    const fiscalYears = await getFiscalYears()
+    let initialData: any = {}, fiscalYears: any = []
+    try { initialData = await getProfitAndLossReport(start, end, scope) } catch { }
+    try { fiscalYears = await getFiscalYears() } catch { }
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
