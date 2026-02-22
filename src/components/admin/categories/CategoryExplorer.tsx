@@ -34,12 +34,14 @@ export function CategoryExplorer({
     categoryId,
     categoryName,
     isOpen,
-    onClose
+    onClose,
+    authToken
 }: {
     categoryId: number | null;
     categoryName: string | null;
     isOpen: boolean;
     onClose: () => void;
+    authToken?: string;
 }) {
     const [data, setData] = useState<ExplorerData | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -60,7 +62,9 @@ export function CategoryExplorer({
         if (!categoryId) return;
         setIsLoading(true);
         try {
-            const result = await erpFetch(`categories/${categoryId}/explore/`);
+            const result = await erpFetch(`categories/${categoryId}/explore/`, {
+                headers: authToken ? { 'Authorization': `Token ${authToken}` } : {}
+            });
             setData(result);
         } catch (e) {
             console.error("Failed to fetch explorer data", e);
