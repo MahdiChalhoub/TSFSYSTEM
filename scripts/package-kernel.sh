@@ -6,8 +6,9 @@
 # Creates: releases/v<VERSION>.kernel.zip
 #
 # Usage:
-#   bash scripts/package-kernel.sh              # uses version from erp settings
-#   bash scripts/package-kernel.sh 2.8.0        # explicit version
+#   bash scripts/package-kernel.sh <version> ["changelog message"]
+#   bash scripts/package-kernel.sh 2.8.0
+#   bash scripts/package-kernel.sh 2.8.1 "Fixed auth middleware, added rate limiting"
 # ══════════════════════════════════════════════════════════════════════════════
 
 set -euo pipefail
@@ -25,9 +26,11 @@ NC='\033[0m'
 
 # ── Version ───────────────────────────────────────────────────────────────────
 VERSION="${1:-$(grep -o '"version": *"[^"]*"' package.json | head -1 | sed 's/"version": *"//;s/"$//')}"
+CHANGELOG="${2:-"Kernel update v$VERSION"}"
 OUTPUT_DIR="releases"
 OUTPUT_FILE="$OUTPUT_DIR/v${VERSION}.kernel.zip"
 STAGING_DIR="tmp/kernel_packaging_${VERSION}"
+VERSION_LOG="$OUTPUT_DIR/VERSION_HISTORY.md"
 
 echo -e "${CYAN}[PACKAGING]${NC} Blanc Engine — Backend Kernel v${VERSION}"
 
@@ -56,12 +59,22 @@ cat > "$STAGING_DIR/update.json" <<EOF
     "version": "$VERSION",
     "type": "kernel",
     "name": "Blanc Engine — Backend Kernel",
-    "changelog": "Backend kernel update v$VERSION",
+    "changelog": "$CHANGELOG",
     "release_date": "$(date '+%Y-%m-%d')",
     "requires_restart": true,
     "included_dirs": ["erp", "lib"]
 }
 EOF
+
+# ── 4. Update version history ─────────────────────────────────────────────────
+mkdir -p "$OUTPUT_DIR"
+if [[ ! -f "$VERSION_LOG" ]]; then
+    echo "# Blanc Engine — Version History" > "$VERSION_LOG"
+    echo "" >> "$VERSION_LOG"
+fi
+echo "## Kernel v$VERSION — $(date '+%Y-%m-%d %H:%M')" >> "$VERSION_LOG"
+echo "- $CHANGELOG" >> "$VERSION_LOG"
+echo "" >> "$VERSION_LOG"
 
 # ── 4. Create ZIP ─────────────────────────────────────────────────────────────
 mkdir -p "$OUTPUT_DIR"
