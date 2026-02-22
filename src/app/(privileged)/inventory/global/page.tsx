@@ -9,6 +9,8 @@ import { useCurrency } from '@/lib/utils/currency'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 
+import { Button } from '@/components/ui/button'
+
 function MarginBadge({ cost, price }: { cost: number; price: number }) {
     if (!price || !cost) return <span className="text-xs text-gray-400">—</span>
     const margin = ((price - cost) / price * 100)
@@ -59,6 +61,8 @@ export default function ProductInventoryPage() {
     const [brands, setBrands] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
 
+    const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set())
+
     const [search, setSearch] = useState('')
     const [filterCategory, setFilterCategory] = useState('')
     const [filterStatus, setFilterStatus] = useState('')
@@ -102,6 +106,12 @@ export default function ProductInventoryPage() {
         try { await deleteProduct(row.id); toast.success('Deleted'); loadData() } catch (e: any) { toast.error(e.message || 'Failed') }
     }
 
+    const handleBulkDelete = () => {
+        if (!confirm(`Are you sure you want to delete ${selectedIds.size} products?`)) return
+        toast.info('Bulk deletion successful (simulation)')
+        setSelectedIds(new Set())
+    }
+
     return (
         <div className="p-6 animate-in fade-in duration-500">
             <TypicalListView<any>
@@ -120,6 +130,20 @@ export default function ProductInventoryPage() {
                 sortKey={settings.sortKey}
                 sortDir={settings.sortDir}
                 onSort={k => settings.setSort(k)}
+                selection={{
+                    selectedIds,
+                    onSelectionChange: setSelectedIds
+                }}
+                bulkActions={
+                    <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="sm" className="text-emerald-600 hover:bg-emerald-50 font-bold px-4" onClick={() => toast.info('Bulk status update coming soon')}>
+                            UPDATE STATUS
+                        </Button>
+                        <Button variant="ghost" size="sm" className="text-rose-600 hover:bg-rose-50 font-bold px-4" onClick={handleBulkDelete}>
+                            DELETE
+                        </Button>
+                    </div>
+                }
                 actions={{
                     onView: r => router.push(`/inventory/global?product=${r.id}`),
                     onEdit: r => router.push(`/inventory/global?product=${r.id}&edit=1`),

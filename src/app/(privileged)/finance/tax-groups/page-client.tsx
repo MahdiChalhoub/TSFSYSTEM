@@ -1,8 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { erpFetch } from '@/lib/erp-api'
-import { Percent, Plus, Star, Trash2, RefreshCw, CheckCircle, XCircle, Edit2, Save, X } from 'lucide-react'
+import { Percent, Plus, Star, Trash2, RefreshCw, CheckCircle, XCircle, Edit2, Save, X, Info, TrendingUp, LayoutGrid } from 'lucide-react'
+import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { toast } from "sonner"
 
 type TaxGroup = {
     id: number
@@ -27,7 +34,6 @@ export default function TaxGroupsPage() {
     const [saving, setSaving] = useState(false)
     const [settingDefault, setSettingDefault] = useState<number | null>(null)
     const [deleting, setDeleting] = useState<number | null>(null)
-    const [toast, setToast] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null)
 
     useEffect(() => { load() }, [])
 
@@ -36,25 +42,26 @@ export default function TaxGroupsPage() {
         try {
             const data = await erpFetch('finance/tax-groups/')
             setGroups(Array.isArray(data) ? data : (data?.results ?? []))
-        } catch { setGroups([]) }
-        setLoading(false)
-    }
-
-    function showToast(msg: string, type: 'ok' | 'err') {
-        setToast({ msg, type })
-        setTimeout(() => setToast(null), 3500)
+        } catch {
+            setGroups([])
+            toast.error("Failed to load tax groups")
+        } finally {
+            setLoading(false)
+        }
     }
 
     function startEdit(tg: TaxGroup) {
         setEditing(tg)
         setForm({ name: tg.name, rate: String(tg.rate), description: tg.description || '', tax_type: tg.tax_type || 'STANDARD' })
-        setShowForm(false)
+        setShowForm(true)
+        window.scrollTo({ top: 0, behavior: 'smooth' })
     }
 
     function startCreate() {
         setEditing(null)
         setForm(EMPTY_FORM)
         setShowForm(true)
+        window.scrollTo({ top: 0, behavior: 'smooth' })
     }
 
     function cancelForm() {
@@ -70,195 +77,260 @@ export default function TaxGroupsPage() {
             const body = { name: form.name, rate: parseFloat(form.rate), description: form.description, tax_type: form.tax_type }
             if (editing) {
                 await erpFetch(`finance/tax-groups/${editing.id}/`, { method: 'PATCH', body: JSON.stringify(body) })
-                showToast('Tax group updated', 'ok')
+                toast.success('Tax group updated')
             } else {
                 await erpFetch('finance/tax-groups/', { method: 'POST', body: JSON.stringify(body) })
-                showToast('Tax group created', 'ok')
+                toast.success('Tax group created')
             }
             cancelForm()
             load()
-        } catch { showToast('Save failed', 'err') }
-        setSaving(false)
+        } catch {
+            toast.error('Save failed')
+        } finally {
+            setSaving(false)
+        }
     }
 
     async function handleSetDefault(id: number) {
         setSettingDefault(id)
         try {
             await erpFetch('finance/tax-groups/set_default/', { method: 'POST', body: JSON.stringify({ tax_group_id: id }) })
-            showToast('Default tax group updated', 'ok')
+            toast.success('Default tax group updated')
             load()
-        } catch { showToast('Failed to set default', 'err') }
-        setSettingDefault(null)
+        } catch {
+            toast.error('Failed to set default')
+        } finally {
+            setSettingDefault(null)
+        }
     }
 
     async function handleDelete(id: number) {
         setDeleting(id)
         try {
             await erpFetch(`finance/tax-groups/${id}/`, { method: 'DELETE' })
-            showToast('Tax group deleted', 'ok')
+            toast.success('Tax group deleted')
             load()
-        } catch { showToast('Delete failed — may be in use', 'err') }
-        setDeleting(null)
+        } catch {
+            toast.error('Delete failed — may be in use')
+        } finally {
+            setDeleting(null)
+        }
     }
 
-    const defaultGroup = groups.find(g => g.is_default)
+    const stats = useMemo(() => {
+        const total = groups.length
+        const avg = total ? (groups.reduce((s, g) => s + Number(g.rate || 0), 0) / total) : 0
+        const def = groups.find(g => g.is_default)?.name || 'None'
+        return { total, avg, def }
+    }, [groups])
+
+    const columns: ColumnDef<TaxGroup>[] = useMemo(() => [
+        {
+            key: 'name',
+            label: 'Tax Group Configuration',
+            sortable: true,
+            render: (tg) => (
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl flex flex-col items-center justify-center bg-stone-50 border border-stone-100 shrink-0 shadow-inner">
+                        <span className="text-sm font-black text-amber-600">{Number(tg.rate).toFixed(0)}</span>
+                        <span className="text-[10px] text-stone-400 font-bold">%</span>
+                    </div>
+                    <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                            <span className="font-bold text-gray-900 text-sm">{tg.name}</span>
+                            {tg.is_default && (
+                                <Badge className="bg-amber-50 text-amber-600 border-amber-200 text-[9px] font-black uppercase px-2 h-4 rounded-lg flex items-center gap-1">
+                                    <Star size={8} fill="currentColor" /> Default
+                                </Badge>
+                            )}
+                        </div>
+                        <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">{tg.tax_type?.replace('_', ' ') || 'STANDARD'}</span>
+                    </div>
+                </div>
+            )
+        },
+        {
+            key: 'rate',
+            label: 'Rate (%)',
+            align: 'right',
+            sortable: true,
+            render: (tg) => <span className="font-mono text-sm font-black text-amber-600">{Number(tg.rate).toFixed(2)}%</span>
+        },
+        {
+            key: 'description',
+            label: 'Applicability',
+            render: (tg) => <span className="text-xs text-stone-400 font-medium truncate max-w-[200px] inline-block">{tg.description || 'No description'}</span>
+        },
+        {
+            key: 'actions',
+            label: '',
+            align: 'right',
+            render: (tg) => (
+                <div className="flex items-center justify-end gap-1">
+                    {!tg.is_default && (
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleSetDefault(tg.id)}
+                            disabled={settingDefault === tg.id}
+                            className="rounded-xl h-8 px-3 text-[10px] font-black uppercase tracking-widest text-amber-600 hover:bg-amber-50 hover:text-amber-700 transition-all"
+                        >
+                            {settingDefault === tg.id ? '...' : 'Set Default'}
+                        </Button>
+                    )}
+                    <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => startEdit(tg)}
+                        className="rounded-xl h-8 w-8 p-0 text-stone-400 hover:text-indigo-600"
+                    >
+                        <Edit2 size={14} />
+                    </Button>
+                    <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDelete(tg.id)}
+                        disabled={deleting === tg.id || tg.is_default}
+                        className="rounded-xl h-8 w-8 p-0 text-stone-300 hover:text-red-600 disabled:opacity-30"
+                    >
+                        {deleting === tg.id ? <RefreshCw size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                    </Button>
+                </div>
+            )
+        }
+    ], [settingDefault, deleting])
+
+    if (loading && groups.length === 0) {
+        return (
+            <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
+                <div className="flex justify-between items-center">
+                    <div><Skeleton className="h-10 w-64" /><Skeleton className="h-4 w-48 mt-2" /></div>
+                    <Skeleton className="h-10 w-44" />
+                </div>
+                <div className="grid grid-cols-3 gap-6">{[1, 2, 3].map(i => <Skeleton key={i} className="h-28 rounded-3xl" />)}</div>
+                <Skeleton className="h-96 rounded-3xl" />
+            </div>
+        )
+    }
 
     return (
-        <div className="min-h-screen bg-[#070D1B] text-gray-100 p-6 flex flex-col gap-6">
-            {toast && (
-                <div className={`fixed top-6 right-6 z-50 px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-sm font-medium border ${toast.type === 'ok' ? 'bg-emerald-900/80 border-emerald-700 text-emerald-300' : 'bg-red-900/80 border-red-700 text-red-300'}`}>
-                    {toast.type === 'ok' ? <CheckCircle size={16} /> : <XCircle size={16} />}
-                    {toast.msg}
+        <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 min-h-screen pb-24">
+            {/* Standard Header */}
+            <header className="flex justify-between items-center">
+                <div>
+                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-[1.5rem] bg-amber-600 flex items-center justify-center shadow-lg shadow-amber-200">
+                            <Percent size={28} className="text-white" />
+                        </div>
+                        Tax <span className="text-amber-600">Groups</span>
+                    </h1>
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">VAT & Tax Configuration</p>
+                </div>
+                <div className="flex items-center gap-3">
+                    <Button onClick={load} variant="ghost" className="h-12 w-12 rounded-2xl p-0 text-stone-400 hover:text-gray-900">
+                        <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+                    </Button>
+                    <Button onClick={startCreate} className="h-12 px-6 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-black uppercase tracking-widest text-xs shadow-lg shadow-amber-200 gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                        <Plus size={18} /> New Tax Group
+                    </Button>
+                </div>
+            </header>
+
+            {/* KPI Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden group">
+                    <CardContent className="p-6 flex items-center gap-5">
+                        <div className="w-16 h-16 rounded-[1.5rem] bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <LayoutGrid size={32} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-stone-400">Configured Groups</p>
+                            <p className="text-3xl font-black mt-1 tracking-tighter text-stone-900">{stats.total}</p>
+                            <p className="text-[10px] text-amber-600 font-bold uppercase mt-1">Active Rules</p>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden group">
+                    <CardContent className="p-6 flex items-center gap-5">
+                        <div className="w-16 h-16 rounded-[1.5rem] bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <TrendingUp size={32} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-stone-400">Average Rate</p>
+                            <p className="text-3xl font-black mt-1 tracking-tighter text-stone-900">{stats.avg.toFixed(1)}%</p>
+                            <p className="text-[10px] text-indigo-600 font-bold uppercase mt-1">Weighted Mean</p>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden group">
+                    <CardContent className="p-6 flex items-center gap-5">
+                        <div className="w-16 h-16 rounded-[1.5rem] bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Star size={32} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-stone-400">Default Group</p>
+                            <p className="text-xl font-black mt-1 tracking-tight text-emerald-600 truncate">{stats.def}</p>
+                            <p className="text-[10px] text-stone-400 font-bold uppercase mt-1">Primary Tax</p>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Create/Edit Form */}
+            {showForm && (
+                <div className="animate-in slide-in-from-top-4 duration-500">
+                    <Card className="rounded-3xl border-0 shadow-xl bg-white border border-stone-100 overflow-hidden">
+                        <div className="p-8 border-b border-stone-50 flex items-center justify-between">
+                            <div>
+                                <h3 className="text-xl font-black tracking-tight text-gray-900 flex items-center gap-2">
+                                    <Edit2 size={20} className="text-amber-600" />
+                                    {editing ? 'Edit Tax Protocol' : 'Register New Tax Group'}
+                                </h3>
+                                <p className="text-xs font-medium text-stone-400 uppercase tracking-widest mt-1">Configuration Parameters</p>
+                            </div>
+                            <Button variant="ghost" onClick={cancelForm} className="h-10 w-10 rounded-xl p-0 text-stone-300 hover:text-gray-900">
+                                <X size={20} />
+                            </Button>
+                        </div>
+                        <div className="p-8 grid grid-cols-1 md:grid-cols-4 gap-6 bg-stone-50/30">
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Group Name</label>
+                                <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="VAT 20%" className="rounded-xl bg-white border-stone-200" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Rate (%)</label>
+                                <Input type="number" step="0.01" value={form.rate} onChange={e => setForm(f => ({ ...f, rate: e.target.value }))} placeholder="20.0" className="rounded-xl bg-white border-stone-200" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Tax Type</label>
+                                <select value={form.tax_type} onChange={e => setForm(f => ({ ...f, tax_type: e.target.value }))} className="w-full h-10 px-3 border border-stone-200 rounded-xl bg-white text-sm outline-none focus:ring-2 focus:ring-amber-500 transition-all">
+                                    {TAX_TYPES.map(t => <option key={t} value={t}>{t.replace('_', ' ')}</option>)}
+                                </select>
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Description</label>
+                                <Input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Optional details..." className="rounded-xl bg-white border-stone-200" />
+                            </div>
+                        </div>
+                        <div className="p-8 border-t border-stone-50 flex justify-end gap-3 bg-white">
+                            <Button variant="ghost" onClick={cancelForm} className="rounded-xl font-black text-[10px] uppercase tracking-widest">Cancel</Button>
+                            <Button onClick={handleSave} disabled={saving || !form.name || !form.rate} className="rounded-xl bg-stone-900 hover:bg-black text-white font-black text-[10px] uppercase tracking-widest h-12 px-8 shadow-lg shadow-stone-200">
+                                {saving ? <RefreshCw size={14} className="animate-spin mr-2" /> : <Save size={14} className="mr-2" />}
+                                {editing ? 'Update Policy' : 'Apply Configuration'}
+                            </Button>
+                        </div>
+                    </Card>
                 </div>
             )}
 
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-700 flex items-center justify-center shadow-lg shadow-indigo-900/40">
-                        <Percent size={22} className="text-white" />
-                    </div>
-                    <div>
-                        <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-[1.5rem] bg-amber-600 flex items-center justify-center shadow-lg shadow-amber-200">
-                                <Percent size={28} className="text-white" />
-                            </div>
-                            Tax <span className="text-amber-600">Groups</span>
-                        </h1>
-                        <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">VAT & Tax Configuration</p>
-                    </div>
-                </div>
-                <div className="flex gap-2">
-                    <button onClick={load} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm">
-                        <RefreshCw size={14} />Refresh
-                    </button>
-                    <button onClick={startCreate} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold shadow-lg shadow-violet-900/30">
-                        <Plus size={14} />New Tax Group
-                    </button>
-                </div>
-            </div>
-
-            {/* Summary */}
-            <div className="grid grid-cols-3 gap-4">
-                {[
-                    { label: 'Total Groups', value: groups.length, color: 'violet' },
-                    { label: 'Default Group', value: defaultGroup?.name || 'None set', color: 'amber', isText: true },
-                    { label: 'Avg Rate', value: groups.length ? `${(groups.reduce((s, g) => s + Number(g.rate || 0), 0) / groups.length).toFixed(1)}%` : '—', color: 'blue', isText: true },
-                ].map(s => (
-                    <div key={s.label} className="bg-[#0F1729] rounded-2xl border border-gray-800 p-5">
-                        <div className="text-xs text-gray-400 mb-2">{s.label}</div>
-                        <div className={`text-2xl font-bold text-${s.color}-400`}>{s.value}</div>
-                    </div>
-                ))}
-            </div>
-
-            {/* Create / Edit Form */}
-            {(showForm || editing) && (
-                <div className="bg-[#0F1729] rounded-2xl border border-violet-800/40 p-6 flex flex-col gap-4">
-                    <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-white text-sm">{editing ? 'Edit Tax Group' : 'New Tax Group'}</h3>
-                        <button onClick={cancelForm} className="p-1.5 rounded-lg text-gray-500 hover:text-gray-300 hover:bg-gray-800"><X size={14} /></button>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-xs text-gray-400 font-medium">Name *</label>
-                            <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. VAT 20%, Standard Tax" className="bg-[#070D1B] border border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-violet-600" />
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-xs text-gray-400 font-medium">Rate (%) *</label>
-                            <input type="number" step="0.01" min="0" max="100" value={form.rate} onChange={e => setForm(f => ({ ...f, rate: e.target.value }))} placeholder="e.g. 20" className="bg-[#070D1B] border border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-violet-600" />
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-xs text-gray-400 font-medium">Tax Type</label>
-                            <select value={form.tax_type} onChange={e => setForm(f => ({ ...f, tax_type: e.target.value }))} className="bg-[#070D1B] border border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-violet-600">
-                                {TAX_TYPES.map(t => <option key={t} value={t}>{t.replace('_', ' ')}</option>)}
-                            </select>
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-xs text-gray-400 font-medium">Description</label>
-                            <input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Optional description" className="bg-[#070D1B] border border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-violet-600" />
-                        </div>
-                    </div>
-                    <div className="flex gap-2 justify-end">
-                        <button onClick={cancelForm} className="px-4 py-2 rounded-xl bg-gray-800 text-gray-400 text-sm hover:bg-gray-700">Cancel</button>
-                        <button onClick={handleSave} disabled={saving || !form.name || !form.rate} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold disabled:opacity-50">
-                            <Save size={13} />{saving ? 'Saving…' : (editing ? 'Update' : 'Create')}
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {/* Tax Groups list */}
-            <div className="flex flex-col gap-2">
-                {loading ? Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-16 bg-gray-800/50 rounded-xl animate-pulse" />) :
-                    groups.length === 0 ? (
-                        <div className="bg-[#0F1729] rounded-2xl border border-gray-800 flex flex-col items-center justify-center py-16 text-gray-500 gap-3">
-                            <Percent size={48} className="opacity-20" />
-                            <p className="text-sm">No tax groups yet. Create one to get started.</p>
-                            <button onClick={startCreate} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-700 hover:bg-violet-600 text-white text-sm font-semibold mt-2">
-                                <Plus size={13} />Add First Tax Group
-                            </button>
-                        </div>
-                    ) : (
-                        groups.map(tg => (
-                            <div key={tg.id} className={`flex items-center gap-4 px-5 py-4 rounded-xl border transition-all ${tg.is_default ? 'bg-violet-900/10 border-violet-800/50' : 'bg-[#0F1729] border-gray-800 hover:border-gray-700'}`}>
-                                {/* Rate badge */}
-                                <div className="w-14 h-14 rounded-xl flex flex-col items-center justify-center bg-gradient-to-br from-violet-600/20 to-indigo-600/20 border border-violet-800/40 shrink-0">
-                                    <span className="text-lg font-black text-violet-400">{Number(tg.rate).toFixed(0)}</span>
-                                    <span className="text-[10px] text-violet-500 font-bold">%</span>
-                                </div>
-
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                        <span className="font-semibold text-base text-white">{tg.name}</span>
-                                        {tg.is_default && (
-                                            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border bg-amber-900/40 text-amber-400 border-amber-700">
-                                                <Star size={9} />DEFAULT
-                                            </span>
-                                        )}
-                                        {tg.tax_type && (
-                                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold border bg-violet-900/30 text-violet-400 border-violet-800">
-                                                {tg.tax_type.replace('_', ' ')}
-                                            </span>
-                                        )}
-                                    </div>
-                                    {tg.description && <p className="text-xs text-gray-500 mt-0.5 truncate">{tg.description}</p>}
-                                    <p className="text-xs text-gray-600 mt-0.5 font-mono">Rate: {Number(tg.rate).toFixed(2)}%</p>
-                                </div>
-
-                                <div className="flex items-center gap-1 shrink-0">
-                                    {!tg.is_default && (
-                                        <button
-                                            onClick={() => handleSetDefault(tg.id)}
-                                            disabled={settingDefault === tg.id}
-                                            title="Set as default"
-                                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-900/20 hover:bg-amber-900/40 text-amber-500 text-xs font-semibold disabled:opacity-50 transition-colors"
-                                        >
-                                            <Star size={11} />
-                                            {settingDefault === tg.id ? '…' : 'Set Default'}
-                                        </button>
-                                    )}
-                                    <button
-                                        onClick={() => startEdit(tg)}
-                                        title="Edit"
-                                        className="p-2 rounded-lg text-gray-500 hover:text-blue-400 hover:bg-blue-900/20 transition-colors"
-                                    >
-                                        <Edit2 size={13} />
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(tg.id)}
-                                        disabled={deleting === tg.id || tg.is_default}
-                                        title={tg.is_default ? "Can't delete the default tax group" : "Delete"}
-                                        className="p-2 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-900/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                                    >
-                                        {deleting === tg.id ? <RefreshCw size={13} className="animate-spin" /> : <Trash2 size={13} />}
-                                    </button>
-                                </div>
-                            </div>
-                        ))
-                    )
-                }
-            </div>
+            <TypicalListView
+                title="Taxation Authority Matrix"
+                data={groups}
+                loading={loading}
+                getRowId={(tg) => tg.id}
+                columns={columns}
+                className="rounded-3xl border-0 shadow-sm overflow-hidden"
+            />
         </div>
     )
 }

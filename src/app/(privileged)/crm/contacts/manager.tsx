@@ -1,20 +1,44 @@
 'use client';
 
-import { useState } from 'react';
-import { Search, Plus, User, Briefcase, Building2, CreditCard, ChevronRight, Phone, Mail, Filter, TrendingUp, TrendingDown, Tag, Star, Users } from "lucide-react";
+import { useState, useCallback } from 'react';
+import { TypicalListView, type ColumnDef } from '@/components/common/TypicalListView';
+import { TypicalFilter } from '@/components/common/TypicalFilter';
+import { useListViewSettings } from '@/hooks/useListViewSettings';
+import { useCurrency } from '@/lib/utils/currency';
+import { toast } from 'sonner';
+import { Search, Plus, User, Briefcase, Building2, CreditCard, ChevronRight, Phone, Mail, Filter, TrendingUp, TrendingDown, Tag, Star, Users, ExternalLink } from "lucide-react";
 import ContactModal from './form';
-import clsx from 'clsx';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
-export default function ContactManager({
+type Contact = Record<string, any>;
+
+const ALL_COLUMNS: ColumnDef<Contact>[] = [
+    { key: 'name', label: 'Entity Identity', sortable: true, alwaysVisible: true },
+    { key: 'type', label: 'Classification', sortable: true },
+    { key: 'contact', label: 'Communication Channels' },
+    { key: 'site', label: 'Home Node' },
+    { key: 'balance', label: 'Ledger Balance', align: 'right', sortable: true },
+];
+
+export default function RelationshipMasterList({
     contacts,
     sites
 }: {
-    contacts: Record<string, any>[],
+    contacts: Contact[],
     sites: Record<string, any>[]
 }) {
+    const { fmt } = useCurrency();
+    const settings = useListViewSettings('crm_contacts_v3', {
+        columns: ALL_COLUMNS.map(c => c.key),
+        pageSize: 20,
+        sortKey: 'name',
+        sortDir: 'asc',
+    });
+
     const [search, setSearch] = useState('');
-    const [typeFilter, setTypeFilter] = useState<'ALL' | 'CUSTOMER' | 'SUPPLIER' | 'LEAD'>('ALL');
-    const [siteFilter, setSiteFilter] = useState<string>('ALL');
+    const [typeFilter, setTypeFilter] = useState('ALL');
+    const [siteFilter, setSiteFilter] = useState('ALL');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalType, setModalType] = useState<'CUSTOMER' | 'SUPPLIER'>('CUSTOMER');
 
@@ -26,157 +50,129 @@ export default function ContactManager({
         return matchesSearch && matchesType && matchesSite;
     });
 
+    const columns: ColumnDef<Contact>[] = ALL_COLUMNS.map(c => {
+        const renderers: Record<string, (r: Contact) => React.ReactNode> = {
+            name: r => (
+                <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110 ${r.type === 'CUSTOMER' ? 'bg-blue-50 text-blue-600' :
+                            r.type === 'SUPPLIER' ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'
+                        }`}>
+                        {r.type === 'CUSTOMER' ? <User size={16} /> :
+                            r.type === 'SUPPLIER' ? <Briefcase size={16} /> : <Users size={16} />}
+                    </div>
+                    <div>
+                        <div className="font-bold text-gray-900 group-hover:text-indigo-600 transition-colors uppercase tracking-tight">{r.name}</div>
+                        <div className="text-[10px] font-mono text-gray-400 group-hover:text-indigo-400">Account: {r.linkedAccount?.code || 'UNLINKED'}</div>
+                    </div>
+                </div>
+            ),
+            type: r => (
+                <div className="flex gap-1.5 flex-wrap">
+                    <Badge variant="secondary" className={`text-[10px] font-black uppercase tracking-tighter border-0 ${r.type === 'CUSTOMER' ? 'bg-blue-100 text-blue-700' :
+                            r.type === 'SUPPLIER' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
+                        }`}>
+                        {r.type}
+                    </Badge>
+                    {r.customer_tier && r.customer_tier !== 'STANDARD' && (
+                        <Badge variant="outline" className="text-[10px] font-bold border-stone-200 text-stone-600 bg-stone-50">
+                            {r.customer_tier === 'VIP' && <Star size={10} className="mr-1 fill-yellow-400 text-yellow-400" />}
+                            {r.customer_tier}
+                        </Badge>
+                    )}
+                </div>
+            ),
+            contact: r => (
+                <div className="flex flex-col gap-0.5">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-gray-600">
+                        <Mail size={12} className="text-gray-400" />
+                        {r.email || 'No Email'}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-gray-400">
+                        <Phone size={12} />
+                        {r.phone || 'No Phone'}
+                    </div>
+                </div>
+            ),
+            site: r => r.homeSite ? (
+                <Badge variant="outline" className="text-[10px] font-bold border-indigo-100 text-indigo-600 bg-indigo-50/50">
+                    <Building2 size={10} className="mr-1" /> {r.homeSite.name}
+                </Badge>
+            ) : <span className="text-gray-300">—</span>,
+            balance: r => {
+                const bal = Number(r.balance || 0);
+                return (
+                    <div className={`font-black flex items-center justify-end gap-1.5 ${bal > 0 ? 'text-emerald-600' : bal < 0 ? 'text-rose-600' : 'text-stone-300'
+                        }`}>
+                        {bal > 0 ? <TrendingUp size={14} /> : bal < 0 ? <TrendingDown size={14} /> : null}
+                        {fmt(Math.abs(bal))}
+                    </div>
+                );
+            }
+        };
+        return { ...c, render: renderers[c.key] };
+    });
+
     return (
-        <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-            {/* Action Bar */}
-            <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 bg-white p-6 rounded-[40px] shadow-2xl shadow-indigo-900/5 border border-gray-50">
-                <div className="flex flex-col md:flex-row items-center gap-4 w-full xl:w-auto">
-                    <div className="relative group w-full md:w-96">
-                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-500 transition-colors" size={20} />
-                        <input
-                            className="w-full bg-gray-50 pl-14 pr-6 py-4 rounded-2xl border-none focus:ring-4 focus:ring-indigo-100 outline-none transition-all font-bold text-gray-700 placeholder:text-gray-300"
-                            placeholder="Universal Master Data Search..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
-                    </div>
-
-                    <div className="flex gap-2 bg-gray-50 p-1.5 rounded-2xl w-full md:w-auto">
-                        {['ALL', 'CUSTOMER', 'SUPPLIER', 'LEAD'].map((t) => (
-                            <button
-                                key={t}
-                                onClick={() => setTypeFilter(t as any)}
-                                className={clsx(
-                                    "px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                                    typeFilter === t ? "bg-white text-gray-900 shadow-sm" : "text-gray-400 hover:text-gray-600"
-                                )}
-                            >
-                                {t}
-                            </button>
-                        ))}
-                    </div>
-
-                    <div className="relative w-full md:w-64">
-                        <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
-                        <select
-                            className="w-full bg-gray-50 pl-12 pr-6 py-4 rounded-2xl border-none focus:ring-4 focus:ring-indigo-100 outline-none transition-all font-bold text-gray-700 appearance-none"
-                            value={siteFilter}
-                            onChange={(e) => setSiteFilter(e.target.value)}
+        <div className="space-y-6">
+            <TypicalListView<Contact>
+                title="Relationship Ledger"
+                data={filtered}
+                getRowId={r => r.id}
+                columns={columns}
+                className="rounded-[32px] border-0 shadow-sm overflow-hidden"
+                pageSize={settings.pageSize}
+                onPageSizeChange={settings.setPageSize}
+                sortKey={settings.sortKey}
+                sortDir={settings.sortDir}
+                onSort={k => settings.setSort(k)}
+                headerExtra={
+                    <div className="flex gap-2">
+                        <Button
+                            onClick={() => { setModalType('SUPPLIER'); setIsModalOpen(true); }}
+                            variant="ghost"
+                            className="h-9 px-4 bg-amber-50 text-amber-600 hover:bg-amber-100 hover:text-amber-700 rounded-xl font-black text-[10px] uppercase tracking-widest border border-amber-100"
                         >
-                            <option value="ALL">All Home Sites</option>
-                            {sites.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                        </select>
+                            <Briefcase size={14} className="mr-2" /> New Supplier
+                        </Button>
+                        <Button
+                            onClick={() => { setModalType('CUSTOMER'); setIsModalOpen(true); }}
+                            className="h-9 px-4 bg-indigo-600 text-white hover:bg-indigo-700 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-100"
+                        >
+                            <Plus size={14} className="mr-2" /> New Client
+                        </Button>
                     </div>
-                </div>
-
-                <div className="flex gap-4 w-full xl:w-auto border-t xl:border-t-0 pt-6 xl:pt-0">
-                    <button
-                        onClick={() => { setModalType('SUPPLIER'); setIsModalOpen(true); }}
-                        className="flex-1 xl:flex-none px-6 py-4 bg-amber-50 text-amber-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-amber-600 hover:text-white transition-all flex items-center justify-center gap-2 group"
-                    >
-                        <Briefcase size={18} className="group-hover:rotate-12 transition-transform" />
-                        New Supplier
-                    </button>
-                    <button
-                        onClick={() => { setModalType('CUSTOMER'); setIsModalOpen(true); }}
-                        className="flex-1 xl:flex-none px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 hover:-translate-y-1 transition-all flex items-center justify-center gap-2 group"
-                    >
-                        <Plus size={20} className="group-hover:rotate-90 transition-transform duration-500" />
-                        Individual Client
-                    </button>
-                </div>
-            </div>
-
-            {/* List */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-20">
-                {filtered.map((contact) => (
-                    <div key={contact.id} className="group bg-white p-8 rounded-[48px] border border-gray-100 hover:shadow-2xl hover:shadow-indigo-900/5 transition-all relative overflow-hidden flex flex-col sm:flex-row items-center gap-8">
-                        {/* Decorative Background Account Code */}
-                        <div className="absolute right-8 top-8 text-[40px] font-black text-gray-50 group-hover:text-indigo-50/30 transition-colors pointer-events-none">
-                            {contact.linkedAccount?.code}
-                        </div>
-
-                        {/* Avatar / Icon */}
-                        <div className={clsx(
-                            "w-24 h-24 rounded-[32px] shrink-0 flex items-center justify-center shadow-inner transition-transform group-hover:scale-110 duration-500",
-                            contact.type === 'CUSTOMER' ? "bg-blue-50 text-blue-600" :
-                                contact.type === 'LEAD' ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
-                        )}>
-                            {contact.type === 'CUSTOMER' ? <User size={40} /> :
-                                contact.type === 'LEAD' ? <Users size={40} /> : <Briefcase size={40} />}
-                        </div>
-
-                        {/* Info */}
-                        <div className="flex-1 text-center sm:text-left space-y-4">
-                            <div>
-                                <div className="flex items-center justify-center sm:justify-start gap-2 mb-1 flex-wrap">
-                                    <span className={clsx(
-                                        "px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-tighter",
-                                        contact.type === 'CUSTOMER' ? "bg-blue-100 text-blue-700" :
-                                            contact.type === 'LEAD' ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
-                                    )}>
-                                        {contact.type}
-                                    </span>
-                                    {/* Supplier Category Badge */}
-                                    {contact.type === 'SUPPLIER' && contact.supplier_category && contact.supplier_category !== 'REGULAR' && (
-                                        <span className={clsx(
-                                            "px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-tighter",
-                                            contact.supplier_category === 'DEPOT_VENTE' ? "bg-purple-100 text-purple-700" : "bg-orange-100 text-orange-700"
-                                        )}>
-                                            {contact.supplier_category === 'DEPOT_VENTE' ? 'Consignment' : 'Mixed'}
-                                        </span>
-                                    )}
-                                    {/* Customer Tier Badge */}
-                                    {contact.type === 'CUSTOMER' && contact.customer_tier && contact.customer_tier !== 'STANDARD' && (
-                                        <span className={clsx(
-                                            "px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-tighter flex items-center gap-0.5",
-                                            contact.customer_tier === 'VIP' ? "bg-yellow-100 text-yellow-700" :
-                                                contact.customer_tier === 'WHOLESALE' ? "bg-cyan-100 text-cyan-700" : "bg-teal-100 text-teal-700"
-                                        )}>
-                                            {contact.customer_tier === 'VIP' && <Star size={10} />}
-                                            {contact.customer_tier}
-                                        </span>
-                                    )}
-                                    {contact.homeSite && (
-                                        <span className="flex items-center gap-1 text-[10px] font-bold text-gray-400">
-                                            <Building2 size={10} /> {contact.homeSite.name}
-                                        </span>
-                                    )}
-                                </div>
-                                <h3 className="text-2xl font-black text-gray-900 group-hover:text-indigo-600 transition-colors truncate max-w-[280px]">
-                                    {contact.name}
-                                </h3>
-                            </div>
-
-                            <div className="flex flex-wrap justify-center sm:justify-start gap-4">
-                                <div className="flex items-center gap-2 text-xs font-bold text-gray-500 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100/50">
-                                    <Mail size={14} className="text-indigo-500" />
-                                    {contact.email || 'No Email'}
-                                </div>
-                                <div className="flex items-center gap-2 text-xs font-bold text-gray-500 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100/50">
-                                    <Phone size={14} className="text-indigo-500" />
-                                    {contact.phone || 'No Phone'}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Balance Card */}
-                        <div className="w-full sm:w-48 bg-gray-50 group-hover:bg-white rounded-[32px] p-6 border border-transparent group-hover:border-gray-100 transition-all flex flex-col items-center justify-center translate-z-0">
-                            <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Current Balance</div>
-                            <div className={clsx(
-                                "text-xl font-black flex items-center gap-1",
-                                Number(contact.balance) > 0 ? "text-emerald-600" : Number(contact.balance) < 0 ? "text-rose-600" : "text-gray-400"
-                            )}>
-                                {Number(contact.balance) > 0 ? <TrendingUp size={16} /> : Number(contact.balance) < 0 ? <TrendingDown size={16} /> : null}
-                                ${Math.abs(Number(contact.balance)).toFixed(2)}
-                            </div>
-                            <button className="mt-4 w-full py-2.5 rounded-xl bg-white border border-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all shadow-sm">
-                                Full Statement
-                            </button>
-                        </div>
-                    </div>
-                ))}
-            </div>
+                }
+                actions={{
+                    onEdit: (r) => toast.info(`Accessing secure profile for ${r.name}`),
+                    extra: (r) => (
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50">
+                            <ExternalLink size={14} />
+                        </Button>
+                    )
+                }}
+            >
+                <TypicalFilter
+                    search={{ placeholder: 'Search Identities or Communication Channels...', value: search, onChange: setSearch }}
+                    filters={[
+                        {
+                            key: 'type', label: 'Classification', type: 'select', options: [
+                                { value: 'ALL', label: 'All Segments' },
+                                { value: 'CUSTOMER', label: 'Customer Base' },
+                                { value: 'SUPPLIER', label: 'Supply Chain' },
+                                { value: 'LEAD', label: 'Potential Leads' },
+                            ]
+                        },
+                        {
+                            key: 'site', label: 'Home Node', type: 'select', options: [
+                                { value: 'ALL', label: 'Global (All Nodes)' },
+                                ...sites.map(s => ({ value: s.id.toString(), label: s.name }))
+                            ]
+                        }
+                    ]}
+                    values={{ type: typeFilter, site: siteFilter }}
+                    onChange={(k, v) => k === 'type' ? setTypeFilter(String(v)) : setSiteFilter(String(v))}
+                />
+            </TypicalListView>
 
             {isModalOpen && (
                 <ContactModal

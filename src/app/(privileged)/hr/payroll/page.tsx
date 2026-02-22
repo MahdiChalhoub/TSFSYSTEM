@@ -1,241 +1,272 @@
-'use client'
+'use client';
 
-import { useCurrency } from '@/lib/utils/currency'
+import { useState, useEffect, useMemo, useCallback } from "react";
+import type { Employee } from '@/types/erp';
+import { TypicalListView, type ColumnDef } from '@/components/common/TypicalListView';
+import { TypicalFilter } from '@/components/common/TypicalFilter';
+import { useListViewSettings } from '@/hooks/useListViewSettings';
+import { useCurrency } from '@/lib/utils/currency';
+import { toast } from 'sonner';
+import { Banknote, Users, DollarSign, TrendingUp, Search, Briefcase, ChevronRight, BarChart3, Wallet, Landmark, ArrowRight } from "lucide-react";
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 
-import { useState, useEffect, useMemo } from "react"
-import type { Employee } from '@/types/erp'
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Skeleton } from "@/components/ui/skeleton"
-import { toast } from "sonner"
-import {
-    Banknote, Users, DollarSign, TrendingUp, Search, Briefcase
-} from "lucide-react"
+type PayrollRecord = Record<string, any>;
 
 const TYPE_BADGE: Record<string, string> = {
     EMPLOYEE: 'bg-blue-100 text-blue-700',
     PARTNER: 'bg-purple-100 text-purple-700',
     BOTH: 'bg-teal-100 text-teal-700',
-}
+};
 
-export default function PayrollSummaryPage() {
-    const { fmt } = useCurrency()
-    const [employees, setEmployees] = useState<Employee[]>([])
-    const [loading, setLoading] = useState(true)
-    const [search, setSearch] = useState('')
-    const [typeFilter, setTypeFilter] = useState<string | null>(null)
+const ALL_COLUMNS: ColumnDef<PayrollRecord>[] = [
+    { key: 'identity', label: 'Human Entity', sortable: true, alwaysVisible: true },
+    { key: 'id', label: 'Record ID', sortable: true },
+    { key: 'classification', label: 'Category' },
+    { key: 'role', label: 'Functional Designation' },
+    { key: 'salary', label: 'Monthly Exposure', align: 'right', sortable: true },
+    { key: 'annual', label: 'Annual Commitment', align: 'right' },
+    { key: 'pct', label: 'Cost Concentration', align: 'right' },
+];
 
-    useEffect(() => { loadData() }, [])
+export default function CompensationEnginePage() {
+    const { fmt } = useCurrency();
+    const settings = useListViewSettings('hr_payroll_v3', {
+        columns: ALL_COLUMNS.map(c => c.key),
+        pageSize: 25,
+        sortKey: 'salary',
+        sortDir: 'desc',
+    });
+
+    const [employees, setEmployees] = useState<PayrollRecord[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [search, setSearch] = useState('');
+    const [typeFilter, setTypeFilter] = useState('ALL');
+
+    useEffect(() => { loadData() }, []);
 
     async function loadData() {
-        setLoading(true)
+        setLoading(true);
         try {
-            const { erpFetch } = await import("@/lib/erp-api")
-            const data = await erpFetch('hr/employees/')
-            setEmployees(Array.isArray(data) ? data : data.results || [])
+            const { erpFetch } = await import("@/lib/erp-api");
+            const data = await erpFetch('hr/employees/');
+            setEmployees(Array.isArray(data) ? data : data.results || []);
         } catch {
-            toast.error("Failed to load payroll data")
+            toast.error("Compensation engine sync failed");
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
     }
 
     const filtered = useMemo(() => {
-        let items = employees
-        if (typeFilter) items = items.filter(e => e.employee_type === typeFilter)
+        let items = employees;
+        if (typeFilter !== 'ALL') items = items.filter(e => e.employee_type === typeFilter);
         if (search) {
-            const s = search.toLowerCase()
+            const s = search.toLowerCase();
             items = items.filter(e =>
                 `${e.first_name || ''} ${e.last_name || ''}`.toLowerCase().includes(s) ||
                 (e.job_title || '').toLowerCase().includes(s) ||
                 (e.employee_id || '').toLowerCase().includes(s)
-            )
+            );
         }
-        return items.sort((a: Record<string, any>, b: Record<string, any>) => parseFloat(b.salary || 0) - parseFloat(a.salary || 0))
-    }, [employees, typeFilter, search])
+        return items;
+    }, [employees, typeFilter, search]);
 
-    const totalPayroll = employees.reduce((s, e) => s + parseFloat(e.salary || 0), 0)
-    const avgSalary = employees.length > 0 ? totalPayroll / employees.length : 0
-    const maxSalary = Math.max(...employees.map(e => parseFloat(e.salary || 0)), 0)
-    const typeCounts: Record<string, number> = {}
-    employees.forEach(e => { typeCounts[e.employee_type] = (typeCounts[e.employee_type] || 0) + 1 })
+    const totalPayroll = employees.reduce((s, e) => s + parseFloat(e.salary || 0), 0);
+    const avgSalary = employees.length > 0 ? totalPayroll / employees.length : 0;
+    const maxSalary = Math.max(...employees.map(e => parseFloat(e.salary || 0)), 0);
 
-    if (loading) {
-        return (
-            <div className="p-6 space-y-6">
-                <Skeleton className="h-10 w-64" />
-                <div className="grid grid-cols-4 gap-4">{[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-28" />)}</div>
-                <Skeleton className="h-96" />
-            </div>
-        )
-    }
+    const columns: ColumnDef<PayrollRecord>[] = ALL_COLUMNS.map(c => {
+        const renderers: Record<string, (r: PayrollRecord) => React.ReactNode> = {
+            identity: r => (
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-black text-xs">
+                        {(r.first_name || '?').charAt(0)}
+                    </div>
+                    <span className="font-bold text-gray-900 uppercase tracking-tight">{r.first_name} {r.last_name}</span>
+                </div>
+            ),
+            id: r => <span className="font-mono text-[10px] text-gray-400 font-black tracking-widest">{r.employee_id}</span>,
+            classification: r => (
+                <Badge className={`${TYPE_BADGE[r.employee_type] || 'bg-gray-100'} border-0 text-[9px] font-black uppercase`}>
+                    {r.employee_type}
+                </Badge>
+            ),
+            role: r => <span className="text-xs font-bold text-stone-500">{r.job_title || '—'}</span>,
+            salary: r => <span className="font-black text-emerald-600">{fmt(parseFloat(r.salary || 0))}</span>,
+            annual: r => <span className="text-xs text-gray-400 font-medium">{fmt(parseFloat(r.salary || 0) * 12)}</span>,
+            pct: r => {
+                const s = parseFloat(r.salary || 0);
+                const p = totalPayroll > 0 ? (s / totalPayroll * 100) : 0;
+                return <span className="text-[10px] font-black text-gray-400">{p.toFixed(1)}%</span>;
+            }
+        };
+        return { ...c, render: renderers[c.key] };
+    });
 
     return (
-        <div className="p-6 space-y-6">
-            <header className="flex items-center justify-between">
+        <div className="p-6 space-y-8 max-w-7xl mx-auto animate-in fade-in duration-500">
+            <header className="flex justify-between items-center">
                 <div>
                     <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
                         <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
                             <Banknote size={28} className="text-white" />
                         </div>
-                        Payroll <span className="text-emerald-600">Management</span>
+                        Compensation <span className="text-emerald-600">Engine</span>
                     </h1>
-                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Salaries & Compensation</p>
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Global Payroll & Economic Exposure</p>
                 </div>
-                <div className="relative w-64">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <Input placeholder="Search employees..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-9" />
+                <div className="flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-2xl border border-emerald-100">
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                    <span className="text-[10px] font-black uppercase text-emerald-700 tracking-widest">Pricing Engine Active</span>
                 </div>
             </header>
 
-            <div className="grid grid-cols-4 gap-4">
-                <Card className="border-l-4 border-l-emerald-500 bg-gradient-to-r from-emerald-50 to-white">
-                    <CardContent className="py-4">
-                        <div className="flex items-center gap-3">
-                            <DollarSign size={24} className="text-emerald-500" />
-                            <div>
-                                <p className="text-xs text-gray-500 uppercase">Total Monthly Payroll</p>
-                                <p className="text-xl font-bold text-emerald-700">{fmt(totalPayroll)}</p>
-                                <p className="text-[10px] text-gray-400">{fmt(totalPayroll * 12)}/year</p>
-                            </div>
+            {/* Economic Intelligence */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-md transition-all">
+                    <CardContent className="p-6 flex items-center gap-5">
+                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Wallet size={28} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider text-left">Monthly Exposure</p>
+                            <h2 className="text-3xl font-black text-gray-900 mt-0.5">{fmt(totalPayroll)}</h2>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50 to-white">
-                    <CardContent className="py-4">
-                        <div className="flex items-center gap-3">
-                            <Users size={24} className="text-blue-500" />
-                            <div>
-                                <p className="text-xs text-gray-500 uppercase">Headcount</p>
-                                <p className="text-2xl font-bold text-blue-700">{employees.length}</p>
-                            </div>
+
+                <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-md transition-all">
+                    <CardContent className="p-6 flex items-center gap-5">
+                        <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Users size={28} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider text-left">Active Headcount</p>
+                            <h2 className="text-3xl font-black text-gray-900 mt-0.5">{employees.length}</h2>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-amber-500 bg-gradient-to-r from-amber-50 to-white">
-                    <CardContent className="py-4">
-                        <div className="flex items-center gap-3">
-                            <TrendingUp size={24} className="text-amber-500" />
-                            <div>
-                                <p className="text-xs text-gray-500 uppercase">Average Salary</p>
-                                <p className="text-xl font-bold text-amber-700">{fmt(avgSalary)}</p>
-                            </div>
+
+                <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-md transition-all">
+                    <CardContent className="p-6 flex items-center gap-5">
+                        <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <TrendingUp size={28} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider text-left">Avg Compensation</p>
+                            <h2 className="text-3xl font-black text-gray-900 mt-0.5">{fmt(avgSalary)}</h2>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-violet-500 bg-gradient-to-r from-violet-50 to-white">
-                    <CardContent className="py-4">
-                        <div className="flex items-center gap-3">
-                            <Briefcase size={24} className="text-violet-500" />
-                            <div>
-                                <p className="text-xs text-gray-500 uppercase">Highest Salary</p>
-                                <p className="text-xl font-bold text-violet-700">{fmt(maxSalary)}</p>
-                            </div>
+
+                <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-md transition-all">
+                    <CardContent className="p-6 flex items-center gap-5">
+                        <div className="w-14 h-14 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Landmark size={28} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider text-left">Max Liability</p>
+                            <h2 className="text-3xl font-black text-gray-900 mt-0.5">{fmt(maxSalary)}</h2>
                         </div>
                     </CardContent>
                 </Card>
             </div>
 
-            {/* Type Filters */}
-            <div className="flex flex-wrap gap-2">
-                <button
-                    onClick={() => setTypeFilter(null)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${!typeFilter ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        }`}
-                >
-                    All ({employees.length})
-                </button>
-                {Object.entries(typeCounts).map(([type, count]) => (
-                    <button
-                        key={type}
-                        onClick={() => setTypeFilter(typeFilter === type ? null : type)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${typeFilter === type ? 'bg-gray-900 text-white' : `${TYPE_BADGE[type]?.split(' ')[0] || 'bg-gray-100'} ${TYPE_BADGE[type]?.split(' ')[1] || 'text-gray-600'}`
-                            }`}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 space-y-6">
+                    <TypicalListView<PayrollRecord>
+                        title="Payroll Ledger"
+                        data={filtered}
+                        loading={loading}
+                        getRowId={r => r.id}
+                        columns={columns}
+                        className="rounded-[2.5rem] border-0 shadow-sm overflow-hidden"
+                        pageSize={settings.pageSize}
+                        onPageSizeChange={settings.setPageSize}
+                        sortKey={settings.sortKey}
+                        sortDir={settings.sortDir}
+                        onSort={k => settings.setSort(k)}
+                        actions={{
+                            onEdit: (r) => toast.info(`Accessing financial stream for ${r.first_name}`),
+                        }}
                     >
-                        {type} ({count})
-                    </button>
-                ))}
-            </div>
+                        <TypicalFilter
+                            search={{ placeholder: 'Search Personnel Identifiers...', value: search, onChange: setSearch }}
+                            filters={[
+                                {
+                                    key: 'type', label: 'Entity Category', type: 'select', options: [
+                                        { value: 'ALL', label: 'Global (All)' },
+                                        { value: 'EMPLOYEE', label: 'Internal Staff' },
+                                        { value: 'PARTNER', label: 'External Partners' },
+                                        { value: 'BOTH', label: 'Hybrid Entities' },
+                                    ]
+                                }
+                            ]}
+                            values={{ type: typeFilter }}
+                            onChange={(k, v) => setTypeFilter(String(v))}
+                        />
+                    </TypicalListView>
+                </div>
 
-            {/* Salary Distribution Bar */}
-            <Card>
-                <CardHeader className="py-3">
-                    <CardTitle className="text-base">Salary Distribution</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="space-y-2">
-                        {filtered.slice(0, 15).map((e: Record<string, any>) => {
-                            const salary = parseFloat(e.salary || 0)
-                            const pct = maxSalary > 0 ? (salary / maxSalary * 100) : 0
-                            return (
-                                <div key={e.id} className="flex items-center gap-3">
-                                    <span className="w-32 text-xs font-medium truncate">{e.first_name} {e.last_name}</span>
-                                    <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden">
-                                        <div
-                                            className="h-full bg-emerald-400 rounded-full transition-all"
-                                            style={{ width: `${pct}%` }}
-                                        />
-                                    </div>
-                                    <span className="w-24 text-right text-xs font-bold">{fmt(salary)}</span>
-                                </div>
-                            )
-                        })}
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Payroll Table */}
-            <Card>
-                <CardContent className="p-0">
-                    <Table>
-                        <TableHeader>
-                            <TableRow className="bg-gray-50/50">
-                                <TableHead>#</TableHead>
-                                <TableHead>Employee</TableHead>
-                                <TableHead>ID</TableHead>
-                                <TableHead>Type</TableHead>
-                                <TableHead>Job Title</TableHead>
-                                <TableHead className="text-right">Monthly Salary</TableHead>
-                                <TableHead className="text-right">Annual</TableHead>
-                                <TableHead className="text-right">% of Total</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {filtered.map((e: Record<string, any>, i: number) => {
-                                const salary = parseFloat(e.salary || 0)
-                                const pct = totalPayroll > 0 ? (salary / totalPayroll * 100) : 0
-                                return (
-                                    <TableRow key={e.id} className="hover:bg-gray-50/50">
-                                        <TableCell className="font-bold text-gray-400">{i + 1}</TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center">
-                                                    <span className="text-xs font-bold text-emerald-600">
-                                                        {(e.first_name || '?').charAt(0)}
-                                                    </span>
+                <div className="space-y-6">
+                    <Card className="rounded-[2.5rem] border-0 shadow-sm overflow-hidden">
+                        <CardHeader className="bg-stone-50/50 border-b border-stone-100 p-6 flex flex-row items-center justify-between">
+                            <CardTitle className="text-xs font-black uppercase tracking-widest text-stone-400">Resource Concentration</CardTitle>
+                            <BarChart3 size={14} className="text-stone-300" />
+                        </CardHeader>
+                        <CardContent className="p-6">
+                            <div className="space-y-6">
+                                {filtered.slice(0, 10).map((e: PayrollRecord) => {
+                                    const salary = parseFloat(e.salary || 0);
+                                    const pct = maxSalary > 0 ? (salary / maxSalary * 100) : 0;
+                                    return (
+                                        <div key={e.id} className="space-y-2 group">
+                                            <div className="flex justify-between items-end">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                                                    <span className="text-[10px] font-black text-stone-600 uppercase tracking-tight truncate max-w-[120px]">{e.first_name} {e.last_name}</span>
                                                 </div>
-                                                <span className="font-medium text-sm">{e.first_name} {e.last_name}</span>
+                                                <span className="text-[10px] font-mono font-bold text-stone-400">{fmt(salary)}</span>
                                             </div>
-                                        </TableCell>
-                                        <TableCell className="font-mono text-xs text-gray-400">{e.employee_id}</TableCell>
-                                        <TableCell>
-                                            <Badge className={TYPE_BADGE[e.employee_type] || 'bg-gray-100'}>
-                                                {e.employee_type}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-sm text-gray-500">{e.job_title || '—'}</TableCell>
-                                        <TableCell className="text-right font-bold text-emerald-600">{fmt(salary)}</TableCell>
-                                        <TableCell className="text-right text-sm">{fmt(salary * 12)}</TableCell>
-                                        <TableCell className="text-right text-sm text-gray-500">{pct.toFixed(1)}%</TableCell>
-                                    </TableRow>
-                                )
-                            })}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
+                                            <div className="relative h-2 bg-stone-100 rounded-full overflow-hidden">
+                                                <div
+                                                    className="absolute inset-y-0 left-0 bg-emerald-500 rounded-full transition-all duration-1000 group-hover:bg-emerald-400"
+                                                    style={{ width: `${pct}%` }}
+                                                />
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                                {filtered.length > 10 && (
+                                    <div className="pt-4 border-t border-stone-50 text-center">
+                                        <p className="text-[9px] font-black text-stone-300 uppercase tracking-widest">Showing top concentration nodes</p>
+                                    </div>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="rounded-[2.5rem] border-0 shadow-sm bg-gray-900 text-white p-8 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:rotate-12 transition-transform duration-700">
+                            <TrendingUp size={120} />
+                        </div>
+                        <div className="relative z-10">
+                            <h3 className="text-xl font-black tracking-tighter mb-2">Liability Pulse</h3>
+                            <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest leading-relaxed">
+                                Total annual operational liability currently calculated at
+                            </p>
+                            <div className="text-4xl font-black text-emerald-400 mt-4 tracking-tighter">
+                                {fmt(totalPayroll * 12)}
+                            </div>
+                            <Button className="w-full mt-8 bg-white/10 hover:bg-white/20 text-white rounded-xl font-black uppercase text-[10px] tracking-widest border border-white/10 group">
+                                Generate Audit Manifest <ArrowRight size={14} className="ml-2 group-hover:translate-x-1 transition-transform" />
+                            </Button>
+                        </div>
+                    </Card>
+                </div>
+            </div>
         </div>
-    )
+    );
 }

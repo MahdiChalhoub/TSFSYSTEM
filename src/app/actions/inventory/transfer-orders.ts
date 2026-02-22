@@ -93,6 +93,24 @@ export async function verifyTransferOrder(id: number, comment?: string) {
     return result
 }
 
+export async function approveTransferOrder(id: number, comment?: string) {
+    const result = await erpFetch(`inventory/transfer-orders/${id}/approve/`, {
+        method: 'POST',
+        body: JSON.stringify({ comment: comment || '' })
+    })
+    revalidatePath('/inventory/transfer-orders')
+    return result
+}
+
+export async function cancelTransferOrder(id: number, comment?: string) {
+    const result = await erpFetch(`inventory/transfer-orders/${id}/cancel/`, {
+        method: 'POST',
+        body: JSON.stringify({ comment: comment || '' })
+    })
+    revalidatePath('/inventory/transfer-orders')
+    return result
+}
+
 export async function getTransferOrderHistory(id: number) {
     return await erpFetch(`inventory/transfer-orders/${id}/lifecycle_history/`)
 }

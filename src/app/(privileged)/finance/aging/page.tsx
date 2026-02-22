@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useCurrency } from "@/lib/utils/currency"
 import { getAgedReceivables, getAgedPayables } from "@/app/actions/finance/reports"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
@@ -12,6 +11,7 @@ import {
     ArrowDownLeft, ArrowUpRight, Clock, AlertTriangle,
     TrendingUp, Users, DollarSign, CalendarClock
 } from "lucide-react"
+import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
 
 type AgingBucket = {
     total: number
@@ -39,9 +39,8 @@ const BUCKET_CONFIG = [
     { key: 'over_90', label: '90+ Days', color: 'bg-red-500', badgeClass: 'bg-red-100 text-red-700', icon: AlertTriangle },
 ]
 
-
 export default function AgingReportPage() {
-    const { fmt: formatCurrency } = useCurrency()
+    const { fmt } = useCurrency()
     const [tab, setTab] = useState<'receivables' | 'payables'>('receivables')
     const [receivables, setReceivables] = useState<AgingData | null>(null)
     const [payables, setPayables] = useState<AgingData | null>(null)
@@ -51,6 +50,7 @@ export default function AgingReportPage() {
     useEffect(() => { loadData() }, [])
 
     async function loadData() {
+        setLoading(true)
         try {
             const [ar, ap] = await Promise.all([
                 getAgedReceivables(),
@@ -67,51 +67,101 @@ export default function AgingReportPage() {
 
     const data = tab === 'receivables' ? receivables : payables
     const contactField = tab === 'receivables' ? 'customer' : 'supplier'
-    const grandTotal = data
-        ? Object.values(data).reduce((sum, b) => sum + (b?.total || 0), 0)
-        : 0
+    const grandTotal = useMemo(() => data ? Object.values(data).reduce((sum, b) => sum + (b?.total || 0), 0) : 0, [data])
 
-    const allItems = data && !activeBucket
-        ? Object.entries(data).flatMap(([key, bucket]) =>
-            (bucket?.items || []).map((item: Record<string, any>) => ({ ...item, bucket: key }))
-        )
-        : data && activeBucket
-            ? (data[activeBucket as keyof AgingData]?.items || []).map((item: Record<string, any>) => ({ ...item, bucket: activeBucket }))
-            : []
+    const allItems = useMemo(() => {
+        if (!data) return []
+        const raw = !activeBucket
+            ? Object.entries(data).flatMap(([key, bucket]) =>
+                (bucket?.items || []).map((item: Record<string, any>) => ({ ...item, bucket: key }))
+            )
+            : (data[activeBucket as keyof AgingData]?.items || []).map((item: Record<string, any>) => ({ ...item, bucket: activeBucket }))
 
-    allItems.sort((a: Record<string, any>, b: Record<string, any>) => b.days - a.days)
+        return [...raw].sort((a: any, b: any) => b.days - a.days)
+    }, [data, activeBucket])
+
+    const columns: ColumnDef<any>[] = useMemo(() => [
+        {
+            key: 'order_id',
+            label: 'Order',
+            sortable: true,
+            render: (v) => <span className="font-mono text-xs font-bold text-gray-400">ORD-{v.order_id}</span>
+        },
+        {
+            key: contactField,
+            label: tab === 'receivables' ? 'Customer' : 'Supplier',
+            sortable: true,
+            render: (v) => <span className="font-medium text-sm">{v[contactField] || 'N/A'}</span>
+        },
+        {
+            key: 'amount',
+            label: 'Amount',
+            align: 'right',
+            sortable: true,
+            render: (v) => <span className="font-bold text-gray-900">{fmt(v.amount)}</span>
+        },
+        {
+            key: 'days',
+            label: 'Days',
+            align: 'center',
+            sortable: true,
+            render: (v) => (
+                <Badge variant={v.days > 90 ? "destructive" : v.days > 60 ? "outline" : "secondary"} className="rounded-lg h-5 px-1.5 text-[10px]">
+                    {v.days}d
+                </Badge>
+            )
+        },
+        {
+            key: 'date',
+            label: 'Date',
+            sortable: true,
+            render: (v) => <span className="text-xs text-gray-500">{v.date}</span>
+        },
+        {
+            key: 'bucket',
+            label: 'Bucket',
+            render: (v) => {
+                const bucketCfg = BUCKET_CONFIG.find(b => b.key === v.bucket)
+                return (
+                    <Badge className={`${bucketCfg?.badgeClass} rounded-lg h-5 px-1.5 text-[10px] border-none shadow-none`}>
+                        {bucketCfg?.label || v.bucket}
+                    </Badge>
+                )
+            }
+        }
+    ], [fmt, tab, contactField])
 
     if (loading) {
         return (
-            <div className="p-6 space-y-6">
-                <Skeleton className="h-10 w-72" />
-                <div className="grid grid-cols-4 gap-4">
-                    {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-28" />)}
+            <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
+                <div className="flex justify-between items-center">
+                    <div><Skeleton className="h-10 w-64" /><Skeleton className="h-4 w-48 mt-2" /></div>
                 </div>
-                <Skeleton className="h-96" />
+                <div className="grid grid-cols-4 gap-4">{[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-28 rounded-2xl" />)}</div>
+                <Skeleton className="h-96 rounded-2xl" />
             </div>
         )
     }
 
     return (
-        <div className="p-6 space-y-6">
-            {/* Header */}
-            <header className="flex items-center justify-between">
+        <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
+            {/* Standard Header */}
+            <header className="flex justify-between items-center">
                 <div>
                     <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-[1.5rem] bg-amber-600 flex items-center justify-center shadow-lg shadow-amber-200">
+                        <div className="w-14 h-14 rounded-[1.5rem] bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-200">
                             <Clock size={28} className="text-white" />
                         </div>
                         Aging <span className="text-amber-600">Report</span>
                     </h1>
                     <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Receivables & Payables Aging</p>
                 </div>
-                <div className="flex rounded-lg border overflow-hidden">
+                <div className="flex bg-stone-100 p-1 rounded-2xl shadow-inner">
                     <button
                         onClick={() => { setTab('receivables'); setActiveBucket(null) }}
-                        className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${tab === 'receivables'
-                            ? 'bg-emerald-600 text-white'
-                            : 'bg-white text-gray-600 hover:bg-gray-50'
+                        className={`flex items-center gap-2 px-6 py-2.5 text-sm font-bold rounded-xl transition-all ${tab === 'receivables'
+                            ? 'bg-white shadow-sm text-emerald-600'
+                            : 'text-stone-400 hover:text-stone-600'
                             }`}
                     >
                         <ArrowDownLeft size={16} />
@@ -119,9 +169,9 @@ export default function AgingReportPage() {
                     </button>
                     <button
                         onClick={() => { setTab('payables'); setActiveBucket(null) }}
-                        className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${tab === 'payables'
-                            ? 'bg-rose-600 text-white'
-                            : 'bg-white text-gray-600 hover:bg-gray-50'
+                        className={`flex items-center gap-2 px-6 py-2.5 text-sm font-bold rounded-xl transition-all ${tab === 'payables'
+                            ? 'bg-white shadow-sm text-rose-600'
+                            : 'text-stone-400 hover:text-stone-600'
                             }`}
                     >
                         <ArrowUpRight size={16} />
@@ -130,29 +180,30 @@ export default function AgingReportPage() {
                 </div>
             </header>
 
-            {/* Grand Total */}
-            <Card className="border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50 to-white">
-                <CardContent className="py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                            <DollarSign size={20} className="text-blue-600" />
+            {/* Grand Total Summary Card */}
+            <Card className="rounded-3xl border-0 shadow-sm bg-gradient-to-br from-stone-900 to-stone-800 text-white overflow-hidden relative">
+                <div className="absolute top-[-20px] right-[-20px] opacity-10">
+                    <DollarSign size={160} />
+                </div>
+                <CardContent className="py-8 px-10 flex items-center justify-between relative z-10">
+                    <div className="flex items-center gap-6">
+                        <div className="w-16 h-16 rounded-[1.5rem] bg-white/10 flex items-center justify-center backdrop-blur-md">
+                            <TrendingUp size={32} className="text-emerald-400" />
                         </div>
                         <div>
-                            <p className="text-sm text-gray-500">
-                                Total Outstanding {tab === 'receivables' ? 'Receivables' : 'Payables'}
-                            </p>
-                            <p className="text-2xl font-bold text-gray-900">{formatCurrency(grandTotal)}</p>
+                            <p className="text-xs font-black uppercase tracking-widest text-stone-400">Grand Total Outstanding</p>
+                            <p className="text-4xl font-black mt-1 tracking-tighter tabular-nums">{fmt(grandTotal)}</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <Users size={16} />
-                        {allItems.length} open {tab === 'receivables' ? 'invoices' : 'bills'}
+                    <div className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-2xl backdrop-blur-md border border-white/10">
+                        <Users size={18} className="text-stone-400" />
+                        <span className="text-sm font-bold">{allItems.length} <span className="text-stone-500 font-medium">Open Items</span></span>
                     </div>
                 </CardContent>
             </Card>
 
-            {/* Aging Buckets */}
-            <div className="grid grid-cols-4 gap-4">
+            {/* Aging Buckets Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {BUCKET_CONFIG.map(({ key, label, color, badgeClass, icon: Icon }) => {
                     const bucket = data?.[key as keyof AgingData]
                     const isActive = activeBucket === key
@@ -162,26 +213,27 @@ export default function AgingReportPage() {
                         <Card
                             key={key}
                             onClick={() => setActiveBucket(isActive ? null : key)}
-                            className={`cursor-pointer transition-all hover:shadow-md ${isActive ? 'ring-2 ring-offset-1 ring-blue-500 shadow-md' : ''
-                                }`}
+                            className={`group cursor-pointer rounded-2xl border-0 shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] ${isActive ? 'ring-2 ring-amber-500 bg-amber-50/10 shadow-lg' : 'bg-white'}`}
                         >
-                            <CardContent className="py-4">
-                                <div className="flex items-center justify-between mb-2">
-                                    <Badge className={badgeClass}>{label}</Badge>
-                                    <Icon size={16} className="text-gray-400" />
+                            <CardContent className="pt-5 pb-4 px-5">
+                                <div className="flex items-center justify-between mb-3">
+                                    <Badge className={`${badgeClass} rounded-lg border-none text-[10px] uppercase font-black px-2 py-0.5`}>{label}</Badge>
+                                    <Icon size={18} className="text-stone-300 group-hover:text-amber-500 transition-colors" />
                                 </div>
-                                <p className="text-xl font-bold text-gray-900">
-                                    {formatCurrency(bucket?.total || 0)}
+                                <p className="text-2xl font-bold text-stone-900 tabular-nums">
+                                    {fmt(bucket?.total || 0)}
                                 </p>
-                                <div className="flex items-center justify-between mt-2">
-                                    <span className="text-xs text-gray-400">
-                                        {bucket?.items?.length || 0} items
+                                <div className="flex items-center justify-between mt-3 mb-1.5">
+                                    <span className="text-[10px] font-black text-stone-400 uppercase tracking-tighter">
+                                        {bucket?.items?.length || 0} Items
                                     </span>
-                                    <span className="text-xs text-gray-400">{pct.toFixed(0)}%</span>
+                                    <span className="text-[10px] font-black text-stone-500">{pct.toFixed(0)}%</span>
                                 </div>
-                                {/* Progress bar */}
-                                <div className="w-full h-1.5 bg-gray-100 rounded-full mt-2 overflow-hidden">
-                                    <div className={`h-full ${color} rounded-full transition-all`} style={{ width: `${Math.min(pct, 100)}%` }} />
+                                <div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden shadow-inner">
+                                    <div
+                                        className={`h-full ${color} rounded-full transition-all duration-500 ease-out shadow-sm`}
+                                        style={{ width: `${Math.min(pct, 100)}%` }}
+                                    />
                                 </div>
                             </CardContent>
                         </Card>
@@ -189,81 +241,51 @@ export default function AgingReportPage() {
                 })}
             </div>
 
-            {/* Stacked Bar Summary */}
-            {grandTotal > 0 && (
-                <div className="flex h-4 rounded-full overflow-hidden bg-gray-100">
-                    {BUCKET_CONFIG.map(({ key, color }) => {
+            {/* Visual Stacked Summary */}
+            <div className="h-6 bg-stone-100 rounded-3xl overflow-hidden flex shadow-inner group p-1">
+                {grandTotal > 0 ? (
+                    BUCKET_CONFIG.map(({ key, color, label }) => {
                         const pct = (data?.[key as keyof AgingData]?.total || 0) / grandTotal * 100
                         return pct > 0 ? (
-                            <div key={key} className={`${color} transition-all`} style={{ width: `${pct}%` }} title={`${pct.toFixed(1)}%`} />
+                            <div
+                                key={key}
+                                className={`${color} h-full first:rounded-l-2xl last:rounded-r-2xl border-r last:border-0 border-white/20 transition-all hover:brightness-110 flex items-center justify-center`}
+                                style={{ width: `${pct}%` }}
+                                title={`${label}: ${pct.toFixed(1)}%`}
+                            >
+                                {pct > 10 && <span className="text-[8px] font-black text-white uppercase opacity-0 group-hover:opacity-100 transition-opacity tracking-widest">{pct.toFixed(0)}%</span>}
+                            </div>
                         ) : null
-                    })}
-                </div>
-            )}
+                    })
+                ) : (
+                    <div className="flex-1 flex items-center justify-center text-[10px] text-stone-300 uppercase font-black tracking-widest">No Aging Data Available</div>
+                )}
+            </div>
 
-            {/* Detail Table */}
-            <Card>
-                <CardHeader className="py-3">
-                    <CardTitle className="text-base flex items-center gap-2">
-                        <TrendingUp size={18} className="text-gray-400" />
-                        {activeBucket
-                            ? `${BUCKET_CONFIG.find(b => b.key === activeBucket)?.label} — Details`
-                            : 'All Outstanding Items'}
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                    {allItems.length === 0 ? (
-                        <div className="text-center py-12 text-gray-400">
-                            <DollarSign size={48} className="mx-auto mb-3 opacity-30" />
-                            <p>No outstanding {tab === 'receivables' ? 'receivables' : 'payables'}</p>
-                        </div>
-                    ) : (
-                        <Table>
-                            <TableHeader>
-                                <TableRow className="bg-gray-50/50">
-                                    <TableHead>Order</TableHead>
-                                    <TableHead>{tab === 'receivables' ? 'Customer' : 'Supplier'}</TableHead>
-                                    <TableHead className="text-right">Amount</TableHead>
-                                    <TableHead className="text-center">Days</TableHead>
-                                    <TableHead>Date</TableHead>
-                                    <TableHead>Bucket</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {allItems.map((item: Record<string, any>, idx: number) => {
-                                    const bucketCfg = BUCKET_CONFIG.find(b => b.key === item.bucket)
-                                    return (
-                                        <TableRow key={idx} className="hover:bg-gray-50/50">
-                                            <TableCell className="font-mono text-sm">
-                                                ORD-{item.order_id}
-                                            </TableCell>
-                                            <TableCell className="font-medium">
-                                                {item[contactField] || 'N/A'}
-                                            </TableCell>
-                                            <TableCell className="text-right font-semibold">
-                                                {formatCurrency(item.amount)}
-                                            </TableCell>
-                                            <TableCell className="text-center">
-                                                <Badge variant={item.days > 90 ? "destructive" : item.days > 60 ? "outline" : "secondary"}>
-                                                    {item.days}d
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell className="text-sm text-gray-500">
-                                                {item.date}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Badge className={bucketCfg?.badgeClass || ''}>
-                                                    {bucketCfg?.label || item.bucket}
-                                                </Badge>
-                                            </TableCell>
-                                        </TableRow>
-                                    )
-                                })}
-                            </TableBody>
-                        </Table>
-                    )}
-                </CardContent>
-            </Card>
+            {/* Details Table */}
+            <TypicalListView
+                title={activeBucket ? `${BUCKET_CONFIG.find(b => b.key === activeBucket)?.label} Details` : "Outstanding Balance Analysis"}
+                data={allItems}
+                loading={loading}
+                getRowId={(v, i) => `${v.order_id}-${i}`}
+                columns={columns}
+                className="rounded-3xl border-0 shadow-sm overflow-hidden"
+                headerExtra={
+                    <div className="flex items-center gap-2">
+                        {activeBucket && (
+                            <button
+                                onClick={() => setActiveBucket(null)}
+                                className="text-[10px] font-black uppercase text-amber-600 hover:text-amber-700 bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-100 transition-all"
+                            >
+                                Clear Filter
+                            </button>
+                        )}
+                        <Badge variant="outline" className="rounded-xl px-3 py-1 text-stone-400 border-stone-200">
+                            {allItems.length} Records
+                        </Badge>
+                    </div>
+                }
+            />
         </div>
     )
 }

@@ -91,6 +91,24 @@ export async function verifyAdjustmentOrder(id: number, comment?: string) {
     return result
 }
 
+export async function approveAdjustmentOrder(id: number, comment?: string) {
+    const result = await erpFetch(`inventory/adjustment-orders/${id}/approve/`, {
+        method: 'POST',
+        body: JSON.stringify({ comment: comment || '' })
+    })
+    revalidatePath('/inventory/adjustment-orders')
+    return result
+}
+
+export async function cancelAdjustmentOrder(id: number, comment?: string) {
+    const result = await erpFetch(`inventory/adjustment-orders/${id}/cancel/`, {
+        method: 'POST',
+        body: JSON.stringify({ comment: comment || '' })
+    })
+    revalidatePath('/inventory/adjustment-orders')
+    return result
+}
+
 export async function getAdjustmentOrderHistory(id: number) {
     return await erpFetch(`inventory/adjustment-orders/${id}/lifecycle_history/`)
 }

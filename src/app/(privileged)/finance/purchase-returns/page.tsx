@@ -1,49 +1,45 @@
 'use client'
 
 import { useState, useEffect, useTransition, useMemo } from "react"
-import type { PurchaseReturn } from '@/types/erp'
 import { getPurchaseReturns, completePurchaseReturn } from "@/app/actions/pos/returns"
 import { Card, CardContent } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import {
     RotateCcw, Search, Clock, CheckCircle2, XCircle,
-    ArrowUpDown, ArrowUp, ArrowDown, Package, Send
+    Package, Send, RefreshCw, User, ClipboardList
 } from "lucide-react"
+import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
+import { useCurrency } from '@/lib/utils/currency'
 
-type SortKey = 'return_date' | 'status'
-type SortDir = 'asc' | 'desc'
-
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: Record<string, any> }> = {
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
     PENDING: { label: 'Pending', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', icon: Clock },
     COMPLETED: { label: 'Completed', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', icon: CheckCircle2 },
     CANCELLED: { label: 'Cancelled', color: 'text-red-700', bg: 'bg-red-50 border-red-200', icon: XCircle },
 }
 
 export default function PurchaseReturnsPage() {
-    const [returns, setReturns] = useState<PurchaseReturn[]>([])
+    const { fmt } = useCurrency()
+    const [returns, setReturns] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
-    const [searchQuery, setSearchQuery] = useState("")
-    const [sortKey, setSortKey] = useState<SortKey>('return_date')
-    const [sortDir, setSortDir] = useState<SortDir>('desc')
     const [confirmId, setConfirmId] = useState<number | null>(null)
     const [isPending, startTransition] = useTransition()
 
     useEffect(() => { loadData() }, [])
 
     async function loadData() {
+        setLoading(true)
         try {
             const r = await getPurchaseReturns()
             setReturns(Array.isArray(r) ? r : [])
         } catch {
-            setReturns([])
             toast.error("Failed to load purchase returns")
-        } finally { setLoading(false) }
+        } finally {
+            setLoading(false)
+        }
     }
 
     async function handleComplete(id: number) {
@@ -59,179 +55,182 @@ export default function PurchaseReturnsPage() {
         })
     }
 
-    function toggleSort(key: SortKey) {
-        if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
-        else { setSortKey(key); setSortDir('asc') }
-    }
-    function SortIcon({ col }: { col: SortKey }) {
-        if (sortKey !== col) return <ArrowUpDown size={12} className="text-stone-300 ml-1 inline" />
-        return sortDir === 'asc'
-            ? <ArrowUp size={12} className="text-emerald-600 ml-1 inline" />
-            : <ArrowDown size={12} className="text-emerald-600 ml-1 inline" />
-    }
+    const stats = useMemo(() => {
+        const pending = returns.filter(r => r.status === 'PENDING').length
+        const completed = returns.filter(r => r.status === 'COMPLETED').length
+        const totalAmount = returns.filter(r => r.status !== 'CANCELLED').reduce((s, r) => s + Number(r.total || 0), 0)
+        return { total: returns.length, pending, completed, totalAmount }
+    }, [returns])
 
-    const filtered = useMemo(() => {
-        let list = returns.filter(r =>
-            !searchQuery ||
-            (r.supplier_name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (r.reason || "").toLowerCase().includes(searchQuery.toLowerCase())
-        )
-        list.sort((a, b) => {
-            let cmp = String(a[sortKey] || '').localeCompare(String(b[sortKey] || ''))
-            return sortDir === 'asc' ? cmp : -cmp
-        })
-        return list
-    }, [returns, searchQuery, sortKey, sortDir])
-
-    const pending = returns.filter(r => r.status === 'PENDING').length
-    const completed = returns.filter(r => r.status === 'COMPLETED').length
-
-    if (loading) {
-        return (
-            <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto">
-                <Skeleton className="h-10 w-48" />
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {[1, 2, 3].map(i => <Skeleton key={i} className="h-28 rounded-2xl" />)}
+    const columns: ColumnDef<any>[] = useMemo(() => [
+        {
+            key: 'return_date',
+            label: 'Manifest Date',
+            sortable: true,
+            render: (r) => (
+                <div className="flex flex-col">
+                    <span className="font-bold text-gray-900 text-sm">{r.return_date || '—'}</span>
+                    <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">{r.reference || `#${r.id}`}</span>
                 </div>
-                <Skeleton className="h-96 rounded-2xl" />
+            )
+        },
+        {
+            key: 'supplier',
+            label: 'Supplier / Vendor',
+            sortable: true,
+            render: (r) => (
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-stone-100 flex items-center justify-center text-stone-400">
+                        <User size={14} />
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="font-bold text-gray-900 text-sm">{r.supplier_name || 'Generic Vendor'}</span>
+                        <span className="text-[10px] text-indigo-600 font-bold uppercase">Ref: {r.original_order_ref || `#${r.original_order}`}</span>
+                    </div>
+                </div>
+            )
+        },
+        {
+            key: 'reason',
+            label: 'Rejection Reason',
+            render: (r) => <span className="text-xs text-stone-500 font-medium truncate max-w-[200px] inline-block">{r.reason || 'No reason provided'}</span>
+        },
+        {
+            key: 'status',
+            label: 'Workflow',
+            align: 'center',
+            sortable: true,
+            render: (r) => {
+                const sc = STATUS_CONFIG[r.status] || STATUS_CONFIG.PENDING
+                const Icon = sc.icon
+                return (
+                    <Badge className={`${sc.bg} ${sc.color} border-none shadow-none text-[10px] font-black uppercase px-2 h-5 rounded-lg flex items-center gap-1`}>
+                        <Icon size={10} /> {sc.label}
+                    </Badge>
+                )
+            }
+        },
+        {
+            key: 'actions',
+            label: '',
+            align: 'right',
+            render: (r) => (
+                <div className="flex items-center justify-end gap-1">
+                    {r.status === 'PENDING' && (
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setConfirmId(r.id)}
+                            className="rounded-xl h-8 px-3 text-[10px] font-black uppercase tracking-widest text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 transition-all gap-1"
+                        >
+                            <Send size={12} /> Finalize
+                        </Button>
+                    )}
+                </div>
+            )
+        }
+    ], [])
+
+    if (loading && returns.length === 0) {
+        return (
+            <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
+                <Skeleton className="h-10 w-64" />
+                <div className="grid grid-cols-3 gap-6">{[1, 2, 3].map(i => <Skeleton key={i} className="h-28 rounded-3xl" />)}</div>
+                <Skeleton className="h-96 rounded-3xl" />
             </div>
         )
     }
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto">
-            <div>
-                <h1 className="text-4xl font-bold text-stone-900 font-serif tracking-tight">Purchase Returns</h1>
-                <p className="text-stone-500 font-medium mt-1">Manage returns to suppliers and reversing entries</p>
+        <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
+            {/* Standard Header */}
+            <header className="flex justify-between items-center">
+                <div>
+                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-900 flex items-center justify-center shadow-lg shadow-indigo-200">
+                            <Package size={28} className="text-white" />
+                        </div>
+                        Supply Return <span className="text-indigo-600">Ledger</span>
+                    </h1>
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Procurement Reversals & Supplier Credits</p>
+                </div>
+                <Button onClick={loadData} variant="ghost" className="h-12 w-12 rounded-2xl p-0 text-stone-400 hover:text-gray-900">
+                    <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+                </Button>
+            </header>
+
+            {/* KPI Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden group">
+                    <CardContent className="p-6 flex items-center gap-5">
+                        <div className="w-16 h-16 rounded-[1.5rem] bg-stone-50 text-stone-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <ClipboardList size={32} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-stone-400">Total Manifests</p>
+                            <p className="text-3xl font-black mt-1 tracking-tighter text-stone-900">{stats.total}</p>
+                            <p className="text-[10px] text-stone-400 font-bold uppercase mt-1">Lifecycle Activity</p>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden group">
+                    <CardContent className="p-6 flex items-center gap-5">
+                        <div className="w-16 h-16 rounded-[1.5rem] bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Clock size={32} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-stone-400">Active Requests</p>
+                            <p className="text-3xl font-black mt-1 tracking-tighter text-stone-900">{stats.pending}</p>
+                            <p className="text-[10px] text-amber-600 font-bold uppercase mt-1">Awaiting Finalization</p>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden group">
+                    <CardContent className="p-6 flex items-center gap-5">
+                        <div className="w-16 h-16 rounded-[1.5rem] bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <CheckCircle2 size={32} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-stone-400">Recovery Value</p>
+                            <p className="text-xl font-black mt-1 tracking-tight text-emerald-600 truncate">{fmt(stats.totalAmount)}</p>
+                            <p className="text-[10px] text-emerald-600 font-bold uppercase mt-1">Confirmed Returns</p>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
+
+            <TypicalListView
+                title="Procurement Reversal Log"
+                data={returns}
+                loading={loading}
+                getRowId={(r) => r.id}
+                columns={columns}
+                className="rounded-3xl border-0 shadow-sm overflow-hidden"
+            />
 
             {/* Confirm Dialog */}
             <Dialog open={confirmId !== null} onOpenChange={(open) => { if (!open) setConfirmId(null) }}>
-                <DialogContent className="sm:max-w-sm">
+                <DialogContent className="sm:max-w-md rounded-3xl border-0 shadow-2xl">
                     <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2 text-emerald-700"><Send size={20} /> Complete Purchase Return</DialogTitle>
-                        <DialogDescription>This will remove items from inventory and post a reversing journal entry.</DialogDescription>
+                        <DialogTitle className="text-2xl font-black tracking-tight text-emerald-700 flex items-center gap-3">
+                            <Send size={24} /> Finalize Supply Return
+                        </DialogTitle>
+                        <DialogDescription className="text-stone-400 font-medium tracking-tight mt-2">
+                            Finalizing this return will remove items from your physical inventory, adjust your supplier payable balance, and record a reversing entry in the general ledger.
+                        </DialogDescription>
                     </DialogHeader>
-                    <div className="flex justify-end gap-2 pt-3">
-                        <Button variant="outline" onClick={() => setConfirmId(null)} className="rounded-xl">Cancel</Button>
-                        <Button onClick={() => confirmId && handleComplete(confirmId)} disabled={isPending} className="rounded-xl gap-2">
-                            {isPending ? "Processing..." : <><Send size={14} /> Complete</>}
+                    <div className="flex justify-end gap-3 pt-6 border-t border-stone-50">
+                        <Button variant="ghost" onClick={() => setConfirmId(null)} className="rounded-xl font-black text-[10px] uppercase">Cancel</Button>
+                        <Button
+                            onClick={() => confirmId && handleComplete(confirmId)}
+                            disabled={isPending}
+                            className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase h-10 px-6 gap-2"
+                        >
+                            {isPending ? "Finalizing Ledger..." : <><Send size={16} /> Authorize Reversal</>}
                         </Button>
                     </div>
                 </DialogContent>
             </Dialog>
-
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-stone-50 to-stone-100">
-                    <CardContent className="pt-5 pb-4 px-5">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-xs font-bold text-stone-400 uppercase tracking-wider">Total</p>
-                                <p className="text-3xl font-bold text-stone-900 mt-1">{returns.length}</p>
-                            </div>
-                            <div className="w-12 h-12 rounded-2xl bg-stone-200/60 flex items-center justify-center">
-                                <RotateCcw size={22} className="text-stone-500" />
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-amber-50 to-amber-100">
-                    <CardContent className="pt-5 pb-4 px-5">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-xs font-bold text-amber-400 uppercase tracking-wider">Pending</p>
-                                <p className="text-3xl font-bold text-amber-900 mt-1">{pending}</p>
-                            </div>
-                            <div className="w-12 h-12 rounded-2xl bg-amber-200/60 flex items-center justify-center">
-                                <Clock size={22} className="text-amber-500" />
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-emerald-50 to-emerald-100">
-                    <CardContent className="pt-5 pb-4 px-5">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Completed</p>
-                                <p className="text-3xl font-bold text-emerald-900 mt-1">{completed}</p>
-                            </div>
-                            <div className="w-12 h-12 rounded-2xl bg-emerald-200/60 flex items-center justify-center">
-                                <CheckCircle2 size={22} className="text-emerald-500" />
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Table */}
-            <Card className="rounded-2xl shadow-sm overflow-hidden">
-                <div className="px-5 py-3 border-b flex items-center justify-between bg-stone-50/50">
-                    <div className="flex items-center gap-2">
-                        <Package size={16} className="text-stone-500" />
-                        <span className="font-semibold text-stone-700 text-sm">Purchase Returns</span>
-                    </div>
-                    <div className="relative w-64">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
-                        <Input placeholder="Search supplier..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 rounded-xl text-sm h-9 bg-white" />
-                    </div>
-                </div>
-                <Table>
-                    <TableHeader>
-                        <TableRow className="bg-stone-50/30">
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 cursor-pointer select-none" onClick={() => toggleSort('return_date')}>
-                                Date <SortIcon col="return_date" />
-                            </TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400">Order</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400">Supplier</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400">Reason</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-center cursor-pointer select-none" onClick={() => toggleSort('status')}>
-                                Status <SortIcon col="status" />
-                            </TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {filtered.map((r: Record<string, any>) => {
-                            const sc = STATUS_CONFIG[r.status] || STATUS_CONFIG.PENDING
-                            const StatusIcon = sc.icon
-                            return (
-                                <TableRow key={r.id} className="hover:bg-stone-50/50 transition-colors group">
-                                    <TableCell className="text-sm text-stone-600">{r.return_date}</TableCell>
-                                    <TableCell className="text-sm text-stone-600">{r.original_order_ref || `#${r.original_order}`}</TableCell>
-                                    <TableCell className="text-sm font-medium text-stone-700">{r.supplier_name || `#${r.supplier}`}</TableCell>
-                                    <TableCell className="text-sm text-stone-600 max-w-[200px] truncate">{r.reason || "—"}</TableCell>
-                                    <TableCell className="text-center">
-                                        <Badge variant="outline" className={`gap-1 rounded-lg border ${sc.bg} ${sc.color} font-semibold text-[11px]`}>
-                                            <StatusIcon size={12} /> {sc.label}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        {r.status === 'PENDING' && (
-                                            <Button size="sm" variant="outline" onClick={() => setConfirmId(r.id)} disabled={isPending}
-                                                className="rounded-xl gap-1 text-emerald-700 border-emerald-200 hover:bg-emerald-50 h-8 text-xs font-semibold">
-                                                <Send size={12} /> Complete
-                                            </Button>
-                                        )}
-                                    </TableCell>
-                                </TableRow>
-                            )
-                        })}
-                        {filtered.length === 0 && (
-                            <TableRow>
-                                <TableCell colSpan={6} className="py-16 text-center">
-                                    <div className="flex flex-col items-center gap-3">
-                                        <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center">
-                                            <RotateCcw size={28} className="text-stone-300" />
-                                        </div>
-                                        <p className="font-semibold text-stone-600">No purchase returns found</p>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </Card>
         </div>
     )
 }

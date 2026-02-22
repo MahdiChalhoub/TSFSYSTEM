@@ -1,34 +1,16 @@
-'use client'
-
-import { useState, useEffect, useTransition, useMemo } from "react"
-import { getInvoices, getInvoiceDashboard, createInvoice, sendInvoice, cancelInvoice, recordInvoicePayment, deleteInvoice } from "@/app/actions/finance/invoices"
-import { getTradeSubTypeSettings } from "@/app/actions/settings/trade-settings"
-import { Card, CardContent } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { Skeleton } from "@/components/ui/skeleton"
-import { toast } from "sonner"
-import {
-    FileText, Plus, Search, Send, CheckCircle2, Clock, XCircle,
-    AlertTriangle, DollarSign, ArrowUpDown, ArrowUp, ArrowDown,
-    Eye, Ban, CreditCard, MoreHorizontal, Receipt, TrendingUp, Percent
-} from "lucide-react"
+import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
+import { useCurrency } from "@/lib/utils/currency"
 
 type ActiveTab = 'ALL' | 'DRAFT' | 'SENT' | 'OVERDUE' | 'PAID'
-type SortKey = 'issue_date' | 'due_date' | 'total_amount' | 'status'
-type SortDir = 'asc' | 'desc'
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
-    DRAFT: { label: 'Draft', color: 'text-stone-600', bg: 'bg-stone-50 border-stone-200', icon: Clock },
-    SENT: { label: 'Sent', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', icon: Send },
-    PARTIAL_PAID: { label: 'Partial', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', icon: Percent },
-    PAID: { label: 'Paid', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', icon: CheckCircle2 },
-    OVERDUE: { label: 'Overdue', color: 'text-red-700', bg: 'bg-red-50 border-red-200', icon: AlertTriangle },
-    CANCELLED: { label: 'Cancelled', color: 'text-stone-400', bg: 'bg-stone-50 border-stone-200', icon: XCircle },
-    WRITTEN_OFF: { label: 'Written Off', color: 'text-stone-400', bg: 'bg-stone-50 border-stone-200', icon: Ban },
+const STATUS_CONFIG: Record<string, { label: string; variant: 'default' | 'success' | 'warning' | 'destructive' }> = {
+    DRAFT: { label: 'Draft', variant: 'default' },
+    SENT: { label: 'Sent', variant: 'default' },
+    PARTIAL_PAID: { label: 'Partial', variant: 'warning' },
+    PAID: { label: 'Paid', variant: 'success' },
+    OVERDUE: { label: 'Overdue', variant: 'destructive' },
+    CANCELLED: { label: 'Cancelled', variant: 'default' },
+    WRITTEN_OFF: { label: 'Written Off', variant: 'default' },
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -44,6 +26,7 @@ const SUB_TYPE_CONFIG: Record<string, { label: string; color: string; bg: string
 }
 
 export default function InvoicesPage() {
+    const { fmt } = useCurrency()
     const [invoices, setInvoices] = useState<any[]>([])
     const [contacts, setContacts] = useState<any[]>([])
     const [contactSearch, setContactSearch] = useState('')
@@ -56,8 +39,6 @@ export default function InvoicesPage() {
     const [subTypeFilter, setSubTypeFilter] = useState('')
     const [tradeSubTypesEnabled, setTradeSubTypesEnabled] = useState(false)
     const [searchQuery, setSearchQuery] = useState("")
-    const [sortKey, setSortKey] = useState<SortKey>('issue_date')
-    const [sortDir, setSortDir] = useState<SortDir>('desc')
     const [isPending, startTransition] = useTransition()
 
     useEffect(() => { loadData() }, [])
@@ -79,20 +60,8 @@ export default function InvoicesPage() {
         } finally { setLoading(false) }
     }
 
-    // ── Sorting ──────────────────────────────────────────────────
-    function toggleSort(key: SortKey) {
-        if (sortKey === key) { setSortDir(d => d === 'asc' ? 'desc' : 'asc') }
-        else { setSortKey(key); setSortDir('asc') }
-    }
-    function SortIcon({ col }: { col: SortKey }) {
-        if (sortKey !== col) return <ArrowUpDown size={12} className="text-stone-300 ml-1 inline" />
-        return sortDir === 'asc'
-            ? <ArrowUp size={12} className="text-emerald-600 ml-1 inline" />
-            : <ArrowDown size={12} className="text-emerald-600 ml-1 inline" />
-    }
-
     const filtered = useMemo(() => {
-        let list = invoices
+        return invoices
             .filter(i => activeTab === 'ALL' || i.status === activeTab)
             .filter(i => !subTypeFilter || i.sub_type === subTypeFilter)
             .filter(i =>
@@ -100,14 +69,7 @@ export default function InvoicesPage() {
                 (i.invoice_number || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
                 (i.contact_display || i.contact_name || "").toLowerCase().includes(searchQuery.toLowerCase())
             )
-        list.sort((a, b) => {
-            let cmp = 0
-            if (sortKey === 'total_amount') cmp = Number(a.total_amount || 0) - Number(b.total_amount || 0)
-            else cmp = String(a[sortKey] || '').localeCompare(String(b[sortKey] || ''))
-            return sortDir === 'asc' ? cmp : -cmp
-        })
-        return list
-    }, [invoices, activeTab, subTypeFilter, searchQuery, sortKey, sortDir])
+    }, [invoices, activeTab, subTypeFilter, searchQuery])
 
     // ── Actions ──────────────────────────────────────────────────
     async function handleSend(inv: any) {
@@ -166,6 +128,65 @@ export default function InvoicesPage() {
         })
     }
 
+    const columns: ColumnDef<any>[] = [
+        {
+            key: 'invoice_number',
+            label: 'Invoice #',
+            sortable: true,
+            render: (inv) => <span className="font-mono font-semibold text-stone-700">{inv.invoice_number || `DRAFT-${inv.id}`}</span>
+        },
+        {
+            key: 'type',
+            label: 'Type',
+            render: (inv) => <span className="text-xs font-medium text-stone-500">{TYPE_LABELS[inv.type] || inv.type}</span>
+        },
+    ]
+
+    if (tradeSubTypesEnabled) {
+        columns.push({
+            key: 'sub_type',
+            label: 'Sub-Type',
+            render: (inv) => inv.sub_type && SUB_TYPE_CONFIG[inv.sub_type] ? (
+                <Badge variant="outline" className={`rounded-md text-[10px] font-semibold border ${SUB_TYPE_CONFIG[inv.sub_type].bg} ${SUB_TYPE_CONFIG[inv.sub_type].color}`}>
+                    {SUB_TYPE_CONFIG[inv.sub_type].label}
+                </Badge>
+            ) : <span className="text-xs text-stone-300">—</span>
+        })
+    }
+
+    columns.push(
+        {
+            key: 'contact_name',
+            label: 'Contact',
+            sortable: true,
+            render: (inv) => inv.contact_display || inv.contact_name || `#${inv.contact}`
+        },
+        {
+            key: 'issue_date',
+            label: 'Issue Date',
+            sortable: true,
+        },
+        {
+            key: 'due_date',
+            label: 'Due Date',
+            sortable: true,
+            render: (inv) => <span className={inv.is_overdue ? 'text-red-600 font-semibold' : ''}>{inv.due_date || '—'}</span>
+        },
+        {
+            key: 'total_amount',
+            label: 'Total',
+            align: 'right',
+            sortable: true,
+            render: (inv) => <span className="font-semibold text-stone-800">{fmt(inv.total_amount)}</span>
+        },
+        {
+            key: 'balance_due',
+            label: 'Balance',
+            align: 'right',
+            render: (inv) => <span className={`font-semibold ${Number(inv.balance_due) > 0 ? 'text-amber-700' : 'text-emerald-700'}`}>{fmt(inv.balance_due)}</span>
+        }
+    )
+
     const tabs = [
         { key: "ALL" as ActiveTab, label: "All Invoices", count: invoices.length },
         { key: "DRAFT" as ActiveTab, label: "Draft", count: dashboard?.draft || 0 },
@@ -216,7 +237,7 @@ export default function InvoicesPage() {
                             <div>
                                 <p className="text-xs font-bold text-blue-400 uppercase tracking-wider">Outstanding</p>
                                 <p className="text-2xl font-bold text-blue-900 mt-1">
-                                    {(dashboard?.total_outstanding || 0).toLocaleString()}
+                                    {fmt(dashboard?.total_outstanding || 0)}
                                 </p>
                             </div>
                             <div className="w-12 h-12 rounded-2xl bg-blue-200/60 flex items-center justify-center">
@@ -231,7 +252,7 @@ export default function InvoicesPage() {
                             <div>
                                 <p className="text-xs font-bold text-red-400 uppercase tracking-wider">Overdue</p>
                                 <p className="text-2xl font-bold text-red-900 mt-1">
-                                    {(dashboard?.total_overdue || 0).toLocaleString()}
+                                    {fmt(dashboard?.total_overdue || 0)}
                                 </p>
                             </div>
                             <div className="w-12 h-12 rounded-2xl bg-red-200/60 flex items-center justify-center">
@@ -246,7 +267,7 @@ export default function InvoicesPage() {
                             <div>
                                 <p className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Collected</p>
                                 <p className="text-2xl font-bold text-emerald-900 mt-1">
-                                    {(dashboard?.total_received || 0).toLocaleString()}
+                                    {fmt(dashboard?.total_received || 0)}
                                 </p>
                             </div>
                             <div className="w-12 h-12 rounded-2xl bg-emerald-200/60 flex items-center justify-center">
@@ -369,7 +390,7 @@ export default function InvoicesPage() {
                         <DialogTitle className="flex items-center gap-2"><CreditCard size={20} /> Record Payment</DialogTitle>
                         <DialogDescription>
                             {selectedInvoice && (
-                                <>Invoice {selectedInvoice.invoice_number || `#${selectedInvoice.id}`} — Balance: <strong>{Number(selectedInvoice.balance_due).toLocaleString()}</strong></>
+                                <>Invoice {selectedInvoice.invoice_number || `#${selectedInvoice.id}`} — Balance: <strong>{fmt(selectedInvoice.balance_due)}</strong></>
                             )}
                         </DialogDescription>
                     </DialogHeader>
@@ -391,8 +412,42 @@ export default function InvoicesPage() {
                 </DialogContent>
             </Dialog>
 
-            {/* ─── Tabs + Table ────────────────────────────────── */}
-            <Card className="rounded-2xl shadow-sm overflow-hidden">
+            {/* ─── Tabs + Table (TypicalListView) ──────────────── */}
+            <TypicalListView
+                title="" // Title is already in the page header
+                data={filtered}
+                loading={loading || isPending}
+                getRowId={(inv) => inv.id}
+                columns={columns}
+                lifecycle={{
+                    getStatus: (inv) => STATUS_CONFIG[inv.status] || STATUS_CONFIG.DRAFT
+                }}
+                actions={{
+                    extra: (inv) => (
+                        <>
+                            {inv.status === 'DRAFT' && (
+                                <>
+                                    <Button size="sm" variant="ghost" className="h-7 px-2 text-blue-600 hover:bg-blue-50"
+                                        onClick={() => handleSend(inv)} disabled={isPending}>
+                                        <Send size={13} />
+                                    </Button>
+                                    <Button size="sm" variant="ghost" className="h-7 px-2 text-stone-400 hover:bg-stone-50"
+                                        onClick={() => handleCancel(inv)} disabled={isPending}>
+                                        <Ban size={13} />
+                                    </Button>
+                                </>
+                            )}
+                            {['SENT', 'PARTIAL_PAID', 'OVERDUE'].includes(inv.status) && (
+                                <Button size="sm" variant="ghost" className="h-7 px-2 text-emerald-600 hover:bg-emerald-50"
+                                    onClick={() => { setSelectedInvoice(inv); setPaymentOpen(true) }} disabled={isPending}>
+                                    <CreditCard size={13} />
+                                </Button>
+                            )}
+                        </>
+                    )
+                }}
+                className="rounded-2xl shadow-sm border overflow-hidden"
+            >
                 <div className="px-5 py-3 border-b flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between bg-stone-50/50">
                     <div className="flex gap-1 flex-wrap">
                         {tabs.map(tab => (
@@ -425,120 +480,7 @@ export default function InvoicesPage() {
                             onChange={e => setSearchQuery(e.target.value)} className="pl-9 rounded-xl text-sm h-9 bg-white" />
                     </div>
                 </div>
-
-                <Table>
-                    <TableHeader>
-                        <TableRow className="bg-stone-50/30">
-                            <TableHead className="text-xs font-bold uppercase text-stone-400">Invoice #</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400">Type</TableHead>
-                            {tradeSubTypesEnabled && <TableHead className="text-xs font-bold uppercase text-stone-400">Sub-Type</TableHead>}
-                            <TableHead className="text-xs font-bold uppercase text-stone-400">Contact</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 cursor-pointer select-none" onClick={() => toggleSort('issue_date')}>
-                                Issue Date <SortIcon col="issue_date" />
-                            </TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 cursor-pointer select-none" onClick={() => toggleSort('due_date')}>
-                                Due Date <SortIcon col="due_date" />
-                            </TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right cursor-pointer select-none" onClick={() => toggleSort('total_amount')}>
-                                Total <SortIcon col="total_amount" />
-                            </TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Balance</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-center cursor-pointer select-none" onClick={() => toggleSort('status')}>
-                                Status <SortIcon col="status" />
-                            </TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-center">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {filtered.map((inv: any) => {
-                            const sc = STATUS_CONFIG[inv.status] || STATUS_CONFIG.DRAFT
-                            const StatusIcon = sc.icon
-                            return (
-                                <TableRow key={inv.id} className="hover:bg-stone-50/50 transition-colors">
-                                    <TableCell className="font-mono text-sm font-semibold text-stone-700">
-                                        {inv.invoice_number || `DRAFT-${inv.id}`}
-                                    </TableCell>
-                                    <TableCell>
-                                        <span className="text-xs font-medium text-stone-500">{TYPE_LABELS[inv.type] || inv.type}</span>
-                                    </TableCell>
-                                    {tradeSubTypesEnabled && (
-                                        <TableCell>
-                                            {inv.sub_type && SUB_TYPE_CONFIG[inv.sub_type] ? (
-                                                <Badge variant="outline" className={`rounded-md text-[10px] font-semibold border ${SUB_TYPE_CONFIG[inv.sub_type].bg} ${SUB_TYPE_CONFIG[inv.sub_type].color}`}>
-                                                    {SUB_TYPE_CONFIG[inv.sub_type].label}
-                                                </Badge>
-                                            ) : (
-                                                <span className="text-xs text-stone-300">—</span>
-                                            )}
-                                        </TableCell>
-                                    )}
-                                    <TableCell className="text-sm font-medium text-stone-700">
-                                        {inv.contact_display || inv.contact_name || `#${inv.contact}`}
-                                    </TableCell>
-                                    <TableCell className="text-sm text-stone-600">{inv.issue_date || '—'}</TableCell>
-                                    <TableCell className={`text-sm ${inv.is_overdue ? 'text-red-600 font-semibold' : 'text-stone-600'}`}>
-                                        {inv.due_date || '—'}
-                                    </TableCell>
-                                    <TableCell className="text-right font-semibold text-stone-800">
-                                        {Number(inv.total_amount || 0).toLocaleString()}
-                                    </TableCell>
-                                    <TableCell className={`text-right font-semibold ${Number(inv.balance_due) > 0 ? 'text-amber-700' : 'text-emerald-700'}`}>
-                                        {Number(inv.balance_due || 0).toLocaleString()}
-                                    </TableCell>
-                                    <TableCell className="text-center">
-                                        <Badge variant="outline" className={`gap-1 rounded-lg border ${sc.bg} ${sc.color} font-semibold text-[11px]`}>
-                                            <StatusIcon size={12} /> {sc.label}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="text-center">
-                                        <div className="flex items-center justify-center gap-1">
-                                            {inv.status === 'DRAFT' && (
-                                                <>
-                                                    <Button size="sm" variant="ghost" className="h-7 px-2 text-blue-600 hover:bg-blue-50"
-                                                        onClick={() => handleSend(inv)} disabled={isPending}>
-                                                        <Send size={13} />
-                                                    </Button>
-                                                    <Button size="sm" variant="ghost" className="h-7 px-2 text-stone-400 hover:bg-stone-50"
-                                                        onClick={() => handleCancel(inv)} disabled={isPending}>
-                                                        <XCircle size={13} />
-                                                    </Button>
-                                                </>
-                                            )}
-                                            {['SENT', 'PARTIAL_PAID', 'OVERDUE'].includes(inv.status) && (
-                                                <Button size="sm" variant="ghost" className="h-7 px-2 text-emerald-600 hover:bg-emerald-50"
-                                                    onClick={() => { setSelectedInvoice(inv); setPaymentOpen(true) }} disabled={isPending}>
-                                                    <CreditCard size={13} />
-                                                </Button>
-                                            )}
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            )
-                        })}
-                        {filtered.length === 0 && (
-                            <TableRow>
-                                <TableCell colSpan={9} className="py-16 text-center">
-                                    <div className="flex flex-col items-center gap-3">
-                                        <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center">
-                                            <FileText size={28} className="text-stone-300" />
-                                        </div>
-                                        <p className="font-semibold text-stone-600">No invoices found</p>
-                                        <p className="text-sm text-stone-400 mt-1">Create your first invoice to get started</p>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-                {filtered.length > 0 && (
-                    <div className="px-5 py-3 border-t bg-stone-50/30 flex items-center justify-between text-sm text-stone-500">
-                        <span>{filtered.length} invoice{filtered.length !== 1 ? 's' : ''} shown</span>
-                        <span className="font-semibold text-stone-700">
-                            Total: {filtered.reduce((s: number, i: any) => s + Number(i.total_amount || 0), 0).toLocaleString()}
-                        </span>
-                    </div>
-                )}
-            </Card>
+            </TypicalListView>
         </div>
     )
 }

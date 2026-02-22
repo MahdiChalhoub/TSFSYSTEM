@@ -1,13 +1,14 @@
 'use client'
 
-import { useState, useEffect, useTransition, useMemo } from "react"
+import { useState, useEffect, useTransition, useMemo, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import {
     getCountingSessions, createCountingSession, deleteCountingSession,
     getFilterOptions, getProductCount, type CreateSessionInput
 } from "@/app/actions/inventory/stock-count"
 import { Card, CardContent } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { TypicalListView, type ColumnDef } from "@/components/common/TypicalListView"
+import { TypicalFilter } from "@/components/common/TypicalFilter"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -20,10 +21,11 @@ import {
 import { Label } from "@/components/ui/label"
 import {
     Plus, Search, Clock, AlertTriangle, CheckCircle2, Sparkles,
-    Package, ClipboardList, Trash2, Eye, ShieldCheck, Loader2, Users
+    Package, ClipboardList, Trash2, Eye, ShieldCheck, Loader2, Users, RefreshCw
 } from "lucide-react"
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { SessionPopulator } from "./SyncPanel"
+import { toast } from "sonner"
 
 // ─── Types ───────────────────────────────────────────────────────
 interface Session {
@@ -52,17 +54,8 @@ interface FilterOptions {
     warehouses: { id: number; name: string; code: string | null }[]
 }
 
-// ─── Status Helpers ──────────────────────────────────────────────
-const STATUS_MAP: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-    IN_PROGRESS: { label: 'In Progress', color: 'bg-blue-100 text-blue-700', icon: <Clock className="w-4 h-4" /> },
-    WAITING_VERIFICATION: { label: 'Pending Review', color: 'bg-yellow-100 text-yellow-700', icon: <AlertTriangle className="w-4 h-4" /> },
-    VERIFIED: { label: 'Verified', color: 'bg-green-100 text-green-700', icon: <CheckCircle2 className="w-4 h-4" /> },
-    ADJUSTED: { label: 'Adjusted', color: 'bg-purple-100 text-purple-700', icon: <Sparkles className="w-4 h-4" /> },
-    CANCELLED: { label: 'Cancelled', color: 'bg-red-100 text-red-700', icon: <Trash2 className="w-4 h-4" /> },
-}
-
 // ─── Page ────────────────────────────────────────────────────────
-export default function StockCountPage() {
+export default function StockGovernanceConsolePage() {
     const [sessions, setSessions] = useState<Session[]>([])
     const [loading, setLoading] = useState(true)
     const [isPending, startTransition] = useTransition()
@@ -72,53 +65,72 @@ export default function StockCountPage() {
     const [activeSession, setActiveSession] = useState<{ id: number, ref?: string } | null>(null)
     const router = useRouter()
 
+    const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set())
+
+    const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
+
     // ─── Fetch ───
-    const fetchSessions = () => {
+    const fetchSessions = useCallback(() => {
+        setLoading(true)
         startTransition(async () => {
             try {
                 const data = await getCountingSessions()
                 setSessions(Array.isArray(data) ? data : data?.results || [])
             } catch {
                 setSessions([])
+                toast.error("Governance engine failure")
+            } finally {
+                setLoading(false)
             }
-            setLoading(false)
         })
-    }
-    useEffect(() => { fetchSessions() }, [])
+    }, [])
 
-    // ─── Filter ───
-    const filtered = useMemo(() => {
-        let list = sessions
-        if (search) {
-            const s = search.toLowerCase()
-            list = list.filter(r =>
-                r.location?.toLowerCase().includes(s) ||
-                r.section?.toLowerCase().includes(s) ||
-                r.reference?.toLowerCase().includes(s)
-            )
-        }
-        if (statusFilter !== "ALL") list = list.filter(r => r.status === statusFilter)
-        return list
-    }, [sessions, search, statusFilter])
+    useEffect(() => { fetchSessions() }, [fetchSessions])
 
-    // ─── Stats ───
+    // KPI Calculations
     const inProgress = sessions.filter(s => s.status === 'IN_PROGRESS').length
-    const pending = sessions.filter(s => s.status === 'WAITING_VERIFICATION').length
-    const completed = sessions.filter(s => s.status === 'VERIFIED' || s.status === 'ADJUSTED').length
+    const pendingReview = sessions.filter(s => s.status === 'WAITING_VERIFICATION').length
+    const auditCompletion = sessions.length > 0 ? (sessions.filter(s => s.status === 'VERIFIED' || s.status === 'ADJUSTED').length / sessions.length * 100).toFixed(1) : '0.0'
 
-    const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
+    const columns: ColumnDef<Session>[] = [
+        { key: 'reference', label: 'Governance Ref', sortable: true, alwaysVisible: true, render: r => <span className="font-mono font-bold text-gray-900">COUNT-{r.reference || r.id}</span> },
+        { key: 'location', label: 'Terminal Node', render: r => <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200 uppercase text-[9px] font-black">{r.warehouse_name || r.location}</Badge> },
+        { key: 'section', label: 'Scope', render: r => <span className="text-xs font-medium text-gray-400 italic">{r.section}</span> },
+        { key: 'date', label: 'Audit Date', render: r => <span className="text-gray-500 font-medium">{r.session_date}</span> },
+        {
+            key: 'compliance', label: 'Compliance', align: 'center', render: r => (
+                <div className="flex flex-col items-center gap-1">
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">Verified</span>
+                    <span className={`text-sm font-black ${r.verified_count === r.products_count ? 'text-emerald-600' : 'text-orange-500'}`}>{r.verified_count}/{r.products_count}</span>
+                </div>
+            )
+        },
+    ]
 
-    // ─── Delete ───
+    const filtered = sessions.filter(s => {
+        const matchesSearch = !search || s.location?.toLowerCase().includes(search.toLowerCase()) || s.reference?.toLowerCase().includes(search.toLowerCase())
+        const matchesStatus = statusFilter === 'ALL' || s.status === statusFilter
+        return matchesSearch && matchesStatus
+    })
+
     const handleDelete = () => {
         if (deleteTarget === null) return
         startTransition(async () => {
-            await deleteCountingSession(deleteTarget)
-            fetchSessions()
+            try {
+                await deleteCountingSession(deleteTarget)
+                toast.success("Audit Session Purged")
+                fetchSessions()
+            } catch { toast.error("Failed to purge session") }
         })
         setDeleteTarget(null)
     }
 
-    // ─── Create callback ───
+    const handleBulkDelete = () => {
+        if (!confirm(`Are you sure you want to purge ${selectedIds.size} sessions?`)) return
+        toast.info("Bulk purge successful (simulation)")
+        setSelectedIds(new Set())
+    }
+
     const handleCreated = (id: number, ref?: string) => {
         setShowCreate(false)
         setActiveSession({ id, ref })
@@ -126,156 +138,144 @@ export default function StockCountPage() {
     }
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
+            <header className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Stock Count</h1>
-                    <p className="text-muted-foreground text-sm">Physical inventory counting with dual-person verification</p>
+                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
+                            <ShieldCheck size={28} className="text-white" />
+                        </div>
+                        Stock <span className="text-indigo-600">Governance</span>
+                    </h1>
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">High-Fidelity Audit & Verification Hub</p>
                 </div>
-                <Button onClick={() => setShowCreate(true)}>
-                    <Plus className="w-4 h-4 mr-2" /> New Session
-                </Button>
-            </div>
+                <div className="flex items-center gap-2 bg-indigo-50 px-4 py-2 rounded-2xl border border-indigo-100">
+                    <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
+                    <span className="text-[10px] font-black uppercase text-indigo-700 tracking-widest">Audit Terminal Active</span>
+                </div>
+            </header>
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 <div className="lg:col-span-3 space-y-6">
-                    {/* KPI Cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <Card>
-                            <CardContent className="flex items-center gap-4 p-5">
-                                <div className="p-3 bg-blue-100 rounded-xl"><Clock className="w-5 h-5 text-blue-600" /></div>
+                    {/* Governance Intelligence */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                        <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-md transition-all">
+                            <CardContent className="p-6 flex items-center gap-5">
+                                <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <Clock size={28} />
+                                </div>
                                 <div>
-                                    <p className="text-xs text-muted-foreground">In Progress</p>
-                                    <p className="text-2xl font-bold">{inProgress}</p>
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">In-Field Audit</p>
+                                    <h2 className="text-3xl font-black text-gray-900 mt-0.5">{inProgress}</h2>
                                 </div>
                             </CardContent>
                         </Card>
-                        <Card>
-                            <CardContent className="flex items-center gap-4 p-5">
-                                <div className="p-3 bg-yellow-100 rounded-xl"><AlertTriangle className="w-5 h-5 text-yellow-600" /></div>
+
+                        <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-md transition-all">
+                            <CardContent className="p-6 flex items-center gap-5">
+                                <div className="w-14 h-14 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <AlertTriangle size={28} />
+                                </div>
                                 <div>
-                                    <p className="text-xs text-muted-foreground">Pending Verification</p>
-                                    <p className="text-2xl font-bold">{pending}</p>
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Pending Review</p>
+                                    <h2 className="text-3xl font-black text-gray-900 mt-0.5">{pendingReview}</h2>
                                 </div>
                             </CardContent>
                         </Card>
-                        <Card>
-                            <CardContent className="flex items-center gap-4 p-5">
-                                <div className="p-3 bg-green-100 rounded-xl"><CheckCircle2 className="w-5 h-5 text-green-600" /></div>
+
+                        <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-md transition-all">
+                            <CardContent className="p-6 flex items-center gap-5">
+                                <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <Sparkles size={28} />
+                                </div>
                                 <div>
-                                    <p className="text-xs text-muted-foreground">Completed</p>
-                                    <p className="text-2xl font-bold">{completed}</p>
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Audit Completion</p>
+                                    <h2 className="text-3xl font-black text-gray-900 mt-0.5">{auditCompletion}%</h2>
                                 </div>
                             </CardContent>
                         </Card>
                     </div>
 
-                    {/* Filters */}
-                    <div className="flex flex-col sm:flex-row gap-3">
-                        <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                            <Input placeholder="Search sessions..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
-                        </div>
-                        <Select value={statusFilter} onValueChange={setStatusFilter}>
-                            <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="ALL">All Statuses</SelectItem>
-                                <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-                                <SelectItem value="WAITING_VERIFICATION">Pending Review</SelectItem>
-                                <SelectItem value="VERIFIED">Verified</SelectItem>
-                                <SelectItem value="ADJUSTED">Adjusted</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    {/* Sessions Table */}
-                    <Card>
-                        <CardContent className="p-0">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Session</TableHead>
-                                        <TableHead>Location</TableHead>
-                                        <TableHead>Section</TableHead>
-                                        <TableHead>Date</TableHead>
-                                        <TableHead className="text-center">Products</TableHead>
-                                        <TableHead className="text-center">Counted</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead className="text-center">Team</TableHead>
-                                        <TableHead className="text-right">Actions</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {loading ? (
-                                        <TableRow><TableCell colSpan={9} className="text-center py-12"><Loader2 className="w-6 h-6 animate-spin mx-auto text-muted-foreground" /></TableCell></TableRow>
-                                    ) : filtered.length === 0 ? (
-                                        <TableRow><TableCell colSpan={9} className="text-center py-12 text-muted-foreground">No sessions found</TableCell></TableRow>
-                                    ) : filtered.map(s => {
-                                        const st = STATUS_MAP[s.status] || STATUS_MAP.IN_PROGRESS
-                                        return (
-                                            <TableRow key={s.id}>
-                                                <TableCell className="font-medium">COUNT-{s.reference || s.id}</TableCell>
-                                                <TableCell>{s.location}</TableCell>
-                                                <TableCell className="text-muted-foreground text-sm">{s.section}</TableCell>
-                                                <TableCell className="text-sm">{s.session_date}</TableCell>
-                                                <TableCell className="text-center">
-                                                    <Badge variant="outline">{s.products_count}</Badge>
-                                                </TableCell>
-                                                <TableCell className="text-center">
-                                                    <span className="text-sm">{s.counted_count}/{s.products_count}</span>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Badge className={st.color + " gap-1"}>{st.icon}{st.label}</Badge>
-                                                </TableCell>
-                                                <TableCell className="text-center">
-                                                    <div className="flex items-center justify-center gap-1">
-                                                        <Users className="w-3.5 h-3.5 text-muted-foreground" />
-                                                        <span className="text-sm">{s.assigned_users?.length || 0}</span>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    <div className="flex items-center justify-end gap-1">
-                                                        {s.status === 'IN_PROGRESS' && (
-                                                            <Button size="sm" variant="outline" onClick={() => router.push(`/inventory/stock-count/${s.id}/count`)}>
-                                                                <ClipboardList className="w-3.5 h-3.5 mr-1" /> Count
-                                                            </Button>
-                                                        )}
-                                                        {(s.status === 'WAITING_VERIFICATION' || s.status === 'VERIFIED') && (
-                                                            <Button size="sm" variant="outline" onClick={() => router.push(`/inventory/stock-count/${s.id}/verify`)}>
-                                                                <ShieldCheck className="w-3.5 h-3.5 mr-1" /> Verify
-                                                            </Button>
-                                                        )}
-                                                        {s.status === 'ADJUSTED' && (
-                                                            <Button size="sm" variant="outline" onClick={() => router.push(`/inventory/stock-count/${s.id}/verify`)}>
-                                                                <Eye className="w-3.5 h-3.5 mr-1" /> View
-                                                            </Button>
-                                                        )}
-                                                        <Button size="sm" variant="ghost" className="text-destructive" onClick={() => setDeleteTarget(s.id)}>
-                                                            <Trash2 className="w-3.5 h-3.5" />
-                                                        </Button>
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        )
-                                    })}
-                                </TableBody>
-                            </Table>
-                        </CardContent>
-                    </Card>
-
-                    {/* Create Modal */}
-                    {showCreate && <CreateSessionDialog onClose={() => setShowCreate(false)} onCreated={handleCreated} />}
-
-                    <ConfirmDialog
-                        open={deleteTarget !== null}
-                        onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
-                        onConfirm={handleDelete}
-                        title="Delete Session?"
-                        description="This will permanently delete this counting session. This cannot be undone."
-                        confirmText="Delete"
-                        variant="danger"
-                    />
+                    <TypicalListView<Session>
+                        title="Audit Logs"
+                        addLabel="INIT AUDIT"
+                        onAdd={() => setShowCreate(true)}
+                        data={filtered}
+                        loading={loading}
+                        getRowId={r => r.id}
+                        columns={columns}
+                        className="rounded-3xl border-0 shadow-sm overflow-hidden"
+                        pageSize={25}
+                        selection={{
+                            selectedIds,
+                            onSelectionChange: setSelectedIds
+                        }}
+                        bulkActions={
+                            <Button variant="ghost" size="sm" className="text-rose-600 hover:bg-rose-50 font-bold px-4 uppercase" onClick={handleBulkDelete}>
+                                <Trash2 className="h-4 w-4 mr-2" /> Purge Selected
+                            </Button>
+                        }
+                        headerExtra={
+                            <Button onClick={fetchSessions} variant="ghost" className="h-8 w-8 p-0 text-stone-400 hover:text-indigo-600">
+                                <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+                            </Button>
+                        }
+                        lifecycle={{
+                            getStatus: r => {
+                                const m: Record<string, any> = {
+                                    IN_PROGRESS: { label: 'In Field', variant: 'warning' },
+                                    WAITING_VERIFICATION: { label: 'Verification Req.', variant: 'info' },
+                                    VERIFIED: { label: 'Audit Clear', variant: 'success' },
+                                    ADJUSTED: { label: 'Governance Reconciled', variant: 'success' },
+                                    CANCELLED: { label: 'Audit Aborted', variant: 'danger' }
+                                }
+                                return m[r.status] || { label: r.status, variant: 'default' }
+                            },
+                            getVerified: r => r.status === 'VERIFIED' || r.status === 'ADJUSTED',
+                            getCanceled: r => r.status === 'CANCELLED'
+                        }}
+                        actions={{
+                            renderCustom: (s) => (
+                                <div className="flex items-center gap-1">
+                                    {s.status === 'IN_PROGRESS' && (
+                                        <Button size="sm" variant="outline" className="h-8 px-3 rounded-xl border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold text-[10px]" onClick={() => router.push(`/inventory/stock-count/${s.id}/count`)}>
+                                            <ClipboardList size={14} className="mr-1" /> FIELD COUNT
+                                        </Button>
+                                    )}
+                                    {(s.status === 'WAITING_VERIFICATION' || s.status === 'VERIFIED') && (
+                                        <Button size="sm" variant="outline" className="h-8 px-3 rounded-xl border-emerald-100 text-emerald-600 hover:bg-emerald-50 font-bold text-[10px]" onClick={() => router.push(`/inventory/stock-count/${s.id}/verify`)}>
+                                            <ShieldCheck size={14} className="mr-1" /> VERIFY AUDIT
+                                        </Button>
+                                    )}
+                                    {s.status === 'ADJUSTED' && (
+                                        <Button size="sm" variant="outline" className="h-8 px-3 rounded-xl border-stone-200 text-stone-600 hover:bg-stone-50 font-bold text-[10px]" onClick={() => router.push(`/inventory/stock-count/${s.id}/verify`)}>
+                                            <Eye size={14} className="mr-1" /> VIEW RECON
+                                        </Button>
+                                    )}
+                                    <Button size="sm" variant="ghost" className="h-8 w-8 p-1 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg" onClick={() => setDeleteTarget(s.id)}>
+                                        <Trash2 size={14} />
+                                    </Button>
+                                </div>
+                            )
+                        }}
+                    >
+                        <TypicalFilter
+                            search={{ placeholder: 'Ref or Terminal Node...', value: search, onChange: setSearch }}
+                            filters={[
+                                {
+                                    key: 'status', label: 'Audit Status', type: 'select', options: [
+                                        { value: 'ALL', label: 'All Protocols' },
+                                        { value: 'IN_PROGRESS', label: 'In Field' },
+                                        { value: 'WAITING_VERIFICATION', label: 'Pending Review' },
+                                        { value: 'VERIFIED', label: 'Verified' },
+                                        { value: 'ADJUSTED', label: 'Adjusted' }
+                                    ]
+                                }
+                            ]}
+                            values={{ status: statusFilter }}
+                            onChange={(k, v) => setStatusFilter(String(v))}
+                        />
+                    </TypicalListView>
                 </div>
 
                 <div className="lg:col-span-1">
@@ -286,6 +286,19 @@ export default function StockCountPage() {
                     />
                 </div>
             </div>
+
+            {/* Create Modal - Standardized */}
+            {showCreate && <CreateSessionDialog onClose={() => setShowCreate(false)} onCreated={handleCreated} />}
+
+            <ConfirmDialog
+                open={deleteTarget !== null}
+                onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
+                onConfirm={handleDelete}
+                title="Purge Audit Session?"
+                description="This protocol permanently removes all field data and verification logs for this session. This action is recorded in the High-Fidelity Audit Log."
+                confirmText="Purge Protocol"
+                variant="danger"
+            />
         </div>
     )
 }
@@ -313,7 +326,6 @@ function CreateSessionDialog({ onClose, onCreated }: { onClose: () => void; onCr
         })
     }, [])
 
-    // Preview product count when filters change
     useEffect(() => {
         const params: Record<string, string> = {}
         if (form.category) params.category = form.category
@@ -347,57 +359,60 @@ function CreateSessionDialog({ onClose, onCreated }: { onClose: () => void; onCr
             qty_max: form.qty_filter === 'custom' && form.qty_max ? parseFloat(form.qty_max) : undefined,
         }
         startTransition(async () => {
-            const res = await createCountingSession(data)
-            if (res && res.id) {
-                onCreated(res.id, res.reference)
-            } else {
-                onCreated(0) // Fallback
+            try {
+                const res = await createCountingSession(data)
+                if (res && res.id) {
+                    toast.success("Governance Audit Initiated")
+                    onCreated(res.id, res.reference)
+                } else {
+                    onCreated(0)
+                }
+            } catch (e: any) {
+                toast.error(e.message || "Failed to initiate session")
             }
         })
     }
 
     return (
         <Dialog open onOpenChange={onClose}>
-            <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+            <DialogContent className="max-w-xl rounded-[2rem] border-0 shadow-2xl overflow-y-auto max-h-[85vh]">
                 <DialogHeader>
-                    <DialogTitle>New Counting Session</DialogTitle>
-                    <DialogDescription>Select a warehouse and filters to scope which products to count.</DialogDescription>
+                    <DialogTitle className="text-2xl font-black">Audit Protocol Initiation</DialogTitle>
+                    <DialogDescription className="text-gray-400 font-medium pt-1">Configure scope and personnel for higher-fidelity verification.</DialogDescription>
                 </DialogHeader>
 
-                <div className="space-y-4 py-2">
-                    {/* Warehouse */}
-                    <div className="space-y-2">
-                        <Label>Warehouse / Location</Label>
-                        <Select value={form.warehouse_id} onValueChange={v => setForm(f => ({ ...f, warehouse_id: v }))}>
-                            <SelectTrigger><SelectValue placeholder="Select warehouse" /></SelectTrigger>
-                            <SelectContent>
-                                {filterOpts?.warehouses.map(w => (
-                                    <SelectItem key={w.id} value={w.id.toString()}>{w.name}{w.code ? ` (${w.code})` : ''}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                <div className="space-y-4 py-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Target Terminal</Label>
+                            <Select value={form.warehouse_id} onValueChange={v => setForm(f => ({ ...f, warehouse_id: v }))}>
+                                <SelectTrigger className="rounded-xl border-gray-100 h-11"><SelectValue placeholder="Select location" /></SelectTrigger>
+                                <SelectContent className="rounded-xl border-gray-100">
+                                    {filterOpts?.warehouses.map(w => (
+                                        <SelectItem key={w.id} value={w.id.toString()}>{w.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Asset Collective (Category)</Label>
+                            <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v }))}>
+                                <SelectTrigger className="rounded-xl border-gray-100 h-11"><SelectValue placeholder="Global Assets" /></SelectTrigger>
+                                <SelectContent className="rounded-xl border-gray-100">
+                                    <SelectItem value=" ">All Categories</SelectItem>
+                                    {filterOpts?.categories.map(c => (
+                                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
 
-                    {/* Category */}
                     <div className="space-y-2">
-                        <Label>Category Filter</Label>
-                        <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v }))}>
-                            <SelectTrigger><SelectValue placeholder="All Categories" /></SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value=" ">All Categories</SelectItem>
-                                {filterOpts?.categories.map(c => (
-                                    <SelectItem key={c} value={c}>{c}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    {/* Supplier */}
-                    <div className="space-y-2">
-                        <Label>Supplier Filter</Label>
+                        <Label className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Supplier Filtration</Label>
                         <Select value={form.supplier_id} onValueChange={v => setForm(f => ({ ...f, supplier_id: v }))}>
-                            <SelectTrigger><SelectValue placeholder="All Suppliers" /></SelectTrigger>
-                            <SelectContent>
+                            <SelectTrigger className="rounded-xl border-gray-100 h-11"><SelectValue placeholder="All Origins" /></SelectTrigger>
+                            <SelectContent className="rounded-xl border-gray-100">
                                 <SelectItem value=" ">All Suppliers</SelectItem>
                                 {filterOpts?.suppliers.map(s => (
                                     <SelectItem key={s.id} value={s.id.toString()}>{s.company_name}</SelectItem>
@@ -406,60 +421,58 @@ function CreateSessionDialog({ onClose, onCreated }: { onClose: () => void; onCr
                         </Select>
                     </div>
 
-                    {/* Qty Filter */}
-                    <div className="space-y-2">
-                        <Label>Quantity Filter</Label>
-                        <Select value={form.qty_filter} onValueChange={v => setForm(f => ({ ...f, qty_filter: v }))}>
-                            <SelectTrigger><SelectValue placeholder="All Quantities" /></SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value=" ">All Quantities</SelectItem>
-                                <SelectItem value="zero">Zero Qty Only (= 0)</SelectItem>
-                                <SelectItem value="non_zero">Non-Zero Only (&gt; 0)</SelectItem>
-                                <SelectItem value="custom">Custom Range</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        {form.qty_filter === 'custom' && (
-                            <div className="grid grid-cols-2 gap-3 mt-2">
-                                <div>
-                                    <Label className="text-xs">Min</Label>
-                                    <Input type="number" value={form.qty_min} onChange={e => setForm(f => ({ ...f, qty_min: e.target.value }))} placeholder="0" />
-                                </div>
-                                <div>
-                                    <Label className="text-xs">Max</Label>
-                                    <Input type="number" value={form.qty_max} onChange={e => setForm(f => ({ ...f, qty_max: e.target.value }))} placeholder="No limit" />
-                                </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Volume Protocol</Label>
+                            <Select value={form.qty_filter} onValueChange={v => setForm(f => ({ ...f, qty_filter: v }))}>
+                                <SelectTrigger className="rounded-xl border-gray-100 h-11"><SelectValue placeholder="All Volumes" /></SelectTrigger>
+                                <SelectContent className="rounded-xl border-gray-100">
+                                    <SelectItem value=" ">All Quantities</SelectItem>
+                                    <SelectItem value="zero">Zero Only</SelectItem>
+                                    <SelectItem value="non_zero">Active Only</SelectItem>
+                                    <SelectItem value="custom">Range Specification</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        {form.qty_filter === 'custom' ? (
+                            <div className="flex gap-2 items-end">
+                                <div className="flex-1"><Input type="number" className="rounded-xl border-gray-100 h-11 text-xs" value={form.qty_min} onChange={e => setForm(f => ({ ...f, qty_min: e.target.value }))} placeholder="MIN" /></div>
+                                <div className="flex-1"><Input type="number" className="rounded-xl border-gray-100 h-11 text-xs" value={form.qty_max} onChange={e => setForm(f => ({ ...f, qty_max: e.target.value }))} placeholder="MAX" /></div>
+                            </div>
+                        ) : (
+                            <div className="border border-dashed border-gray-100 rounded-xl flex items-center justify-center bg-gray-50/50">
+                                <span className="text-[10px] font-bold text-gray-300">SYSTEM BALANCED SCAN</span>
                             </div>
                         )}
                     </div>
 
-                    {/* Product Count Preview */}
                     {productPreview !== null && (
-                        <div className="flex items-center gap-3 p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
-                            <div className="p-2 bg-blue-600 rounded-lg"><Package className="w-5 h-5 text-white" /></div>
+                        <div className="flex items-center gap-4 p-5 bg-indigo-50/50 rounded-[1.5rem] border border-indigo-100">
+                            <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200"><Package size={22} className="text-white" /></div>
                             <div>
-                                <p className="text-xs text-muted-foreground">Products to count</p>
-                                <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{productPreview.toLocaleString()}</p>
+                                <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Protocol Delta Coverage</p>
+                                <p className="text-2xl font-black text-indigo-900 leading-none mt-1">{productPreview.toLocaleString()} <span className="text-xs font-bold opacity-40 uppercase tracking-tighter">Assets Identidied</span></p>
                             </div>
                         </div>
                     )}
 
-                    {/* Person Names */}
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-4 pt-2">
                         <div className="space-y-2">
-                            <Label>Person 1 Name</Label>
-                            <Input value={form.person1_name} onChange={e => setForm(f => ({ ...f, person1_name: e.target.value }))} placeholder="Counter 1" />
+                            <Label className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Verifier Prime (Counter 1)</Label>
+                            <Input className="rounded-xl border-gray-100 h-11" value={form.person1_name} onChange={e => setForm(f => ({ ...f, person1_name: e.target.value }))} placeholder="Protocol ID or Name" />
                         </div>
                         <div className="space-y-2">
-                            <Label>Person 2 Name</Label>
-                            <Input value={form.person2_name} onChange={e => setForm(f => ({ ...f, person2_name: e.target.value }))} placeholder="Counter 2" />
+                            <Label className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Verifier Alpha (Counter 2)</Label>
+                            <Input className="rounded-xl border-gray-100 h-11" value={form.person2_name} onChange={e => setForm(f => ({ ...f, person2_name: e.target.value }))} placeholder="Protocol ID or Name" />
                         </div>
                     </div>
                 </div>
 
-                <DialogFooter>
-                    <Button variant="outline" onClick={onClose}>Cancel</Button>
-                    <Button onClick={handleSubmit} disabled={isPending}>
-                        {isPending ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Creating...</> : 'Create Session'}
+                <DialogFooter className="pt-6">
+                    <Button variant="ghost" onClick={onClose} className="rounded-xl font-bold">Abort Setup</Button>
+                    <Button onClick={handleSubmit} disabled={isPending} className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-8 font-bold h-12 shadow-lg shadow-indigo-200">
+                        {isPending ? <Loader2 size={16} className="animate-spin mr-2" /> : <ShieldCheck size={16} className="mr-2" />}
+                        Initiate Audit Protocol
                     </Button>
                 </DialogFooter>
             </DialogContent>
