@@ -259,12 +259,12 @@ export default function ListViewSettingsPage() {
     return (
         <div className="p-6 max-w-3xl mx-auto animate-in fade-in duration-500">
             {/* Page header */}
-            <div className="flex items-center gap-3 mb-6">
-                <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-lg shadow-emerald-200">
-                    <Settings className="h-6 w-6 text-white" />
+            <div className="flex items-center gap-4 mb-6">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-200">
+                    <Settings className="h-7 w-7 text-white" />
                 </div>
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">ListView Settings</h1>
+                    <h1 className="text-4xl font-black text-gray-900 tracking-tighter">ListView <span className="text-emerald-600">Settings</span></h1>
                     <p className="text-sm text-gray-400">Customize columns, page size, sorting, and filters for every list view</p>
                 </div>
             </div>

@@ -197,10 +197,13 @@ export default function DataQualityPage() {
                         <ArrowLeft className="w-4 h-4" />
                     </Link>
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-                            <Wrench className="w-6 h-6 text-orange-500" /> Product Data Quality
+                        <h1 className="text-4xl font-black text-gray-900 tracking-tighter flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-2xl bg-orange-600 flex items-center justify-center shadow-lg shadow-orange-200">
+                                <Wrench className="w-7 h-7 text-white" />
+                            </div>
+                            Product Data <span className="text-orange-600">Quality</span>
                         </h1>
-                        <p className="text-muted-foreground text-sm">
+                        <p className="text-gray-500 text-sm mt-2">
                             Find and fix missing data — barcodes, categories, prices, TVA, and more
                         </p>
                     </div>

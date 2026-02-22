@@ -139,13 +139,13 @@ export default function LabelPrintingPage() {
         <div className="p-6 space-y-6">
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-orange-600 flex items-center justify-center">
-                            <Tag size={20} className="text-white" />
+                    <h1 className="text-4xl font-black text-gray-900 tracking-tighter flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-2xl bg-orange-600 flex items-center justify-center shadow-lg shadow-orange-200">
+                            <Tag size={28} className="text-white" />
                         </div>
-                        Label Printing
+                        Label <span className="text-orange-600">Printing</span>
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">Select products and print barcode labels</p>
+                    <p className="text-sm text-gray-500 mt-2">Select products and print barcode labels</p>
                 </div>
                 <div className="relative w-56">
                     <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />

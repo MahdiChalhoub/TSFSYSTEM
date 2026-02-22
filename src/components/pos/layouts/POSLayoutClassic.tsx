@@ -26,7 +26,7 @@ export function POSLayoutClassic(props: POSLayoutProps) {
         isFullscreen, paymentMethod, cashReceived, isProcessing,
         isOverrideOpen, isReceiptOpen, lastOrder,
         onSetSearchQuery, onSetActiveCategoryId, onSetActiveSessionId,
-        onSetPaymentMethod, onSetCashReceived, onAddToCart, onUpdateQuantity,
+        onSetPaymentMethod, onSetCashReceived, onSetDiscount, onAddToCart, onUpdateQuantity,
         onClearCart, onCreateNewSession, onRemoveSession, onUpdateActiveSession,
         onToggleFullscreen, onCharge, onOpenLayoutSelector,
         onSetOverrideOpen, onSetReceiptOpen

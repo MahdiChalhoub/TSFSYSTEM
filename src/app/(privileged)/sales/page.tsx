@@ -208,7 +208,7 @@ export default function POSPage() {
     const total = cart.reduce((acc: number, item: any) => acc + (Number(item.price) * item.quantity), 0);
     const totalPieces = cart.reduce((acc: number, item: any) => acc + item.quantity, 0);
     const uniqueItems = cart.length;
-    const discount = 0;
+    const [discount, setDiscount] = useState(0);
     const totalAmount = Math.max(0, total - discount);
 
     // ─── Override & Receipt ───
@@ -252,6 +252,7 @@ export default function POSPage() {
         onSetActiveSessionId: setActiveSessionId,
         onSetPaymentMethod: setPaymentMethod,
         onSetCashReceived: setCashReceived,
+        onSetDiscount: setDiscount,
         onSetOverrideOpen: setIsOverrideOpen,
         onSetReceiptOpen: setIsReceiptOpen,
         onAddToCart: addToCart,

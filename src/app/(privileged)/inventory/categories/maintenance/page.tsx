@@ -43,8 +43,12 @@ export default async function CategoryMaintenancePage(props: {
                     >
                         <ArrowLeft size={20} />
                     </Link>
+                    <div className="w-14 h-14 rounded-2xl bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
+                        <ArrowLeft size={28} className="text-white rotate-180 hidden" />
+                        <span className="text-white font-black text-lg">C</span>
+                    </div>
                     <div>
-                        <h1 className="text-xl font-bold text-gray-900">Category Maintenance</h1>
+                        <h1 className="text-4xl font-black text-gray-900 tracking-tighter">Category <span className="text-emerald-600">Maintenance</span></h1>
                         <p className="text-sm text-gray-500">Reorganize products by moving them between categories.</p>
                     </div>
                 </div>
