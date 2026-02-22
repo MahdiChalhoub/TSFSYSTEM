@@ -316,6 +316,7 @@ export const MENU_ITEMS = [
                     { title: 'Supplier Access', path: '/workspace/supplier-access' },
                     { title: 'Proforma Review', path: '/workspace/proformas' },
                     { title: 'Price Requests', path: '/workspace/price-requests' },
+                    { title: 'Supplier Portal Admin', path: '/workspace/supplier-portal' },
                     { title: 'Gate Preview', path: '/crm/supplier-gate-preview', icon: Eye },
                 ]
             },
@@ -327,6 +328,7 @@ export const MENU_ITEMS = [
                     { title: 'Client Access', path: '/workspace/client-access' },
                     { title: 'Client Orders', path: '/workspace/client-orders' },
                     { title: 'Client Tickets', path: '/workspace/client-tickets' },
+                    { title: 'Client Portal Admin', path: '/workspace/client-portal' },
                     { title: 'Quote Inbox', path: '/workspace/quote-inbox' },
                     { title: 'Tender Inbox', path: '/workspace/tenders' },
                     { title: 'Gate Preview', path: '/crm/client-gate-preview', icon: Eye },
@@ -351,6 +353,7 @@ export const MENU_ITEMS = [
         icon: ShieldCheck,
         module: 'hr',
         children: [
+            { title: 'HR Overview', path: '/hr/overview' },
             { title: 'Employee Manager', path: '/hr/employees' },
             { title: 'Departments', path: '/hr/departments' },
             { title: 'Shifts', path: '/hr/shifts' },

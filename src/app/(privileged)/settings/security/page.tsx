@@ -2,10 +2,25 @@ import React from 'react';
 import { Shield, Key, Lock, Fingerprint } from 'lucide-react';
 import { TwoFactorSettings } from './TwoFactorSettings';
 import { meAction } from '@/app/actions/auth';
+import { headers } from 'next/headers';
 
 export default async function SecurityPage() {
     // We need to know if 2FA is already enabled for the current user
     const user = await meAction();
+    const headerStore = await headers();
+    const userAgent = headerStore.get('user-agent') || 'Unknown device';
+    // Derive a readable browser/OS label from user-agent
+    const browser = userAgent.includes('Chrome') ? 'Chrome'
+        : userAgent.includes('Firefox') ? 'Firefox'
+            : userAgent.includes('Safari') ? 'Safari'
+                : userAgent.includes('Edge') ? 'Edge'
+                    : 'Browser';
+    const os = userAgent.includes('Windows') ? 'Windows'
+        : userAgent.includes('Mac') ? 'macOS'
+            : userAgent.includes('Linux') ? 'Linux'
+                : userAgent.includes('Android') ? 'Android'
+                    : userAgent.includes('iPhone') || userAgent.includes('iPad') ? 'iOS'
+                        : 'Unknown OS';
 
     return (
         <div className="p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
@@ -42,11 +57,11 @@ export default async function SecurityPage() {
                             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-gray-100">
-                                        <SquareTerminal size={18} className="text-gray-400" />
+                                        <Lock size={18} className="text-gray-400" />
                                     </div>
                                     <div>
                                         <p className="text-sm font-black text-gray-900 tracking-tight">Current Session</p>
-                                        <p className="text-[10px] text-gray-400 font-bold uppercase">Windows 11 • Chrome • 192.168.1.1</p>
+                                        <p className="text-[10px] text-gray-400 font-bold uppercase">{os} • {browser} • {user.email || user.username || 'Authenticated'}</p>
                                     </div>
                                 </div>
                                 <Badge className="bg-emerald-100 text-emerald-700 rounded-lg text-[10px] font-black uppercase border-none">Active Now</Badge>

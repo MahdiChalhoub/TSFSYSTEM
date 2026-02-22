@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition, useMemo, useEffect } from 'react'
+import { useCurrency } from '@/lib/utils/currency'
 import { getProfitAndLossReport } from '@/app/actions/finance/accounts'
 import { Printer, Calendar, TrendingUp, TrendingDown, ChevronRight, ChevronDown, Download } from 'lucide-react'
 
@@ -12,36 +13,16 @@ export default function PnlViewer({ initialData, fiscalYears }: { initialData: R
     const [data, setData] = useState(initialData)
     const [isPending, startTransition] = useTransition()
     const [mounted, setMounted] = useState(false)
+    const { fmt } = useCurrency()
 
     useEffect(() => {
         setMounted(true)
     }, [])
 
-    const handleRefresh = () => {
-        const start = new Date(startDate)
-        const end = new Date(endDate)
-        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-            return
-        }
-        startTransition(async () => {
-            const report = await getProfitAndLossReport(start, end)
-            setData(report)
-        })
-    }
-
-    const { incomes, expenses, netProfit } = useMemo(() => {
-        const inc = data.filter(a => a.type === 'INCOME' && !a.parentId).sort((a, b) => a.code.localeCompare(b.code))
-        const exp = data.filter(a => a.type === 'EXPENSE' && !a.parentId).sort((a, b) => a.code.localeCompare(b.code))
-
-        const totalInc = inc.reduce((sum, a) => sum + a.balance, 0)
-        const totalExp = exp.reduce((sum, a) => sum + a.balance, 0)
-
-        return { incomes: inc, expenses: exp, netProfit: totalInc - totalExp }
-    }, [data])
-
+    // SSR-safe amount formatter: plain number during hydration, org-currency after mount
     const formatAmount = (val: number) => {
         if (!mounted) return val.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-        return val.toLocaleString(undefined, { minimumFractionDigits: 2 })
+        return fmt(val)
     }
 
     return (
