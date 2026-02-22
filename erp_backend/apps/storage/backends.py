@@ -42,15 +42,35 @@ def _get_boto3_client(provider):
     )
 
 
-def _build_storage_key(provider, category, original_filename):
+def _build_storage_key(provider, category, original_filename, linked_model='', linked_id=None):
     """
-    Build the S3 object key: {prefix}{category}/{YYYY-MM}/{uuid}_{filename}
+    Build the S3 object key with strict isolation:
+    {prefix}{module}/{feature}/{id}/{filename}
+    Fallback to: {prefix}{category}/{YYYY-MM}/{uuid}_{filename}
     """
     prefix = provider.path_prefix if provider else ''
+    
+    # 1. Attempt structured path if linked_model exists
+    if linked_model and '.' in linked_model:
+        try:
+            module, model_name = linked_model.split('.', 1)
+            feature = model_name.lower()
+            # Pluralize feature if possible or just use it
+            if not feature.endswith('s'):
+                feature = f"{feature}s"
+            
+            identifier = str(linked_id) if linked_id else 'general'
+            
+            # Sanitise filename
+            safe_name = original_filename.replace(' ', '_').replace('/', '_')
+            return f"{prefix}{module}/{feature}/{identifier}/{safe_name}"
+        except Exception:
+            pass
+
+    # 2. Fallback to category-based flat structure if no linked model
     now = datetime.utcnow()
     date_part = now.strftime('%Y-%m')
     unique = uuid_lib.uuid4().hex[:12]
-    # Sanitise filename
     safe_name = original_filename.replace(' ', '_').replace('/', '_')
     return f"{prefix}{category.lower()}/{date_part}/{unique}_{safe_name}"
 
@@ -65,14 +85,17 @@ def _compute_checksum(file_obj):
     return sha.hexdigest()
 
 
-def upload_to_cloud(provider, file_obj, category, original_filename):
+def upload_to_cloud(provider, file_obj, category, original_filename, linked_model='', linked_id=None):
     """
     Upload a file to the configured cloud storage.
     Returns (storage_key, bucket, checksum, file_size).
     Falls back to local media storage if provider_type == LOCAL.
     """
     bucket = provider.bucket_name if provider else getattr(settings, 'STORAGE_R2_BUCKET', 'tsf-files')
-    storage_key = _build_storage_key(provider, category, original_filename)
+    storage_key = _build_storage_key(
+        provider, category, original_filename,
+        linked_model=linked_model, linked_id=linked_id
+    )
     checksum = _compute_checksum(file_obj)
     file_size = file_obj.size if hasattr(file_obj, 'size') else 0
 
