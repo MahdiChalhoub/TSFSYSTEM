@@ -49,8 +49,12 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = '__all__'
-        read_only_fields = ['organization']
+        fields = [
+            'id', 'name', 'code', 'short_name', 'parent', 
+            'level', 'full_path', 'products_count', 'product_count',
+            'brand_count', 'parfum_count', 'organization'
+        ]
+        read_only_fields = ['organization', 'level', 'full_path', 'products_count']
 
     def get_product_count(self, obj):
         return obj.product_set.count() if hasattr(obj, 'product_set') else 0

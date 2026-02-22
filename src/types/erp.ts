@@ -1005,6 +1005,8 @@ export interface SaasUpdateStatus {
     current_version?: string
     latest_version?: string
     update_available?: boolean
+    integrity?: string
+    environment?: string
     [key: string]: unknown
 }
 
@@ -1139,8 +1141,11 @@ export interface PlanCategory {
 export interface SaasUpdateHistoryEntry {
     id: number
     version: string
+    is_applied: boolean
+    created_at: string
     applied_at?: string
     status?: string
+    changelog?: string
     [key: string]: unknown
 }
 

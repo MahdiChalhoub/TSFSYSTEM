@@ -1287,13 +1287,18 @@ class CategoryViewSet(TenantModelViewSet):
         categories = Category.objects.filter(
             organization=organization
         ).annotate(
-            product_count=Count('product')
+            annotated_product_count=Count('product', distinct=True),
+            annotated_brand_count=Count('brands', distinct=True),
+            annotated_parfum_count=Count('parfums', distinct=True)
         )
 
         data = []
         for cat in categories:
             cat_data = CategorySerializer(cat).data
-            cat_data["productCount"] = cat.product_count
+            # Prefer annotated counts to avoid N+1
+            cat_data["product_count"] = cat.annotated_product_count
+            cat_data["brand_count"] = cat.annotated_brand_count
+            cat_data["parfum_count"] = cat.annotated_parfum_count
             data.append(cat_data)
 
         return Response(data)

@@ -23,7 +23,7 @@ import {
     Package, ClipboardList, Trash2, Eye, ShieldCheck, Loader2, Users
 } from "lucide-react"
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-import { SyncPanel } from "./SyncPanel"
+import { SessionPopulator } from "./SyncPanel"
 
 // ─── Types ───────────────────────────────────────────────────────
 interface Session {
@@ -69,6 +69,7 @@ export default function StockCountPage() {
     const [search, setSearch] = useState("")
     const [statusFilter, setStatusFilter] = useState("ALL")
     const [showCreate, setShowCreate] = useState(false)
+    const [activeSession, setActiveSession] = useState<{ id: number, ref?: string } | null>(null)
     const router = useRouter()
 
     // ─── Fetch ───
@@ -114,8 +115,9 @@ export default function StockCountPage() {
     }
 
     // ─── Create callback ───
-    const handleCreated = () => {
+    const handleCreated = (id: number, ref?: string) => {
         setShowCreate(false)
+        setActiveSession({ id, ref })
         fetchSessions()
     }
 
@@ -273,7 +275,11 @@ export default function StockCountPage() {
                 </div>
 
                 <div className="lg:col-span-1">
-                    <SyncPanel />
+                    <SessionPopulator
+                        sessionId={activeSession?.id}
+                        sessionRef={activeSession?.ref}
+                        onComplete={fetchSessions}
+                    />
                 </div>
             </div>
         </div>
@@ -281,7 +287,7 @@ export default function StockCountPage() {
 }
 
 // ─── Create Session Dialog ───────────────────────────────────────
-function CreateSessionDialog({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+function CreateSessionDialog({ onClose, onCreated }: { onClose: () => void; onCreated: (id: number, ref?: string) => void }) {
     const [isPending, startTransition] = useTransition()
     const [filterOpts, setFilterOpts] = useState<FilterOptions | null>(null)
     const [productPreview, setProductPreview] = useState<number | null>(null)
@@ -337,8 +343,12 @@ function CreateSessionDialog({ onClose, onCreated }: { onClose: () => void; onCr
             qty_max: form.qty_filter === 'custom' && form.qty_max ? parseFloat(form.qty_max) : undefined,
         }
         startTransition(async () => {
-            await createCountingSession(data)
-            onCreated()
+            const res = await createCountingSession(data)
+            if (res && res.id) {
+                onCreated(res.id, res.reference)
+            } else {
+                onCreated(0) // Fallback
+            }
         })
     }
 

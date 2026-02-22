@@ -104,24 +104,19 @@ export async function unverifyLine(lineId: number) {
     return result
 }
 
-// ─── Legacy Sync ────────────────────────────────────────────────
+// ─── Internal Session Populator (Inspired by Standalone Sync) ────
 const SYNC = 'inventory/sync'
 
-export async function syncLegacyProducts(last_id = 0) {
-    const result = await erpFetch(`${SYNC}/products/`, {
+export async function populateSessionLines(sessionId: number, lastId = 0) {
+    const result = await erpFetch(`${SYNC}/populate/`, {
         method: 'POST',
-        body: JSON.stringify({ last_id })
+        body: JSON.stringify({ session_id: sessionId, last_id: lastId })
     })
     revalidatePath('/inventory/stock-count')
     return result
 }
 
-export async function syncLegacyLocations() {
-    const result = await erpFetch(`${SYNC}/locations/`, { method: 'POST' })
-    revalidatePath('/inventory/stock-count')
-    return result
-}
-
-export async function getLegacyLiveQty(barcode: string, locationId: number) {
-    return await erpFetch(`${SYNC}/live-qty/?barcode=${barcode}&location_id=${locationId}`)
+export async function getLiveQty(barcode: string, warehouseId?: number) {
+    const whParam = warehouseId ? `&warehouse_id=${warehouseId}` : ''
+    return await erpFetch(`${SYNC}/live-qty/?barcode=${barcode}${whParam}`)
 }
