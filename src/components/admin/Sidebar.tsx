@@ -42,7 +42,8 @@ import {
     Globe,
     ListChecks,
     Trophy,
-    Eye
+    Eye,
+    FileCheck
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
@@ -123,6 +124,7 @@ export const MENU_ITEMS = [
                     { title: 'Consignment', path: '/sales/consignment' },
                     { title: 'Delivery Zones', path: '/sales/delivery-zones' },
                     { title: 'Sales Returns', path: '/sales/returns' },
+                    { title: 'Credit Notes', path: '/sales/credit-notes' },
                     { title: 'Import Sales', path: '/sales/import' },
                 ]
             },
@@ -255,9 +257,18 @@ export const MENU_ITEMS = [
                     { title: 'Budget Overview', path: '/finance/budget' },
                     { title: 'Profit Centers', path: '/finance/profit-centers' },
                     { title: 'Revenue Breakdown', path: '/finance/revenue' },
-
+                    { title: 'Report Builder', path: '/finance/reports/builder' },
                 ]
             },
+            {
+                title: 'Payments & Balances',
+                icon: Wallet,
+                children: [
+                    { title: 'Contact Balances', path: '/finance/balances' },
+                    { title: 'Payment Gateway', path: '/finance/gateway' },
+                ]
+            },
+            { title: 'E-Invoicing', path: '/finance/einvoicing', icon: FileCheck },
             {
                 title: 'Fiscal & Periods',
                 icon: Calendar,

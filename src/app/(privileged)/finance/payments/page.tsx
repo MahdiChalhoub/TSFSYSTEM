@@ -4,6 +4,7 @@ import { useState, useEffect, useTransition, useMemo } from "react"
 import type { Payment, FinancialAccount, AgingBucket, ContactBalance } from '@/types/erp'
 import { getPayments, recordSupplierPayment, recordCustomerReceipt, getAgedReceivables, getAgedPayables, getCustomerBalances, getSupplierBalances } from "@/app/actions/finance/payments"
 import { getFinancialAccounts } from "@/app/actions/finance/financial-accounts"
+import { erpFetch } from "@/lib/erp-api"
 import { Card, CardContent } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
@@ -45,6 +46,8 @@ const METHOD_ICONS: Record<string, any> = {
 export default function PaymentsPage() {
     const [payments, setPayments] = useState<Payment[]>([])
     const [accounts, setAccounts] = useState<FinancialAccount[]>([])
+    const [contacts, setContacts] = useState<Array<{ id: number; name: string; type: string }>>([])
+    const [contactSearch, setContactSearch] = useState('')
     const [agedAR, setAgedAR] = useState<AgingBucket[]>([])
     const [agedAP, setAgedAP] = useState<AgingBucket[]>([])
     const [customerBalances, setCustomerBalances] = useState<ContactBalance[]>([])
@@ -62,12 +65,20 @@ export default function PaymentsPage() {
 
     async function loadData() {
         try {
-            const [p, accs] = await Promise.all([
+            const [p, accs, ctcs] = await Promise.all([
                 getPayments(),
-                getFinancialAccounts()
+                getFinancialAccounts(),
+                erpFetch('crm/contacts/?limit=200').catch(() => [])
             ])
             setPayments(Array.isArray(p) ? p : [])
             setAccounts(Array.isArray(accs) ? accs : [])
+            if (Array.isArray(ctcs)) {
+                setContacts(ctcs.map((c: any) => ({
+                    id: c.id,
+                    name: c.name || c.company_name || `Contact #${c.id}`,
+                    type: c.type || 'unknown'
+                })))
+            }
         } catch {
             setPayments([]); setAccounts([])
             toast.error("Failed to load payments")
@@ -216,8 +227,29 @@ export default function PaymentsPage() {
                     </div>
                     <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4 pt-2">
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-stone-500 uppercase">Contact ID *</label>
-                            <Input name="contact_id" type="number" required placeholder="Contact ID" className="rounded-xl" />
+                            <label className="text-xs font-bold text-stone-500 uppercase">Contact *</label>
+                            <input
+                                type="text"
+                                placeholder="Search customer or supplier..."
+                                value={contactSearch}
+                                onChange={e => setContactSearch(e.target.value)}
+                                className="w-full px-3 py-2 border rounded-xl bg-background text-sm mb-1 focus:outline-none focus:border-stone-400"
+                            />
+                            <select name="contact_id" required className="w-full px-3 py-2 border rounded-xl bg-background text-sm" size={4}>
+                                {contacts
+                                    .filter(c => !contactSearch ||
+                                        c.name.toLowerCase().includes(contactSearch.toLowerCase())
+                                    )
+                                    .slice(0, 30)
+                                    .map((c) => (
+                                        <option key={c.id} value={c.id}>
+                                            {c.name} [{c.type}]
+                                        </option>
+                                    ))}
+                                {contacts.length === 0 && (
+                                    <option disabled>No contacts loaded</option>
+                                )}
+                            </select>
                         </div>
                         <div className="space-y-1.5">
                             <label className="text-xs font-bold text-stone-500 uppercase">Amount *</label>
