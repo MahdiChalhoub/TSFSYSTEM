@@ -35,7 +35,13 @@ if not SECRET_KEY:
     else:
         raise ValueError("DJANGO_SECRET_KEY environment variable is required in production!")
 
-ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,tsf.ci,saas.tsf.ci,.tsf.ci').split(',')
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,backend,tsf.ci,saas.tsf.ci,.tsf.ci').split(',')
+
+# Security: Trust the X-Forwarded-Proto header for SSL detection
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# CSRF: Trust production domains
+CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', 'https://tsf.ci,https://saas.tsf.ci,https://demo.tsf.ci').split(',')
 
 ROOT_DOMAIN = os.getenv('ROOT_DOMAIN', 'tsf.ci')
 
@@ -321,10 +327,10 @@ AUTH_USER_MODEL = 'erp.User'
 
 import sys
 # Local dev hacks to bypass model clashes and migration history issues
-if 'runserver' in sys.argv or 'test' in sys.argv or 'migrate' in sys.argv or os.getenv('APP_ENV') == 'production':
+if 'runserver' in sys.argv or 'test' in sys.argv or 'migrate' in sys.argv or os.getenv('APP_ENV') == 'production' or os.getenv('LOCAL_DEV') == '1':
     SILENCED_SYSTEM_CHECKS = ["fields.E304"]
     # Bypass migrations for speed/simplicity in local dev if needed
-    if 'test' in sys.argv:
+    if 'test' in sys.argv or os.getenv('LOCAL_DEV') == '1':
         class DisableMigrations:
             def __contains__(self, item): return True
             def __getitem__(self, item): return None
