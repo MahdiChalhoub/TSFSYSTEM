@@ -127,6 +127,7 @@ export function AlertsClient({ initialAlerts }: { initialAlerts: any[] }) {
                 </div>
             }
             expandable={{
+                columns: columns, // Fix type error: required property
                 renderActions: (row) => (
                     <div className="flex gap-2">
                         <Button
@@ -136,15 +137,15 @@ export function AlertsClient({ initialAlerts }: { initialAlerts: any[] }) {
                             onClick={() => handleQuickRestock(row)}
                             disabled={isPending}
                         >
-                            <MessageSquarePlus size={14} /> CREATE REPLENISHMENT STRATEGY
+                            <MessageSquarePlus size={14} /> NEW WAREHOUSE ANALYTIC STRATEGY
                         </Button>
                         <Button size="sm" variant="ghost" className="h-8 text-[10px] font-bold text-gray-400">ACKNOWLEDGE ALERT</Button>
                     </div>
                 ),
                 getDetails: (row) => [
-                    { label: 'Message', value: row.message || 'No additional context' },
-                    { label: 'Warehouse', value: row.warehouse_name || 'Global' },
-                    { label: 'Last Scan', value: new Date().toLocaleString() }
+                    { label: 'Analytic Source', value: 'Warehouse Analytics (Stock vs Needs)' },
+                    { label: 'Suggested Action', value: 'Promotion to Logistics Strategy' },
+                    { label: 'Message', value: row.message || 'No additional context' }
                 ]
             }}
             lifecycle={{
