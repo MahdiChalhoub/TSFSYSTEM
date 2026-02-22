@@ -7,6 +7,14 @@ import {
 
 export const dynamic = 'force-dynamic';
 
+async function getOrgCurrency(): Promise<string> {
+    try {
+        const orgs = await erpFetch('organizations/')
+        const org = Array.isArray(orgs) ? orgs[0] : orgs
+        return org?.currency || org?.settings?.currency || 'USD'
+    } catch { return 'USD' }
+}
+
 async function getPurchaseOrders() {
     try {
         return await erpFetch(`purchase-orders/`);
@@ -61,10 +69,11 @@ async function getOrgSettings() {
 }
 
 export default async function PurchaseRegistryPage() {
-    const [orders, dashboard, orgSettings] = await Promise.all([
+    const [orders, dashboard, orgSettings, currency] = await Promise.all([
         getPurchaseOrders(),
         getPODashboard(),
         getOrgSettings(),
+        getOrgCurrency(),
     ]);
     const tradeSubTypesEnabled = orgSettings.tradeSubTypesEnabled;
 
@@ -120,7 +129,7 @@ export default async function PurchaseRegistryPage() {
                 </div>
                 <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
                     <div className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Total Procurement</div>
-                    <div className="text-4xl font-black text-gray-900">{Number(totalValue).toLocaleString()}</div>
+                    <div className="text-4xl font-black text-gray-900">{Number(totalValue).toLocaleString()} {currency}</div>
                     <div className="mt-2 text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Total value of all POs</div>
                 </div>
             </div>
@@ -192,7 +201,7 @@ export default async function PurchaseRegistryPage() {
                                             </span>
                                         </td>
                                         <td className="p-6 text-right font-black text-gray-900">
-                                            {parseFloat(po.total_amount || 0).toLocaleString()} {po.currency || 'USD'}
+                                            {parseFloat(po.total_amount || 0).toLocaleString()} {currency}
                                         </td>
                                         <td className="p-6 text-sm text-gray-500">
                                             {po.expected_date ? new Date(po.expected_date).toLocaleDateString('fr-FR') : '—'}

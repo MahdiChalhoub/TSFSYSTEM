@@ -18,6 +18,7 @@ import {
 import { getContactStatement } from "@/app/actions/finance/bank-reconciliation"
 
 export default function StatementsPage() {
+    const { fmt } = useCurrency()
     const [contacts, setContacts] = useState<Contact[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')

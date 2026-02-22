@@ -14,6 +14,7 @@ import {
 } from "lucide-react"
 
 export default function BudgetPlanningPage() {
+    const { fmt } = useCurrency()
     const [accounts, setAccounts] = useState<ChartOfAccount[]>([])
     const [loading, setLoading] = useState(true)
 

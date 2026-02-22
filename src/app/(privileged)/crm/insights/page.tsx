@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 
 export default function CustomerInsightsPage() {
+    const { fmt } = useCurrency()
     const [contacts, setContacts] = useState<Contact[]>([])
     const [orders, setOrders] = useState<Record<string, unknown>[]>([])
     const [loading, setLoading] = useState(true)

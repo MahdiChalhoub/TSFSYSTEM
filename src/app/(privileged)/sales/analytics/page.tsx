@@ -20,6 +20,7 @@ const PAYMENT_ICONS: Record<string, string> = {
 }
 
 export default function SalesAnalyticsPage() {
+    const { fmt } = useCurrency()
     const [data, setData] = useState<SalesAnalyticsData | null>(null)
     const [loading, setLoading] = useState(true)
     const [period, setPeriod] = useState(30)

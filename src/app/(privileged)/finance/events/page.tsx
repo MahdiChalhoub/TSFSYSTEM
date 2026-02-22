@@ -41,6 +41,7 @@ const STATUS_COLOR: Record<string, string> = {
 }
 
 export default function FinancialEventsPage() {
+    const { fmt } = useCurrency()
     const [events, setEvents] = useState<FinancialEvent[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')

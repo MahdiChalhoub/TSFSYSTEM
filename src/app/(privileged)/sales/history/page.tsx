@@ -33,6 +33,7 @@ const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
 }
 
 export default function OrderHistoryPage() {
+    const { fmt } = useCurrency()
     const [orders, setOrders] = useState<SalesOrder[]>([])
     const [loading, setLoading] = useState(true)
     const [filters, setFilters] = useState({

@@ -1,94 +1,158 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import { Search, Tag, Grid, Filter } from 'lucide-react';
+import { useState, useEffect } from 'react'
+import { erpFetch } from '@/lib/erp-api'
+import { Search, Tag, Grid, RefreshCw, Package, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react'
+
+type Product = {
+    id: number
+    name: string
+    sku?: string
+    price: number
+    stock_quantity?: number
+    category?: { name: string }
+    category_name?: string
+    is_active?: boolean
+    is_published?: boolean
+    image_url?: string
+}
 
 export default function EcommerceCatalogPage() {
-    const [products] = useState<any[]>([]);
-    const [searchTerm, setSearchTerm] = useState('');
+    const [products, setProducts] = useState<Product[]>([])
+    const [loading, setLoading] = useState(true)
+    const [search, setSearch] = useState('')
+    const [view, setView] = useState<'grid' | 'list'>('grid')
+    const [toast, setToast] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null)
+
+    useEffect(() => { load() }, [])
+
+    async function load() {
+        setLoading(true)
+        try {
+            const data = await erpFetch('inventory/products/?is_active=true&page_size=100')
+            setProducts(Array.isArray(data) ? data : (data?.results ?? []))
+        } catch { setProducts([]) }
+        setLoading(false)
+    }
+
+    function showToast(msg: string, type: 'ok' | 'err') {
+        setToast({ msg, type })
+        setTimeout(() => setToast(null), 3000)
+    }
+
+    async function togglePublish(p: Product) {
+        try {
+            await erpFetch(`inventory/products/${p.id}/`, {
+                method: 'PATCH',
+                body: JSON.stringify({ is_published: !p.is_published })
+            })
+            setProducts(prev => prev.map(x => x.id === p.id ? { ...x, is_published: !x.is_published } : x))
+            showToast(!p.is_published ? 'Published to storefront' : 'Hidden from storefront', 'ok')
+        } catch { showToast('Failed to update', 'err') }
+    }
+
+    const filtered = products.filter(p => {
+        const q = search.toLowerCase()
+        return !q || p.name.toLowerCase().includes(q) || p.sku?.toLowerCase().includes(q)
+    })
+
+    const published = products.filter(p => p.is_published).length
 
     return (
-        <div style={{ padding: '2rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <div>
-                    <h1 style={{ fontSize: '1.75rem', fontWeight: 700, margin: 0 }}>Product Catalog</h1>
-                    <p style={{ color: '#64748b', marginTop: '0.25rem' }}>Manage which products appear on your storefront.</p>
+        <div className="min-h-screen bg-[#070D1B] text-gray-100 p-6 flex flex-col gap-6">
+            {toast && (
+                <div className={`fixed top-6 right-6 z-50 px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-sm font-medium border ${toast.type === 'ok' ? 'bg-emerald-900/80 border-emerald-700 text-emerald-300' : 'bg-red-900/80 border-red-700 text-red-300'}`}>
+                    {toast.type === 'ok' ? <CheckCircle size={16} /> : <XCircle size={16} />}
+                    {toast.msg}
+                </div>
+            )}
+
+            {/* Header */}
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-500 to-cyan-700 flex items-center justify-center shadow-lg shadow-cyan-900/40">
+                        <Tag size={22} className="text-white" />
+                    </div>
+                    <div>
+                        <h1 className="text-2xl font-bold text-white tracking-tight">Product Catalog</h1>
+                        <p className="text-sm text-gray-400 mt-0.5">
+                            {published} of {products.length} products published to storefront
+                        </p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    <button onClick={load} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm">
+                        <RefreshCw size={14} />Refresh
+                    </button>
+                    <div className="flex gap-0.5 bg-gray-800 p-1 rounded-xl">
+                        <button onClick={() => setView('grid')} className={`p-2 rounded-lg ${view === 'grid' ? 'bg-gray-700 text-white' : 'text-gray-500'}`}><Grid size={14} /></button>
+                        <button onClick={() => setView('list')} className={`p-2 rounded-lg ${view === 'list' ? 'bg-gray-700 text-white' : 'text-gray-500'}`}><Tag size={14} /></button>
+                    </div>
                 </div>
             </div>
 
-            {/* Search bar */}
-            <div style={{
-                display: 'flex', gap: '0.75rem', marginBottom: '1.5rem',
-                alignItems: 'center',
-            }}>
-                <div style={{
-                    display: 'flex', alignItems: 'center', gap: '0.5rem',
-                    background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px',
-                    padding: '0.5rem 1rem', flex: 1, maxWidth: '400px',
-                }}>
-                    <Search size={16} color="#94a3b8" />
-                    <input
-                        type="text"
-                        placeholder="Search products..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        style={{
-                            border: 'none', outline: 'none', width: '100%',
-                            fontSize: '0.9rem', background: 'transparent',
-                        }}
-                    />
-                </div>
+            {/* Search */}
+            <div className="relative max-w-md">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                <input
+                    value={search} onChange={e => setSearch(e.target.value)}
+                    placeholder="Search by name or SKU…"
+                    className="w-full pl-9 pr-4 py-2 bg-[#0F1729] border border-gray-800 rounded-xl text-sm text-gray-300 placeholder-gray-600 focus:outline-none focus:border-teal-700"
+                />
             </div>
 
-            {/* Products */}
-            {products.length === 0 ? (
-                <div style={{
-                    background: '#fff',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '12px',
-                    padding: '3rem',
-                    textAlign: 'center',
-                    color: '#94a3b8',
-                }}>
-                    <Tag size={48} style={{ margin: '0 auto 1rem' }} />
-                    <p style={{ fontWeight: 600, fontSize: '1.1rem' }}>Catalog is empty</p>
-                    <p>Products from inventory will appear here when your storefront is active.</p>
-                    <p style={{ fontSize: '0.85rem', marginTop: '0.5rem' }}>
-                        Add products in <strong>Inventory → Products</strong> to populate the catalog.
-                    </p>
+            {/* Product grid / list */}
+            {loading ? (
+                <div className={`grid ${view === 'grid' ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4' : 'grid-cols-1'} gap-4`}>
+                    {Array.from({ length: 8 }).map((_, i) => <div key={i} className={`h-${view === 'grid' ? '48' : '16'} bg-gray-800/50 rounded-2xl animate-pulse`} />)}
+                </div>
+            ) : filtered.length === 0 ? (
+                <div className="bg-[#0F1729] rounded-2xl border border-gray-800 py-16 flex flex-col items-center gap-3 text-gray-500">
+                    <Package size={48} className="opacity-20" />
+                    <p className="text-sm">No products found</p>
+                </div>
+            ) : view === 'grid' ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {filtered.map(p => (
+                        <div key={p.id} className={`bg-[#0F1729] rounded-2xl border flex flex-col overflow-hidden transition-all ${p.is_published ? 'border-teal-800/50' : 'border-gray-800 opacity-70'}`}>
+                            <div className="h-32 bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+                                {p.image_url ? <img src={p.image_url} alt={p.name} className="h-full w-full object-cover" /> : <Package size={32} className="text-gray-700" />}
+                            </div>
+                            <div className="p-3 flex flex-col gap-1 flex-1">
+                                <p className="font-semibold text-sm text-white truncate">{p.name}</p>
+                                {p.sku && <p className="text-xs font-mono text-gray-600">{p.sku}</p>}
+                                <p className="text-sm font-bold text-teal-400 mt-auto">${Number(p.price || 0).toFixed(2)}</p>
+                            </div>
+                            <button
+                                onClick={() => togglePublish(p)}
+                                className={`flex items-center justify-center gap-1.5 py-2 text-xs font-semibold transition-all ${p.is_published ? 'bg-teal-900/20 text-teal-400 hover:bg-red-900/20 hover:text-red-400' : 'bg-gray-800 text-gray-500 hover:bg-teal-900/20 hover:text-teal-400'}`}
+                            >
+                                {p.is_published ? <><Eye size={11} />Published</> : <><EyeOff size={11} />Hidden</>}
+                            </button>
+                        </div>
+                    ))}
                 </div>
             ) : (
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-                    gap: '1rem',
-                }}>
-                    {products.map((p: any) => (
-                        <div key={p.id} style={{
-                            background: '#fff',
-                            border: '1px solid #e2e8f0',
-                            borderRadius: '10px',
-                            padding: '1rem',
-                        }}>
-                            <div style={{
-                                height: '120px',
-                                background: '#f8fafc',
-                                borderRadius: '6px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                marginBottom: '0.75rem',
-                                color: '#cbd5e1',
-                            }}>
-                                <Grid size={32} />
+                <div className="flex flex-col gap-2">
+                    {filtered.map(p => (
+                        <div key={p.id} className={`flex items-center gap-4 px-5 py-3.5 rounded-xl border ${p.is_published ? 'border-teal-800/40 bg-[#0F1729]' : 'border-gray-800 bg-[#0F1729] opacity-70'}`}>
+                            <Package size={14} className="text-teal-400 shrink-0" />
+                            <div className="flex-1 min-w-0">
+                                <div className="font-medium text-sm text-white truncate">{p.name}</div>
+                                <div className="text-xs text-gray-500">{p.sku || '—'}{p.category?.name ? ` · ${p.category.name}` : ''}</div>
                             </div>
-                            <h3 style={{ fontSize: '0.95rem', fontWeight: 600, margin: 0 }}>{p.name}</h3>
-                            <p style={{ fontSize: '0.85rem', color: '#64748b', margin: '0.25rem 0' }}>{p.category || 'Uncategorized'}</p>
-                            <p style={{ fontWeight: 700, color: '#1e293b' }}>${p.price}</p>
+                            <div className="font-mono font-bold text-sm text-teal-400 shrink-0">${Number(p.price || 0).toFixed(2)}</div>
+                            <div className="text-xs text-gray-600 shrink-0">Stock: {p.stock_quantity ?? '—'}</div>
+                            <button
+                                onClick={() => togglePublish(p)}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold shrink-0 ${p.is_published ? 'bg-teal-900/30 text-teal-400 hover:bg-red-900/20 hover:text-red-400' : 'bg-gray-800 text-gray-500 hover:bg-teal-900/20 hover:text-teal-400'}`}
+                            >
+                                {p.is_published ? <><Eye size={11} />Show</> : <><EyeOff size={11} />Hidden</>}
+                            </button>
                         </div>
                     ))}
                 </div>
             )}
         </div>
-    );
+    )
 }
