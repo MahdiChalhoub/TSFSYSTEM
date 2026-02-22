@@ -5,7 +5,7 @@ import { createProduct } from '../actions';
 import { useState, useEffect } from 'react';
 import type { ProductNamingRule } from '@/app/actions/settings';
 import type { ProductAttribute } from '@/types/erp';
-import { getBrandsByCategory } from '@/app/actions/brands';
+import { getBrandsByCategory } from '@/app/actions/inventory/brands';
 import { getAttributesByCategory } from '@/app/actions/attributes';
 
 import { CategorySelector } from '@/components/admin/CategorySelector';

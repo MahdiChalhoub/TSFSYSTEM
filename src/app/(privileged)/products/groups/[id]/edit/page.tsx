@@ -1,6 +1,8 @@
 import { erpFetch } from "@/lib/erp-api";
 import { GroupedProductForm } from "@/components/admin/GroupedProductForm";
 import { notFound } from "next/navigation";
+import { Box } from "lucide-react";
+import AttachmentManager from "@/components/common/AttachmentManager";
 
 export const dynamic = 'force-dynamic';
 
@@ -45,6 +47,18 @@ export default async function EditGroupPage({ params }: { params: Promise<{ id: 
             </div>
 
             <GroupedProductForm {...data} />
+
+            <div className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm mt-12 overflow-hidden">
+                <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2 tracking-tighter">
+                    <Box className="text-emerald-600" size={24} />
+                    Family Digital Assets
+                </h2>
+                <AttachmentManager
+                    linkedModel="inventory.ProductGroup"
+                    linkedId={Number(id)}
+                    category="PRODUCT_IMAGE"
+                />
+            </div>
         </div>
     );
 }

@@ -121,3 +121,16 @@ export async function moveProducts(productIds: number[], targetCategoryId: numbe
         return { success: false, message: 'Failed to move products' };
     }
 }
+
+/**
+ * Fetch products assigned to a specific category
+ */
+export async function getCategoryProducts(categoryId: number) {
+    try {
+        const data = await erpFetch(`inventory/products/?category=${categoryId}`);
+        return Array.isArray(data) ? data : data?.results || [];
+    } catch (e) {
+        console.error("Failed to fetch products for category:", e);
+        return [];
+    }
+}

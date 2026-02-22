@@ -1,5 +1,5 @@
 import { erpFetch } from "@/lib/erp-api";
-import { getCategoryWithCounts } from "@/app/actions/categories";
+import { getCategoryWithCounts } from "@/app/actions/inventory/categories";
 import { CategoryMaintenanceSidebar } from "@/components/admin/CategoryMaintenanceSidebar";
 import { ProductReassignmentTable } from "@/components/admin/ProductReassignmentTable";
 import { ArrowLeft } from "lucide-react";

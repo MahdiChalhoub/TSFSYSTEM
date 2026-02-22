@@ -2,12 +2,11 @@
 
 import { erpFetch } from "@/lib/erp-api";
 import { revalidatePath } from "next/cache";
+import { getCommercialContext } from "@/app/actions/commercial";
 
-// Cache for frequently accessed data (server-side)
-let productsCache: Record<string, any>[] | null = null;
-let cacheTimestamp: number = 0;
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache
-
+/**
+ * Enhanced product search for POS with Next.js cache integration
+ */
 export async function getPosProducts(options: {
     search?: string;
     limit?: number;
@@ -20,30 +19,47 @@ export async function getPosProducts(options: {
         const queryParams = new URLSearchParams();
         if (search) queryParams.append('query', search);
         if (categoryId) queryParams.append('category_id', String(categoryId));
-        // Add limit/offset if backend supports it
+        queryParams.append('limit', String(limit));
+        queryParams.append('offset', String(offset));
 
-        const products = await erpFetch(`products/search_enhanced/?${queryParams.toString()}`);
-        return products;
+        // Use fetch cache for high-frequency search
+        return await erpFetch(`products/search_enhanced/?${queryParams.toString()}`, {
+            next: { revalidate: 60, tags: ['products', 'pos'] }
+        });
     } catch (error) {
         console.error('[getPosProducts] API error:', error);
         return [];
     }
 }
 
-export async function getProductCount(search?: string) {
-    // Stub for now
-    return 100;
+/**
+ * Get total product count for pagination/metrics
+ */
+export async function getProductCount(options: { search?: string; categoryId?: number } = {}) {
+    try {
+        const queryParams = new URLSearchParams();
+        if (options.search) queryParams.append('query', options.search);
+        if (options.categoryId) queryParams.append('category_id', String(options.categoryId));
+
+        const res = await erpFetch(`products/count/?${queryParams.toString()}`);
+        return res.count || 0;
+    } catch (error) {
+        console.error('[getProductCount] Error:', error);
+        return 0;
+    }
 }
 
 export async function clearProductsCache() {
-    productsCache = null;
-    cacheTimestamp = 0;
+    // In Next.js, we revalidate tags instead of clearing local vars
+    revalidatePath('/sales');
     return { success: true };
 }
 
 export async function getCategories() {
     try {
-        return await erpFetch('inventory/categories/');
+        return await erpFetch('inventory/categories/', {
+            next: { revalidate: 3600, tags: ['categories'] } // Categories change rarely
+        });
     } catch (error) {
         console.error('[getCategories] Error:', error);
         return [];
@@ -60,22 +76,26 @@ export async function processSale(data: {
     paymentAccountId?: number
 }) {
     try {
+        const context = await getCommercialContext();
+
         const response = await erpFetch('pos/checkout/', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 items: data.cart.map(item => ({
                     product_id: item.productId,
                     quantity: item.quantity,
                     unit_price: item.price
                 })),
-                warehouse_id: data.warehouseId || 1, // Fallback need actual ID
+                warehouse_id: data.warehouseId || context.defaultWarehouseId,
                 payment_account_id: data.paymentAccountId,
+                payment_method: data.paymentMethod,
                 notes: data.notes,
-                scope: data.scope || 'OFFICIAL'
+                scope: data.scope || 'OFFICIAL',
+                total_amount: data.totalAmount
             })
         });
 
+        revalidatePath('/sales/history');
         return { success: true, orderId: response.order_id, ref: response.ref || "POS-WEB" };
     } catch (e: unknown) {
         console.error("POS Checkout Error:", e);

@@ -6,6 +6,7 @@ import {
     AlertCircle, Clock, Database, Printer, RotateCcw
 } from "lucide-react";
 import { authorizePurchaseOrder, receivePurchaseOrder, invoicePurchaseOrder } from "@/app/actions/commercial/purchases";
+import AttachmentManager from "@/components/common/AttachmentManager";
 
 export const dynamic = 'force-dynamic';
 
@@ -270,6 +271,16 @@ export default async function PurchaseDetailPage({ params }: { params: { id: str
                                 </div>
                             )}
                         </div>
+                    </div>
+
+                    {/* Attachment Manager */}
+                    <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm animate-in fade-in slide-in-from-right-4 duration-1000 delay-300">
+                        <AttachmentManager
+                            linkedModel="commercial.PurchaseOrder"
+                            linkedId={parseInt(id)}
+                            category="PURCHASE_DOC"
+                            compact
+                        />
                     </div>
                 </div>
             </div>

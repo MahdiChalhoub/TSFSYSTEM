@@ -1,12 +1,12 @@
 import { erpFetch } from "@/lib/erp-api";
-import WarehouseManager from "./manager";
+import { WarehouseClient } from "./WarehouseClient";
 
 export const dynamic = 'force-dynamic';
 
-async function getWarehouses() {
+async function getWarehousesData() {
     try {
-        // WarehouseSerializer now includes site_name and inventory_count
-        return await erpFetch('warehouses/');
+        const warehouses = await erpFetch('warehouses/');
+        return (warehouses as any[]) || [];
     } catch (error) {
         console.error("Failed to fetch warehouses:", error);
         return [];
@@ -14,11 +14,9 @@ async function getWarehouses() {
 }
 
 export default async function WarehousesPage() {
-    const warehouses = await getWarehouses();
+    const warehouses = await getWarehousesData();
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
-            <WarehouseManager warehouses={warehouses} />
-        </div>
+        <WarehouseClient initialWarehouses={warehouses} />
     );
 }

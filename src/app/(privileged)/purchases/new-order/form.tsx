@@ -19,17 +19,26 @@ export default function FormalOrderForm({
 
     const [scope, setScope] = useState<'OFFICIAL' | 'INTERNAL'>('OFFICIAL');
     const [selectedSiteId, setSelectedSiteId] = useState<number | ''>('');
+    const [selectedWarehouseId, setSelectedWarehouseId] = useState<number | ''>('');
     const [selectedSupplierId, setSelectedSupplierId] = useState<number | ''>('');
     const [supplierPriceHints, setSupplierPriceHints] = useState<Record<number, number>>({});
-    const [availableWarehouses, setAvailableWarehouses] = useState<Record<string, unknown>[]>([]);
+    const [availableWarehouses, setAvailableWarehouses] = useState<Record<string, any>[]>([]);
     const [lines, setLines] = useState<PurchaseLine[]>([]);
 
     useEffect(() => {
         if (selectedSiteId) {
             const site = sites.find(s => s.id === Number(selectedSiteId));
-            setAvailableWarehouses(site?.warehouses || []);
+            const warehouses = site?.warehouses || [];
+            setAvailableWarehouses(warehouses);
+            // Auto-select first warehouse if none selected or if switching sites
+            if (warehouses.length > 0) {
+                setSelectedWarehouseId(warehouses[0].id);
+            } else {
+                setSelectedWarehouseId('');
+            }
         } else {
             setAvailableWarehouses([]);
+            setSelectedWarehouseId('');
         }
     }, [selectedSiteId, sites]);
 
@@ -99,7 +108,13 @@ export default function FormalOrderForm({
 
                 <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-center">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 text-center">Warehouse</label>
-                    <select className="w-full text-xs font-bold bg-transparent border-none focus:ring-0 text-center text-indigo-600" name="warehouseId" required>
+                    <select
+                        className="w-full text-xs font-bold bg-transparent border-none focus:ring-0 text-center text-indigo-600"
+                        name="warehouseId"
+                        required
+                        value={selectedWarehouseId}
+                        onChange={(e) => setSelectedWarehouseId(Number(e.target.value))}
+                    >
                         <option value="">Warehouse...</option>
                         {availableWarehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
                     </select>
@@ -126,7 +141,11 @@ export default function FormalOrderForm({
                 <div className="p-4 bg-gray-50 border-b flex items-center gap-4">
                     <div className="relative flex-1">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                        <ProductSearch callback={addProductToLines} siteId={Number(selectedSiteId)} />
+                        <ProductSearch
+                            callback={addProductToLines}
+                            siteId={Number(selectedSiteId)}
+                            supplierId={Number(selectedSupplierId)}
+                        />
                     </div>
                 </div>
 
@@ -247,7 +266,7 @@ export default function FormalOrderForm({
     );
 }
 
-function ProductSearch({ callback, siteId }: { callback: (p: Record<string, any>) => void, siteId: number }) {
+function ProductSearch({ callback, siteId, supplierId }: { callback: (p: Record<string, any>) => void, siteId: number, supplierId: number }) {
     const [query, setQuery] = useState('');
     const [results, setResults] = useState<Record<string, unknown>[]>([]);
     const [open, setOpen] = useState(false);
@@ -255,7 +274,7 @@ function ProductSearch({ callback, siteId }: { callback: (p: Record<string, any>
     useEffect(() => {
         const timer = setTimeout(async () => {
             if (query.length > 1) {
-                const res = await searchProductsSimple(query, siteId);
+                const res = await searchProductsSimple(query, siteId, supplierId);
                 setResults(res);
                 setOpen(true);
             } else {
@@ -264,7 +283,7 @@ function ProductSearch({ callback, siteId }: { callback: (p: Record<string, any>
             }
         }, 300);
         return () => clearTimeout(timer);
-    }, [query, siteId]);
+    }, [query, siteId, supplierId]);
 
     return (
         <div className="relative">

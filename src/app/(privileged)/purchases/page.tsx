@@ -1,9 +1,11 @@
 import { erpFetch } from "@/lib/erp-api";
 import Link from "next/link";
 import {
-    ShoppingCart, Plus, Calendar, User, Tag, Clock, Database, BarChart3,
-    CheckCircle2, XCircle, Truck, FileText, AlertTriangle, Package
+    CheckCircle2, XCircle, Truck, FileText, AlertTriangle, Package,
+    Search, BarChart2, Plus, Calendar, Clock, BarChart3
 } from "lucide-react";
+import { getCommercialContext } from "@/app/actions/commercial";
+import { PurchasesRegistryClient } from "./PurchasesRegistryClient";
 
 export const dynamic = 'force-dynamic';
 
@@ -15,9 +17,14 @@ async function getOrgCurrency(): Promise<string> {
     } catch { return 'USD' }
 }
 
-async function getPurchaseOrders() {
+async function getPurchaseOrders(searchParams?: { status?: string, query?: string }) {
     try {
-        return await erpFetch(`purchase-orders/`);
+        const query = new URLSearchParams()
+        if (searchParams?.status) query.append('status', searchParams.status)
+        if (searchParams?.query) query.append('query', searchParams.query)
+
+        const url = `purchase-orders/${query.toString() ? `?${query.toString()}` : ''}`
+        return await erpFetch(url);
     } catch (e) {
         console.error("Failed to fetch purchase orders:", e);
         return [];
@@ -32,32 +39,6 @@ async function getPODashboard() {
     }
 }
 
-const STATUS_MAP: Record<string, { label: string; color: string; icon?: any }> = {
-    DRAFT: { label: 'Draft', color: 'bg-slate-100 text-slate-600', icon: FileText },
-    SUBMITTED: { label: 'Pending Approval', color: 'bg-amber-100 text-amber-700', icon: Clock },
-    APPROVED: { label: 'Approved', color: 'bg-blue-100 text-blue-700', icon: CheckCircle2 },
-    REJECTED: { label: 'Rejected', color: 'bg-rose-100 text-rose-600', icon: XCircle },
-    ORDERED: { label: 'Sent to Supplier', color: 'bg-indigo-100 text-indigo-700', icon: Truck },
-    PARTIALLY_RECEIVED: { label: 'Partial Receipt', color: 'bg-cyan-100 text-cyan-700', icon: Package },
-    RECEIVED: { label: 'Fully Received', color: 'bg-emerald-100 text-emerald-700', icon: Package },
-    INVOICED: { label: 'Invoiced', color: 'bg-purple-100 text-purple-700', icon: FileText },
-    COMPLETED: { label: 'Completed', color: 'bg-emerald-500 text-white', icon: CheckCircle2 },
-    CANCELLED: { label: 'Cancelled', color: 'bg-gray-100 text-gray-400', icon: XCircle },
-};
-
-const PRIORITY_MAP: Record<string, { label: string; color: string }> = {
-    LOW: { label: 'Low', color: 'text-gray-400' },
-    NORMAL: { label: 'Normal', color: 'text-blue-500' },
-    HIGH: { label: 'High', color: 'text-orange-500' },
-    URGENT: { label: 'Urgent', color: 'text-red-600 font-black' },
-};
-
-const PO_SUB_TYPE_CONFIG: Record<string, { label: string; color: string }> = {
-    STANDARD: { label: 'Standard', color: 'bg-slate-100 text-slate-600' },
-    WHOLESALE: { label: 'Wholesale', color: 'bg-amber-100 text-amber-700' },
-    CONSIGNEE: { label: 'Consignee', color: 'bg-purple-100 text-purple-700' },
-};
-
 async function getOrgSettings() {
     try {
         const orgs = await erpFetch('organizations/');
@@ -68,14 +49,13 @@ async function getOrgSettings() {
     return { tradeSubTypesEnabled: false };
 }
 
-export default async function PurchaseRegistryPage() {
-    const [orders, dashboard, orgSettings, currency] = await Promise.all([
-        getPurchaseOrders(),
+export default async function PurchaseRegistryPage({ searchParams }: { searchParams: { status?: string, query?: string } }) {
+    const [orders, dashboard, context] = await Promise.all([
+        getPurchaseOrders(searchParams),
         getPODashboard(),
-        getOrgSettings(),
-        getOrgCurrency(),
+        getCommercialContext(),
     ]);
-    const tradeSubTypesEnabled = orgSettings.tradeSubTypesEnabled;
+    const { tradeSubTypesEnabled, currency } = context;
 
     const rfqCount = dashboard?.by_status?.DRAFT || 0;
     const pendingApproval = dashboard?.pending_approval || 0;
@@ -134,90 +114,12 @@ export default async function PurchaseRegistryPage() {
                 </div>
             </div>
 
-            {/* Table */}
-            <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-                <table className="w-full text-left">
-                    <thead className="bg-[#F8FAFC] border-b border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                        <tr>
-                            <th className="p-6">PO Number</th>
-                            <th className="p-6">Supplier</th>
-                            <th className="p-6">Status</th>
-                            {tradeSubTypesEnabled && <th className="p-6">Type</th>}
-                            <th className="p-6">Priority</th>
-                            <th className="p-6 text-right">Amount</th>
-                            <th className="p-6">Expected</th>
-                            <th className="p-6 text-right w-10"></th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                        {(!orders || orders.length === 0) ? (
-                            <tr>
-                                <td colSpan={tradeSubTypesEnabled ? 8 : 7} className="p-20 text-center text-gray-400 font-medium italic">
-                                    No purchase orders found. Create your first PO to get started.
-                                </td>
-                            </tr>
-                        ) : (
-                            orders.map((po: Record<string, any>) => {
-                                const statusInfo = STATUS_MAP[po.status] || { label: po.status, color: 'bg-gray-100 text-gray-400' };
-                                const priorityInfo = PRIORITY_MAP[po.priority] || { label: po.priority, color: 'text-gray-500' };
-                                return (
-                                    <tr key={po.id} className="hover:bg-gray-50 group transition-colors">
-                                        <td className="p-6">
-                                            <Link href={`/purchases/${po.id}`} className="flex flex-col">
-                                                <span className="font-bold text-gray-900 group-hover:text-emerald-600 transition-colors uppercase tracking-tight">
-                                                    {po.po_number || `PO-${po.id}`}
-                                                </span>
-                                                <div className="flex items-center gap-1 text-[10px] text-gray-400 mt-0.5">
-                                                    <Calendar size={10} />
-                                                    {po.created_at ? new Date(po.created_at).toLocaleDateString('fr-FR') : '—'}
-                                                </div>
-                                            </Link>
-                                        </td>
-                                        <td className="p-6">
-                                            <span className="text-sm font-bold text-gray-700">
-                                                {po.supplier_display || po.supplier_name || 'N/A'}
-                                            </span>
-                                        </td>
-                                        <td className="p-6">
-                                            <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${statusInfo.color}`}>
-                                                {statusInfo.label}
-                                            </span>
-                                        </td>
-                                        {tradeSubTypesEnabled && (
-                                            <td className="p-6">
-                                                {po.purchase_sub_type && PO_SUB_TYPE_CONFIG[po.purchase_sub_type] ? (
-                                                    <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${PO_SUB_TYPE_CONFIG[po.purchase_sub_type].color}`}>
-                                                        {PO_SUB_TYPE_CONFIG[po.purchase_sub_type].label}
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-xs text-gray-300">—</span>
-                                                )}
-                                            </td>
-                                        )}
-                                        <td className="p-6">
-                                            <span className={`text-xs font-bold ${priorityInfo.color}`}>
-                                                {po.priority === 'URGENT' && <AlertTriangle size={12} className="inline mr-1" />}
-                                                {priorityInfo.label}
-                                            </span>
-                                        </td>
-                                        <td className="p-6 text-right font-black text-gray-900">
-                                            {parseFloat(po.total_amount || 0).toLocaleString()} {currency}
-                                        </td>
-                                        <td className="p-6 text-sm text-gray-500">
-                                            {po.expected_date ? new Date(po.expected_date).toLocaleDateString('fr-FR') : '—'}
-                                        </td>
-                                        <td className="p-6 text-right">
-                                            <Link href={`/purchases/${po.id}`} className="opacity-0 group-hover:opacity-100 transition-opacity p-2 text-gray-300 hover:text-emerald-500">
-                                                <Clock size={16} />
-                                            </Link>
-                                        </td>
-                                    </tr>
-                                );
-                            })
-                        )}
-                    </tbody>
-                </table>
-            </div>
+            {/* Registry */}
+            <PurchasesRegistryClient
+                orders={orders}
+                currency={currency}
+                tradeSubTypesEnabled={tradeSubTypesEnabled}
+            />
         </div>
     );
 }

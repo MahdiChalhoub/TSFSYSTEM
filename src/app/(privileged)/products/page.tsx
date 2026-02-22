@@ -178,7 +178,7 @@ function ProductRow({ product }: { product: Record<string, any> }) {
                         <span className="text-sm font-medium">{product.country.name}</span>
                         <span className="text-xs bg-gray-100 px-1 rounded text-gray-500">{product.country.code}</span>
                     </div>
-                ) : <span className="text-gray-400">ΓÇö</span>}
+                ) : <span className="text-gray-400">ΓÇ—</span>}
 
                 {Number(product.size) > 0 && (
                     <div className="text-xs text-gray-500 mt-1">{Number(product.size)} {product.sizeUnit?.shortName}</div>
@@ -226,7 +226,7 @@ function GroupRow({ group }: { group: Record<string, any> }) {
 
     const variantCount = group.products?.length || 0;
     // Extract Unique Countries
-    const uniqueCountries = Array.from(new Set(group.products?.map((p: Record<string, any>) => p.country?.code).filter(Boolean)));
+    const uniqueCountries = Array.from(new Set(group.products?.map((p: any) => p.country?.code).filter(Boolean)));
 
     return (
         <tr className="hover:bg-gray-50/60 transition-colors bg-gray-50/30">
@@ -243,7 +243,7 @@ function GroupRow({ group }: { group: Record<string, any> }) {
                 <div className="flex flex-col gap-1">
                     <span className="text-sm font-medium text-gray-900">{variantCount} Variants</span>
                     <div className="flex gap-1 flex-wrap">
-                        {uniqueCountries.map((c: Record<string, any>) => (
+                        {uniqueCountries.map((c: any) => (
                             <span key={c} className="text-[10px] bg-white border border-gray-200 px-1.5 py-0.5 rounded shadow-sm flex items-center gap-0.5">
                                 <Globe size={8} className="text-gray-400" /> {c}
                             </span>

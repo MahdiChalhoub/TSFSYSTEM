@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { ArrowRightLeft, CheckSquare, Square, Save, Loader2 } from 'lucide-react';
 import { CategoryTreeSelector } from './CategoryTreeSelector';
-import { moveProducts } from '@/app/actions/categories';
+import { moveProducts } from '@/app/actions/inventory/categories';
 import { toast } from 'sonner';
 
 type Props = {

@@ -136,9 +136,9 @@ export async function createFormalPurchaseOrder(prevState: PurchaseFormState, fo
     }
 
     const rawData = {
-        supplierId: formData.get('supplierId'),
-        siteId: formData.get('siteId'),
-        warehouseId: formData.get('warehouseId'),
+        supplierId: Number(formData.get('supplierId')),
+        siteId: Number(formData.get('siteId')),
+        warehouseId: Number(formData.get('warehouseId')),
         scope: formData.get('scope'),
         notes: formData.get('notes'),
         refCode: formData.get('refCode'),

@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
-import { createCategory, updateCategory, CategoryState } from '@/app/actions/categories';
+import { createCategory, updateCategory, CategoryState } from '@/app/actions/inventory/categories';
 import { X, Save, Loader2, FolderTree, AlertCircle } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 import { CategoryCascader } from './CategoryCascader';

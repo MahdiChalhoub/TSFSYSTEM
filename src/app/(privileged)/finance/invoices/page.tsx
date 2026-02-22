@@ -1,14 +1,44 @@
+"use client"
+
+import React, { useState, useEffect, useMemo, useTransition } from "react"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
 import { useCurrency } from "@/lib/utils/currency"
+import {
+    Cloud, FileText, Plus, DollarSign, AlertTriangle,
+    TrendingUp, Receipt, Send, CreditCard, Search,
+    Ban, ClipboardList
+} from "lucide-react"
+import AttachmentManager from "@/components/common/AttachmentManager"
+import { toast } from "sonner"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
+import {
+    Dialog, DialogContent, DialogHeader, DialogTitle,
+    DialogDescription
+} from "@/components/ui/dialog"
+
+// Actions
+import {
+    getInvoices,
+    getInvoiceDashboard,
+    sendInvoice,
+    recordInvoicePayment,
+    cancelInvoice,
+    createInvoice
+} from "@/app/actions/finance/invoices"
+import { getTradeSubTypeSettings } from "@/app/actions/settings/trade-settings"
 
 type ActiveTab = 'ALL' | 'DRAFT' | 'SENT' | 'OVERDUE' | 'PAID'
 
-const STATUS_CONFIG: Record<string, { label: string; variant: 'default' | 'success' | 'warning' | 'destructive' }> = {
+const STATUS_CONFIG: Record<string, { label: string; variant: 'default' | 'success' | 'warning' | 'danger' }> = {
     DRAFT: { label: 'Draft', variant: 'default' },
     SENT: { label: 'Sent', variant: 'default' },
     PARTIAL_PAID: { label: 'Partial', variant: 'warning' },
     PAID: { label: 'Paid', variant: 'success' },
-    OVERDUE: { label: 'Overdue', variant: 'destructive' },
+    OVERDUE: { label: 'Overdue', variant: 'danger' },
     CANCELLED: { label: 'Cancelled', variant: 'default' },
     WRITTEN_OFF: { label: 'Written Off', variant: 'default' },
 }
@@ -419,6 +449,19 @@ export default function InvoicesPage() {
                 loading={loading || isPending}
                 getRowId={(inv) => inv.id}
                 columns={columns}
+                renderExpanded={(inv: any) => (
+                    <div className="bg-gray-50/50 p-6 border-t border-gray-100 overflow-hidden animate-in slide-in-from-top-2 duration-300">
+                        <div className="max-w-4xl mx-auto bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
+                            <AttachmentManager
+                                linkedModel="commercial.Invoice"
+                                linkedId={inv.id}
+                                category="INVOICE"
+                                title={`Attachments for ${inv.invoice_number || `#${inv.id}`}`}
+                                compact
+                            />
+                        </div>
+                    </div>
+                )}
                 lifecycle={{
                     getStatus: (inv) => STATUS_CONFIG[inv.status] || STATUS_CONFIG.DRAFT
                 }}
