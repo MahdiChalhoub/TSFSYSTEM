@@ -89,8 +89,8 @@ class TenantModelViewSet(AuditLogMixin, viewsets.ModelViewSet):
         if user.is_staff or user.is_superuser:
             if tenant_id:
                 return self.queryset.filter(organization_id=tenant_id)
-            # SaaS Root: no data leak — staff must proxy into tenant
-            return self.queryset.none()
+            # SaaS Root & Global Admin: Allow cross-tenant data visibility
+            return self.queryset.all()
         
         # 2. Strict Tenant Isolation for Regular Users
         if not user.organization_id:
@@ -127,6 +127,14 @@ class TenantModelViewSet(AuditLogMixin, viewsets.ModelViewSet):
 class UserViewSet(TenantModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+    def get_queryset(self):
+        # Extend base scoping with registration_status filtering for the SaaS Admin queue
+        qs = super().get_queryset()
+        status_filter = self.request.query_params.get('registration_status')
+        if status_filter:
+            qs = qs.filter(registration_status=status_filter)
+        return qs
 
     @action(detail=True, methods=['post'], url_path='set-scope-pin')
     def set_scope_pin(self, request, pk=None):
@@ -931,6 +939,7 @@ class DashboardViewSet(viewsets.ViewSet):
         active_tenants = Organization.objects.filter(is_active=True).count()
         total_modules = SystemModule.objects.count()
         total_deployments = OrganizationModule.objects.filter(is_enabled=True).count()
+        pending_registrations = User.objects.filter(registration_status='PENDING').count()
         
         latest_tenants = Organization.objects.order_by('-created_at')[:5]
         latest_tenants_data = [{
@@ -944,6 +953,7 @@ class DashboardViewSet(viewsets.ViewSet):
         return Response({
             "tenants": total_tenants,
             "activeTenants": active_tenants,
+            "pendingRegistrations": pending_registrations,
             "modules": total_modules,
             "deployments": total_deployments,
             "systemLoad": "Optimal",
