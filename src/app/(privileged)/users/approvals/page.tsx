@@ -116,27 +116,27 @@ export default function ApprovalsPage() {
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             {/* Header Section */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-background to-muted/30 p-6 rounded-2xl border">
+            <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/70">
-                        Management Terminal
+                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-[1.5rem] bg-amber-600 flex items-center justify-center shadow-lg shadow-amber-200">
+                            <Fingerprint size={28} className="text-white" />
+                        </div>
+                        Management <span className="text-amber-600">Terminal</span>
                     </h1>
-                    <p className="text-muted-foreground mt-1 flex items-center gap-2 font-medium italic">
-                        <Fingerprint className="h-4 w-4" />
-                        Identity Verification & Authorization Desk
-                    </p>
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Identity Verification & Authorization Desk</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <div className="flex flex-col items-end mr-4">
-                        <span className="text-2xl font-bold text-primary">{users.length}</span>
-                        <span className="text-[10px] uppercase tracking-widest font-bold opacity-50">Pending</span>
+                        <span className="text-2xl font-black text-gray-900">{users.length}</span>
+                        <span className="text-[10px] uppercase tracking-widest font-black text-gray-400">Pending</span>
                     </div>
-                    <Button onClick={loadData} variant="outline" className="rounded-xl px-6 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 border">
+                    <Button onClick={loadData} variant="outline" className="rounded-2xl px-6 h-12 font-bold">
                         <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                         Sync Data
                     </Button>
                 </div>
-            </div>
+            </header>
 
             {/* Main Content */}
             <Card className="border-none shadow-2xl bg-card/50 backdrop-blur-sm overflow-hidden rounded-3xl ring-1 ring-white/10">

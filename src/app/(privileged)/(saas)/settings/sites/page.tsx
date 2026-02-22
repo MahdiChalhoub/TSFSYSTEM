@@ -31,6 +31,11 @@ export default function SitesPage() {
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex justify-between items-end">
                 <div>
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg">
+                            <MapPin size={28} />
+                        </div>
+                    </div>
                     <h2 className="text-3xl font-black text-gray-900 tracking-tight">Sites & Branches</h2>
                     <p className="text-gray-500 mt-2 font-medium">Manage physical locations and branch offices</p>
                 </div>

@@ -37,6 +37,7 @@ This file is the **Single Source of Truth** for all AI agents.
 | **Sales History Refinement** | **Agent-4** | ✅ DONE | [Plan](file:///root/.gemini/antigravity/brain/1ee34314-f18b-4d81-a8ce-d4678fd53412/implementation_plan.md) |
 | **Sales Sub-Modules Sweep** | **Agent-4** | ✅ DONE | [Walkthrough](file:///root/.gemini/antigravity/brain/1ee34314-f18b-4d81-a8ce-d4678fd53412/walkthrough.md) |
 | **E-Commerce & Settings Sweep** | **Agent-4** | ✅ DONE | [Walkthrough](file:///root/.gemini/antigravity/brain/1ee34314-f18b-4d81-a8ce-d4678fd53412/walkthrough.md) |
+| **Purchases & Users Sweep** | **Agent-4** | ✅ DONE | [Walkthrough](file:///root/.gemini/antigravity/brain/1ee34314-f18b-4d81-a8ce-d4678fd53412/walkthrough.md) |
 | **E-Invoicing (ZATCA Phase 2)** | **#1877 - Specialist** | ✅ DONE | [Walkthrough](file:///root/.gemini/antigravity/brain/18772dfe-f3d9-4f47-976a-cc07ec207705/walkthrough.md) |
 
 

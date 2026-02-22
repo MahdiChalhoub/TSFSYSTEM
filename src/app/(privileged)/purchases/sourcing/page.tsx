@@ -37,14 +37,17 @@ export default async function SourcingDashboardPage() {
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
             {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                    <h1 className="text-4xl lg:text-6xl font-black text-gray-900 tracking-tighter">
+                    <h1 className="text-4xl font-black text-gray-900 tracking-tighter flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
+                            <BarChart3 size={28} className="text-white" />
+                        </div>
                         Sourcing <span className="text-emerald-500">Intelligence</span>
                     </h1>
-                    <p className="text-gray-500 font-bold mt-2">Evaluate vendor performance and optimization opportunities.</p>
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Vendor Performance & Optimization Opportunities</p>
                 </div>
-            </div>
+            </header>
 
             {/* KPI Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

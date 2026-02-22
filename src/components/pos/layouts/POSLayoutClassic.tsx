@@ -2,15 +2,21 @@
 
 import { POSLayoutProps } from '@/types/pos-layout';
 import { ProductGrid } from '@/components/pos/ProductGrid';
-import { CartTotals } from '@/components/pos/CartTotals';
+import { CompactClientHeader } from '@/components/pos/CompactClientHeader';
 import { Numpad } from '@/components/pos/Numpad';
-import { Search, ShoppingCart, Plus, X, Minus, Trash2, User, Settings, ChevronDown, Layout } from 'lucide-react';
+import { ManagerOverride } from '@/components/pos/ManagerOverride';
+import { ReceiptModal } from '@/components/pos/ReceiptModal';
+import {
+    Search, ShoppingCart, Plus, X, Minus, Trash2, User, ChevronDown, Layout,
+    Maximize, Minimize, FileText, Settings, Wallet, Save, Book, File, ArrowLeft
+} from 'lucide-react';
 import clsx from 'clsx';
+import { toast } from 'sonner';
 
 /**
  * Layout A: "Classic" — Odoo-Inspired
  * Products left (65%), Order panel right (35%) with numpad.
- * Clean, familiar retail layout with category-colored product cards.
+ * Full functionality: fullscreen, all action buttons, sessions, client info.
  */
 export function POSLayoutClassic(props: POSLayoutProps) {
     const {
@@ -18,10 +24,12 @@ export function POSLayoutClassic(props: POSLayoutProps) {
         sessions, activeSessionId, currency, total, discount, totalAmount,
         totalPieces, uniqueItems, searchQuery, activeCategoryId,
         isFullscreen, paymentMethod, cashReceived, isProcessing,
+        isOverrideOpen, isReceiptOpen, lastOrder,
         onSetSearchQuery, onSetActiveCategoryId, onSetActiveSessionId,
         onSetPaymentMethod, onSetCashReceived, onAddToCart, onUpdateQuantity,
         onClearCart, onCreateNewSession, onRemoveSession, onUpdateActiveSession,
-        onToggleFullscreen, onCharge, onOpenLayoutSelector, onSetOverrideOpen
+        onToggleFullscreen, onCharge, onOpenLayoutSelector,
+        onSetOverrideOpen, onSetReceiptOpen
     } = props;
 
     return (
@@ -29,122 +37,141 @@ export function POSLayoutClassic(props: POSLayoutProps) {
             "flex flex-col bg-[#f0f2f5] overflow-hidden select-none h-full",
             isFullscreen ? "fixed inset-0 z-[1000] h-screen w-screen" : "absolute inset-0"
         )}>
-            {/* ─── TOP BAR ─── */}
-            <header className="h-14 bg-[#1B1D2A] flex items-center justify-between px-5 shrink-0 z-50">
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
-                            <ShoppingCart size={16} className="text-white" />
+            {/* ═══════ HEADER — FULL FEATURE ═══════ */}
+            <header className="h-14 bg-white border-b border-gray-100 flex items-center justify-between px-5 shrink-0 z-50 shadow-sm">
+                <div className="flex items-center gap-5">
+                    <h1 className="text-xl font-black tracking-tighter text-gray-900 flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-100">
+                            <ShoppingCart size={18} className="text-white" />
                         </div>
-                        <span className="text-white font-black text-sm tracking-tight">POS Terminal</span>
-                    </div>
+                        Sales <span className="text-indigo-600">Terminal</span>
+                    </h1>
 
                     {/* Session Tabs */}
-                    <div className="flex gap-1 ml-4">
+                    <div className="flex gap-1.5 ml-2 overflow-x-auto max-w-md no-scrollbar">
                         {sessions.map(s => (
-                            <div key={s.id} className="flex items-center group">
+                            <div key={s.id} className="flex shrink-0 group">
                                 <button
                                     onClick={() => onSetActiveSessionId(s.id)}
                                     className={clsx(
-                                        "px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all",
+                                        "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all",
                                         activeSessionId === s.id
-                                            ? "bg-indigo-600 text-white"
-                                            : "bg-white/10 text-white/60 hover:bg-white/20"
+                                            ? "bg-indigo-600 text-white shadow-lg shadow-indigo-100"
+                                            : "bg-gray-50 text-gray-400 hover:bg-gray-100"
                                     )}
                                 >
+                                    <ShoppingCart size={10} className={activeSessionId === s.id ? "text-white" : "text-gray-300"} />
                                     {s.name}
                                 </button>
-                                <button
-                                    onClick={() => onRemoveSession(s.id)}
-                                    className="ml-[-4px] p-0.5 text-white/30 hover:text-rose-400 transition-all opacity-0 group-hover:opacity-100"
-                                >
-                                    <X size={10} />
+                                <button onClick={() => onRemoveSession(s.id)} className="ml-[-6px] p-0.5 text-gray-300 hover:text-rose-500 transition-all opacity-0 group-hover:opacity-100">
+                                    <X size={9} />
                                 </button>
                             </div>
                         ))}
-                        <button
-                            onClick={onCreateNewSession}
-                            className="w-7 h-7 flex items-center justify-center bg-white/10 text-white/50 rounded-lg hover:bg-indigo-600 hover:text-white transition-all"
-                        >
-                            <Plus size={14} />
+                        <button onClick={onCreateNewSession} className="w-7 h-7 flex items-center justify-center bg-gray-50 text-gray-400 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-all">
+                            <Plus size={13} />
                         </button>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                    {/* Client Selector */}
-                    <div className="relative">
-                        <User className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/40" size={12} />
-                        <select
-                            value={selectedClientId}
-                            onChange={(e) => onUpdateActiveSession({ clientId: Number(e.target.value) })}
-                            className="pl-8 pr-6 py-1.5 bg-white/10 border border-white/10 rounded-lg text-[10px] text-white font-bold appearance-none outline-none focus:border-indigo-500 transition-all cursor-pointer uppercase tracking-wider"
-                        >
-                            {clients.map(c => (
-                                <option key={c.id} value={c.id} className="text-gray-900">{c.name}</option>
-                            ))}
-                        </select>
-                        <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" size={10} />
-                    </div>
-
-                    <button onClick={onOpenLayoutSelector} className="w-8 h-8 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 rounded-lg transition-all" title="Switch Layout">
-                        <Layout size={16} />
+                <div className="flex items-center gap-2">
+                    <button onClick={onToggleFullscreen} className="bg-indigo-50 border border-indigo-100 text-indigo-600 h-9 px-3 rounded-xl font-bold shadow-sm hover:bg-indigo-600 hover:text-white transition-all flex items-center gap-1.5">
+                        {isFullscreen ? <Minimize size={14} /> : <Maximize size={14} />}
+                        <span className="text-[9px] uppercase tracking-widest font-black">{isFullscreen ? 'Exit' : 'Fullscreen'}</span>
                     </button>
-                    <button onClick={onToggleFullscreen} className="w-8 h-8 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 rounded-lg transition-all">
-                        <Settings size={16} />
+                    <div className="h-5 w-px bg-gray-100 mx-0.5" />
+                    <button onClick={onOpenLayoutSelector} className="w-8 h-8 flex items-center justify-center bg-white border border-gray-100 rounded-lg text-gray-400 hover:text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50 transition-all shadow-sm" title="Switch Layout">
+                        <Layout size={15} />
+                    </button>
+                    {[FileText, Settings, Wallet, Save, Book, File].map((Icon, i) => (
+                        <button key={i} className="w-8 h-8 flex items-center justify-center bg-white border border-gray-100 rounded-lg text-gray-400 hover:text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50 transition-all shadow-sm">
+                            <Icon size={15} />
+                        </button>
+                    ))}
+                    <button className="w-8 h-8 flex items-center justify-center bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-all shadow-lg shadow-gray-200 ml-0.5">
+                        <ArrowLeft size={15} />
                     </button>
                 </div>
             </header>
 
-            {/* ─── MAIN CONTENT ─── */}
+            {/* ═══════ CLIENT INFO BAR ═══════ */}
+            <CompactClientHeader
+                client={selectedClient}
+                currency={currency}
+                uniqueItems={uniqueItems}
+                totalPieces={totalPieces}
+            />
+
+            {/* ═══════ SEARCH + CLIENT SELECTOR ═══════ */}
+            <div className="bg-white border-b border-gray-100 px-5 py-2.5 flex items-center gap-3 shrink-0">
+                <div className="w-56">
+                    <div className="relative group">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors" size={13} />
+                        <select
+                            value={selectedClientId}
+                            onChange={(e) => onUpdateActiveSession({ clientId: Number(e.target.value) })}
+                            className="w-full pl-9 pr-8 py-2 bg-gray-50/50 border border-gray-100 rounded-xl text-[10px] font-black appearance-none outline-none focus:bg-white focus:border-indigo-500 transition-all cursor-pointer shadow-sm uppercase tracking-widest"
+                        >
+                            {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={12} />
+                    </div>
+                </div>
+
+                <div className="h-7 w-px bg-gray-100" />
+
+                {/* Category Pills inline */}
+                <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
+                    <button
+                        onClick={() => onSetActiveCategoryId(null)}
+                        className={clsx(
+                            "px-3 py-1.5 whitespace-nowrap rounded-full text-[9px] font-black uppercase tracking-widest transition-all border",
+                            activeCategoryId === null
+                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-100'
+                                : 'bg-white text-gray-500 border-gray-200 hover:border-indigo-200 hover:text-indigo-600'
+                        )}
+                    >
+                        All
+                    </button>
+                    {categories.map(cat => (
+                        <button
+                            key={cat.id}
+                            onClick={() => onSetActiveCategoryId(cat.id)}
+                            className={clsx(
+                                "px-3 py-1.5 whitespace-nowrap rounded-full text-[9px] font-black uppercase tracking-widest transition-all border",
+                                activeCategoryId === cat.id
+                                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-100'
+                                    : 'bg-white text-gray-500 border-gray-200 hover:border-indigo-200 hover:text-indigo-600'
+                            )}
+                        >
+                            {cat.name}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="h-7 w-px bg-gray-100" />
+
+                <div className="relative flex-1 group">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-500 transition-colors" size={15} />
+                    <input
+                        type="text"
+                        placeholder="Search products..."
+                        className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold outline-none focus:bg-white focus:border-indigo-500 transition-all"
+                        value={searchQuery}
+                        onChange={(e) => onSetSearchQuery(e.target.value)}
+                    />
+                </div>
+
+                <button className="h-9 px-5 bg-indigo-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center gap-1.5">
+                    <Plus size={14} />
+                    Product
+                </button>
+            </div>
+
+            {/* ═══════ MAIN CONTENT ═══════ */}
             <div className="flex-1 flex overflow-hidden">
                 {/* ─── LEFT: Products ─── */}
                 <div className="flex-1 flex flex-col bg-[#f0f2f5] overflow-hidden">
-                    {/* Search + Categories */}
-                    <div className="p-4 pb-2 flex flex-col gap-3 shrink-0 bg-white border-b border-gray-100">
-                        {/* Search */}
-                        <div className="relative group">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-500 transition-colors" size={16} />
-                            <input
-                                type="text"
-                                placeholder="Search products..."
-                                className="w-full pl-11 pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-sm font-medium outline-none focus:bg-white focus:border-indigo-500 transition-all"
-                                value={searchQuery}
-                                onChange={(e) => onSetSearchQuery(e.target.value)}
-                            />
-                        </div>
-
-                        {/* Category Pills */}
-                        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                            <button
-                                onClick={() => onSetActiveCategoryId(null)}
-                                className={clsx(
-                                    "px-4 py-2 whitespace-nowrap rounded-full text-xs font-bold transition-all border",
-                                    activeCategoryId === null
-                                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-100'
-                                        : 'bg-white text-gray-500 border-gray-200 hover:border-indigo-200 hover:text-indigo-600'
-                                )}
-                            >
-                                All Items
-                            </button>
-                            {categories.map(cat => (
-                                <button
-                                    key={cat.id}
-                                    onClick={() => onSetActiveCategoryId(cat.id)}
-                                    className={clsx(
-                                        "px-4 py-2 whitespace-nowrap rounded-full text-xs font-bold transition-all border",
-                                        activeCategoryId === cat.id
-                                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-100'
-                                            : 'bg-white text-gray-500 border-gray-200 hover:border-indigo-200 hover:text-indigo-600'
-                                    )}
-                                >
-                                    {cat.name}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Product Grid */}
                     <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                         <ProductGrid
                             searchQuery={searchQuery}
@@ -163,9 +190,14 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                             <h2 className="text-xs font-black uppercase tracking-widest text-gray-900">Current Order</h2>
                         </div>
-                        <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-400">
-                            <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-md font-black">{uniqueItems} lines</span>
-                            <span className="px-2 py-0.5 bg-gray-50 text-gray-600 rounded-md font-black">{totalPieces} pcs</span>
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-[9px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">{uniqueItems} lines</span>
+                            <span className="text-[9px] font-black text-gray-600 bg-gray-50 px-2 py-0.5 rounded-md">{totalPieces} pcs</span>
+                            {cart.length > 0 && (
+                                <button onClick={onClearCart} className="text-[8px] font-bold text-gray-400 hover:text-rose-500 uppercase tracking-widest ml-1 transition-colors">
+                                    Clear
+                                </button>
+                            )}
                         </div>
                     </div>
 
@@ -181,41 +213,25 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                             <div className="divide-y divide-gray-50">
                                 {cart.map((item: any) => (
                                     <div key={item.productId} className="px-5 py-3 flex items-center gap-3 group hover:bg-gray-50/50 transition-colors">
-                                        {/* Product Info */}
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-bold text-gray-900 truncate">{item.name}</p>
                                             <p className="text-[10px] text-gray-400 font-medium tabular-nums">
                                                 {currency}{Number(item.price).toFixed(2)} × {item.quantity}
                                             </p>
                                         </div>
-
-                                        {/* Qty Controls */}
                                         <div className="flex items-center gap-1">
-                                            <button
-                                                onClick={() => onUpdateQuantity(item.productId, -1)}
-                                                className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-rose-100 hover:text-rose-600 flex items-center justify-center text-gray-400 transition-all active:scale-90"
-                                            >
+                                            <button onClick={() => onUpdateQuantity(item.productId, -1)} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-rose-100 hover:text-rose-600 flex items-center justify-center text-gray-400 transition-all active:scale-90">
                                                 <Minus size={12} />
                                             </button>
                                             <span className="w-8 text-center text-sm font-black tabular-nums text-gray-900">{item.quantity}</span>
-                                            <button
-                                                onClick={() => onUpdateQuantity(item.productId, 1)}
-                                                className="w-7 h-7 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 flex items-center justify-center transition-all active:scale-90"
-                                            >
+                                            <button onClick={() => onUpdateQuantity(item.productId, 1)} className="w-7 h-7 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 flex items-center justify-center transition-all active:scale-90">
                                                 <Plus size={12} />
                                             </button>
                                         </div>
-
-                                        {/* Line Total */}
                                         <span className="w-20 text-right text-sm font-black tabular-nums text-gray-900">
                                             {currency}{(Number(item.price) * item.quantity).toFixed(2)}
                                         </span>
-
-                                        {/* Delete */}
-                                        <button
-                                            onClick={() => onUpdateQuantity(item.productId, -100)}
-                                            className="opacity-0 group-hover:opacity-100 w-6 h-6 flex items-center justify-center text-gray-300 hover:text-rose-500 transition-all"
-                                        >
+                                        <button onClick={() => onUpdateQuantity(item.productId, -100)} className="opacity-0 group-hover:opacity-100 w-6 h-6 flex items-center justify-center text-gray-300 hover:text-rose-500 transition-all">
                                             <Trash2 size={12} />
                                         </button>
                                     </div>
@@ -256,7 +272,6 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                             </div>
                         </div>
 
-                        {/* Payment Button */}
                         <button
                             onClick={onCharge}
                             disabled={cart.length === 0 || isProcessing}
@@ -272,6 +287,19 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                     </div>
                 </aside>
             </div>
+
+            <ManagerOverride
+                isOpen={isOverrideOpen}
+                actionLabel="Authorize Change"
+                onClose={() => onSetOverrideOpen(false)}
+                onSuccess={() => toast.success("Action authorized")}
+            />
+            <ReceiptModal
+                isOpen={isReceiptOpen}
+                onClose={() => onSetReceiptOpen(false)}
+                orderId={lastOrder?.id || null}
+                refCode={lastOrder?.ref || null}
+            />
         </div>
     );
 }
