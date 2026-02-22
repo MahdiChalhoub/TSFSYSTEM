@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useCallback, memo } from 'react';
-import { ChevronRight, ChevronDown, Edit2, Trash2, Plus, Folder, AlertCircle, Bookmark, Tag, Box } from 'lucide-react';
+import { ChevronRight, ChevronDown, Edit2, Trash2, Plus, Folder, AlertCircle, Bookmark, Tag, Box, Search } from 'lucide-react';
 import { CategoryFormModal } from './CategoryFormModal';
+import { CategoryExplorer } from './CategoryExplorer';
 import { deleteCategory } from '@/app/actions/categories';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -22,6 +23,7 @@ type CategoryNode = {
 
 export function CategoryTree({ categories, allCategories = [] }: { categories: CategoryNode[], allCategories?: Record<string, any>[] }) {
     const [activeModal, setActiveModal] = useState<{ type: 'edit' | 'add-child' | 'none', category?: CategoryNode, parentId?: number }>({ type: 'none' });
+    const [explorerTarget, setExplorerTarget] = useState<{ id: number; name: string } | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<CategoryNode | null>(null);
 
     const handleEdit = useCallback((category: CategoryNode) => {
@@ -34,6 +36,10 @@ export function CategoryTree({ categories, allCategories = [] }: { categories: C
 
     const handleRequestDelete = useCallback((category: CategoryNode) => {
         setDeleteTarget(category);
+    }, []);
+
+    const handleExplore = useCallback((id: number, name: string) => {
+        setExplorerTarget({ id, name });
     }, []);
 
     const handleConfirmDelete = async () => {
@@ -70,6 +76,7 @@ export function CategoryTree({ categories, allCategories = [] }: { categories: C
                         onEdit={handleEdit}
                         onAddChild={handleAddChild}
                         onDelete={handleRequestDelete}
+                        onExplore={handleExplore}
                     />
                 </div>
             ))}
@@ -84,6 +91,13 @@ export function CategoryTree({ categories, allCategories = [] }: { categories: C
                     potentialParents={allCategories}
                 />
             )}
+
+            <CategoryExplorer
+                categoryId={explorerTarget?.id || null}
+                categoryName={explorerTarget?.name || null}
+                isOpen={explorerTarget !== null}
+                onClose={() => setExplorerTarget(null)}
+            />
 
             <ConfirmDialog
                 open={deleteTarget !== null}
@@ -104,7 +118,8 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
     allCategories,
     onEdit,
     onAddChild,
-    onDelete
+    onDelete,
+    onExplore
 }: {
     category: CategoryNode;
     level: number;
@@ -112,6 +127,7 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
     onEdit: (cat: CategoryNode) => void;
     onAddChild: (id: number) => void;
     onDelete: (cat: CategoryNode) => void;
+    onExplore: (id: number, name: string) => void;
 }) {
     const [isExpanded, setIsExpanded] = useState(true);
 
@@ -165,9 +181,15 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
                     </div>
 
                     {/* Info */}
-                    <div>
+                    <div
+                        className="cursor-pointer group/title"
+                        onClick={() => onExplore(category.id, category.name)}
+                    >
                         <div className="flex items-center gap-2">
-                            <h4 className="font-extrabold text-gray-900 text-lg tracking-tight">{category.name}</h4>
+                            <h4 className="font-extrabold text-gray-900 text-lg tracking-tight group-hover/title:text-orange-600 transition-colors flex items-center gap-2">
+                                {category.name}
+                                <Search size={14} className="opacity-0 group-hover/title:opacity-100 transition-opacity text-orange-400" />
+                            </h4>
                             {category.code && (
                                 <span className="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-gray-100 text-gray-500 border border-gray-200 shadow-sm">
                                     {category.code}
@@ -251,6 +273,7 @@ const CategoryTreeNode = memo(function CategoryTreeNode({
                             onEdit={onEdit}
                             onAddChild={onAddChild}
                             onDelete={onDelete}
+                            onExplore={onExplore}
                         />
                     ))}
                 </div>
