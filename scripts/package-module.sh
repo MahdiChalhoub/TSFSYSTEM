@@ -18,6 +18,7 @@ cd "$PROJECT_ROOT"
 
 MODULES_DIR="src/modules"
 RELEASES_DIR="releases/modules"
+VERSION_LOG="releases/VERSION_HISTORY.md"
 
 # ── Colors ────────────────────────────────────────────────────────────────────
 RED='\033[0;31m'
@@ -30,6 +31,7 @@ NC='\033[0m'
 # ── Functions ─────────────────────────────────────────────────────────────────
 package_module() {
     local MODULE_NAME="$1"
+    local CHANGELOG="${2:-"Module update"}"
     local MANIFEST="$MODULES_DIR/$MODULE_NAME/manifest.json"
     
     if [[ ! -f "$MANIFEST" ]]; then
@@ -94,6 +96,7 @@ package_module() {
     "code": "$MODULE_NAME",
     "version": "$VERSION",
     "type": "module",
+    "changelog": "$CHANGELOG",
     "package_date": "$(date '+%Y-%m-%d')",
     "package_time": "$(date '+%H:%M:%S')",
     "requires_restart": true,
@@ -114,6 +117,16 @@ EOF
 
     local SIZE=$(du -h "$OUTPUT" | cut -f1)
     echo -e "   ${GREEN}✅ Packaged:${NC} $OUTPUT ($SIZE)"
+    
+    # Track in version history
+    if [[ ! -f "$VERSION_LOG" ]]; then
+        echo "# Blanc Engine — Version History" > "$VERSION_LOG"
+        echo "" >> "$VERSION_LOG"
+    fi
+    echo "## Module: $NAME v$VERSION — $(date '+%Y-%m-%d %H:%M')" >> "$VERSION_LOG"
+    echo "- $CHANGELOG" >> "$VERSION_LOG"
+    echo "" >> "$VERSION_LOG"
+    
     echo ""
 }
 
