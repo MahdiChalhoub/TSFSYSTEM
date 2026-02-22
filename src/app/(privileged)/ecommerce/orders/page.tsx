@@ -1,8 +1,16 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useTransition } from 'react'
 import { erpFetch } from '@/lib/erp-api'
-import { ShoppingCart, Clock, CheckCircle, Truck, Package, Search, RefreshCw, ChevronRight, Circle, XCircle, DollarSign } from 'lucide-react'
+import { TypicalListView, type ColumnDef } from '@/components/common/TypicalListView'
+import { TypicalFilter } from '@/components/common/TypicalFilter'
+import { useListViewSettings } from '@/hooks/useListViewSettings'
+import { useCurrency } from '@/lib/utils/currency'
+import { toast } from 'sonner'
+import { ShoppingCart, Clock, CheckCircle, Truck, Package, Search, RefreshCw, ChevronRight, Circle, XCircle, DollarSign, Zap, Globe } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 
 type Order = {
     id: number
@@ -15,146 +23,181 @@ type Order = {
     items_count?: number
 }
 
-const STATUS_MAP: Record<string, { label: string; color: string; icon: typeof Clock }> = {
-    PLACED: { label: 'Placed', color: 'amber', icon: Clock },
+const STATUS_MAP: Record<string, { label: string; color: string; icon: any }> = {
+    PLACED: { label: 'Awaiting Protocol', color: 'orange', icon: Clock },
     CONFIRMED: { label: 'Confirmed', color: 'blue', icon: CheckCircle },
-    PROCESSING: { label: 'Processing', color: 'violet', icon: RefreshCw },
-    SHIPPED: { label: 'Shipped', color: 'indigo', icon: Truck },
-    DELIVERED: { label: 'Delivered', color: 'emerald', icon: CheckCircle },
-    CANCELLED: { label: 'Cancelled', color: 'red', icon: XCircle },
+    PROCESSING: { label: 'Fulfillment Active', color: 'violet', icon: Zap },
+    SHIPPED: { label: 'In Transit', color: 'indigo', icon: Truck },
+    DELIVERED: { label: 'Consigned', color: 'emerald', icon: CheckCircle },
+    CANCELLED: { label: 'Aborted', color: 'rose', icon: XCircle },
 }
 
-const FILTERS = ['ALL', 'PLACED', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED']
+const ALL_COLUMNS: ColumnDef<Order>[] = [
+    { key: 'date', label: 'Protocol Date', sortable: true, alwaysVisible: true },
+    { key: 'reference', label: 'Stream ID', sortable: true, alwaysVisible: true },
+    { key: 'client', label: 'Consignee Entity' },
+    { key: 'items', label: 'Asset Count', align: 'center' },
+    { key: 'amount', label: 'Economic Exposure', align: 'right', sortable: true },
+]
 
-export default function EcommerceOrdersPage() {
+export default function DigitalCommerceStreamPage() {
+    const { fmt } = useCurrency()
+    const settings = useListViewSettings('ecommerce_orders_v3', {
+        columns: ALL_COLUMNS.map(c => c.key),
+        pageSize: 25,
+        sortKey: 'date',
+        sortDir: 'desc',
+    })
+
     const [orders, setOrders] = useState<Order[]>([])
     const [loading, setLoading] = useState(true)
-    const [filter, setFilter] = useState('ALL')
+    const [isPending, startTransition] = useTransition()
     const [search, setSearch] = useState('')
-    const [selected, setSelected] = useState<Order | null>(null)
+    const [statusFilter, setStatusFilter] = useState('ALL')
 
-    const load = useCallback(async () => {
+    const loadOrders = useCallback(async () => {
         setLoading(true)
         try {
-            const params = filter !== 'ALL' ? `?status=${filter}` : ''
+            const params = statusFilter !== 'ALL' ? `?status=${statusFilter}` : ''
             const data = await erpFetch(`client-portal/admin-orders/${params}`)
             setOrders(Array.isArray(data) ? data : (data?.results ?? []))
-        } catch { setOrders([]) }
-        setLoading(false)
-    }, [filter])
+        } catch {
+            setOrders([])
+            toast.error("Commerce stream sync failed")
+        } finally {
+            setLoading(false)
+        }
+    }, [statusFilter])
 
-    useEffect(() => { load() }, [load])
+    useEffect(() => { loadOrders() }, [loadOrders])
+
+    // KPI Calculations
+    const throughput = orders.length
+    const pendingFulfillment = orders.filter(o => o.status === 'PLACED' || o.status === 'CONFIRMED' || o.status === 'PROCESSING').length
+    const revenueVelocity = orders.reduce((sum, o) => sum + (o.total_amount || 0), 0)
+
+    const columns: ColumnDef<Order>[] = ALL_COLUMNS.map(c => {
+        const renderers: Record<string, (r: Order) => React.ReactNode> = {
+            date: r => <span className="text-gray-500 font-medium">{new Date(r.created_at).toLocaleDateString()}</span>,
+            reference: r => <span className="font-mono font-bold text-gray-900">{r.order_number || `#${r.id}`}</span>,
+            client: r => <span className="font-bold text-gray-900">{r.client?.name || r.client_name || 'Anonymous Guest'}</span>,
+            items: r => <Badge variant="secondary" className="bg-stone-100 text-stone-600 border-0 font-black text-[10px]">{r.items_count || 0} ITEMS</Badge>,
+            amount: r => <span className="font-black text-gray-900">{fmt(r.total_amount)}</span>,
+        }
+        return { ...c, render: renderers[c.key] }
+    })
 
     const filtered = orders.filter(o => {
         const q = search.toLowerCase()
         return !q || o.order_number?.toLowerCase().includes(q) || o.client?.name?.toLowerCase().includes(q) || o.client_name?.toLowerCase().includes(q)
     })
 
-    const stats: Record<string, number> = {}
-    orders.forEach(o => { stats[o.status] = (stats[o.status] || 0) + 1 })
-
     return (
-        <div className="min-h-screen bg-[#070D1B] text-gray-100 p-6 flex flex-col gap-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-700 flex items-center justify-center shadow-lg shadow-violet-900/40">
-                        <ShoppingCart size={22} className="text-white" />
-                    </div>
-                    <div>
-                        <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-[1.5rem] bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
-                                <ShoppingCart size={28} className="text-white" />
-                            </div>
-                            Online <span className="text-blue-600">Orders</span>
-                        </h1>
-                        <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">E-Commerce Orders</p>
-                    </div>
+        <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
+            <header className="flex justify-between items-center">
+                <div>
+                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-[1.5rem] bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-200">
+                            <ShoppingCart size={28} className="text-white" />
+                        </div>
+                        Digital Commerce <span className="text-violet-600">Stream</span>
+                    </h1>
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">E-Commerce Lifecycle & Transaction Engine</p>
                 </div>
-                <button onClick={load} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm">
-                    <RefreshCw size={14} />Refresh
-                </button>
+                <div className="flex items-center gap-2 bg-violet-50 px-4 py-2 rounded-2xl border border-violet-100">
+                    <div className="w-2 h-2 bg-violet-500 rounded-full animate-pulse" />
+                    <span className="text-[10px] font-black uppercase text-violet-700 tracking-widest">Global Stream Online</span>
+                </div>
+            </header>
+
+            {/* Commerce Intelligence */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-md transition-all">
+                    <CardContent className="p-6 flex items-center gap-5">
+                        <div className="w-14 h-14 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Globe size={28} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Stream Throughput</p>
+                            <h2 className="text-3xl font-black text-gray-900 mt-0.5">{throughput} <span className="text-sm text-gray-300">REQ</span></h2>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-md transition-all">
+                    <CardContent className="p-6 flex items-center gap-5">
+                        <div className="w-14 h-14 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Package size={28} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Pending Fulfillment</p>
+                            <h2 className="text-3xl font-black text-gray-900 mt-0.5">{pendingFulfillment}</h2>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-md transition-all">
+                    <CardContent className="p-6 flex items-center gap-5">
+                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <DollarSign size={28} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Revenue Velocity</p>
+                            <h2 className="text-3xl font-black text-gray-900 mt-0.5">{fmt(revenueVelocity)}</h2>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
 
-            {/* Status summary */}
-            <div className="flex gap-3 overflow-x-auto pb-1">
-                {Object.entries(STATUS_MAP).map(([key, { label, color }]) => (
-                    <div key={key} className={`shrink-0 bg-[#0F1729] border border-gray-800 rounded-2xl px-4 py-3 flex flex-col gap-0.5`}>
-                        <span className={`text-xl font-black text-${color}-400`}>{stats[key] || 0}</span>
-                        <span className="text-xs text-gray-500">{label}</span>
-                    </div>
-                ))}
-            </div>
-
-            {/* Filters + search */}
-            <div className="flex items-center gap-3 flex-wrap">
-                <div className="relative flex-1 min-w-[200px] max-w-sm">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-                    <input
-                        value={search} onChange={e => setSearch(e.target.value)}
-                        placeholder="Search by order or client…"
-                        className="w-full pl-9 pr-4 py-2 bg-[#0F1729] border border-gray-800 rounded-xl text-sm text-gray-300 placeholder-gray-600 focus:outline-none focus:border-indigo-700"
-                    />
-                </div>
-                <div className="flex gap-1 bg-[#0F1729] rounded-2xl border border-gray-800 p-1 flex-wrap">
-                    {FILTERS.map(f => (
-                        <button key={f} onClick={() => setFilter(f)} className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${filter === f ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-gray-200'}`}>
-                            {f === 'ALL' ? 'All' : STATUS_MAP[f]?.label || f}
-                            {f !== 'ALL' && stats[f] ? <span className="ml-1.5 opacity-70">{stats[f]}</span> : null}
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            {/* Orders list */}
-            <div className="flex gap-5">
-                <div className="flex-1 flex flex-col gap-2 min-w-0">
-                    {loading ? Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-16 bg-gray-800/50 rounded-xl animate-pulse" />) :
-                        filtered.length === 0 ? (
-                            <div className="bg-[#0F1729] rounded-2xl border border-gray-800 py-16 flex flex-col items-center gap-3 text-gray-500">
-                                <ShoppingCart size={48} className="opacity-20" />
-                                <p className="text-sm">No orders {filter !== 'ALL' ? `with status "${STATUS_MAP[filter]?.label}"` : ''}</p>
-                            </div>
-                        ) : (
-                            filtered.map(o => {
-                                const s = STATUS_MAP[o.status] || { label: o.status, color: 'gray', icon: Circle }
-                                const Icon = s.icon
-                                return (
-                                    <button key={o.id} onClick={() => setSelected(selected?.id === o.id ? null : o)} className={`w-full flex items-center gap-4 px-5 py-4 rounded-xl border text-left transition-all ${selected?.id === o.id ? 'bg-indigo-900/20 border-indigo-800/50' : 'bg-[#0F1729] border-gray-800 hover:border-gray-700'}`}>
-                                        <Icon size={16} className={`text-${s.color}-400 shrink-0`} />
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-mono font-semibold text-sm text-white">{o.order_number || `#${o.id}`}</span>
-                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border bg-${s.color}-900/40 text-${s.color}-400 border-${s.color}-800`}>{s.label}</span>
-                                            </div>
-                                            <p className="text-xs text-gray-500 mt-0.5 truncate">{o.client?.name || o.client_name || '—'}{o.created_at ? ` · ${new Date(o.created_at).toLocaleDateString()}` : ''}</p>
-                                        </div>
-                                        <div className="text-sm font-bold font-mono text-white shrink-0">${Number(o.total_amount || 0).toFixed(2)}</div>
-                                        <ChevronRight size={14} className="text-gray-600 shrink-0" />
-                                    </button>
-                                )
-                            })
-                        )
+            <TypicalListView<Order>
+                title="Commerce Ledger"
+                data={filtered}
+                loading={loading}
+                getRowId={r => r.id}
+                columns={columns}
+                className="rounded-3xl border-0 shadow-sm overflow-hidden"
+                pageSize={settings.pageSize}
+                onPageSizeChange={settings.setPageSize}
+                sortKey={settings.sortKey}
+                sortDir={settings.sortDir}
+                onSort={k => settings.setSort(k)}
+                headerExtra={
+                    <Button onClick={loadOrders} variant="ghost" className="h-8 w-8 p-0 text-stone-400 hover:text-violet-600">
+                        <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+                    </Button>
+                }
+                lifecycle={{
+                    getStatus: r => {
+                        const s = STATUS_MAP[r.status] || { label: r.status, color: 'gray' }
+                        const variantMap: Record<string, any> = {
+                            orange: 'warning',
+                            blue: 'default',
+                            violet: 'default',
+                            indigo: 'default',
+                            emerald: 'success',
+                            rose: 'destructive'
+                        }
+                        return { label: s.label, variant: variantMap[s.color] || 'default' }
                     }
-                </div>
-
-                {/* Detail panel */}
-                {selected && (
-                    <div className="w-72 shrink-0 bg-[#0F1729] rounded-2xl border border-gray-800 p-5 flex flex-col gap-4 h-fit sticky top-6">
-                        <div className="flex items-center justify-between">
-                            <h3 className="font-semibold text-white text-sm">Order Detail</h3>
-                            <button onClick={() => setSelected(null)} className="text-gray-600 hover:text-gray-400 text-xs">✕</button>
-                        </div>
-                        <div className="flex flex-col gap-2 text-xs">
-                            <div className="flex justify-between"><span className="text-gray-500">Order #</span><span className="font-mono text-white">{selected.order_number || `#${selected.id}`}</span></div>
-                            <div className="flex justify-between"><span className="text-gray-500">Client</span><span className="text-white">{selected.client?.name || selected.client_name || '—'}</span></div>
-                            <div className="flex justify-between"><span className="text-gray-500">Status</span><span className={`font-bold text-${(STATUS_MAP[selected.status] || {}).color || 'gray'}-400`}>{STATUS_MAP[selected.status]?.label || selected.status}</span></div>
-                            <div className="flex justify-between"><span className="text-gray-500">Total</span><span className="font-mono font-bold text-white">${Number(selected.total_amount || 0).toFixed(2)}</span></div>
-                            <div className="flex justify-between"><span className="text-gray-500">Date</span><span className="text-white">{selected.created_at ? new Date(selected.created_at).toLocaleDateString() : '—'}</span></div>
-                        </div>
-                    </div>
-                )}
-            </div>
+                }}
+                actions={{
+                    onEdit: (r) => toast.info(`Initializing secure protocol for order ${r.order_number}`),
+                }}
+            >
+                <TypicalFilter
+                    search={{ placeholder: 'Search Stream ID or Consignee...', value: search, onChange: setSearch }}
+                    filters={[
+                        {
+                            key: 'status', label: 'Protocol Status', type: 'select', options: [
+                                { value: 'ALL', label: 'All Streams' },
+                                ...Object.entries(STATUS_MAP).map(([k, v]) => ({ value: k, label: v.label }))
+                            ]
+                        }
+                    ]}
+                    values={{ status: statusFilter }}
+                    onChange={(k, v) => setStatusFilter(String(v))}
+                />
+            </TypicalListView>
         </div>
     )
 }

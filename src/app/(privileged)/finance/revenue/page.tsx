@@ -1,17 +1,13 @@
 'use client'
 
-import { useCurrency } from '@/lib/utils/currency'
-
 import { useState, useEffect, useMemo } from "react"
+import { useCurrency } from '@/lib/utils/currency'
 import type { ChartOfAccount, JournalEntry } from '@/types/erp'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
-import {
-    TrendingUp, DollarSign, BarChart3, Percent
-} from "lucide-react"
+import { TrendingUp, DollarSign, BarChart3, Percent } from "lucide-react"
+import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
 
 export default function RevenueBreakdownPage() {
     const { fmt } = useCurrency()
@@ -54,6 +50,29 @@ export default function RevenueBreakdownPage() {
     const topAccount = enriched[0]
     const avgBalance = enriched.length > 0 ? totalRevenue / enriched.length : 0
 
+    const columns: ColumnDef<any>[] = useMemo(() => [
+        { key: 'code', label: 'Code', sortable: true, render: (a) => <span className="font-mono text-xs">{a.code}</span> },
+        { key: 'name', label: 'Account Name', sortable: true, render: (a) => <span className="font-medium text-sm">{a.name}</span> },
+        { key: 'balance', label: 'Balance', align: 'right', sortable: true, render: (a) => <span className="font-bold text-emerald-600">{fmt(a.balance)}</span> },
+        {
+            key: 'pct',
+            label: '% of Revenue',
+            align: 'right',
+            render: (a) => {
+                const pct = totalRevenue > 0 ? (a.balance / totalRevenue * 100) : 0
+                return (
+                    <div className="flex items-center gap-2 justify-end">
+                        <div className="w-12 h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                            <div className="h-full bg-emerald-400 rounded-full" style={{ width: `${Math.min(pct, 100)}%` }} />
+                        </div>
+                        <span className="text-xs text-stone-500 w-10 text-right">{pct.toFixed(1)}%</span>
+                    </div>
+                )
+            }
+        },
+        { key: 'journalCount', label: 'Journal Entries', align: 'right', sortable: true },
+    ], [fmt, totalRevenue])
+
     if (loading) {
         return (
             <div className="p-6 space-y-6">
@@ -65,7 +84,7 @@ export default function RevenueBreakdownPage() {
     }
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-6 max-w-7xl mx-auto">
             <header>
                 <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
                     <div className="w-14 h-14 rounded-[1.5rem] bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
@@ -77,47 +96,55 @@ export default function RevenueBreakdownPage() {
             </header>
 
             <div className="grid grid-cols-4 gap-4">
-                <Card className="border-l-4 border-l-emerald-500 bg-gradient-to-r from-emerald-50 to-white">
-                    <CardContent className="py-4">
-                        <div className="flex items-center gap-3">
-                            <DollarSign size={24} className="text-emerald-500" />
+                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-emerald-50 to-emerald-100/50">
+                    <CardContent className="pt-5 pb-4 px-5">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-emerald-200/60 flex items-center justify-center">
+                                <DollarSign size={24} className="text-emerald-600" />
+                            </div>
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Total Revenue</p>
-                                <p className="text-xl font-bold text-emerald-700">{fmt(totalRevenue)}</p>
+                                <p className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Total Revenue</p>
+                                <p className="text-2xl font-bold text-emerald-900 mt-0.5">{fmt(totalRevenue)}</p>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50 to-white">
-                    <CardContent className="py-4">
-                        <div className="flex items-center gap-3">
-                            <BarChart3 size={24} className="text-blue-500" />
+                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-blue-50 to-blue-100/50">
+                    <CardContent className="pt-5 pb-4 px-5">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-blue-200/60 flex items-center justify-center">
+                                <BarChart3 size={24} className="text-blue-600" />
+                            </div>
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Income Accounts</p>
-                                <p className="text-2xl font-bold text-blue-700">{accounts.length}</p>
+                                <p className="text-xs font-bold text-blue-400 uppercase tracking-wider">Income Accounts</p>
+                                <p className="text-2xl font-bold text-blue-900 mt-0.5">{accounts.length}</p>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-violet-500 bg-gradient-to-r from-violet-50 to-white">
-                    <CardContent className="py-4">
-                        <div className="flex items-center gap-3">
-                            <TrendingUp size={24} className="text-violet-500" />
+                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-violet-50 to-violet-100/50">
+                    <CardContent className="pt-5 pb-4 px-5">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-violet-200/60 flex items-center justify-center">
+                                <TrendingUp size={24} className="text-violet-600" />
+                            </div>
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Avg per Account</p>
-                                <p className="text-xl font-bold text-violet-700">{fmt(avgBalance)}</p>
+                                <p className="text-xs font-bold text-violet-400 uppercase tracking-wider">Avg per Account</p>
+                                <p className="text-2xl font-bold text-violet-900 mt-0.5">{fmt(avgBalance)}</p>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-amber-500 bg-gradient-to-r from-amber-50 to-white">
-                    <CardContent className="py-4">
-                        <div className="flex items-center gap-3">
-                            <Percent size={24} className="text-amber-500" />
+                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-amber-50 to-amber-100/50">
+                    <CardContent className="pt-5 pb-4 px-5">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-amber-200/60 flex items-center justify-center">
+                                <Percent size={24} className="text-amber-600" />
+                            </div>
                             <div>
-                                <p className="text-xs text-gray-500 uppercase">Top Account</p>
-                                <p className="text-sm font-bold text-amber-700 truncate">{topAccount?.name || '\u2014'}</p>
-                                <p className="text-[10px] text-gray-400">{topAccount ? `${(topAccount.balance / totalRevenue * 100).toFixed(1)}% of total` : ''}</p>
+                                <p className="text-xs font-bold text-amber-400 uppercase tracking-wider">Top Account</p>
+                                <p className="text-sm font-bold text-amber-900 mt-0.5 truncate max-w-[150px]">{topAccount?.name || '\u2014'}</p>
+                                <p className="text-[10px] text-amber-500 font-bold uppercase">{topAccount ? `${(topAccount.balance / totalRevenue * 100).toFixed(1)}% of total` : ''}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -125,30 +152,34 @@ export default function RevenueBreakdownPage() {
             </div>
 
             {/* Revenue Waterfall */}
-            <Card>
-                <CardHeader className="py-3">
-                    <CardTitle className="text-base">Revenue Distribution</CardTitle>
+            <Card className="rounded-2xl shadow-sm border-0 overflow-hidden">
+                <CardHeader className="py-4 border-b bg-stone-50/50">
+                    <CardTitle className="text-sm font-bold uppercase tracking-wider text-stone-500">Revenue Distribution</CardTitle>
                 </CardHeader>
-                <CardContent>
-                    <div className="space-y-2">
-                        {enriched.map((a: Record<string, any>) => {
+                <CardContent className="pt-6">
+                    <div className="space-y-4">
+                        {enriched.slice(0, 8).map((a: Record<string, any>) => {
                             const pct = totalRevenue > 0 ? (a.balance / totalRevenue * 100) : 0
                             return (
-                                <div key={a.id} className="flex items-center gap-3">
-                                    <span className="font-mono text-xs text-gray-400 w-14">{a.code}</span>
-                                    <span className="text-sm w-48 truncate">{a.name}</span>
-                                    <div className="flex-1 h-5 bg-gray-100 rounded-full overflow-hidden relative">
-                                        <div
-                                            className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full transition-all"
-                                            style={{ width: `${pct}%` }}
-                                        />
-                                        {pct > 10 && (
-                                            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white">
-                                                {pct.toFixed(1)}%
-                                            </span>
-                                        )}
+                                <div key={a.id} className="flex items-center gap-4">
+                                    <div className="w-20 font-mono text-[10px] text-stone-400 font-bold uppercase">{a.code}</div>
+                                    <div className="flex-1">
+                                        <div className="flex justify-between items-end mb-1.5">
+                                            <span className="text-xs font-semibold text-stone-700">{a.name}</span>
+                                            <span className="text-xs font-bold text-stone-900">{fmt(a.balance)}</span>
+                                        </div>
+                                        <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full transition-all duration-1000"
+                                                style={{ width: `${pct}%` }}
+                                            />
+                                        </div>
                                     </div>
-                                    <span className="text-sm font-bold w-28 text-right">{fmt(a.balance)}</span>
+                                    <div className="w-12 text-right">
+                                        <span className="text-[10px] font-black text-stone-400 bg-stone-100 px-1.5 py-0.5 rounded-md">
+                                            {pct.toFixed(1)}%
+                                        </span>
+                                    </div>
                                 </div>
                             )
                         })}
@@ -156,45 +187,14 @@ export default function RevenueBreakdownPage() {
                 </CardContent>
             </Card>
 
-            {/* Detail Table */}
-            <Card>
-                <CardContent className="p-0">
-                    <Table>
-                        <TableHeader>
-                            <TableRow className="bg-gray-50/50">
-                                <TableHead>#</TableHead>
-                                <TableHead>Code</TableHead>
-                                <TableHead>Account Name</TableHead>
-                                <TableHead className="text-right">Balance</TableHead>
-                                <TableHead className="text-right">% of Revenue</TableHead>
-                                <TableHead className="text-right">Journal Entries</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {enriched.map((a: Record<string, any>, i: number) => {
-                                const pct = totalRevenue > 0 ? (a.balance / totalRevenue * 100) : 0
-                                return (
-                                    <TableRow key={a.id} className="hover:bg-gray-50/50">
-                                        <TableCell className="font-bold text-gray-400">{i + 1}</TableCell>
-                                        <TableCell className="font-mono text-xs">{a.code}</TableCell>
-                                        <TableCell className="font-medium text-sm">{a.name}</TableCell>
-                                        <TableCell className="text-right font-bold text-emerald-600">{fmt(a.balance)}</TableCell>
-                                        <TableCell className="text-right">
-                                            <div className="flex items-center gap-2 justify-end">
-                                                <div className="w-12 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                                                    <div className="h-full bg-emerald-400 rounded-full" style={{ width: `${Math.min(pct, 100)}%` }} />
-                                                </div>
-                                                <span className="text-xs text-gray-500 w-10 text-right">{pct.toFixed(1)}%</span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="text-right text-sm text-gray-500">{a.journalCount}</TableCell>
-                                    </TableRow>
-                                )
-                            })}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
+            <TypicalListView
+                title="Account Details"
+                data={enriched}
+                loading={loading}
+                getRowId={(item) => item.id || item.code}
+                columns={columns}
+                className="rounded-2xl shadow-sm border-0 overflow-hidden"
+            />
         </div>
     )
 }

@@ -10,7 +10,6 @@ import {
 import { getFinancialAccounts } from "@/app/actions/finance/financial-accounts"
 import { getFinancialEvents } from "@/app/actions/finance/financial-events"
 import { Card, CardContent } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -20,11 +19,12 @@ import { toast } from "sonner"
 import {
     FileText, Plus, Search, ArrowRightLeft, ArrowDownLeft, ArrowUpRight,
     CheckCircle2, Clock, Send, Receipt, Pencil, Trash2,
-    ArrowUpDown, ArrowUp, ArrowDown, Lock, Unlock, ShieldCheck, History
+    Lock, Unlock, ShieldCheck, History
 } from "lucide-react"
+import { TypicalListView, ColumnDef, LifecycleConfig, ActionsConfig } from "@/components/common/TypicalListView"
+import { useCurrency } from "@/lib/utils/currency"
 
-type SortKey = 'date' | 'voucher_type' | 'reference' | 'amount' | 'lifecycle_status'
-type SortDir = 'asc' | 'desc'
+// Sort logic handled by TypicalListView
 
 const LIFECYCLE_CONFIG: Record<string, { label: string; color: string; bg: string; icon: Record<string, any> }> = {
     OPEN: { label: 'Open', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', icon: Clock },
@@ -34,6 +34,7 @@ const LIFECYCLE_CONFIG: Record<string, { label: string; color: string; bg: strin
 }
 
 export default function VouchersPage() {
+    const { fmt } = useCurrency()
     const [vouchers, setVouchers] = useState<Voucher[]>([])
     const [accounts, setAccounts] = useState<FinancialAccount[]>([])
     const [events, setEvents] = useState<FinancialEvent[]>([])
@@ -46,8 +47,8 @@ export default function VouchersPage() {
     const [voucherType, setVoucherType] = useState<'TRANSFER' | 'RECEIPT' | 'PAYMENT'>('TRANSFER')
     const [activeTab, setActiveTab] = useState<string>("ALL")
     const [searchQuery, setSearchQuery] = useState("")
-    const [sortKey, setSortKey] = useState<SortKey>('date')
-    const [sortDir, setSortDir] = useState<SortDir>('desc')
+    const [sortKey, setSortKey] = useState<string>('date')
+    const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
     const [isPending, startTransition] = useTransition()
 
     useEffect(() => { loadData() }, [])
@@ -157,60 +158,132 @@ export default function VouchersPage() {
     function openCreate() { setEditVoucher(null); setVoucherType('TRANSFER'); setDialogOpen(true) }
     function closeDialog() { setDialogOpen(false); setEditVoucher(null) }
 
-    // ─── Sorting ──────────────────────────────────────────────────
-    function toggleSort(key: SortKey) {
-        if (sortKey === key) { setSortDir(d => d === 'asc' ? 'desc' : 'asc') }
-        else { setSortKey(key); setSortDir('asc') }
-    }
-    function SortIcon({ col }: { col: SortKey }) {
-        if (sortKey !== col) return <ArrowUpDown size={12} className="text-stone-300 ml-1 inline" />
-        return sortDir === 'asc'
-            ? <ArrowUp size={12} className="text-emerald-600 ml-1 inline" />
-            : <ArrowDown size={12} className="text-emerald-600 ml-1 inline" />
-    }
-
-    // ─── Filtering + Sorting ──────────────────────
-    const filteredVouchers = useMemo(() => {
-        let list = vouchers
-            .filter(v => activeTab === "ALL" || v.voucher_type === activeTab)
-            .filter(v =>
-                !searchQuery ||
-                (v.reference || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (v.description || "").toLowerCase().includes(searchQuery.toLowerCase())
-            )
-
-        list.sort((a, b) => {
-            let cmp = 0
-            const av = a[sortKey], bv = b[sortKey]
-            if (sortKey === 'amount') {
-                cmp = Number(av || 0) - Number(bv || 0)
-            } else {
-                cmp = String(av || '').localeCompare(String(bv || ''))
-            }
-            return sortDir === 'asc' ? cmp : -cmp
-        })
-        return list
-    }, [vouchers, activeTab, searchQuery, sortKey, sortDir])
-
-    const tabs = [
-        { key: "ALL", label: "All", icon: FileText },
-        { key: "TRANSFER", label: "Transfers", icon: ArrowRightLeft },
-        { key: "RECEIPT", label: "Receipts", icon: ArrowDownLeft },
-        { key: "PAYMENT", label: "Payments", icon: ArrowUpRight },
-    ]
-
+    // ─── TypicalListView Configuration ──────────────────────────
     const typeConfig: Record<string, { icon: Record<string, any>; color: string; bg: string }> = {
         TRANSFER: { icon: ArrowRightLeft, color: "text-blue-700", bg: "bg-blue-50 border-blue-200" },
         RECEIPT: { icon: ArrowDownLeft, color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
         PAYMENT: { icon: ArrowUpRight, color: "text-rose-700", bg: "bg-rose-50 border-rose-200" },
     }
 
+    const columns: ColumnDef<any>[] = useMemo(() => [
+        {
+            key: 'date',
+            label: 'Date',
+            sortable: true,
+            render: (v) => <span className="text-sm text-stone-600">{v.date}</span>
+        },
+        {
+            key: 'voucher_type',
+            label: 'Type',
+            sortable: true,
+            render: (v) => {
+                const tc = typeConfig[v.voucher_type] || typeConfig.TRANSFER
+                const TypeIcon = tc.icon
+                return (
+                    <Badge variant="outline" className={`gap-1 rounded-lg border ${tc.bg} ${tc.color} font-semibold text-[11px]`}>
+                        <TypeIcon size={12} /> {v.voucher_type}
+                    </Badge>
+                )
+            }
+        },
+        {
+            key: 'reference',
+            label: 'Reference',
+            sortable: true,
+            render: (v) => <span className="font-mono text-sm text-stone-500">{v.reference || "—"}</span>
+        },
+        {
+            key: 'description',
+            label: 'Description',
+            render: (v) => <span className="text-sm text-stone-600 max-w-[200px] truncate block">{v.description || "—"}</span>
+        },
+        {
+            key: 'amount',
+            label: 'Amount',
+            align: 'right',
+            sortable: true,
+            render: (v) => <span className="font-semibold text-stone-800">{fmt(v.amount)}</span>
+        }
+    ], [fmt])
+
+    const lifecycle: LifecycleConfig<Voucher> = {
+        label: 'Status',
+        variant: 'default',
+        getStatus: (v) => {
+            const status = v.lifecycle_status
+            if (status === 'CONFIRMED') return { label: 'Confirmed', variant: 'success' }
+            if (status === 'LOCKED') return { label: 'Locked', variant: 'warning' }
+            if (status === 'VERIFIED') return { label: 'Verified', variant: 'default' }
+            return { label: 'Open', variant: 'default' }
+        }
+    }
+
+    // ─── Filtering ──────────────────────
+    const filteredVouchers = useMemo(() => {
+        return vouchers
+            .filter(v => activeTab === "ALL" || v.voucher_type === activeTab)
+            .filter(v =>
+                !searchQuery ||
+                (v.reference || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (v.description || "").toLowerCase().includes(searchQuery.toLowerCase())
+            )
+    }, [vouchers, activeTab, searchQuery])
+
     const activeType = editVoucher ? editVoucher.voucher_type : voucherType
 
-    // ─── Loading Skeleton ─────────────────────────────────────────
+    const actions: ActionsConfig<Voucher> = {
+        onEdit: (v) => v.lifecycle_status === 'OPEN' ? openEdit(v) : undefined,
+        onDelete: (v) => v.lifecycle_status === 'OPEN' ? setDeleteConfirm(v.id) : undefined,
+        extra: (v) => {
+            const isOpen = v.lifecycle_status === 'OPEN'
+            const isLocked = v.lifecycle_status === 'LOCKED'
+            const isVerified = v.lifecycle_status === 'VERIFIED'
+            const isConfirmed = v.lifecycle_status === 'CONFIRMED'
+
+            return (
+                <div className="flex items-center gap-1">
+                    {isOpen && !v.is_posted && (
+                        <Button size="sm" variant="outline" onClick={() => handleLock(v.id)} disabled={isPending}
+                            className="rounded-xl gap-1 text-amber-700 border-amber-200 hover:bg-amber-50 h-8 text-xs font-semibold">
+                            <Lock size={12} /> Lock
+                        </Button>
+                    )}
+                    {isLocked && (
+                        <>
+                            <Button size="sm" variant="outline" onClick={() => setCommentDialog({ id: v.id, action: 'unlock' })} disabled={isPending}
+                                className="rounded-xl gap-1 text-stone-600 border-stone-200 hover:bg-stone-50 h-8 text-xs font-semibold">
+                                <Unlock size={12} /> Unlock
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => handleVerify(v.id)} disabled={isPending}
+                                className="rounded-xl gap-1 text-purple-700 border-purple-200 hover:bg-purple-50 h-8 text-xs font-semibold">
+                                <ShieldCheck size={12} /> Verify
+                            </Button>
+                        </>
+                    )}
+                    {isVerified && (
+                        <Button size="sm" variant="outline" onClick={() => handleConfirm(v.id)} disabled={isPending}
+                            className="rounded-xl gap-1 text-purple-700 border-purple-200 hover:bg-purple-50 h-8 text-xs font-semibold">
+                            <CheckCircle2 size={12} /> Confirm
+                        </Button>
+                    )}
+                    {isConfirmed && !v.is_posted && (
+                        <Button size="sm" variant="outline" onClick={() => handlePost(v.id)} disabled={isPending}
+                            className="rounded-xl gap-1 text-emerald-700 border-emerald-200 hover:bg-emerald-50 h-8 text-xs font-semibold">
+                            <Send size={12} /> Post
+                        </Button>
+                    )}
+                    <Button size="sm" variant="ghost" onClick={() => showHistory(v.id)}
+                        className="h-8 w-8 p-0 text-stone-400 hover:text-stone-600" title="History">
+                        <History size={14} />
+                    </Button>
+                </div>
+            )
+        }
+    }
+
     if (loading) {
         return (
-            <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto">
+            <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto p-6">
                 <div className="flex justify-between items-center">
                     <div><Skeleton className="h-10 w-48" /><Skeleton className="h-4 w-64 mt-2" /></div>
                     <Skeleton className="h-10 w-36" />
@@ -224,17 +297,22 @@ export default function VouchersPage() {
     }
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto">
+        <div className="p-6 space-y-6 max-w-7xl mx-auto">
             {/* Header */}
-            <div className="flex justify-between items-center">
+            <header className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-4xl font-bold text-stone-900 font-serif tracking-tight">Vouchers</h1>
-                    <p className="text-stone-500 font-medium mt-1">Manage transfers, receipts, and payment vouchers</p>
+                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-[1.5rem] bg-stone-900 flex items-center justify-center shadow-lg shadow-stone-200">
+                            <Receipt size={28} className="text-white" />
+                        </div>
+                        Financial <span className="text-stone-600">Vouchers</span>
+                    </h1>
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Entry Lifecycle & Management</p>
                 </div>
-                <Button onClick={openCreate} className="rounded-xl gap-2 shadow-md hover:shadow-lg transition-all">
-                    <Plus size={16} /> New Voucher
+                <Button onClick={openCreate} className="rounded-2xl h-12 px-6 gap-2 bg-stone-900 hover:bg-stone-800 shadow-lg shadow-stone-200 transition-all">
+                    <Plus size={18} /> New Voucher
                 </Button>
-            </div>
+            </header>
 
             {/* ─── Create / Edit Dialog ────────────────────────────── */}
             <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) closeDialog(); else setDialogOpen(true) }}>
@@ -399,238 +477,108 @@ export default function VouchersPage() {
                 </DialogContent>
             </Dialog>
 
-            {/* Summary Cards */}
+            {/* Dashboard Statistics */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-stone-50 to-stone-100">
+                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-stone-50 to-stone-100/50">
                     <CardContent className="pt-5 pb-4 px-5">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-xs font-bold text-stone-400 uppercase tracking-wider">Total</p>
-                                <p className="text-3xl font-bold text-stone-900 mt-1">{vouchers.length}</p>
-                            </div>
+                        <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-2xl bg-stone-200/60 flex items-center justify-center">
-                                <FileText size={22} className="text-stone-500" />
+                                <FileText size={22} className="text-stone-600" />
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold text-stone-400 uppercase tracking-wider">Total Vouchers</p>
+                                <p className="text-2xl font-bold text-stone-900 mt-0.5">{vouchers.length}</p>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-blue-50 to-blue-100">
+                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-blue-50 to-blue-100/50">
                     <CardContent className="pt-5 pb-4 px-5">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-blue-200/60 flex items-center justify-center">
+                                <Clock size={22} className="text-blue-600" />
+                            </div>
                             <div>
                                 <p className="text-xs font-bold text-blue-400 uppercase tracking-wider">Open</p>
-                                <p className="text-3xl font-bold text-blue-900 mt-1">{vouchers.filter(v => v.lifecycle_status === "OPEN").length}</p>
-                            </div>
-                            <div className="w-12 h-12 rounded-2xl bg-blue-200/60 flex items-center justify-center">
-                                <Clock size={22} className="text-blue-500" />
+                                <p className="text-2xl font-bold text-blue-900 mt-0.5">{vouchers.filter(v => v.lifecycle_status === "OPEN").length}</p>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-amber-50 to-amber-100">
+                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-amber-50 to-amber-100/50">
                     <CardContent className="pt-5 pb-4 px-5">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-amber-200/60 flex items-center justify-center">
+                                <Lock size={22} className="text-amber-600" />
+                            </div>
                             <div>
                                 <p className="text-xs font-bold text-amber-400 uppercase tracking-wider">Locked</p>
-                                <p className="text-3xl font-bold text-amber-900 mt-1">{vouchers.filter(v => v.lifecycle_status === "LOCKED").length}</p>
-                            </div>
-                            <div className="w-12 h-12 rounded-2xl bg-amber-200/60 flex items-center justify-center">
-                                <Lock size={22} className="text-amber-500" />
+                                <p className="text-2xl font-bold text-amber-900 mt-0.5">{vouchers.filter(v => v.lifecycle_status === "LOCKED").length}</p>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-emerald-50 to-emerald-100">
+                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-emerald-50 to-emerald-100/50">
                     <CardContent className="pt-5 pb-4 px-5">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-emerald-200/60 flex items-center justify-center">
+                                <CheckCircle2 size={22} className="text-emerald-600" />
+                            </div>
                             <div>
                                 <p className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Posted</p>
-                                <p className="text-3xl font-bold text-emerald-900 mt-1">{vouchers.filter(v => v.is_posted).length}</p>
-                            </div>
-                            <div className="w-12 h-12 rounded-2xl bg-emerald-200/60 flex items-center justify-center">
-                                <CheckCircle2 size={22} className="text-emerald-500" />
+                                <p className="text-2xl font-bold text-emerald-900 mt-0.5">{vouchers.filter(v => v.is_posted).length}</p>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
             </div>
 
-            {/* Tabs + Search + Table */}
-            <Card className="rounded-2xl shadow-sm overflow-hidden">
-                <div className="px-5 py-3 border-b flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between bg-stone-50/50">
-                    <div className="flex gap-1">
-                        {tabs.map(tab => {
-                            const Icon = tab.icon
-                            return (
-                                <button
-                                    key={tab.key}
-                                    onClick={() => setActiveTab(tab.key)}
-                                    className={`flex items-center gap-1.5 px-3.5 py-2 text-sm rounded-xl transition-all ${activeTab === tab.key
-                                        ? "bg-white shadow-sm font-semibold text-stone-900"
-                                        : "text-stone-400 hover:text-stone-600"
-                                        }`}
-                                >
-                                    <Icon size={13} />
-                                    {tab.label}
-                                </button>
-                            )
-                        })}
+            <TypicalListView
+                title="Voucher Entries"
+                data={filteredVouchers}
+                loading={loading}
+                getRowId={(v) => v.id}
+                columns={columns}
+                lifecycle={lifecycle}
+                actions={actions}
+                className="rounded-2xl shadow-sm overflow-hidden border-0"
+                headerExtra={
+                    <div className="flex items-center gap-4">
+                        <div className="flex gap-1 bg-stone-100 p-1 rounded-xl">
+                            {[
+                                { key: "ALL", label: "All", icon: FileText },
+                                { key: "TRANSFER", label: "Transfers", icon: ArrowRightLeft },
+                                { key: "RECEIPT", label: "Receipts", icon: ArrowDownLeft },
+                                { key: "PAYMENT", label: "Payments", icon: ArrowUpRight },
+                            ].map(tab => {
+                                const Icon = tab.icon
+                                return (
+                                    <button
+                                        key={tab.key}
+                                        onClick={() => setActiveTab(tab.key)}
+                                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg transition-all ${activeTab === tab.key
+                                            ? "bg-white shadow-sm font-bold text-stone-900"
+                                            : "text-stone-400 hover:text-stone-600"
+                                            }`}
+                                    >
+                                        <Icon size={12} />
+                                        {tab.label}
+                                    </button>
+                                )
+                            })}
+                        </div>
+                        <div className="relative w-64">
+                            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                            <Input
+                                placeholder="Search..."
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                className="pl-9 h-9 rounded-xl text-xs border-0 bg-stone-100"
+                            />
+                        </div>
                     </div>
-                    <div className="relative w-full sm:w-64">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
-                        <Input
-                            placeholder="Search reference or description..."
-                            value={searchQuery}
-                            onChange={e => setSearchQuery(e.target.value)}
-                            className="pl-9 rounded-xl text-sm h-9 bg-white"
-                        />
-                    </div>
-                </div>
-                <Table>
-                    <TableHeader>
-                        <TableRow className="bg-stone-50/30">
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 cursor-pointer select-none" onClick={() => toggleSort('date')}>
-                                Date <SortIcon col="date" />
-                            </TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 cursor-pointer select-none" onClick={() => toggleSort('voucher_type')}>
-                                Type <SortIcon col="voucher_type" />
-                            </TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 cursor-pointer select-none" onClick={() => toggleSort('reference')}>
-                                Reference <SortIcon col="reference" />
-                            </TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400">Description</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right cursor-pointer select-none" onClick={() => toggleSort('amount')}>
-                                Amount <SortIcon col="amount" />
-                            </TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-center cursor-pointer select-none" onClick={() => toggleSort('lifecycle_status')}>
-                                Status <SortIcon col="lifecycle_status" />
-                            </TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {filteredVouchers.map((v: Record<string, any>) => {
-                            const tc = typeConfig[v.voucher_type] || typeConfig.TRANSFER
-                            const lc = LIFECYCLE_CONFIG[v.lifecycle_status] || LIFECYCLE_CONFIG.OPEN
-                            const TypeIcon = tc.icon
-                            const LcIcon = lc.icon
-                            const isOpen = v.lifecycle_status === 'OPEN'
-                            const isLocked = v.lifecycle_status === 'LOCKED'
-                            const isVerified = v.lifecycle_status === 'VERIFIED'
-                            const isConfirmed = v.lifecycle_status === 'CONFIRMED'
-                            return (
-                                <TableRow key={v.id} className="hover:bg-stone-50/50 transition-colors group">
-                                    <TableCell className="text-sm text-stone-600">{v.date}</TableCell>
-                                    <TableCell>
-                                        <Badge variant="outline" className={`gap-1 rounded-lg border ${tc.bg} ${tc.color} font-semibold text-[11px]`}>
-                                            <TypeIcon size={12} /> {v.voucher_type}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="font-mono text-sm text-stone-500">{v.reference || "—"}</TableCell>
-                                    <TableCell className="text-sm text-stone-600 max-w-[200px] truncate">{v.description || "—"}</TableCell>
-                                    <TableCell className="text-right font-semibold text-stone-800">{Number(v.amount).toLocaleString()}</TableCell>
-                                    <TableCell className="text-center">
-                                        <div className="flex items-center justify-center gap-1.5">
-                                            <Badge variant="outline" className={`gap-1 rounded-lg border ${lc.bg} ${lc.color} font-semibold text-[11px]`}>
-                                                <LcIcon size={12} /> {lc.label}
-                                            </Badge>
-                                            {v.is_posted && (
-                                                <Badge variant="outline" className="gap-1 rounded-lg border bg-emerald-50 border-emerald-200 text-emerald-700 font-semibold text-[11px]">
-                                                    <Send size={10} /> Posted
-                                                </Badge>
-                                            )}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <div className="flex items-center justify-end gap-1">
-                                            {/* OPEN: Edit, Lock, Delete */}
-                                            {isOpen && !v.is_posted && (
-                                                <>
-                                                    <Button size="sm" variant="ghost" onClick={() => openEdit(v)}
-                                                        className="h-8 w-8 p-0 text-stone-400 hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" title="Edit">
-                                                        <Pencil size={14} />
-                                                    </Button>
-                                                    <Button size="sm" variant="outline" onClick={() => handleLock(v.id)} disabled={isPending}
-                                                        className="rounded-xl gap-1 text-amber-700 border-amber-200 hover:bg-amber-50 h-8 text-xs font-semibold">
-                                                        <Lock size={12} /> Lock
-                                                    </Button>
-                                                    <Button size="sm" variant="ghost" onClick={() => setDeleteConfirm(v.id)}
-                                                        className="h-8 w-8 p-0 text-stone-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity" title="Delete">
-                                                        <Trash2 size={14} />
-                                                    </Button>
-                                                </>
-                                            )}
-                                            {/* LOCKED: Unlock, Verify */}
-                                            {isLocked && (
-                                                <>
-                                                    <Button size="sm" variant="outline" onClick={() => setCommentDialog({ id: v.id, action: 'unlock' })} disabled={isPending}
-                                                        className="rounded-xl gap-1 text-stone-600 border-stone-200 hover:bg-stone-50 h-8 text-xs font-semibold">
-                                                        <Unlock size={12} /> Unlock
-                                                    </Button>
-                                                    <Button size="sm" variant="outline" onClick={() => handleVerify(v.id)} disabled={isPending}
-                                                        className="rounded-xl gap-1 text-purple-700 border-purple-200 hover:bg-purple-50 h-8 text-xs font-semibold">
-                                                        <ShieldCheck size={12} /> Verify
-                                                    </Button>
-                                                </>
-                                            )}
-                                            {/* VERIFIED: Confirm */}
-                                            {isVerified && (
-                                                <Button size="sm" variant="outline" onClick={() => handleConfirm(v.id)} disabled={isPending}
-                                                    className="rounded-xl gap-1 text-purple-700 border-purple-200 hover:bg-purple-50 h-8 text-xs font-semibold">
-                                                    <CheckCircle2 size={12} /> Confirm
-                                                </Button>
-                                            )}
-                                            {/* CONFIRMED: Post */}
-                                            {isConfirmed && !v.is_posted && (
-                                                <Button size="sm" variant="outline" onClick={() => handlePost(v.id)} disabled={isPending}
-                                                    className="rounded-xl gap-1 text-emerald-700 border-emerald-200 hover:bg-emerald-50 h-8 text-xs font-semibold">
-                                                    <Send size={12} /> Post
-                                                </Button>
-                                            )}
-                                            {v.is_posted && (
-                                                <span className="text-xs text-emerald-600 font-medium italic">✓ Posted</span>
-                                            )}
-                                            {/* History — always visible */}
-                                            <Button size="sm" variant="ghost" onClick={() => showHistory(v.id)}
-                                                className="h-8 w-8 p-0 text-stone-400 hover:text-stone-600 opacity-0 group-hover:opacity-100 transition-opacity" title="History">
-                                                <History size={14} />
-                                            </Button>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            )
-                        })}
-                        {filteredVouchers.length === 0 && (
-                            <TableRow>
-                                <TableCell colSpan={7} className="py-16 text-center">
-                                    <div className="flex flex-col items-center gap-3">
-                                        <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center">
-                                            <FileText size={28} className="text-stone-300" />
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold text-stone-600">No vouchers found</p>
-                                            <p className="text-sm text-stone-400 mt-1">Create your first voucher to get started</p>
-                                        </div>
-                                        <Button variant="outline" onClick={openCreate} className="rounded-xl gap-2 mt-2">
-                                            <Plus size={14} /> New Voucher
-                                        </Button>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-
-                {/* Table Footer */}
-                {filteredVouchers.length > 0 && (
-                    <div className="px-5 py-3 border-t bg-stone-50/30 flex items-center justify-between text-sm text-stone-500">
-                        <span>{filteredVouchers.length} voucher{filteredVouchers.length !== 1 ? 's' : ''} shown</span>
-                        <span className="font-semibold text-stone-700">
-                            Total: {filteredVouchers.reduce((s, v) => s + Number(v.amount || 0), 0).toLocaleString()}
-                        </span>
-                    </div>
-                )}
-            </Card>
+                }
+            />
         </div>
     )
 }

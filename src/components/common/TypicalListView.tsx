@@ -1,474 +1,470 @@
 'use client'
 
-import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
+import React, { useState, useMemo } from 'react'
 import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from '@/components/ui/table'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Checkbox } from '@/components/ui/checkbox'
+import {
+    DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator
+} from '@/components/ui/dropdown-menu'
 import {
     Popover, PopoverContent, PopoverTrigger
 } from '@/components/ui/popover'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Badge } from '@/components/ui/badge'
+import {
+    MoreHorizontal, ChevronDown, ChevronRight, Eye, Pencil, Trash2,
+    ArrowUpDown, ArrowUp, ArrowDown, Settings2, Download, Plus,
+    CheckCircle2, XCircle, Lock, Unlock, Check
+} from 'lucide-react'
 import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/components/ui/select'
-import {
-    Download, Plus, ChevronDown, ChevronUp, Lock, LockOpen,
-    CheckCircle2, Eye, Pencil, Trash2, ArrowUpDown, ArrowUp, ArrowDown,
-    Columns3, ChevronLeft, ChevronRight,
-} from 'lucide-react'
 
 /* ═══════════════════════════════════════════════════════
-   TypicalListView — Fully customizable list/table
-   
-   Features:
-   ✓ Column definitions with custom renderers
-   ✓ Column visibility dropdown (show/hide columns)
-   ✓ Record count badge in header
-   ✓ Pagination bar with "Showing X–Y of Z" + page nav
-   ✓ Page size selector
-   ✓ Expandable detail sub-rows
-   ✓ Lifecycle columns (status, verified, lock)
-   ✓ Row actions (view, edit, delete, custom)
-   ✓ Row selection + bulk actions
-   ✓ Sorting
-   ✓ Compact / striped / hoverable modes
+   TypicalListView — Universal data table component
    ═══════════════════════════════════════════════════════ */
-
-/* ─── Types ──────────────────────────────────────────── */
 
 export type ColumnDef<T> = {
     key: string
     label: string
-    align?: 'left' | 'center' | 'right'
     render?: (row: T) => React.ReactNode
     sortable?: boolean
-    width?: string
-    hideMobile?: boolean
-    /** If false, column cannot be hidden via visibility dropdown */
+    align?: 'left' | 'center' | 'right'
     alwaysVisible?: boolean
 }
 
-export type DetailColumnDef<D> = {
-    key: string
-    label: string
-    align?: 'left' | 'center' | 'right'
-    render?: (detail: D) => React.ReactNode
-}
-
-export type ExpandableConfig<T, D> = {
-    columns: DetailColumnDef<D>[]
-    getDetails: (row: T) => D[]
-    renderActions?: (detail: D, row: T) => React.ReactNode
-    borderColor?: string
-    headerColor?: string
-    headerTextColor?: string
-}
-
 export type LifecycleConfig<T> = {
-    getStatus: (row: T) => { label: string; variant: 'default' | 'success' | 'warning' | 'destructive' }
+    getStatus?: (row: T) => { label: string; variant: 'default' | 'success' | 'warning' | 'danger' | 'info' }
     getVerified?: (row: T) => boolean
     getLocked?: (row: T) => boolean
+    getApproved?: (row: T) => boolean
+    getCanceled?: (row: T) => boolean
     onLockToggle?: (row: T) => void
-}
-
-export type ActionsConfig<T> = {
-    onView?: (row: T) => void
-    onEdit?: (row: T) => void
-    onDelete?: (row: T) => void
-    extra?: (row: T) => React.ReactNode
+    onApprove?: (row: T) => void
+    onCancel?: (row: T) => void
 }
 
 export type TypicalListViewProps<T, D = any> = {
-    /* Header */
     title: string
     addLabel?: string
     onAdd?: () => void
     onExport?: () => void
-    headerExtra?: React.ReactNode
 
-    /* Data */
     data: T[]
     loading?: boolean
     getRowId: (row: T) => string | number
-    emptyMessage?: string
 
-    /* Columns */
     columns: ColumnDef<T>[]
-
-    /* Column visibility */
-    visibleColumns?: string[]
+    visibleColumns?: string[] // Controlled by useListViewSettings
     onToggleColumn?: (key: string) => void
 
-    /* Expandable */
-    expandable?: ExpandableConfig<T, D>
+    /** Row selection state */
+    selection?: {
+        selectedIds: Set<string | number>
+        onSelectionChange: (ids: Set<string | number>) => void
+    }
 
-    /* Lifecycle */
+    /** Bulk actions rendered when rows are selected */
+    bulkActions?: React.ReactNode
+
+    /** Lifecycle rendering & actions (Lock/Verify/Approve/Cancel) */
     lifecycle?: LifecycleConfig<T>
 
-    /* Actions */
-    actions?: ActionsConfig<T>
+    /** Custom badges/indicators after title */
+    headerExtras?: React.ReactNode
 
-    /* Visual */
-    className?: string
-    striped?: boolean
-    compact?: boolean
-    hoverable?: boolean
+    /** Nested rows logic */
+    expandable?: {
+        columns: ColumnDef<D>[]
+        getDetails: (row: T | any) => D[]
+        renderActions?: (detail: D, parent: T) => React.ReactNode
+    }
 
-    /* Selection */
-    selectable?: boolean
-    onSelectionChange?: (ids: (string | number)[]) => void
-    renderBulkActions?: (selectedIds: (string | number)[]) => React.ReactNode
+    /** Actions on individual rows */
+    actions?: {
+        onView?: (row: T) => void
+        onEdit?: (row: T) => void
+        onDelete?: (row: T) => void
+        extra?: (row: T) => React.ReactNode
+    }
 
-    /* Sorting */
-    sortKey?: string
-    sortDir?: 'asc' | 'desc'
-    onSort?: (key: string) => void
-
-    /* Pagination (client-side auto-paginate OR server-side) */
+    /** Pagination & Sorting (Controlled by useListViewSettings or Internal) */
     pageSize?: number
     onPageSizeChange?: (size: number) => void
-    /** For server-side pagination */
-    totalCount?: number
-    currentPage?: number
-    onPageChange?: (page: number) => void
+    sortKey?: string
+    sortDir?: 'asc' | 'desc'
+    onSort?: (key: string, dir: 'asc' | 'desc') => void
 
-    children?: React.ReactNode
+    children?: React.ReactNode // Usually TypicalFilter
 }
 
-/* ─── Status Badge ──────────────────────────────────── */
-
-const STATUS_COLORS: Record<string, string> = {
-    success: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    warning: 'bg-amber-50 text-amber-700 border-amber-200',
-    destructive: 'bg-red-50 text-red-700 border-red-200',
-    default: 'bg-gray-50 text-gray-700 border-gray-200',
-}
-
-function StatusBadge({ label, variant }: { label: string; variant: string }) {
-    return (
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${STATUS_COLORS[variant] || STATUS_COLORS.default}`}>
-            {label}
-        </span>
-    )
-}
-
-/* ─── Skeleton ──────────────────────────────────────── */
-
-function LoadingSkeleton({ columns, compact }: { columns: number; compact: boolean }) {
-    return (
-        <>
-            {[1, 2, 3, 4, 5].map(i => (
-                <TableRow key={i}>
-                    {Array.from({ length: columns }).map((_, j) => (
-                        <TableCell key={j} className={compact ? 'py-1.5' : 'py-3'}>
-                            <Skeleton className="h-4 w-full" />
-                        </TableCell>
-                    ))}
-                </TableRow>
-            ))}
-        </>
-    )
-}
-
-/* ─── Page Size Options ─────────────────────────────── */
-const PAGE_SIZES = [10, 25, 50, 100]
-
-/* ═══════════════ MAIN COMPONENT ═════════════════════ */
-
-export function TypicalListView<T extends Record<string, any>, D extends Record<string, any> = any>({
-    title, addLabel, onAdd, onExport, headerExtra,
-    data, loading, getRowId, emptyMessage,
-    columns,
-    visibleColumns, onToggleColumn,
-    expandable,
-    lifecycle,
-    actions,
-    className = '',
-    striped = false,
-    compact = false,
-    hoverable = true,
-    selectable = false,
-    onSelectionChange,
-    renderBulkActions,
+export function TypicalListView<T, D = any>({
+    title, addLabel, onAdd, onExport,
+    data, loading, getRowId,
+    columns, visibleColumns, onToggleColumn,
+    selection, bulkActions,
+    lifecycle, headerExtras,
+    expandable, actions,
+    pageSize = 25, onPageSizeChange,
     sortKey, sortDir, onSort,
-    pageSize: pageSizeProp = 25,
-    onPageSizeChange,
-    totalCount: totalCountProp,
-    currentPage: currentPageProp,
-    onPageChange: onPageChangeProp,
-    children,
+    children
 }: TypicalListViewProps<T, D>) {
 
     const [expandedRows, setExpandedRows] = useState<Set<string | number>>(new Set())
-    const [selectedRows, setSelectedRows] = useState<Set<string | number>>(new Set())
-    const [localPage, setLocalPage] = useState(1)
+    const [currentPage, setCurrentPage] = useState(1)
 
-    /* ─── Column Visibility ─────────────── */
+    // Filter columns based on visibility
     const activeColumns = useMemo(() => {
         if (!visibleColumns) return columns
-        return columns.filter(c => visibleColumns.includes(c.key) || c.alwaysVisible)
+        return columns.filter(c => c.alwaysVisible || visibleColumns.includes(c.key))
     }, [columns, visibleColumns])
 
-    /* ─── Client-side pagination ─────────── */
-    const isServerPaginated = !!onPageChangeProp
-    const currentPage = isServerPaginated ? (currentPageProp || 1) : localPage
-    const totalRecords = isServerPaginated ? (totalCountProp || data.length) : data.length
-    const totalPages = Math.max(1, Math.ceil(totalRecords / pageSizeProp))
+    // Client-side Sort Logic
+    const sortedData = useMemo(() => {
+        if (!sortKey) return data
+        const dir = sortDir === 'desc' ? -1 : 1
+        return [...data].sort((a: any, b: any) => {
+            const valA = a[sortKey]
+            const valB = b[sortKey]
+            if (valA < valB) return -1 * dir
+            if (valA > valB) return 1 * dir
+            return 0
+        })
+    }, [data, sortKey, sortDir])
 
+    // Client-side Pagination Logic
+    const totalPages = Math.ceil(sortedData.length / pageSize)
     const paginatedData = useMemo(() => {
-        if (isServerPaginated) return data // server already sliced
-        const start = (currentPage - 1) * pageSizeProp
-        return data.slice(start, start + pageSizeProp)
-    }, [data, currentPage, pageSizeProp, isServerPaginated])
+        const start = (currentPage - 1) * pageSize
+        return sortedData.slice(start, start + pageSize)
+    }, [sortedData, currentPage, pageSize])
 
-    const handlePageChange = useCallback((page: number) => {
-        const clamped = Math.max(1, Math.min(totalPages, page))
-        if (isServerPaginated) {
-            onPageChangeProp?.(clamped)
+    const toggleExpand = (id: string | number) => {
+        const next = new Set(expandedRows)
+        if (next.has(id)) next.delete(id)
+        else next.add(id)
+        setExpandedRows(next)
+    }
+
+    const toggleSort = (key: string) => {
+        if (!onSort) return
+        const dir = (sortKey === key && sortDir === 'asc') ? 'desc' : 'asc'
+        onSort(key, dir)
+    }
+
+    const handleSelectAll = (checked: boolean) => {
+        if (!selection) return
+        if (checked) {
+            selection.onSelectionChange(new Set(paginatedData.map(r => getRowId(r))))
         } else {
-            setLocalPage(clamped)
+            selection.onSelectionChange(new Set())
         }
-    }, [totalPages, isServerPaginated, onPageChangeProp])
+    }
 
-    // Reset to page 1 when data changes
-    useEffect(() => { if (!isServerPaginated) setLocalPage(1) }, [data.length, isServerPaginated])
-
-    /* ─── Row expand / select ────────────── */
-    const toggleRow = useCallback((id: string | number) => {
-        setExpandedRows(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
-    }, [])
-    const toggleSelect = useCallback((id: string | number) => {
-        setSelectedRows(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); onSelectionChange?.(Array.from(n)); return n })
-    }, [onSelectionChange])
-    const toggleSelectAll = useCallback(() => {
-        if (selectedRows.size === paginatedData.length) { setSelectedRows(new Set()); onSelectionChange?.([]) }
-        else { const ids = paginatedData.map(getRowId); setSelectedRows(new Set(ids)); onSelectionChange?.(ids) }
-    }, [paginatedData, getRowId, selectedRows.size, onSelectionChange])
-
-    const hasExpandable = !!expandable
-    const hasLifecycle = !!lifecycle
-    const hasActions = !!actions
-    const hasVerified = !!lifecycle?.getVerified
-    const hasLock = !!lifecycle?.getLocked
-
-    const totalCols = (selectable ? 1 : 0) + activeColumns.length +
-        (hasLifecycle ? 1 : 0) + (hasVerified ? 1 : 0) + (hasLock ? 1 : 0) +
-        (hasExpandable ? 1 : 0) + (hasActions ? 1 : 0)
-
-    const cp = compact ? 'py-1.5 px-2' : 'py-2.5 px-3'
-    const hp = compact ? 'py-1 px-2' : 'py-2 px-3'
-    const detailBorder = expandable?.borderColor || 'border-emerald-200'
-    const detailHeader = expandable?.headerColor || 'bg-emerald-50/80'
-    const detailText = expandable?.headerTextColor || 'text-emerald-700'
-
-    /* Showing range */
-    const showStart = totalRecords === 0 ? 0 : (currentPage - 1) * pageSizeProp + 1
-    const showEnd = Math.min(currentPage * pageSizeProp, totalRecords)
+    const handleSelectRow = (id: string | number, checked: boolean) => {
+        if (!selection) return
+        const next = new Set(selection.selectedIds)
+        if (checked) next.add(id)
+        else next.delete(id)
+        selection.onSelectionChange(next)
+    }
 
     return (
-        <div className={`space-y-4 ${className}`}>
-            {/* ═══ HEADER ═════════════════════════════ */}
-            <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="space-y-4 bg-white rounded-xl shadow-sm border border-gray-100 p-1">
+            {/* ─── Header Section ────────────────── */}
+            <div className="px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                    <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
-                        {totalRecords} records
-                    </span>
+                    <h2 className="text-xl font-bold text-gray-900 tracking-tight">{title}</h2>
+                    <Badge variant="secondary" className="bg-gray-100 text-gray-500 hover:bg-gray-100 font-bold border-none">
+                        {data.length}
+                    </Badge>
+                    {headerExtras}
                 </div>
+
                 <div className="flex items-center gap-2">
-                    {/* Column Visibility Dropdown */}
+                    {onExport && (
+                        <Button variant="outline" size="sm" onClick={onExport} className="text-xs border-gray-200">
+                            <Download className="h-4 w-4 mr-2 text-gray-400" /> Export
+                        </Button>
+                    )}
+
+                    {/* Column Visibility Popover */}
                     {onToggleColumn && (
                         <Popover>
                             <PopoverTrigger asChild>
-                                <Button variant="outline" size="sm" className="gap-1.5">
-                                    <Columns3 className="h-4 w-4" /> Columns
+                                <Button variant="outline" size="sm" className="text-xs border-gray-200">
+                                    <Settings2 className="h-4 w-4 mr-2 text-gray-400" /> Columns
                                 </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-56 p-3" align="end">
-                                <p className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider">Show / Hide Columns</p>
-                                <div className="space-y-1.5 max-h-64 overflow-auto">
-                                    {columns.map(col => (
-                                        <label key={col.key}
-                                            className={`flex items-center gap-2 px-2 py-1.5 rounded text-sm cursor-pointer hover:bg-gray-50 transition-colors ${col.alwaysVisible ? 'opacity-50' : ''}`}>
+                            <PopoverContent className="w-56 p-2" align="end">
+                                <div className="space-y-1">
+                                    <p className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase">Visible Columns</p>
+                                    {columns.map(c => (
+                                        <label key={c.key} className="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer transition-colors">
                                             <Checkbox
-                                                checked={visibleColumns?.includes(col.key) ?? true}
-                                                onCheckedChange={() => !col.alwaysVisible && onToggleColumn(col.key)}
-                                                disabled={col.alwaysVisible}
+                                                checked={c.alwaysVisible || visibleColumns?.includes(c.key)}
+                                                onCheckedChange={() => onToggleColumn(c.key)}
+                                                disabled={c.alwaysVisible}
                                             />
-                                            <span>{col.label}</span>
+                                            <span className={`text-sm ${c.alwaysVisible ? 'text-gray-400' : 'text-gray-700'}`}>{c.label}</span>
                                         </label>
                                     ))}
                                 </div>
                             </PopoverContent>
                         </Popover>
                     )}
-                    {headerExtra}
-                    {onExport && (
-                        <Button variant="outline" size="sm" onClick={onExport}>
-                            <Download className="h-4 w-4 mr-1.5" /> Export
-                        </Button>
-                    )}
-                    {onAdd && addLabel && (
-                        <Button size="sm" onClick={onAdd} className="bg-emerald-500 hover:bg-emerald-600 text-white">
-                            <Plus className="h-4 w-4 mr-1.5" /> {addLabel}
+
+                    {onAdd && (
+                        <Button onClick={onAdd} size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-xs font-bold shadow-emerald-100 shadow-lg border-none px-4">
+                            <Plus className="h-4 w-4 mr-1 text-white stroke-[3px]" /> {addLabel || 'ADD'}
                         </Button>
                     )}
                 </div>
             </div>
 
-            {/* ═══ CHILDREN (TypicalFilter) ═══════════ */}
-            {children}
+            {/* ─── Filter Section ────────────────── */}
+            {children && <div className="px-5">{children}</div>}
 
-            {/* ═══ BULK ACTIONS ═══════════════════════ */}
-            {selectable && selectedRows.size > 0 && renderBulkActions && (
-                <div className="flex items-center gap-3 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg animate-in slide-in-from-top-2">
-                    <span className="text-sm font-medium text-blue-700">{selectedRows.size} selected</span>
-                    {renderBulkActions(Array.from(selectedRows))}
+            {/* ─── Bulk Actions Bar ──────────────── */}
+            {selection && selection.selectedIds.size > 0 && (
+                <div className="mx-5 px-4 py-2 bg-indigo-50 border border-indigo-100 rounded-lg flex items-center justify-between animate-in slide-in-from-top-2 duration-200 shadow-sm">
+                    <div className="flex items-center gap-3">
+                        <span className="text-sm font-bold text-indigo-700">{selection.selectedIds.size} lines selected</span>
+                        <div className="h-4 w-px bg-indigo-200" />
+                        <button onClick={() => selection.onSelectionChange(new Set())} className="text-xs text-indigo-500 hover:text-indigo-700 font-medium underline underline-offset-4">
+                            Clear selection
+                        </button>
+                    </div>
+                    {bulkActions && <div className="flex items-center gap-2">{bulkActions}</div>}
                 </div>
             )}
 
-            {/* ═══ TABLE ═════════════════════════════ */}
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            {/* ─── Table Section ─────────────────── */}
+            <div className="relative overflow-x-auto min-h-[300px]">
                 <Table>
-                    <TableHeader>
-                        <TableRow className="bg-gray-50/60">
-                            {selectable && (
-                                <TableHead className={`${hp} w-10`}>
-                                    <input type="checkbox" checked={paginatedData.length > 0 && selectedRows.size === paginatedData.length}
-                                        onChange={toggleSelectAll} className="rounded border-gray-300" />
+                    <TableHeader className="bg-gray-50/50">
+                        <TableRow className="border-b-0 hover:bg-transparent">
+                            {/* Expandable Chevron Placeholder */}
+                            {expandable && <TableHead className="w-10"></TableHead>}
+
+                            {/* Selection Checkbox */}
+                            {selection && (
+                                <TableHead className="w-10 px-4">
+                                    <Checkbox
+                                        checked={paginatedData.length > 0 && paginatedData.every(r => selection.selectedIds.has(getRowId(r)))}
+                                        onCheckedChange={handleSelectAll}
+                                    />
                                 </TableHead>
                             )}
-                            {activeColumns.map(col => (
-                                <TableHead key={col.key}
-                                    className={`${hp} text-xs font-semibold text-gray-600 ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : ''} ${col.hideMobile ? 'hidden md:table-cell' : ''}`}
-                                    style={col.width ? { width: col.width } : undefined}>
-                                    {col.sortable && onSort ? (
-                                        <button onClick={() => onSort(col.key)}
-                                            className="flex items-center gap-1 hover:text-gray-900 transition-colors">
-                                            {col.label}
-                                            {sortKey === col.key
-                                                ? (sortDir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />)
-                                                : <ArrowUpDown className="h-3 w-3 opacity-30" />}
+
+                            {activeColumns.map(c => (
+                                <TableHead key={c.key} className={`text-[11px] font-bold text-gray-400 uppercase tracking-widest px-4 py-4 ${c.align === 'right' ? 'text-right' : c.align === 'center' ? 'text-center' : 'text-left'}`}>
+                                    {c.sortable ? (
+                                        <button onClick={() => toggleSort(c.key)} className="group inline-flex items-center hover:text-gray-900 transition-colors gap-1">
+                                            {c.label}
+                                            {sortKey === c.key ? (
+                                                sortDir === 'desc' ? <ArrowDown className="h-3 w-3 text-emerald-500" /> : <ArrowUp className="h-3 w-3 text-emerald-500" />
+                                            ) : (
+                                                <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-100 text-gray-300" />
+                                            )}
                                         </button>
-                                    ) : col.label}
+                                    ) : (
+                                        c.label
+                                    )}
                                 </TableHead>
                             ))}
-                            {hasLifecycle && <TableHead className={`${hp} text-xs font-semibold text-gray-600`}>Status</TableHead>}
-                            {hasVerified && <TableHead className={`${hp} text-xs font-semibold text-gray-600 text-center`}>Verified</TableHead>}
-                            {hasLock && <TableHead className={`${hp} text-xs font-semibold text-gray-600 text-center`}>Lock</TableHead>}
-                            {hasExpandable && <TableHead className={`${hp} text-xs font-semibold text-gray-600 text-center`}>Details</TableHead>}
-                            {hasActions && <TableHead className={`${hp} text-xs font-semibold text-gray-600 text-center`}>Action</TableHead>}
+
+                            {/* Indicators Placeholder (Status, Verified, Locked) */}
+                            {lifecycle && (
+                                <>
+                                    <TableHead className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-28 px-4 text-center">Status</TableHead>
+                                    <TableHead className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-16 px-4 text-center">Verified</TableHead>
+                                    <TableHead className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-16 px-4 text-center">Lock</TableHead>
+                                </>
+                            )}
+
+                            {actions && <TableHead className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-24 px-4 text-right">Actions</TableHead>}
                         </TableRow>
                     </TableHeader>
+
                     <TableBody>
                         {loading ? (
-                            <LoadingSkeleton columns={totalCols} compact={compact} />
+                            Array.from({ length: 5 }).map((_, i) => (
+                                <TableRow key={i} className="animate-pulse">
+                                    <TableCell colSpan={activeColumns.length + 5} className="h-12 bg-gray-50/50" />
+                                </TableRow>
+                            ))
                         ) : paginatedData.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={totalCols} className="text-center py-12 text-gray-400">
-                                    {emptyMessage || 'No records found'}
+                                <TableCell colSpan={activeColumns.length + (expandable ? 1 : 0) + (selection ? 1 : 0) + (lifecycle ? 3 : 0) + (actions ? 1 : 0)} className="h-32 text-center text-gray-400 text-sm">
+                                    No results found
                                 </TableCell>
                             </TableRow>
-                        ) : paginatedData.map((row, rowIdx) => {
-                            const rowId = getRowId(row)
-                            const isExpanded = expandedRows.has(rowId)
-                            const isSelected = selectedRows.has(rowId)
-                            const details = hasExpandable ? expandable!.getDetails(row) : []
+                        ) : paginatedData.map(row => {
+                            const id = getRowId(row)
+                            const isExpanded = expandedRows.has(id)
+                            const isSelected = selection?.selectedIds.has(id)
 
                             return (
-                                <React.Fragment key={rowId}>
-                                    <TableRow className={`
-                                        ${hoverable ? 'hover:bg-gray-50/50' : ''} transition-colors
-                                        ${striped && rowIdx % 2 === 1 ? 'bg-gray-50/30' : ''}
-                                        ${isSelected ? 'bg-blue-50/50' : ''}
-                                    `}>
-                                        {selectable && (
-                                            <TableCell className={cp}>
-                                                <input type="checkbox" checked={isSelected}
-                                                    onChange={() => toggleSelect(rowId)} className="rounded border-gray-300" />
+                                <React.Fragment key={id}>
+                                    <TableRow className={`group cursor-pointer transition-colors border-b border-gray-50 ${isSelected ? 'bg-indigo-50/30' : 'hover:bg-gray-50/80'}`}>
+                                        {expandable && (
+                                            <TableCell className="px-4" onClick={() => toggleExpand(id)}>
+                                                {isExpanded ? <ChevronDown className="h-4 w-4 text-gray-400" /> : <ChevronRight className="h-4 w-4 text-gray-400" />}
                                             </TableCell>
                                         )}
-                                        {activeColumns.map(col => (
-                                            <TableCell key={col.key}
-                                                className={`${cp} ${compact ? 'text-xs' : 'text-sm'} ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : ''} ${col.hideMobile ? 'hidden md:table-cell' : ''}`}>
-                                                {col.render ? col.render(row) : String(row[col.key] ?? '')}
+
+                                        {selection && (
+                                            <TableCell className="px-4">
+                                                <Checkbox
+                                                    checked={isSelected}
+                                                    onCheckedChange={(checked) => handleSelectRow(id, !!checked)}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                />
+                                            </TableCell>
+                                        )}
+
+                                        {activeColumns.map(c => (
+                                            <TableCell key={c.key} className={`px-4 py-4 text-sm ${c.align === 'right' ? 'text-right font-mono' : c.align === 'center' ? 'text-center' : 'text-left'}`}>
+                                                {c.render ? c.render(row) : (row as any)[c.key]}
                                             </TableCell>
                                         ))}
-                                        {hasLifecycle && (
-                                            <TableCell className={cp}>
-                                                {(() => { const s = lifecycle!.getStatus(row); return <StatusBadge label={s.label} variant={s.variant} /> })()}
-                                            </TableCell>
+
+                                        {/* Lifecycle Indicators */}
+                                        {lifecycle && (
+                                            <>
+                                                <TableCell className="px-4 text-center">
+                                                    {lifecycle.getStatus && (() => {
+                                                        const s = lifecycle.getStatus(row)
+                                                        const colorMap: Record<string, string> = {
+                                                            default: 'bg-gray-100 text-gray-600',
+                                                            success: 'bg-emerald-100 text-emerald-700',
+                                                            warning: 'bg-amber-100 text-amber-700',
+                                                            danger: 'bg-rose-100 text-rose-700',
+                                                            info: 'bg-blue-100 text-blue-700'
+                                                        }
+                                                        return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${colorMap[s.variant]}`}>{s.label}</span>
+                                                    })()}
+                                                </TableCell>
+                                                <TableCell className="px-4 text-center">
+                                                    {lifecycle.getVerified?.(row) ? <CheckCircle2 className="h-4 w-4 text-emerald-500 mx-auto" /> : <div className="h-4 w-4 rounded-full border border-gray-200 mx-auto" />}
+                                                </TableCell>
+                                                <TableCell className="px-4 text-center">
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); lifecycle.onLockToggle?.(row) }}
+                                                        className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                                                    >
+                                                        {lifecycle.getLocked?.(row) ? <Lock className="h-4 w-4 text-amber-500" /> : <Unlock className="h-4 w-4 text-gray-300" />}
+                                                    </button>
+                                                </TableCell>
+                                            </>
                                         )}
-                                        {hasVerified && (
-                                            <TableCell className={`${cp} text-center`}>
-                                                {lifecycle!.getVerified!(row)
-                                                    ? <CheckCircle2 className="h-5 w-5 text-emerald-500 mx-auto" />
-                                                    : <div className="h-5 w-5 rounded-full border-2 border-gray-200 mx-auto" />}
-                                            </TableCell>
-                                        )}
-                                        {hasLock && (
-                                            <TableCell className={`${cp} text-center`}>
-                                                <button onClick={() => lifecycle?.onLockToggle?.(row)}
-                                                    className="p-1 rounded hover:bg-gray-100 transition-colors mx-auto block">
-                                                    {lifecycle!.getLocked!(row)
-                                                        ? <Lock className="h-4 w-4 text-gray-700" />
-                                                        : <LockOpen className="h-4 w-4 text-gray-400" />}
-                                                </button>
-                                            </TableCell>
-                                        )}
-                                        {hasExpandable && (
-                                            <TableCell className={`${cp} text-center`}>
-                                                <button onClick={() => toggleRow(rowId)}
-                                                    className="p-1 rounded hover:bg-gray-100 transition-colors mx-auto block">
-                                                    {isExpanded
-                                                        ? <ChevronUp className="h-4 w-4 text-gray-600" />
-                                                        : <ChevronDown className="h-4 w-4 text-gray-400" />}
-                                                </button>
-                                            </TableCell>
-                                        )}
-                                        {hasActions && (
-                                            <TableCell className={`${cp} text-center`}>
-                                                <div className="flex items-center justify-center gap-1">
-                                                    {actions?.extra?.(row)}
-                                                    {actions?.onView && <button onClick={() => actions.onView!(row)} className="p-1 rounded hover:bg-gray-100 transition-colors"><Eye className="h-4 w-4 text-gray-500" /></button>}
-                                                    {actions?.onEdit && <button onClick={() => actions.onEdit!(row)} className="p-1 rounded hover:bg-blue-50 transition-colors"><Pencil className="h-4 w-4 text-blue-500" /></button>}
-                                                    {actions?.onDelete && <button onClick={() => actions.onDelete!(row)} className="p-1 rounded hover:bg-red-50 transition-colors"><Trash2 className="h-4 w-4 text-red-400" /></button>}
+
+                                        {/* Row Actions */}
+                                        {actions && (
+                                            <TableCell className="px-4 py-3 text-right">
+                                                <div className="flex items-center justify-end gap-0.5" onClick={e => e.stopPropagation()}>
+                                                    {(lifecycle?.onApprove || lifecycle?.onCancel) && (
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-emerald-50 hover:text-emerald-600">
+                                                                    <Check className="h-4 w-4" />
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end">
+                                                                {lifecycle.onApprove && !lifecycle.getApproved?.(row) && !lifecycle.getCanceled?.(row) && (
+                                                                    <DropdownMenuItem onClick={() => lifecycle.onApprove?.(row)} className="text-emerald-600 font-semibold focus:text-emerald-600 focus:bg-emerald-50">
+                                                                        <CheckCircle2 className="mr-2 h-4 w-4" /> Approve
+                                                                    </DropdownMenuItem>
+                                                                )}
+                                                                {lifecycle.onCancel && !lifecycle.getCanceled?.(row) && (
+                                                                    <DropdownMenuItem onClick={() => lifecycle.onCancel?.(row)} className="text-rose-600 font-semibold focus:text-rose-600 focus:bg-rose-50">
+                                                                        <XCircle className="mr-2 h-4 w-4" /> Cancel
+                                                                    </DropdownMenuItem>
+                                                                )}
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    )}
+
+                                                    {actions.onView && (
+                                                        <button onClick={() => actions.onView!(row)} className="p-1.5 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all">
+                                                            <Eye size={16} />
+                                                        </button>
+                                                    )}
+                                                    {actions.extra && actions.extra(row)}
+                                                    {actions.onEdit && (
+                                                        <button onClick={() => actions.onEdit!(row)} className="p-1.5 text-gray-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-all">
+                                                            <Pencil size={16} />
+                                                        </button>
+                                                    )}
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <button className="p-1.5 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all">
+                                                                <MoreHorizontal size={16} />
+                                                            </button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end" className="w-40 p-1">
+                                                            <DropdownMenuItem className="text-xs font-medium">Download PDF</DropdownMenuItem>
+                                                            <DropdownMenuItem className="text-xs font-medium">Send Email</DropdownMenuItem>
+                                                            {actions.onDelete && (
+                                                                <>
+                                                                    <DropdownMenuSeparator />
+                                                                    <DropdownMenuItem onClick={() => actions.onDelete!(row)} className="text-xs font-bold text-rose-500 hover:bg-rose-50 hover:text-rose-600">
+                                                                        <Trash2 size={14} className="mr-2" /> Delete
+                                                                    </DropdownMenuItem>
+                                                                </>
+                                                            )}
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
                                                 </div>
                                             </TableCell>
                                         )}
                                     </TableRow>
 
-                                    {/* Detail sub-rows */}
-                                    {hasExpandable && isExpanded && details.length > 0 && (
-                                        <TableRow>
-                                            <TableCell colSpan={totalCols} className="p-0 bg-gray-50/30">
-                                                <div className={`mx-6 my-3 rounded-lg border ${detailBorder} overflow-hidden`}>
-                                                    <Table>
-                                                        <TableHeader>
-                                                            <TableRow className={detailHeader}>
-                                                                {expandable!.renderActions && <TableHead className={`${hp} text-xs font-semibold ${detailText}`}>Action</TableHead>}
-                                                                {expandable!.columns.map(dc => (
-                                                                    <TableHead key={dc.key} className={`${hp} text-xs font-semibold ${detailText} ${dc.align === 'right' ? 'text-right' : dc.align === 'center' ? 'text-center' : ''}`}>
-                                                                        {dc.label}
-                                                                    </TableHead>
-                                                                ))}
-                                                            </TableRow>
-                                                        </TableHeader>
-                                                        <TableBody>
-                                                            {details.map((d, idx) => (
-                                                                <TableRow key={idx} className="hover:bg-emerald-50/30">
-                                                                    {expandable!.renderActions && <TableCell className={`${cp} ${compact ? 'text-xs' : 'text-sm'}`}>{expandable!.renderActions(d, row)}</TableCell>}
-                                                                    {expandable!.columns.map(dc => (
-                                                                        <TableCell key={dc.key} className={`${cp} ${compact ? 'text-xs' : 'text-sm'} ${dc.align === 'right' ? 'text-right' : dc.align === 'center' ? 'text-center' : ''}`}>
-                                                                            {dc.render ? dc.render(d) : String((d as any)[dc.key] ?? '')}
-                                                                        </TableCell>
+                                    {/* Expandable Content (Details) */}
+                                    {expandable && isExpanded && (
+                                        <TableRow className="bg-emerald-50/20 border-l-2 border-emerald-400 hover:bg-emerald-50/20">
+                                            <TableCell colSpan={activeColumns.length + (selection ? 2 : 1) + (lifecycle ? 3 : 0) + (actions ? 1 : 0)} className="p-0">
+                                                <div className="p-5 overflow-hidden animate-in slide-in-from-top-2 duration-300">
+                                                    <div className="bg-white rounded-xl border border-emerald-100 shadow-sm overflow-hidden">
+                                                        <Table>
+                                                            <TableHeader className="bg-emerald-50/50">
+                                                                <TableRow className="border-b-0 hover:bg-transparent">
+                                                                    {expandable.columns.map(ec => (
+                                                                        <TableHead key={ec.key} className={`text-[10px] font-bold text-emerald-600 uppercase tracking-widest px-4 py-3 ${ec.align === 'right' ? 'text-right' : 'text-left'}`}>
+                                                                            {ec.label}
+                                                                        </TableHead>
                                                                     ))}
+                                                                    {expandable.renderActions && <TableHead className="w-20"></TableHead>}
                                                                 </TableRow>
-                                                            ))}
-                                                        </TableBody>
-                                                    </Table>
+                                                            </TableHeader>
+                                                            <TableBody>
+                                                                {expandable.getDetails(row).map((detail: any, di: number) => (
+                                                                    <TableRow key={di} className="hover:bg-emerald-50/30 border-b border-emerald-50 last:border-0">
+                                                                        {expandable.columns.map(ec => (
+                                                                            <TableCell key={ec.key} className={`px-4 py-3 text-xs ${ec.align === 'right' ? 'text-right font-mono' : 'text-left'}`}>
+                                                                                {ec.render ? ec.render(detail) : detail[ec.key]}
+                                                                            </TableCell>
+                                                                        ))}
+                                                                        {expandable.renderActions && (
+                                                                            <TableCell className="px-4 py-1 text-right">
+                                                                                {expandable.renderActions(detail, row)}
+                                                                            </TableCell>
+                                                                        )}
+                                                                    </TableRow>
+                                                                ))}
+                                                                {expandable.getDetails(row).length === 0 && (
+                                                                    <TableRow>
+                                                                        <TableCell colSpan={expandable.columns.length + 1} className="py-4 text-center text-xs text-emerald-400 font-medium">
+                                                                            No details available for this record
+                                                                        </TableCell>
+                                                                    </TableRow>
+                                                                )}
+                                                            </TableBody>
+                                                        </Table>
+                                                    </div>
                                                 </div>
                                             </TableCell>
                                         </TableRow>
@@ -478,54 +474,78 @@ export function TypicalListView<T extends Record<string, any>, D extends Record<
                         })}
                     </TableBody>
                 </Table>
+            </div>
 
-                {/* ═══ PAGINATION BAR ═════════════════ */}
-                <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 bg-gray-50/30">
-                    <div className="flex items-center gap-3">
-                        <span className="text-xs text-gray-500">
-                            Showing <span className="font-medium text-gray-700">{showStart}–{showEnd}</span> of <span className="font-medium text-gray-700">{totalRecords}</span>
-                        </span>
-                        {onPageSizeChange && (
-                            <Select value={String(pageSizeProp)} onValueChange={v => onPageSizeChange(parseInt(v))}>
-                                <SelectTrigger className="h-7 w-auto min-w-[70px] text-xs gap-1">
+            {/* ─── Pagination Section ────────────── */}
+            <div className="px-5 py-3 border-t border-gray-50 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                    <p className="text-xs text-gray-400 font-medium whitespace-nowrap">
+                        Showing <span className="text-gray-700 font-bold">{Math.min(sortedData.length, (currentPage - 1) * pageSize + 1)}</span>
+                        {' '}- <span className="text-gray-700 font-bold">{Math.min(sortedData.length, currentPage * pageSize)}</span>
+                        {' '}of <span className="text-gray-700 font-bold">{sortedData.length}</span> results
+                    </p>
+
+                    {onPageSizeChange && (
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-400">Rows:</span>
+                            <Select value={String(pageSize)} onValueChange={v => onPageSizeChange(parseInt(v))}>
+                                <SelectTrigger className="h-7 w-16 text-xs bg-gray-50 border-none shadow-none focus:ring-0">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {PAGE_SIZES.map(s => (
-                                        <SelectItem key={s} value={String(s)}>{s} / page</SelectItem>
-                                    ))}
+                                    {[10, 25, 50, 100].map(s => <SelectItem key={s} value={String(s)}>{s}</SelectItem>)}
                                 </SelectContent>
                             </Select>
-                        )}
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <Button variant="outline" size="sm" disabled={currentPage <= 1}
-                            onClick={() => handlePageChange(currentPage - 1)}
-                            className="h-7 w-7 p-0">
-                            <ChevronLeft className="h-4 w-4" />
-                        </Button>
-                        {/* Page number buttons */}
-                        {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
-                            let page: number
-                            if (totalPages <= 5) { page = i + 1 }
-                            else if (currentPage <= 3) { page = i + 1 }
-                            else if (currentPage >= totalPages - 2) { page = totalPages - 4 + i }
-                            else { page = currentPage - 2 + i }
-                            return (
-                                <Button key={page} variant={page === currentPage ? 'default' : 'outline'} size="sm"
-                                    onClick={() => handlePageChange(page)}
-                                    className={`h-7 w-7 p-0 text-xs ${page === currentPage ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : ''}`}>
-                                    {page}
-                                </Button>
-                            )
-                        })}
-                        <Button variant="outline" size="sm" disabled={currentPage >= totalPages}
-                            onClick={() => handlePageChange(currentPage + 1)}
-                            className="h-7 w-7 p-0">
-                            <ChevronRight className="h-4 w-4" />
-                        </Button>
-                    </div>
+                        </div>
+                    )}
                 </div>
+
+                {totalPages > 1 && (
+                    <div className="flex items-center gap-1">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setCurrentPage(1)}
+                            disabled={currentPage === 1}
+                            className="h-8 px-2 text-xs font-bold text-gray-400 hover:text-gray-900"
+                        >
+                            First
+                        </Button>
+                        <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-lg">
+                            {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
+                                // Simple sliding window for page numbers
+                                let pageNum = i + 1
+                                if (totalPages > 5) {
+                                    if (currentPage > 3) pageNum = currentPage - 3 + i + 1
+                                    if (pageNum > totalPages) pageNum = totalPages - (4 - i)
+                                }
+                                if (pageNum <= 0) return null
+
+                                return (
+                                    <button
+                                        key={pageNum}
+                                        onClick={() => setCurrentPage(pageNum)}
+                                        className={`h-7 w-7 rounded-md text-xs font-bold transition-all ${currentPage === pageNum
+                                            ? 'bg-white shadow text-emerald-600'
+                                            : 'text-gray-400 hover:text-emerald-500'
+                                            }`}
+                                    >
+                                        {pageNum}
+                                    </button>
+                                )
+                            })}
+                        </div>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setCurrentPage(totalPages)}
+                            disabled={currentPage === totalPages}
+                            className="h-8 px-2 text-xs font-bold text-gray-400 hover:text-gray-900"
+                        >
+                            Last
+                        </Button>
+                    </div>
+                )}
             </div>
         </div>
     )

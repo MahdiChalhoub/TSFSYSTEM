@@ -1,22 +1,27 @@
 'use client'
 
-import { useCurrency } from '@/lib/utils/currency'
-import { useState, useEffect, useTransition } from "react"
+import { useState, useEffect, useMemo, useTransition } from "react"
 import type { DeferredExpense, FinancialAccount } from '@/types/erp'
 import { getDeferredExpenses, createDeferredExpense, recognizeDeferredExpense, DeferredExpenseInput } from "@/app/actions/finance/deferred-expenses"
 import { getFinancialAccounts } from "@/app/actions/finance/financial-accounts"
+import { useCurrency } from '@/lib/utils/currency'
 import { Card, CardContent } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import {
     Clock, Plus, Search, CheckCircle2, Receipt, Timer,
-    CalendarClock, DollarSign, PlayCircle
+    CalendarClock, DollarSign, PlayCircle, Filter, ChevronRight, LayoutGrid
 } from "lucide-react"
+import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
+
+const STATUS_CONFIG: Record<string, { icon: any; color: string; bg: string }> = {
+    ACTIVE: { icon: PlayCircle, color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
+    COMPLETED: { icon: CheckCircle2, color: "text-blue-700", bg: "bg-blue-50 border-blue-200" },
+}
 
 export default function DeferredExpensesPage() {
     const { fmt } = useCurrency()
@@ -24,7 +29,6 @@ export default function DeferredExpensesPage() {
     const [accounts, setAccounts] = useState<FinancialAccount[]>([])
     const [loading, setLoading] = useState(true)
     const [dialogOpen, setDialogOpen] = useState(false)
-    const [searchQuery, setSearchQuery] = useState("")
     const [activeTab, setActiveTab] = useState<string>("ALL")
     const [isPending, startTransition] = useTransition()
 
@@ -81,262 +85,253 @@ export default function DeferredExpensesPage() {
         })
     }
 
-    const categories = ["SUBSCRIPTION", "RENOVATION", "ADVERTISING", "INSURANCE", "RENT_ADVANCE", "OTHER"]
+    const filteredExpenses = useMemo(() => {
+        return expenses.filter(e => activeTab === "ALL" || e.status === activeTab)
+    }, [expenses, activeTab])
 
-    const tabs = [
-        { key: "ALL", label: "All" },
-        { key: "ACTIVE", label: "Active" },
-        { key: "COMPLETED", label: "Completed" },
-    ]
+    const stats = useMemo(() => {
+        const active = expenses.filter(e => e.status === "ACTIVE").length
+        const total = expenses.reduce((s, e) => s + Number(e.total_amount || 0), 0)
+        const remaining = expenses.reduce((s, e) => s + Number(e.remaining_amount || 0), 0)
+        return { active, total, remaining }
+    }, [expenses])
 
-    const filteredExpenses = expenses
-        .filter(e => activeTab === "ALL" || e.status === activeTab)
-        .filter(e =>
-            !searchQuery ||
-            (e.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (e.category || "").toLowerCase().includes(searchQuery.toLowerCase())
-        )
-
-    const totalActive = expenses.filter(e => e.status === "ACTIVE").length
-    const totalCommitted = expenses.reduce((s, e) => s + Number(e.total_amount || 0), 0)
-    const totalRemaining = expenses.reduce((s, e) => s + Number(e.remaining_amount || 0), 0)
-
-    const statusConfig: Record<string, { icon: Record<string, any>; color: string; bg: string }> = {
-        ACTIVE: { icon: PlayCircle, color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
-        COMPLETED: { icon: CheckCircle2, color: "text-blue-700", bg: "bg-blue-50 border-blue-200" },
-    }
+    const columns: ColumnDef<any>[] = useMemo(() => [
+        {
+            key: 'name',
+            label: 'Asset / Expense',
+            sortable: true,
+            render: (exp) => (
+                <div className="flex flex-col">
+                    <span className="font-bold text-gray-900 text-sm">{exp.name}</span>
+                    <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">{exp.category?.replace(/_/g, " ")}</span>
+                </div>
+            )
+        },
+        {
+            key: 'total_amount',
+            label: 'Total Commitment',
+            align: 'right',
+            sortable: true,
+            render: (exp) => <span className="font-mono text-sm font-bold text-stone-900">{fmt(Number(exp.total_amount))}</span>
+        },
+        {
+            key: 'progress',
+            label: 'Amortization Progress',
+            align: 'center',
+            render: (exp) => {
+                const progress = exp.duration_months > 0 ? Math.round((exp.months_recognized / exp.duration_months) * 100) : 100
+                return (
+                    <div className="flex flex-col items-center gap-1.5 min-w-[120px]">
+                        <div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden shadow-inner">
+                            <div
+                                className={`h-full rounded-full transition-all duration-700 ${progress >= 100 ? "bg-blue-500" : "bg-emerald-500"}`}
+                                style={{ width: `${Math.min(progress, 100)}%` }}
+                            />
+                        </div>
+                        <span className="text-[9px] font-black text-stone-400 uppercase tracking-tighter">
+                            {exp.months_recognized} / {exp.duration_months} Months Recognized
+                        </span>
+                    </div>
+                )
+            }
+        },
+        {
+            key: 'remaining_amount',
+            label: 'Remaining',
+            align: 'right',
+            sortable: true,
+            render: (exp) => <span className="font-mono text-sm font-black text-emerald-600">{fmt(Number(exp.remaining_amount))}</span>
+        },
+        {
+            key: 'status',
+            label: 'Status',
+            align: 'center',
+            sortable: true,
+            render: (exp) => {
+                const sc = STATUS_CONFIG[exp.status] || STATUS_CONFIG.ACTIVE
+                const Icon = sc.icon
+                return (
+                    <Badge className={`${sc.bg} ${sc.color} border-none shadow-none text-[10px] font-black uppercase px-2 h-5 rounded-lg flex items-center gap-1`}>
+                        <Icon size={10} /> {exp.status}
+                    </Badge>
+                )
+            }
+        },
+        {
+            key: 'actions',
+            label: '',
+            align: 'right',
+            render: (exp) => (
+                exp.status === "ACTIVE" ? (
+                    <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleRecognize(exp.id)}
+                        disabled={isPending}
+                        className="rounded-xl h-8 px-3 text-[10px] font-black uppercase tracking-widest text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 transition-all group"
+                    >
+                        Recognize Period <ChevronRight size={12} className="ml-1 group-hover:translate-x-0.5 transition-transform" />
+                    </Button>
+                ) : null
+            )
+        }
+    ], [fmt, isPending])
 
     if (loading) {
         return (
-            <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto">
+            <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
                 <div className="flex justify-between items-center">
-                    <div><Skeleton className="h-10 w-56" /><Skeleton className="h-4 w-72 mt-2" /></div>
+                    <div><Skeleton className="h-10 w-64" /><Skeleton className="h-4 w-48 mt-2" /></div>
                     <Skeleton className="h-10 w-44" />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {[1, 2, 3].map(i => <Skeleton key={i} className="h-28 rounded-2xl" />)}
-                </div>
-                <Skeleton className="h-96 rounded-2xl" />
+                <div className="grid grid-cols-3 gap-6">{[1, 2, 3].map(i => <Skeleton key={i} className="h-28 rounded-3xl" />)}</div>
+                <Skeleton className="h-96 rounded-3xl" />
             </div>
         )
     }
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto">
-            {/* Header */}
-            <div className="flex justify-between items-center">
+        <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
+            {/* Standard Header */}
+            <header className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-4xl font-bold text-stone-900 font-serif tracking-tight">Deferred Expenses</h1>
-                    <p className="text-stone-500 font-medium mt-1">Manage long-term expenses recognized over multiple months</p>
+                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
+                            <Clock size={28} className="text-white" />
+                        </div>
+                        Deferred <span className="text-indigo-600">Expenses</span>
+                    </h1>
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Amortization & Prepaid Management</p>
                 </div>
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button className="rounded-xl gap-2 shadow-md hover:shadow-lg transition-all">
-                            <Plus size={16} /> New Deferred Expense
+                        <Button className="h-12 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-widest text-xs shadow-lg shadow-indigo-200 gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                            <Plus size={18} /> New Expense Account
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-lg">
+                    <DialogContent className="sm:max-w-lg rounded-3xl border-0 shadow-2xl">
                         <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2"><CalendarClock size={20} /> Create Deferred Expense</DialogTitle>
-                            <DialogDescription>Set up a prepaid expense to be amortized over time.</DialogDescription>
+                            <DialogTitle className="text-2xl font-black tracking-tight text-gray-900 flex items-center gap-2">
+                                <CalendarClock size={24} className="text-indigo-600" />
+                                Create Amortization Schedule
+                            </DialogTitle>
+                            <DialogDescription className="text-stone-400 font-medium tracking-tight">Set up a prepaid expense to be recognized over time.</DialogDescription>
                         </DialogHeader>
-                        <form onSubmit={handleCreate} className="grid grid-cols-2 gap-4 pt-2">
+                        <form onSubmit={handleCreate} className="grid grid-cols-2 gap-5 pt-4">
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Name *</label>
-                                <Input name="name" required placeholder="Annual Software License" className="rounded-xl" />
+                                <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Expense Name</label>
+                                <Input name="name" required placeholder="Annual License" className="rounded-xl bg-stone-50 border-stone-100 focus:bg-white transition-all" />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Category *</label>
-                                <select name="category" required className="w-full px-3 py-2 border rounded-xl bg-background text-sm">
-                                    {categories.map(c => <option key={c} value={c}>{c.replace(/_/g, " ")}</option>)}
+                                <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Category</label>
+                                <select name="category" required className="w-full h-10 px-3 border border-stone-100 rounded-xl bg-stone-50 text-sm focus:bg-white transition-all outline-none">
+                                    {["SUBSCRIPTION", "RENOVATION", "ADVERTISING", "INSURANCE", "RENT_ADVANCE", "OTHER"].map(c => <option key={c} value={c}>{c.replace(/_/g, " ")}</option>)}
                                 </select>
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Total Amount *</label>
-                                <Input name="total_amount" type="number" step="0.01" min="0.01" required placeholder="12,000.00" className="rounded-xl" />
+                                <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Total Amount</label>
+                                <Input name="total_amount" type="number" step="0.01" min="0.01" required placeholder="0.00" className="rounded-xl bg-stone-50 border-stone-100" />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Duration (Months) *</label>
-                                <Input name="duration_months" type="number" min="1" max="120" required placeholder="12" className="rounded-xl" />
+                                <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Duration (Months)</label>
+                                <Input name="duration_months" type="number" min="1" max="120" required placeholder="12" className="rounded-xl bg-stone-50 border-stone-100" />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Start Date *</label>
-                                <Input name="start_date" type="date" required className="rounded-xl" />
+                                <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Activation Date</label>
+                                <Input name="start_date" type="date" required className="rounded-xl bg-stone-50 border-stone-100" />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Source Account *</label>
-                                <select name="source_account_id" required className="w-full px-3 py-2 border rounded-xl bg-background text-sm">
+                                <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Funding Account</label>
+                                <select name="source_account_id" required className="w-full h-10 px-3 border border-stone-100 rounded-xl bg-stone-50 text-sm focus:bg-white transition-all outline-none">
                                     <option value="">Select account...</option>
                                     {accounts.map((a: Record<string, any>) => <option key={a.id} value={a.id}>{a.name} ({a.type})</option>)}
                                 </select>
                             </div>
                             <div className="col-span-2 space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Description</label>
-                                <textarea name="description" rows={2} className="w-full px-3 py-2 border rounded-xl bg-background text-sm resize-none" placeholder="Optional description..." />
+                                <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Internal Notes</label>
+                                <textarea name="description" rows={2} className="w-full px-3 py-2 border border-stone-100 rounded-xl bg-stone-50 text-sm resize-none focus:bg-white transition-all outline-none" placeholder="Optional audit notes..." />
                             </div>
-                            <div className="col-span-2 flex justify-end gap-2 pt-3 border-t">
-                                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} className="rounded-xl">Cancel</Button>
-                                <Button type="submit" disabled={isPending} className="rounded-xl gap-2">
-                                    {isPending ? "Creating..." : <><CalendarClock size={14} /> Create Expense</>}
+                            <div className="col-span-2 flex justify-end gap-3 pt-6 border-t border-stone-50">
+                                <Button type="button" variant="ghost" onClick={() => setDialogOpen(false)} className="rounded-xl font-black text-[10px] uppercase">Cancel</Button>
+                                <Button type="submit" disabled={isPending} className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-[10px] uppercase h-10 px-6 px-6">
+                                    {isPending ? "Configuring..." : "Schedule Amortization"}
                                 </Button>
                             </div>
                         </form>
                     </DialogContent>
                 </Dialog>
-            </div>
+            </header>
 
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-emerald-50 to-emerald-100">
-                    <CardContent className="pt-5 pb-4 px-5">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Active</p>
-                                <p className="text-3xl font-bold text-emerald-900 mt-1">{totalActive}</p>
-                            </div>
-                            <div className="w-12 h-12 rounded-2xl bg-emerald-200/60 flex items-center justify-center">
-                                <PlayCircle size={22} className="text-emerald-500" />
-                            </div>
+            {/* KPI Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden group">
+                    <CardContent className="p-6 flex items-center gap-5">
+                        <div className="w-16 h-16 rounded-[1.5rem] bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <PlayCircle size={32} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-stone-400">Active Schedules</p>
+                            <p className="text-3xl font-black mt-1 tracking-tighter text-stone-900">{stats.active}</p>
+                            <p className="text-[10px] text-emerald-600 font-bold uppercase mt-1">Currently Amortizing</p>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-indigo-50 to-indigo-100">
-                    <CardContent className="pt-5 pb-4 px-5">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-xs font-bold text-indigo-400 uppercase tracking-wider">Total Committed</p>
-                                <p className="text-3xl font-bold text-indigo-900 mt-1">{fmt(totalCommitted)}</p>
-                            </div>
-                            <div className="w-12 h-12 rounded-2xl bg-indigo-200/60 flex items-center justify-center">
-                                <DollarSign size={22} className="text-indigo-500" />
-                            </div>
+                <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden group">
+                    <CardContent className="p-6 flex items-center gap-5">
+                        <div className="w-16 h-16 rounded-[1.5rem] bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <DollarSign size={32} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-stone-400">Total Commitment</p>
+                            <p className="text-3xl font-black mt-1 tracking-tighter text-stone-900">{fmt(stats.total)}</p>
+                            <p className="text-[10px] text-indigo-600 font-bold uppercase mt-1">Asset Value</p>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-amber-50 to-amber-100">
-                    <CardContent className="pt-5 pb-4 px-5">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-xs font-bold text-amber-400 uppercase tracking-wider">Remaining</p>
-                                <p className="text-3xl font-bold text-amber-900 mt-1">{fmt(totalRemaining)}</p>
-                            </div>
-                            <div className="w-12 h-12 rounded-2xl bg-amber-200/60 flex items-center justify-center">
-                                <Timer size={22} className="text-amber-500" />
-                            </div>
+                <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden group">
+                    <CardContent className="p-6 flex items-center gap-5">
+                        <div className="w-16 h-16 rounded-[1.5rem] bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Timer size={32} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-stone-400">Unrecognized Balance</p>
+                            <p className="text-3xl font-black mt-1 tracking-tighter text-amber-600">{fmt(stats.remaining)}</p>
+                            <p className="text-[10px] text-stone-400 font-bold uppercase mt-1">Pending Amortization</p>
                         </div>
                     </CardContent>
                 </Card>
             </div>
 
-            {/* Tabs + Search + Table */}
-            <Card className="rounded-2xl shadow-sm overflow-hidden">
-                <div className="px-5 py-3 border-b flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between bg-stone-50/50">
-                    <div className="flex gap-1">
-                        {tabs.map(tab => (
+            <TypicalListView
+                title="Amortization Lifecycle"
+                data={filteredExpenses}
+                loading={loading}
+                getRowId={(exp) => exp.id}
+                columns={columns}
+                className="rounded-3xl border-0 shadow-sm overflow-hidden"
+                headerExtra={
+                    <div className="flex items-center gap-1 bg-stone-100 p-1 rounded-2xl">
+                        {[
+                            { key: "ALL", label: "All Assets", icon: LayoutGrid },
+                            { key: "ACTIVE", label: "Running", icon: PlayCircle },
+                            { key: "COMPLETED", label: "Closed", icon: CheckCircle2 },
+                        ].map(tab => (
                             <button
                                 key={tab.key}
                                 onClick={() => setActiveTab(tab.key)}
-                                className={`px-3.5 py-2 text-sm rounded-xl transition-all ${activeTab === tab.key
-                                    ? "bg-white shadow-sm font-semibold text-stone-900"
+                                className={`flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === tab.key
+                                    ? "bg-white shadow-sm text-gray-900"
                                     : "text-stone-400 hover:text-stone-600"
                                     }`}
                             >
+                                <tab.icon size={12} />
                                 {tab.label}
                             </button>
                         ))}
                     </div>
-                    <div className="relative w-full sm:w-64">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
-                        <Input
-                            placeholder="Search name or category..."
-                            value={searchQuery}
-                            onChange={e => setSearchQuery(e.target.value)}
-                            className="pl-9 rounded-xl text-sm h-9 bg-white"
-                        />
-                    </div>
-                </div>
-                <Table>
-                    <TableHeader>
-                        <TableRow className="bg-stone-50/30">
-                            <TableHead className="text-xs font-bold uppercase text-stone-400">Name</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400">Category</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Total</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Monthly</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-center">Progress</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Remaining</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-center">Status</TableHead>
-                            <TableHead className="text-xs font-bold uppercase text-stone-400 text-right">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {filteredExpenses.map((exp: Record<string, any>) => {
-                            const progress = exp.duration_months > 0 ? Math.round((exp.months_recognized / exp.duration_months) * 100) : 100
-                            const sc = statusConfig[exp.status] || statusConfig.ACTIVE
-                            const StatusIcon = sc.icon
-                            return (
-                                <TableRow key={exp.id} className="hover:bg-stone-50/50 transition-colors">
-                                    <TableCell className="font-semibold text-stone-800">{exp.name}</TableCell>
-                                    <TableCell>
-                                        <Badge variant="outline" className="rounded-lg text-[11px] border-stone-200 text-stone-600">
-                                            {(exp.category || "").replace(/_/g, " ")}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="text-right text-sm">{fmt(Number(exp.total_amount))}</TableCell>
-                                    <TableCell className="text-right text-sm text-stone-500">{fmt(Number(exp.monthly_amount))}</TableCell>
-                                    <TableCell>
-                                        <div className="flex items-center gap-2 justify-center">
-                                            <div className="w-20 h-2.5 bg-stone-100 rounded-full overflow-hidden">
-                                                <div
-                                                    className={`h-full rounded-full transition-all ${progress >= 100 ? "bg-blue-400" : "bg-emerald-400"}`}
-                                                    style={{ width: `${Math.min(progress, 100)}%` }}
-                                                />
-                                            </div>
-                                            <span className="text-xs font-semibold text-stone-400">{exp.months_recognized}/{exp.duration_months}</span>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="text-right font-semibold text-stone-800">{fmt(Number(exp.remaining_amount))}</TableCell>
-                                    <TableCell className="text-center">
-                                        <Badge variant="outline" className={`gap-1 rounded-lg border ${sc.bg} ${sc.color} font-semibold text-[11px]`}>
-                                            <StatusIcon size={12} /> {exp.status}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        {exp.status === "ACTIVE" && (
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => handleRecognize(exp.id)}
-                                                disabled={isPending}
-                                                className="rounded-xl gap-1 h-8 text-xs font-semibold text-emerald-700 border-emerald-200 hover:bg-emerald-50"
-                                            >
-                                                <Clock size={12} /> Recognize
-                                            </Button>
-                                        )}
-                                    </TableCell>
-                                </TableRow>
-                            )
-                        })}
-                        {filteredExpenses.length === 0 && (
-                            <TableRow>
-                                <TableCell colSpan={8} className="py-16 text-center">
-                                    <div className="flex flex-col items-center gap-3">
-                                        <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center">
-                                            <CalendarClock size={28} className="text-stone-300" />
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold text-stone-600">No deferred expenses found</p>
-                                            <p className="text-sm text-stone-400 mt-1">Create a deferred expense to start amortization</p>
-                                        </div>
-                                        <Button variant="outline" onClick={() => setDialogOpen(true)} className="rounded-xl gap-2 mt-2">
-                                            <Plus size={14} /> New Deferred Expense
-                                        </Button>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </Card>
+                }
+            />
         </div>
     )
 }

@@ -1,287 +1,236 @@
 'use client'
 
 import { useCurrency } from '@/lib/utils/currency'
-
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import type { ValuationResponse, Warehouse as WarehouseType } from '@/types/erp'
 import { getStockValuation, getWarehouses } from "@/app/actions/inventory/valuation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { TypicalListView, type ColumnDef } from "@/components/common/TypicalListView"
+import { TypicalFilter } from "@/components/common/TypicalFilter"
 import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import {
-    Package, DollarSign, BarChart3, Warehouse,
-    Search, TrendingUp, ArrowUpDown, Boxes
+    Package, DollarSign, BarChart3, Building2,
+    TrendingUp, Boxes, Landmark, RefreshCw
 } from "lucide-react"
+import { Button } from '@/components/ui/button'
 
 function fmtQty(n: number) {
     return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(n)
 }
 
 const METHOD_BADGES: Record<string, string> = {
-    WEIGHTED_AVG: 'bg-blue-100 text-blue-700',
-    FIFO: 'bg-emerald-100 text-emerald-700',
-    LIFO: 'bg-purple-100 text-purple-700',
-    COST_PRICE: 'bg-gray-100 text-gray-700',
+    WEIGHTED_AVG: 'bg-blue-100 text-blue-700 border-blue-200',
+    FIFO: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    LIFO: 'bg-purple-100 text-purple-700 border-purple-200',
+    COST_PRICE: 'bg-stone-100 text-stone-700 border-stone-200',
 }
 
-type SortKey = 'product_name' | 'quantity' | 'total_value' | 'avg_cost'
-
-export default function InventoryValuationPage() {
+export default function AssetValuationEnginePage() {
     const { fmt } = useCurrency()
     const [data, setData] = useState<ValuationResponse | null>(null)
     const [warehouses, setWarehouses] = useState<WarehouseType[]>([])
     const [loading, setLoading] = useState(true)
     const [warehouseFilter, setWarehouseFilter] = useState<string>('all')
     const [search, setSearch] = useState('')
-    const [sortKey, setSortKey] = useState<SortKey>('total_value')
+    const [sortKey, setSortKey] = useState<string>('total_value')
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
 
-    useEffect(() => { loadData() }, [])
-
-    async function loadData(whId?: number) {
+    const loadData = useCallback(async (whId?: number) => {
         setLoading(true)
         try {
             const [valData, wh] = await Promise.all([
                 getStockValuation(whId),
-                warehouses.length ? Promise.resolve(warehouses) : getWarehouses()
+                getWarehouses()
             ])
             setData(valData)
-            if (!warehouses.length) setWarehouses(wh)
+            setWarehouses(wh)
         } catch {
-            toast.error("Failed to load valuation data")
+            toast.error("Valuation sync failed")
         } finally {
             setLoading(false)
         }
-    }
+    }, [])
 
-    function handleWarehouseChange(val: string) {
+    useEffect(() => { loadData() }, [loadData])
+
+    const handleWarehouseChange = (val: string) => {
         setWarehouseFilter(val)
         if (val === 'all') loadData()
         else loadData(Number(val))
     }
 
-    function handleSort(key: SortKey) {
-        if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
-        else { setSortKey(key); setSortDir('desc') }
-    }
-
-    const products = useMemo(() => {
-        if (!data?.products) return []
-        let items = [...data.products]
-        if (search) {
-            const s = search.toLowerCase()
-            items = items.filter((p: Record<string, any>) =>
-                p.product_name?.toLowerCase().includes(s) ||
-                p.product_sku?.toLowerCase().includes(s)
+    const columns: ColumnDef<any>[] = [
+        { key: 'product_name', label: 'Asset Entity', sortable: true, alwaysVisible: true, render: r => <span className="font-bold text-gray-900">{r.product_name}</span> },
+        { key: 'sku', label: 'SKU/Code', render: r => <span className="font-mono text-[10px] text-gray-400 font-black tracking-tighter uppercase">{r.product_sku || '—'}</span> },
+        { key: 'quantity', label: 'Reserved Volume', align: 'right', sortable: true, render: r => <span className="font-black text-gray-900">{fmtQty(r.quantity)} <span className="text-[10px] text-gray-300">U</span></span> },
+        { key: 'avg_cost', label: 'Asset Basis', align: 'right', sortable: true, render: r => <span className="text-gray-500 font-medium">{fmt(r.avg_cost)}</span> },
+        { key: 'total_value', label: 'Market Exposure', align: 'right', sortable: true, render: r => <span className="font-black text-emerald-600">{fmt(r.total_value)}</span> },
+        {
+            key: 'method', label: 'Valuation Protocol', render: r => (
+                <Badge variant="outline" className={`${METHOD_BADGES[r.method] || 'bg-gray-100'} text-[9px] font-black uppercase tracking-tighter py-0.5`}>
+                    {r.method?.replace('_', ' ')}
+                </Badge>
             )
-        }
-        items.sort((a: Record<string, any>, b: Record<string, any>) => {
-            const av = a[sortKey] ?? 0
-            const bv = b[sortKey] ?? 0
-            if (typeof av === 'string') return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av)
-            return sortDir === 'asc' ? av - bv : bv - av
-        })
-        return items
-    }, [data, search, sortKey, sortDir])
+        },
+    ]
 
-    // Compute top products for the bar chart
+    const items = useMemo(() => {
+        if (!data?.products) return []
+        return data.products
+    }, [data])
+
+    // Top Products Logic
     const topProducts = useMemo(() => {
         if (!data?.products) return []
         return [...data.products]
-            .sort((a: Record<string, any>, b: Record<string, any>) => b.total_value - a.total_value)
-            .slice(0, 8)
+            .sort((a: any, b: any) => b.total_value - a.total_value)
+            .slice(0, 5)
     }, [data])
-    const maxValue = topProducts.length ? Math.max(...topProducts.map((p: Record<string, any>) => p.total_value)) : 1
+    const maxValue = topProducts.length ? Math.max(...topProducts.map((p: any) => p.total_value)) : 1
 
-    if (loading) {
+    if (loading && !data) {
         return (
-            <div className="p-6 space-y-6">
-                <Skeleton className="h-10 w-72" />
-                <div className="grid grid-cols-3 gap-4">
-                    {[1, 2, 3].map(i => <Skeleton key={i} className="h-28" />)}
+            <div className="p-6 space-y-6 max-w-7xl mx-auto">
+                <Skeleton className="h-20 w-1/2 rounded-2xl" />
+                <div className="grid grid-cols-3 gap-6">
+                    {[1, 2, 3].map(i => <Skeleton key={i} className="h-32 rounded-[2rem]" />)}
                 </div>
-                <Skeleton className="h-96" />
+                <Skeleton className="h-[500px] rounded-[2rem]" />
             </div>
         )
     }
 
     return (
-        <div className="p-6 space-y-6">
-            {/* Header */}
-            <header className="flex items-center justify-between">
+        <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
+            <header className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Inventory Valuation</h1>
-                    <p className="text-sm text-gray-500 mt-1">Stock value breakdown by product</p>
+                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
+                            <Landmark size={28} className="text-white" />
+                        </div>
+                        Asset <span className="text-emerald-600">Valuation</span>
+                    </h1>
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Global Asset Equity & Inventory Exposure</p>
                 </div>
-                <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2">
-                        <Warehouse size={16} className="text-gray-400" />
-                        <select
-                            value={warehouseFilter}
-                            onChange={e => handleWarehouseChange(e.target.value)}
-                            className="border rounded-lg px-3 py-2 text-sm bg-white"
-                        >
-                            <option value="all">All Warehouses</option>
-                            {warehouses.map((wh: Record<string, any>) => (
-                                <option key={wh.id} value={wh.id}>{wh.name}</option>
-                            ))}
-                        </select>
-                    </div>
+                <div className="flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-2xl border border-emerald-100">
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                    <span className="text-[10px] font-black uppercase text-emerald-700 tracking-widest">Valuation Engine Synced</span>
                 </div>
             </header>
 
-            {/* KPI Cards */}
-            <div className="grid grid-cols-3 gap-4">
-                <Card className="border-l-4 border-l-emerald-500 bg-gradient-to-r from-emerald-50 to-white">
-                    <CardContent className="py-4">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
-                                <DollarSign size={20} className="text-emerald-600" />
-                            </div>
-                            <div>
-                                <p className="text-xs text-gray-500 uppercase">Total Stock Value</p>
-                                <p className="text-2xl font-bold text-gray-900">{fmt(data?.summary?.total_value || 0)}</p>
-                            </div>
+            {/* Global Equity Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-md transition-all">
+                    <CardContent className="p-6 flex items-center gap-5">
+                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <DollarSign size={28} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Total Equity Exposure</p>
+                            <h2 className="text-3xl font-black text-gray-900 mt-0.5">{fmt(data?.summary?.total_value || 0)}</h2>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50 to-white">
-                    <CardContent className="py-4">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                <Package size={20} className="text-blue-600" />
-                            </div>
-                            <div>
-                                <p className="text-xs text-gray-500 uppercase">Products with Stock</p>
-                                <p className="text-2xl font-bold text-gray-900">{data?.summary?.total_products || 0}</p>
-                            </div>
+
+                <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-md transition-all">
+                    <CardContent className="p-6 flex items-center gap-5">
+                        <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Package size={28} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Asset Diversity</p>
+                            <h2 className="text-3xl font-black text-gray-900 mt-0.5">{data?.summary?.total_products || 0} <span className="text-sm text-gray-300">SKUs</span></h2>
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-purple-500 bg-gradient-to-r from-purple-50 to-white">
-                    <CardContent className="py-4">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                                <Boxes size={20} className="text-purple-600" />
-                            </div>
-                            <div>
-                                <p className="text-xs text-gray-500 uppercase">Total Units</p>
-                                <p className="text-2xl font-bold text-gray-900">{fmtQty(data?.summary?.total_quantity || 0)}</p>
-                            </div>
+
+                <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-md transition-all">
+                    <CardContent className="p-6 flex items-center gap-5">
+                        <div className="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Boxes size={28} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Aggregate Units</p>
+                            <h2 className="text-3xl font-black text-gray-900 mt-0.5">{fmtQty(data?.summary?.total_quantity || 0)}</h2>
                         </div>
                     </CardContent>
                 </Card>
             </div>
 
-            {/* Top Products Bar Chart */}
-            {topProducts.length > 0 && (
-                <Card>
-                    <CardHeader className="py-3">
-                        <CardTitle className="text-base flex items-center gap-2">
-                            <BarChart3 size={18} className="text-gray-400" />
-                            Top Products by Value
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="pb-4">
-                        <div className="space-y-2">
-                            {topProducts.map((p: Record<string, any>, i: number) => {
-                                const pct = (p.total_value / maxValue * 100)
-                                return (
-                                    <div key={p.product_id} className="flex items-center gap-3">
-                                        <span className="text-xs text-gray-500 w-48 truncate font-medium">{p.product_name}</span>
-                                        <div className="flex-1 h-6 bg-gray-50 rounded overflow-hidden">
-                                            <div
-                                                className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded flex items-center justify-end pr-2 transition-all"
-                                                style={{ width: `${Math.max(pct, 2)}%` }}
-                                            >
-                                                {pct > 20 && (
-                                                    <span className="text-[10px] text-white font-bold">{fmt(p.total_value)}</span>
-                                                )}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2">
+                    <TypicalListView
+                        title="Asset Master List"
+                        data={items}
+                        loading={loading}
+                        getRowId={r => `${r.product_id}-${r.warehouse || ''}`}
+                        columns={columns}
+                        className="rounded-3xl border-0 shadow-sm overflow-hidden"
+                        pageSize={25}
+                        headerExtra={
+                            <div className="flex items-center gap-2">
+                                <Button onClick={() => loadData()} variant="ghost" className="h-8 w-8 p-0 text-stone-400 hover:text-emerald-600">
+                                    <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+                                </Button>
+                            </div>
+                        }
+                    >
+                        <TypicalFilter
+                            search={{ placeholder: 'Asset Entity or SKU...', value: search, onChange: setSearch }}
+                            filters={[
+                                { key: 'warehouse', label: 'Terminal Node', type: 'select', options: [{ value: 'all', label: 'All Warehouses' }, ...warehouses.map(w => ({ value: String(w.id), label: w.name }))] }
+                            ]}
+                            values={{ warehouse: warehouseFilter }}
+                            onChange={(k, v) => handleWarehouseChange(String(v))}
+                        />
+                    </TypicalListView>
+                </div>
+
+                <div className="lg:col-span-1 space-y-6">
+                    {/* Top Concentrations Bar Chart */}
+                    <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden h-full">
+                        <CardHeader className="p-6 pb-2">
+                            <CardTitle className="text-base font-black flex items-center gap-2 text-gray-400 uppercase tracking-tighter">
+                                <TrendingUp size={18} className="text-emerald-500" />
+                                Asset Concentration
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="px-6 pb-6">
+                            <div className="space-y-6 mt-4">
+                                {topProducts.map((p: any) => {
+                                    const pct = (p.total_value / maxValue * 100)
+                                    return (
+                                        <div key={p.product_id} className="space-y-2">
+                                            <div className="flex justify-between items-end">
+                                                <span className="text-[10px] font-black text-gray-900 uppercase tracking-tight truncate w-32">{p.product_name}</span>
+                                                <span className="text-[10px] font-black text-emerald-600 font-mono">{fmt(p.total_value)}</span>
+                                            </div>
+                                            <div className="h-2 bg-stone-50 rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full bg-emerald-500 rounded-full shadow-lg shadow-emerald-100 transition-all duration-1000"
+                                                    style={{ width: `${Math.max(pct, 2)}%` }}
+                                                />
                                             </div>
                                         </div>
-                                        {pct <= 20 && (
-                                            <span className="text-xs text-gray-500 font-mono">{fmt(p.total_value)}</span>
-                                        )}
-                                    </div>
-                                )
-                            })}
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
+                                    )
+                                })}
+                            </div>
 
-            {/* Detail Table */}
-            <Card>
-                <CardHeader className="py-3 flex flex-row items-center justify-between">
-                    <CardTitle className="text-base flex items-center gap-2">
-                        <TrendingUp size={18} className="text-gray-400" />
-                        Product Valuation Details
-                    </CardTitle>
-                    <div className="relative w-64">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                        <Input
-                            placeholder="Search products..."
-                            value={search}
-                            onChange={e => setSearch(e.target.value)}
-                            className="pl-9 h-8 text-sm"
-                        />
-                    </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                    {products.length === 0 ? (
-                        <div className="text-center py-12 text-gray-400">
-                            <Package size={48} className="mx-auto mb-3 opacity-30" />
-                            <p>No inventory found</p>
-                        </div>
-                    ) : (
-                        <Table>
-                            <TableHeader>
-                                <TableRow className="bg-gray-50/50">
-                                    <TableHead className="cursor-pointer" onClick={() => handleSort('product_name')}>
-                                        Product {sortKey === 'product_name' && <ArrowUpDown size={12} className="inline ml-1" />}
-                                    </TableHead>
-                                    <TableHead>SKU / Barcode</TableHead>
-                                    <TableHead className="text-right cursor-pointer" onClick={() => handleSort('quantity')}>
-                                        Qty {sortKey === 'quantity' && <ArrowUpDown size={12} className="inline ml-1" />}
-                                    </TableHead>
-                                    <TableHead className="text-right cursor-pointer" onClick={() => handleSort('avg_cost')}>
-                                        Avg Cost {sortKey === 'avg_cost' && <ArrowUpDown size={12} className="inline ml-1" />}
-                                    </TableHead>
-                                    <TableHead className="text-right cursor-pointer" onClick={() => handleSort('total_value')}>
-                                        Total Value {sortKey === 'total_value' && <ArrowUpDown size={12} className="inline ml-1" />}
-                                    </TableHead>
-                                    <TableHead>Method</TableHead>
-                                    {products.some((p: Record<string, any>) => p.warehouse) && <TableHead>Warehouse</TableHead>}
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {products.map((p: Record<string, any>) => (
-                                    <TableRow key={`${p.product_id}-${p.warehouse || ''}`} className="hover:bg-gray-50/50">
-                                        <TableCell className="font-medium">{p.product_name}</TableCell>
-                                        <TableCell className="text-sm text-gray-500 font-mono">
-                                            {p.product_sku || '—'}
-                                        </TableCell>
-                                        <TableCell className="text-right font-semibold">{fmtQty(p.quantity)}</TableCell>
-                                        <TableCell className="text-right text-sm">{fmt(p.avg_cost)}</TableCell>
-                                        <TableCell className="text-right font-bold text-emerald-700">{fmt(p.total_value)}</TableCell>
-                                        <TableCell>
-                                            <Badge className={METHOD_BADGES[p.method] || 'bg-gray-100'}>
-                                                {p.method?.replace('_', ' ')}
-                                            </Badge>
-                                        </TableCell>
-                                        {products.some((pr: Record<string, any>) => pr.warehouse) && (
-                                            <TableCell className="text-sm text-gray-500">{p.warehouse || '—'}</TableCell>
-                                        )}
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    )}
-                </CardContent>
-            </Card>
+                            <div className="mt-12 p-5 bg-stone-50 rounded-[1.5rem] border border-stone-100 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-emerald-600 transition-transform hover:rotate-12">
+                                        <BarChart3 size={20} />
+                                    </div>
+                                    <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Equity Pareto Analysis</span>
+                                </div>
+                                <span className="text-[10px] font-black text-emerald-700 bg-emerald-100/50 px-2 py-1 rounded-lg">CALCULATED</span>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
         </div>
     )
 }
