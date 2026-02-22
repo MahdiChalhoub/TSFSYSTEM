@@ -24,7 +24,13 @@ class MigrationJob(TenantModel):
     name = models.CharField(max_length=255, default='UltimatePOS Migration')
     source_type = models.CharField(max_length=20, choices=SOURCE_TYPES, default='SQL_DUMP')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
-    file_path = models.CharField(max_length=500, null=True, blank=True)
+
+    # Link to universal storage
+    stored_file = models.ForeignKey(
+        'storage.StoredFile', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='migration_jobs'
+    )
+    file_path = models.CharField(max_length=500, null=True, blank=True, help_text='Legacy local path fallback')
 
     # Direct DB connection params (encrypted at rest ideally)
     db_host = models.CharField(max_length=255, null=True, blank=True)
