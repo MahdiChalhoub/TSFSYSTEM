@@ -39,8 +39,8 @@ export default function StatementGenerator({ accounts, fiscalYears }: Props) {
         if (dateMode === 'FISCAL') {
             const year = fiscalYears.find(y => y.id == selectedYearId)
             if (!year) return
-            start = new Date(year.startDate).toISOString().split('T')[0]
-            end = new Date(year.endDate).toISOString().split('T')[0]
+            start = year.start_date ? new Date(year.start_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+            end = year.end_date ? new Date(year.end_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
         } else {
             start = customStart
             end = customEnd
@@ -114,7 +114,7 @@ export default function StatementGenerator({ accounts, fiscalYears }: Props) {
                         >
                             {fiscalYears.map(y => (
                                 <option key={y.id} value={y.id}>
-                                    {y.name} ({new Date(y.startDate).toLocaleDateString()} - {new Date(y.endDate).toLocaleDateString()})
+                                    {y.name} ({y.start_date ? new Date(y.start_date).toLocaleDateString() : '—'} - {y.end_date ? new Date(y.end_date).toLocaleDateString() : '—'})
                                 </option>
                             ))}
                         </select>
