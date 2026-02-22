@@ -23,6 +23,7 @@ import {
     Package, ClipboardList, Trash2, Eye, ShieldCheck, Loader2, Users
 } from "lucide-react"
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { SyncPanel } from "./SyncPanel"
 
 // ─── Types ───────────────────────────────────────────────────────
 interface Session {
@@ -131,142 +132,150 @@ export default function StockCountPage() {
                 </Button>
             </div>
 
-            {/* KPI Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Card>
-                    <CardContent className="flex items-center gap-4 p-5">
-                        <div className="p-3 bg-blue-100 rounded-xl"><Clock className="w-5 h-5 text-blue-600" /></div>
-                        <div>
-                            <p className="text-xs text-muted-foreground">In Progress</p>
-                            <p className="text-2xl font-bold">{inProgress}</p>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardContent className="flex items-center gap-4 p-5">
-                        <div className="p-3 bg-yellow-100 rounded-xl"><AlertTriangle className="w-5 h-5 text-yellow-600" /></div>
-                        <div>
-                            <p className="text-xs text-muted-foreground">Pending Verification</p>
-                            <p className="text-2xl font-bold">{pending}</p>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardContent className="flex items-center gap-4 p-5">
-                        <div className="p-3 bg-green-100 rounded-xl"><CheckCircle2 className="w-5 h-5 text-green-600" /></div>
-                        <div>
-                            <p className="text-xs text-muted-foreground">Completed</p>
-                            <p className="text-2xl font-bold">{completed}</p>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <div className="lg:col-span-3 space-y-6">
+                    {/* KPI Cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <Card>
+                            <CardContent className="flex items-center gap-4 p-5">
+                                <div className="p-3 bg-blue-100 rounded-xl"><Clock className="w-5 h-5 text-blue-600" /></div>
+                                <div>
+                                    <p className="text-xs text-muted-foreground">In Progress</p>
+                                    <p className="text-2xl font-bold">{inProgress}</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardContent className="flex items-center gap-4 p-5">
+                                <div className="p-3 bg-yellow-100 rounded-xl"><AlertTriangle className="w-5 h-5 text-yellow-600" /></div>
+                                <div>
+                                    <p className="text-xs text-muted-foreground">Pending Verification</p>
+                                    <p className="text-2xl font-bold">{pending}</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardContent className="flex items-center gap-4 p-5">
+                                <div className="p-3 bg-green-100 rounded-xl"><CheckCircle2 className="w-5 h-5 text-green-600" /></div>
+                                <div>
+                                    <p className="text-xs text-muted-foreground">Completed</p>
+                                    <p className="text-2xl font-bold">{completed}</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
 
-            {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-3">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input placeholder="Search sessions..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
-                </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="ALL">All Statuses</SelectItem>
-                        <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-                        <SelectItem value="WAITING_VERIFICATION">Pending Review</SelectItem>
-                        <SelectItem value="VERIFIED">Verified</SelectItem>
-                        <SelectItem value="ADJUSTED">Adjusted</SelectItem>
-                    </SelectContent>
-                </Select>
-            </div>
+                    {/* Filters */}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Input placeholder="Search sessions..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+                        </div>
+                        <Select value={statusFilter} onValueChange={setStatusFilter}>
+                            <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="ALL">All Statuses</SelectItem>
+                                <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                                <SelectItem value="WAITING_VERIFICATION">Pending Review</SelectItem>
+                                <SelectItem value="VERIFIED">Verified</SelectItem>
+                                <SelectItem value="ADJUSTED">Adjusted</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
 
-            {/* Sessions Table */}
-            <Card>
-                <CardContent className="p-0">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Session</TableHead>
-                                <TableHead>Location</TableHead>
-                                <TableHead>Section</TableHead>
-                                <TableHead>Date</TableHead>
-                                <TableHead className="text-center">Products</TableHead>
-                                <TableHead className="text-center">Counted</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="text-center">Team</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {loading ? (
-                                <TableRow><TableCell colSpan={9} className="text-center py-12"><Loader2 className="w-6 h-6 animate-spin mx-auto text-muted-foreground" /></TableCell></TableRow>
-                            ) : filtered.length === 0 ? (
-                                <TableRow><TableCell colSpan={9} className="text-center py-12 text-muted-foreground">No sessions found</TableCell></TableRow>
-                            ) : filtered.map(s => {
-                                const st = STATUS_MAP[s.status] || STATUS_MAP.IN_PROGRESS
-                                return (
-                                    <TableRow key={s.id}>
-                                        <TableCell className="font-medium">COUNT-{s.reference || s.id}</TableCell>
-                                        <TableCell>{s.location}</TableCell>
-                                        <TableCell className="text-muted-foreground text-sm">{s.section}</TableCell>
-                                        <TableCell className="text-sm">{s.session_date}</TableCell>
-                                        <TableCell className="text-center">
-                                            <Badge variant="outline">{s.products_count}</Badge>
-                                        </TableCell>
-                                        <TableCell className="text-center">
-                                            <span className="text-sm">{s.counted_count}/{s.products_count}</span>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge className={st.color + " gap-1"}>{st.icon}{st.label}</Badge>
-                                        </TableCell>
-                                        <TableCell className="text-center">
-                                            <div className="flex items-center justify-center gap-1">
-                                                <Users className="w-3.5 h-3.5 text-muted-foreground" />
-                                                <span className="text-sm">{s.assigned_users?.length || 0}</span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <div className="flex items-center justify-end gap-1">
-                                                {s.status === 'IN_PROGRESS' && (
-                                                    <Button size="sm" variant="outline" onClick={() => router.push(`/inventory/stock-count/${s.id}/count`)}>
-                                                        <ClipboardList className="w-3.5 h-3.5 mr-1" /> Count
-                                                    </Button>
-                                                )}
-                                                {(s.status === 'WAITING_VERIFICATION' || s.status === 'VERIFIED') && (
-                                                    <Button size="sm" variant="outline" onClick={() => router.push(`/inventory/stock-count/${s.id}/verify`)}>
-                                                        <ShieldCheck className="w-3.5 h-3.5 mr-1" /> Verify
-                                                    </Button>
-                                                )}
-                                                {s.status === 'ADJUSTED' && (
-                                                    <Button size="sm" variant="outline" onClick={() => router.push(`/inventory/stock-count/${s.id}/verify`)}>
-                                                        <Eye className="w-3.5 h-3.5 mr-1" /> View
-                                                    </Button>
-                                                )}
-                                                <Button size="sm" variant="ghost" className="text-destructive" onClick={() => setDeleteTarget(s.id)}>
-                                                    <Trash2 className="w-3.5 h-3.5" />
-                                                </Button>
-                                            </div>
-                                        </TableCell>
+                    {/* Sessions Table */}
+                    <Card>
+                        <CardContent className="p-0">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Session</TableHead>
+                                        <TableHead>Location</TableHead>
+                                        <TableHead>Section</TableHead>
+                                        <TableHead>Date</TableHead>
+                                        <TableHead className="text-center">Products</TableHead>
+                                        <TableHead className="text-center">Counted</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead className="text-center">Team</TableHead>
+                                        <TableHead className="text-right">Actions</TableHead>
                                     </TableRow>
-                                )
-                            })}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
+                                </TableHeader>
+                                <TableBody>
+                                    {loading ? (
+                                        <TableRow><TableCell colSpan={9} className="text-center py-12"><Loader2 className="w-6 h-6 animate-spin mx-auto text-muted-foreground" /></TableCell></TableRow>
+                                    ) : filtered.length === 0 ? (
+                                        <TableRow><TableCell colSpan={9} className="text-center py-12 text-muted-foreground">No sessions found</TableCell></TableRow>
+                                    ) : filtered.map(s => {
+                                        const st = STATUS_MAP[s.status] || STATUS_MAP.IN_PROGRESS
+                                        return (
+                                            <TableRow key={s.id}>
+                                                <TableCell className="font-medium">COUNT-{s.reference || s.id}</TableCell>
+                                                <TableCell>{s.location}</TableCell>
+                                                <TableCell className="text-muted-foreground text-sm">{s.section}</TableCell>
+                                                <TableCell className="text-sm">{s.session_date}</TableCell>
+                                                <TableCell className="text-center">
+                                                    <Badge variant="outline">{s.products_count}</Badge>
+                                                </TableCell>
+                                                <TableCell className="text-center">
+                                                    <span className="text-sm">{s.counted_count}/{s.products_count}</span>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge className={st.color + " gap-1"}>{st.icon}{st.label}</Badge>
+                                                </TableCell>
+                                                <TableCell className="text-center">
+                                                    <div className="flex items-center justify-center gap-1">
+                                                        <Users className="w-3.5 h-3.5 text-muted-foreground" />
+                                                        <span className="text-sm">{s.assigned_users?.length || 0}</span>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <div className="flex items-center justify-end gap-1">
+                                                        {s.status === 'IN_PROGRESS' && (
+                                                            <Button size="sm" variant="outline" onClick={() => router.push(`/inventory/stock-count/${s.id}/count`)}>
+                                                                <ClipboardList className="w-3.5 h-3.5 mr-1" /> Count
+                                                            </Button>
+                                                        )}
+                                                        {(s.status === 'WAITING_VERIFICATION' || s.status === 'VERIFIED') && (
+                                                            <Button size="sm" variant="outline" onClick={() => router.push(`/inventory/stock-count/${s.id}/verify`)}>
+                                                                <ShieldCheck className="w-3.5 h-3.5 mr-1" /> Verify
+                                                            </Button>
+                                                        )}
+                                                        {s.status === 'ADJUSTED' && (
+                                                            <Button size="sm" variant="outline" onClick={() => router.push(`/inventory/stock-count/${s.id}/verify`)}>
+                                                                <Eye className="w-3.5 h-3.5 mr-1" /> View
+                                                            </Button>
+                                                        )}
+                                                        <Button size="sm" variant="ghost" className="text-destructive" onClick={() => setDeleteTarget(s.id)}>
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        </Button>
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        )
+                                    })}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
 
-            {/* Create Modal */}
-            {showCreate && <CreateSessionDialog onClose={() => setShowCreate(false)} onCreated={handleCreated} />}
+                    {/* Create Modal */}
+                    {showCreate && <CreateSessionDialog onClose={() => setShowCreate(false)} onCreated={handleCreated} />}
 
-            <ConfirmDialog
-                open={deleteTarget !== null}
-                onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
-                onConfirm={handleDelete}
-                title="Delete Session?"
-                description="This will permanently delete this counting session. This cannot be undone."
-                confirmText="Delete"
-                variant="danger"
-            />
+                    <ConfirmDialog
+                        open={deleteTarget !== null}
+                        onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
+                        onConfirm={handleDelete}
+                        title="Delete Session?"
+                        description="This will permanently delete this counting session. This cannot be undone."
+                        confirmText="Delete"
+                        variant="danger"
+                    />
+                </div>
+
+                <div className="lg:col-span-1">
+                    <SyncPanel />
+                </div>
+            </div>
         </div>
     )
 }

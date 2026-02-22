@@ -344,3 +344,48 @@ class InventorySessionLineViewSet(viewsets.ModelViewSet):
         line.is_verified = False
         line.save(update_fields=['is_verified'])
         return Response({'success': True})
+
+class SyncViewSet(viewsets.ViewSet):
+    """
+    SaaS/Legacy Bridge: Synchronize data from tsfci.com.
+    """
+    def get_api_key(self, request):
+        # Prefer API key from organization settings or environment
+        # For now, we'll try to get it from a setting or header
+        return getattr(settings, 'TSFCI_API_KEY', None)
+
+    @action(detail=False, methods=['post'], url_path='products')
+    def sync_products(self, request):
+        org = getattr(request, 'organization', None)
+        api_key = self.get_api_key(request)
+        if not api_key:
+            return Response({"error": "TSFCI_API_KEY not configured"}, status=400)
+        
+        last_id = request.data.get('last_id', 0)
+        from .stock_count_sync import StockCountSyncService
+        result = StockCountSyncService.sync_products(org, api_key, last_id)
+        return Response(result)
+
+    @action(detail=False, methods=['post'], url_path='locations')
+    def sync_locations(self, request):
+        org = getattr(request, 'organization', None)
+        api_key = self.get_api_key(request)
+        if not api_key:
+            return Response({"error": "TSFCI_API_KEY not configured"}, status=400)
+        
+        from .stock_count_sync import StockCountSyncService
+        result = StockCountSyncService.sync_locations(org, api_key)
+        return Response(result)
+
+    @action(detail=False, methods=['get'], url_path='live-qty')
+    def live_qty(self, request):
+        api_key = self.get_api_key(request)
+        barcode = request.query_params.get('barcode')
+        legacy_location_id = request.query_params.get('location_id')
+        
+        if not all([api_key, barcode, legacy_location_id]):
+            return Response({"error": "Missing parameters"}, status=400)
+            
+        from .stock_count_sync import StockCountSyncService
+        result = StockCountSyncService.get_live_qty(api_key, barcode, legacy_location_id)
+        return Response(result)

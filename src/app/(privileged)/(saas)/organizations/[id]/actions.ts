@@ -5,10 +5,10 @@ import { erpFetch } from "@/lib/erp-api"
 export async function getOrganization(id: string) {
     try {
 
-        const result = await erpFetch(`organizations/${id}/`)
+        const result = await erpFetch(`organizations/${id}/`, { cache: 'no-store' })
 
         return result
-    } catch (error: unknown) {
+    } catch (error: any) {
         console.error(`[SaaS Detail] Error fetching org ${id}:`, error?.message || error)
         return null
     }
@@ -16,7 +16,7 @@ export async function getOrganization(id: string) {
 
 export async function getOrgUsage(orgId: string) {
     try {
-        return await erpFetch(`saas/org-modules/${orgId}/usage/`)
+        return await erpFetch(`saas/org-modules/${orgId}/usage/`, { cache: 'no-store' })
     } catch (error) {
         console.error("[SaaS] Error fetching usage:", error)
         return null
@@ -25,7 +25,7 @@ export async function getOrgUsage(orgId: string) {
 
 export async function getOrgBilling(orgId: string) {
     try {
-        return await erpFetch(`saas/org-modules/${orgId}/billing/`)
+        return await erpFetch(`saas/org-modules/${orgId}/billing/`, { cache: 'no-store' })
     } catch (error) {
         console.error("[SaaS] Error fetching billing:", error)
         return []
@@ -34,7 +34,7 @@ export async function getOrgBilling(orgId: string) {
 
 export async function getOrgModules(orgId: string) {
     try {
-        return await erpFetch(`saas/org-modules/${orgId}/modules/`)
+        return await erpFetch(`saas/org-modules/${orgId}/modules/`, { cache: 'no-store' })
     } catch (error) {
         console.error("[SaaS] Error fetching modules:", error)
         return []
@@ -84,7 +84,7 @@ export async function changeOrgPlan(orgId: string, planId: string) {
 
 export async function getOrgUsers(orgId: string) {
     try {
-        return await erpFetch(`saas/org-modules/${orgId}/users/`)
+        return await erpFetch(`saas/org-modules/${orgId}/users/`, { cache: 'no-store' })
     } catch (error) {
         console.error("[SaaS] Error fetching users:", error)
         return []
@@ -118,7 +118,7 @@ export async function resetOrgUserPassword(orgId: string, userId: string, newPas
 
 export async function getOrgSites(orgId: string) {
     try {
-        return await erpFetch(`saas/org-modules/${orgId}/sites/`)
+        return await erpFetch(`saas/org-modules/${orgId}/sites/`, { cache: 'no-store' })
     } catch (error) {
         console.error("[SaaS] Error fetching sites:", error)
         return []

@@ -13,7 +13,7 @@ from apps.inventory.views import (
     StockAlertViewSet,
 )
 from apps.inventory.counting_views import (
-    InventorySessionViewSet, InventorySessionLineViewSet,
+    InventorySessionViewSet, InventorySessionLineViewSet, SyncViewSet,
 )
 from apps.inventory.location_views import (
     WarehouseZoneViewSet, WarehouseAisleViewSet, WarehouseRackViewSet,
@@ -35,6 +35,7 @@ router.register(r'transfer-orders', StockTransferOrderViewSet)
 router.register(r'requests', OperationalRequestViewSet)
 router.register(r'counting-sessions', InventorySessionViewSet, basename='counting-sessions')
 router.register(r'counting-lines', InventorySessionLineViewSet, basename='counting-lines')
+router.register(r'sync', SyncViewSet, basename='legacy-sync')
 router.register(r'serials', ProductSerialViewSet)
 router.register(r'serial-logs', SerialLogViewSet)
 router.register(r'stock-alerts', StockAlertViewSet, basename='stock-alerts')
