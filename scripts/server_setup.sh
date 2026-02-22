@@ -24,7 +24,7 @@ DB_USER=tsfci
 DB_PASSWORD=tsfci_secure_2026
 DB_HOST=localhost
 DB_PORT=5433
-ALLOWED_HOSTS=tsf.ci,saas.tsf.ci,www.tsf.ci,91.99.186.183,localhost
+ALLOWED_HOSTS=tsf.ci,saas.tsf.ci,www.tsf.ci,tsf.ci,localhost
 CORS_ALLOWED_ORIGINS=https://tsf.ci,https://saas.tsf.ci,https://www.tsf.ci,http://localhost:3000
 ENVFILE
 echo "Backend .env created"

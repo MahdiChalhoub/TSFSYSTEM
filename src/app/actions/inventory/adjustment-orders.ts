@@ -109,6 +109,15 @@ export async function cancelAdjustmentOrder(id: number, comment?: string) {
     return result
 }
 
+export async function promoteToExecution(id: number) {
+    const result = await erpFetch(`inventory/adjustment-orders/${id}/promote_to_execution/`, {
+        method: 'POST'
+    })
+    revalidatePath('/inventory/adjustment-orders')
+    revalidatePath('/inventory/adjustments')
+    return result
+}
+
 export async function getAdjustmentOrderHistory(id: number) {
     return await erpFetch(`inventory/adjustment-orders/${id}/lifecycle_history/`)
 }

@@ -5,7 +5,7 @@ This document outlines the final production state and deployment procedures for 
 ## Platform Identity
 - **Primary Domain:** [tsf.ci](https://tsf.ci)
 - **SaaS Master Panel:** [saas.tsf.ci](https://saas.tsf.ci)
-- **Production IP:** `91.99.186.183`
+- **Domain**: `tsf.ci`
 - **Architecture**: Docker-based Microservices
 - **OS**: Ubuntu 24.04 LTS
 
@@ -17,8 +17,8 @@ The system operates as a unified Docker stack orchestrated via `docker-compose`:
 | Service | Technology | Internal Port | External Visibility |
 | :--- | :--- | :--- | :--- |
 | **Gateway** | Nginx | 80 / 443 | Entry Point |
-| **Frontend** | Next.js 16 | 3000 | `/` |
-| **Backend** | Django 5.1 | 8000 | `/api` |
+| **Frontend** | Next.js 16 | 3000 | `tsf.ci` |
+| **Backend** | Django 5.1 | 8000 | `tsf.ci/api` |
 | **Database** | PostgreSQL 16 | 5432 | Internal Only |
 | **Cache** | Redis | 6379 | Internal Only |
 
@@ -49,7 +49,7 @@ Use this for rapid code-only updates from your local machine. This bypasses the 
 **Command (local):**
 ```bash
 # Using the Smart Deploy workflow
-ssh -i ~/.ssh/id_deploy root@91.99.186.183 "cd /root/TSFSYSTEM && git pull origin main && ./deploy_production.sh"
+ssh -i ~/.ssh/id_deploy root@tsf.ci "cd /root/TSFSYSTEM && git pull origin main && ./deploy_production.sh"
 ```
 
 ---
