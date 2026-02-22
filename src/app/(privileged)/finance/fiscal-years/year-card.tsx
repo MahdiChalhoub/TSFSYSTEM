@@ -117,7 +117,7 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
                             </span>
                         </h3>
                         <p className="text-sm text-stone-500 mt-1 font-medium">
-                            {new Date(year.startDate).toLocaleDateString()} — {new Date(year.endDate).toLocaleDateString()}
+                            {year.startDate ? new Date(year.startDate).toLocaleDateString() : '—'} — {year.endDate ? new Date(year.endDate).toLocaleDateString() : '—'}
                         </p>
                     </div>
                 </div>

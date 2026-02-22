@@ -238,7 +238,7 @@ export default function SupplierGatePreviewClient() {
                                                 <div className="text-right flex-shrink-0">
                                                     <span className="text-sm font-black text-white">{Number(po.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
                                                     {po.expected_date && (
-                                                        <p className="text-[10px] text-gray-500 mt-0.5">Due {new Date(po.expected_date).toLocaleDateString()}</p>
+                                                        <p className="text-[10px] text-gray-500 mt-0.5">Due {po.expected_date ? new Date(po.expected_date).toLocaleDateString() : '—'}</p>
                                                     )}
                                                 </div>
                                             </div>

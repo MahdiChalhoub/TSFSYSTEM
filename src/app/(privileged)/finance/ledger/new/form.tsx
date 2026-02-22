@@ -8,11 +8,21 @@ import { toast } from 'sonner'
 
 // Helper to find the correct Fiscal Year/Period for a date
 function findFiscalContext(date: string, years: Record<string, any>[]) {
+    if (!date) return { yearId: null, periodId: null }
     const d = new Date(date)
-    const year = years.find((y: Record<string, any>) => new Date(y.startDate) <= d && new Date(y.endDate) >= d)
+    if (isNaN(d.getTime())) return { yearId: null, periodId: null }
+    const year = years.find((y: Record<string, any>) => {
+        const s = y.startDate || y.start_date
+        const e = y.endDate || y.end_date
+        return s && e && new Date(s) <= d && new Date(e) >= d
+    })
     if (!year) return { yearId: null, periodId: null }
 
-    const period = year.periods.find((p: Record<string, any>) => new Date(p.startDate) <= d && new Date(p.endDate) >= d)
+    const period = (year.periods || []).find((p: Record<string, any>) => {
+        const s = p.startDate || p.start_date
+        const e = p.endDate || p.end_date
+        return s && e && new Date(s) <= d && new Date(e) >= d
+    })
     return { yearId: year.id, periodId: period?.id }
 }
 

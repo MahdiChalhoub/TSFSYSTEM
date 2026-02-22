@@ -201,7 +201,7 @@ export default function GeneralLedgerPage() {
                                 <div className="px-4 py-2 bg-white flex items-center gap-6 text-[11px] text-stone-500 border-b border-stone-50 font-medium">
                                     <div className="flex items-center gap-1.5">
                                         <Calendar className="h-3 w-3 text-stone-300" />
-                                        <span>{new Date(entry.transactionDate).toLocaleDateString('en-GB')}</span>
+                                        <span>{entry.transactionDate ? new Date(entry.transactionDate).toLocaleDateString('en-GB') : '—'}</span>
                                     </div>
                                     {entry.reference && (
                                         <div className="flex items-center gap-1.5">

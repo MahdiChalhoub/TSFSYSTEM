@@ -36,7 +36,7 @@ export default function AccountStatementView({ data, dateRange }: StatementProps
                 <div className="text-right">
                     <h2 className="text-xs font-bold uppercase text-stone-400 mb-1">Statement Period</h2>
                     <div className="font-medium text-stone-900">
-                        {new Date(currentRange.start).toLocaleDateString()} — {new Date(currentRange.end).toLocaleDateString()}
+                        {currentRange.start ? new Date(currentRange.start).toLocaleDateString() : '—'} — {currentRange.end ? new Date(currentRange.end).toLocaleDateString() : '—'}
                     </div>
                 </div>
             </div>
@@ -89,7 +89,7 @@ export default function AccountStatementView({ data, dateRange }: StatementProps
                     <tbody className="divide-y divide-stone-100">
                         {/* Opening Balance Row */}
                         <tr className="bg-stone-50/50 italic text-stone-600">
-                            <td className="px-6 py-3">{new Date(currentRange.start).toLocaleDateString()}</td>
+                            <td className="px-6 py-3">{currentRange.start ? new Date(currentRange.start).toLocaleDateString() : '—'}</td>
                             <td className="px-6 py-3">-</td>
                             <td className="px-6 py-3 font-medium">Opening Balance</td>
                             <td className="px-6 py-3 text-right">
@@ -111,7 +111,7 @@ export default function AccountStatementView({ data, dateRange }: StatementProps
                             return (
                                 <tr key={line.id} className="hover:bg-blue-50/30 transition-colors group">
                                     <td className="px-6 py-3 text-stone-600">
-                                        {new Date(line.journalEntry.transactionDate).toLocaleDateString()}
+                                        {line.journalEntry?.transactionDate ? new Date(line.journalEntry.transactionDate).toLocaleDateString() : '—'}
                                     </td>
                                     <td className="px-6 py-3 text-stone-500 font-mono text-xs">
                                         <Link href={`/finance/ledger?id=${line.journalEntry.id}`} className="hover:underline hover:text-blue-600">

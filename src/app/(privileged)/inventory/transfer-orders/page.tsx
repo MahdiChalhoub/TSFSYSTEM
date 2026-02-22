@@ -525,7 +525,7 @@ export default function TransferOrdersPage() {
                                         <Badge variant="outline" className="text-xs">{entry.action}</Badge>
                                         {entry.level && <span className="text-xs text-muted-foreground">Level {entry.level}</span>}
                                     </div>
-                                    <p className="text-xs text-muted-foreground mt-1">{entry.performed_by_name || 'System'} · {new Date(entry.performed_at).toLocaleString()}</p>
+                                    <p className="text-xs text-muted-foreground mt-1">{entry.performed_by_name || 'System'} · {entry.performed_at ? new Date(entry.performed_at).toLocaleString() : '—'}</p>
                                     {entry.comment && <p className="text-sm mt-1 bg-muted rounded px-2 py-1">{entry.comment}</p>}
                                 </div>
                             </div>
