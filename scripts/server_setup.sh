@@ -55,4 +55,5 @@ npm run build 2>&1 | tail -10
 echo "Frontend built"
 
 echo "=== DONE ==="
-echo "Next: Configure Nginx + start services"
+echo "Next: Configure Nginx + start services for tsf.ci
+"
