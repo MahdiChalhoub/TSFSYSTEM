@@ -263,13 +263,13 @@ class ProductViewSet(UDLEViewSetMixin, TenantModelViewSet):
                 organization=organization,
                 is_active=True,
             ).filter(
-                models.Q(barcode__isnull=True) | models.Q(barcode='')
+                Q(barcode__isnull=True) | Q(barcode='')
             )
         elif product_ids:
             products = Product.objects.filter(
                 id__in=product_ids, organization=organization
             ).filter(
-                models.Q(barcode__isnull=True) | models.Q(barcode='')
+                Q(barcode__isnull=True) | Q(barcode='')
             )
         else:
             return Response({"error": "Provide product_ids or set all_missing=true"}, status=400)
@@ -298,13 +298,13 @@ class ProductViewSet(UDLEViewSetMixin, TenantModelViewSet):
         if err: return err
 
         total = Product.objects.filter(organization=organization, is_active=True)
-        missing_barcode = total.filter(models.Q(barcode__isnull=True) | models.Q(barcode='')).count()
+        missing_barcode = total.filter(Q(barcode__isnull=True) | Q(barcode='')).count()
         missing_category = total.filter(category__isnull=True).count()
         missing_brand = total.filter(brand__isnull=True).count()
         zero_tva = total.filter(tva_rate=0).count()
         zero_cost = total.filter(cost_price_ht=0, cost_price_ttc=0).count()
         zero_selling = total.filter(selling_price_ht=0, selling_price_ttc=0).count()
-        missing_name = total.filter(models.Q(name='') | models.Q(name__isnull=True)).count()
+        missing_name = total.filter(Q(name='') | Q(name__isnull=True)).count()
         total_count = total.count()
 
         return Response({
@@ -957,9 +957,9 @@ class InventoryViewSet(TenantModelViewSet):
         stats = ExpiryAlert.objects.filter(
             organization=organization, is_acknowledged=False
         ).aggregate(
-            expired=Count('id', filter=models.Q(severity='EXPIRED')),
-            critical=Count('id', filter=models.Q(severity='CRITICAL')),
-            warning=Count('id', filter=models.Q(severity='WARNING')),
+            expired=Count('id', filter=Q(severity='EXPIRED')),
+            critical=Count('id', filter=Q(severity='CRITICAL')),
+            warning=Count('id', filter=Q(severity='WARNING')),
             total_value=Sum('value_at_risk'),
             total_qty=Sum('quantity_at_risk'),
         )
