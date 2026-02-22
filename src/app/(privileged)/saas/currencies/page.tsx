@@ -116,7 +116,7 @@ export default function CurrenciesPage() {
                             <label className="block text-xs font-medium text-stone-600 mb-1">Currency Name</label>
                             <input
                                 value={formData.name}
-                                onChange={e => setFormData(p => ({ ...p, name: e.target.value }))}
+                                onChange={(e: any) => setFormData(p => ({ ...p, name: e.target.value }))}
                                 placeholder="e.g. US Dollar"
                                 className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:ring-2 focus:ring-black focus:border-black outline-none"
                             />
@@ -125,7 +125,7 @@ export default function CurrenciesPage() {
                             <label className="block text-xs font-medium text-stone-600 mb-1">Code (ISO 4217)</label>
                             <input
                                 value={formData.code}
-                                onChange={e => setFormData(p => ({ ...p, code: e.target.value.toUpperCase() }))}
+                                onChange={(e: any) => setFormData(p => ({ ...p, code: e.target.value.toUpperCase() }))}
                                 placeholder="e.g. USD"
                                 maxLength={10}
                                 className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm uppercase focus:ring-2 focus:ring-black focus:border-black outline-none"
@@ -135,7 +135,7 @@ export default function CurrenciesPage() {
                             <label className="block text-xs font-medium text-stone-600 mb-1">Symbol</label>
                             <input
                                 value={formData.symbol}
-                                onChange={e => setFormData(p => ({ ...p, symbol: e.target.value }))}
+                                onChange={(e: any) => setFormData(p => ({ ...p, symbol: e.target.value }))}
                                 placeholder="e.g. $"
                                 maxLength={10}
                                 className="w-full px-3 py-2 border border-stone-300 rounded-lg text-sm focus:ring-2 focus:ring-black focus:border-black outline-none"

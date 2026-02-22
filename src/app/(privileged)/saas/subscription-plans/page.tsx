@@ -164,7 +164,7 @@ export default function SubscriptionPlansPage() {
                                     <Label>Name</Label>
                                     <Input
                                         value={catForm.name}
-                                        onChange={e => setCatForm(f => ({ ...f, name: e.target.value }))}
+                                        onChange={(e: any) => setCatForm(f => ({ ...f, name: e.target.value }))}
                                         placeholder="e.g. Standard Plans"
                                     />
                                 </div>
@@ -172,7 +172,7 @@ export default function SubscriptionPlansPage() {
                                     <Label>Slug</Label>
                                     <Input
                                         value={catForm.slug}
-                                        onChange={e => setCatForm(f => ({ ...f, slug: e.target.value }))}
+                                        onChange={(e: any) => setCatForm(f => ({ ...f, slug: e.target.value }))}
                                         placeholder="e.g. standard"
                                     />
                                 </div>
@@ -212,7 +212,7 @@ export default function SubscriptionPlansPage() {
                                     <Label>Plan Name</Label>
                                     <Input
                                         value={planForm.name}
-                                        onChange={e => setPlanForm(f => ({ ...f, name: e.target.value }))}
+                                        onChange={(e: any) => setPlanForm(f => ({ ...f, name: e.target.value }))}
                                         placeholder="e.g. Pro Plan"
                                     />
                                 </div>
@@ -220,7 +220,7 @@ export default function SubscriptionPlansPage() {
                                     <Label>Slug</Label>
                                     <Input
                                         value={planForm.slug}
-                                        onChange={e => setPlanForm(f => ({ ...f, slug: e.target.value }))}
+                                        onChange={(e: any) => setPlanForm(f => ({ ...f, slug: e.target.value }))}
                                         placeholder="e.g. pro"
                                     />
                                 </div>
@@ -230,7 +230,7 @@ export default function SubscriptionPlansPage() {
                                         <Input
                                             type="number"
                                             value={planForm.monthly_price}
-                                            onChange={e => setPlanForm(f => ({ ...f, monthly_price: e.target.value }))}
+                                            onChange={(e: any) => setPlanForm(f => ({ ...f, monthly_price: e.target.value }))}
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -238,7 +238,7 @@ export default function SubscriptionPlansPage() {
                                         <Input
                                             type="number"
                                             value={planForm.annual_price}
-                                            onChange={e => setPlanForm(f => ({ ...f, annual_price: e.target.value }))}
+                                            onChange={(e: any) => setPlanForm(f => ({ ...f, annual_price: e.target.value }))}
                                         />
                                     </div>
                                 </div>
@@ -263,7 +263,7 @@ export default function SubscriptionPlansPage() {
                                             <Input
                                                 type="number"
                                                 value={planForm.limits.max_users}
-                                                onChange={e => setPlanForm(f => ({ ...f, limits: { ...f.limits, max_users: e.target.value } }))}
+                                                onChange={(e: any) => setPlanForm(f => ({ ...f, limits: { ...f.limits, max_users: e.target.value } }))}
                                             />
                                         </div>
                                         <div className="space-y-1">
@@ -271,7 +271,7 @@ export default function SubscriptionPlansPage() {
                                             <Input
                                                 type="number"
                                                 value={planForm.limits.max_products}
-                                                onChange={e => setPlanForm(f => ({ ...f, limits: { ...f.limits, max_products: e.target.value } }))}
+                                                onChange={(e: any) => setPlanForm(f => ({ ...f, limits: { ...f.limits, max_products: e.target.value } }))}
                                             />
                                         </div>
                                         <div className="space-y-1">
@@ -279,7 +279,7 @@ export default function SubscriptionPlansPage() {
                                             <Input
                                                 type="number"
                                                 value={planForm.limits.max_sites}
-                                                onChange={e => setPlanForm(f => ({ ...f, limits: { ...f.limits, max_sites: e.target.value } }))}
+                                                onChange={(e: any) => setPlanForm(f => ({ ...f, limits: { ...f.limits, max_sites: e.target.value } }))}
                                             />
                                         </div>
                                         <div className="space-y-1">
@@ -287,7 +287,7 @@ export default function SubscriptionPlansPage() {
                                             <Input
                                                 type="number"
                                                 value={planForm.limits.storage_gb}
-                                                onChange={e => setPlanForm(f => ({ ...f, limits: { ...f.limits, storage_gb: e.target.value } }))}
+                                                onChange={(e: any) => setPlanForm(f => ({ ...f, limits: { ...f.limits, storage_gb: e.target.value } }))}
                                             />
                                         </div>
                                     </div>
@@ -316,7 +316,7 @@ export default function SubscriptionPlansPage() {
                                     <p className="text-xs text-gray-400 mb-2">One feature per line. Displayed on pricing pages.</p>
                                     <Textarea
                                         value={planForm.features}
-                                        onChange={e => setPlanForm(f => ({ ...f, features: e.target.value }))}
+                                        onChange={(e: any) => setPlanForm(f => ({ ...f, features: e.target.value }))}
                                         placeholder={"Up to 10 team members\n5,000 product SKUs\nPriority support"}
                                         rows={4}
                                     />
@@ -497,7 +497,7 @@ export default function SubscriptionPlansPage() {
                                     <div className="space-y-4 py-4">
                                         <div className="space-y-2">
                                             <Label>Name</Label>
-                                            <Input value={addonForm.name} onChange={e => setAddonForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Extra 10 Users" />
+                                            <Input value={addonForm.name} onChange={(e: any) => setAddonForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Extra 10 Users" />
                                         </div>
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
@@ -513,17 +513,17 @@ export default function SubscriptionPlansPage() {
                                             </div>
                                             <div className="space-y-2">
                                                 <Label>Quantity</Label>
-                                                <Input type="number" value={addonForm.quantity} onChange={e => setAddonForm(f => ({ ...f, quantity: e.target.value }))} />
+                                                <Input type="number" value={addonForm.quantity} onChange={(e: any) => setAddonForm(f => ({ ...f, quantity: e.target.value }))} />
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                                 <Label>Monthly Price ($)</Label>
-                                                <Input type="number" value={addonForm.monthly_price} onChange={e => setAddonForm(f => ({ ...f, monthly_price: e.target.value }))} />
+                                                <Input type="number" value={addonForm.monthly_price} onChange={(e: any) => setAddonForm(f => ({ ...f, monthly_price: e.target.value }))} />
                                             </div>
                                             <div className="space-y-2">
                                                 <Label>Annual Price ($)</Label>
-                                                <Input type="number" value={addonForm.annual_price} onChange={e => setAddonForm(f => ({ ...f, annual_price: e.target.value }))} />
+                                                <Input type="number" value={addonForm.annual_price} onChange={(e: any) => setAddonForm(f => ({ ...f, annual_price: e.target.value }))} />
                                             </div>
                                         </div>
                                         <div className="border-t pt-4">

@@ -245,20 +245,20 @@ export default function PlanDetailPage() {
                             <div className="space-y-2">
                                 <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Name</Label>
                                 <Input value={form.name} disabled={!editing}
-                                    onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                                    onChange={(e: any) => setForm(f => ({ ...f, name: e.target.value }))}
                                     className="bg-gray-50 border-gray-100 rounded-xl" />
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Description</Label>
                                 <Textarea value={form.description} disabled={!editing} rows={3}
-                                    onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                                    onChange={(e: any) => setForm(f => ({ ...f, description: e.target.value }))}
                                     className="bg-gray-50 border-gray-100 rounded-xl" />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Sort Order</Label>
                                     <Input type="number" value={form.sort_order} disabled={!editing}
-                                        onChange={e => setForm(f => ({ ...f, sort_order: parseInt(e.target.value) || 0 }))}
+                                        onChange={(e: any) => setForm(f => ({ ...f, sort_order: parseInt(e.target.value) || 0 }))}
                                         className="bg-gray-50 border-gray-100 rounded-xl" />
                                 </div>
                                 <div className="space-y-2">
@@ -266,7 +266,7 @@ export default function PlanDetailPage() {
                                         <Clock size={12} /> Trial Duration (days)
                                     </Label>
                                     <Input type="number" value={form.trial_days} disabled={!editing}
-                                        onChange={e => setForm(f => ({ ...f, trial_days: parseInt(e.target.value) || 0 }))}
+                                        onChange={(e: any) => setForm(f => ({ ...f, trial_days: parseInt(e.target.value) || 0 }))}
                                         className="bg-gray-50 border-gray-100 rounded-xl"
                                         placeholder="0 = no trial" />
                                     {form.trial_days > 0 && (
@@ -294,13 +294,13 @@ export default function PlanDetailPage() {
                                     <div className="space-y-2">
                                         <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Monthly Price ($)</Label>
                                         <Input type="number" value={form.monthly_price} disabled={!editing}
-                                            onChange={e => setForm(f => ({ ...f, monthly_price: e.target.value }))}
+                                            onChange={(e: any) => setForm(f => ({ ...f, monthly_price: e.target.value }))}
                                             className="bg-gray-50 border-gray-100 rounded-xl" />
                                     </div>
                                     <div className="space-y-2">
                                         <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Annual Price ($)</Label>
                                         <Input type="number" value={form.annual_price} disabled={!editing}
-                                            onChange={e => setForm(f => ({ ...f, annual_price: e.target.value }))}
+                                            onChange={(e: any) => setForm(f => ({ ...f, annual_price: e.target.value }))}
                                             className="bg-gray-50 border-gray-100 rounded-xl" />
                                     </div>
                                     <div className="pt-4 border-t text-center">
@@ -378,7 +378,7 @@ export default function PlanDetailPage() {
                                                     checked={isIncluded}
                                                     disabled={!editing}
                                                     onCheckedChange={() => editing && toggleModule(code)}
-                                                    onClick={(e) => e.stopPropagation()}
+                                                    onClick={(e: any) => e.stopPropagation()}
                                                 />
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-2 flex-wrap">
@@ -408,7 +408,7 @@ export default function PlanDetailPage() {
                                                 {hasFeatures && isIncluded && (
                                                     <Button variant="ghost" size="sm"
                                                         className="text-gray-400 hover:text-gray-700 gap-1"
-                                                        onClick={(e) => { e.stopPropagation(); toggleExpandModule(code) }}>
+                                                        onClick={(e: any) => { e.stopPropagation(); toggleExpandModule(code) }}>
                                                         {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                                                         <span className="text-xs">Features</span>
                                                     </Button>
@@ -432,7 +432,7 @@ export default function PlanDetailPage() {
                                                                         checked={isActive}
                                                                         disabled={!editing}
                                                                         onCheckedChange={() => editing && toggleFeature(code, feat.code)}
-                                                                        onClick={(e) => e.stopPropagation()}
+                                                                        onClick={(e: any) => e.stopPropagation()}
                                                                     />
                                                                     <div className="flex-1 min-w-0">
                                                                         <p className={`text-sm font-medium ${isActive ? 'text-gray-800' : 'text-gray-400'}`}>{feat.name}</p>
@@ -477,7 +477,7 @@ export default function PlanDetailPage() {
                                         type="number"
                                         value={form.limits[lim.key] ?? ''}
                                         disabled={!editing}
-                                        onChange={e => updateLimit(lim.key, e.target.value)}
+                                        onChange={(e: any) => updateLimit(lim.key, e.target.value)}
                                         className="bg-gray-50 border-gray-100 rounded-xl"
                                         placeholder="0"
                                     />

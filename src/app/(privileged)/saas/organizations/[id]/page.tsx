@@ -1349,24 +1349,24 @@ export default function OrganizationDetailPage() {
                         <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <label className="text-xs font-bold text-gray-500 mb-1 block">First Name</label>
-                                <Input value={newUser.first_name} onChange={e => setNewUser({ ...newUser, first_name: e.target.value })} placeholder="John" className="rounded-xl" />
+                                <Input value={newUser.first_name} onChange={(e: any) => setNewUser({ ...newUser, first_name: e.target.value })} placeholder="John" className="rounded-xl" />
                             </div>
                             <div>
                                 <label className="text-xs font-bold text-gray-500 mb-1 block">Last Name</label>
-                                <Input value={newUser.last_name} onChange={e => setNewUser({ ...newUser, last_name: e.target.value })} placeholder="Doe" className="rounded-xl" />
+                                <Input value={newUser.last_name} onChange={(e: any) => setNewUser({ ...newUser, last_name: e.target.value })} placeholder="Doe" className="rounded-xl" />
                             </div>
                         </div>
                         <div>
                             <label className="text-xs font-bold text-gray-500 mb-1 block">Username *</label>
-                            <Input value={newUser.username} onChange={e => setNewUser({ ...newUser, username: e.target.value })} placeholder="johndoe" className="rounded-xl" />
+                            <Input value={newUser.username} onChange={(e: any) => setNewUser({ ...newUser, username: e.target.value })} placeholder="johndoe" className="rounded-xl" />
                         </div>
                         <div>
                             <label className="text-xs font-bold text-gray-500 mb-1 block">Email</label>
-                            <Input type="email" value={newUser.email} onChange={e => setNewUser({ ...newUser, email: e.target.value })} placeholder="john@company.com" className="rounded-xl" />
+                            <Input type="email" value={newUser.email} onChange={(e: any) => setNewUser({ ...newUser, email: e.target.value })} placeholder="john@company.com" className="rounded-xl" />
                         </div>
                         <div>
                             <label className="text-xs font-bold text-gray-500 mb-1 block">Password *</label>
-                            <Input type="password" value={newUser.password} onChange={e => setNewUser({ ...newUser, password: e.target.value })} placeholder="••••••••" className="rounded-xl" />
+                            <Input type="password" value={newUser.password} onChange={(e: any) => setNewUser({ ...newUser, password: e.target.value })} placeholder="••••••••" className="rounded-xl" />
                         </div>
                         <div className="flex items-center gap-3 p-3 bg-indigo-50 rounded-xl border border-indigo-100">
                             <button onClick={() => setNewUser({ ...newUser, is_superuser: !newUser.is_superuser })}
@@ -1402,7 +1402,7 @@ export default function OrganizationDetailPage() {
                             </p>
                             <div className="relative">
                                 <Input type={showPass ? 'text' : 'password'} value={newPassword}
-                                    onChange={e => setNewPassword(e.target.value)} placeholder="New password (min 6 chars)" className="rounded-xl pr-10" />
+                                    onChange={(e: any) => setNewPassword(e.target.value)} placeholder="New password (min 6 chars)" className="rounded-xl pr-10" />
                                 <button onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
                                     {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
                                 </button>
@@ -1429,30 +1429,30 @@ export default function OrganizationDetailPage() {
                         <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <label className="text-xs font-bold text-gray-500 mb-1 block">Site Name *</label>
-                                <Input value={newSite.name} onChange={e => setNewSite({ ...newSite, name: e.target.value })} placeholder="Main Branch" className="rounded-xl" />
+                                <Input value={newSite.name} onChange={(e: any) => setNewSite({ ...newSite, name: e.target.value })} placeholder="Main Branch" className="rounded-xl" />
                             </div>
                             <div>
                                 <label className="text-xs font-bold text-gray-500 mb-1 block">Code</label>
-                                <Input value={newSite.code} onChange={e => setNewSite({ ...newSite, code: e.target.value.toUpperCase() })} placeholder="BR001" className="rounded-xl font-mono" />
+                                <Input value={newSite.code} onChange={(e: any) => setNewSite({ ...newSite, code: e.target.value.toUpperCase() })} placeholder="BR001" className="rounded-xl font-mono" />
                             </div>
                         </div>
                         <div>
                             <label className="text-xs font-bold text-gray-500 mb-1 block">Address</label>
-                            <Input value={newSite.address} onChange={e => setNewSite({ ...newSite, address: e.target.value })} placeholder="123 Main Street" className="rounded-xl" />
+                            <Input value={newSite.address} onChange={(e: any) => setNewSite({ ...newSite, address: e.target.value })} placeholder="123 Main Street" className="rounded-xl" />
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <label className="text-xs font-bold text-gray-500 mb-1 block">City</label>
-                                <Input value={newSite.city} onChange={e => setNewSite({ ...newSite, city: e.target.value })} placeholder="Beirut" className="rounded-xl" />
+                                <Input value={newSite.city} onChange={(e: any) => setNewSite({ ...newSite, city: e.target.value })} placeholder="Beirut" className="rounded-xl" />
                             </div>
                             <div>
                                 <label className="text-xs font-bold text-gray-500 mb-1 block">Phone</label>
-                                <Input value={newSite.phone} onChange={e => setNewSite({ ...newSite, phone: e.target.value })} placeholder="+961 1 234567" className="rounded-xl" />
+                                <Input value={newSite.phone} onChange={(e: any) => setNewSite({ ...newSite, phone: e.target.value })} placeholder="+961 1 234567" className="rounded-xl" />
                             </div>
                         </div>
                         <div>
                             <label className="text-xs font-bold text-gray-500 mb-1 block">VAT Number</label>
-                            <Input value={newSite.vat_number} onChange={e => setNewSite({ ...newSite, vat_number: e.target.value })} placeholder="LB123456789" className="rounded-xl font-mono" />
+                            <Input value={newSite.vat_number} onChange={(e: any) => setNewSite({ ...newSite, vat_number: e.target.value })} placeholder="LB123456789" className="rounded-xl font-mono" />
                         </div>
                     </div>
                     <DialogFooter>
@@ -1644,25 +1644,25 @@ export default function OrganizationDetailPage() {
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="text-[10px] font-bold text-gray-400 uppercase">First Name *</label>
-                                    <Input value={newClient.first_name} onChange={e => setNewClient({ ...newClient, first_name: e.target.value })} className="rounded-xl" />
+                                    <Input value={newClient.first_name} onChange={(e: any) => setNewClient({ ...newClient, first_name: e.target.value })} className="rounded-xl" />
                                 </div>
                                 <div>
                                     <label className="text-[10px] font-bold text-gray-400 uppercase">Last Name *</label>
-                                    <Input value={newClient.last_name} onChange={e => setNewClient({ ...newClient, last_name: e.target.value })} className="rounded-xl" />
+                                    <Input value={newClient.last_name} onChange={(e: any) => setNewClient({ ...newClient, last_name: e.target.value })} className="rounded-xl" />
                                 </div>
                             </div>
                             <div>
                                 <label className="text-[10px] font-bold text-gray-400 uppercase">Email *</label>
-                                <Input type="email" value={newClient.email} onChange={e => setNewClient({ ...newClient, email: e.target.value })} className="rounded-xl" />
+                                <Input type="email" value={newClient.email} onChange={(e: any) => setNewClient({ ...newClient, email: e.target.value })} className="rounded-xl" />
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="text-[10px] font-bold text-gray-400 uppercase">Phone</label>
-                                    <Input value={newClient.phone} onChange={e => setNewClient({ ...newClient, phone: e.target.value })} className="rounded-xl" />
+                                    <Input value={newClient.phone} onChange={(e: any) => setNewClient({ ...newClient, phone: e.target.value })} className="rounded-xl" />
                                 </div>
                                 <div>
                                     <label className="text-[10px] font-bold text-gray-400 uppercase">Company Name</label>
-                                    <Input value={newClient.company_name} onChange={e => setNewClient({ ...newClient, company_name: e.target.value })} className="rounded-xl" />
+                                    <Input value={newClient.company_name} onChange={(e: any) => setNewClient({ ...newClient, company_name: e.target.value })} className="rounded-xl" />
                                 </div>
                             </div>
                             <DialogFooter>

@@ -188,7 +188,7 @@ export function RegistrationQueue({ initialUsers }: { initialUsers: Record<strin
                             <Textarea
                                 placeholder="Explain what needs to be changed..."
                                 value={correctionNotes}
-                                onChange={e => setCorrectionNotes(e.target.value)}
+                                onChange={(e: any) => setCorrectionNotes(e.target.value)}
                                 className="min-h-[120px] rounded-2xl border-gray-100 bg-gray-50 focus:bg-white focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all font-medium"
                             />
                         </div>
