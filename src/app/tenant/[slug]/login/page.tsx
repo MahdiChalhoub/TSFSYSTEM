@@ -7,11 +7,9 @@ import { getPublicConfig } from "@/app/actions/onboarding";
 import { PublicConfig } from "@/types/erp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, ShieldCheck, Building2, Globe } from "lucide-react";
-import { useDynamicBranding } from "@/lib/saas_config";
 
 const initialState: { error: Record<string, unknown>; success?: boolean } = {
     error: {},
@@ -22,10 +20,8 @@ function TenantLoginContent() {
     const slug = params.slug as string;
     const [state, action, isPending] = useActionState(loginAction, initialState);
     const [config, setConfig] = useState<PublicConfig>({ tenant: null });
-    const branding = useDynamicBranding();
 
     useEffect(() => {
-        // Fetch config for this specific tenant to get logo/name
         getPublicConfig().then(setConfig).catch(() => { });
     }, [slug]);
 
@@ -92,16 +88,13 @@ function TenantLoginContent() {
                                     <ShieldCheck size={20} />
                                     {state.message}
                                 </div>
-                                <div className="space-y-2">
-                                    <Label className="text-xs uppercase font-bold text-slate-500">Verification Code</Label>
-                                    <Input
-                                        name="otp_token"
-                                        placeholder="000 000"
-                                        required
-                                        autoFocus
-                                        className="bg-[#1e293b] border-slate-700 h-16 rounded-lg text-white font-mono text-center text-3xl tracking-[0.2em] focus:ring-emerald-500 focus:border-emerald-500"
-                                    />
-                                </div>
+                                <input
+                                    name="otp_token"
+                                    placeholder="000 000"
+                                    required
+                                    autoFocus
+                                    className="bg-[#1e293b] border-slate-700 h-16 rounded-lg text-white font-mono text-center text-3xl tracking-[0.2em] focus:ring-emerald-500 focus:border-emerald-500 w-full"
+                                />
                                 <input type="hidden" name="challenge_id" defaultValue={(state as any).challenge_id} />
                                 <Button className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-lg rounded-lg shadow-lg shadow-emerald-900/20 transition-all uppercase tracking-tighter" disabled={isPending}>
                                     {isPending ? <Loader2 className="animate-spin" /> : "Verify"}
@@ -144,6 +137,11 @@ function TenantLoginContent() {
                                 <Button className="w-full h-14 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-lg rounded-lg shadow-lg shadow-emerald-900/20 transition-all uppercase tracking-tighter" disabled={isPending}>
                                     {isPending ? <Loader2 className="animate-spin" /> : "Sign In"}
                                 </Button>
+                                <div className="flex justify-between items-center py-2">
+                                    <a href="/forgot-password" title="Recover your account credentials" className="text-[10px] font-black uppercase text-slate-500 hover:text-emerald-400 transition-colors tracking-widest">
+                                        Forgot Password?
+                                    </a>
+                                </div>
                             </div>
                         )}
                     </form>

@@ -91,10 +91,10 @@ export default async function AdminLayout({
 
 
     const cookieStore = await cookies();
-    const scopeAccess = cookieStore.get('scope_access')?.value as 'official' | 'internal' | undefined;
+    const scopeAccess = cookieStore.get('scope_access')?.value as 'OFFICIAL' | 'INTERNAL' | undefined;
 
     return (
-        <AdminProvider contextKey={currentSlug} initialScopeAccess={scopeAccess || 'internal'}>
+        <AdminProvider contextKey={currentSlug} initialScopeAccess={scopeAccess || 'INTERNAL'}>
             <DevProvider>
                 <div className="flex h-screen bg-gray-50 overflow-hidden font-sans text-gray-900">
                     {/* Left Panel: Sidebar Tree */}
@@ -103,7 +103,6 @@ export default async function AdminLayout({
                         isSuperuser={user?.is_superuser || false}
                         dualViewEnabled={(user?.is_superuser) || (financialSettings?.dualView || false)}
                     />
-
                     {/* Right Panel: Content */}
                     <div className="flex-1 flex flex-col min-w-0">
                         {/* 1. Global Header (Search, Profile) */}

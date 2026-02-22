@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { Employee } from '@/types/erp';
-import { Search, Plus, User, Briefcase, Building2, CreditCard, ChevronRight, Phone, Mail, Filter, ShieldCheck, Fingerprint, Lock, AlertTriangle, Link2 } from "lucide-react";
+import { Search, Plus, User, Briefcase, Building2, CreditCard, ChevronRight, Phone, Mail, Filter, ShieldCheck, Fingerprint, Lock, AlertTriangle, Link2, Edit2 } from "lucide-react";
 import EmployeeModal from './form';
 import ScopePasswordModal from '@/components/admin/ScopePasswordModal';
 import { linkGLAccount } from '@/app/actions/people';
@@ -193,13 +193,17 @@ export default function EmployeeManager({
                                     </button>
                                 </>
                             )}
-                            {scopeAccess !== 'official' && (
+                            {scopeAccess !== 'OFFICIAL' && (
                                 <button
                                     onClick={() => setScopeEmployee(emp as any)}
                                     className="py-3.5 rounded-2xl bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 hover:text-white transition-all shadow-sm flex items-center justify-center gap-1"
                                 >
-                                    <Lock size={10} />
-                                    Scope
+                                    <Edit2 size={12} /> Scope Access
+                                </button>
+                            )}
+                            {scopeAccess === "OFFICIAL" && (
+                                <button className="py-3.5 rounded-2xl bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
+                                    Edit Details
                                 </button>
                             )}
                         </div>
