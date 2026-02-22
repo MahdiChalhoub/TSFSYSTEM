@@ -55,7 +55,7 @@ export default function RelationshipMasterList({
             name: r => (
                 <div className="flex items-center gap-3">
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110 ${r.type === 'CUSTOMER' ? 'bg-blue-50 text-blue-600' :
-                            r.type === 'SUPPLIER' ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'
+                        r.type === 'SUPPLIER' ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'
                         }`}>
                         {r.type === 'CUSTOMER' ? <User size={16} /> :
                             r.type === 'SUPPLIER' ? <Briefcase size={16} /> : <Users size={16} />}
@@ -69,7 +69,7 @@ export default function RelationshipMasterList({
             type: r => (
                 <div className="flex gap-1.5 flex-wrap">
                     <Badge variant="secondary" className={`text-[10px] font-black uppercase tracking-tighter border-0 ${r.type === 'CUSTOMER' ? 'bg-blue-100 text-blue-700' :
-                            r.type === 'SUPPLIER' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
+                        r.type === 'SUPPLIER' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
                         }`}>
                         {r.type}
                     </Badge>
@@ -119,6 +119,8 @@ export default function RelationshipMasterList({
                 data={filtered}
                 getRowId={r => r.id}
                 columns={columns}
+                visibleColumns={settings.visibleColumns}
+                onToggleColumn={settings.toggleColumn}
                 className="rounded-[32px] border-0 shadow-sm overflow-hidden"
                 pageSize={settings.pageSize}
                 onPageSizeChange={settings.setPageSize}

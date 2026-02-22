@@ -262,6 +262,8 @@ export default function StrategicRelationshipIntelligencePage() {
                         loading={loading}
                         getRowId={r => r.id}
                         columns={columns}
+                        visibleColumns={settings.visibleColumns}
+                        onToggleColumn={settings.toggleColumn}
                         className="rounded-[2.5rem] border-0 shadow-sm overflow-hidden"
                         pageSize={settings.pageSize}
                         onPageSizeChange={settings.setPageSize}
