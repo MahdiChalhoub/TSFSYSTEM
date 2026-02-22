@@ -339,7 +339,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                         )}
                     </div>
 
-                    {/* Cart Footer Totals (always visible) */}
+                    {/* Cart Footer — Totals + Payment (always visible) */}
                     <div className="border-t border-gray-200 bg-white px-5 py-3 shrink-0">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-6">
@@ -359,21 +359,18 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                     <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Total</p>
                                     <p className="text-xl font-black tabular-nums text-gray-900">{currency}{totalAmount.toFixed(2)}</p>
                                 </div>
-                                {/* Quick payment when in expanded mode */}
-                                {leftExpanded && (
-                                    <button
-                                        onClick={onCharge}
-                                        disabled={cart.length === 0 || isProcessing}
-                                        className={clsx(
-                                            "py-3 px-8 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
-                                            cart.length > 0 && !isProcessing
-                                                ? "bg-violet-600 text-white shadow-lg shadow-violet-200 hover:bg-violet-700 active:scale-[0.98]"
-                                                : "bg-gray-100 text-gray-300 cursor-not-allowed"
-                                        )}
-                                    >
-                                        {isProcessing ? 'Processing...' : `Charge ${currency}${totalAmount.toFixed(2)}`}
-                                    </button>
-                                )}
+                                <button
+                                    onClick={onCharge}
+                                    disabled={cart.length === 0 || isProcessing}
+                                    className={clsx(
+                                        "py-3 px-8 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
+                                        cart.length > 0 && !isProcessing
+                                            ? "bg-violet-600 text-white shadow-lg shadow-violet-200 hover:bg-violet-700 active:scale-[0.98]"
+                                            : "bg-gray-100 text-gray-300 cursor-not-allowed"
+                                    )}
+                                >
+                                    {isProcessing ? 'Processing...' : `Charge ${currency}${totalAmount.toFixed(2)}`}
+                                </button>
                             </div>
                         </div>
                     </div>
