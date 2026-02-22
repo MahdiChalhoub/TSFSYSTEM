@@ -82,6 +82,7 @@ export function useOfflineProducts() {
 export function usePendingOrders() {
     const [count, setCount] = useState(0);
     const [syncing, setSyncing] = useState(false);
+    const [syncProgress, setSyncProgress] = useState({ synced: 0, failed: 0, total: 0 });
 
     const refreshCount = useCallback(async () => {
         try {
@@ -94,37 +95,54 @@ export function usePendingOrders() {
 
     useEffect(() => {
         refreshCount();
-        // Refresh count periodically
         const interval = setInterval(refreshCount, 5000);
         return () => clearInterval(interval);
     }, [refreshCount]);
 
-    // Listen for sync complete messages from SW
     useEffect(() => {
-        if (!('serviceWorker' in navigator)) return;
+        if (!('serviceWorker' in navigator) && typeof window === 'undefined') return;
 
+        const handleProgress = (event: any) => {
+            refreshCount();
+        };
+
+        const handleComplete = (event: any) => {
+            setSyncProgress(event.detail);
+            setSyncing(false);
+            refreshCount();
+        };
+
+        window.addEventListener('pos-sync-progress', handleProgress);
+        window.addEventListener('pos-sync-complete', handleComplete);
+
+        // Backward compatibility for SW messages
         const handleMessage = (event: MessageEvent) => {
             if (event.data?.type === 'SYNC_COMPLETE') {
                 refreshCount();
                 setSyncing(false);
             }
         };
+        navigator.serviceWorker?.addEventListener('message', handleMessage);
 
-        navigator.serviceWorker.addEventListener('message', handleMessage);
-        return () => navigator.serviceWorker.removeEventListener('message', handleMessage);
+        return () => {
+            window.removeEventListener('pos-sync-progress', handleProgress);
+            window.removeEventListener('pos-sync-complete', handleComplete);
+            navigator.serviceWorker?.removeEventListener('message', handleMessage);
+        };
     }, [refreshCount]);
 
     const triggerSync = useCallback(async () => {
         setSyncing(true);
+        setSyncProgress({ synced: 0, failed: 0, total: count });
         try {
             await syncPendingOrders();
-            await refreshCount();
         } finally {
             setSyncing(false);
+            await refreshCount();
         }
-    }, [refreshCount]);
+    }, [refreshCount, count]);
 
-    return { count, syncing, triggerSync, refreshCount };
+    return { count, syncing, syncProgress, triggerSync, refreshCount };
 }
 
 // ── useOnlineOnlyMode ───────────────────────────────────────────

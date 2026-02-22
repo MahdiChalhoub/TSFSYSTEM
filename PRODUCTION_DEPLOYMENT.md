@@ -1,96 +1,60 @@
-# 🚀 TSF System: Production Deployment (tsf.ci)
+# Production Deployment & Maintenance Guide
 
-This document outlines the final production state and deployment procedures for the **TSF System** platform on the official domain.
+This guide defines the authoritative deployment and maintenance procedures for the TSF ERP production environment.
 
-## Platform Identity
-- **Primary Domain:** [tsf.ci](https://tsf.ci)
-- **SaaS Master Panel:** [saas.tsf.ci](https://saas.tsf.ci)
-- **Domain**: `tsf.ci`
-- **Architecture**: Docker-based Microservices
-- **OS**: Ubuntu 24.04 LTS
+## 🏗️ System Architecture
+- **Domain**: [tsf.ci](https://tsf.ci)
+- **Primary IP**: `91.99.186.183`
+- **Stack**: Docker-Compose orchestrating:
+  - **Gateway**: Nginx (handling SSL via Certbot)
+  - **Frontend**: Next.js (Port 3000)
+  - **Backend**: Django/Gunicorn (Port 8000)
+  - **Database**: PostgreSQL 16 (Port 5432)
+  - **Cache/Queue**: Redis
 
----
+## 🚀 Deployment Procedures
 
-## 🏗️ The Production Stack
-The system operates as a unified Docker stack orchestrated via `docker-compose`:
-
-| Service | Technology | Internal Port | External Visibility |
-| :--- | :--- | :--- | :--- |
-| **Gateway** | Nginx | 80 / 443 | Entry Point |
-| **Frontend** | Next.js 16 | 3000 | `tsf.ci` |
-| **Backend** | Django 5.1 | 8000 | `tsf.ci/api` |
-| **Database** | PostgreSQL 16 | 5432 | Internal Only |
-| **Cache** | Redis | 6379 | Internal Only |
-
----
-
-## 🚀 Deployment Workflows
-
-### 1. Full Stack Deployment (Recommended)
-Use this command for major updates, infrastructure changes, or fresh installations. It rebuilds all containers and applies migrations.
-
-**Command (on server):**
+### 1. Atomic Automated Deployment (Preferred)
+Use the smart deployment workflow to bridge local changes to the server:
 ```bash
+# From local workspace
+./deploy-module.sh [module_name]
+```
+*Note: This script handles SSH authentication via `id_deploy` and executes atomic migrations.*
+
+### 2. Manual Server Recovery
+If the stack is down, use the consolidated Docker command:
+```bash
+ssh -i ~/.ssh/id_deploy root@91.99.186.183
 cd /root/TSFSYSTEM
-chmod +x deploy_production.sh
-./deploy_production.sh
+docker-compose up -d --build
 ```
 
-**What it does:**
-- Pulls latest code from `main`
-- Rebuilds Docker images (Frontend build included)
-- Applies Django database migrations
-- Collects static files
-- Performs a container health check
+### 🔒 The Mutex Rule (Crucial)
+Before executing any deployment that affects the database:
+1. Check [MASTER_HUB.md](file:///root/TSFSYSTEM/MASTER_HUB.md) for the **Deployment Lock**.
+2. If `IDLE`, acquire the lock by writing `[DEPLOYING BY SESSION #XXXX]`.
+3. Release the lock to `IDLE` only after successful health checks.
 
-### 2. Fast Intelligence Iteration (SSH)
-Use this for rapid code-only updates from your local machine. This bypasses the full Docker rebuild and updates the running containers or PM2 processes.
+## 🛠️ Maintenance & Troubleshooting
 
-**Command (local):**
+### View Logs
 ```bash
-# Using the Smart Deploy workflow
-ssh -i ~/.ssh/id_deploy root@tsf.ci "cd /root/TSFSYSTEM && git pull origin main && ./deploy_production.sh"
+docker logs -f tsf_backend
+docker logs -f tsf_gateway
 ```
+
+### Database Access
+```bash
+docker exec -it tsf_db psql -U postgres -d tsfci_db
+```
+
+### Resetting Migrations (Disaster Recovery Only)
+If migrations become inconsistent:
+1. Stop the stack.
+2. Delete all `00*.py` files in app migration folders.
+3. Run `makemigrations` and `migrate` sequentially in an isolated container.
+4. Verify schema via `docker exec tsf_backend python manage.py migrate --check`.
 
 ---
-
-## 🛠️ Maintenance & Operations
-
-### Viewing Logs
-To monitor the real-time heartbeat of the system:
-```bash
-# All services
-docker-compose logs -f
-
-# Specific services
-docker-compose logs -f frontend
-docker-compose logs -f backend
-```
-
-### Database Management
-Access the production database directly:
-```bash
-docker exec -it tsf_db psql -U postgres -d tsfdb
-```
-
-### Health Check Diagnostic
-If the site is slow or unresponsive, run:
-```bash
-# Check container status
-docker ps
-
-# Check host resource usage
-htop
-```
-
----
-
-## 🔐 Security & Access
-- **SSH Access**: Restricted to `id_deploy` key.
-- **Environment**: Managed via `/root/TSFSYSTEM/.env` (Production secrets).
-- **SSL**: Automated renewal via Certbot container.
-
----
-
-> [!IMPORTANT]
-> Always verify `npm run build` locally before pushing to `main` to prevent production downtime.
+*Created by Agent-3 (Session #38152f) - Verified Stable on 2026-02-22*

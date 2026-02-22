@@ -45,8 +45,13 @@ class StoredFileViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'], url_path='upload')
     def upload(self, request):
         """Upload a file to cloud storage."""
-        org = getattr(request, 'organization', None)
-        provider = StorageProvider.get_for_organization(org) if org else None
+        org_id = request.headers.get('X-Tenant-Id') or \
+                 getattr(request, 'organization', None) or \
+                 getattr(request.user, 'organization_id', None)
+        
+        from erp.models import Organization
+        org = Organization.objects.filter(id=org_id).first() if org_id else None
+        provider = StorageProvider.get_for_organization(org)
 
         serializer = FileUploadSerializer(
             data=request.data,
@@ -101,8 +106,13 @@ class StoredFileViewSet(viewsets.ModelViewSet):
     def download(self, request, uuid=None):
         """Generate a presigned download URL for a file."""
         stored_file = self.get_object()
-        org = getattr(request, 'organization', None)
-        provider = StorageProvider.get_for_organization(org) if org else None
+        org_id = request.headers.get('X-Tenant-Id') or \
+                 getattr(request, 'organization', None) or \
+                 getattr(request.user, 'organization_id', None)
+        
+        from erp.models import Organization
+        org = Organization.objects.filter(id=org_id).first() if org_id else None
+        provider = StorageProvider.get_for_organization(org)
 
         try:
             url = backends.generate_download_url(

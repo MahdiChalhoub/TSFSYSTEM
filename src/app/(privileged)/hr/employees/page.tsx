@@ -1,7 +1,7 @@
 /** HR Data Center - Employees */
 import { erpFetch } from "@/lib/erp-api";
 import EmployeeManager from "./manager";
-import { Users, Briefcase, Fingerprint } from "lucide-react";
+import { Users, Briefcase, Fingerprint, ShieldCheck } from "lucide-react";
 
 export const dynamic = 'force-dynamic';
 
@@ -97,39 +97,40 @@ export default async function EmployeesPage() {
     const allPeople = [...employees, ...standaloneUsers];
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
-            {/* HR Command Header */}
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
-                <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-[20px] bg-black flex items-center justify-center text-white shadow-2xl">
-                            <Fingerprint size={24} />
+        <div className="p-8 space-y-10 animate-in fade-in duration-500 max-w-[1600px] mx-auto">
+            {/* Header */}
+            <header className="flex flex-col md:flex-row justify-between items-center gap-6">
+                <div>
+                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200 text-white">
+                            <Users size={28} />
                         </div>
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em]">Resource Master</span>
-                    </div>
-                    <h1 className="text-6xl lg:text-7xl font-black text-gray-900 tracking-tighter">
-                        HR <span className="text-indigo-600">Command</span>
+                        HR <span className="text-emerald-600">Command</span>
                     </h1>
-                    <p className="text-gray-500 font-medium max-w-xl text-lg leading-relaxed">
-                        Unified management of your company's human capital. Linking physical employees to system security and financial payroll dimensions.
-                    </p>
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Resource Master & Professional Directory</p>
                 </div>
-
-                <div className="flex gap-8 bg-white p-10 rounded-[50px] shadow-2xl shadow-indigo-900/5 border border-gray-50">
-                    <div className="text-center px-8 border-r border-gray-100">
-                        <div className="text-5xl font-black text-gray-900 tracking-tighter mb-1">{allPeople.length}</div>
-                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Staff</div>
+                {/* Action Pulse */}
+                <div className="flex gap-4">
+                    <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex items-center gap-5 min-w-[200px]">
+                        <div className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center">
+                            <Briefcase size={24} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1 leading-none mb-1">Total Staff</p>
+                            <h2 className="text-2xl font-black text-gray-900 tracking-tighter">{allPeople.length}</h2>
+                        </div>
                     </div>
-                    <div className="text-center px-8 border-r border-gray-100">
-                        <div className="text-5xl font-black text-indigo-600 tracking-tighter mb-1">{allPeople.filter((e: Record<string, any>) => e.user).length}</div>
-                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">System Access</div>
-                    </div>
-                    <div className="text-center px-8">
-                        <div className="text-5xl font-black text-emerald-600 tracking-tighter mb-1">{sites.length}</div>
-                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Active Branches</div>
+                    <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-emerald-100 flex items-center gap-5 min-w-[200px]">
+                        <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                            <ShieldCheck size={24} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mt-1 leading-none mb-1">System Access</p>
+                            <h2 className="text-2xl font-black text-emerald-600 tracking-tighter">{allPeople.filter((e: Record<string, any>) => e.user).length}</h2>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </header>
 
             <EmployeeManager
                 employees={allPeople}

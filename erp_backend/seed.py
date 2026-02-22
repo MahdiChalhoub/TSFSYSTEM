@@ -12,23 +12,27 @@ django.setup()
 from django.apps import apps
 from django.contrib.auth import get_user_model
 
-def get_model(name):
-    return apps.get_model('erp', name)
+def get_model_agnostic(name):
+    for app_label in ['erp', 'inventory', 'finance', 'core']:
+        try:
+            return apps.get_model(app_label, name)
+        except LookupError:
+            continue
+    raise LookupError(f"Model {name} not found in expected apps.")
 
-Organization = get_model('Organization')
-Site = get_model('Site')
-# User handled separately
-Role = get_model('Role')
-Country = get_model('Country')
-Unit = get_model('Unit')
-Warehouse = get_model('Warehouse')
-FinancialAccount = get_model('FinancialAccount')
-
-FiscalYear = get_model('FiscalYear')
-ChartOfAccount = get_model('ChartOfAccount')
-SystemSettings = get_model('SystemSettings')
-Product = get_model('Product')
-SystemModule = get_model('SystemModule')
+Organization = get_model_agnostic('Organization')
+Site = get_model_agnostic('Site')
+Role = get_model_agnostic('Role')
+Country = get_model_agnostic('Country')
+Unit = get_model_agnostic('Unit')
+Warehouse = get_model_agnostic('Warehouse')
+FinancialAccount = get_model_agnostic('FinancialAccount')
+FiscalYear = get_model_agnostic('FiscalYear')
+ChartOfAccount = get_model_agnostic('ChartOfAccount')
+FiscalPeriod = get_model_agnostic('FiscalPeriod')
+SystemSettings = None # Deprecated, using Organization.settings
+Product = get_model_agnostic('Product')
+SystemModule = get_model_agnostic('SystemModule')
 
 def run_seed():
     print("🌱 Starting Django Seed...")
@@ -153,17 +157,17 @@ def run_seed():
 
     # 8. Financial Settings (Stored in SystemSettings)
     financial_config = {
-        'company_type': 'MIXED',
-        'currency': 'USD',
-        'default_tax_rate': 0.11,
-        'works_in_ttc': True,
-        'allow_ht_entry_for_ttc': False,
-        'dual_view': True
+        "worksInTTC": True,
+        "dualView": False,
+        "pricingCostBasis": "AMC"
     }
-    SystemSettings.objects.get_or_create(
-        key='financial_settings', organization=org,
-        defaults={'value': json.dumps(financial_config)}
-    )
+    
+    org.settings['financial_settings'] = financial_config
+    org.save(update_fields=['settings'])
+    
+    # Posting Rules
+    from erp.services import ConfigurationService
+    ConfigurationService.apply_smart_posting_rules(org)
 
     # 9. Fiscal Year
     fy, _ = FiscalYear.objects.get_or_create(
@@ -175,6 +179,21 @@ def run_seed():
         }
     )
     print("📅 Fiscal Year 2026 Seeded")
+
+    for month in range(1, 13):
+        import calendar
+        last_day = calendar.monthrange(2026, month)[1]
+        FiscalPeriod.objects.get_or_create(
+            fiscal_year=fy,
+            organization=org,
+            name=f"P{month:02d}-2026",
+            defaults={
+                'start_date': date(2026, month, 1),
+                'end_date': date(2026, month, last_day),
+                'status': 'OPEN'
+            }
+        )
+    print("⏳ Monthly Fiscal Periods Seeded")
 
     # 10. Chart of Accounts
     def upsert_account(code, name, type, parent=None, sub_type=None):
@@ -236,10 +255,9 @@ def run_seed():
         }
     }
     
-    SystemSettings.objects.get_or_create(
-        key='finance_posting_rules', organization=org,
-        defaults={'value': json.dumps(rules)}
-    )
+    # Save Posting Rules
+    org.settings['finance_posting_rules'] = rules
+    org.save(update_fields=['settings'])
 
     # 12. Financial Accounts
     accounts = [
@@ -294,7 +312,7 @@ def run_seed():
     print(f"📦 Seeded {len(core_modules)} core modules to Global Registry")
 
     # ── Finance Account Type Permissions ──────────────────────────────
-    Permission = get_model('Permission')
+    Permission = get_model_agnostic('Permission')
     account_perms = [
         ('finance.account.cash', 'Access Cash Drawers'),
         ('finance.account.bank', 'Access Bank Accounts'),

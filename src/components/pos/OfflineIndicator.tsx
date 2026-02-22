@@ -16,79 +16,79 @@ import { useOnlineStatus, usePendingOrders } from '@/lib/offline/hooks';
 import { Wifi, WifiOff, RefreshCw, Check, AlertTriangle } from 'lucide-react';
 
 export default function OfflineIndicator() {
-    const { isOnline, wasOffline, clearWasOffline } = useOnlineStatus();
-    const { count: pendingCount, syncing, triggerSync } = usePendingOrders();
+  const { isOnline, wasOffline, clearWasOffline } = useOnlineStatus();
+  const { count: pendingCount, syncing, syncProgress, triggerSync } = usePendingOrders();
 
-    // Determine state
-    const state = !isOnline
-        ? 'offline'
-        : syncing
-            ? 'syncing'
-            : wasOffline && pendingCount > 0
-                ? 'reconnected'
-                : pendingCount > 0
-                    ? 'pending'
-                    : 'online';
+  // Determine state
+  const state = !isOnline
+    ? 'offline'
+    : syncing
+      ? 'syncing'
+      : wasOffline && pendingCount > 0
+        ? 'reconnected'
+        : pendingCount > 0
+          ? 'pending'
+          : 'online';
 
-    // Auto-clear "was offline" after a few seconds if nothing pending
-    if (wasOffline && pendingCount === 0 && isOnline) {
-        setTimeout(clearWasOffline, 3000);
-    }
+  // Auto-clear "was offline" after a few seconds if nothing pending
+  if (wasOffline && pendingCount === 0 && isOnline) {
+    setTimeout(clearWasOffline, 3000);
+  }
 
-    return (
-        <div className="offline-indicator" data-state={state}>
-            <div className="offline-indicator__dot" />
+  return (
+    <div className="offline-indicator" data-state={state}>
+      <div className="offline-indicator__dot" />
 
-            <span className="offline-indicator__label">
-                {state === 'offline' && (
-                    <>
-                        <WifiOff size={14} />
-                        <span>Offline</span>
-                    </>
-                )}
-                {state === 'syncing' && (
-                    <>
-                        <RefreshCw size={14} className="spin" />
-                        <span>Syncing...</span>
-                    </>
-                )}
-                {state === 'reconnected' && (
-                    <>
-                        <AlertTriangle size={14} />
-                        <span>{pendingCount} pending</span>
-                    </>
-                )}
-                {state === 'pending' && (
-                    <>
-                        <AlertTriangle size={14} />
-                        <span>{pendingCount} queued</span>
-                    </>
-                )}
-                {state === 'online' && (
-                    <>
-                        <Wifi size={14} />
-                        <span>Online</span>
-                    </>
-                )}
-            </span>
+      <span className="offline-indicator__label">
+        {state === 'offline' && (
+          <>
+            <WifiOff size={14} />
+            <span>Offline</span>
+          </>
+        )}
+        {state === 'syncing' && (
+          <>
+            <RefreshCw size={14} className="spin" />
+            <span>Syncing {syncProgress?.synced + syncProgress?.failed || 0}/{syncProgress?.total || pendingCount}...</span>
+          </>
+        )}
+        {state === 'reconnected' && (
+          <>
+            <AlertTriangle size={14} />
+            <span>{pendingCount} to sync</span>
+          </>
+        )}
+        {state === 'pending' && (
+          <>
+            <AlertTriangle size={14} />
+            <span>{pendingCount} queued</span>
+          </>
+        )}
+        {state === 'online' && (
+          <>
+            <Wifi size={14} />
+            <span>Online</span>
+          </>
+        )}
+      </span>
 
-            {/* Sync button when there are pending orders */}
-            {pendingCount > 0 && isOnline && !syncing && (
-                <button
-                    className="offline-indicator__sync-btn"
-                    onClick={triggerSync}
-                    title="Sync pending orders now"
-                >
-                    <RefreshCw size={12} />
-                </button>
-            )}
+      {/* Sync button when there are pending orders */}
+      {pendingCount > 0 && isOnline && !syncing && (
+        <button
+          className="offline-indicator__sync-btn"
+          onClick={triggerSync}
+          title="Sync pending orders now"
+        >
+          <RefreshCw size={12} />
+        </button>
+      )}
 
-            {/* Pending badge */}
-            {pendingCount > 0 && (
-                <span className="offline-indicator__badge">{pendingCount}</span>
-            )}
+      {/* Pending badge */}
+      {pendingCount > 0 && (
+        <span className="offline-indicator__badge">{pendingCount}</span>
+      )}
 
-            <style jsx>{`
+      <style jsx>{`
         .offline-indicator {
           display: inline-flex;
           align-items: center;
@@ -182,6 +182,6 @@ export default function OfflineIndicator() {
           50% { opacity: 0.7; }
         }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 }

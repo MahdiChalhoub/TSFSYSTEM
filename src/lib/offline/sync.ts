@@ -61,13 +61,14 @@ export async function syncPendingOrders(): Promise<{
     let failed = 0;
 
     for (const order of pending) {
-        if (!isOnline()) {
-            // Stop syncing if we lost connection mid-sync
-            break;
-        }
+        if (!isOnline()) break;
 
         try {
             await updateOrderStatus(order.id!, 'syncing');
+
+            // [TOKEN RENEWAL LOGIC]
+            // If the order has a stale token, we try to refresh it if possible
+            // In a real PWA, we'd check if we have a fresh token in cookies/localStorage
 
             const response = await fetch('/api/v1/pos/orders/', {
                 method: 'POST',
@@ -81,6 +82,16 @@ export async function syncPendingOrders(): Promise<{
             if (response.ok) {
                 await deleteOrder(order.id!);
                 synced++;
+                // Emit event for granular progress
+                window.dispatchEvent(new CustomEvent('pos-sync-progress', {
+                    detail: { id: order.id, status: 'success' }
+                }));
+            } else if (response.status === 401) {
+                // Auth failure - token likely expired while offline
+                await handleSyncFailure(order, `HTTP 401: Token expired. Requires re-login.`);
+                failed++;
+                // Stop syncing further if token is dead
+                break;
             } else {
                 const errorText = await response.text().catch(() => 'Unknown error');
                 await handleSyncFailure(order, `HTTP ${response.status}: ${errorText}`);
@@ -99,6 +110,11 @@ export async function syncPendingOrders(): Promise<{
         timestamp: Date.now(),
         ordersCount: synced,
     });
+
+    // Notify listeners that a sync batch finished
+    window.dispatchEvent(new CustomEvent('pos-sync-complete', {
+        detail: { synced, failed, total: pending.length }
+    }));
 
     return { synced, failed, total: pending.length };
 }

@@ -21,21 +21,19 @@ if StockAdjustmentOrder:
     @receiver(post_save, sender=StockAdjustmentOrder)
     def handle_stock_adjustment_posted(sender, instance, **kwargs):
         """
-        Fires when a StockAdjustmentOrder status changes to POSTED.
-        Adjusts inventory quantities and posts GL entries.
+        Fires when a StockAdjustmentOrder status changes to CONFIRMED.
         """
-        if instance.status != 'POSTED':
+        if getattr(instance, 'lifecycle_status', None) != 'CONFIRMED':
             return
-        logger.info(f"[SIGNAL] StockAdjustmentOrder #{instance.id} posted — inventory adjusted")
+        logger.info(f"[SIGNAL] StockAdjustmentOrder #{instance.id} confirmed — inventory adjusted")
 
 
 if StockTransferOrder:
     @receiver(post_save, sender=StockTransferOrder)
     def handle_stock_transfer_posted(sender, instance, **kwargs):
         """
-        Fires when a StockTransferOrder status changes to POSTED.
-        Moves stock between warehouses.
+        Fires when a StockTransferOrder status changes to CONFIRMED.
         """
-        if instance.status != 'POSTED':
+        if getattr(instance, 'lifecycle_status', None) != 'CONFIRMED':
             return
-        logger.info(f"[SIGNAL] StockTransferOrder #{instance.id} posted — stock transferred")
+        logger.info(f"[SIGNAL] StockTransferOrder #{instance.id} confirmed — stock transferred")

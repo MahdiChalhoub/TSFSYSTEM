@@ -63,54 +63,73 @@ export default async function PurchaseRegistryPage({ searchParams }: { searchPar
     const totalValue = dashboard?.total_value || 0;
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="p-6 space-y-6 max-w-[1400px] mx-auto animate-in fade-in duration-500">
             {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tighter">
-                        Procurement <span className="text-emerald-500">Center</span>
+                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
+                            <Package size={28} className="text-white" />
+                        </div>
+                        Procurement <span className="text-emerald-600">Center</span>
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">Manage RFQs, Purchase Orders, Approvals, and Reception</p>
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Manage RFQs, Purchase Orders, & Reception</p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex items-center gap-3">
                     <Link
                         href="/purchases/sourcing"
-                        className="bg-white border-2 border-gray-100 text-gray-500 px-6 py-3.5 rounded-2xl font-bold hover:text-emerald-600 hover:border-emerald-100 transition-all flex items-center gap-2"
+                        className="bg-white border border-gray-100 text-gray-500 h-12 px-6 rounded-2xl font-bold hover:text-emerald-600 hover:border-emerald-100 transition-all flex items-center gap-2 shadow-sm"
                     >
                         <BarChart3 size={18} />
                         <span>Sourcing Intelligence</span>
                     </Link>
                     <Link
                         href="/purchases/new-order"
-                        className="bg-emerald-600 text-white px-6 py-3.5 rounded-2xl font-bold shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all flex items-center gap-2"
+                        className="bg-emerald-600 text-white h-12 px-6 rounded-2xl font-bold shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all flex items-center gap-2 border-0"
                     >
                         <Plus size={18} />
                         <span>New Purchase Order</span>
                     </Link>
                 </div>
-            </div>
+            </header>
 
             {/* KPIs */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
-                <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-                    <div className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Drafts</div>
-                    <div className="text-4xl font-black text-slate-600">{rfqCount}</div>
-                    <div className="mt-2 text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Orders pending submission</div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4 group">
+                    <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+                        <FileText size={22} className="text-slate-600" />
+                    </div>
+                    <div>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Drafts</p>
+                        <p className="text-2xl font-black text-slate-700 mt-0.5">{rfqCount}</p>
+                    </div>
                 </div>
-                <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-                    <div className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Pending Approval</div>
-                    <div className="text-4xl font-black text-amber-600">{pendingApproval}</div>
-                    <div className="mt-2 text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Awaiting manager approval</div>
+                <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4 group">
+                    <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center group-hover:bg-amber-100 transition-colors">
+                        <Clock size={22} className="text-amber-600" />
+                    </div>
+                    <div>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Pending Approval</p>
+                        <p className="text-2xl font-black text-amber-600 mt-0.5">{pendingApproval}</p>
+                    </div>
                 </div>
-                <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-                    <div className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Incoming Stock</div>
-                    <div className="text-4xl font-black text-blue-600">{awaitingReceipt}</div>
-                    <div className="mt-2 text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Ordered, awaiting delivery</div>
+                <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4 group">
+                    <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                        <Truck size={22} className="text-blue-600" />
+                    </div>
+                    <div>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Incoming Stock</p>
+                        <p className="text-2xl font-black text-blue-600 mt-0.5">{awaitingReceipt}</p>
+                    </div>
                 </div>
-                <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-                    <div className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Total Procurement</div>
-                    <div className="text-4xl font-black text-gray-900">{Number(totalValue).toLocaleString()} {currency}</div>
-                    <div className="mt-2 text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Total value of all POs</div>
+                <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4 group">
+                    <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
+                        <Package size={22} className="text-emerald-600" />
+                    </div>
+                    <div>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Procurement</p>
+                        <p className="text-2xl font-black text-gray-900 mt-0.5">{Number(totalValue).toLocaleString()} {currency}</p>
+                    </div>
                 </div>
             </div>
 

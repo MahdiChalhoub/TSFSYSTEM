@@ -62,8 +62,8 @@ export function PurchasesRegistryClient({ orders, currency, tradeSubTypesEnabled
             label: 'PO Number',
             sortable: true,
             render: (po) => (
-                <Link href={`/purchases/${po.id}`} className="flex flex-col">
-                    <span className="font-bold text-gray-900 hover:text-emerald-600 transition-colors uppercase tracking-tight">
+                <Link href={`/purchases/${po.id}`} className="flex flex-col group">
+                    <span className="font-bold text-gray-900 group-hover:text-emerald-600 transition-colors uppercase tracking-tight">
                         {po.po_number || `PO-${po.id}`}
                     </span>
                     <div className="flex items-center gap-1 text-[10px] text-gray-400 mt-0.5">
@@ -162,11 +162,12 @@ export function PurchasesRegistryClient({ orders, currency, tradeSubTypesEnabled
             actions={{
                 onView: (po) => router.push(`/purchases/${po.id}`),
                 extra: (po) => (
-                    <Link href={`/purchases/${po.id}`} className="p-1.5 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all">
+                    <Link href={`/purchases/${po.id}`} className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all">
                         <Clock size={16} />
                     </Link>
                 )
             }}
+            className="rounded-2xl shadow-sm bg-white overflow-hidden border-0"
         >
             <TypicalFilter
                 search={{

@@ -8,6 +8,7 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 from datetime import timedelta
+from erp.models import Organization
 
 
 class UploadSession(models.Model):
@@ -48,12 +49,15 @@ class UploadSession(models.Model):
     # For file uploads
     category = models.CharField(max_length=20, default='ATTACHMENT')
     linked_model = models.CharField(max_length=100, blank=True, default='')
-    linked_id = models.IntegerField(null=True, blank=True)
+    linked_id = models.CharField(max_length=100, null=True, blank=True, help_text='ID of the linked model (UUID as string or Int)')
     # For package uploads
     package_type = models.CharField(max_length=20, blank=True, default='')
 
     # Ownership
-    organization_id = models.IntegerField(null=True, blank=True)
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE,
+        null=True, blank=True, related_name='upload_sessions'
+    )
     uploaded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL, null=True, blank=True,

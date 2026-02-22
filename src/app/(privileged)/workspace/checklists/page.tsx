@@ -29,35 +29,49 @@ export default async function ChecklistsPage() {
     const totalPoints = arr.reduce((sum: number, c: any) => sum + (c.points_earned || 0), 0);
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
-                <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-[20px] bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-2xl">
-                            <ListChecks size={24} />
+        <div className="space-y-8 animate-in fade-in duration-500">
+            <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
+                            <ListChecks size={28} className="text-white" />
                         </div>
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em]">Workspace</span>
-                    </div>
-                    <h1 className="text-6xl lg:text-7xl font-black text-gray-900 tracking-tighter">
                         Check<span className="text-emerald-600">lists</span>
                     </h1>
-                    <p className="text-gray-500 font-medium max-w-xl text-lg leading-relaxed">
-                        Shift checklists, daily tasks, and compliance checks. Complete items to earn points and track performance.
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">
+                        Workspace &bull; Compliance Hub
                     </p>
                 </div>
+            </header>
 
-                <div className="flex gap-8 bg-white p-10 rounded-[50px] shadow-2xl shadow-emerald-900/5 border border-gray-50">
-                    <div className="text-center px-8 border-r border-gray-100">
-                        <div className="text-5xl font-black text-amber-500 tracking-tighter mb-1">{pending}</div>
-                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Active</div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white p-6 rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-50 flex flex-col justify-between relative overflow-hidden group hover:border-amber-100 transition-all duration-300">
+                    <div className="relative z-10">
+                        <div className="text-4xl font-black text-amber-600 tracking-tighter mb-1">{pending}</div>
+                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest group-hover:text-amber-600 transition-colors">Active</div>
                     </div>
-                    <div className="text-center px-8 border-r border-gray-100">
-                        <div className="text-5xl font-black text-emerald-600 tracking-tighter mb-1">{completed}</div>
-                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Done</div>
+                    <div className="absolute top-4 right-4 text-amber-100 group-hover:text-amber-200 transition-colors">
+                        <ClipboardCheck size={24} />
                     </div>
-                    <div className="text-center px-8">
-                        <div className="text-5xl font-black text-indigo-600 tracking-tighter mb-1">{totalPoints}</div>
-                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Points</div>
+                </div>
+
+                <div className="bg-white p-6 rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-50 flex flex-col justify-between relative overflow-hidden group hover:border-emerald-100 transition-all duration-300">
+                    <div className="relative z-10">
+                        <div className="text-4xl font-black text-emerald-600 tracking-tighter mb-1">{completed}</div>
+                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest group-hover:text-emerald-600 transition-colors">Done</div>
+                    </div>
+                    <div className="absolute top-4 right-4 text-emerald-100 group-hover:text-emerald-200 transition-colors">
+                        <ListChecks size={24} />
+                    </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-50 flex flex-col justify-between relative overflow-hidden group hover:border-indigo-100 transition-all duration-300">
+                    <div className="relative z-10">
+                        <div className="text-4xl font-black text-indigo-600 tracking-tighter mb-1">{totalPoints}</div>
+                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest group-hover:text-indigo-600 transition-colors">Points</div>
+                    </div>
+                    <div className="absolute top-4 right-4 text-indigo-100 group-hover:text-indigo-200 transition-colors">
+                        <Award size={24} />
                     </div>
                 </div>
             </div>

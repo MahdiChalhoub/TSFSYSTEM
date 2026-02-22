@@ -243,22 +243,32 @@ export default function InvoicesPage() {
     return (
         <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto">
             {/* Header */}
-            <div className="flex justify-between items-center">
+            <header className="flex justify-between items-end">
                 <div>
-                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-[1.5rem] bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
-                            <FileText size={28} className="text-white" />
+                    <div className="flex items-center gap-3 mb-2">
+                        <Badge className="bg-blue-50 text-blue-600 border-blue-100 font-black text-[10px] uppercase tracking-widest px-3 py-1">
+                            Node: Billing Active
+                        </Badge>
+                        <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest flex items-center gap-1">
+                            <TrendingUp size={12} /> Revenue Velocity
+                        </span>
+                    </div>
+                    <h1 className="text-5xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <div className="w-16 h-16 rounded-[1.8rem] bg-stone-900 flex items-center justify-center shadow-2xl shadow-stone-200">
+                            <FileText size={32} className="text-white" />
                         </div>
-                        Invoice <span className="text-blue-600">Management</span>
+                        Invoice <span className="text-indigo-600">Suite</span>
                     </h1>
-                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Sales & Purchase Invoices</p>
-                    <p className="text-stone-500 font-medium mt-1">Create, manage, and track sales &amp; purchase invoices</p>
                 </div>
-                <Button onClick={() => setCreateOpen(true)} className="rounded-xl gap-2 shadow-md hover:shadow-lg transition-all">
-                    <Plus size={16} /> New Invoice
-                </Button>
-            </div>
-
+                <div className="flex gap-3">
+                    <Button onClick={() => toast.info("Batch import coming soon")} variant="outline" className="h-12 px-6 rounded-2xl border-stone-100 font-bold text-gray-600 flex items-center gap-2 hover:bg-stone-50 transition-all">
+                        <Cloud size={18} /> Batch Import
+                    </Button>
+                    <Button onClick={() => setCreateOpen(true)} className="h-12 px-6 rounded-2xl bg-indigo-600 text-white font-bold flex items-center gap-2 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
+                        <Plus size={18} /> New Invoice
+                    </Button>
+                </div>
+            </header>
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-blue-50 to-blue-100">
@@ -444,27 +454,11 @@ export default function InvoicesPage() {
 
             {/* ─── Tabs + Table (TypicalListView) ──────────────── */}
             <TypicalListView
-                title="" // Title is already in the page header
-                data={filtered}
-                loading={loading || isPending}
-                getRowId={(inv) => inv.id}
+                title="Commercial Invoices"
+                data={invoices}
+                loading={loading}
+                getRowId={(i) => i.id}
                 columns={columns}
-                renderExpanded={(inv: any) => (
-                    <div className="bg-gray-50/50 p-6 border-t border-gray-100 overflow-hidden animate-in slide-in-from-top-2 duration-300">
-                        <div className="max-w-4xl mx-auto bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
-                            <AttachmentManager
-                                linkedModel="commercial.Invoice"
-                                linkedId={inv.id}
-                                category="INVOICE"
-                                title={`Attachments for ${inv.invoice_number || `#${inv.id}`}`}
-                                compact
-                            />
-                        </div>
-                    </div>
-                )}
-                lifecycle={{
-                    getStatus: (inv) => STATUS_CONFIG[inv.status] || STATUS_CONFIG.DRAFT
-                }}
                 actions={{
                     extra: (inv) => (
                         <>
@@ -489,41 +483,44 @@ export default function InvoicesPage() {
                         </>
                     )
                 }}
-                className="rounded-2xl shadow-sm border overflow-hidden"
-            >
-                <div className="px-5 py-3 border-b flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between bg-stone-50/50">
-                    <div className="flex gap-1 flex-wrap">
-                        {tabs.map(tab => (
-                            <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-                                className={`flex items-center gap-1.5 px-3.5 py-2 text-sm rounded-xl transition-all ${activeTab === tab.key
-                                    ? "bg-white shadow-sm font-semibold text-stone-900" : "text-stone-400 hover:text-stone-600"}`}>
-                                {tab.label}
-                                {tab.count > 0 && (
-                                    <span className={`ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${activeTab === tab.key ? 'bg-stone-900 text-white' : 'bg-stone-200 text-stone-500'}`}>
-                                        {tab.count}
-                                    </span>
-                                )}
-                            </button>
-                        ))}
-                    </div>
-                    {tradeSubTypesEnabled && (
-                        <div className="flex gap-1 flex-wrap">
-                            {[{ key: '', label: 'All Types' }, { key: 'RETAIL', label: 'Retail' }, { key: 'WHOLESALE', label: 'Wholesale' }, { key: 'CONSIGNEE', label: 'Consignee' }, { key: 'STANDARD', label: 'Standard' }].map(st => (
-                                <button key={st.key} onClick={() => setSubTypeFilter(st.key)}
-                                    className={`px-3 py-1.5 text-xs rounded-lg transition-all font-medium ${subTypeFilter === st.key
-                                        ? 'bg-indigo-100 text-indigo-700 shadow-sm' : 'text-stone-400 hover:text-stone-600'}`}>
-                                    {st.label}
-                                </button>
-                            ))}
+                lifecycle={{
+                    getStatus: (i) => ({
+                        label: STATUS_CONFIG[i.status]?.label || i.status,
+                        variant: (STATUS_CONFIG[i.status]?.variant as any) || 'default'
+                    })
+                }}
+                className="rounded-[2.5rem] border-0 shadow-sm overflow-hidden bg-white"
+                headerExtra={
+                    <div className="flex flex-col md:flex-row items-center gap-4">
+                        <div className="flex gap-1 bg-stone-100 p-1 rounded-xl w-full md:w-auto">
+                            {(['ALL', 'DRAFT', 'SENT', 'OVERDUE', 'PAID'] as ActiveTab[]).map(tab => {
+                                const isActive = activeTab === tab
+                                return (
+                                    <button
+                                        key={tab}
+                                        onClick={() => setActiveTab(tab)}
+                                        className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 px-4 py-2 text-xs rounded-lg transition-all ${isActive
+                                            ? "bg-white shadow-sm font-bold text-indigo-600"
+                                            : "text-stone-400 hover:text-stone-600"
+                                            }`}
+                                    >
+                                        {tab}
+                                    </button>
+                                )
+                            })}
                         </div>
-                    )}
-                    <div className="relative w-full sm:w-64">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
-                        <Input placeholder="Search invoices..." value={searchQuery}
-                            onChange={e => setSearchQuery(e.target.value)} className="pl-9 rounded-xl text-sm h-9 bg-white" />
+                        <div className="relative w-full md:w-64">
+                            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                            <Input
+                                placeholder="Search..."
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                className="pl-9 h-11 rounded-xl text-sm border-0 bg-stone-100 focus-visible:ring-indigo-500/30"
+                            />
+                        </div>
                     </div>
-                </div>
-            </TypicalListView>
+                }
+            />
         </div>
     )
 }

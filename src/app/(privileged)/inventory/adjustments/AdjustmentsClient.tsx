@@ -53,7 +53,7 @@ export function AdjustmentsClient({ warehouses }: { warehouses: any[] }) {
             label: 'Delta',
             align: 'right' as const,
             render: (row: any) => (
-                <span className={`font-black ${(row.total_qty_adjustment || 0) < 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                <span className={`font-black ${(row.total_qty_adjustment || 0) < 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
                     {(row.total_qty_adjustment || 0) > 0 ? '+' : ''}{row.total_qty_adjustment || 0}
                 </span>
             )
@@ -75,9 +75,9 @@ export function AdjustmentsClient({ warehouses }: { warehouses: any[] }) {
             addLabel="CREATE DRAFT ADJUSTMENT"
             onAdd={() => toast.info("Use the adjustment form to create real stock impact")}
             headerExtras={
-                <div className="flex items-center gap-2 bg-rose-50 px-3 py-1 rounded-full border border-rose-100">
-                    <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
-                    <span className="text-[9px] font-black uppercase text-rose-700 tracking-widest">Live Inventory Impact</span>
+                <div className="flex items-center gap-2 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
+                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                    <span className="text-[9px] font-black uppercase text-emerald-700 tracking-widest">Live Inventory Impact</span>
                 </div>
             }
             lifecycle={{
