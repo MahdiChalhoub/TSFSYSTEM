@@ -1,5 +1,7 @@
 'use client'
 
+import { useCurrency } from '@/lib/utils/currency'
+
 import { useState, useEffect, useMemo } from "react"
 import type { PurchaseOrder } from '@/types/erp'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,10 +14,6 @@ import {
     Package, DollarSign, TrendingUp, Clock,
     Search, CheckCircle, AlertCircle, Truck
 } from "lucide-react"
-
-function fmt(n: number) {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
-}
 
 const STATUS_COLOR: Record<string, string> = {
     PENDING: 'bg-yellow-100 text-yellow-700',

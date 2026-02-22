@@ -1,5 +1,7 @@
 'use client'
 
+import { useCurrency } from '@/lib/utils/currency'
+
 import { useState, useEffect, useMemo } from "react"
 import type { ValuationResponse, Warehouse as WarehouseType } from '@/types/erp'
 import { getStockValuation, getWarehouses } from "@/app/actions/inventory/valuation"
@@ -13,10 +15,6 @@ import {
     Package, DollarSign, BarChart3, Warehouse,
     Search, TrendingUp, ArrowUpDown, Boxes
 } from "lucide-react"
-
-function fmt(n: number) {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
-}
 
 function fmtQty(n: number) {
     return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(n)

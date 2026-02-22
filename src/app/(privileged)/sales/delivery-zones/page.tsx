@@ -1,5 +1,7 @@
 'use client'
 
+import { useCurrency } from '@/lib/utils/currency'
+
 import { useState, useEffect, useMemo } from "react"
 import type { DeliveryZone } from '@/types/erp'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,10 +14,6 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
     MapPin, Plus, DollarSign, Clock, Layers, Edit2, Trash2, X, Check
 } from "lucide-react"
-
-function fmt(n: number) {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
-}
 
 export default function DeliveryZonesPage() {
     const [zones, setZones] = useState<DeliveryZone[]>([])

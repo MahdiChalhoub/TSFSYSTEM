@@ -1,5 +1,7 @@
 'use client'
 
+import { useCurrency } from '@/lib/utils/currency'
+
 import { useState, useEffect, useMemo } from "react"
 import type { FinancialEvent } from '@/types/erp'
 import { getFinancialEvents } from "@/app/actions/finance/financial-events"
@@ -14,10 +16,6 @@ import Link from "next/link"
 import {
     Zap, Search, ArrowUpCircle, ArrowDownCircle, Wallet, Briefcase
 } from "lucide-react"
-
-function fmt(n: number) {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
-}
 
 const EVENT_CONFIG: Record<string, { icon: string, color: string, bg: string, label: string }> = {
     PARTNER_WITHDRAWAL: { icon: '🔻', color: 'text-red-700', bg: 'bg-red-50', label: 'Withdrawal' },

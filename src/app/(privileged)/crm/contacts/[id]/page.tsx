@@ -1,5 +1,7 @@
 'use client'
 
+import { useCurrency } from '@/lib/utils/currency'
+
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { getContactSummary } from "@/app/actions/crm/contacts"
@@ -16,10 +18,6 @@ import {
     TrendingUp, Clock, CheckCircle2, AlertCircle,
     Tag, Star, BarChart3, Percent, Hash
 } from "lucide-react"
-
-function fmt(n: number) {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
-}
 
 const STATUS_COLORS: Record<string, string> = {
     DRAFT: 'bg-gray-100 text-gray-700',

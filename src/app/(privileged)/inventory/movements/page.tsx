@@ -12,10 +12,6 @@ import { UniversalDataTable } from "@/components/ui/universal-data-table";
 import { getInventoryMovementsUDLE, getInventoryMovementsMeta } from "@/app/actions/inventory";
 import { useState, useEffect } from "react";
 
-function fmt(n: number) {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n);
-}
-
 export default function InventoryMovementsPage() {
     const [stats, setStats] = useState({ total: 0, in: 0, out: 0, value: 0 });
 

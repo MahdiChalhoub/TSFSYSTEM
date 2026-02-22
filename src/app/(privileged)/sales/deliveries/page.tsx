@@ -1,5 +1,7 @@
 'use client'
 
+import { useCurrency } from '@/lib/utils/currency'
+
 import { useState, useEffect, useMemo } from "react"
 import type { DeliveryOrder } from '@/types/erp'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,10 +14,6 @@ import {
     Truck, Package, Clock, CheckCircle2, XCircle, AlertTriangle,
     Search, MapPin, Phone, Navigation, Ban
 } from "lucide-react"
-
-function fmt(n: number) {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
-}
 
 const STATUS_CONFIG: Record<string, { label: string; bg: string; icon: Record<string, any> }> = {
     PENDING: { label: 'Pending', bg: 'bg-gray-100 text-gray-700', icon: Clock },

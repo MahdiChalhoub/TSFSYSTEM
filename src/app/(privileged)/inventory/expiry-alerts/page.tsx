@@ -1,5 +1,7 @@
 'use client'
 
+import { useCurrency } from '@/lib/utils/currency'
+
 import { useState, useEffect, useMemo } from "react"
 import type { ExpiryAlertResponse } from '@/types/erp'
 import { getExpiryAlerts, scanForExpiry, acknowledgeAlert } from "@/app/actions/inventory/expiry-alerts"
@@ -13,10 +15,6 @@ import {
     AlertTriangle, Skull, Clock, Shield, RefreshCw,
     Search, CheckCircle2, Package, DollarSign, Boxes
 } from "lucide-react"
-
-function fmt(n: number) {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
-}
 
 const SEVERITY_CONFIG: Record<string, { color: string, bg: string, icon: Record<string, any>, label: string }> = {
     EXPIRED: { color: 'text-red-700', bg: 'bg-red-50 border-red-200', icon: Skull, label: 'Expired' },

@@ -1,5 +1,7 @@
 'use client'
 
+import { useCurrency } from '@/lib/utils/currency'
+
 import { useState, useEffect, useMemo } from "react"
 import type { TaxGroup, TaxSummary } from '@/types/erp'
 import { getTaxGroups, getTaxSummary } from "@/app/actions/finance/tax-reports"
@@ -11,10 +13,6 @@ import { toast } from "sonner"
 import {
     Receipt, Percent, DollarSign, TrendingUp, CheckCircle, AlertCircle, BarChart3
 } from "lucide-react"
-
-function fmt(n: number) {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
-}
 
 export default function TaxReportsPage() {
     const [taxGroups, setTaxGroups] = useState<TaxGroup[]>([])

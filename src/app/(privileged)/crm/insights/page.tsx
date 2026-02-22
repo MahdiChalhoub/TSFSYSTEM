@@ -1,5 +1,7 @@
 'use client'
 
+import { useCurrency } from '@/lib/utils/currency'
+
 import { useState, useEffect, useMemo } from "react"
 import { Contact } from "@/types/erp"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,10 +13,6 @@ import { toast } from "sonner"
 import {
     Users, DollarSign, ShoppingCart, TrendingUp, Search, Star, Crown
 } from "lucide-react"
-
-function fmt(n: number) {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
-}
 
 export default function CustomerInsightsPage() {
     const [contacts, setContacts] = useState<Contact[]>([])

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from "react"
+import { useCurrency } from "@/lib/utils/currency"
 import { getAgedReceivables, getAgedPayables } from "@/app/actions/finance/reports"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -38,11 +39,9 @@ const BUCKET_CONFIG = [
     { key: 'over_90', label: '90+ Days', color: 'bg-red-500', badgeClass: 'bg-red-100 text-red-700', icon: AlertTriangle },
 ]
 
-function formatCurrency(n: number) {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
-}
 
 export default function AgingReportPage() {
+    const { fmt: formatCurrency } = useCurrency()
     const [tab, setTab] = useState<'receivables' | 'payables'>('receivables')
     const [receivables, setReceivables] = useState<AgingData | null>(null)
     const [payables, setPayables] = useState<AgingData | null>(null)
@@ -106,8 +105,8 @@ export default function AgingReportPage() {
                     <button
                         onClick={() => { setTab('receivables'); setActiveBucket(null) }}
                         className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${tab === 'receivables'
-                                ? 'bg-emerald-600 text-white'
-                                : 'bg-white text-gray-600 hover:bg-gray-50'
+                            ? 'bg-emerald-600 text-white'
+                            : 'bg-white text-gray-600 hover:bg-gray-50'
                             }`}
                     >
                         <ArrowDownLeft size={16} />
@@ -116,8 +115,8 @@ export default function AgingReportPage() {
                     <button
                         onClick={() => { setTab('payables'); setActiveBucket(null) }}
                         className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors ${tab === 'payables'
-                                ? 'bg-rose-600 text-white'
-                                : 'bg-white text-gray-600 hover:bg-gray-50'
+                            ? 'bg-rose-600 text-white'
+                            : 'bg-white text-gray-600 hover:bg-gray-50'
                             }`}
                     >
                         <ArrowUpRight size={16} />

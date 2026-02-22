@@ -47,7 +47,9 @@ export default function CustomDashboard() {
                 erpFetch('inventory/inventory-movements/').catch(() => []),
                 erpFetch('settings/global_financial/').catch(() => null),
             ])
-            if (orgSettings?.currency_code) setCurrency(orgSettings.currency_code)
+            if (orgSettings?.currency || orgSettings?.currency_code) {
+                setCurrency(orgSettings.currency || orgSettings.currency_code)
+            }
             setData({
                 salesSummary: sales,
                 lowStock: Array.isArray(stock) ? stock : stock?.results || [],

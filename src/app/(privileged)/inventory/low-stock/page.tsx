@@ -1,5 +1,7 @@
 'use client'
 
+import { useCurrency } from '@/lib/utils/currency'
+
 import { useState, useEffect, useMemo } from "react"
 import type { LowStockResponse } from '@/types/erp'
 import { getLowStockAlerts } from "@/app/actions/inventory/low-stock"
@@ -13,10 +15,6 @@ import {
     PackageX, AlertTriangle, TrendingDown, Search,
     DollarSign, ShoppingCart, ArrowUpDown, Package
 } from "lucide-react"
-
-function fmt(n: number) {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
-}
 
 const SEVERITY_CONFIG: Record<string, { color: string, bg: string, label: string }> = {
     OUT: { color: 'text-red-700', bg: 'bg-red-100 border-red-200', label: 'Out of Stock' },

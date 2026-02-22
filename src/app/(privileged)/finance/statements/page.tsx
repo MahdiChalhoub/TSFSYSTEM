@@ -1,5 +1,7 @@
 'use client'
 
+import { useCurrency } from '@/lib/utils/currency'
+
 import { useState, useEffect, useMemo } from "react"
 import type { Contact } from '@/types/erp'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,10 +16,6 @@ import {
     CreditCard, BookOpen, ArrowLeft
 } from "lucide-react"
 import { getContactStatement } from "@/app/actions/finance/bank-reconciliation"
-
-function fmt(n: number) {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
-}
 
 export default function StatementsPage() {
     const [contacts, setContacts] = useState<Contact[]>([])
