@@ -40,6 +40,9 @@ export default async function middleware(req: NextRequest) {
                 if (url.pathname === '/login') {
                     return NextResponse.rewrite(new URL(`/saas/login${searchParams.length > 0 ? `?${searchParams}` : ""}`, req.url));
                 }
+                if (url.pathname === '/') {
+                    return NextResponse.rewrite(new URL(`/saas/dashboard${searchParams.length > 0 ? `?${searchParams}` : ""}`, req.url));
+                }
                 return NextResponse.rewrite(new URL(`/saas${path}`, req.url));
             }
             return NextResponse.next();
