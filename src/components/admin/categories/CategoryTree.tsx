@@ -4,7 +4,7 @@ import { useState, useCallback, memo } from 'react';
 import { ChevronRight, ChevronDown, Edit2, Trash2, Plus, Folder, AlertCircle, Bookmark, Tag, Box, Search } from 'lucide-react';
 import { CategoryFormModal } from './CategoryFormModal';
 import { CategoryExplorer } from './CategoryExplorer';
-import { deleteCategory } from '@/app/actions/categories';
+import { deleteCategory } from '@/app/actions/inventory/categories';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import clsx from 'clsx';

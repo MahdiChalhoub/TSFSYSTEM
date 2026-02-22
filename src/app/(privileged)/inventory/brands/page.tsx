@@ -1,37 +1,47 @@
 import { erpFetch } from "@/lib/erp-api";
-import { BrandManager } from "@/components/admin/BrandManager";
+import { BrandsClient } from "./BrandsClient";
 
 export const dynamic = 'force-dynamic';
 
-async function getBrands() {
-    try { return await erpFetch('brands/'); }
-    catch { return []; }
+async function getBrandsData() {
+    try {
+        const brands = await erpFetch('brands/');
+        return (brands as any[]) || [];
+    } catch {
+        return [];
+    }
 }
 
-async function getCountries() {
-    try { return await erpFetch('countries/'); }
-    catch { return []; }
+async function getCountriesData() {
+    try {
+        const countries = await erpFetch('countries/');
+        return (countries as any[]) || [];
+    } catch {
+        return [];
+    }
 }
 
-async function getCategories() {
-    try { return await erpFetch('inventory/categories/'); }
-    catch { return []; }
+async function getCategoriesData() {
+    try {
+        const categories = await erpFetch('inventory/categories/');
+        return (categories as any[]) || [];
+    } catch {
+        return [];
+    }
 }
 
 export default async function BrandsPage() {
     const [brands, countries, categories] = await Promise.all([
-        getBrands(),
-        getCountries(),
-        getCategories()
+        getBrandsData(),
+        getCountriesData(),
+        getCategoriesData()
     ]);
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
-            <BrandManager
-                brands={brands}
-                countries={countries}
-                categories={categories}
-            />
-        </div>
+        <BrandsClient
+            initialBrands={brands}
+            countries={countries}
+            categories={categories}
+        />
     );
 }

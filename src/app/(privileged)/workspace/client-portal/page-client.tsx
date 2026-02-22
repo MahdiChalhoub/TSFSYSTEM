@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { getClientWallets, getClientTickets, getQuoteRequests, getClientAccess, updateClientTicket } from '@/app/actions/portal'
-import { Monitor, Wallet, Ticket, FileQuestion, Users, RefreshCw, CheckCircle, XCircle, Clock, ChevronRight, DollarSign, MessageSquare , Globe } from 'lucide-react'
+import { Monitor, Wallet, Ticket, FileQuestion, Users, RefreshCw, CheckCircle, XCircle, Clock, ChevronRight, DollarSign, MessageSquare, Globe } from 'lucide-react'
 
 type ClientWallet = { id: number; client?: { name: string }; client_name?: string; balance: number; currency?: string }
 type Ticket = { id: number; subject: string; status: string; priority?: string; client?: { name: string }; client_name?: string; created_at?: string }
@@ -64,39 +64,74 @@ export default function ClientPortalAdminPage() {
                 </div>
             )}
 
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-fuchsia-500 to-violet-700 flex items-center justify-center shadow-lg shadow-violet-900/40">
-                        <Monitor size={22} className="text-white" />
+            {/* Header: Global Client Intelligence */}
+            <header className="flex justify-between items-end">
+                <div>
+                    <div className="flex items-center gap-3 mb-2">
+                        <Badge className="bg-blue-50 text-blue-600 border-blue-100 font-black text-[10px] uppercase tracking-widest px-3 py-1">
+                            Client Network: Synchronized
+                        </Badge>
+                        <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest flex items-center gap-1">
+                            <Activity size={12} /> Sync: Direct
+                        </span>
                     </div>
-                    <div>
-                        <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-[1.5rem] bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
-                                <Globe size={28} className="text-white" />
-                            </div>
-                            Client <span className="text-blue-600">Portal</span>
-                        </h1>
-                        <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Customer Self-Service</p>
-                    </div>
+                    <h1 className="text-5xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <div className="w-16 h-16 rounded-[1.8rem] bg-blue-600 flex items-center justify-center shadow-2xl shadow-blue-200">
+                            <Monitor size={32} className="text-white fill-white" />
+                        </div>
+                        Client <span className="text-blue-600">Ops</span>
+                    </h1>
                 </div>
-                <button onClick={load} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm">
-                    <RefreshCw size={14} />
-                    Refresh
-                </button>
-            </div>
+                <div className="flex gap-3">
+                    <button onClick={load} className="h-12 px-6 rounded-2xl bg-white border border-gray-100 shadow-sm font-bold text-gray-600 flex items-center gap-2 hover:bg-gray-50 transition-all">
+                        <RefreshCw size={18} /> Refresh Hub
+                    </button>
+                    <button className="h-12 px-6 rounded-2xl bg-blue-600 text-white font-bold flex items-center gap-2 hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">
+                        Portal Audit <ChevronRight size={18} />
+                    </button>
+                </div>
+            </header>
 
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-4">
-                {[
-                    { label: 'Total Wallet Balance', value: `$${totalBalance.toFixed(2)}`, icon: DollarSign, color: 'fuchsia' },
-                    { label: 'Open Tickets', value: openTickets.length, icon: Ticket, color: openTickets.length > 0 ? 'amber' : 'emerald' },
-                    { label: 'Quote Requests', value: quotes.length, icon: FileQuestion, color: 'blue' },
-                ].map(s => (
-                    <div key={s.label} className="bg-[#0F1729] rounded-2xl border border-gray-800 p-5">
-                        <div className="flex items-center gap-2 text-gray-400 text-xs mb-2"><s.icon size={14} />{s.label}</div>
-                        <div className={`text-2xl font-bold text-${s.color}-400`}>{s.value}</div>
+            {/* Premium KPI Node Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-white p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="w-12 h-12 rounded-2xl bg-fuchsia-50 text-fuchsia-600 flex items-center justify-center">
+                            <DollarSign size={24} />
+                        </div>
+                        <Badge variant="outline" className="text-fuchsia-500 bg-fuchsia-50 border-0 font-black text-[10px]">
+                            WALLET
+                        </Badge>
                     </div>
-                ))}
+                    <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Portfolio Balance</p>
+                    <h2 className="text-3xl font-black text-gray-900">${totalBalance.toFixed(2)}</h2>
+                </div>
+
+                <div className="bg-blue-600 p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-white">
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="w-12 h-12 rounded-2xl bg-blue-500/50 text-blue-100 flex items-center justify-center">
+                            <MessageSquare size={24} />
+                        </div>
+                        <Badge variant="outline" className="text-blue-200 bg-blue-500/30 border-0 font-black text-[10px]">
+                            {openTickets.length} ACTIVE
+                        </Badge>
+                    </div>
+                    <p className="text-[11px] font-black text-blue-100 uppercase tracking-widest leading-none mb-1">Support Tickets</p>
+                    <h2 className="text-3xl font-black text-white">{openTickets.length} <span className="text-xs text-blue-200">OPEN</span></h2>
+                </div>
+
+                <div className="bg-white p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                            <FileQuestion size={24} />
+                        </div>
+                        <Badge variant="outline" className="text-blue-500 bg-blue-50 border-0 font-black text-[10px]">
+                            QUOTES
+                        </Badge>
+                    </div>
+                    <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Quote Requests</p>
+                    <h2 className="text-3xl font-black text-gray-900">{quotes.length}</h2>
+                </div>
             </div>
 
             {/* Tabs */}
@@ -130,18 +165,21 @@ export default function ClientPortalAdminPage() {
                     ) : tab === 'tickets' ? (
                         tickets.length === 0 ? <div className="text-sm text-gray-500 py-8 text-center">No tickets.</div> :
                             tickets.map(t => (
-                                <div key={t.id} className="flex items-center gap-4 px-5 py-3.5 rounded-xl bg-[#0F1729] border border-gray-800">
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-medium text-sm text-white">{t.subject}</span>
-                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${TICKET_STATUS[t.status] || 'bg-gray-800 text-gray-400 border-gray-700'}`}>{t.status}</span>
-                                            {t.priority && <span className={`text-xs font-semibold ${PRIORITY[t.priority] || 'text-gray-400'}`}>{t.priority}</span>}
+                                <div key={t.id} className="flex items-center gap-6 p-6 rounded-[2.5rem] bg-white shadow-sm border border-slate-50 transition-all hover:shadow-md group text-gray-900">
+                                    <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                                        <MessageSquare size={24} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-3 mb-1">
+                                            <span className="font-black text-sm uppercase italic truncate">{t.subject}</span>
+                                            <Badge className={`${TICKET_STATUS[t.status] || 'bg-gray-100 text-gray-400'} border-0 text-[8px] font-black px-3 py-0.5 rounded-full uppercase tracking-widest`}>{t.status}</Badge>
+                                            {t.priority && <span className={`text-[10px] font-black uppercase tracking-widest ${PRIORITY[t.priority] || 'text-gray-400'}`}>{t.priority}</span>}
                                         </div>
-                                        <p className="text-xs text-gray-500 mt-0.5">{t.client?.name || t.client_name || '—'}{t.created_at ? ` · ${new Date(t.created_at).toLocaleDateString()}` : ''}</p>
+                                        <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest truncate">{t.client?.name || t.client_name || '—'}{t.created_at ? ` · ${new Date(t.created_at).toLocaleDateString()}` : ''}</p>
                                     </div>
                                     {(t.status === 'OPEN' || t.status === 'IN_PROGRESS') && (
-                                        <button onClick={() => resolveTicket(t.id)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-semibold">
-                                            <CheckCircle size={11} />Resolve
+                                        <button onClick={() => resolveTicket(t.id)} className="h-10 px-6 rounded-2xl bg-emerald-600 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all">
+                                            Authorize
                                         </button>
                                     )}
                                 </div>

@@ -35,12 +35,13 @@ FILE_CATEGORIES = (
     ('PAYMENT_RECEIPT', 'Payment Receipt'),
     ('LOGO', 'Company Logo'),
     ('USER_ATTACHMENT', 'User Attachment'),
+    ('MIGRATION', 'Migration Source File'),
     ('OTHER', 'Other'),
 )
 
 DEFAULT_ALLOWED_EXTENSIONS = [
     "pdf", "jpg", "jpeg", "png", "gif", "webp",
-    "doc", "docx", "xls", "xlsx", "csv",
+    "doc", "docx", "xls", "xlsx", "csv", "sql",
     "txt", "zip", "rar",
 ]
 

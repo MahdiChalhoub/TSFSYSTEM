@@ -70,50 +70,99 @@ export default function HROverviewPage() {
                 </div>
             )}
 
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-500 to-cyan-700 flex items-center justify-center shadow-lg shadow-cyan-900/40">
-                        <Users size={22} className="text-white" />
+            {/* Header: Human Capital Intelligence */}
+            <header className="flex justify-between items-end">
+                <div>
+                    <div className="flex items-center gap-3 mb-2">
+                        <Badge className="bg-teal-50 text-teal-600 border-teal-100 font-black text-[10px] uppercase tracking-widest px-3 py-1">
+                            Human Capital: Synchronized
+                        </Badge>
+                        <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest flex items-center gap-1">
+                            <Activity size={12} /> Sync: Direct
+                        </span>
                     </div>
-                    <div>
-                        <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
-                                <Users size={28} className="text-white" />
-                            </div>
-                            HR <span className="text-indigo-600">Overview</span>
-                        </h1>
-                        <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Human Resources</p>
-                    </div>
+                    <h1 className="text-5xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <div className="w-16 h-16 rounded-[1.8rem] bg-teal-600 flex items-center justify-center shadow-2xl shadow-teal-200">
+                            <Users size={32} className="text-white fill-white" />
+                        </div>
+                        Talent <span className="text-teal-600">Ops</span>
+                    </h1>
                 </div>
-                <button onClick={load} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm">
-                    <RefreshCw size={14} />
-                    Refresh
-                </button>
-            </div>
+                <div className="flex gap-3">
+                    <button onClick={load} className="h-12 px-6 rounded-2xl bg-white border border-gray-100 shadow-sm font-bold text-gray-600 flex items-center gap-2 hover:bg-gray-50 transition-all">
+                        <RefreshCw size={18} /> Refresh Hub
+                    </button>
+                    <button className="h-12 px-6 rounded-2xl bg-teal-600 text-white font-bold flex items-center gap-2 hover:bg-teal-700 transition-all shadow-lg shadow-teal-200">
+                        Staff Audit <ChevronRight size={18} />
+                    </button>
+                </div>
+            </header>
 
-            {/* Stats */}
-            <div className="grid grid-cols-4 gap-4">
-                {[
-                    { label: 'Total Employees', value: employees.length, icon: Users, color: 'cyan' },
-                    { label: 'Active', value: activeEmp.length, icon: UserCheck, color: 'emerald' },
-                    { label: 'Present Today', value: presentToday, icon: TrendingUp, color: 'blue' },
-                    { label: 'Pending Leaves', value: pending.length, icon: AlertTriangle, color: pending.length > 0 ? 'amber' : 'gray' },
-                ].map(s => (
-                    <div key={s.label} className="bg-[#0F1729] rounded-2xl border border-gray-800 p-5">
-                        <div className="flex items-center gap-2 text-gray-400 text-xs mb-2"><s.icon size={14} />{s.label}</div>
-                        <div className={`text-3xl font-bold text-${s.color}-400`}>{s.value}</div>
+            {/* Premium KPI Node Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="bg-white p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="w-12 h-12 rounded-2xl bg-cyan-50 text-cyan-600 flex items-center justify-center">
+                            <Users size={24} />
+                        </div>
+                        <Badge variant="outline" className="text-cyan-500 bg-cyan-50 border-0 font-black text-[10px]">
+                            ROSTER
+                        </Badge>
                     </div>
-                ))}
+                    <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Total Employees</p>
+                    <h2 className="text-3xl font-black text-gray-900">{employees.length}</h2>
+                </div>
+
+                <div className="bg-teal-900 p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-white">
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="w-12 h-12 rounded-2xl bg-teal-800/50 text-teal-100 flex items-center justify-center">
+                            <UserCheck size={24} />
+                        </div>
+                        <Badge variant="outline" className="text-teal-200 bg-teal-800/30 border-0 font-black text-[10px]">
+                            ACTIVE
+                        </Badge>
+                    </div>
+                    <p className="text-[11px] font-black text-teal-300 uppercase tracking-widest leading-none mb-1">Human Capital</p>
+                    <h2 className="text-3xl font-black text-white">{activeEmp.length} <span className="text-xs text-teal-200">STAFF</span></h2>
+                </div>
+
+                <div className="bg-white p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                            <TrendingUp size={24} />
+                        </div>
+                        <Badge variant="outline" className="text-indigo-500 bg-indigo-50 border-0 font-black text-[10px]">
+                            PRESENT
+                        </Badge>
+                    </div>
+                    <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Daily Attendance</p>
+                    <h2 className="text-3xl font-black text-gray-900">{presentToday}</h2>
+                </div>
+
+                <div className="bg-white p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                            <AlertTriangle size={24} />
+                        </div>
+                        <Badge variant="outline" className="text-amber-500 bg-amber-50 border-0 font-black text-[10px]">
+                            {pending.length} ACTION
+                        </Badge>
+                    </div>
+                    <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Pending Leaves</p>
+                    <h2 className="text-3xl font-black text-gray-900">{pending.length}</h2>
+                </div>
             </div>
 
-            {/* Departments mini grid */}
+            {/* Departments: Node Chips */}
             {departments.length > 0 && (
-                <div className="flex gap-3 flex-wrap">
+                <div className="flex gap-2 flex-wrap pb-4">
                     {departments.map(dept => (
-                        <div key={dept.id} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#0F1729] border border-gray-800">
-                            <Building2 size={13} className="text-teal-400" />
-                            <span className="text-sm text-gray-300">{dept.name}</span>
-                            {dept.employee_count != null && <span className="text-xs text-gray-600 font-mono">({dept.employee_count})</span>}
+                        <div key={dept.id} className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-white border border-slate-100 shadow-sm group hover:border-teal-200 transition-all">
+                            <div className="w-6 h-6 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center group-hover:bg-teal-600 group-hover:text-white transition-all">
+                                <Building2 size={12} />
+                            </div>
+                            <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">{dept.name}</span>
+                            {dept.employee_count != null && <Badge variant="outline" className="bg-slate-50 border-0 text-[8px] font-black text-gray-400">{dept.employee_count}</Badge>}
                         </div>
                     ))}
                 </div>
@@ -139,19 +188,29 @@ export default function HROverviewPage() {
                             leaves.map(leave => {
                                 const name = leave.employee ? `${leave.employee.first_name} ${leave.employee.last_name}` : (leave.employee_name || '—')
                                 return (
-                                    <div key={leave.id} className="flex items-center gap-4 px-5 py-3.5 rounded-xl bg-[#0F1729] border border-gray-800">
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-medium text-sm text-white">{name}</span>
-                                                {leave.leave_type && <span className="text-xs text-gray-500 bg-gray-800 px-2 py-0.5 rounded-lg">{leave.leave_type}</span>}
-                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${STATUS_BADGE[leave.status] || 'bg-gray-800 text-gray-400 border-gray-700'}`}>{leave.status}</span>
+                                    <div key={leave.id} className="flex items-center gap-6 p-6 rounded-[2.5rem] bg-white shadow-sm border border-slate-50 transition-all hover:shadow-md group text-gray-900">
+                                        <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center shrink-0 group-hover:bg-teal-600 group-hover:text-white transition-all font-black text-xs uppercase">
+                                            {leave.leave_type?.[0] || 'L'}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-3 mb-1">
+                                                <span className="font-black text-sm uppercase italic truncate">{name}</span>
+                                                <Badge className={`${STATUS_BADGE[leave.status] || 'bg-gray-100 text-gray-400'} border-0 text-[8px] font-black px-3 py-0.5 rounded-full uppercase tracking-widest`}>{leave.status}</Badge>
+                                                {leave.leave_type && <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{leave.leave_type}</span>}
                                             </div>
-                                            <p className="text-xs text-gray-500 mt-0.5">{leave.start_date} → {leave.end_date}{leave.reason ? ` · ${leave.reason}` : ''}</p>
+                                            <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest truncate">
+                                                {leave.start_date} <span className="text-gray-300 italic mx-1">UNTIL</span> {leave.end_date}
+                                                {leave.reason ? ` · ${leave.reason}` : ''}
+                                            </p>
                                         </div>
                                         {leave.status === 'PENDING' && (
-                                            <div className="flex gap-2">
-                                                <button onClick={() => handleLeave(leave.id, 'approve')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold"><CheckCircle size={11} />Approve</button>
-                                                <button onClick={() => handleLeave(leave.id, 'reject')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-800 hover:bg-red-700 text-white text-xs font-semibold"><XCircle size={11} />Reject</button>
+                                            <div className="flex gap-3">
+                                                <button onClick={() => handleLeave(leave.id, 'approve')} className="h-10 px-6 rounded-2xl bg-emerald-600 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all">
+                                                    Approve
+                                                </button>
+                                                <button onClick={() => handleLeave(leave.id, 'reject')} className="h-10 px-6 rounded-2xl bg-rose-50 text-rose-600 font-black text-[10px] uppercase tracking-widest hover:bg-rose-100 transition-all">
+                                                    Reject
+                                                </button>
                                             </div>
                                         )}
                                     </div>

@@ -16,11 +16,12 @@ import { Badge } from '@/components/ui/badge'
 import {
     MoreHorizontal, ChevronDown, ChevronRight, Eye, Pencil, Trash2,
     ArrowUpDown, ArrowUp, ArrowDown, Settings2, Download, Plus,
-    CheckCircle2, XCircle, Lock, Unlock, Check
+    CheckCircle2, XCircle, Lock, Unlock, Check, LayoutGrid, List
 } from 'lucide-react'
 import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/components/ui/select'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 /* ═══════════════════════════════════════════════════════
    TypicalListView — Universal data table component
@@ -82,6 +83,9 @@ export type TypicalListViewProps<T, D = any> = {
         renderActions?: (detail: D, parent: T) => React.ReactNode
     }
 
+    /** Custom expanded content (takes precedence over nested rows) */
+    renderExpanded?: (row: T) => React.ReactNode
+
     /** Actions on individual rows */
     actions?: {
         onView?: (row: T) => void
@@ -97,6 +101,12 @@ export type TypicalListViewProps<T, D = any> = {
     sortDir?: 'asc' | 'desc'
     onSort?: (key: string, dir: 'asc' | 'desc') => void
 
+    /** View Mode support */
+    viewMode?: 'table' | 'grid'
+    onViewModeChange?: (mode: 'table' | 'grid') => void
+    renderCard?: (row: T) => React.ReactNode
+    gridClassName?: string
+
     children?: React.ReactNode // Usually TypicalFilter
 }
 
@@ -106,14 +116,22 @@ export function TypicalListView<T, D = any>({
     columns, visibleColumns, onToggleColumn,
     selection, bulkActions,
     lifecycle, headerExtras,
-    expandable, actions,
+    expandable, actions, renderExpanded,
     pageSize = 25, onPageSizeChange,
     sortKey, sortDir, onSort,
+    viewMode: initialViewMode = 'table', onViewModeChange, renderCard, gridClassName,
     children
 }: TypicalListViewProps<T, D>) {
 
     const [expandedRows, setExpandedRows] = useState<Set<string | number>>(new Set())
     const [currentPage, setCurrentPage] = useState(1)
+    const [viewModeState, setViewModeState] = useState<'table' | 'grid'>(initialViewMode)
+
+    const viewMode = onViewModeChange ? initialViewMode : viewModeState
+    const handleViewModeChange = (mode: 'table' | 'grid') => {
+        if (onViewModeChange) onViewModeChange(mode)
+        else setViewModeState(mode)
+    }
 
     // Filter columns based on visibility
     const activeColumns = useMemo(() => {
@@ -183,44 +201,60 @@ export function TypicalListView<T, D = any>({
                     {headerExtras}
                 </div>
 
-                <div className="flex items-center gap-2">
-                    {onExport && (
-                        <Button variant="outline" size="sm" onClick={onExport} className="text-xs border-gray-200">
-                            <Download className="h-4 w-4 mr-2 text-gray-400" /> Export
-                        </Button>
+                <div className="flex items-center gap-4">
+                    {/* View Mode Toggle */}
+                    {renderCard && (
+                        <Tabs value={viewMode} onValueChange={(v) => handleViewModeChange(v as 'table' | 'grid')} className="hidden sm:block">
+                            <TabsList className="bg-gray-100/50 p-1 h-9 rounded-lg">
+                                <TabsTrigger value="table" className="h-7 px-3 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                                    <List className="h-4 w-4 text-gray-400 data-[state=active]:text-emerald-500" />
+                                </TabsTrigger>
+                                <TabsTrigger value="grid" className="h-7 px-3 rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                                    <LayoutGrid className="h-4 w-4 text-gray-400 data-[state=active]:text-emerald-500" />
+                                </TabsTrigger>
+                            </TabsList>
+                        </Tabs>
                     )}
 
-                    {/* Column Visibility Popover */}
-                    {onToggleColumn && (
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button variant="outline" size="sm" className="text-xs border-gray-200">
-                                    <Settings2 className="h-4 w-4 mr-2 text-gray-400" /> Columns
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-56 p-2" align="end">
-                                <div className="space-y-1">
-                                    <p className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase">Visible Columns</p>
-                                    {columns.map(c => (
-                                        <label key={c.key} className="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer transition-colors">
-                                            <Checkbox
-                                                checked={c.alwaysVisible || visibleColumns?.includes(c.key)}
-                                                onCheckedChange={() => onToggleColumn(c.key)}
-                                                disabled={c.alwaysVisible}
-                                            />
-                                            <span className={`text-sm ${c.alwaysVisible ? 'text-gray-400' : 'text-gray-700'}`}>{c.label}</span>
-                                        </label>
-                                    ))}
-                                </div>
-                            </PopoverContent>
-                        </Popover>
-                    )}
+                    <div className="flex items-center gap-2">
+                        {onExport && (
+                            <Button variant="outline" size="sm" onClick={onExport} className="text-xs border-gray-200">
+                                <Download className="h-4 w-4 mr-2 text-gray-400" /> Export
+                            </Button>
+                        )}
 
-                    {onAdd && (
-                        <Button onClick={onAdd} size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-xs font-bold shadow-emerald-100 shadow-lg border-none px-4">
-                            <Plus className="h-4 w-4 mr-1 text-white stroke-[3px]" /> {addLabel || 'ADD'}
-                        </Button>
-                    )}
+                        {/* Column Visibility Popover */}
+                        {onToggleColumn && (
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button variant="outline" size="sm" className="text-xs border-gray-200">
+                                        <Settings2 className="h-4 w-4 mr-2 text-gray-400" /> Columns
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-56 p-2" align="end">
+                                    <div className="space-y-1">
+                                        <p className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase">Visible Columns</p>
+                                        {columns.map(c => (
+                                            <label key={c.key} className="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer transition-colors">
+                                                <Checkbox
+                                                    checked={c.alwaysVisible || visibleColumns?.includes(c.key)}
+                                                    onCheckedChange={() => onToggleColumn(c.key)}
+                                                    disabled={c.alwaysVisible}
+                                                />
+                                                <span className={`text-sm ${c.alwaysVisible ? 'text-gray-400' : 'text-gray-700'}`}>{c.label}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
+                        )}
+
+                        {onAdd && (
+                            <Button onClick={onAdd} size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-xs font-bold shadow-emerald-100 shadow-lg border-none px-4">
+                                <Plus className="h-4 w-4 mr-1 text-white stroke-[3px]" /> {addLabel || 'ADD'}
+                            </Button>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -242,239 +276,273 @@ export function TypicalListView<T, D = any>({
             )}
 
             {/* ─── Table Section ─────────────────── */}
-            <div className="relative overflow-x-auto min-h-[300px]">
-                <Table>
-                    <TableHeader className="bg-gray-50/50">
-                        <TableRow className="border-b-0 hover:bg-transparent">
-                            {/* Expandable Chevron Placeholder */}
-                            {expandable && <TableHead className="w-10"></TableHead>}
+            {viewMode === 'table' ? (
+                <div className="relative overflow-x-auto min-h-[300px]">
+                    <Table>
+                        <TableHeader className="bg-gray-50/50">
+                            <TableRow className="border-b-0 hover:bg-transparent">
+                                {/* Expandable Chevron Placeholder */}
+                                {(expandable || renderExpanded) && <TableHead className="w-10"></TableHead>}
 
-                            {/* Selection Checkbox */}
-                            {selection && (
-                                <TableHead className="w-10 px-4">
-                                    <Checkbox
-                                        checked={paginatedData.length > 0 && paginatedData.every(r => selection.selectedIds.has(getRowId(r)))}
-                                        onCheckedChange={handleSelectAll}
-                                    />
-                                </TableHead>
-                            )}
+                                {/* Selection Checkbox */}
+                                {selection && (
+                                    <TableHead className="w-10 px-4">
+                                        <Checkbox
+                                            checked={paginatedData.length > 0 && paginatedData.every(r => selection.selectedIds.has(getRowId(r)))}
+                                            onCheckedChange={handleSelectAll}
+                                        />
+                                    </TableHead>
+                                )}
 
-                            {activeColumns.map(c => (
-                                <TableHead key={c.key} className={`text-[11px] font-bold text-gray-400 uppercase tracking-widest px-4 py-4 ${c.align === 'right' ? 'text-right' : c.align === 'center' ? 'text-center' : 'text-left'}`}>
-                                    {c.sortable ? (
-                                        <button onClick={() => toggleSort(c.key)} className="group inline-flex items-center hover:text-gray-900 transition-colors gap-1">
-                                            {c.label}
-                                            {sortKey === c.key ? (
-                                                sortDir === 'desc' ? <ArrowDown className="h-3 w-3 text-emerald-500" /> : <ArrowUp className="h-3 w-3 text-emerald-500" />
-                                            ) : (
-                                                <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-100 text-gray-300" />
-                                            )}
-                                        </button>
-                                    ) : (
-                                        c.label
-                                    )}
-                                </TableHead>
-                            ))}
+                                {activeColumns.map(c => (
+                                    <TableHead key={c.key} className={`text-[11px] font-bold text-gray-400 uppercase tracking-widest px-4 py-4 ${c.align === 'right' ? 'text-right' : c.align === 'center' ? 'text-center' : 'text-left'}`}>
+                                        {c.sortable ? (
+                                            <button onClick={() => toggleSort(c.key)} className="group inline-flex items-center hover:text-gray-900 transition-colors gap-1">
+                                                {c.label}
+                                                {sortKey === c.key ? (
+                                                    sortDir === 'desc' ? <ArrowDown className="h-3 w-3 text-emerald-500" /> : <ArrowUp className="h-3 w-3 text-emerald-500" />
+                                                ) : (
+                                                    <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-100 text-gray-300" />
+                                                )}
+                                            </button>
+                                        ) : (
+                                            c.label
+                                        )}
+                                    </TableHead>
+                                ))}
 
-                            {/* Indicators Placeholder (Status, Verified, Locked) */}
-                            {lifecycle && (
-                                <>
-                                    <TableHead className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-28 px-4 text-center">Status</TableHead>
-                                    <TableHead className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-16 px-4 text-center">Verified</TableHead>
-                                    <TableHead className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-16 px-4 text-center">Lock</TableHead>
-                                </>
-                            )}
+                                {/* Indicators Placeholder (Status, Verified, Locked) */}
+                                {lifecycle && (
+                                    <>
+                                        <TableHead className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-28 px-4 text-center">Status</TableHead>
+                                        <TableHead className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-16 px-4 text-center">Verified</TableHead>
+                                        <TableHead className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-16 px-4 text-center">Lock</TableHead>
+                                    </>
+                                )}
 
-                            {actions && <TableHead className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-24 px-4 text-right">Actions</TableHead>}
-                        </TableRow>
-                    </TableHeader>
-
-                    <TableBody>
-                        {loading ? (
-                            Array.from({ length: 5 }).map((_, i) => (
-                                <TableRow key={i} className="animate-pulse">
-                                    <TableCell colSpan={activeColumns.length + 5} className="h-12 bg-gray-50/50" />
-                                </TableRow>
-                            ))
-                        ) : paginatedData.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={activeColumns.length + (expandable ? 1 : 0) + (selection ? 1 : 0) + (lifecycle ? 3 : 0) + (actions ? 1 : 0)} className="h-32 text-center text-gray-400 text-sm">
-                                    No results found
-                                </TableCell>
+                                {actions && <TableHead className="text-[11px] font-bold text-gray-400 uppercase tracking-widest w-24 px-4 text-right">Actions</TableHead>}
                             </TableRow>
-                        ) : paginatedData.map(row => {
-                            const id = getRowId(row)
-                            const isExpanded = expandedRows.has(id)
-                            const isSelected = selection?.selectedIds.has(id)
+                        </TableHeader>
 
-                            return (
-                                <React.Fragment key={id}>
-                                    <TableRow className={`group cursor-pointer transition-colors border-b border-gray-50 ${isSelected ? 'bg-indigo-50/30' : 'hover:bg-gray-50/80'}`}>
-                                        {expandable && (
-                                            <TableCell className="px-4" onClick={() => toggleExpand(id)}>
-                                                {isExpanded ? <ChevronDown className="h-4 w-4 text-gray-400" /> : <ChevronRight className="h-4 w-4 text-gray-400" />}
-                                            </TableCell>
-                                        )}
+                        <TableBody>
+                            {loading ? (
+                                Array.from({ length: 5 }).map((_, i) => (
+                                    <TableRow key={i} className="animate-pulse">
+                                        <TableCell colSpan={activeColumns.length + 5} className="h-12 bg-gray-50/50" />
+                                    </TableRow>
+                                ))
+                            ) : paginatedData.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={activeColumns.length + (expandable ? 1 : 0) + (selection ? 1 : 0) + (lifecycle ? 3 : 0) + (actions ? 1 : 0)} className="h-32 text-center text-gray-400 text-sm">
+                                        No results found
+                                    </TableCell>
+                                </TableRow>
+                            ) : paginatedData.map(row => {
+                                const id = getRowId(row)
+                                const isExpanded = expandedRows.has(id)
+                                const isSelected = selection?.selectedIds.has(id)
 
-                                        {selection && (
-                                            <TableCell className="px-4">
-                                                <Checkbox
-                                                    checked={isSelected}
-                                                    onCheckedChange={(checked) => handleSelectRow(id, !!checked)}
-                                                    onClick={(e) => e.stopPropagation()}
-                                                />
-                                            </TableCell>
-                                        )}
-
-                                        {activeColumns.map(c => (
-                                            <TableCell key={c.key} className={`px-4 py-4 text-sm ${c.align === 'right' ? 'text-right font-mono' : c.align === 'center' ? 'text-center' : 'text-left'}`}>
-                                                {c.render ? c.render(row) : (row as any)[c.key]}
-                                            </TableCell>
-                                        ))}
-
-                                        {/* Lifecycle Indicators */}
-                                        {lifecycle && (
-                                            <>
-                                                <TableCell className="px-4 text-center">
-                                                    {lifecycle.getStatus && (() => {
-                                                        const s = lifecycle.getStatus(row)
-                                                        const colorMap: Record<string, string> = {
-                                                            default: 'bg-gray-100 text-gray-600',
-                                                            success: 'bg-emerald-100 text-emerald-700',
-                                                            warning: 'bg-amber-100 text-amber-700',
-                                                            danger: 'bg-rose-100 text-rose-700',
-                                                            info: 'bg-blue-100 text-blue-700'
-                                                        }
-                                                        return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${colorMap[s.variant]}`}>{s.label}</span>
-                                                    })()}
+                                return (
+                                    <React.Fragment key={id}>
+                                        <TableRow className={`group cursor-pointer transition-colors border-b border-gray-50 ${isSelected ? 'bg-indigo-50/30' : 'hover:bg-gray-50/80'}`}>
+                                            {(expandable || renderExpanded) && (
+                                                <TableCell className="px-4" onClick={() => toggleExpand(id)}>
+                                                    {isExpanded ? <ChevronDown className="h-4 w-4 text-gray-400" /> : <ChevronRight className="h-4 w-4 text-gray-400" />}
                                                 </TableCell>
-                                                <TableCell className="px-4 text-center">
-                                                    {lifecycle.getVerified?.(row) ? <CheckCircle2 className="h-4 w-4 text-emerald-500 mx-auto" /> : <div className="h-4 w-4 rounded-full border border-gray-200 mx-auto" />}
-                                                </TableCell>
-                                                <TableCell className="px-4 text-center">
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); lifecycle.onLockToggle?.(row) }}
-                                                        className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-                                                    >
-                                                        {lifecycle.getLocked?.(row) ? <Lock className="h-4 w-4 text-amber-500" /> : <Unlock className="h-4 w-4 text-gray-300" />}
-                                                    </button>
-                                                </TableCell>
-                                            </>
-                                        )}
+                                            )}
 
-                                        {/* Row Actions */}
-                                        {actions && (
-                                            <TableCell className="px-4 py-3 text-right">
-                                                <div className="flex items-center justify-end gap-0.5" onClick={e => e.stopPropagation()}>
-                                                    {(lifecycle?.onApprove || lifecycle?.onCancel) && (
+                                            {selection && (
+                                                <TableCell className="px-4">
+                                                    <Checkbox
+                                                        checked={isSelected}
+                                                        onCheckedChange={(checked) => handleSelectRow(id, !!checked)}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    />
+                                                </TableCell>
+                                            )}
+
+                                            {activeColumns.map(c => (
+                                                <TableCell key={c.key} className={`px-4 py-4 text-sm ${c.align === 'right' ? 'text-right font-mono' : c.align === 'center' ? 'text-center' : 'text-left'}`}>
+                                                    {c.render ? c.render(row) : (row as any)[c.key]}
+                                                </TableCell>
+                                            ))}
+
+                                            {/* Lifecycle Indicators */}
+                                            {lifecycle && (
+                                                <>
+                                                    <TableCell className="px-4 text-center">
+                                                        {lifecycle.getStatus && (() => {
+                                                            const s = lifecycle.getStatus(row)
+                                                            const colorMap: Record<string, string> = {
+                                                                default: 'bg-gray-100 text-gray-600',
+                                                                success: 'bg-emerald-100 text-emerald-700',
+                                                                warning: 'bg-amber-100 text-amber-700',
+                                                                danger: 'bg-rose-100 text-rose-700',
+                                                                info: 'bg-blue-100 text-blue-700'
+                                                            }
+                                                            return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${colorMap[s.variant]}`}>{s.label}</span>
+                                                        })()}
+                                                    </TableCell>
+                                                    <TableCell className="px-4 text-center">
+                                                        {lifecycle.getVerified?.(row) ? <CheckCircle2 className="h-4 w-4 text-emerald-500 mx-auto" /> : <div className="h-4 w-4 rounded-full border border-gray-200 mx-auto" />}
+                                                    </TableCell>
+                                                    <TableCell className="px-4 text-center">
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); lifecycle.onLockToggle?.(row) }}
+                                                            className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                                                        >
+                                                            {lifecycle.getLocked?.(row) ? <Lock className="h-4 w-4 text-amber-500" /> : <Unlock className="h-4 w-4 text-gray-300" />}
+                                                        </button>
+                                                    </TableCell>
+                                                </>
+                                            )}
+
+                                            {/* Row Actions */}
+                                            {actions && (
+                                                <TableCell className="px-4 py-3 text-right">
+                                                    <div className="flex items-center justify-end gap-0.5" onClick={e => e.stopPropagation()}>
+                                                        {(lifecycle?.onApprove || lifecycle?.onCancel) && (
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger asChild>
+                                                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-emerald-50 hover:text-emerald-600">
+                                                                        <Check className="h-4 w-4" />
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent align="end">
+                                                                    {lifecycle.onApprove && !lifecycle.getApproved?.(row) && !lifecycle.getCanceled?.(row) && (
+                                                                        <DropdownMenuItem onClick={() => lifecycle.onApprove?.(row)} className="text-emerald-600 font-semibold focus:text-emerald-600 focus:bg-emerald-50">
+                                                                            <CheckCircle2 className="mr-2 h-4 w-4" /> Approve
+                                                                        </DropdownMenuItem>
+                                                                    )}
+                                                                    {lifecycle.onCancel && !lifecycle.getCanceled?.(row) && (
+                                                                        <DropdownMenuItem onClick={() => lifecycle.onCancel?.(row)} className="text-rose-600 font-semibold focus:text-rose-600 focus:bg-rose-50">
+                                                                            <XCircle className="mr-2 h-4 w-4" /> Cancel
+                                                                        </DropdownMenuItem>
+                                                                    )}
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        )}
+
+                                                        {actions.onView && (
+                                                            <button onClick={() => actions.onView!(row)} className="p-1.5 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all">
+                                                                <Eye size={16} />
+                                                            </button>
+                                                        )}
+                                                        {actions.extra && actions.extra(row)}
+                                                        {actions.onEdit && (
+                                                            <button onClick={() => actions.onEdit!(row)} className="p-1.5 text-gray-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-all">
+                                                                <Pencil size={16} />
+                                                            </button>
+                                                        )}
                                                         <DropdownMenu>
                                                             <DropdownMenuTrigger asChild>
-                                                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-emerald-50 hover:text-emerald-600">
-                                                                    <Check className="h-4 w-4" />
-                                                                </Button>
+                                                                <button className="p-1.5 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all">
+                                                                    <MoreHorizontal size={16} />
+                                                                </button>
                                                             </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end">
-                                                                {lifecycle.onApprove && !lifecycle.getApproved?.(row) && !lifecycle.getCanceled?.(row) && (
-                                                                    <DropdownMenuItem onClick={() => lifecycle.onApprove?.(row)} className="text-emerald-600 font-semibold focus:text-emerald-600 focus:bg-emerald-50">
-                                                                        <CheckCircle2 className="mr-2 h-4 w-4" /> Approve
-                                                                    </DropdownMenuItem>
-                                                                )}
-                                                                {lifecycle.onCancel && !lifecycle.getCanceled?.(row) && (
-                                                                    <DropdownMenuItem onClick={() => lifecycle.onCancel?.(row)} className="text-rose-600 font-semibold focus:text-rose-600 focus:bg-rose-50">
-                                                                        <XCircle className="mr-2 h-4 w-4" /> Cancel
-                                                                    </DropdownMenuItem>
+                                                            <DropdownMenuContent align="end" className="w-40 p-1">
+                                                                <DropdownMenuItem className="text-xs font-medium">Download PDF</DropdownMenuItem>
+                                                                <DropdownMenuItem className="text-xs font-medium">Send Email</DropdownMenuItem>
+                                                                {actions.onDelete && (
+                                                                    <>
+                                                                        <DropdownMenuSeparator />
+                                                                        <DropdownMenuItem onClick={() => actions.onDelete!(row)} className="text-xs font-bold text-rose-500 hover:bg-rose-50 hover:text-rose-600">
+                                                                            <Trash2 size={14} className="mr-2" /> Delete
+                                                                        </DropdownMenuItem>
+                                                                    </>
                                                                 )}
                                                             </DropdownMenuContent>
                                                         </DropdownMenu>
-                                                    )}
-
-                                                    {actions.onView && (
-                                                        <button onClick={() => actions.onView!(row)} className="p-1.5 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all">
-                                                            <Eye size={16} />
-                                                        </button>
-                                                    )}
-                                                    {actions.extra && actions.extra(row)}
-                                                    {actions.onEdit && (
-                                                        <button onClick={() => actions.onEdit!(row)} className="p-1.5 text-gray-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-all">
-                                                            <Pencil size={16} />
-                                                        </button>
-                                                    )}
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <button className="p-1.5 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all">
-                                                                <MoreHorizontal size={16} />
-                                                            </button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end" className="w-40 p-1">
-                                                            <DropdownMenuItem className="text-xs font-medium">Download PDF</DropdownMenuItem>
-                                                            <DropdownMenuItem className="text-xs font-medium">Send Email</DropdownMenuItem>
-                                                            {actions.onDelete && (
-                                                                <>
-                                                                    <DropdownMenuSeparator />
-                                                                    <DropdownMenuItem onClick={() => actions.onDelete!(row)} className="text-xs font-bold text-rose-500 hover:bg-rose-50 hover:text-rose-600">
-                                                                        <Trash2 size={14} className="mr-2" /> Delete
-                                                                    </DropdownMenuItem>
-                                                                </>
-                                                            )}
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                </div>
-                                            </TableCell>
-                                        )}
-                                    </TableRow>
-
-                                    {/* Expandable Content (Details) */}
-                                    {expandable && isExpanded && (
-                                        <TableRow className="bg-emerald-50/20 border-l-2 border-emerald-400 hover:bg-emerald-50/20">
-                                            <TableCell colSpan={activeColumns.length + (selection ? 2 : 1) + (lifecycle ? 3 : 0) + (actions ? 1 : 0)} className="p-0">
-                                                <div className="p-5 overflow-hidden animate-in slide-in-from-top-2 duration-300">
-                                                    <div className="bg-white rounded-xl border border-emerald-100 shadow-sm overflow-hidden">
-                                                        <Table>
-                                                            <TableHeader className="bg-emerald-50/50">
-                                                                <TableRow className="border-b-0 hover:bg-transparent">
-                                                                    {expandable.columns.map(ec => (
-                                                                        <TableHead key={ec.key} className={`text-[10px] font-bold text-emerald-600 uppercase tracking-widest px-4 py-3 ${ec.align === 'right' ? 'text-right' : 'text-left'}`}>
-                                                                            {ec.label}
-                                                                        </TableHead>
-                                                                    ))}
-                                                                    {expandable.renderActions && <TableHead className="w-20"></TableHead>}
-                                                                </TableRow>
-                                                            </TableHeader>
-                                                            <TableBody>
-                                                                {expandable.getDetails(row).map((detail: any, di: number) => (
-                                                                    <TableRow key={di} className="hover:bg-emerald-50/30 border-b border-emerald-50 last:border-0">
-                                                                        {expandable.columns.map(ec => (
-                                                                            <TableCell key={ec.key} className={`px-4 py-3 text-xs ${ec.align === 'right' ? 'text-right font-mono' : 'text-left'}`}>
-                                                                                {ec.render ? ec.render(detail) : detail[ec.key]}
-                                                                            </TableCell>
-                                                                        ))}
-                                                                        {expandable.renderActions && (
-                                                                            <TableCell className="px-4 py-1 text-right">
-                                                                                {expandable.renderActions(detail, row)}
-                                                                            </TableCell>
-                                                                        )}
-                                                                    </TableRow>
-                                                                ))}
-                                                                {expandable.getDetails(row).length === 0 && (
-                                                                    <TableRow>
-                                                                        <TableCell colSpan={expandable.columns.length + 1} className="py-4 text-center text-xs text-emerald-400 font-medium">
-                                                                            No details available for this record
-                                                                        </TableCell>
-                                                                    </TableRow>
-                                                                )}
-                                                            </TableBody>
-                                                        </Table>
                                                     </div>
-                                                </div>
-                                            </TableCell>
+                                                </TableCell>
+                                            )}
                                         </TableRow>
-                                    )}
-                                </React.Fragment>
-                            )
-                        })}
-                    </TableBody>
-                </Table>
-            </div>
+
+                                        {/* Expandable Content (Details or Custom) */}
+                                        {(expandable || renderExpanded) && isExpanded && (
+                                            <TableRow className="bg-emerald-50/10 border-l-2 border-emerald-400 hover:bg-emerald-50/10">
+                                                <TableCell colSpan={activeColumns.length + (selection ? 2 : 1) + (lifecycle ? 3 : 0) + (actions ? 1 : 0)} className="p-0">
+                                                    {renderExpanded ? (
+                                                        renderExpanded(row)
+                                                    ) : expandable && (
+                                                        <div className="p-5 overflow-hidden animate-in slide-in-from-top-2 duration-300">
+                                                            <div className="bg-white rounded-xl border border-emerald-100 shadow-sm overflow-hidden">
+                                                                <Table>
+                                                                    <TableHeader className="bg-emerald-50/50">
+                                                                        <TableRow className="border-b-0 hover:bg-transparent">
+                                                                            {expandable.columns.map(ec => (
+                                                                                <TableHead key={ec.key} className={`text-[10px] font-bold text-emerald-600 uppercase tracking-widest px-4 py-3 ${ec.align === 'right' ? 'text-right' : 'text-left'}`}>
+                                                                                    {ec.label}
+                                                                                </TableHead>
+                                                                            ))}
+                                                                            {expandable.renderActions && <TableHead className="w-20"></TableHead>}
+                                                                        </TableRow>
+                                                                    </TableHeader>
+                                                                    <TableBody>
+                                                                        {expandable.getDetails(row).map((detail: any, di: number) => (
+                                                                            <TableRow key={di} className="hover:bg-emerald-50/30 border-b border-emerald-50 last:border-0">
+                                                                                {expandable.columns.map(ec => (
+                                                                                    <TableCell key={ec.key} className={`px-4 py-3 text-xs ${ec.align === 'right' ? 'text-right font-mono' : 'text-left'}`}>
+                                                                                        {ec.render ? ec.render(detail) : detail[ec.key]}
+                                                                                    </TableCell>
+                                                                                ))}
+                                                                                {expandable.renderActions && (
+                                                                                    <TableCell className="px-4 py-1 text-right">
+                                                                                        {expandable.renderActions(detail, row)}
+                                                                                    </TableCell>
+                                                                                )}
+                                                                            </TableRow>
+                                                                        ))}
+                                                                        {expandable.getDetails(row).length === 0 && (
+                                                                            <TableRow>
+                                                                                <TableCell colSpan={expandable.columns.length + 1} className="py-4 text-center text-xs text-emerald-400 font-medium">
+                                                                                    No details available for this record
+                                                                                </TableCell>
+                                                                            </TableRow>
+                                                                        )}
+                                                                    </TableBody>
+                                                                </Table>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </React.Fragment>
+                                )
+                            })}
+                        </TableBody>
+                    </Table>
+                </div>
+            ) : (
+                <div className={`px-5 py-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-500 ${gridClassName}`}>
+                    {loading ? (
+                        Array.from({ length: 6 }).map((_, i) => (
+                            <div key={i} className="h-64 bg-gray-50 rounded-[2.5rem] animate-pulse" />
+                        ))
+                    ) : paginatedData.length === 0 ? (
+                        <div className="col-span-full py-32 text-center text-gray-400">
+                            No results found
+                        </div>
+                    ) : paginatedData.map(row => (
+                        <div key={getRowId(row)} className="relative h-full">
+                            {selection && (
+                                <div className="absolute top-6 right-6 z-20">
+                                    <Checkbox
+                                        checked={selection.selectedIds.has(getRowId(row))}
+                                        onCheckedChange={(checked) => handleSelectRow(getRowId(row), !!checked)}
+                                    />
+                                </div>
+                            )}
+                            {renderCard ? renderCard(row) : (
+                                <div className="p-6 bg-white rounded-[2rem] border border-gray-100 shadow-sm h-full">
+                                    <pre className="text-[10px] overflow-auto">{JSON.stringify(row, null, 2)}</pre>
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            )}
 
             {/* ─── Pagination Section ────────────── */}
             <div className="px-5 py-3 border-t border-gray-50 flex flex-col sm:flex-row items-center justify-between gap-4">

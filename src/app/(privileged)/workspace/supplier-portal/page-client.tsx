@@ -58,39 +58,74 @@ export default function SupplierPortalAdminPage() {
                 </div>
             )}
 
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-500 to-orange-700 flex items-center justify-center shadow-lg shadow-orange-900/40">
-                        <Truck size={22} className="text-white" />
+            {/* Header: Global Sourcing Intelligence */}
+            <header className="flex justify-between items-end">
+                <div>
+                    <div className="flex items-center gap-3 mb-2">
+                        <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 font-black text-[10px] uppercase tracking-widest px-3 py-1">
+                            Supply Chain: Synchronized
+                        </Badge>
+                        <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest flex items-center gap-1">
+                            <Activity size={12} /> Sync: Direct
+                        </span>
                     </div>
-                    <div>
-                        <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
-                                <Truck size={28} className="text-white" />
-                            </div>
-                            Supplier <span className="text-emerald-600">Portal</span>
-                        </h1>
-                        <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Vendor Self-Service</p>
-                    </div>
+                    <h1 className="text-5xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <div className="w-16 h-16 rounded-[1.8rem] bg-emerald-600 flex items-center justify-center shadow-2xl shadow-emerald-200">
+                            <Truck size={32} className="text-white fill-white" />
+                        </div>
+                        Supplier <span className="text-emerald-600">Ops</span>
+                    </h1>
                 </div>
-                <button onClick={load} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm">
-                    <RefreshCw size={14} />
-                    Refresh
-                </button>
-            </div>
+                <div className="flex gap-3">
+                    <button onClick={load} className="h-12 px-6 rounded-2xl bg-white border border-gray-100 shadow-sm font-bold text-gray-600 flex items-center gap-2 hover:bg-gray-50 transition-all">
+                        <RefreshCw size={18} /> Refresh Hub
+                    </button>
+                    <button className="h-12 px-6 rounded-2xl bg-emerald-600 text-white font-bold flex items-center gap-2 hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200">
+                        Vendor Audit <ChevronRight size={18} />
+                    </button>
+                </div>
+            </header>
 
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-4">
-                {[
-                    { label: 'Proforma Value', value: `$${totalProformaValue.toFixed(2)}`, icon: DollarSign, color: 'rose' },
-                    { label: 'Pending Price Requests', value: pendingPrice.length, icon: Tag, color: pendingPrice.length > 0 ? 'amber' : 'gray' },
-                    { label: 'Total Proformas', value: proformas.length, icon: FileText, color: 'orange' },
-                ].map(s => (
-                    <div key={s.label} className="bg-[#0F1729] rounded-2xl border border-gray-800 p-5">
-                        <div className="flex items-center gap-2 text-gray-400 text-xs mb-2"><s.icon size={14} />{s.label}</div>
-                        <div className={`text-2xl font-bold text-${s.color}-400`}>{s.value}</div>
+            {/* Premium KPI Node Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-white p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
+                            <DollarSign size={24} />
+                        </div>
+                        <Badge variant="outline" className="text-rose-500 bg-rose-50 border-0 font-black text-[10px]">
+                            PROFORMA
+                        </Badge>
                     </div>
-                ))}
+                    <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Exposure Value</p>
+                    <h2 className="text-3xl font-black text-gray-900">${totalProformaValue.toFixed(2)}</h2>
+                </div>
+
+                <div className="bg-amber-900 p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-white">
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="w-12 h-12 rounded-2xl bg-amber-800/50 text-amber-100 flex items-center justify-center">
+                            <Tag size={24} />
+                        </div>
+                        <Badge variant="outline" className="text-amber-200 bg-amber-800/30 border-0 font-black text-[10px]">
+                            {pendingPrice.length} PENDING
+                        </Badge>
+                    </div>
+                    <p className="text-[11px] font-black text-amber-300 uppercase tracking-widest leading-none mb-1">Price Adjustments</p>
+                    <h2 className="text-3xl font-black text-white">{pendingPrice.length} <span className="text-xs text-amber-200">REQUESTS</span></h2>
+                </div>
+
+                <div className="bg-white p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                            <FileText size={24} />
+                        </div>
+                        <Badge variant="outline" className="text-emerald-500 bg-emerald-50 border-0 font-black text-[10px]">
+                            REGISTRY
+                        </Badge>
+                    </div>
+                    <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Total Proformas</p>
+                    <h2 className="text-3xl font-black text-gray-900">{proformas.length}</h2>
+                </div>
             </div>
 
             {/* Tabs */}
@@ -114,27 +149,39 @@ export default function SupplierPortalAdminPage() {
                                 const pct = ((Number(r.requested_price) - Number(r.current_price)) / Number(r.current_price || 1)) * 100
                                 const isIncrease = pct > 0
                                 return (
-                                    <div key={r.id} className="flex items-start gap-4 px-5 py-4 rounded-xl bg-[#0F1729] border border-gray-800">
-                                        <Package size={16} className="text-rose-400 shrink-0 mt-0.5" />
+                                    <div key={r.id} className="flex items-start gap-6 p-6 rounded-[2.5rem] bg-white shadow-sm border border-slate-50 transition-all hover:shadow-md group">
+                                        <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                                            <Package size={24} />
+                                        </div>
                                         <div className="flex-1">
-                                            <div className="flex items-center gap-2 flex-wrap">
-                                                <span className="font-medium text-sm text-white">{r.product?.name || r.product_name || '—'}</span>
-                                                {r.product?.sku && <span className="font-mono text-xs text-gray-600">{r.product.sku}</span>}
-                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${STATUS_BADGE[r.status] || 'bg-gray-800 text-gray-400 border-gray-700'}`}>{r.status}</span>
+                                            <div className="flex items-center gap-3 mb-1">
+                                                <span className="font-black text-sm text-gray-900 uppercase italic">{r.product?.name || r.product_name || '—'}</span>
+                                                <Badge className={`${STATUS_BADGE[r.status] || 'bg-gray-100 text-gray-400'} border-0 text-[8px] font-black px-3 py-0.5 rounded-full uppercase tracking-widest`}>{r.status}</Badge>
                                             </div>
-                                            <p className="text-xs text-gray-500 mt-0.5">{r.supplier?.name || r.supplier_name || '—'}{r.reason ? ` · ${r.reason}` : ''}</p>
-                                            <div className="flex items-center gap-3 mt-1.5">
-                                                <span className="text-xs text-gray-400">Current: <span className="text-white font-mono">${Number(r.current_price).toFixed(2)}</span></span>
-                                                <span className="text-gray-700">→</span>
-                                                <span className="text-xs text-gray-400">Requested: <span className="text-white font-mono">${Number(r.requested_price).toFixed(2)}</span></span>
-                                                <span className={`text-xs font-bold ${isIncrease ? 'text-red-400' : 'text-emerald-400'}`}>
-                                                    {isIncrease ? '▲' : '▼'} {Math.abs(pct).toFixed(1)}%
-                                                </span>
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">{r.supplier?.name || r.supplier_name || '—'}</span>
+                                                {r.product?.sku && <span className="text-[10px] text-gray-300">·</span>}
+                                                {r.product?.sku && <span className="text-[10px] font-bold text-gray-400 font-mono italic">{r.product.sku}</span>}
+                                            </div>
+                                            <div className="flex items-center gap-6 p-4 bg-slate-50 rounded-2xl border border-slate-100/50">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Current</span>
+                                                    <span className="text-sm font-black text-gray-500 line-through">${Number(r.current_price).toFixed(2)}</span>
+                                                </div>
+                                                <ChevronRight size={16} className="text-gray-300 mt-4" />
+                                                <div className="flex flex-col">
+                                                    <span className="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-1">Requested</span>
+                                                    <span className="text-xl font-black text-gray-900">${Number(r.requested_price).toFixed(2)}</span>
+                                                </div>
+                                                <div className={`ml-auto flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black ${isIncrease ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                                                    {isIncrease ? <TrendingUp size={12} /> : <TrendingUp size={12} className="rotate-180" />}
+                                                    {Math.abs(pct).toFixed(1)}%
+                                                </div>
                                             </div>
                                         </div>
                                         {r.status === 'PENDING' && (
-                                            <button onClick={() => handleApprove(r.id)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-semibold shrink-0">
-                                                <CheckCircle size={11} />Approve
+                                            <button onClick={() => handleApprove(r.id)} className="h-12 px-6 rounded-2xl bg-emerald-600 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all self-center">
+                                                Authorize
                                             </button>
                                         )}
                                     </div>

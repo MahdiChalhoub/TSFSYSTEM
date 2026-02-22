@@ -3,7 +3,7 @@
 import { AdminEntity, AdminCountryHierarchyItem } from "@/types/erp"
 import { useState } from 'react';
 import { Plus, Search, Filter, X, Edit2, ChevronDown, ChevronRight, LayoutGrid, LayoutList, Factory, Package, Save, Loader2 } from "lucide-react";
-import { getCountryHierarchy, createCountry, updateCountry, CountryState } from '@/app/actions/countries';
+import { getCountryHierarchy, createCountry, updateCountry, CountryState } from '@/app/actions/inventory/countries';
 import { useActionState, useEffect } from 'react';
 
 type CountryManagerProps = {

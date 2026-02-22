@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createProductGroupWithVariants, updateProductGroup, VariantInput } from '@/app/actions/product-groups';
-import { getBrandsByCategory } from '@/app/actions/brands';
+import { getBrandsByCategory } from '@/app/actions/inventory/brands';
 import { Plus, Trash2, Save, Loader2, Globe, Box, Copy } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';

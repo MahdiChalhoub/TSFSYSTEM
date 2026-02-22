@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { getInvoices } from '@/app/actions/finance/invoices'
 import { submitEInvoice, getEInvoiceStatus, getEInvoiceQR } from '@/app/actions/finance/einvoice'
-import { FileCheck, Send, QrCode, RefreshCw, CheckCircle, XCircle, Clock, Search, ChevronRight, Shield , Zap } from 'lucide-react'
+import { FileCheck, Send, QrCode, RefreshCw, CheckCircle, XCircle, Clock, Search, ChevronRight, Shield, Zap } from 'lucide-react'
 
 type Invoice = {
     id: string | number
@@ -123,104 +123,122 @@ export default function EInvoicingPage() {
                 </div>
             )}
 
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center shadow-lg shadow-purple-900/40">
-                        <FileCheck size={22} className="text-white" />
+            {/* Header: Regulatory Intelligence Mode */}
+            <header className="flex justify-between items-end">
+                <div>
+                    <div className="flex items-center gap-3 mb-2">
+                        <Badge className="bg-indigo-900/50 text-indigo-300 border-indigo-700/50 font-black text-[10px] uppercase tracking-widest px-3 py-1">
+                            Regulatory Sync: Active
+                        </Badge>
+                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1">
+                            <Activity size={12} /> ZATCA Phase 2 (Clearance)
+                        </span>
                     </div>
-                    <div>
-                        <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
-                                <Zap size={28} className="text-white" />
-                            </div>
-                            E- <span className="text-indigo-600">Invoicing</span>
-                        </h1>
-                        <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">ZATCA & FNE Compliance</p>
-                    </div>
+                    <h1 className="text-5xl font-black tracking-tighter text-white flex items-center gap-4">
+                        <div className="w-16 h-16 rounded-[1.8rem] bg-indigo-600 flex items-center justify-center shadow-2xl shadow-indigo-900/20">
+                            <ShieldCheck size={32} className="text-white fill-white" />
+                        </div>
+                        Compliance <span className="text-indigo-400">Vault</span>
+                    </h1>
                 </div>
-                <button onClick={loadInvoices} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm transition-colors">
-                    <RefreshCw size={14} />
-                    Refresh
-                </button>
-            </div>
+                <div className="flex gap-3">
+                    <button onClick={loadInvoices} className="h-12 px-6 rounded-2xl bg-[#0F1729] border border-gray-800 font-bold text-gray-400 flex items-center gap-2 hover:bg-gray-800 transition-all">
+                        <RefreshCw size={18} /> Sync Nodes
+                    </button>
+                    <button className="h-12 px-6 rounded-2xl bg-indigo-600 text-white font-bold flex items-center gap-2 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-900/20">
+                        Audit Report <ChevronRight size={18} />
+                    </button>
+                </div>
+            </header>
 
             {/* Compliance badges */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                    { label: 'ZATCA Phase 1', country: '🇸🇦 Saudi Arabia', status: 'Ready', color: 'emerald' },
-                    { label: 'ZATCA Phase 2', country: '🇸🇦 Clearance', status: 'Ready', color: 'emerald' },
-                    { label: 'FNE-CI v1.1', country: '🇨🇮 Côte d\'Ivoire', status: 'Ready', color: 'emerald' },
-                    { label: 'UBL 2.1 XML', country: '🌍 Standard', status: 'Enabled', color: 'blue' },
+                    { label: 'ZATCA P2', country: '🇸🇦 Kingdom of Saudi Arabia', status: 'READY', color: 'indigo' },
+                    { label: 'FNE-CI', country: '🇨🇮 Côte d\'Ivoire (CI)', status: 'ACTIVE', color: 'emerald' },
+                    { label: 'UBL 2.1', country: '🌍 Universal Standard', status: 'ENABLED', color: 'violet' },
+                    { label: 'RSA-2048', country: '🔐 Crypto Signing', status: 'SECURE', color: 'amber' },
                 ].map((b) => (
-                    <div key={b.label} className="bg-[#0F1729] rounded-2xl p-4 border border-gray-800 flex items-center gap-3">
-                        <Shield size={18} className={`text-${b.color}-400 shrink-0`} />
-                        <div>
-                            <div className="text-xs font-semibold text-white">{b.label}</div>
-                            <div className="text-xs text-gray-500">{b.country}</div>
+                    <div key={b.label} className="bg-[#0F1729]/80 backdrop-blur-md rounded-[2rem] p-5 border border-gray-800/50 flex flex-col gap-1 hover:shadow-xl hover:shadow-indigo-900/5 transition-all">
+                        <div className="flex justify-between items-start mb-2">
+                            <div className={`w-8 h-8 rounded-xl bg-${b.color}-900/40 text-${b.color}-400 flex items-center justify-center`}>
+                                <ShieldCheck size={18} />
+                            </div>
+                            <span className={`px-2 py-0.5 rounded-full text-[8px] font-black bg-${b.color}-900/40 text-${b.color}-400 border border-${b.color}-800/50 tracking-widest`}>{b.status}</span>
                         </div>
-                        <span className={`ml-auto px-2 py-0.5 rounded-full text-[10px] font-bold bg-${b.color}-900/40 text-${b.color}-400 border border-${b.color}-800`}>{b.status}</span>
+                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{b.label}</div>
+                        <div className="text-[9px] font-bold text-gray-500 uppercase tracking-tighter line-clamp-1">{b.country}</div>
                     </div>
                 ))}
             </div>
 
             <div className="flex gap-6 flex-1 min-h-0">
-                {/* Invoice list */}
-                <div className="w-1/2 flex flex-col gap-3">
-                    <div className="relative">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                {/* Invoice list: Registry Mode */}
+                <div className="w-1/2 flex flex-col gap-4">
+                    <div className="relative group">
+                        <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-indigo-500 transition-colors" />
                         <input
                             value={search}
                             onChange={e => setSearch(e.target.value)}
-                            placeholder="Search invoices..."
-                            className="w-full bg-[#0F1729] border border-gray-800 rounded-xl pl-9 pr-4 py-2.5 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-violet-600"
+                            placeholder="Search Registry..."
+                            className="w-full bg-[#0F1729]/50 border border-gray-800 focus:border-indigo-500/50 rounded-2xl pl-12 pr-4 py-3 text-xs font-black uppercase tracking-widest text-gray-200 placeholder-gray-600 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 transition-all"
                         />
                     </div>
-                    <div className="flex-1 flex flex-col gap-2 overflow-y-auto max-h-[60vh]">
+                    <div className="flex-1 flex flex-col gap-3 overflow-y-auto max-h-[65vh] custom-scrollbar pr-1">
                         {loading ? (
                             Array.from({ length: 5 }).map((_, i) => (
-                                <div key={i} className="h-16 bg-gray-800/50 rounded-xl animate-pulse" />
+                                <div key={i} className="h-20 bg-gray-800/30 rounded-[1.5rem] animate-pulse" />
                             ))
                         ) : filtered.length === 0 ? (
-                            <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">No invoices found</div>
+                            <div className="flex-1 flex flex-col items-center justify-center text-gray-600 gap-4 opacity-50">
+                                <Activity size={48} />
+                                <p className="text-[10px] font-black uppercase tracking-widest">No matching records</p>
+                            </div>
                         ) : filtered.map(inv => (
                             <button
                                 key={inv.id}
                                 onClick={() => openDetail(inv)}
-                                className={`w-full text-left px-4 py-3 rounded-xl border transition-all flex items-center gap-3 ${selected?.id === inv.id ? 'bg-violet-900/30 border-violet-700' : 'bg-[#0F1729] border-gray-800 hover:border-gray-700'}`}
+                                className={`w-full text-left p-5 rounded-[2rem] border transition-all flex items-center gap-4 group ${selected?.id === inv.id ? 'bg-indigo-600 border-indigo-500 shadow-xl shadow-indigo-900/20' : 'bg-[#0F1729]/80 border-gray-800/50 hover:border-gray-700 hover:bg-[#161F33]'}`}
                             >
                                 <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-mono text-sm text-white font-medium">{inv.invoice_number || `INV-${inv.id}`}</span>
+                                    <div className="flex items-center gap-3 mb-1">
+                                        <span className={`font-black text-xs tracking-tight ${selected?.id === inv.id ? 'text-white' : 'text-gray-200'}`}>{inv.invoice_number || `INV-${inv.id}`}</span>
                                         {statusBadge(inv.fne_status)}
                                     </div>
-                                    <div className="text-xs text-gray-400 mt-0.5 truncate">{inv.contact_name}</div>
+                                    <div className={`text-[10px] font-bold uppercase tracking-widest truncate ${selected?.id === inv.id ? 'text-indigo-200' : 'text-gray-500'}`}>{inv.contact_name}</div>
                                 </div>
                                 <div className="text-right shrink-0">
-                                    <div className="text-sm font-semibold text-white">${Number(inv.total_amount || 0).toFixed(2)}</div>
-                                    <div className="text-xs text-gray-500">{inv.issue_date}</div>
+                                    <div className={`text-base font-black ${selected?.id === inv.id ? 'text-white' : 'text-indigo-400'}`}>${Number(inv.total_amount || 0).toLocaleString()}</div>
+                                    <div className={`text-[9px] font-black uppercase tracking-tighter ${selected?.id === inv.id ? 'text-indigo-300' : 'text-gray-600'}`}>{inv.issue_date}</div>
                                 </div>
-                                <ChevronRight size={14} className="text-gray-600 shrink-0" />
+                                <ChevronRight size={16} className={`${selected?.id === inv.id ? 'text-white' : 'text-gray-700'} group-hover:translate-x-1 transition-transform`} />
                             </button>
                         ))}
                     </div>
                 </div>
 
-                {/* Detail panel */}
-                <div className="w-1/2 bg-[#0F1729] rounded-2xl border border-gray-800 p-6 flex flex-col gap-5">
+                {/* Detail panel: Audit Mode */}
+                <div className="w-1/2 bg-[#0F1729]/50 backdrop-blur-xl rounded-[2.5rem] border border-gray-800/50 p-8 flex flex-col gap-6 shadow-2xl relative overflow-hidden">
                     {!selected ? (
-                        <div className="flex-1 flex flex-col items-center justify-center text-gray-500 gap-3">
-                            <FileCheck size={48} className="opacity-20" />
-                            <p className="text-sm">Select an invoice to view e-invoicing details</p>
+                        <div className="flex-1 flex flex-col items-center justify-center text-gray-700 gap-6 opacity-40">
+                            <ShieldCheck size={80} strokeWidth={1} />
+                            <div className="text-center">
+                                <p className="text-xs font-black uppercase tracking-[0.3em] mb-2">Registry Standby</p>
+                                <p className="text-[10px] font-bold uppercase tracking-widest">Select a record to initialize audit</p>
+                            </div>
                         </div>
                     ) : (
                         <>
-                            <div className="flex items-start justify-between">
+                            <div className="flex items-start justify-between pb-6 border-b border-gray-800/50">
                                 <div>
-                                    <h2 className="text-lg font-bold text-white">{selected.invoice_number || `INV-${selected.id}`}</h2>
-                                    <p className="text-sm text-gray-400">{selected.contact_name} · {selected.issue_date}</p>
+                                    <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Current Subject</p>
+                                    <h2 className="text-2xl font-black text-white tracking-tighter uppercase italic">{selected.invoice_number || `INV-${selected.id}`}</h2>
+                                    <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mt-1">{selected.contact_name} · {selected.issue_date}</p>
                                 </div>
-                                <span className="text-xl font-bold text-white">${Number(selected.total_amount || 0).toFixed(2)}</span>
+                                <div className="text-right">
+                                    <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Settlement</p>
+                                    <span className="text-3xl font-black text-white tracking-tighter">${Number(selected.total_amount || 0).toLocaleString()}</span>
+                                </div>
                             </div>
 
                             {detail && (
@@ -258,27 +276,26 @@ export default function EInvoicingPage() {
                                 </div>
                             )}
 
-                            <div className="flex gap-3 mt-auto">
+                            <div className="flex gap-4 mt-auto">
                                 <button
                                     onClick={handleSubmit}
                                     disabled={submitting}
-                                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-colors disabled:opacity-50"
+                                    className="flex-1 h-14 flex items-center justify-center gap-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-indigo-900/40 disabled:opacity-50"
                                 >
-                                    {submitting ? <RefreshCw size={14} className="animate-spin" /> : <Send size={14} />}
-                                    {submitting ? 'Submitting...' : 'Submit for Certification'}
+                                    {submitting ? <RefreshCw size={18} className="animate-spin" /> : <Send size={18} />}
+                                    {submitting ? 'Certification in Progress' : 'Authorize Certification'}
                                 </button>
                                 <button
                                     onClick={handleQR}
-                                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm transition-colors"
+                                    className="h-14 px-6 rounded-2xl bg-gray-800 hover:bg-gray-700 text-gray-300 transition-all flex items-center justify-center"
                                 >
-                                    <QrCode size={14} />
-                                    QR Code
+                                    <QrCode size={20} />
                                 </button>
                                 <button
                                     onClick={() => openDetail(selected)}
-                                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm transition-colors"
+                                    className="h-14 px-6 rounded-2xl bg-gray-800 hover:bg-gray-700 text-gray-300 transition-all flex items-center justify-center"
                                 >
-                                    <RefreshCw size={14} />
+                                    <RefreshCw size={20} />
                                 </button>
                             </div>
                         </>

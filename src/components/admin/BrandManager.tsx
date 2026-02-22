@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Plus, Search, Globe, Award, Edit2, ChevronDown, ChevronRight, Layers, Package, Filter, X, LayoutGrid, LayoutList } from "lucide-react";
 import { BrandFormModal } from './BrandFormModal';
-import { getBrandHierarchy } from '@/app/actions/brands';
+import { getBrandHierarchy } from '@/app/actions/inventory/brands';
 
 type BrandManagerProps = {
     brands: Record<string, any>[]; // using any for speed, ideally typed

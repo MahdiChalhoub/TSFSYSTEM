@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
-import { createBrand, updateBrand, BrandState } from '@/app/actions/brands';
+import { createBrand, updateBrand, BrandState } from '@/app/actions/inventory/brands';
 import { X, Save, Loader2, Globe } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { CategoryTreeSelector } from './CategoryTreeSelector';
