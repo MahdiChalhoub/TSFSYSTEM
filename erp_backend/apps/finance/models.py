@@ -614,4 +614,4 @@ class TaxGroup(TenantModel):
 # Import models from sub-files so Django discovers them for migrations
 from apps.finance.payment_models import Payment, CustomerBalance, SupplierBalance  # noqa: E402, F401
 from apps.finance.invoice_models import Invoice, InvoiceLine  # noqa: E402, F401
-
+from apps.finance.zatca_config import ZATCAConfig  # noqa: E402, F401

@@ -192,6 +192,24 @@ class Invoice(TenantModel):
     fne_error = models.TextField(null=True, blank=True)
     fne_raw_response = models.JSONField(null=True, blank=True)
 
+    # ── ZATCA Phase 2: Hash Chain & Signed XML ───────────────────────────
+    invoice_hash = models.CharField(
+        max_length=64, null=True, blank=True,
+        help_text='SHA-256 hash of this invoice for chain integrity'
+    )
+    previous_invoice_hash = models.CharField(
+        max_length=64, null=True, blank=True,
+        help_text='Hash of the preceding invoice (chain link)'
+    )
+    zatca_signed_xml = models.TextField(
+        null=True, blank=True,
+        help_text='Digitally signed UBL 2.1 XML for ZATCA submission'
+    )
+    zatca_clearance_id = models.CharField(
+        max_length=255, null=True, blank=True,
+        help_text='ZATCA clearance/reporting response ID'
+    )
+
     # ── GL / Posting ─────────────────────────────────────────────────────────
     journal_entry = models.ForeignKey(
         'finance.JournalEntry', on_delete=models.SET_NULL, null=True, blank=True,

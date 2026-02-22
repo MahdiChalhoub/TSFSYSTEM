@@ -309,6 +309,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
             'total_in_functional_currency', 'paid_at',
             'fne_status', 'fne_reference', 'fne_token', 'fne_error', 'fne_raw_response',
             'previous_invoice_hash', 'invoice_hash',
+            'zatca_signed_xml', 'zatca_clearance_id',
         ]
 
     def get_line_count(self, obj):
@@ -323,7 +324,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
     def get_zatca_qr_code_data(self, obj):
         """Generate ZATCA TLV QR code data if applicable."""
         try:
-            if obj.invoice_hash or obj.fne_status:
+            if obj.invoice_hash or (obj.fne_status and obj.fne_status != 'NONE'):
                 from apps.finance.einvoicing_service import ZATCAService
                 service = ZATCAService(str(obj.organization_id))
                 return service.generate_qr_code_data(obj)

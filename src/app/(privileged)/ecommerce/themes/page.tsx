@@ -1,6 +1,7 @@
 import { getCurrentPortalConfig } from '@/app/actions/client-portal';
 import ThemeSelector from '@/app/(privileged)/workspace/portal-config/ThemeSelector';
 import StoreTypePicker from './StoreTypePicker';
+import { Palette } from 'lucide-react';
 
 export default async function EcommerceThemesPage() {
     let configId = '';
@@ -19,19 +20,25 @@ export default async function EcommerceThemesPage() {
     }
 
     return (
-        <div style={{ padding: '2rem' }}>
-            <div style={{ marginBottom: '2rem' }}>
-                <h1 style={{ fontSize: '1.75rem', fontWeight: 700, margin: 0 }}>Theme Manager</h1>
-                <p style={{ color: '#64748b', marginTop: '0.25rem' }}>Choose the type of storefront and the visual theme for your customers.</p>
-            </div>
+        <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
+            <header>
+                <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-[1.5rem] bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-200">
+                        <Palette size={28} className="text-white" />
+                    </div>
+                    Theme <span className="text-violet-600">Manager</span>
+                </h1>
+                <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Storefront Type & Visual Identity</p>
+            </header>
 
             {/* Step 1: Store Type */}
             <StoreTypePicker configId={configId} currentType={currentType} />
 
             {/* Step 2: Visual Theme */}
-            <div style={{ marginTop: '2rem' }}>
+            <div className="mt-8">
                 <ThemeSelector configId={configId} currentTheme={currentTheme} />
             </div>
         </div>
     );
 }
+

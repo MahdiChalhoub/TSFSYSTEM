@@ -1741,7 +1741,11 @@ class EInvoiceViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['post'], url_path='submit/(?P<invoice_id>[^/.]+)')
     def submit(self, request, invoice_id=None):
-        """Manually submit an invoice for e-invoicing certification."""
+        """
+        Submit an invoice for e-invoicing certification.
+        Auto-detects ZATCA (via ZATCAConfig) or FNE (via country_code).
+        Supports ?provider=zatca|fne to force a specific provider.
+        """
         from apps.finance.invoice_models import Invoice
         from apps.finance.einvoicing_service import ZATCAService, FNEService
         from erp.middleware import get_current_tenant_id
@@ -1753,17 +1757,30 @@ class EInvoiceViewSet(viewsets.ViewSet):
         except Invoice.DoesNotExist:
             return Response({'error': 'Invoice not found'}, status=404)
 
-        org = invoice.organization
-        country_code = getattr(org, 'country_code', None) or org.settings.get('country_code', '')
+        provider = request.query_params.get('provider', '').lower()
+        clearance = request.data.get('clearance', True)
 
-        if country_code == 'SA':
-            service = ZATCAService(str(org.id))
-            result = service.submit_for_clearance(invoice)
-        elif country_code in ('CI', 'CIV'):
-            service = FNEService(str(org.id))
+        # Auto-detect provider
+        if not provider:
+            from apps.finance.zatca_config import ZATCAConfig
+            if ZATCAConfig.objects.filter(organization_id=org_id, is_active=True).exists():
+                provider = 'zatca'
+            else:
+                org = invoice.organization
+                country_code = getattr(org, 'country_code', None) or org.settings.get('country_code', '')
+                if country_code in ('LB', 'LBN', 'CI', 'CIV'):
+                    provider = 'fne'
+
+        if provider == 'zatca':
+            service = ZATCAService(str(org_id))
+            result = service.submit_for_clearance(invoice, clearance=clearance)
+        elif provider == 'fne':
+            service = FNEService(str(org_id))
             result = service.submit_for_certification(invoice)
         else:
-            return Response({'error': f'E-invoicing not configured for country: {country_code}'}, status=400)
+            return Response({
+                'error': 'E-invoicing not configured. Create a ZATCAConfig or set country_code in org settings.'
+            }, status=400)
 
         return Response(result)
 
@@ -1787,6 +1804,7 @@ class EInvoiceViewSet(viewsets.ViewSet):
             'fne_error': invoice.fne_error,
             'invoice_hash': invoice.invoice_hash,
             'previous_invoice_hash': invoice.previous_invoice_hash,
+            'zatca_clearance_id': invoice.zatca_clearance_id,
         })
 
     @action(detail=False, methods=['get'], url_path='qr/(?P<invoice_id>[^/.]+)')
@@ -1808,3 +1826,4 @@ class EInvoiceViewSet(viewsets.ViewSet):
             return Response({'qr_data': qr_data})
         except Exception as e:
             return Response({'error': str(e)}, status=500)
+

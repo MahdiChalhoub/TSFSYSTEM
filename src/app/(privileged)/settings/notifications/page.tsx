@@ -86,14 +86,17 @@ export default function NotificationPreferencesPage() {
     return (
         <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
             {/* Header */}
-            <div>
-                <h1 className="text-4xl font-black text-gray-900 tracking-tighter">
+            <header>
+                <h1 className="text-4xl font-black text-gray-900 tracking-tighter flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-[1.5rem] bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-200">
+                        <Bell size={28} className="text-white" />
+                    </div>
                     Notification <span className="text-violet-500">Preferences</span>
                 </h1>
-                <p className="text-sm text-gray-500 mt-1">
-                    Control how and when you receive notifications across channels
+                <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">
+                    Channel Routing & Delivery Controls
                 </p>
-            </div>
+            </header>
 
             {/* Preferences Grid */}
             <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
@@ -137,8 +140,8 @@ export default function NotificationPreferencesPage() {
                                                 onClick={() => handleToggle(ntype, channel, isEnabled)}
                                                 disabled={isPending}
                                                 className={`w-12 h-7 rounded-full transition-all relative ${isEnabled
-                                                        ? 'bg-violet-500 shadow-inner shadow-violet-600'
-                                                        : 'bg-gray-200'
+                                                    ? 'bg-violet-500 shadow-inner shadow-violet-600'
+                                                    : 'bg-gray-200'
                                                     }`}
                                             >
                                                 <div className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-all ${isEnabled ? 'left-6' : 'left-1'
@@ -175,10 +178,10 @@ export default function NotificationPreferencesPage() {
                         log.map((entry: any) => (
                             <div key={entry.id} className="p-4 px-6 flex items-center gap-4 hover:bg-gray-50/50 transition-colors">
                                 <div className={`p-2 rounded-lg ${entry.status === 'SENT' || entry.status === 'DELIVERED'
-                                        ? 'bg-emerald-50 text-emerald-500'
-                                        : entry.status === 'FAILED'
-                                            ? 'bg-red-50 text-red-500'
-                                            : 'bg-gray-50 text-gray-400'
+                                    ? 'bg-emerald-50 text-emerald-500'
+                                    : entry.status === 'FAILED'
+                                        ? 'bg-red-50 text-red-500'
+                                        : 'bg-gray-50 text-gray-400'
                                     }`}>
                                     {entry.channel === 'EMAIL' ? <Mail size={14} /> : <Bell size={14} />}
                                 </div>
@@ -189,10 +192,10 @@ export default function NotificationPreferencesPage() {
                                     </p>
                                 </div>
                                 <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg ${entry.status === 'SENT' || entry.status === 'DELIVERED'
-                                        ? 'bg-emerald-100 text-emerald-700'
-                                        : entry.status === 'FAILED'
-                                            ? 'bg-red-100 text-red-700'
-                                            : 'bg-gray-100 text-gray-500'
+                                    ? 'bg-emerald-100 text-emerald-700'
+                                    : entry.status === 'FAILED'
+                                        ? 'bg-red-100 text-red-700'
+                                        : 'bg-gray-100 text-gray-500'
                                     }`}>
                                     {entry.status}
                                 </span>
