@@ -6,15 +6,23 @@ import { useTransition, useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { processSale } from '@/app/(privileged)/sales/actions';
 import { ReceiptModal } from './ReceiptModal';
+import { ManagerOverride } from './ManagerOverride';
+import clsx from 'clsx';
 
-export function TicketSidebar({ cart, onUpdateQuantity, onClear, currency = '$' }: {
+export function TicketSidebar({ cart, onUpdateQuantity, onClear, currency = '$', client }: {
     cart: CartItem[],
     onUpdateQuantity: (id: number, delta: number) => void,
     onClear: () => void,
-    currency?: string
+    currency?: string,
+    client: any
 }) {
     const [isPending, startTransition] = useTransition();
     const [paymentMethod, setPaymentMethod] = useState<string>('CASH');
+    const [cashReceived, setCashReceived] = useState<string>('');
+
+    // Security States
+    const [isOverrideOpen, setIsOverrideOpen] = useState(false);
+    const [pendingAction, setPendingAction] = useState<{ type: 'delete' | 'clear' | 'discount', data?: any } | null>(null);
 
     // Receipt Modal State
     const [lastOrder, setLastOrder] = useState<{ id: number; ref: string } | null>(null);
@@ -24,9 +32,13 @@ export function TicketSidebar({ cart, onUpdateQuantity, onClear, currency = '$' 
         const itemPrice = Number(item.price) || 0;
         return acc + (itemPrice * item.quantity);
     }, 0);
+
+    const uniqueItems = cart.length;
+    const totalPieces = cart.reduce((acc, item) => acc + item.quantity, 0);
     const discount = 0; // Mocked for UI
     const totalAmount = Math.max(0, total - discount);
-    const receivedAmount = totalAmount; // Mocked
+    const receivedAmount = Number(cashReceived) || totalAmount;
+    const changeDue = Math.max(0, receivedAmount - totalAmount);
 
     const handleCharge = useCallback(() => {
         if (cart.length === 0 || isPending) return;
@@ -53,32 +65,46 @@ export function TicketSidebar({ cart, onUpdateQuantity, onClear, currency = '$' 
 
     return (
         <div className="flex flex-col h-full bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden">
-            {/* Header / Client Info Placeholder */}
+            {/* Header / Client Info */}
             <div className="p-6 bg-gray-50/50 border-b border-gray-100">
                 <div className="flex justify-between items-center mb-4">
                     <div className="flex gap-4">
                         <div className="flex flex-col">
                             <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Client Name</span>
-                            <span className="font-bold text-gray-900 text-xs">John Doe</span>
+                            <span className="font-extrabold text-gray-900 text-sm italic">{client.name}</span>
                         </div>
                         <div className="flex flex-col">
                             <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Phone</span>
-                            <span className="font-bold text-gray-900 text-xs">+91 54321 098765</span>
+                            <span className="font-bold text-gray-500 text-xs">{client.phone}</span>
                         </div>
                     </div>
-                    <div className="flex gap-4 text-right">
+                    <div className="flex gap-6 text-right">
                         <div className="flex flex-col">
                             <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Balance</span>
-                            <span className="font-black text-indigo-600 text-xl tracking-tighter">{currency}120</span>
+                            <span className={clsx("font-black text-xl tracking-tighter", client.balance > 0 ? "text-rose-500" : "text-green-500")}>
+                                {currency}{client.balance.toLocaleString()}
+                            </span>
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Loyalty Points</span>
-                            <span className="font-black text-indigo-400 text-xl tracking-tighter">50</span>
+                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Loyalty</span>
+                            <span className="font-black text-amber-500 text-xl tracking-tighter">{client.loyalty} pts</span>
                         </div>
                     </div>
                 </div>
-                <div className="text-[10px] font-bold text-gray-400">
-                    <span className="uppercase tracking-widest">Address:</span> 1st Block 1st Cross, Rammurthy Nagar, Bangalore.
+                <div className="flex items-center justify-between">
+                    <div className="text-[10px] font-bold text-gray-400">
+                        <span className="uppercase tracking-widest mr-1 opacity-50">Delivery Address:</span> {client.address}
+                    </div>
+                    <div className="flex gap-3">
+                        <div className="flex items-center gap-1.5 px-3 py-1 bg-white border border-gray-100 rounded-full">
+                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Lines</span>
+                            <span className="text-xs font-black text-indigo-600 tabular-nums">{uniqueItems}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 px-3 py-1 bg-white border border-gray-100 rounded-full">
+                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Units</span>
+                            <span className="text-xs font-black text-indigo-600 tabular-nums">{totalPieces}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -123,7 +149,13 @@ export function TicketSidebar({ cart, onUpdateQuantity, onClear, currency = '$' 
                                     <td className="p-4 text-right tabular-nums">{currency}{(Number(item.price) || 0).toFixed(2)}</td>
                                     <td className="p-4 text-right tabular-nums font-black text-gray-900">{currency}{((Number(item.price) || 0) * item.quantity).toFixed(2)}</td>
                                     <td className="p-4 pr-6 text-center">
-                                        <button onClick={() => onUpdateQuantity(item.productId, -item.quantity)} className="p-1.5 text-gray-300 hover:text-rose-500 transition-all">
+                                        <button
+                                            onClick={() => {
+                                                setPendingAction({ type: 'delete', data: item.productId });
+                                                setIsOverrideOpen(true);
+                                            }}
+                                            className="p-1.5 text-gray-300 hover:text-rose-500 transition-all"
+                                        >
                                             <Trash2 size={16} />
                                         </button>
                                     </td>
@@ -145,28 +177,47 @@ export function TicketSidebar({ cart, onUpdateQuantity, onClear, currency = '$' 
 
             {/* Bottom Section: Summary & Payments */}
             <div className="bg-white border-t border-gray-100 p-6 flex gap-8 shrink-0">
-                {/* Summary Box */}
-                <div className="w-72 space-y-3 font-bold text-xs uppercase tracking-tight text-gray-500">
-                    <div className="flex justify-between items-center">
-                        <span>Amount Before Discount</span>
-                        <span className="text-gray-900">{currency}{total.toFixed(2)}</span>
+                <div className="w-72 space-y-4 font-bold text-xs uppercase tracking-tight text-gray-500">
+                    <div className="flex justify-between items-center text-gray-400">
+                        <span>Items Subtotal</span>
+                        <span className="font-mono">{currency}{total.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                        <span>Discount</span>
-                        <span className="text-gray-900">{currency}{discount.toFixed(2)}</span>
+                        <span>Discount %</span>
+                        <button
+                            onClick={() => {
+                                setPendingAction({ type: 'discount' });
+                                setIsOverrideOpen(true);
+                            }}
+                            className="px-2 py-1 bg-gray-50 border border-gray-100 rounded text-[10px] hover:border-indigo-500 transition-all"
+                        >
+                            {currency}{discount.toFixed(2)}
+                        </button>
                     </div>
-                    <div className="flex justify-between items-center">
-                        <span>Total Amount</span>
-                        <span className="text-gray-900">{currency}{totalAmount.toFixed(2)}</span>
+                    <div className="flex justify-between items-center pt-2 border-t border-gray-50">
+                        <span className="text-gray-900 font-black">Total to pay</span>
+                        <span className="text-gray-900 font-black text-lg tabular-nums">{currency}{totalAmount.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                        <span>Received Amount</span>
-                        <span className="text-gray-900">{currency}{receivedAmount.toFixed(2)}</span>
+
+                    <div className="relative pt-2">
+                        <Banknote className="absolute left-4 top-[2.2rem] text-indigo-400" size={16} />
+                        <label className="text-[8px] font-black text-gray-400 block mb-1">Cash Received</label>
+                        <input
+                            type="number"
+                            placeholder="0.00"
+                            value={cashReceived}
+                            onChange={(e) => setCashReceived(e.target.value)}
+                            className="w-full pl-12 pr-4 py-4 bg-gray-50 border-2 border-transparent rounded-2xl text-lg font-black text-gray-900 outline-none focus:bg-white focus:border-indigo-500 transition-all tabular-nums"
+                        />
                     </div>
-                    <div className="pt-2">
-                        <div className="bg-indigo-500 rounded-xl p-4 flex justify-between items-center shadow-lg shadow-indigo-100">
+
+                    <div className="">
+                        <div className={clsx(
+                            "rounded-2xl p-4 flex justify-between items-center shadow-lg transition-all",
+                            changeDue > 0 ? "bg-emerald-500 shadow-emerald-100" : "bg-indigo-500 shadow-indigo-100"
+                        )}>
                             <span className="text-white font-black">Change Due</span>
-                            <span className="text-white font-black text-xl">{currency}0.00</span>
+                            <span className="text-white font-black text-xl tabular-nums">{currency}{changeDue.toFixed(2)}</span>
                         </div>
                     </div>
                 </div>
@@ -225,6 +276,21 @@ export function TicketSidebar({ cart, onUpdateQuantity, onClear, currency = '$' 
                 onClose={() => setIsReceiptOpen(false)}
                 orderId={lastOrder?.id || null}
                 refCode={lastOrder?.ref || null}
+            />
+
+            <ManagerOverride
+                isOpen={isOverrideOpen}
+                actionLabel={pendingAction?.type === 'delete' ? 'Delete Item' : (pendingAction?.type === 'discount' ? 'Apply Discount' : 'Clear Ticket')}
+                onClose={() => setIsOverrideOpen(false)}
+                onSuccess={() => {
+                    if (pendingAction?.type === 'delete') {
+                        const item = cart.find(i => i.productId === pendingAction.data);
+                        if (item) onUpdateQuantity(item.productId, -item.quantity);
+                        toast.success("Item removed with authorization");
+                    } else if (pendingAction?.type === 'discount') {
+                        toast.info("Discount unlocked (Interface to follow)");
+                    }
+                }}
             />
         </div>
     );
