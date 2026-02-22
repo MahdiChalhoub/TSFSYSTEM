@@ -65,6 +65,8 @@ class StoredFileViewSet(viewsets.ModelViewSet):
                 file_obj=file_obj,
                 category=category,
                 original_filename=file_obj.name,
+                linked_model=linked_model,
+                linked_id=linked_id,
             )
 
             stored_file = StoredFile.objects.create(
