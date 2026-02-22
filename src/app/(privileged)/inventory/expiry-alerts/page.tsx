@@ -23,6 +23,7 @@ const SEVERITY_CONFIG: Record<string, { color: string, bg: string, icon: Record<
 }
 
 export default function ExpiryAlertsPage() {
+    const { fmt } = useCurrency()
     const [data, setData] = useState<ExpiryAlertResponse | null>(null)
     const [loading, setLoading] = useState(true)
     const [scanning, setScanning] = useState(false)

@@ -16,6 +16,7 @@ import { ArrowLeft, Truck, AlertCircle, ShoppingBag, CheckCircle2 } from "lucide
 import Link from "next/link"
 
 function CreatePurchaseReturnForm() {
+    const { fmt } = useCurrency()
     const searchParams = useSearchParams()
     const router = useRouter()
     const orderId = searchParams.get('order_id')

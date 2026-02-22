@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 
 export default function LabelPrintingPage() {
+    const { fmt } = useCurrency()
     const [products, setProducts] = useState<Product[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')

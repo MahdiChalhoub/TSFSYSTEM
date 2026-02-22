@@ -30,6 +30,7 @@ const METHOD_BADGES: Record<string, string> = {
 type SortKey = 'product_name' | 'quantity' | 'total_value' | 'avg_cost'
 
 export default function InventoryValuationPage() {
+    const { fmt } = useCurrency()
     const [data, setData] = useState<ValuationResponse | null>(null)
     const [warehouses, setWarehouses] = useState<WarehouseType[]>([])
     const [loading, setLoading] = useState(true)

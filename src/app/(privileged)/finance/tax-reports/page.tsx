@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 
 export default function TaxReportsPage() {
+    const { fmt } = useCurrency()
     const [taxGroups, setTaxGroups] = useState<TaxGroup[]>([])
     const [summary, setSummary] = useState<TaxSummary | null>(null)
     const [loading, setLoading] = useState(true)

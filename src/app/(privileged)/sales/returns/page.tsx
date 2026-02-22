@@ -24,6 +24,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
 }
 
 export default function SalesReturnsPage() {
+    const { fmt } = useCurrency()
     const [returns, setReturns] = useState<SalesReturn[]>([])
     const [loading, setLoading] = useState(true)
 

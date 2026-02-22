@@ -23,6 +23,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
 }
 
 export default function PurchaseReturnsPage() {
+    const { fmt } = useCurrency()
     const [returns, setReturns] = useState<PurchaseReturn[]>([])
     const [loading, setLoading] = useState(true)
 
