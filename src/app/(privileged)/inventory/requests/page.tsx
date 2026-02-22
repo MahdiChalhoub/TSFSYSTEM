@@ -20,7 +20,7 @@ import {
     FileQuestion, ArrowDownUp, ArrowLeftRight, ShoppingCart, RefreshCw,
     Activity, ClipboardList
 } from "lucide-react"
-import { TypicalListView, ColumnDef, DetailColumnDef } from "@/components/common/TypicalListView"
+import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
 import { TypicalFilter } from "@/components/common/TypicalFilter"
 
 const TYPE_CONFIG: Record<string, { label: string; icon: any; color: string; bg: string }> = {
@@ -136,7 +136,7 @@ export default function OperationalRequestsPage() {
         }
     ]
 
-    const detailColumns: DetailColumnDef<any>[] = [
+    const detailColumns: ColumnDef<any>[] = [
         { key: 'product_name', label: 'Product', render: d => <div className="flex items-center gap-2 font-bold text-gray-700 text-xs">{d.product_name}</div> },
         { key: 'quantity', label: 'Requested Qty', align: 'right', render: d => <span className="font-mono font-black text-rose-500 text-xs">{d.quantity}</span> },
         { key: 'warehouse_name', label: 'Destination Terminal', render: d => <Badge variant="outline" className="bg-white text-gray-400 border-gray-100 text-[9px] font-black uppercase leading-none">{d.warehouse_name || 'Generic'}</Badge> },
@@ -177,8 +177,10 @@ export default function OperationalRequestsPage() {
                 loading={loading}
                 getRowId={r => r.id}
                 columns={columns}
-                detailColumns={detailColumns}
-                getDetails={r => r.lines || []}
+                expandable={{
+                    columns: detailColumns,
+                    getDetails: r => r.lines || []
+                }}
                 selection={{
                     selectedIds,
                     onSelectionChange: setSelectedIds
@@ -192,7 +194,7 @@ export default function OperationalRequestsPage() {
                     getCanceled: r => r.status === 'REJECTED'
                 }}
                 actions={{
-                    renderCustom: (req: OperationalRequest) => (
+                    extra: (req: OperationalRequest) => (
                         <div className="flex items-center gap-2">
                             {req.status === 'PENDING' && (
                                 <>
