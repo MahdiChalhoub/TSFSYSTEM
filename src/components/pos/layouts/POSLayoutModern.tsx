@@ -217,52 +217,54 @@ export function POSLayoutModern(props: POSLayoutProps) {
                         </div>
                     )}
 
-                    {/* Categories (when not expanded, show as scrollable grid) */}
+                    {/* Collapsed: Categories + Payment SIDE BY SIDE */}
                     {!leftExpanded && (
-                        <div className="p-4 flex-1 overflow-y-auto custom-scrollbar">
-                            <div className="grid grid-cols-2 gap-2">
-                                <button
-                                    onClick={() => { onSetActiveCategoryId(null); setLeftExpanded(true); }}
-                                    className="p-3 rounded-xl bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-100 text-center group hover:shadow-md transition-all"
-                                >
-                                    <Package size={20} className="mx-auto text-violet-500 mb-1.5" />
-                                    <span className="text-[9px] font-black text-gray-700 uppercase tracking-widest">All Products</span>
-                                </button>
-                                {categories.map(cat => (
+                        <div className="flex-1 flex overflow-hidden">
+                            {/* LEFT COLUMN: Category Tiles */}
+                            <div className="w-1/2 border-r border-gray-100 p-3 overflow-y-auto custom-scrollbar">
+                                <h4 className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-2.5">Categories</h4>
+                                <div className="grid grid-cols-2 gap-2">
                                     <button
-                                        key={cat.id}
-                                        onClick={() => { onSetActiveCategoryId(cat.id); setLeftExpanded(true); }}
-                                        className={clsx(
-                                            "p-3 rounded-xl border text-center group hover:shadow-md transition-all",
-                                            activeCategoryId === cat.id
-                                                ? "bg-violet-50 border-violet-200"
-                                                : "bg-white border-gray-100 hover:border-violet-100"
-                                        )}
+                                        onClick={() => { onSetActiveCategoryId(null); setLeftExpanded(true); }}
+                                        className="p-3 rounded-xl bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-100 text-center group hover:shadow-md transition-all"
                                     >
-                                        <Tag size={16} className={clsx("mx-auto mb-1.5", activeCategoryId === cat.id ? "text-violet-500" : "text-gray-300 group-hover:text-violet-400")} />
-                                        <span className="text-[9px] font-black text-gray-700 uppercase tracking-widest">{cat.name}</span>
+                                        <Package size={20} className="mx-auto text-violet-500 mb-1.5" />
+                                        <span className="text-[9px] font-black text-gray-700 uppercase tracking-widest">All Products</span>
                                     </button>
-                                ))}
+                                    {categories.map(cat => (
+                                        <button
+                                            key={cat.id}
+                                            onClick={() => { onSetActiveCategoryId(cat.id); setLeftExpanded(true); }}
+                                            className={clsx(
+                                                "p-3 rounded-xl border text-center group hover:shadow-md transition-all",
+                                                activeCategoryId === cat.id
+                                                    ? "bg-violet-50 border-violet-200"
+                                                    : "bg-white border-gray-100 hover:border-violet-100"
+                                            )}
+                                        >
+                                            <Tag size={16} className={clsx("mx-auto mb-1.5", activeCategoryId === cat.id ? "text-violet-500" : "text-gray-300 group-hover:text-violet-400")} />
+                                            <span className="text-[9px] font-black text-gray-700 uppercase tracking-widest">{cat.name}</span>
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                    )}
-
-                    {/* Payment Section (hidden when expanded) */}
-                    {!leftExpanded && (
-                        <div className="border-t border-gray-100 p-4 shrink-0 bg-gray-50/30">
-                            <CartTotals
-                                subtotal={total}
-                                discount={discount}
-                                totalAmount={totalAmount}
-                                cashReceived={cashReceived}
-                                paymentMethod={paymentMethod}
-                                isPending={isProcessing}
-                                currency={currency}
-                                onSetCashReceived={onSetCashReceived}
-                                onSetPaymentMethod={onSetPaymentMethod}
-                                onCharge={onCharge}
-                                onDiscountClick={() => onSetOverrideOpen(true)}
-                            />
+                            {/* RIGHT COLUMN: Payment & Finalize */}
+                            <div className="w-1/2 p-3 overflow-y-auto custom-scrollbar bg-gray-50/30">
+                                <h4 className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-2.5">Payment</h4>
+                                <CartTotals
+                                    subtotal={total}
+                                    discount={discount}
+                                    totalAmount={totalAmount}
+                                    cashReceived={cashReceived}
+                                    paymentMethod={paymentMethod}
+                                    isPending={isProcessing}
+                                    currency={currency}
+                                    onSetCashReceived={onSetCashReceived}
+                                    onSetPaymentMethod={onSetPaymentMethod}
+                                    onCharge={onCharge}
+                                    onDiscountClick={() => onSetOverrideOpen(true)}
+                                />
+                            </div>
                         </div>
                     )}
                 </aside>
