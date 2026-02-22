@@ -41,7 +41,7 @@ export async function createCategory(prevState: CategoryState, formData: FormDat
 
         revalidatePath('/inventory/categories');
         return { message: 'success' };
-    } catch (e: unknown) {
+    } catch (e: any) {
         console.error('[createCategory] Exception:', e);
         const detail = e?.message || 'Failed to create category';
         return { message: detail };
