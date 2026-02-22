@@ -61,9 +61,7 @@ export default function SalesAnalyticsPage() {
                         </div>
                         Sales <span className="text-indigo-600">Analytics</span>
                     </h1>
-                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Performance Insights</p>
-                        {data.period?.start} → {data.period?.end}
-                    </p>
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Performance Insights · {data.period?.start} → {data.period?.end}</p>
                 </div>
                 <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
                     {[7, 30, 90].map(d => (

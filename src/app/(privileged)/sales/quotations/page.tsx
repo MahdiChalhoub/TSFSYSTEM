@@ -51,8 +51,6 @@ export default async function QuotationsPage() {
                     Quote <span className="text-blue-600">Management</span>
                 </h1>
                 <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Proposals & Estimates</p>
-                    Create proformas, manage line items, and convert accepted quotations into sale orders.
-                </p>
             </div>
             <QuotationManager
                 initialQuotations={quotations}

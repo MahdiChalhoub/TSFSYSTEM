@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { erpFetch } from '@/lib/erp-api'
-import { Search, Tag, Grid, RefreshCw, Package, Eye, EyeOff, CheckCircle, XCircle , ShoppingBag } from 'lucide-react'
+import { Search, Tag, Grid, RefreshCw, Package, Eye, EyeOff, CheckCircle, XCircle, ShoppingBag } from 'lucide-react'
 
 type Product = {
     id: number
@@ -69,21 +69,14 @@ export default function EcommerceCatalogPage() {
 
             {/* Header */}
             <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-500 to-cyan-700 flex items-center justify-center shadow-lg shadow-cyan-900/40">
-                        <Tag size={22} className="text-white" />
-                    </div>
-                    <div>
-                        <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-[1.5rem] bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-200">
-                                <ShoppingBag size={28} className="text-white" />
-                            </div>
-                            Online <span className="text-violet-600">Catalog</span>
-                        </h1>
-                        <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Product Catalog</p>
-                            {published} of {products.length} products published to storefront
-                        </p>
-                    </div>
+                <div>
+                    <h1 className="text-4xl font-black tracking-tighter text-gray-100 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-[1.5rem] bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-900/40">
+                            <ShoppingBag size={28} className="text-white" />
+                        </div>
+                        Online <span className="text-violet-400">Catalog</span>
+                    </h1>
+                    <p className="text-sm font-medium text-gray-500 mt-2 uppercase tracking-widest">{published} of {products.length} products published</p>
                 </div>
                 <div className="flex items-center gap-2">
                     <button onClick={load} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm">
