@@ -1,6 +1,7 @@
 'use client'
 
 import { useCurrency } from '@/lib/utils/currency'
+import { safeDateSort } from '@/lib/utils/safe-date'
 
 import { useState, useEffect, useMemo } from "react"
 import { Contact } from "@/types/erp"
@@ -48,7 +49,7 @@ export default function CustomerInsightsPage() {
             )
             const totalSpent = cOrders.reduce((s, o) => s + parseFloat(o.total_amount || 0), 0)
             const completedOrders = cOrders.filter(o => o.status === 'COMPLETED')
-            const lastOrder = cOrders.sort((a: Record<string, any>, b: Record<string, any>) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
+            const lastOrder = cOrders.sort((a: Record<string, any>, b: Record<string, any>) => (safeDateSort(b.created_at)) - (safeDateSort(a.created_at)))[0]
 
             // Calculate recency in days
             const lastDate = lastOrder?.created_at ? new Date(lastOrder.created_at) : null

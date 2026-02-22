@@ -81,7 +81,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
                 </div>
                 <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm">
                     <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Date</div>
-                    <div className="text-xl font-black text-gray-900">{new Date(order.created_at).toLocaleDateString('fr-FR')}</div>
+                    <div className="text-xl font-black text-gray-900">{order.created_at ? new Date(order.created_at).toLocaleDateString('fr-FR') : '—'}</div>
                 </div>
                 <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm">
                     <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Customer</div>
@@ -176,7 +176,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
                             </div>
                             <div>
                                 <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Transaction Time</div>
-                                <div className="text-sm font-black text-gray-900">{new Date(order.created_at).toLocaleTimeString('fr-FR')}</div>
+                                <div className="text-sm font-black text-gray-900">{order.created_at ? new Date(order.created_at).toLocaleTimeString('fr-FR') : '—'}</div>
                             </div>
                         </div>
                         <div className="flex items-start gap-4">

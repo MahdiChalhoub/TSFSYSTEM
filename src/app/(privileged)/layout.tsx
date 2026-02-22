@@ -8,6 +8,7 @@ import { TopHeader } from '@/components/admin/TopHeader';
 import { TabNavigator } from '@/components/admin/TabNavigator';
 import { DevProvider } from '@/context/DevContext';
 import DebugOverlay from '@/components/dev/DebugOverlay';
+import DevModeBanner from '@/components/dev/DevModeBanner';
 import { CommandPalette } from '@/components/admin/CommandPalette';
 
 
@@ -96,6 +97,7 @@ export default async function AdminLayout({
     return (
         <AdminProvider contextKey={currentSlug} initialScopeAccess={scopeAccess || 'internal'}>
             <DevProvider>
+                {process.env.DEV_MODULE && <DevModeBanner moduleName={process.env.DEV_MODULE} />}
                 <div className="flex h-screen bg-gray-50 overflow-hidden font-sans text-gray-900">
                     {/* Left Panel: Sidebar Tree */}
                     <Sidebar
