@@ -164,6 +164,7 @@ export default async function middleware(req: NextRequest) {
             || url.pathname.startsWith('/dashboard')
             || url.pathname.startsWith('/organizations')
             || url.pathname.startsWith('/modules')
+            || url.pathname.startsWith('/storage')
             || url.pathname.startsWith('/tsf-system-kernel-7788');
 
         if (isAppRoute) {
