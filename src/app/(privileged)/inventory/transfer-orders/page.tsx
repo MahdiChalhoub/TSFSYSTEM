@@ -13,7 +13,7 @@ import { TypicalFilter } from '@/components/common/TypicalFilter'
 import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { useCurrency } from '@/lib/utils/currency'
 import { toast } from 'sonner'
-import { Eye, Truck, Package, MapPin, CheckCircle2, RefreshCw, AlertCircle, ArrowRightLeft, Clock, Trash2, MessageSquare, ExternalLink, Play } from 'lucide-react'
+import { Eye, MessageSquare, Package, AlertCircle, CheckCircle2, RefreshCw, Play, ArrowRightLeft } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -192,13 +192,13 @@ export default function LogisticsStrategyPage() {
                         { key: 'reason', label: 'Strategy Notes', render: (d: TransferLine) => <span className="italic text-gray-400">{d.reason || 'Standard redistribution'}</span> },
                     ],
                     getDetails: r => r.lines || [],
-                    renderActions: (row) => (
+                    renderActions: (row, parent) => (
                         <div className="flex gap-2">
-                            {(row.lifecycle_status === 'OPEN' || row.lifecycle_status === 'APPROVED') && (
+                            {(parent.lifecycle_status === 'OPEN' || parent.lifecycle_status === 'APPROVED') && (
                                 <Button
                                     size="sm"
                                     className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] h-7 px-3 rounded-lg flex items-center gap-2 shadow-sm"
-                                    onClick={() => handlePromote(row.id)}
+                                    onClick={() => handlePromote(parent.id)}
                                 >
                                     <Play size={10} fill="currentColor" /> EXECUTE NOW
                                 </Button>
