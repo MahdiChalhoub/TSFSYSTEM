@@ -1,10 +1,11 @@
-# 🚀 TSFSYSTEM: Definitive Production Deployment Guide
+# 🚀 TSF System: Production Deployment (tsf.ci)
 
-This guide details the authoritative workflows for deploying and maintaining the **TSFSYSTEM Intelligence Console** on the production server.
+This document outlines the final production state and deployment procedures for the **TSF System** platform on the official domain.
 
-## 🖥️ Server Environment
-- **Public IP**: `91.99.186.183`
-- **Domain**: `tsf.ci`
+## Platform Identity
+- **Primary Domain:** [tsf.ci](https://tsf.ci)
+- **SaaS Master Panel:** [saas.tsf.ci](https://saas.tsf.ci)
+- **Production IP:** `91.99.186.183`
 - **Architecture**: Docker-based Microservices
 - **OS**: Ubuntu 24.04 LTS
 

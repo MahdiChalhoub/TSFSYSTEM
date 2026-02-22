@@ -15,7 +15,7 @@
 #
 # Prerequisites:
 #   - SSH key at ~/.ssh/id_deploy
-#   - Access to root@91.99.186.183
+#   - Access to root@91.99.186.183 (tsf.ci)
 # ══════════════════════════════════════════════════════════════════════════════
 
 set -euo pipefail
