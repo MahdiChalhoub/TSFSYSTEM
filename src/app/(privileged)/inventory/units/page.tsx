@@ -12,22 +12,21 @@ async function getUnitsData() {
         const units = await erpFetch('units/');
 
         // Map backend response if needed (UnitSerializer has product_count)
-        const mappedUnits = units.map((u: Record<string, any>) => ({
-            ...u,
-            _count: { products: u.product_count || 0 }
-        }));
-
         // Build Tree
         const unitMap = new Map();
         const roots: Record<string, any>[] = [];
 
-        // Initialize Map with empty children array
-        mappedUnits.forEach((u: Record<string, any>) => {
-            unitMap.set(u.id, { ...u, children: [] });
+        // Initialize Map
+        units.forEach((u: Record<string, any>) => {
+            unitMap.set(u.id, {
+                ...u,
+                children: [],
+                product_count: u.product_count || 0
+            });
         });
 
         // Link Children to Parents
-        mappedUnits.forEach((u: Record<string, any>) => {
+        units.forEach((u: Record<string, any>) => {
             const node = unitMap.get(u.id);
             const parentId = u.base_unit; // Backend field is base_unit
             if (parentId) {
@@ -45,8 +44,8 @@ async function getUnitsData() {
 
         // We also return the flat list for the generic "Create" dropdown
         return {
-            hierarchicalUnits: JSON.parse(JSON.stringify(roots)),
-            flatUnits: JSON.parse(JSON.stringify(mappedUnits))
+            hierarchicalUnits: roots,
+            flatUnits: units
         };
     } catch (e) {
         console.error("Failed to fetch units:", e);
@@ -90,7 +89,7 @@ export default async function UnitsPage() {
                 </div>
 
                 {hierarchicalUnits.length > 0 ? (
-                    <UnitTree units={hierarchicalUnits} potentialParents={flatUnits} />
+                    <UnitTree units={hierarchicalUnits as any[]} potentialParents={flatUnits as any[]} />
                 ) : (
                     <div className="py-12 text-center text-gray-400">
                         <p>No units defined yet.</p>
