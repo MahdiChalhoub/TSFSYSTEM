@@ -45,6 +45,8 @@ const SUB_TYPE_CONFIG: Record<string, { label: string; color: string; bg: string
 
 export default function InvoicesPage() {
     const [invoices, setInvoices] = useState<any[]>([])
+    const [contacts, setContacts] = useState<any[]>([])
+    const [contactSearch, setContactSearch] = useState('')
     const [dashboard, setDashboard] = useState<any>(null)
     const [loading, setLoading] = useState(true)
     const [createOpen, setCreateOpen] = useState(false)
@@ -62,10 +64,15 @@ export default function InvoicesPage() {
 
     async function loadData() {
         try {
-            const [inv, dash, settings] = await Promise.all([getInvoices(), getInvoiceDashboard(), getTradeSubTypeSettings()])
+            const { erpFetch } = await import('@/lib/erp-api')
+            const [inv, dash, settings, contactList] = await Promise.all([
+                getInvoices(), getInvoiceDashboard(), getTradeSubTypeSettings(),
+                erpFetch('contacts/').catch(() => [])
+            ])
             setInvoices(Array.isArray(inv) ? inv : [])
             setDashboard(dash)
             setTradeSubTypesEnabled(settings?.enabled ?? false)
+            setContacts(Array.isArray(contactList) ? contactList : contactList?.results || [])
         } catch {
             setInvoices([])
             toast.error("Failed to load invoices")
@@ -287,8 +294,30 @@ export default function InvoicesPage() {
                             </div>
                         )}
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-stone-500 uppercase">Contact ID *</label>
-                            <Input name="contact" type="number" required placeholder="Customer/Supplier ID" className="rounded-xl" />
+                            <label className="text-xs font-bold text-stone-500 uppercase">Contact *</label>
+                            <input
+                                type="text"
+                                placeholder="Search customer or supplier..."
+                                value={contactSearch}
+                                onChange={e => setContactSearch(e.target.value)}
+                                className="w-full px-3 py-2 border rounded-xl bg-background text-sm mb-1 focus:outline-none focus:border-stone-400"
+                            />
+                            <select name="contact" required className="w-full px-3 py-2 border rounded-xl bg-background text-sm" size={4}>
+                                {contacts
+                                    .filter(c => !contactSearch ||
+                                        (c.name || c.company_name || '').toLowerCase().includes(contactSearch.toLowerCase())
+                                    )
+                                    .slice(0, 30)
+                                    .map((c: any) => (
+                                        <option key={c.id} value={c.id}>
+                                            {c.name || c.company_name || `Contact #${c.id}`} [{c.type}]
+                                        </option>
+                                    ))
+                                }
+                                {contacts.length === 0 && (
+                                    <option disabled>No contacts loaded</option>
+                                )}
+                            </select>
                         </div>
                         <div className="space-y-1.5">
                             <label className="text-xs font-bold text-stone-500 uppercase">Issue Date *</label>

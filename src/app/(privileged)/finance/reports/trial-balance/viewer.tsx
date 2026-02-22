@@ -15,8 +15,12 @@ export default function TrialBalanceViewer({ initialAccounts, fiscalYears }: { i
     }, [])
 
     const handleRefresh = () => {
+        const dateObj = new Date(asOfDate)
+        if (isNaN(dateObj.getTime())) {
+            return
+        }
         startTransition(async () => {
-            const data = await getTrialBalanceReport(new Date(asOfDate))
+            const data = await getTrialBalanceReport(dateObj)
             setAccounts(data)
         })
     }

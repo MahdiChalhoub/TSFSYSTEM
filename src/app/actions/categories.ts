@@ -90,7 +90,16 @@ export async function deleteCategory(id: number) {
 }
 
 export async function getCategoryWithCounts() {
-    return await erpFetch('inventory/categories/with_counts/');
+    try {
+        // Try namespaced first (new standard)
+        return await erpFetch('inventory/categories/with_counts/');
+    } catch (e: any) {
+        if (e.status === 404) {
+            // Fallback to flat URL (backward compatibility)
+            return await erpFetch('categories/with_counts/');
+        }
+        throw e;
+    }
 }
 
 export async function moveProducts(productIds: number[], targetCategoryId: number) {

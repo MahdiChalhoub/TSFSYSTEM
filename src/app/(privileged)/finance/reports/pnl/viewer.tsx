@@ -18,8 +18,13 @@ export default function PnlViewer({ initialData, fiscalYears }: { initialData: R
     }, [])
 
     const handleRefresh = () => {
+        const start = new Date(startDate)
+        const end = new Date(endDate)
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+            return
+        }
         startTransition(async () => {
-            const report = await getProfitAndLossReport(new Date(startDate), new Date(endDate))
+            const report = await getProfitAndLossReport(start, end)
             setData(report)
         })
     }

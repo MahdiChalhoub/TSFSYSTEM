@@ -114,12 +114,14 @@ export async function updateChartOfAccount(id: number, data: unknown) {
     }
 }
 
+const isValidDate = (d: any) => d instanceof Date && !isNaN(d.getTime());
+
 export async function getAccountStatement(accountId: number, filter?: { startDate?: Date, endDate?: Date }, scope: 'OFFICIAL' | 'INTERNAL' = 'INTERNAL') {
     try {
         const query = new URLSearchParams({
             scope,
-            start_date: filter?.startDate?.toISOString() || '',
-            end_date: filter?.endDate?.toISOString() || ''
+            start_date: isValidDate(filter?.startDate) ? filter!.startDate!.toISOString() : '',
+            end_date: isValidDate(filter?.endDate) ? filter!.endDate!.toISOString() : ''
         }).toString()
 
         const result = await erpFetch(`coa/${accountId}/statement/?${query}`)
@@ -145,7 +147,7 @@ export async function getTrialBalanceReport(asOfDate?: Date, legalReport: boolea
     try {
         const query = new URLSearchParams({
             scope,
-            as_of: asOfDate?.toISOString() || ''
+            as_of: isValidDate(asOfDate) ? asOfDate!.toISOString() : new Date().toISOString()
         }).toString()
 
         const result = await erpFetch(`coa/trial_balance/?${query}`)
@@ -165,8 +167,8 @@ export async function getProfitAndLossReport(startDate: Date, endDate: Date, sco
         // Pass date range to backend so it returns period-specific balances
         const query = new URLSearchParams({
             scope,
-            start_date: startDate.toISOString(),
-            end_date: endDate.toISOString()
+            start_date: isValidDate(startDate) ? startDate.toISOString() : new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString(),
+            end_date: isValidDate(endDate) ? endDate.toISOString() : new Date().toISOString()
         }).toString()
         const result = await erpFetch(`coa/trial_balance/?${query}`)
         return serialize(
@@ -188,7 +190,7 @@ export async function getBalanceSheetReport(asOfDate: Date, scope: 'OFFICIAL' | 
     try {
         const query = new URLSearchParams({
             scope,
-            as_of: asOfDate.toISOString()
+            as_of: isValidDate(asOfDate) ? asOfDate.toISOString() : new Date().toISOString()
         }).toString()
         const result = await erpFetch(`coa/trial_balance/?${query}`)
         const mapped = result.map((acc: Record<string, any>) => ({

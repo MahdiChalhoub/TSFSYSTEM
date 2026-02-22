@@ -19,6 +19,7 @@ export async function getPosProducts(options: {
     try {
         const queryParams = new URLSearchParams();
         if (search) queryParams.append('query', search);
+        if (categoryId) queryParams.append('category_id', String(categoryId));
         // Add limit/offset if backend supports it
 
         const products = await erpFetch(`products/search_enhanced/?${queryParams.toString()}`);
