@@ -24,12 +24,17 @@ export default async function ComboPage() {
 
     return (
         <div className="p-6 space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold">Combo &amp; Bundle Products</h1>
-                <p className="text-sm text-gray-500 mt-1">
-                    Create product bundles by combining multiple items into a single combo.
-                    When sold, stock for each component is deducted automatically.
-                </p>
+            <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-purple-600 flex items-center justify-center shadow-lg shadow-purple-200">
+                    <Package size={28} className="text-white" />
+                </div>
+                <div>
+                    <h1 className="text-4xl font-black text-gray-900 tracking-tighter">Combo & <span className="text-purple-600">Bundle</span> Products</h1>
+                    <p className="text-sm text-gray-500 mt-1">
+                        Create product bundles by combining multiple items into a single combo.
+                        When sold, stock for each component is deducted automatically.
+                    </p>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

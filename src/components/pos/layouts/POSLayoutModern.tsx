@@ -18,18 +18,20 @@ import { toast } from 'sonner';
 
 /**
  * Layout B: "Modern" — Cart-Focused Layout (per user wireframe)
- * ┌──────────────────────────────────────────────────────┐
- * │ HEADER (full: branding, sessions, all action btns)   │
- * ├──────────────────────────────────────────────────────┤
- * │ CLIENT INFO BAR                                      │
- * ├──────────────────────────────────────────────────────┤
- * │ SEARCH BOX + CATEGORY FILTERS                        │
- * ├────────────────────────┬─────────────────────────────┤
- * │ Categories (expandable)│                             │
- * │ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─│     FULL CART VIEW          │
- * │ Payment / Finalize     │     (all item info,         │
- * │ (hidden when expanded) │      quantities, totals)    │
- * └────────────────────────┴─────────────────────────────┘
+ * ┌──────────────────────────────────────────────────────────┐
+ * │ HEADER (full width)                                      │
+ * ├────────────────────────────┬──────────────────────────────┤
+ * │ Client Info                │                              │
+ * ├────────────────────────────┤                              │
+ * │ Search + Category Pills    │       CART                   │
+ * ├──────────┬─────────────────┤    (full height,             │
+ * │ Category │ Payment Info    │     all item info,           │
+ * │ Tiles    │ & Finalize      │     quantities, totals,      │
+ * │ (normal) │ Payment         │     charge at bottom)        │
+ * │          │                 │                              │
+ * │ When expanded → Products   │                              │
+ * │ (payment hides)            │                              │
+ * └──────────┴─────────────────┴──────────────────────────────┘
  */
 export function POSLayoutModern(props: POSLayoutProps) {
     const {
@@ -52,7 +54,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
             "flex flex-col bg-[#F1F5F9] overflow-hidden select-none h-full",
             isFullscreen ? "fixed inset-0 z-[1000] h-screen w-screen" : "absolute inset-0"
         )}>
-            {/* ═══════ HEADER — FULL FEATURE ═══════ */}
+            {/* ═══════ HEADER — FULL WIDTH ═══════ */}
             <header className="h-14 bg-white border-b border-gray-100 flex items-center justify-between px-5 shrink-0 z-50 shadow-sm">
                 <div className="flex items-center gap-5">
                     <h1 className="text-xl font-black tracking-tighter text-gray-900 flex items-center gap-2.5">
@@ -109,90 +111,88 @@ export function POSLayoutModern(props: POSLayoutProps) {
                 </div>
             </header>
 
-            {/* ═══════ CLIENT INFO BAR ═══════ */}
-            <CompactClientHeader
-                client={selectedClient}
-                currency={currency}
-                uniqueItems={uniqueItems}
-                totalPieces={totalPieces}
-            />
-
-            {/* ═══════ SEARCH + CLIENT SELECTOR + CATEGORIES ═══════ */}
-            <div className="bg-white border-b border-gray-100 px-5 py-2.5 flex items-center gap-3 shrink-0">
-                <div className="w-56">
-                    <div className="relative group">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-violet-600 transition-colors" size={13} />
-                        <select
-                            value={selectedClientId}
-                            onChange={(e) => onUpdateActiveSession({ clientId: Number(e.target.value) })}
-                            className="w-full pl-9 pr-8 py-2 bg-gray-50/50 border border-gray-100 rounded-xl text-[10px] font-black appearance-none outline-none focus:bg-white focus:border-violet-500 transition-all cursor-pointer shadow-sm uppercase tracking-widest"
-                        >
-                            {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={12} />
-                    </div>
-                </div>
-
-                <div className="h-7 w-px bg-gray-100" />
-
-                {/* Category Pills */}
-                <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
-                    <button
-                        onClick={() => onSetActiveCategoryId(null)}
-                        className={clsx(
-                            "px-3 py-1.5 whitespace-nowrap rounded-full text-[9px] font-black uppercase tracking-widest transition-all border",
-                            activeCategoryId === null
-                                ? 'bg-violet-600 text-white border-violet-600 shadow-md shadow-violet-100'
-                                : 'bg-white text-gray-500 border-gray-200 hover:border-violet-200 hover:text-violet-600'
-                        )}
-                    >
-                        All
-                    </button>
-                    {categories.map(cat => (
-                        <button
-                            key={cat.id}
-                            onClick={() => onSetActiveCategoryId(cat.id)}
-                            className={clsx(
-                                "px-3 py-1.5 whitespace-nowrap rounded-full text-[9px] font-black uppercase tracking-widest transition-all border",
-                                activeCategoryId === cat.id
-                                    ? 'bg-violet-600 text-white border-violet-600 shadow-md shadow-violet-100'
-                                    : 'bg-white text-gray-500 border-gray-200 hover:border-violet-200 hover:text-violet-600'
-                            )}
-                        >
-                            {cat.name}
-                        </button>
-                    ))}
-                </div>
-
-                <div className="h-7 w-px bg-gray-100" />
-
-                <div className="relative flex-1 group">
-                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-violet-500 transition-colors" size={15} />
-                    <input
-                        type="text"
-                        placeholder="Search products, scan barcode..."
-                        className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold outline-none focus:bg-white focus:border-violet-500 transition-all"
-                        value={searchQuery}
-                        onChange={(e) => onSetSearchQuery(e.target.value)}
-                    />
-                </div>
-
-                <button className="h-9 px-5 bg-violet-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-violet-100 hover:bg-violet-700 transition-all flex items-center gap-1.5">
-                    <Plus size={14} />
-                    Product
-                </button>
-            </div>
-
-            {/* ═══════ MAIN CONTENT ═══════ */}
+            {/* ═══════ MAIN SPLIT — LEFT (everything) + RIGHT (cart full height) ═══════ */}
             <div className="flex-1 flex overflow-hidden">
-                {/* ── LEFT: Categories (expandable) + Payment ── */}
+
+                {/* ════ LEFT COLUMN: Client Info → Search → Categories/Payment ════ */}
                 <aside className={clsx(
                     "flex flex-col bg-white border-r border-gray-100 shrink-0 transition-all duration-500 overflow-hidden",
-                    leftExpanded ? "w-[55%]" : "w-[340px]"
+                    leftExpanded ? "w-[55%]" : "w-[420px]"
                 )}>
-                    {/* Toggle + Title */}
-                    <div className="px-4 py-3 border-b border-gray-50 flex items-center justify-between shrink-0">
-                        <h3 className="text-[9px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
+                    {/* Client Info Bar */}
+                    <CompactClientHeader
+                        client={selectedClient}
+                        currency={currency}
+                        uniqueItems={uniqueItems}
+                        totalPieces={totalPieces}
+                    />
+
+                    {/* Search + Client Selector + Category Pills */}
+                    <div className="bg-white border-b border-gray-100 px-4 py-2.5 space-y-2 shrink-0">
+                        {/* Client selector + Search row */}
+                        <div className="flex items-center gap-2">
+                            <div className="w-44 shrink-0">
+                                <div className="relative group">
+                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-violet-600 transition-colors" size={13} />
+                                    <select
+                                        value={selectedClientId}
+                                        onChange={(e) => onUpdateActiveSession({ clientId: Number(e.target.value) })}
+                                        className="w-full pl-8 pr-6 py-1.5 bg-gray-50/50 border border-gray-100 rounded-lg text-[10px] font-black appearance-none outline-none focus:bg-white focus:border-violet-500 transition-all cursor-pointer uppercase tracking-widest"
+                                    >
+                                        {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                    </select>
+                                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={10} />
+                                </div>
+                            </div>
+                            <div className="relative flex-1 group">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-violet-500 transition-colors" size={14} />
+                                <input
+                                    type="text"
+                                    placeholder="Search products, scan barcode..."
+                                    className="w-full pl-9 pr-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs font-bold outline-none focus:bg-white focus:border-violet-500 transition-all"
+                                    value={searchQuery}
+                                    onChange={(e) => onSetSearchQuery(e.target.value)}
+                                />
+                            </div>
+                            <button className="h-8 px-3 bg-violet-600 text-white rounded-lg text-[8px] font-black uppercase tracking-widest shadow-md shadow-violet-100 hover:bg-violet-700 transition-all flex items-center gap-1 shrink-0">
+                                <Plus size={12} />
+                                Add
+                            </button>
+                        </div>
+
+                        {/* Category pills */}
+                        <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
+                            <button
+                                onClick={() => onSetActiveCategoryId(null)}
+                                className={clsx(
+                                    "px-2.5 py-1 whitespace-nowrap rounded-full text-[8px] font-black uppercase tracking-widest transition-all border",
+                                    activeCategoryId === null
+                                        ? 'bg-violet-600 text-white border-violet-600 shadow-md shadow-violet-100'
+                                        : 'bg-white text-gray-500 border-gray-200 hover:border-violet-200 hover:text-violet-600'
+                                )}
+                            >
+                                All
+                            </button>
+                            {categories.map(cat => (
+                                <button
+                                    key={cat.id}
+                                    onClick={() => onSetActiveCategoryId(cat.id)}
+                                    className={clsx(
+                                        "px-2.5 py-1 whitespace-nowrap rounded-full text-[8px] font-black uppercase tracking-widest transition-all border",
+                                        activeCategoryId === cat.id
+                                            ? 'bg-violet-600 text-white border-violet-600 shadow-md shadow-violet-100'
+                                            : 'bg-white text-gray-500 border-gray-200 hover:border-violet-200 hover:text-violet-600'
+                                    )}
+                                >
+                                    {cat.name}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Toggle bar */}
+                    <div className="px-4 py-2 border-b border-gray-50 flex items-center justify-between shrink-0 bg-gray-50/30">
+                        <h3 className="text-[8px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
                             <span className="w-1.5 h-1.5 bg-violet-600 rounded-full"></span>
                             {leftExpanded ? 'Product Discovery' : 'Categories & Payment'}
                         </h3>
@@ -205,9 +205,9 @@ export function POSLayoutModern(props: POSLayoutProps) {
                         </button>
                     </div>
 
-                    {/* Expandable Product Grid (visible when expanded) */}
+                    {/* Expanded: Product Grid */}
                     {leftExpanded && (
-                        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar border-b border-gray-50">
+                        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                             <ProductGrid
                                 searchQuery={searchQuery}
                                 categoryId={activeCategoryId}
@@ -220,7 +220,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                     {/* Collapsed: Categories + Payment SIDE BY SIDE */}
                     {!leftExpanded && (
                         <div className="flex-1 flex overflow-hidden">
-                            {/* LEFT COLUMN: Category Tiles */}
+                            {/* LEFT SUB-COLUMN: Category Tiles */}
                             <div className="w-1/2 border-r border-gray-100 p-3 overflow-y-auto custom-scrollbar">
                                 <h4 className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-2.5">Categories</h4>
                                 <div className="grid grid-cols-2 gap-2">
@@ -228,8 +228,8 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                         onClick={() => { onSetActiveCategoryId(null); setLeftExpanded(true); }}
                                         className="p-3 rounded-xl bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-100 text-center group hover:shadow-md transition-all"
                                     >
-                                        <Package size={20} className="mx-auto text-violet-500 mb-1.5" />
-                                        <span className="text-[9px] font-black text-gray-700 uppercase tracking-widest">All Products</span>
+                                        <Package size={18} className="mx-auto text-violet-500 mb-1" />
+                                        <span className="text-[8px] font-black text-gray-700 uppercase tracking-widest">All</span>
                                     </button>
                                     {categories.map(cat => (
                                         <button
@@ -242,13 +242,13 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                                     : "bg-white border-gray-100 hover:border-violet-100"
                                             )}
                                         >
-                                            <Tag size={16} className={clsx("mx-auto mb-1.5", activeCategoryId === cat.id ? "text-violet-500" : "text-gray-300 group-hover:text-violet-400")} />
-                                            <span className="text-[9px] font-black text-gray-700 uppercase tracking-widest">{cat.name}</span>
+                                            <Tag size={14} className={clsx("mx-auto mb-1", activeCategoryId === cat.id ? "text-violet-500" : "text-gray-300 group-hover:text-violet-400")} />
+                                            <span className="text-[8px] font-black text-gray-700 uppercase tracking-widest">{cat.name}</span>
                                         </button>
                                     ))}
                                 </div>
                             </div>
-                            {/* RIGHT COLUMN: Payment & Finalize */}
+                            {/* RIGHT SUB-COLUMN: Payment & Finalize */}
                             <div className="w-1/2 p-3 overflow-y-auto custom-scrollbar bg-gray-50/30">
                                 <h4 className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-2.5">Payment</h4>
                                 <CartTotals
@@ -269,13 +269,13 @@ export function POSLayoutModern(props: POSLayoutProps) {
                     )}
                 </aside>
 
-                {/* ── RIGHT: FULL CART VIEW ── */}
+                {/* ════ RIGHT COLUMN: FULL-HEIGHT CART ════ */}
                 <main className="flex-1 flex flex-col bg-[#FAFBFC] overflow-hidden">
                     {/* Cart Header */}
                     <div className="px-5 py-3 border-b border-gray-100 bg-white flex items-center justify-between shrink-0">
                         <div className="flex items-center gap-2">
                             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <h2 className="text-xs font-black uppercase tracking-widest text-gray-900 italic">Cart — Full View</h2>
+                            <h2 className="text-xs font-black uppercase tracking-widest text-gray-900 italic">Cart</h2>
                         </div>
                         <div className="flex items-center gap-2">
                             <span className="text-[9px] font-black text-violet-600 bg-violet-50 px-2.5 py-1 rounded-lg">{uniqueItems} lines · {totalPieces} pcs</span>
@@ -287,7 +287,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                         </div>
                     </div>
 
-                    {/* Cart Table — Full width, detailed */}
+                    {/* Cart Table */}
                     <div className="flex-1 overflow-y-auto custom-scrollbar">
                         {cart.length === 0 ? (
                             <div className="flex flex-col items-center justify-center h-full text-gray-300 gap-3">
@@ -301,9 +301,9 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                     <tr className="text-[9px] font-black uppercase tracking-widest text-gray-400 border-b border-gray-100">
                                         <th className="text-left px-5 py-3 w-8">#</th>
                                         <th className="text-left px-3 py-3">Product</th>
-                                        <th className="text-center px-3 py-3 w-20">Unit Price</th>
-                                        <th className="text-center px-3 py-3 w-28">Quantity</th>
-                                        <th className="text-center px-3 py-3 w-16">Tax</th>
+                                        <th className="text-center px-3 py-3 w-20">Price</th>
+                                        <th className="text-center px-3 py-3 w-28">Qty</th>
+                                        <th className="text-center px-3 py-3 w-14">Tax</th>
                                         <th className="text-right px-5 py-3 w-24">Total</th>
                                         <th className="w-10"></th>
                                     </tr>
@@ -311,12 +311,12 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 <tbody className="divide-y divide-gray-50">
                                     {cart.map((item: any, idx: number) => (
                                         <tr key={item.productId} className="group hover:bg-violet-50/30 transition-colors">
-                                            <td className="px-5 py-3.5 text-xs text-gray-300 font-mono">{idx + 1}</td>
-                                            <td className="px-3 py-3.5">
+                                            <td className="px-5 py-3 text-xs text-gray-300 font-mono">{idx + 1}</td>
+                                            <td className="px-3 py-3">
                                                 <span className="font-bold text-gray-900">{item.name}</span>
                                             </td>
-                                            <td className="px-3 py-3.5 text-center font-mono tabular-nums text-gray-500">{currency}{Number(item.price).toFixed(2)}</td>
-                                            <td className="px-3 py-3.5">
+                                            <td className="px-3 py-3 text-center font-mono tabular-nums text-gray-500">{currency}{Number(item.price).toFixed(2)}</td>
+                                            <td className="px-3 py-3">
                                                 <div className="flex items-center justify-center gap-1">
                                                     <button onClick={() => onUpdateQuantity(item.productId, -1)} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-rose-100 hover:text-rose-600 flex items-center justify-center text-gray-400 transition-all active:scale-90">
                                                         <Minus size={12} />
@@ -327,9 +327,9 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                                     </button>
                                                 </div>
                                             </td>
-                                            <td className="px-3 py-3.5 text-center text-[10px] font-mono text-gray-400">{(item.taxRate || 0)}%</td>
-                                            <td className="px-5 py-3.5 text-right font-black tabular-nums text-gray-900">{currency}{(Number(item.price) * item.quantity).toFixed(2)}</td>
-                                            <td className="pr-3 py-3.5">
+                                            <td className="px-3 py-3 text-center text-[10px] font-mono text-gray-400">{(item.taxRate || 0)}%</td>
+                                            <td className="px-5 py-3 text-right font-black tabular-nums text-gray-900">{currency}{(Number(item.price) * item.quantity).toFixed(2)}</td>
+                                            <td className="pr-3 py-3">
                                                 <button onClick={() => onUpdateQuantity(item.productId, -100)} className="opacity-0 group-hover:opacity-100 w-6 h-6 flex items-center justify-center text-gray-300 hover:text-rose-500 transition-all">
                                                     <Trash2 size={13} />
                                                 </button>
@@ -341,7 +341,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                         )}
                     </div>
 
-                    {/* Cart Footer — Totals + Payment (always visible) */}
+                    {/* Cart Footer — Totals + Charge (always visible) */}
                     <div className="border-t border-gray-200 bg-white px-5 py-3 shrink-0">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-6">

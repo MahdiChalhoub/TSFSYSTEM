@@ -13,8 +13,8 @@ export default async function ExpiryAlertsPage() {
             <header className="flex justify-between items-start">
                 <div>
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-indigo-600 rounded-lg text-white shadow-lg shadow-indigo-200">
-                            <Clock size={16} />
+                        <div className="w-14 h-14 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200 text-white">
+                            <Clock size={28} />
                         </div>
                         <span className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.3em]">Batch Management</span>
                     </div>

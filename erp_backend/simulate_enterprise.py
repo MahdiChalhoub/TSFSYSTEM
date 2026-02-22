@@ -14,6 +14,7 @@ from django.apps import apps
 from django.db import models, reset_queries
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from django.db import close_old_connections
 import gc
 
 def get_model(app_label, model_name):
@@ -461,6 +462,7 @@ def simulate():
     while current_time < end_date:
         reset_queries()
         gc.collect()
+        close_old_connections()
 
         cur_date = current_time.date()
 
@@ -486,7 +488,7 @@ def simulate():
 
         # ─── 2. DAILY: Sales Orders + Invoices + Payments ────────
         for store_wh in [w for w in whs if w.type == 'STORE']:
-            daily_count = random.randint(5, 12)
+            daily_count = random.randint(3, 5)
             batch_refs = get_ref_batch(org, 'ORD', daily_count)
             inv_refs = get_ref_batch(org, 'INV', daily_count)
             pay_refs = get_ref_batch(org, 'PAY', daily_count)
@@ -512,7 +514,7 @@ def simulate():
                 moves_batch = []
                 inv_lines_data = []
 
-                for _ in range(random.randint(1, 4)):
+                for _ in range(random.randint(1, 3)):
                     p = random.choice(products)
                     qty = random.randint(1, 3)
 
@@ -589,11 +591,11 @@ def simulate():
         # ─── 3. WEEKLY: Purchase Restocks + Purchase Invoices (Mondays) ──
         if cur_date.weekday() == 0:
             for wh in [w for w in whs if w.type == 'GENERAL']:
-                batch_refs = get_ref_batch(org, 'PO', 3)
-                pinv_refs = get_ref_batch(org, 'PINV', 3)
-                ppay_refs = get_ref_batch(org, 'PPAY', 3)
+                batch_refs = get_ref_batch(org, 'PO', 2)
+                pinv_refs = get_ref_batch(org, 'PINV', 2)
+                ppay_refs = get_ref_batch(org, 'PPAY', 2)
 
-                for k in range(3):
+                for k in range(2):
                     ref = batch_refs[k]
                     sup = random.choice(suppliers)
                     order = Order.objects.create(
@@ -609,9 +611,9 @@ def simulate():
                     lines = []
                     movements = []
                     pinv_lines_data = []
-                    for _ in range(random.randint(5, 15)):
+                    for _ in range(random.randint(3, 6)):
                         p = random.choice(products)
-                        qty = random.randint(50, 200)
+                        qty = random.randint(20, 80)
                         line_total = qty * p.cost_price
                         line = OrderLine(organization=org, order=order, product=p,
                             quantity=qty, unit_price=p.cost_price, total=line_total)
@@ -689,7 +691,7 @@ def simulate():
                         reason='Weekly replenishment', is_posted=True,
                         lifecycle_status='CONFIRMED')
                     total_qty = 0
-                    for _ in range(random.randint(3, 8)):
+                    for _ in range(random.randint(2, 4)):
                         p = random.choice(products)
                         qty = random.randint(10, 30)
                         inv_src, _ = Inventory.objects.get_or_create(warehouse=src, product=p, organization=org)
@@ -714,7 +716,7 @@ def simulate():
                 warehouse=adj_wh, reason='Cycle count adjustment',
                 is_posted=True, lifecycle_status='CONFIRMED')
             total_adj = 0
-            for _ in range(random.randint(3, 8)):
+            for _ in range(random.randint(2, 5)):
                 p = random.choice(products)
                 qty_adj = random.randint(-5, 10)
                 StockAdjustmentLine.objects.create(order=adj_order, product=p, qty_adjustment=qty_adj, warehouse=adj_wh,
@@ -789,8 +791,8 @@ def simulate():
                 for dname, dcat, dtotal, months in deferred_items:
                     DeferredExpense.objects.create(
                         organization=org, name=f"{dname} - Q{(cur_date.month-1)//3 + 1} {cur_date.year}",
-                        category=dcat, total_amount=dtotal, monthly_amount=(dtotal / months).quantize(Decimal('0.01')),
-                        start_date=cur_date, end_date=cur_date + timedelta(days=365),
+                        category=dcat, total_amount=dtotal, duration_months=months,
+                        start_date=cur_date,
                         remaining_amount=dtotal, status='ACTIVE',
                         expense_coa=coa_prepaid, source_account=fa_bank
                     )
@@ -807,26 +809,18 @@ def simulate():
                     reason="Personal matters",
                     status=random.choice(['PENDING', 'APPROVED', 'APPROVED', 'APPROVED']))
 
-            # === Vouchers (2-3 per month) ===
+            # === Vouchers (2-3 per month: Transfers between accounts) ===
             for _ in range(random.randint(2, 3)):
                 v_ref = get_ref_batch(org, 'VCH', 1)[0]
-                v_type = random.choice(['TRANSFER', 'RECEIPT', 'PAYMENT'])
                 v_amt = Decimal(random.uniform(500, 10000)).quantize(Decimal('0.01'))
-                v_kwargs = {
-                    'organization': org, 'voucher_type': v_type,
-                    'amount': v_amt, 'date': cur_date,
-                    'reference': v_ref, 'description': f"Voucher {v_type}",
-                    'is_posted': True, 'lifecycle_status': 'CONFIRMED',
-                }
-                if v_type == 'TRANSFER':
-                    src, dst = random.sample(financial_accounts, 2)
-                    v_kwargs['source_account'] = src
-                    v_kwargs['destination_account'] = dst
-                else:
-                    v_kwargs['source_account'] = fa_cash
-                    v_kwargs['destination_account'] = fa_bank
-                    v_kwargs['contact'] = random.choice(customers if v_type == 'RECEIPT' else suppliers)
-                Voucher.objects.create(**v_kwargs)
+                src, dst = random.sample(financial_accounts, 2)
+                Voucher.objects.create(
+                    organization=org, voucher_type='TRANSFER',
+                    amount=v_amt, date=cur_date,
+                    reference=v_ref, description=f"Internal Fund Transfer",
+                    source_account=src, destination_account=dst,
+                    is_posted=True, lifecycle_status='CONFIRMED',
+                )
 
         # ─── Advance Day ─────────────────────────────────────────
         current_time += timedelta(days=1)

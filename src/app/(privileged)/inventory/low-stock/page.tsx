@@ -90,8 +90,13 @@ export default function LowStockPage() {
     return (
         <div className="p-6 space-y-6">
             <header>
-                <h1 className="text-2xl font-bold text-gray-900">Low Stock Alerts</h1>
-                <p className="text-sm text-gray-500 mt-1">Products at or below minimum stock levels</p>
+                <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-amber-600 flex items-center justify-center shadow-lg shadow-amber-200">
+                        <TrendingDown size={28} className="text-white" />
+                    </div>
+                    Low Stock <span className="text-amber-600">Alerts</span>
+                </h1>
+                <p className="text-sm text-gray-500 mt-2">Products at or below minimum stock levels</p>
             </header>
 
             {/* KPI Cards */}
