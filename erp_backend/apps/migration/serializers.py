@@ -76,3 +76,9 @@ class MigrationMappingSerializer(serializers.ModelSerializer):
 class MigrationPreviewSerializer(serializers.Serializer):
     """Response serializer for preview endpoint."""
     tables = serializers.DictField(child=serializers.IntegerField())
+
+
+class MigrationLinkSerializer(serializers.Serializer):
+    """Serializer for linking an existing StoredFile to a new migration job."""
+    file_uuid = serializers.UUIDField()
+    name = serializers.CharField(max_length=255, default='UltimatePOS Migration')

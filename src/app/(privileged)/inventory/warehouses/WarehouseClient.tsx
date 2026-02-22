@@ -29,12 +29,12 @@ export function WarehouseClient({ initialWarehouses }: { initialWarehouses: any[
             alwaysVisible: true,
             render: (row: any) => (
                 <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${row.can_sell ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-50 text-indigo-600'}`}>
-                        {row.can_sell ? <Store size={20} /> : <Warehouse size={20} />}
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm ${row.can_sell ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-slate-600'}`}>
+                        {row.can_sell ? <Store size={22} /> : <Warehouse size={22} />}
                     </div>
                     <div>
-                        <p className="font-bold text-gray-900">{row.name}</p>
-                        <p className="text-[10px] text-gray-400 font-mono uppercase">{row.code || `NODE-${row.id}`}</p>
+                        <p className="font-black text-gray-900 tracking-tight">{row.name}</p>
+                        <p className="text-[10px] text-gray-400 font-mono uppercase tracking-wider">{row.code || `NODE-${row.id}`}</p>
                     </div>
                 </div>
             )
@@ -143,38 +143,38 @@ export function WarehouseClient({ initialWarehouses }: { initialWarehouses: any[
         <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto p-4 md:p-8">
             {/* Infrastructure Intelligence */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="rounded-[2.5rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-md transition-all">
+                <Card className="rounded-[2rem] border-0 shadow-sm bg-gradient-to-br from-slate-50 to-white overflow-hidden group hover:shadow-md transition-all">
                     <CardContent className="p-6 flex items-center gap-5">
-                        <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">
+                        <div className="w-14 h-14 rounded-2xl bg-white text-slate-600 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
                             <Layers size={28} />
                         </div>
                         <div>
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Storage Nodes</p>
-                            <h2 className="text-3xl font-black text-gray-900 mt-0.5">{totalNodes}</h2>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Storage Nodes</p>
+                            <h2 className="text-3xl font-black text-gray-900 mt-0.5 tracking-tighter">{totalNodes}</h2>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="rounded-[2.5rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-md transition-all">
+                <Card className="rounded-[2rem] border-0 shadow-sm bg-gradient-to-br from-emerald-50 to-white overflow-hidden group hover:shadow-md transition-all">
                     <CardContent className="p-6 flex items-center gap-5">
-                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">
+                        <div className="w-14 h-14 rounded-2xl bg-white text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
                             <Store size={28} />
                         </div>
                         <div>
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Retail Points</p>
-                            <h2 className="text-3xl font-black text-gray-900 mt-0.5">{retailActive}</h2>
+                            <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Retail Points</p>
+                            <h2 className="text-3xl font-black text-gray-900 mt-0.5 tracking-tighter">{retailActive}</h2>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="rounded-[2.5rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-md transition-all">
+                <Card className="rounded-[2rem] border-0 shadow-sm bg-gradient-to-br from-slate-900 to-slate-800 text-white overflow-hidden group hover:shadow-xl transition-all">
                     <CardContent className="p-6 flex items-center gap-5">
-                        <div className="w-14 h-14 rounded-2xl bg-stone-50 text-stone-600 flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">
+                        <div className="w-14 h-14 rounded-2xl bg-white/10 text-slate-100 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm backdrop-blur-sm">
                             <BarChart3 size={28} />
                         </div>
                         <div>
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Global SKUs</p>
-                            <h2 className="text-3xl font-black text-gray-900 mt-0.5">{globalSKUCount}</h2>
+                            <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Global SKUs</p>
+                            <h2 className="text-3xl font-black text-white mt-0.5 tracking-tighter">{globalSKUCount}</h2>
                         </div>
                     </CardContent>
                 </Card>
@@ -195,10 +195,7 @@ export function WarehouseClient({ initialWarehouses }: { initialWarehouses: any[
                     onDelete: (r) => setDeleteTarget(r)
                 }}
             >
-                <TypicalFilter
-                    onFilter={() => { }}
-                    searchPlaceholder="Filter Nodes by ID, Signature or Name..."
-                />
+                <TypicalFilter />
             </TypicalListView>
 
             {isFormOpen && (

@@ -39,14 +39,58 @@ export function ReceiptModal({ orderId, refCode, isOpen, onClose }: {
     }
 
     function handlePrint() {
-        // In a real scenario, this would generate a specific 80mm thermal receipt
-        // For now, we reuse the official PDF for simplicity in this session
-        handleDownload()
+        // Toggle the hidden receipt view and trigger print
+        const printContent = document.getElementById('thermal-receipt-content');
+        if (!printContent) return;
+
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) return;
+
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Print Receipt</title>
+                    <style>
+                        body { font-family: 'Courier New', Courier, monospace; width: 80mm; padding: 5mm; margin: 0; }
+                        .center { text-align: center; }
+                        .bold { font-weight: bold; }
+                        .hr { border-bottom: 1px dashed #000; margin: 5px 0; }
+                        .item { display: flex; justify-content: space-between; font-size: 12px; }
+                        .total { font-weight: bold; border-top: 1px solid #000; margin-top: 5px; padding-top: 5px; }
+                        @media print { body { width: 80mm; } }
+                    </style>
+                </head>
+                <body>
+                    ${printContent.innerHTML}
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
     }
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="max-w-md p-0 overflow-hidden border-none shadow-2xl rounded-3xl">
+                {/* Hidden Thermal Receipt for Printing */}
+                <div id="thermal-receipt-content" className="hidden">
+                    <div className="center bold">TSF ERP - RETAIL</div>
+                    <div className="center">Point of Sale</div>
+                    <div className="hr"></div>
+                    <div>Date: ${new Date().toLocaleString()}</div>
+                    <div>Ref: ${refCode || orderId}</div>
+                    <div className="hr"></div>
+                    {/* Items would be mapped here from order data */}
+                    <div className="item">
+                        <span>Transaction Total</span>
+                        <span className="bold">$XX.XX</span>
+                    </div>
+                    <div className="hr"></div>
+                    <div className="center">THANK YOU</div>
+                </div>
+
                 <div className="bg-emerald-600 p-8 text-center text-white relative">
                     <div className="absolute top-4 right-4 cursor-pointer hover:bg-white/20 p-2 rounded-full" onClick={onClose}>
                         <X size={20} />

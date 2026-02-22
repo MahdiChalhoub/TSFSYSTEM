@@ -51,55 +51,60 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
     const { data, total, totalPages } = isGrouped ? await getGroups(page) : await getProducts(page);
 
     return (
-        <div className="space-y-10 animate-in fade-in duration-500">
+        <div className="p-8 space-y-10 animate-in fade-in duration-500 max-w-[1600px] mx-auto">
             {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <header className="flex flex-col md:flex-row justify-between items-center gap-6">
                 <div>
-                    <h1 className="text-4xl font-bold text-gray-900 tracking-tight mb-2">Product Registry</h1>
-                    <p className="text-gray-500 text-base">Manage your product catalog.</p>
+                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200 text-white">
+                            <Layers size={28} />
+                        </div>
+                        Product <span className="text-emerald-600">Registry</span>
+                    </h1>
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Global Catalog & Master Data Management</p>
                 </div>
                 <div className="flex gap-4">
                     <Link
                         href="/products/new"
-                        className="bg-white border text-gray-700 px-6 py-3.5 rounded-2xl font-semibold shadow-sm hover:bg-gray-50 transition-all flex items-center gap-2"
+                        className="bg-white border border-gray-100 text-gray-700 px-6 h-12 rounded-2xl font-bold shadow-sm hover:bg-gray-50 hover:border-gray-200 transition-all flex items-center gap-2 group"
                     >
-                        <Plus size={18} />
+                        <Plus size={18} className="text-emerald-600 group-hover:scale-110 transition-transform" />
                         <span>Single Product</span>
                     </Link>
                     <Link
                         href="/products/create-group"
-                        className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-3.5 rounded-2xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center gap-2"
+                        className="bg-emerald-600 text-white px-6 h-12 rounded-2xl font-bold shadow-lg shadow-emerald-100 hover:bg-emerald-700 hover:shadow-xl hover:scale-105 transition-all flex items-center gap-2"
                     >
                         <Layers size={18} />
                         <span>Create Group</span>
                     </Link>
                 </div>
-            </div>
+            </header>
 
-            {/* View Toggle & Filters */}
-            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-                <div className="flex p-1 bg-gray-100 rounded-xl">
+            {/* View Toggle & Filters Header */}
+            <div className="flex flex-col sm:flex-row gap-6 items-center justify-between bg-white/50 p-6 rounded-[2.5rem] border border-gray-100 shadow-sm">
+                <div className="flex p-1.5 bg-gray-100/80 rounded-2xl">
                     <Link
                         href="/products?view=flat"
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${!isGrouped ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+                        className={`px-5 py-2.5 rounded-xl text-sm font-black tracking-tight transition-all ${!isGrouped ? 'bg-white shadow-lg shadow-gray-200/50 text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
                     >
-                        Detailed (SKUs)
+                        DETAILED (SKUs)
                     </Link>
                     <Link
                         href="/products?view=grouped"
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${isGrouped ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+                        className={`px-5 py-2.5 rounded-xl text-sm font-black tracking-tight transition-all ${isGrouped ? 'bg-white shadow-lg shadow-gray-200/50 text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
                     >
-                        Grouped (Master)
+                        GROUPED (MASTER)
                     </Link>
                 </div>
 
                 <div className="flex gap-4 w-full max-w-xl">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
+                    <div className="relative flex-1 group">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none group-focus-within:text-emerald-500 transition-colors" size={20} />
                         <input
                             type="text"
-                            placeholder="Search..."
-                            className="w-full pl-12 pr-4 py-3 bg-white rounded-xl border border-gray-200 focus:border-emerald-500 outline-none transition-all shadow-sm"
+                            placeholder="Search master catalog..."
+                            className="w-full pl-12 pr-4 h-12 bg-white rounded-2xl border border-gray-100 focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all shadow-sm"
                         />
                     </div>
                 </div>

@@ -81,11 +81,12 @@ class Order(TenantModel):
         return hashlib.sha256(encoded_data).hexdigest()
 
     def save(self, *args, **kwargs):
+        bypass = kwargs.pop('force_audit_bypass', False)
         if self.pk:
             original = Order.objects.get(pk=self.pk)
             # Immutability Guard for finalized orders
             if original.status in ['COMPLETED', 'INVOICED', 'RECEIVED']:
-                if not kwargs.get('force_audit_bypass', False):
+                if not bypass:
                     raise ValidationError(f"Immutable POS: Orders in status '{original.status}' cannot be modified.")
         super().save(*args, **kwargs)
 

@@ -22,6 +22,7 @@ import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/components/ui/select'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { cn } from '@/lib/utils'
 
 /* ═══════════════════════════════════════════════════════
    TypicalListView — Universal data table component
@@ -75,6 +76,7 @@ export type TypicalListViewProps<T, D = any> = {
 
     /** Custom badges/indicators after title */
     headerExtras?: React.ReactNode
+    headerExtra?: React.ReactNode // Backward compatibility
 
     /** Nested rows logic */
     expandable?: {
@@ -107,6 +109,7 @@ export type TypicalListViewProps<T, D = any> = {
     renderCard?: (row: T) => React.ReactNode
     gridClassName?: string
 
+    className?: string
     children?: React.ReactNode // Usually TypicalFilter
 }
 
@@ -115,11 +118,12 @@ export function TypicalListView<T, D = any>({
     data, loading, getRowId,
     columns, visibleColumns, onToggleColumn,
     selection, bulkActions,
-    lifecycle, headerExtras,
+    lifecycle, headerExtras, headerExtra,
     expandable, actions, renderExpanded,
     pageSize = 25, onPageSizeChange,
     sortKey, sortDir, onSort,
     viewMode: initialViewMode = 'table', onViewModeChange, renderCard, gridClassName,
+    className,
     children
 }: TypicalListViewProps<T, D>) {
 
@@ -190,7 +194,7 @@ export function TypicalListView<T, D = any>({
     }
 
     return (
-        <div className="space-y-4 bg-white rounded-xl shadow-sm border border-gray-100 p-1">
+        <div className={cn("space-y-4 bg-white rounded-xl shadow-sm border border-gray-100 p-1", className)}>
             {/* ─── Header Section ────────────────── */}
             <div className="px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
@@ -199,6 +203,7 @@ export function TypicalListView<T, D = any>({
                         {data.length}
                     </Badge>
                     {headerExtras}
+                    {headerExtra}
                 </div>
 
                 <div className="flex items-center gap-4">

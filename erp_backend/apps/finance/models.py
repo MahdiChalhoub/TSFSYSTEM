@@ -150,6 +150,7 @@ class JournalEntry(TenantModel):
         return LedgerCryptography.calculate_entry_hash(entry_meta, self.previous_hash)
 
     def save(self, *args, **kwargs):
+        bypass = kwargs.pop('force_audit_bypass', False)
         # Quantum Audit: Immutability Guard
         if self.pk:
             original = JournalEntry.objects.get(pk=self.pk)
@@ -158,7 +159,7 @@ class JournalEntry(TenantModel):
                 # For now, block everything to be safe.
                 # If we need to update 'posted_at' or 'posted_by' during POSTING,
                 # the service layer should use .update() or we can add a bypass flag.
-                if not kwargs.get('force_audit_bypass', False):
+                if not bypass:
                     raise ValidationError("Immutable Ledger: 'POSTED' entries cannot be modified. Use reversals instead.")
         super().save(*args, **kwargs)
 

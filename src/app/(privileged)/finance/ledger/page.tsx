@@ -11,7 +11,7 @@ import {
     Plus, History, ShieldCheck, Wallet, FileText,
     ArrowUpRight, ArrowDownRight, Hash, X
 } from 'lucide-react'
-import { TypicalListView, ColumnDef, ExpandableConfig } from '@/components/common/TypicalListView'
+import { TypicalListView, ColumnDef } from '@/components/common/TypicalListView'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -127,30 +127,30 @@ export default function GeneralLedgerPage() {
         }
     ], [])
 
-    const expandable: ExpandableConfig<any, any> = useMemo(() => ({
-        getDetails: (e) => e.lines || [],
+    const expandable: any = useMemo(() => ({
+        getDetails: (e: any) => e.lines || [],
         columns: [
             {
                 key: 'account_code',
                 label: 'Code',
-                render: (l) => <span className="font-mono text-[10px] text-gray-400">{l.account?.code}</span>
+                render: (l: any) => <span className="font-mono text-[10px] text-gray-400">{l.account?.code}</span>
             },
             {
                 key: 'account_name',
                 label: 'Financial Account',
-                render: (l) => <span className="font-bold text-gray-700 text-xs">{l.account?.name}</span>
+                render: (l: any) => <span className="font-bold text-gray-700 text-xs">{l.account?.name}</span>
             },
             {
                 key: 'debit',
                 label: 'Debit',
                 align: 'right',
-                render: (l) => <span className="font-black text-emerald-600 font-mono text-xs">{Number(l.debit) > 0 ? fmt(Number(l.debit)) : ''}</span>
+                render: (l: any) => <span className="font-black text-emerald-600 font-mono text-xs">{Number(l.debit) > 0 ? fmt(Number(l.debit)) : ''}</span>
             },
             {
                 key: 'credit',
                 label: 'Credit',
                 align: 'right',
-                render: (l) => <span className="font-black text-rose-600 font-mono text-xs">{Number(l.credit) > 0 ? fmt(Number(l.credit)) : ''}</span>
+                render: (l: any) => <span className="font-black text-rose-600 font-mono text-xs">{Number(l.credit) > 0 ? fmt(Number(l.credit)) : ''}</span>
             }
         ],
         headerColor: 'bg-stone-50',
@@ -161,28 +161,30 @@ export default function GeneralLedgerPage() {
     return (
         <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
             {/* Standard Header */}
-            <header className="flex justify-between items-center">
+            <header className="flex justify-between items-end">
                 <div>
-                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-[1.5rem] bg-stone-900 flex items-center justify-center shadow-lg shadow-stone-200">
-                            <BookOpen size={28} className="text-white" />
+                    <div className="flex items-center gap-3 mb-2">
+                        <Badge className="bg-stone-50 text-stone-600 border-stone-100 font-black text-[10px] uppercase tracking-widest px-3 py-1">
+                            System Node: Integrity Active
+                        </Badge>
+                        <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest flex items-center gap-1">
+                            <ShieldCheck size={12} /> Trial Balance Guard
+                        </span>
+                    </div>
+                    <h1 className="text-5xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <div className="w-16 h-16 rounded-[1.8rem] bg-stone-900 flex items-center justify-center shadow-2xl shadow-stone-200">
+                            <BookOpen size={32} className="text-white" />
                         </div>
                         General <span className="text-indigo-600">Ledger</span>
                     </h1>
-                    <div className="flex items-center gap-3 mt-2">
-                        <p className="text-sm font-medium text-gray-400 uppercase tracking-widest">Journal Entries & Audit Log</p>
-                        <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-100 text-[10px] font-black uppercase flex items-center gap-1 h-5">
-                            <ShieldCheck size={10} /> Trial Balance Guard Active
-                        </Badge>
-                    </div>
                 </div>
-                <div className="flex items-center gap-3">
-                    <Button asChild variant="ghost" className="h-12 px-5 rounded-2xl font-black uppercase tracking-widest text-[10px] text-stone-500 hover:bg-stone-50 border border-transparent hover:border-stone-100">
+                <div className="flex gap-3">
+                    <Button asChild variant="outline" className="h-12 px-6 rounded-2xl border-stone-100 font-bold text-gray-600 flex items-center gap-2 hover:bg-stone-50 transition-all">
                         <Link href="/finance/ledger/opening/list" className="flex items-center gap-2">
-                            <Wallet size={16} /> Opening Balances
+                            <Wallet size={18} /> Opening Balances
                         </Link>
                     </Button>
-                    <Button asChild className="h-12 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-widest text-xs shadow-lg shadow-indigo-200 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                    <Button asChild className="h-12 px-6 rounded-2xl bg-indigo-600 text-white font-bold flex items-center gap-2 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
                         <Link href="/finance/ledger/new" className="flex items-center gap-2">
                             <Plus size={18} /> New Journal Entry
                         </Link>
@@ -278,7 +280,7 @@ export default function GeneralLedgerPage() {
                 lifecycle={{
                     getStatus: (e) => {
                         if (e.status === 'POSTED') return { label: 'Posted', variant: 'success' }
-                        if (e.status === 'REVERSED') return { label: 'Reversed', variant: 'destructive' }
+                        if (e.status === 'REVERSED') return { label: 'Reversed', variant: 'danger' }
                         return { label: 'Draft', variant: 'warning' }
                     }
                 }}
@@ -294,7 +296,7 @@ export default function GeneralLedgerPage() {
                         )
                     }
                 }}
-                className="rounded-3xl border-0 shadow-sm overflow-hidden"
+                className="rounded-[2.5rem] border-0 shadow-sm overflow-hidden bg-white"
             />
         </div>
     )

@@ -1700,25 +1700,19 @@ class StockAdjustmentOrderViewSet(LifecycleViewSetMixin, TenantModelViewSet):
     def post_order(self, request, pk=None):
         """Execute all adjustments once order is CONFIRMED."""
         order = self.get_object()
-        if order.lifecycle_status != 'CONFIRMED':
+        if order.lifecycle_status != 'CONFIRMED' and order.status != 'CONFIRMED':
+            # Support both lifecycle mixin and legacy status
             return Response({'error': 'Order must be CONFIRMED before posting'}, status=400)
         if order.is_posted:
             return Response({'error': 'Order already posted'}, status=400)
-        organization = order.organization
+            
         try:
-            with transaction.atomic():
-                for line in order.lines.select_related('product', 'warehouse').all():
-                    InventoryService.adjust_stock(
-                        organization=organization,
-                        product=line.product,
-                        warehouse=line.warehouse,
-                        quantity=line.qty_adjustment,
-                        reason=line.reason or order.reason or 'Stock Adjustment',
-                        reference=order.reference,
-                    )
-                order.is_posted = True
-                order.save(update_fields=['is_posted'])
-            return Response({'message': f'Posted {order.lines.count()} adjustments'})
+            InventoryService.process_adjustment_order(
+                organization=order.organization,
+                order=order,
+                user=request.user
+            )
+            return Response({'message': f'Posted {order.lines.count()} adjustments successfully.'})
         except Exception as e:
             return Response({'error': str(e)}, status=400)
 
@@ -1805,25 +1799,18 @@ class StockTransferOrderViewSet(LifecycleViewSetMixin, TenantModelViewSet):
     def post_order(self, request, pk=None):
         """Execute all transfers once order is CONFIRMED."""
         order = self.get_object()
-        if order.lifecycle_status != 'CONFIRMED':
+        if order.lifecycle_status != 'CONFIRMED' and order.status != 'CONFIRMED':
             return Response({'error': 'Order must be CONFIRMED before posting'}, status=400)
         if order.is_posted:
             return Response({'error': 'Order already posted'}, status=400)
-        organization = order.organization
+            
         try:
-            with transaction.atomic():
-                for line in order.lines.select_related('product', 'from_warehouse', 'to_warehouse').all():
-                    InventoryService.transfer_stock(
-                        organization=organization,
-                        product=line.product,
-                        source_warehouse=line.from_warehouse,
-                        destination_warehouse=line.to_warehouse,
-                        quantity=line.qty_transferred,
-                        reference=order.reference,
-                    )
-                order.is_posted = True
-                order.save(update_fields=['is_posted'])
-            return Response({'message': f'Posted {order.lines.count()} transfers'})
+            InventoryService.process_transfer_order(
+                organization=order.organization,
+                order=order,
+                user=request.user
+            )
+            return Response({'message': f'Posted {order.lines.count()} transfers successfully.'})
         except Exception as e:
             return Response({'error': str(e)}, status=400)
 

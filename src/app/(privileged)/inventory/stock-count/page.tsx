@@ -235,7 +235,7 @@ export default function StockGovernanceConsolePage() {
                             getCanceled: r => r.status === 'CANCELLED'
                         }}
                         actions={{
-                            renderCustom: (s) => (
+                            extra: (s: Session) => (
                                 <div className="flex items-center gap-1">
                                     {s.status === 'IN_PROGRESS' && (
                                         <Button size="sm" variant="outline" className="h-8 px-3 rounded-xl border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold text-[10px]" onClick={() => router.push(`/inventory/stock-count/${s.id}/count`)}>

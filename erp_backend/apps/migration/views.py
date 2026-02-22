@@ -18,6 +18,7 @@ from apps.migration.serializers import (
     MigrationJobSerializer, MigrationJobDetailSerializer,
     MigrationUploadSerializer, MigrationDirectDBSerializer,
     MigrationMappingSerializer, MigrationPreviewSerializer,
+    MigrationLinkSerializer,
 )
 from apps.migration.services import MigrationService, MigrationRollbackService
 from apps.migration.parsers import SQLDumpParser
@@ -53,6 +54,12 @@ class MigrationViewSet(viewsets.ModelViewSet):
         return MigrationJob.objects.filter(organization_id=org_id)
 
     def get_serializer_class(self):
+        if self.action == 'upload':
+            return MigrationUploadSerializer
+        if self.action == 'connect':
+            return MigrationDirectDBSerializer
+        if self.action == 'link':
+            return MigrationLinkSerializer
         if self.action == 'retrieve':
             return MigrationJobDetailSerializer
         return MigrationJobSerializer
@@ -82,12 +89,12 @@ class MigrationViewSet(viewsets.ModelViewSet):
         
         # Use the universal storage logic
         storage_key, bucket, checksum, file_size = upload_to_cloud(
-            uploaded_file,
-            category='MIGRATION',
             provider=provider,
+            file_obj=uploaded_file,
+            category='MIGRATION',
+            original_filename=uploaded_file.name,
             org_slug=org_slug,
-            linked_model='data_migration.MigrationJob',
-            # linked_id will be set after job creation
+            linked_model='migration.MigrationJob',
         )
 
         # Create StoredFile record
@@ -100,7 +107,7 @@ class MigrationViewSet(viewsets.ModelViewSet):
             file_size=file_size,
             category='MIGRATION',
             uploaded_by=request.user if request.user.is_authenticated else None,
-            linked_model='data_migration.MigrationJob',
+            linked_model='migration.MigrationJob',
         )
 
         # Create migration job linked to stored_file
@@ -115,6 +122,38 @@ class MigrationViewSet(viewsets.ModelViewSet):
         # Update stored_file with job ID
         stored_file.linked_id = job.id
         stored_file.save()
+
+        return Response(
+            MigrationJobSerializer(job).data,
+            status=status.HTTP_201_CREATED
+        )
+
+    @action(detail=False, methods=['post'], url_path='link')
+    def link(self, request):
+        """Create a migration job linked to an existing StoredFile."""
+        serializer = MigrationLinkSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        file_uuid = serializer.validated_data['file_uuid']
+        name = serializer.validated_data.get('name', 'UltimatePOS Migration')
+
+        from apps.storage.models import StoredFile
+        stored_file = StoredFile.objects.filter(uuid=file_uuid).first()
+        if not stored_file:
+            return Response({'error': 'StoredFile not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Get tenant context
+        org_id = request.headers.get('X-Tenant-Id') or \
+                 getattr(request.user, 'organization_id', None)
+
+        # Create migration job
+        job = MigrationJob.objects.create(
+            organization_id=org_id,
+            name=name,
+            source_type='SQL_DUMP',
+            stored_file=stored_file,
+            created_by=request.user if request.user.is_authenticated else None,
+        )
 
         return Response(
             MigrationJobSerializer(job).data,

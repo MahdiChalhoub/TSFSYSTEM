@@ -25,38 +25,40 @@ export default async function AttendancePage() {
     const checkedIn = todayRecords.filter((a: any) => a.check_in && !a.check_out).length;
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
-                <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-[20px] bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-2xl">
-                            <Fingerprint size={24} />
+        <div className="p-8 space-y-10 animate-in fade-in duration-500 max-w-[1600px] mx-auto">
+            {/* Header */}
+            <header className="flex flex-col md:flex-row justify-between items-center gap-6">
+                <div>
+                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200 text-white">
+                            <Fingerprint size={28} />
                         </div>
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em]">Tracking</span>
-                    </div>
-                    <h1 className="text-6xl lg:text-7xl font-black text-gray-900 tracking-tighter">
                         Atten<span className="text-emerald-600">dance</span>
                     </h1>
-                    <p className="text-gray-500 font-medium max-w-xl text-lg leading-relaxed">
-                        Real-time employee check-in/check-out tracking. Monitor presence across shifts and calculate working hours automatically.
-                    </p>
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Real-time Pulse: Workforce Presence Tracking</p>
                 </div>
-
-                <div className="flex gap-8 bg-white p-10 rounded-[50px] shadow-2xl shadow-emerald-900/5 border border-gray-50">
-                    <div className="text-center px-8 border-r border-gray-100">
-                        <div className="text-5xl font-black text-gray-900 tracking-tighter mb-1">{attendance.length}</div>
-                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Records</div>
+                {/* KPI Pulse */}
+                <div className="flex gap-4">
+                    <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex items-center gap-5 min-w-[200px]">
+                        <div className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center">
+                            <Clock size={24} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1 leading-none mb-1">Total Logs</p>
+                            <h2 className="text-2xl font-black text-gray-900 tracking-tighter">{attendance.length}</h2>
+                        </div>
                     </div>
-                    <div className="text-center px-8 border-r border-gray-100">
-                        <div className="text-5xl font-black text-emerald-600 tracking-tighter mb-1">{todayRecords.length}</div>
-                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Today</div>
-                    </div>
-                    <div className="text-center px-8">
-                        <div className="text-5xl font-black text-amber-600 tracking-tighter mb-1">{checkedIn}</div>
-                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">On-site Now</div>
+                    <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-emerald-100 flex items-center gap-5 min-w-[200px]">
+                        <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                            <UserCheck size={24} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mt-1 leading-none mb-1">On-Site Now</p>
+                            <h2 className="text-2xl font-black text-emerald-600 tracking-tighter">{checkedIn}</h2>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </header>
 
             <AttendanceClient attendance={attendance} employees={employees} shifts={shifts} />
         </div>

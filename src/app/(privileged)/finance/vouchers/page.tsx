@@ -21,12 +21,12 @@ import {
     CheckCircle2, Clock, Send, Receipt, Pencil, Trash2,
     Lock, Unlock, ShieldCheck, History
 } from "lucide-react"
-import { TypicalListView, ColumnDef, LifecycleConfig, ActionsConfig } from "@/components/common/TypicalListView"
+import { TypicalListView, ColumnDef, LifecycleConfig } from "@/components/common/TypicalListView"
 import { useCurrency } from "@/lib/utils/currency"
 
 // Sort logic handled by TypicalListView
 
-const LIFECYCLE_CONFIG: Record<string, { label: string; color: string; bg: string; icon: Record<string, any> }> = {
+const LIFECYCLE_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ElementType }> = {
     OPEN: { label: 'Open', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', icon: Clock },
     LOCKED: { label: 'Locked', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', icon: Lock },
     VERIFIED: { label: 'Verified', color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200', icon: ShieldCheck },
@@ -154,12 +154,12 @@ export default function VouchersPage() {
         } catch { toast.error("Failed to load history") }
     }
 
-    function openEdit(v: Record<string, any>) { setEditVoucher(v); setVoucherType(v.voucher_type); setDialogOpen(true) }
+    function openEdit(v: Voucher) { setEditVoucher(v); setVoucherType(v.voucher_type); setDialogOpen(true) }
     function openCreate() { setEditVoucher(null); setVoucherType('TRANSFER'); setDialogOpen(true) }
     function closeDialog() { setDialogOpen(false); setEditVoucher(null) }
 
     // ─── TypicalListView Configuration ──────────────────────────
-    const typeConfig: Record<string, { icon: Record<string, any>; color: string; bg: string }> = {
+    const typeConfig: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
         TRANSFER: { icon: ArrowRightLeft, color: "text-blue-700", bg: "bg-blue-50 border-blue-200" },
         RECEIPT: { icon: ArrowDownLeft, color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
         PAYMENT: { icon: ArrowUpRight, color: "text-rose-700", bg: "bg-rose-50 border-rose-200" },
@@ -170,13 +170,13 @@ export default function VouchersPage() {
             key: 'date',
             label: 'Date',
             sortable: true,
-            render: (v) => <span className="text-sm text-stone-600">{v.date}</span>
+            render: (v: Voucher) => <span className="text-sm text-stone-600">{v.date}</span>
         },
         {
             key: 'voucher_type',
             label: 'Type',
             sortable: true,
-            render: (v) => {
+            render: (v: Voucher) => {
                 const tc = typeConfig[v.voucher_type] || typeConfig.TRANSFER
                 const TypeIcon = tc.icon
                 return (
@@ -190,31 +190,36 @@ export default function VouchersPage() {
             key: 'reference',
             label: 'Reference',
             sortable: true,
-            render: (v) => <span className="font-mono text-sm text-stone-500">{v.reference || "—"}</span>
+            render: (v: Voucher) => <span className="font-mono text-sm text-stone-500">{v.reference || "—"}</span>
         },
         {
             key: 'description',
             label: 'Description',
-            render: (v) => <span className="text-sm text-stone-600 max-w-[200px] truncate block">{v.description || "—"}</span>
+            render: (v: Voucher) => <span className="text-sm text-stone-600 max-w-[200px] truncate block">{v.description || "—"}</span>
         },
         {
             key: 'amount',
             label: 'Amount',
             align: 'right',
             sortable: true,
-            render: (v) => <span className="font-semibold text-stone-800">{fmt(v.amount)}</span>
+            render: (v: Voucher) => (
+                <div className="text-right">
+                    <div className="font-bold text-stone-900">{fmt(v.amount)}</div>
+                    <div className="text-[10px] text-stone-400 font-bold">{v.credit_account?.name || v.debit_account?.name}</div>
+                </div>
+            )
         }
     ], [fmt])
 
     const lifecycle: LifecycleConfig<Voucher> = {
-        label: 'Status',
-        variant: 'default',
-        getStatus: (v) => {
-            const status = v.lifecycle_status
-            if (status === 'CONFIRMED') return { label: 'Confirmed', variant: 'success' }
-            if (status === 'LOCKED') return { label: 'Locked', variant: 'warning' }
-            if (status === 'VERIFIED') return { label: 'Verified', variant: 'default' }
-            return { label: 'Open', variant: 'default' }
+        getStatus: (v: Voucher) => {
+            const cfg = LIFECYCLE_CONFIG[v.lifecycle_status] || LIFECYCLE_CONFIG.OPEN
+            const StatusIcon = cfg.icon
+            return (
+                <Badge className={`gap-1.5 px-3 py-1 rounded-lg border shadow-sm ${cfg.bg} ${cfg.color} font-black text-[10px] uppercase tracking-widest`}>
+                    <StatusIcon size={12} /> {cfg.label}
+                </Badge>
+            )
         }
     }
 
@@ -297,19 +302,26 @@ export default function VouchersPage() {
     }
 
     return (
-        <div className="p-6 space-y-6 max-w-7xl mx-auto">
+        <div className="p-6 space-y-6 max-w-[1400px] mx-auto">
             {/* Header */}
-            <header className="flex justify-between items-center">
+            <header className="flex justify-between items-end">
                 <div>
-                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-[1.5rem] bg-stone-900 flex items-center justify-center shadow-lg shadow-stone-200">
-                            <Receipt size={28} className="text-white" />
+                    <div className="flex items-center gap-3 mb-2">
+                        <Badge className="bg-amber-50 text-amber-600 border-amber-100 font-black text-[10px] uppercase tracking-widest px-3 py-1">
+                            Node: Active
+                        </Badge>
+                        <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest flex items-center gap-1">
+                            <Receipt size={12} /> Lifecycle Hub
+                        </span>
+                    </div>
+                    <h1 className="text-5xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <div className="w-16 h-16 rounded-[1.8rem] bg-amber-600 flex items-center justify-center shadow-2xl shadow-amber-200">
+                            <Receipt size={32} className="text-white" />
                         </div>
-                        Financial <span className="text-stone-600">Vouchers</span>
+                        Financial <span className="text-amber-600">Vouchers</span>
                     </h1>
-                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Entry Lifecycle & Management</p>
                 </div>
-                <Button onClick={openCreate} className="rounded-2xl h-12 px-6 gap-2 bg-stone-900 hover:bg-stone-800 shadow-lg shadow-stone-200 transition-all">
+                <Button onClick={openCreate} className="h-12 px-6 rounded-2xl bg-amber-600 text-white font-bold flex items-center gap-2 hover:bg-amber-700 transition-all shadow-lg shadow-amber-200">
                     <Plus size={18} /> New Voucher
                 </Button>
             </header>
@@ -407,7 +419,7 @@ export default function VouchersPage() {
 
                         <div className="col-span-2 flex justify-end gap-2 pt-3 border-t">
                             <Button type="button" variant="outline" onClick={closeDialog} className="rounded-xl">Cancel</Button>
-                            <Button type="submit" disabled={isPending} className="rounded-xl gap-2">
+                            <Button type="submit" disabled={isPending} className="rounded-xl gap-2 bg-amber-600 hover:bg-amber-700 text-white border-0">
                                 {isPending ? (editVoucher ? "Saving..." : "Creating...") : <><Send size={14} /> {editVoucher ? "Save Changes" : "Create Voucher"}</>}
                             </Button>
                         </div>
@@ -442,7 +454,7 @@ export default function VouchersPage() {
                         <Input name="comment" required placeholder="Reason for unlocking..." className="rounded-xl" />
                         <div className="flex justify-end gap-2">
                             <Button type="button" variant="outline" onClick={() => setCommentDialog(null)} className="rounded-xl">Cancel</Button>
-                            <Button type="submit" disabled={isPending} className="rounded-xl gap-2">
+                            <Button type="submit" disabled={isPending} className="rounded-xl gap-2 bg-amber-600 hover:bg-amber-700 text-white border-0">
                                 {isPending ? "Unlocking..." : <><Unlock size={14} /> Unlock</>}
                             </Button>
                         </div>
@@ -478,57 +490,64 @@ export default function VouchersPage() {
             </Dialog>
 
             {/* Dashboard Statistics */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-stone-50 to-stone-100/50">
-                    <CardContent className="pt-5 pb-4 px-5">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-stone-200/60 flex items-center justify-center">
-                                <FileText size={22} className="text-stone-600" />
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    <CardContent className="p-7">
+                        <div className="flex justify-between items-start mb-4">
+                            <div className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-600 flex items-center justify-center">
+                                <FileText size={24} />
                             </div>
-                            <div>
-                                <p className="text-xs font-bold text-stone-400 uppercase tracking-wider">Total Vouchers</p>
-                                <p className="text-2xl font-bold text-stone-900 mt-0.5">{vouchers.length}</p>
-                            </div>
+                            <Badge variant="outline" className="bg-slate-50 border-0 font-black text-[10px]">
+                                TOTAL
+                            </Badge>
                         </div>
+                        <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest">TOTAL VOUCHERS</p>
+                        <h2 className="text-3xl font-black text-gray-900 mt-1">{vouchers.length}</h2>
                     </CardContent>
                 </Card>
-                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-blue-50 to-blue-100/50">
-                    <CardContent className="pt-5 pb-4 px-5">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-blue-200/60 flex items-center justify-center">
-                                <Clock size={22} className="text-blue-600" />
+
+                <Card className="rounded-[2rem] border-0 shadow-sm bg-blue-600 overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-white">
+                    <CardContent className="p-7">
+                        <div className="flex justify-between items-start mb-4">
+                            <div className="w-12 h-12 rounded-2xl bg-blue-500/50 text-blue-100 flex items-center justify-center">
+                                <Clock size={24} />
                             </div>
-                            <div>
-                                <p className="text-xs font-bold text-blue-400 uppercase tracking-wider">Open</p>
-                                <p className="text-2xl font-bold text-blue-900 mt-0.5">{vouchers.filter(v => v.lifecycle_status === "OPEN").length}</p>
-                            </div>
+                            <Badge variant="outline" className="bg-blue-500/30 text-blue-100 border-0 font-black text-[10px]">
+                                OPEN
+                            </Badge>
                         </div>
+                        <p className="text-[11px] font-black text-blue-200 uppercase tracking-widest">PENDING ACTION</p>
+                        <h2 className="text-3xl font-black text-white mt-1">{vouchers.filter(v => v.lifecycle_status === "OPEN").length}</h2>
                     </CardContent>
                 </Card>
-                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-amber-50 to-amber-100/50">
-                    <CardContent className="pt-5 pb-4 px-5">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-amber-200/60 flex items-center justify-center">
-                                <Lock size={22} className="text-amber-600" />
+
+                <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    <CardContent className="p-7">
+                        <div className="flex justify-between items-start mb-4">
+                            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                                <Lock size={24} />
                             </div>
-                            <div>
-                                <p className="text-xs font-bold text-amber-400 uppercase tracking-wider">Locked</p>
-                                <p className="text-2xl font-bold text-amber-900 mt-0.5">{vouchers.filter(v => v.lifecycle_status === "LOCKED").length}</p>
-                            </div>
+                            <Badge variant="outline" className="bg-amber-50 border-0 font-black text-[10px]">
+                                LOCKED
+                            </Badge>
                         </div>
+                        <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest">LOCKED ENTRIES</p>
+                        <h2 className="text-3xl font-black text-amber-600 mt-1">{vouchers.filter(v => v.lifecycle_status === "LOCKED").length}</h2>
                     </CardContent>
                 </Card>
-                <Card className="rounded-2xl border-0 shadow-sm bg-gradient-to-br from-emerald-50 to-emerald-100/50">
-                    <CardContent className="pt-5 pb-4 px-5">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-emerald-200/60 flex items-center justify-center">
-                                <CheckCircle2 size={22} className="text-emerald-600" />
+
+                <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    <CardContent className="p-7">
+                        <div className="flex justify-between items-start mb-4">
+                            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                <CheckCircle2 size={24} />
                             </div>
-                            <div>
-                                <p className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Posted</p>
-                                <p className="text-2xl font-bold text-emerald-900 mt-0.5">{vouchers.filter(v => v.is_posted).length}</p>
-                            </div>
+                            <Badge variant="outline" className="bg-emerald-50 border-0 font-black text-[10px]">
+                                POSTED
+                            </Badge>
                         </div>
+                        <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest">POSTED TO LEDGER</p>
+                        <h2 className="text-3xl font-black text-emerald-600 mt-1">{vouchers.filter(v => v.is_posted).length}</h2>
                     </CardContent>
                 </Card>
             </div>
@@ -541,10 +560,10 @@ export default function VouchersPage() {
                 columns={columns}
                 lifecycle={lifecycle}
                 actions={actions}
-                className="rounded-2xl shadow-sm overflow-hidden border-0"
+                className="rounded-[2.5rem] border-0 shadow-sm overflow-hidden bg-white"
                 headerExtra={
-                    <div className="flex items-center gap-4">
-                        <div className="flex gap-1 bg-stone-100 p-1 rounded-xl">
+                    <div className="flex flex-col md:flex-row items-center gap-4">
+                        <div className="flex gap-1 bg-stone-100 p-1 rounded-xl w-full md:w-auto">
                             {[
                                 { key: "ALL", label: "All", icon: FileText },
                                 { key: "TRANSFER", label: "Transfers", icon: ArrowRightLeft },
@@ -552,12 +571,13 @@ export default function VouchersPage() {
                                 { key: "PAYMENT", label: "Payments", icon: ArrowUpRight },
                             ].map(tab => {
                                 const Icon = tab.icon
+                                const isActive = activeTab === tab.key
                                 return (
                                     <button
                                         key={tab.key}
                                         onClick={() => setActiveTab(tab.key)}
-                                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg transition-all ${activeTab === tab.key
-                                            ? "bg-white shadow-sm font-bold text-stone-900"
+                                        className={`flex-1 md:flex-none flex items-center justify-center gap-1.5 px-4 py-2 text-xs rounded-lg transition-all ${isActive
+                                            ? "bg-white shadow-sm font-bold text-amber-600"
                                             : "text-stone-400 hover:text-stone-600"
                                             }`}
                                     >
@@ -567,13 +587,13 @@ export default function VouchersPage() {
                                 )
                             })}
                         </div>
-                        <div className="relative w-64">
+                        <div className="relative w-full md:w-64">
                             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
                             <Input
                                 placeholder="Search..."
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
-                                className="pl-9 h-9 rounded-xl text-xs border-0 bg-stone-100"
+                                className="pl-9 h-11 rounded-xl text-sm border-0 bg-stone-100 focus-visible:ring-amber-500/30"
                             />
                         </div>
                     </div>

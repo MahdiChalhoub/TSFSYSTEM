@@ -26,23 +26,20 @@ export default async function PerformancePage() {
     const config = Array.isArray(kpiConfig) ? kpiConfig[0] : kpiConfig;
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
-                <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-[20px] bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white shadow-2xl">
-                            <Trophy size={24} />
+        <div className="space-y-8 animate-in fade-in duration-500">
+            <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-[1.5rem] bg-amber-600 flex items-center justify-center shadow-lg shadow-amber-200">
+                            <Trophy size={28} className="text-white" />
                         </div>
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em]">Workspace</span>
-                    </div>
-                    <h1 className="text-6xl lg:text-7xl font-black text-gray-900 tracking-tighter">
                         Perfor<span className="text-amber-600">mance</span>
                     </h1>
-                    <p className="text-gray-500 font-medium max-w-xl text-lg leading-relaxed">
-                        Employee KPIs, leaderboard, and performance tracking. Monitor task completion, checklists, and evaluation scores.
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">
+                        Workspace &bull; Talent Scoring
                     </p>
                 </div>
-            </div>
+            </header>
 
             <PerformanceClient leaderboard={leaders} myPerformance={myData} kpiConfig={config} />
         </div>

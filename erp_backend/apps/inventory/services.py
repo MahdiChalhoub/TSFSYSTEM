@@ -22,7 +22,7 @@ class InventoryService:
         return ht * (Decimal('1') + rate)
 
     @staticmethod
-    def receive_stock(organization, product, warehouse, quantity, cost_price_ht, is_tax_recoverable=True, reference=None, user=None, scope='OFFICIAL', serials=None):
+    def receive_stock(organization, product, warehouse, quantity, cost_price_ht, is_tax_recoverable=True, reference=None, user=None, scope='OFFICIAL', serials=None, skip_finance=False):
         from apps.inventory.models import Inventory, InventoryMovement
         from apps.finance.services import ForensicAuditService
         
@@ -55,7 +55,14 @@ class InventoryService:
             inventory.save()
             
             InventoryMovement.objects.create(organization=organization, product=product, warehouse=warehouse, type='IN', quantity=inbound_qty, cost_price=effective_cost, reference=reference, scope=scope)
-            
+        
+            # Valuation Integration (FIFO/LIFO/AMC)
+            from apps.inventory.valuation_service import ValuationService
+            ValuationService.record_stock_in(
+                organization=organization, product=product, warehouse=warehouse,
+                quantity=inbound_qty, unit_cost=effective_cost, reference=reference
+            )
+
             # Serial Tracking Integration
             if product.tracks_serials:
                 if not serials or len(serials) != int(inbound_qty):
@@ -67,20 +74,21 @@ class InventoryService:
                     )
             
             # Cross-module: create journal entry for stock reception
-            from erp.services import ConfigurationService
-            rules = ConfigurationService.get_posting_rules(organization)
-            inv_acc = rules.get('sales', {}).get('inventory')
-            susp_acc = rules.get('suspense', {}).get('reception')
-            
-            if inv_acc and susp_acc:
-                try:
-                    from apps.finance.services import LedgerService
-                    LedgerService.create_journal_entry(organization=organization, transaction_date=timezone.now(), description=f"Stock Reception: {product.name}", reference=reference, status='POSTED', scope=scope, site_id=warehouse.site_id, user=user, lines=[
-                        {"account_id": inv_acc, "debit": inbound_value, "credit": Decimal('0')},
-                        {"account_id": susp_acc, "debit": Decimal('0'), "credit": inbound_value}
-                    ])
-                except ImportError:
-                    logger.warning(f"Finance module unavailable — journal entry skipped for {reference}")
+            if not skip_finance:
+                from erp.services import ConfigurationService
+                rules = ConfigurationService.get_posting_rules(organization)
+                inv_acc = rules.get('sales', {}).get('inventory')
+                susp_acc = rules.get('suspense', {}).get('reception')
+                
+                if inv_acc and susp_acc:
+                    try:
+                        from apps.finance.services import LedgerService
+                        LedgerService.create_journal_entry(organization=organization, transaction_date=timezone.now(), description=f"Stock Reception: {product.name}", reference=reference, status='POSTED', scope=scope, site_id=warehouse.site_id, user=user, lines=[
+                            {"account_id": inv_acc, "debit": inbound_value, "credit": Decimal('0')},
+                            {"account_id": susp_acc, "debit": Decimal('0'), "credit": inbound_value}
+                        ])
+                    except ImportError:
+                        logger.warning(f"Finance module unavailable — journal entry skipped for {reference}")
 
             ForensicAuditService.log_mutation(
                 organization=organization,
@@ -164,7 +172,7 @@ class InventoryService:
         }
 
     @staticmethod
-    def adjust_stock(organization, product, warehouse, quantity, reason=None, reference=None, user=None, scope='OFFICIAL'):
+    def adjust_stock(organization, product, warehouse, quantity, reason=None, reference=None, user=None, scope='OFFICIAL', skip_finance=False):
         from apps.inventory.models import Inventory, InventoryMovement
         from apps.finance.services import ForensicAuditService
 
@@ -211,35 +219,49 @@ class InventoryService:
                 scope=scope,
                 reason=reason or '',
             )
-            
+        
+            # Valuation Integration
+            from apps.inventory.valuation_service import ValuationService
+            if adj_qty > 0:
+                ValuationService.record_stock_in(
+                    organization=organization, product=product, warehouse=warehouse,
+                    quantity=adj_qty, unit_cost=cost_basis, reference=reference
+                )
+            else:
+                ValuationService.record_stock_out(
+                    organization=organization, product=product, warehouse=warehouse,
+                    quantity=abs(adj_qty), reference=reference
+                )
+
             # Cross-module: Financial Sync
-            from erp.services import ConfigurationService
-            rules = ConfigurationService.get_posting_rules(organization)
-            inv_acc = rules.get('sales', {}).get('inventory')
-            adj_acc = rules.get('inventory', {}).get('adjustment')
-            
-            if inv_acc and adj_acc:
-                try:
-                    from apps.finance.services import LedgerService
-                    desc = f"Stock Adjustment ({'Gain' if adj_qty > 0 else 'Loss'}): {product.name}"
-                    if adj_qty > 0:
-                        lines = [
-                            {"account_id": inv_acc, "debit": adj_value, "credit": Decimal('0')},
-                            {"account_id": adj_acc, "debit": Decimal('0'), "credit": adj_value}
-                        ]
-                    else:
-                        lines = [
-                            {"account_id": adj_acc, "debit": adj_value, "credit": Decimal('0')},
-                            {"account_id": inv_acc, "debit": Decimal('0'), "credit": adj_value}
-                        ]
-                    
-                    LedgerService.create_journal_entry(
-                        organization=organization, transaction_date=timezone.now(),
-                        description=desc, reference=reference, status='POSTED',
-                        scope=scope, site_id=warehouse.site_id, user=user, lines=lines
-                    )
-                except ImportError:
-                    pass
+            if not skip_finance:
+                from erp.services import ConfigurationService
+                rules = ConfigurationService.get_posting_rules(organization)
+                inv_acc = rules.get('sales', {}).get('inventory')
+                adj_acc = rules.get('inventory', {}).get('adjustment')
+                
+                if inv_acc and adj_acc:
+                    try:
+                        from apps.finance.services import LedgerService
+                        desc = f"Stock Adjustment ({'Gain' if adj_qty > 0 else 'Loss'}): {product.name}"
+                        if adj_qty > 0:
+                            lines = [
+                                {"account_id": inv_acc, "debit": adj_value, "credit": Decimal('0')},
+                                {"account_id": adj_acc, "debit": Decimal('0'), "credit": adj_value}
+                            ]
+                        else:
+                            lines = [
+                                {"account_id": adj_acc, "debit": adj_value, "credit": Decimal('0')},
+                                {"account_id": inv_acc, "debit": Decimal('0'), "credit": adj_value}
+                            ]
+                        
+                        LedgerService.create_journal_entry(
+                            organization=organization, transaction_date=timezone.now(),
+                            description=desc, reference=reference, status='POSTED',
+                            scope=scope, site_id=warehouse.site_id, user=user, lines=lines
+                        )
+                    except ImportError:
+                        pass
 
             ForensicAuditService.log_mutation(
                 organization=organization,
@@ -253,7 +275,7 @@ class InventoryService:
             return inventory
 
     @staticmethod
-    def reduce_stock(organization, product, warehouse, quantity, reference=None, user=None, scope='OFFICIAL', serials=None):
+    def reduce_stock(organization, product, warehouse, quantity, reference=None, user=None, scope='OFFICIAL', serials=None, skip_finance=False):
         """Reduces stock and captures AMC for COGS booking."""
         from apps.inventory.models import Inventory, InventoryMovement
         from apps.finance.services import ForensicAuditService
@@ -286,6 +308,13 @@ class InventoryService:
                 cost_price=current_amc,
                 reference=reference or f"SALE-{uuid.uuid4().hex[:6].upper()}",
                 scope=scope
+            )
+        
+            # Valuation Integration
+            from apps.inventory.valuation_service import ValuationService
+            ValuationService.record_stock_out(
+                organization=organization, product=product, warehouse=warehouse,
+                quantity=qty_to_reduce, reference=reference
             )
 
             # Serial Tracking Integration
@@ -383,6 +412,19 @@ class InventoryService:
                 scope=scope,
                 reason=f"Transfer IN from {source_warehouse.name}",
             )
+        
+            # Valuation Integration
+            from apps.inventory.valuation_service import ValuationService
+            # Out from source
+            ValuationService.record_stock_out(
+                organization=organization, product=product, warehouse=source_warehouse,
+                quantity=qty, reference=reference
+            )
+            # In to destination
+            ValuationService.record_stock_in(
+                organization=organization, product=product, warehouse=destination_warehouse,
+                quantity=qty, unit_cost=current_cost, reference=reference
+            )
 
             ForensicAuditService.log_mutation(
                 organization=organization,
@@ -445,6 +487,48 @@ class InventoryService:
         }
 
     @staticmethod
+    def sync_inventory_to_ledger(organization, user=None):
+        """
+        Forces a synchronization journal entry to align the GL Inventory Account 
+        with the current physical valuation.
+        """
+        audit = InventoryService.reconcile_with_finance(organization)
+        if audit['status'] != 'DISCREPANCY':
+            return audit
+
+        discrepancy = audit['discrepancy']
+        from erp.services import ConfigurationService
+        rules = ConfigurationService.get_posting_rules(organization)
+        inv_acc = rules.get('sales', {}).get('inventory')
+        adj_acc = rules.get('inventory', {}).get('adjustment')
+
+        if not inv_acc or not adj_acc:
+            return {"status": "ERROR", "message": "Rules for inventory/adjustment missing."}
+
+        try:
+            from apps.finance.services import LedgerService
+            desc = f"Inventory Valuation Sync: {'Gain' if discrepancy > 0 else 'Loss'}"
+            if discrepancy > 0:
+                lines = [
+                    {"account_id": inv_acc, "debit": discrepancy, "credit": Decimal('0')},
+                    {"account_id": adj_acc, "debit": Decimal('0'), "credit": discrepancy}
+                ]
+            else:
+                lines = [
+                    {"account_id": adj_acc, "debit": abs(discrepancy), "credit": Decimal('0')},
+                    {"account_id": inv_acc, "debit": Decimal('0'), "credit": abs(discrepancy)}
+                ]
+
+            LedgerService.create_journal_entry(
+                organization=organization, transaction_date=timezone.now(),
+                description=desc, reference="SYNC-AUTO", status='POSTED',
+                user=user, lines=lines
+            )
+            return {"status": "FIXED", "adjusted_by": discrepancy}
+        except Exception as e:
+            return {"status": "ERROR", "message": str(e)}
+
+    @staticmethod
     def register_serial_exit(organization, product, warehouse, serial_number, reference, user_name=None):
         from apps.inventory.advanced_models import ProductSerial, SerialLog
         serial = ProductSerial.objects.filter(
@@ -499,6 +583,126 @@ class InventoryService:
             warehouse=warehouse,
             user_name=user_name
         )
+
+    @staticmethod
+    def process_adjustment_order(organization, order, user=None):
+        """
+        Main runner for StockAdjustmentOrder implementation.
+        Validates all lines and executes stock_adjust for each.
+        Atomic transaction ensures all-or-nothing.
+        """
+        from apps.inventory.models import StockAdjustmentLine
+        lines = StockAdjustmentLine.objects.filter(order=order)
+        
+        if not lines.exists():
+            raise ValidationError("Cannot post an empty adjustment order.")
+            
+        with transaction.atomic():
+            # Professional Audit Lock
+            order.lifecycle_status = 'LOCKED'
+            order.save(update_fields=['lifecycle_status'])
+            
+            # Batch Finance Preparation
+            finance_lines = []
+            from erp.services import ConfigurationService
+            rules = ConfigurationService.get_posting_rules(organization)
+            inv_acc = rules.get('sales', {}).get('inventory')
+            adj_acc = rules.get('inventory', {}).get('adjustment')
+            
+            for line in lines:
+                InventoryService.adjust_stock(
+                    organization=organization,
+                    product=line.product,
+                    warehouse=line.warehouse,
+                    quantity=line.qty_adjustment,
+                    reason=line.reason or order.reason or f"ADJ Order #{order.id}",
+                    reference=order.reference,
+                    user=user,
+                    skip_finance=True
+                )
+                
+                # Collect finance lines
+                if inv_acc and adj_acc:
+                    cost_basis = Decimal(str(line.product.cost_price))
+                    adj_value = abs(line.qty_adjustment * cost_basis)
+                    if line.qty_adjustment > 0:
+                        finance_lines.append({"account_id": inv_acc, "debit": adj_value, "credit": Decimal('0')})
+                        finance_lines.append({"account_id": adj_acc, "debit": Decimal('0'), "credit": adj_value})
+                    else:
+                        finance_lines.append({"account_id": adj_acc, "debit": adj_value, "credit": Decimal('0')})
+                        finance_lines.append({"account_id": inv_acc, "debit": Decimal('0'), "credit": adj_value})
+
+            # Batch Posting
+            if finance_lines:
+                try:
+                    from apps.finance.services import LedgerService
+                    LedgerService.create_journal_entry(
+                        organization=organization, transaction_date=timezone.now(),
+                        description=f"Bulk Stock Adjustment: {order.reference}",
+                        reference=order.reference, status='POSTED',
+                        user=user, lines=finance_lines
+                    )
+                except ImportError:
+                    logger.warning("Finance module unavailable for bulk adjustment posting.")
+
+            order.is_posted = True
+            order.lifecycle_status = 'CONFIRMED'
+            order.save(update_fields=['is_posted', 'lifecycle_status'])
+            
+            from apps.finance.services import ForensicAuditService
+            ForensicAuditService.log_mutation(
+                organization=organization,
+                user=user,
+                model_name="StockAdjustmentOrder",
+                object_id=order.id,
+                change_type="UPDATE",
+                payload={"ref": order.reference, "status": "CONFIRMED"}
+            )
+            
+        return True
+
+    @staticmethod
+    def process_transfer_order(organization, order, user=None):
+        """
+        Main runner for StockTransferOrder implementation.
+        Validates availability at source and moves to destination.
+        """
+        from apps.inventory.models import StockTransferLine
+        lines = StockTransferLine.objects.filter(order=order)
+        
+        if not lines.exists():
+            raise ValidationError("Cannot post an empty transfer order.")
+            
+        with transaction.atomic():
+            order.lifecycle_status = 'LOCKED'
+            order.save(update_fields=['lifecycle_status'])
+            
+            for line in lines:
+                InventoryService.transfer_stock(
+                    organization=organization,
+                    product=line.product,
+                    source_warehouse=line.from_warehouse,
+                    destination_warehouse=line.to_warehouse,
+                    quantity=line.qty_transferred,
+                    reference=order.reference,
+                    user=user
+                )
+            
+            order.is_posted = True
+            order.lifecycle_status = 'CONFIRMED'
+            order.save(update_fields=['is_posted', 'lifecycle_status'])
+
+            from apps.finance.services import ForensicAuditService
+            ForensicAuditService.log_mutation(
+                organization=organization,
+                user=user,
+                model_name="StockTransferOrder",
+                object_id=order.id,
+                change_type="UPDATE",
+                payload={"ref": order.reference, "status": "CONFIRMED"}
+            )
+            
+        return True
 
     @staticmethod
     def get_purchase_suggestions(organization, days=None):

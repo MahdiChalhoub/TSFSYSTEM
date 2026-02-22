@@ -1,6 +1,6 @@
 /** HR Data Center — Leave Requests */
 import { erpFetch } from "@/lib/erp-api";
-import { CalendarOff, Check, X, Clock } from "lucide-react";
+import { CalendarOff, Check, X, Clock, CalendarDays, CheckCircle } from "lucide-react";
 import LeavesClient from "./client";
 
 export const dynamic = 'force-dynamic';
@@ -21,42 +21,40 @@ export default async function LeavesPage() {
     const rejected = leaves.filter((l: any) => l.status === 'REJECTED').length;
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
-                <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-[20px] bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center text-white shadow-2xl">
-                            <CalendarOff size={24} />
+        <div className="p-8 space-y-10 animate-in fade-in duration-500 max-w-[1600px] mx-auto">
+            {/* Header */}
+            <header className="flex flex-col md:flex-row justify-between items-center gap-6">
+                <div>
+                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200 text-white">
+                            <CalendarDays size={28} />
                         </div>
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em]">Time Off</span>
-                    </div>
-                    <h1 className="text-6xl lg:text-7xl font-black text-gray-900 tracking-tighter">
-                        Leave <span className="text-rose-600">Requests</span>
+                        Leave <span className="text-emerald-600">Requests</span>
                     </h1>
-                    <p className="text-gray-500 font-medium max-w-xl text-lg leading-relaxed">
-                        Manage employee leave applications — annual, sick, maternity, and more. Review, approve, or reject requests.
-                    </p>
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Absence Governance & Approval Workflow</p>
                 </div>
-
-                <div className="flex gap-8 bg-white p-10 rounded-[50px] shadow-2xl shadow-rose-900/5 border border-gray-50">
-                    <div className="text-center px-8 border-r border-gray-100">
-                        <div className="text-5xl font-black text-gray-900 tracking-tighter mb-1">{leaves.length}</div>
-                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total</div>
+                {/* Approval Pulse */}
+                <div className="flex gap-4">
+                    <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex items-center gap-5 min-w-[200px]">
+                        <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                            <Clock size={24} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1 leading-none mb-1">Pending Auth</p>
+                            <h2 className="text-2xl font-black text-amber-600 tracking-tighter">{pending}</h2>
+                        </div>
                     </div>
-                    <div className="text-center px-8 border-r border-gray-100">
-                        <div className="text-5xl font-black text-amber-600 tracking-tighter mb-1">{pending}</div>
-                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Pending</div>
-                    </div>
-                    <div className="text-center px-8 border-r border-gray-100">
-                        <div className="text-5xl font-black text-emerald-600 tracking-tighter mb-1">{approved}</div>
-                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Approved</div>
-                    </div>
-                    <div className="text-center px-8">
-                        <div className="text-5xl font-black text-rose-600 tracking-tighter mb-1">{rejected}</div>
-                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Rejected</div>
+                    <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-emerald-100 flex items-center gap-5 min-w-[200px]">
+                        <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                            <CheckCircle size={24} />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mt-1 leading-none mb-1">Approved</p>
+                            <h2 className="text-2xl font-black text-emerald-600 tracking-tighter">{approved}</h2>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </header>
 
             <LeavesClient leaves={leaves} employees={employees} />
         </div>

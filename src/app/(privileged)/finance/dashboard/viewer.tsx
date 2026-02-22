@@ -1,5 +1,7 @@
 'use client'
 
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
 import { useState } from 'react'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
@@ -127,32 +129,33 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
                 </div>
 
                 {/* Monthly Breakdown */}
-                <div className="bg-stone-900 rounded-3xl p-8 text-white flex flex-col justify-between shadow-2xl">
-                    <div>
-                        <h3 className="text-lg font-bold italic font-serif mb-6 opacity-80">Current Month P&L</h3>
+                <Card className="rounded-[2.5rem] border-0 bg-stone-900 p-8 text-white flex flex-col justify-between shadow-2xl relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+                    <div className="relative z-10">
+                        <h3 className="text-xs font-black uppercase tracking-widest text-stone-500 mb-6">Current Month P&L</h3>
                         <div className="space-y-6">
-                            <div className="flex justify-between items-center">
-                                <span className="text-stone-400 text-sm">Monthly Revenue</span>
+                            <div className="flex justify-between items-center group/row">
+                                <span className="text-stone-400 text-sm font-medium">Monthly Revenue</span>
                                 <span className="font-mono text-emerald-400 font-bold">+{stats.monthlyIncome.toLocaleString()}</span>
                             </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-stone-400 text-sm">Monthly Expenses</span>
+                            <div className="flex justify-between items-center group/row">
+                                <span className="text-stone-400 text-sm font-medium">Monthly Expenses</span>
                                 <span className="font-mono text-rose-400 font-bold">-{stats.monthlyExpense.toLocaleString()}</span>
                             </div>
                             <div className="border-t border-stone-800 pt-6 flex justify-between items-center">
-                                <span className="text-lg font-bold">Net Profit</span>
-                                <span className="text-2xl font-mono font-black">{stats.netProfit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                <span className="text-lg font-black tracking-tighter">Net Profit</span>
+                                <span className="text-3xl font-mono font-black text-indigo-400">{stats.netProfit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                             </div>
                         </div>
                     </div>
 
                     <Link
                         href="/finance/reports/pnl"
-                        className="mt-8 bg-white/5 hover:bg-white/10 text-white py-3 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-all border border-white/10"
+                        className="mt-8 bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-2xl flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-indigo-500/20 relative z-10"
                     >
                         View Full P&L Report <ArrowRight size={16} />
                     </Link>
-                </div>
+                </Card>
             </div>
 
             {/* Bottom Section: Recent Entries */}
@@ -232,19 +235,36 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
 function MetricCard({ title, value, icon, description, isProfit, color = 'stone' }: Record<string, any>) {
     const isNeg = isProfit && value < 0
     return (
-        <div className="bg-white p-6 rounded-3xl border border-stone-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-            <div className={`absolute top-0 right-0 w-24 h-24 -mt-8 -mr-8 opacity-5 group-hover:scale-110 transition-transform bg-${color}-500 rounded-full`}></div>
-            <div className="flex justify-between items-start mb-4 relative z-10">
-                <div className="p-3 bg-white shadow-sm border border-stone-100 rounded-xl">
-                    {icon}
+        <Card className="rounded-[2.5rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+            <CardContent className="p-7">
+                <div className="flex justify-between items-start mb-4">
+                    <div className={clsx(
+                        "w-12 h-12 rounded-2xl flex items-center justify-center transition-colors",
+                        color === 'sky' ? "bg-sky-50 text-sky-600" :
+                            color === 'amber' ? "bg-amber-50 text-amber-600" :
+                                "bg-emerald-50 text-emerald-600"
+                    )}>
+                        {icon}
+                    </div>
+                    <Badge variant="outline" className="bg-stone-50 border-0 font-black text-[10px] uppercase tracking-widest text-stone-400">
+                        Live Pulse
+                    </Badge>
                 </div>
-            </div>
-            <p className="text-[10px] font-bold uppercase text-stone-400 tracking-[0.1em] mb-1">{title}</p>
-            <h4 className={`text-2xl font-mono font-bold ${isNeg ? 'text-rose-600' : 'text-stone-900'}`}>
-                {value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </h4>
-            <p className="text-xs text-stone-500 font-medium mt-1">{description}</p>
-        </div>
+                <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1">{title}</p>
+                <div className="flex items-baseline gap-1">
+                    <h4 className={clsx(
+                        "text-3xl font-black tracking-tighter",
+                        isNeg ? 'text-rose-600' : 'text-gray-900'
+                    )}>
+                        {value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </h4>
+                </div>
+                <div className="mt-4 pt-4 border-t border-gray-50 flex items-center gap-2 text-[10px] font-bold text-gray-400">
+                    <div className={clsx("w-1.5 h-1.5 rounded-full animate-pulse", isNeg ? 'bg-rose-400' : 'bg-emerald-400')} />
+                    {description}
+                </div>
+            </CardContent>
+        </Card>
     )
 }
 

@@ -40,7 +40,12 @@ def chunked_upload_init(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    org = getattr(request, 'organization', None)
+    org_id = request.headers.get('X-Tenant-Id') or \
+             getattr(request, 'organization', None) or \
+             getattr(request.user, 'organization_id', None)
+    
+    from erp.models import Organization
+    org = Organization.objects.filter(id=org_id).first() if org_id else None
 
     session = UploadSession(
         filename=filename,
@@ -108,11 +113,22 @@ def chunked_upload_chunk(request, session_id):
 
     # Append chunk to temp file
     try:
-        os.makedirs(os.path.dirname(session.temp_path), exist_ok=True)
+        temp_dir = os.path.dirname(session.temp_path)
+        if not os.path.exists(temp_dir):
+            os.makedirs(temp_dir, exist_ok=True)
+            os.chmod(temp_dir, 0o777)
+
         with open(session.temp_path, 'ab') as f:
-            for part in chunk.chunks() if hasattr(chunk, 'chunks') else [chunk.read() if hasattr(chunk, 'read') else chunk]:
-                f.write(part if isinstance(part, bytes) else part.encode())
-                session.bytes_received += len(part) if isinstance(part, bytes) else len(part.encode())
+            if hasattr(chunk, 'chunks'):
+                for part in chunk.chunks():
+                    f.write(part)
+                    session.bytes_received += len(part)
+            else:
+                data = chunk.read() if hasattr(chunk, 'read') else chunk
+                if isinstance(data, str):
+                    data = data.encode()
+                f.write(data)
+                session.bytes_received += len(data)
 
         session.chunk_count += 1
         session.save(update_fields=['bytes_received', 'chunk_count', 'updated_at'])
@@ -209,8 +225,13 @@ def chunked_upload_complete(request, session_id):
 
 def _finalize_file_upload(session, checksum, request):
     """Move assembled file to cloud storage and create StoredFile record."""
-    org = getattr(request, 'organization', None)
-    provider = StorageProvider.get_for_organization(org) if org else None
+    org_id = request.headers.get('X-Tenant-Id') or \
+             getattr(request, 'organization', None) or \
+             getattr(request.user, 'organization_id', None)
+    
+    from erp.models import Organization
+    org = Organization.objects.filter(id=org_id).first() if org_id else None
+    provider = StorageProvider.get_for_organization(org)
 
     # Create a file-like wrapper for the assembled temp file
     class TempFileWrapper:

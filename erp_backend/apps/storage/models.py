@@ -158,3 +158,5 @@ class StoredFile(TenantModel):
                 return f"{size:.1f} {unit}"
             size /= 1024
         return f"{size:.1f} TB"
+# Import UploadSession here to ensure it's discovered by Django's model registry
+from .upload_session import UploadSession

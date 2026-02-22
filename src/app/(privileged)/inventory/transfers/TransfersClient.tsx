@@ -46,10 +46,10 @@ export function TransfersClient() {
             key: 'route',
             label: 'Terminal Route',
             render: (row: any) => (
-                <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-100 text-[9px] font-black">{row.from_warehouse_name || 'SRC'}</Badge>
+                <div className="flex items-center gap-2 text-xs font-black">
+                    <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 text-[10px] rounded-lg">{row.from_warehouse_name || 'SRC'}</Badge>
                     <ArrowRightLeft size={10} className="text-gray-300" />
-                    <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-100 text-[9px] font-black">{row.to_warehouse_name || 'DEST'}</Badge>
+                    <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px] rounded-lg">{row.to_warehouse_name || 'DEST'}</Badge>
                 </div>
             )
         },
@@ -76,9 +76,9 @@ export function TransfersClient() {
             addLabel="INITIATE MOVEMENT"
             onAdd={() => toast.info("Execute movements from the Logistics Manifest")}
             headerExtras={
-                <div className="flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
-                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
-                    <span className="text-[9px] font-black uppercase text-blue-700 tracking-widest">Real-World Logistics Active</span>
+                <div className="flex items-center gap-2 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
+                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                    <span className="text-[9px] font-black uppercase text-emerald-700 tracking-widest">Real-World Logistics Active</span>
                 </div>
             }
             lifecycle={{
