@@ -15,7 +15,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
     Tag, Plus, Percent, DollarSign, Package, Layers, Calendar,
     History, Edit2, Trash2, X, Check, Power, AlertCircle, ShoppingCart
-} from "lucide-react"
+, Tags } from "lucide-react"
 
 const TYPE_CONFIG: Record<string, { label: string; icon: Record<string, any>; color: string }> = {
     PERCENTAGE: { label: 'Percentage Off', icon: Percent, color: 'text-blue-600 bg-blue-50' },
@@ -193,13 +193,13 @@ export default function DiscountRulesPage() {
         <div className="p-6 space-y-6">
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center">
-                            <Percent size={20} className="text-white" />
+                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-[1.5rem] bg-amber-600 flex items-center justify-center shadow-lg shadow-amber-200">
+                            <Tags size={28} className="text-white" />
                         </div>
-                        Discount & Promotions
+                        Discount <span className="text-amber-600">Engine</span>
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">Manage promotional rules, coupon codes, and automatic discounts</p>
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Promotions & Rules</p>
                 </div>
                 <button onClick={startCreate}
                     className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 transition-all flex items-center gap-2">

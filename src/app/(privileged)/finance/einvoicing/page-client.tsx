@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { getInvoices } from '@/app/actions/finance/invoices'
 import { submitEInvoice, getEInvoiceStatus, getEInvoiceQR } from '@/app/actions/finance/einvoice'
-import { FileCheck, Send, QrCode, RefreshCw, CheckCircle, XCircle, Clock, Search, ChevronRight, Shield } from 'lucide-react'
+import { FileCheck, Send, QrCode, RefreshCw, CheckCircle, XCircle, Clock, Search, ChevronRight, Shield , Zap } from 'lucide-react'
 
 type Invoice = {
     id: string | number
@@ -130,8 +130,13 @@ export default function EInvoicingPage() {
                         <FileCheck size={22} className="text-white" />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-white tracking-tight">E-Invoicing</h1>
-                        <p className="text-sm text-gray-400 mt-0.5">ZATCA (Saudi Arabia) & FNE (Côte d&apos;Ivoire) compliance certification</p>
+                        <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
+                                <Zap size={28} className="text-white" />
+                            </div>
+                            E- <span className="text-indigo-600">Invoicing</span>
+                        </h1>
+                        <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">ZATCA & FNE Compliance</p>
                     </div>
                 </div>
                 <button onClick={loadInvoices} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm transition-colors">

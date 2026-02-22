@@ -79,7 +79,13 @@ export default function GeneralLedgerPage() {
             <div className="flex justify-between items-center mb-6">
                 <div>
                     <div className="flex items-center gap-2 mb-1">
-                        <h1 className="text-2xl font-bold text-stone-900 font-serif">General Ledger</h1>
+                        <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-[1.5rem] bg-stone-600 flex items-center justify-center shadow-lg shadow-stone-200">
+                                <BookOpen size={28} className="text-white" />
+                            </div>
+                            General <span className="text-stone-600">Ledger</span>
+                        </h1>
+                        <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Journal Entries</p>
                         <span className="bg-emerald-50 text-emerald-600 text-[10px] px-2 py-0.5 rounded-full border border-emerald-100 font-bold uppercase tracking-wider flex items-center gap-1">
                             <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
                             Trial Balance Guard Active

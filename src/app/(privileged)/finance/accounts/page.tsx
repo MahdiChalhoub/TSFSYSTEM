@@ -60,7 +60,13 @@ export default function FinancialAccountsPage() {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-2xl font-bold">Financial Accounts</h1>
+                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
+                            <Wallet size={28} className="text-white" />
+                        </div>
+                        Financial <span className="text-emerald-600">Accounts</span>
+                    </h1>
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Cash Drawers & Bank Accounts</p>
                     <p className="text-muted-foreground">Manage cash drawers, bank accounts, and their ledger links.</p>
                 </div>
                 <Link href="/finance/accounts/new">

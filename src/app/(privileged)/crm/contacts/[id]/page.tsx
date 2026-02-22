@@ -17,7 +17,7 @@ import {
     ShoppingCart, CreditCard, BookOpen, FileText,
     TrendingUp, Clock, CheckCircle2, AlertCircle,
     Tag, Star, BarChart3, Percent, Hash
-} from "lucide-react"
+, UserCircle } from "lucide-react"
 
 const STATUS_COLORS: Record<string, string> = {
     DRAFT: 'bg-gray-100 text-gray-700',
@@ -94,7 +94,13 @@ export default function ContactDetailPage() {
                                 <User size={24} />
                             </div>
                             <div>
-                                <h1 className="text-2xl font-bold text-gray-900">{contact.name}</h1>
+                                <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                                    <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
+                                        <UserCircle size={28} className="text-white" />
+                                    </div>
+                                    Contact <span className="text-indigo-600">Profile</span>
+                                </h1>
+                                <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Customer Details</p>
                                 <div className="flex items-center gap-2 mt-1">
                                     <Badge className={isCustomer ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}>
                                         {contact.type}

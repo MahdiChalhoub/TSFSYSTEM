@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { getProducts, getCategories, getBrands, deleteProduct } from '@/app/actions/inventory/product-actions'
 import { TypicalListView, type ColumnDef } from '@/components/common/TypicalListView'
 import { TypicalFilter } from '@/components/common/TypicalFilter'
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { useCurrency } from '@/lib/utils/currency'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
@@ -20,7 +21,7 @@ function HealthBadge({ margin }: { margin: number }) {
     if (margin >= 10) return <span className="text-xs font-semibold text-amber-500">Warning</span>
     return <span className="text-xs font-semibold text-red-500">Critical</span>
 }
-function StatusBadge({ status }: { status: string }) {
+function ProdStatusBadge({ status }: { status: string }) {
     const colors: Record<string, string> = {
         active: 'bg-emerald-50 text-emerald-700 border-emerald-200',
         inactive: 'bg-gray-50 text-gray-500 border-gray-200',
@@ -31,9 +32,28 @@ function StatusBadge({ status }: { status: string }) {
     return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border ${colors[s] || colors.active}`}>{status || 'Active'}</span>
 }
 
+const ALL_COLUMNS: ColumnDef<any>[] = [
+    { key: 'name', label: 'Product', alwaysVisible: true, sortable: true },
+    { key: 'barcode', label: 'Barcode/SKU' },
+    { key: 'category', label: 'Category' },
+    { key: 'qty', label: 'Total Qty', align: 'right', sortable: true },
+    { key: 'cost', label: 'Cost', align: 'right', sortable: true },
+    { key: 'price', label: 'Selling Price', align: 'right', sortable: true },
+    { key: 'margin', label: 'Margin %', align: 'center' },
+    { key: 'health', label: 'Health', align: 'center' },
+    { key: 'status', label: 'Status', align: 'center' },
+]
+
 export default function ProductInventoryPage() {
     const { fmt } = useCurrency()
     const router = useRouter()
+    const settings = useListViewSettings('inventory_products', {
+        columns: ALL_COLUMNS.map(c => c.key),
+        pageSize: 25,
+        sortKey: 'name',
+        sortDir: 'asc',
+    })
+
     const [products, setProducts] = useState<any[]>([])
     const [categories, setCategories] = useState<any[]>([])
     const [brands, setBrands] = useState<any[]>([])
@@ -54,17 +74,20 @@ export default function ProductInventoryPage() {
 
     useEffect(() => { loadData() }, [loadData])
 
-    const columns: ColumnDef<any>[] = [
-        { key: 'name', label: 'Product', render: r => (<div><p className="font-medium text-gray-900 text-sm">{r.name}</p><p className="text-xs text-gray-400">{r.brand_name || r.brand?.name || ''}</p></div>) },
-        { key: 'barcode', label: 'Barcode/SKU', render: r => (<div><p className="font-mono text-sm">{r.barcode || '—'}</p><p className="text-xs text-gray-400 font-mono">{r.sku || r.code || ''}</p></div>) },
-        { key: 'category', label: 'Category', render: r => { const n = r.category_name || r.category?.name; return n ? <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-700">{n}</span> : <span className="text-gray-400">—</span> } },
-        { key: 'qty', label: 'Total Qty', align: 'right', render: r => r.total_quantity || r.total_qty || 0 },
-        { key: 'cost', label: 'Cost', align: 'right', render: r => fmt(r.cost_price || 0) },
-        { key: 'price', label: 'Selling Price', align: 'right', render: r => fmt(r.selling_price || 0) },
-        { key: 'margin', label: 'Margin %', align: 'center', render: r => <MarginBadge cost={r.cost_price || 0} price={r.selling_price || 0} /> },
-        { key: 'health', label: 'Health', align: 'center', render: r => { const m = r.selling_price ? ((r.selling_price - (r.cost_price || 0)) / r.selling_price * 100) : 0; return <HealthBadge margin={m} /> } },
-        { key: 'status', label: 'Status', align: 'center', render: r => <StatusBadge status={r.lifecycle_status || r.status || 'Active'} /> },
-    ]
+    const columns: ColumnDef<any>[] = ALL_COLUMNS.map(c => {
+        const renderers: Record<string, (r: any) => React.ReactNode> = {
+            name: r => (<div><p className="font-medium text-gray-900 text-sm">{r.name}</p><p className="text-xs text-gray-400">{r.brand_name || r.brand?.name || ''}</p></div>),
+            barcode: r => (<div><p className="font-mono text-sm">{r.barcode || '—'}</p><p className="text-xs text-gray-400 font-mono">{r.sku || r.code || ''}</p></div>),
+            category: r => { const n = r.category_name || r.category?.name; return n ? <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-700">{n}</span> : <span className="text-gray-400">—</span> },
+            qty: r => r.total_quantity || r.total_qty || 0,
+            cost: r => fmt(r.cost_price || 0),
+            price: r => fmt(r.selling_price || 0),
+            margin: r => <MarginBadge cost={r.cost_price || 0} price={r.selling_price || 0} />,
+            health: r => { const m = r.selling_price ? ((r.selling_price - (r.cost_price || 0)) / r.selling_price * 100) : 0; return <HealthBadge margin={m} /> },
+            status: r => <ProdStatusBadge status={r.lifecycle_status || r.status || 'Active'} />,
+        }
+        return { ...c, render: renderers[c.key] }
+    })
 
     const filtered = products.filter(p => {
         if (filterCategory && String(p.category_id || p.category?.id || p.category) !== filterCategory) return false
@@ -90,6 +113,13 @@ export default function ProductInventoryPage() {
                 loading={loading}
                 getRowId={r => r.id}
                 columns={columns}
+                visibleColumns={settings.visibleColumns}
+                onToggleColumn={settings.toggleColumn}
+                pageSize={settings.pageSize}
+                onPageSizeChange={settings.setPageSize}
+                sortKey={settings.sortKey}
+                sortDir={settings.sortDir}
+                onSort={k => settings.setSort(k)}
                 actions={{
                     onView: r => router.push(`/inventory/global?product=${r.id}`),
                     onEdit: r => router.push(`/inventory/global?product=${r.id}&edit=1`),
@@ -102,6 +132,7 @@ export default function ProductInventoryPage() {
                         { key: 'category', label: 'All Category', type: 'select', options: categories.map(c => ({ value: String(c.id), label: c.name })) },
                         { key: 'status', label: 'All Status', type: 'select', options: [{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }, { value: 'low-stock', label: 'Low-stock' }] },
                     ]}
+                    maxVisible={2}
                     moreFilters={[
                         { key: 'brand', label: 'Brand', type: 'select', options: brands.map(b => ({ value: String(b.id), label: b.name })) },
                     ]}

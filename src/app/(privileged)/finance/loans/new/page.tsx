@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ContactPicker } from "@/components/finance/contact-picker"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft , Landmark } from "lucide-react"
 import { toast } from 'sonner'
 import Link from "next/link"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -61,7 +61,13 @@ export default function NewLoanPage() {
                 <Link href="/finance/loans">
                     <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
                 </Link>
-                <h1 className="text-2xl font-bold">New Partner Loan</h1>
+                <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-[1.5rem] bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-200">
+                        <Landmark size={28} className="text-white" />
+                    </div>
+                    New <span className="text-violet-600">Loan</span>
+                </h1>
+                <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Create Loan</p>
                 <div className="ml-auto text-xs font-mono text-stone-400">
                     Draft Contract Numbering Active
                 </div>

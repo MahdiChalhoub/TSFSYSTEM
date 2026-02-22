@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { createFinancialAccount, getOrgCurrency } from "../actions"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { ArrowLeft, Link as LinkIcon, Loader2 } from "lucide-react"
+import { ArrowLeft, Link as LinkIcon, Loader2 , WalletCards } from "lucide-react"
 import Link from "next/link"
 
 const ACCOUNT_TYPES = [
@@ -80,7 +80,13 @@ export default function NewFinancialAccountPage() {
                     <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
                 </Link>
                 <div>
-                    <h1 className="text-2xl font-bold">New Financial Account</h1>
+                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
+                            <WalletCards size={28} className="text-white" />
+                        </div>
+                        New <span className="text-emerald-600">Account</span>
+                    </h1>
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Create Financial Account</p>
                     <p className="text-muted-foreground">Define a new physical money container.</p>
                 </div>
             </div>

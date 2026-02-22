@@ -119,8 +119,13 @@ export default function TaxGroupsPage() {
                         <Percent size={22} className="text-white" />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-white tracking-tight">Tax Groups</h1>
-                        <p className="text-sm text-gray-400 mt-0.5">Configure tax rates applied to invoices and transactions</p>
+                        <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-[1.5rem] bg-amber-600 flex items-center justify-center shadow-lg shadow-amber-200">
+                                <Percent size={28} className="text-white" />
+                            </div>
+                            Tax <span className="text-amber-600">Groups</span>
+                        </h1>
+                        <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">VAT & Tax Configuration</p>
                     </div>
                 </div>
                 <div className="flex gap-2">

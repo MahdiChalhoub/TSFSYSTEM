@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Separator } from "@/components/ui/separator"
 import { PostEventButton } from "@/components/finance/post-event-button"
 import { format } from "date-fns"
-import { ArrowLeft, CheckCircle2, AlertCircle } from "lucide-react"
+import { ArrowLeft, CheckCircle2, AlertCircle , Calendar } from "lucide-react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
@@ -27,12 +27,13 @@ export default async function FinancialEventDetailPage(props: { params: Promise<
                         <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
                     </Link>
                     <div>
-                        <h1 className="text-2xl font-bold flex items-center gap-2">
-                            Event #{event.id}
-                            <Badge variant={event.status === 'SETTLED' ? 'default' : 'secondary'}>
-                                {event.status}
-                            </Badge>
+                        <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
+                                <Calendar size={28} className="text-white" />
+                            </div>
+                            Event <span className="text-indigo-600">Details</span>
                         </h1>
+                        <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Financial Event</p>
                         <p className="text-muted-foreground">{event.eventType.replace(/_/g, " ")}</p>
                     </div>
                 </div>

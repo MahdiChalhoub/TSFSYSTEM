@@ -16,7 +16,7 @@ import {
     ShoppingCart, Download, Printer, FileText, Search,
     Filter, Calendar, ChevronRight, User, Hash, MoreVertical,
     History as HistoryIcon
-} from "lucide-react"
+, History } from "lucide-react"
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
     DRAFT: { label: 'Draft', color: 'bg-gray-100 text-gray-600' },
@@ -104,13 +104,13 @@ export default function OrderHistoryPage() {
         <div className="p-6 space-y-6 max-w-[1400px] mx-auto">
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
-                            <HistoryIcon size={20} className="text-white" />
+                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
+                            <History size={28} className="text-white" />
                         </div>
-                        Transaction History
+                        Transaction <span className="text-indigo-600">History</span>
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">Review historical sales, purchases, and download official invoices</p>
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Sales & Purchases</p>
                 </div>
             </header>
 

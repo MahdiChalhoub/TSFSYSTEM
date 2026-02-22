@@ -98,8 +98,13 @@ export default function AgingReportPage() {
             {/* Header */}
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Aging Report</h1>
-                    <p className="text-sm text-gray-500 mt-1">Receivables & Payables breakdown by age</p>
+                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-[1.5rem] bg-amber-600 flex items-center justify-center shadow-lg shadow-amber-200">
+                            <Clock size={28} className="text-white" />
+                        </div>
+                        Aging <span className="text-amber-600">Report</span>
+                    </h1>
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Receivables & Payables Aging</p>
                 </div>
                 <div className="flex rounded-lg border overflow-hidden">
                     <button

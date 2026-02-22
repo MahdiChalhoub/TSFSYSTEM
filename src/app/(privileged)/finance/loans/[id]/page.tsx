@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import Link from "next/link"
 import { format } from "date-fns"
-import { ArrowLeft, Wallet } from "lucide-react"
+import { ArrowLeft, Wallet , Landmark } from "lucide-react"
 import { DisburseButton } from "./disburse-button" // Client component for action
 
 import { serialize } from "@/lib/utils/serialization"
@@ -29,7 +29,13 @@ export default async function LoanDetailPage({ params }: { params: Promise<{ id:
                     <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
                 </Link>
                 <div>
-                    <h1 className="text-2xl font-bold">Loan Contract #{loan.id}</h1>
+                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-[1.5rem] bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-200">
+                            <Landmark size={28} className="text-white" />
+                        </div>
+                        Loan <span className="text-violet-600">Details</span>
+                    </h1>
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Loan Overview</p>
                     <p className="text-muted-foreground">{loan.contact.name}</p>
                 </div>
                 <div className="ml-auto flex gap-2">

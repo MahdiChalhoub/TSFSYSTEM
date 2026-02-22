@@ -91,8 +91,13 @@ export default function PaymentGatewayPage() {
                         <CreditCard size={22} className="text-white" />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-white tracking-tight">Payment Gateway</h1>
-                        <p className="text-sm text-gray-400 mt-0.5">Configure Stripe and other payment processors</p>
+                        <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-[1.5rem] bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-200">
+                                <CreditCard size={28} className="text-white" />
+                            </div>
+                            Payment <span className="text-violet-600">Gateway</span>
+                        </h1>
+                        <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Online Payments</p>
                     </div>
                 </div>
                 <button onClick={() => setShowNew(v => !v)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors">

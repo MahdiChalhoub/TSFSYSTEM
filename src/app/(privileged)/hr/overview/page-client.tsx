@@ -76,8 +76,13 @@ export default function HROverviewPage() {
                         <Users size={22} className="text-white" />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-white tracking-tight">HR Overview</h1>
-                        <p className="text-sm text-gray-400 mt-0.5">Attendance, leaves, departments, and employee management</p>
+                        <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
+                                <Users size={28} className="text-white" />
+                            </div>
+                            HR <span className="text-indigo-600">Overview</span>
+                        </h1>
+                        <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Human Resources</p>
                     </div>
                 </div>
                 <button onClick={load} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm">
