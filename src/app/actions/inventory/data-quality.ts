@@ -6,7 +6,15 @@ import { revalidatePath } from "next/cache"
 // ─── Data Quality ────────────────────────────────────────────────
 
 export async function getDataQuality() {
-    return await erpFetch('inventory/products/data-quality/')
+    try {
+        return await erpFetch('inventory/products/data-quality/')
+    } catch {
+        return {
+            total_products: 0, missing_barcode: 0, missing_category: 0,
+            missing_brand: 0, zero_tva: 0, zero_cost_price: 0,
+            zero_selling_price: 0, missing_name: 0,
+        }
+    }
 }
 
 // ─── Bulk Update ─────────────────────────────────────────────────
@@ -56,17 +64,29 @@ export async function generateBarcodes(productIds?: number[]) {
 // ─── Fetch Products with missing data filters ───────────────────
 
 export async function getProductsForMaintenance(params?: Record<string, string>) {
-    const query = params ? '?' + new URLSearchParams(params).toString() : ''
-    return await erpFetch(`inventory/products/${query}`)
+    try {
+        const query = params ? '?' + new URLSearchParams(params).toString() : ''
+        return await erpFetch(`inventory/products/${query}`)
+    } catch {
+        return []
+    }
 }
 
 // ─── Filter Options ──────────────────────────────────────────────
 
 export async function getMaintenanceFilterOptions() {
+    const safeFetch = async (endpoint: string) => {
+        try {
+            const data = await erpFetch(endpoint)
+            return Array.isArray(data) ? data : data?.results || []
+        } catch {
+            return []
+        }
+    }
     const [categories, brands, units] = await Promise.all([
-        erpFetch('inventory/categories/'),
-        erpFetch('inventory/brands/'),
-        erpFetch('inventory/units/'),
+        safeFetch('inventory/categories/'),
+        safeFetch('inventory/brands/'),
+        safeFetch('inventory/units/'),
     ])
     return { categories, brands, units }
 }
