@@ -75,8 +75,12 @@ export default function StockCountPage() {
     // ─── Fetch ───
     const fetchSessions = () => {
         startTransition(async () => {
-            const data = await getCountingSessions()
-            setSessions(Array.isArray(data) ? data : data?.results || [])
+            try {
+                const data = await getCountingSessions()
+                setSessions(Array.isArray(data) ? data : data?.results || [])
+            } catch {
+                setSessions([])
+            }
             setLoading(false)
         })
     }
