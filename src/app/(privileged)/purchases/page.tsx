@@ -169,7 +169,7 @@ export default async function PurchaseRegistryPage() {
                                                 </span>
                                                 <div className="flex items-center gap-1 text-[10px] text-gray-400 mt-0.5">
                                                     <Calendar size={10} />
-                                                    {new Date(po.created_at).toLocaleDateString('fr-FR')}
+                                                    {po.created_at ? new Date(po.created_at).toLocaleDateString('fr-FR') : '—'}
                                                 </div>
                                             </Link>
                                         </td>

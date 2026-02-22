@@ -175,7 +175,7 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
                             {stats.recentEntries.map((entry: Record<string, any>) => (
                                 <tr key={entry.id} className="hover:bg-stone-50/50 transition-colors group">
                                     <td className="p-6 text-stone-500 font-mono text-xs">
-                                        {new Date(entry.transactionDate).toLocaleDateString()}
+                                        {entry.transactionDate ? new Date(entry.transactionDate).toLocaleDateString() : '—'}
                                     </td>
                                     <td className="p-6">
                                         <div className="font-bold text-stone-900">{entry.description}</div>

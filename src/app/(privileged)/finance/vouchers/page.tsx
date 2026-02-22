@@ -390,7 +390,7 @@ export default function VouchersPage() {
                                     <p className="font-semibold text-sm text-stone-800">{h.action}</p>
                                     {h.comment && <p className="text-xs text-stone-500 mt-0.5">{h.comment}</p>}
                                     <p className="text-xs text-stone-400 mt-1">
-                                        by {h.performed_by || 'System'} · {new Date(h.performed_at).toLocaleString()}
+                                        by {h.performed_by || 'System'} · {h.performed_at ? new Date(h.performed_at).toLocaleString() : '—'}
                                     </p>
                                 </div>
                             </div>
