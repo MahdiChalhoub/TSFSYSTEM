@@ -19,7 +19,7 @@ export default async function SaasMasterDashboard() {
 
     const quickStats = [
         { label: "Provisioned Tenants", value: stats?.tenants || "0", icon: Building, color: "emerald", trend: "Stable" },
-        { label: "Active Subscriptions", value: stats?.activeTenants || "0", icon: ShieldCheck, color: "blue", trend: stats?.lastSync ? `Sync ${stats.lastSync}` : "Live" },
+        { label: "Pending Registrations", value: stats?.pendingRegistrations || "0", icon: Activity, color: "amber", trend: "Review Required", href: "/organizations/registrations" },
         { label: "Module Registries", value: stats?.modules || "0", icon: Database, color: "purple", trend: "Global" },
         { label: "Module Deployments", value: stats?.deployments || "0", icon: Zap, color: "orange", trend: "Active" },
     ];
@@ -59,38 +59,17 @@ export default async function SaasMasterDashboard() {
             {/* Quick Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {quickStats.map((stat, i) => {
-                    if (stat.label.includes("Module")) {
-                        return (
-                            <Link href="/modules" key={i} className="block group">
-                                <Card className="bg-white border-gray-100 rounded-[2rem] overflow-hidden group hover:border-emerald-500/30 transition-all shadow-xl h-full cursor-pointer">
-                                    <CardContent className="p-8 space-y-4">
-                                        <div className={`p-4 bg-${stat.color}-500/10 rounded-2xl w-fit text-${stat.color}-400 group-hover:scale-110 transition-transform`}>
-                                            <stat.icon size={24} />
-                                        </div>
-                                        <div>
-                                            <div className="text-sm font-bold text-gray-500 uppercase tracking-widest flex justify-between items-center group-hover:text-emerald-400 transition-colors">
-                                                {stat.label}
-                                                <Zap size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
-                                            </div>
-                                            <div className="text-4xl font-black text-gray-900 mt-1 font-mono tracking-tighter">{stat.value}</div>
-                                        </div>
-                                        <div className="flex items-center gap-2 text-xs font-bold text-gray-500">
-                                            <Clock size={12} /> {stat.trend}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </Link>
-                        );
-                    }
-
-                    return (
-                        <Card key={i} className="bg-white border-gray-100 rounded-[2rem] overflow-hidden group hover:border-emerald-500/30 transition-all shadow-xl h-full">
+                    const CardComponent = (
+                        <Card className="bg-white border-gray-100 rounded-[2rem] overflow-hidden group hover:border-emerald-500/30 transition-all shadow-xl h-full">
                             <CardContent className="p-8 space-y-4">
                                 <div className={`p-4 bg-${stat.color}-500/10 rounded-2xl w-fit text-${stat.color}-400 group-hover:scale-110 transition-transform`}>
                                     <stat.icon size={24} />
                                 </div>
                                 <div>
-                                    <div className="text-sm font-bold text-gray-500 uppercase tracking-widest">{stat.label}</div>
+                                    <div className="text-sm font-bold text-gray-500 uppercase tracking-widest flex justify-between items-center group-hover:text-emerald-400 transition-colors">
+                                        {stat.label}
+                                        {stat.label.includes("Module") && <Zap size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />}
+                                    </div>
                                     <div className="text-4xl font-black text-gray-900 mt-1 font-mono tracking-tighter">{stat.value}</div>
                                 </div>
                                 <div className="flex items-center gap-2 text-xs font-bold text-gray-500">
@@ -99,6 +78,16 @@ export default async function SaasMasterDashboard() {
                             </CardContent>
                         </Card>
                     );
+
+                    if (stat.label.includes("Module") || stat.href) {
+                        return (
+                            <Link href={stat.href || "/modules"} key={i} className="block group">
+                                {CardComponent}
+                            </Link>
+                        );
+                    }
+
+                    return <div key={i}>{CardComponent}</div>;
                 })}
             </div>
 
