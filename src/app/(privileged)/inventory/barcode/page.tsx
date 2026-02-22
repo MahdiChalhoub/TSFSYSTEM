@@ -54,12 +54,12 @@ export default function BarcodeSettingsPage() {
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
-            <div className="flex items-center gap-3 mb-8">
-                <div className="bg-emerald-100 p-2 rounded-xl text-emerald-600">
-                    <Barcode size={32} />
+            <div className="flex items-center gap-4 mb-8">
+                <div className="w-14 h-14 rounded-2xl bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
+                    <Barcode size={28} className="text-white" />
                 </div>
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Barcode Configuration</h1>
+                    <h1 className="text-4xl font-black text-gray-900 tracking-tighter">Barcode <span className="text-emerald-600">Configuration</span></h1>
                     <p className="text-gray-500">Manage automatic EAN-13 barcode generation rules.</p>
                 </div>
             </div>

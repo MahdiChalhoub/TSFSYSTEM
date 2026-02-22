@@ -229,11 +229,11 @@ export default function ProductAnalyticsPage() {
             {/* ── Header ── */}
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/25">
-                            <Activity size={22} className="text-white" />
+                    <h1 className="text-4xl font-black text-gray-900 tracking-tighter flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-200">
+                            <Activity size={28} className="text-white" />
                         </div>
-                        Product Analytics
+                        Product <span className="text-violet-600">Analytics</span>
                     </h1>
                     <p className="text-gray-500 mt-2 text-sm font-medium">
                         Live analytics with request lifecycle tracking — {total.toLocaleString()} products

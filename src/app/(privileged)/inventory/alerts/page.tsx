@@ -32,9 +32,11 @@ export default async function StockAlertsPage() {
         <div className="space-y-6 animate-in fade-in duration-500">
             <header className="flex justify-between items-center border-b pb-6">
                 <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                        <Activity size={20} className="text-rose-600" />
-                        <h1 className="text-2xl font-black text-gray-900 tracking-tighter uppercase">
+                    <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-2xl bg-rose-600 flex items-center justify-center shadow-lg shadow-rose-200">
+                            <Activity size={28} className="text-white" />
+                        </div>
+                        <h1 className="text-4xl font-black text-gray-900 tracking-tighter">
                             Stock <span className="text-rose-600">Health</span>
                         </h1>
                     </div>
