@@ -8,6 +8,9 @@ from django.db import models as models
 from .models import SystemModule, Organization, OrganizationModule, SystemUpdate
 from .module_manager import ModuleManager
 from .kernel_manager import KernelManager
+import logging
+
+logger = logging.getLogger(__name__)
 
 class SaaSUpdateViewSet(viewsets.ViewSet):
     """
@@ -1147,18 +1150,30 @@ class OrgModuleViewSet(viewsets.ViewSet):
         for mod_code in (old_plan_modules - new_plan_modules):
             OrganizationModule.objects.filter(organization=org, module_name=mod_code, is_enabled=True).update(is_enabled=False)
 
-        # ─── 4. Connector hook ──────────────────────────────────────
+        # ─── 4. Dispatch Subscription Event ─────────────────────────
         try:
             from erp.connector_engine import ConnectorEngine
             engine = ConnectorEngine()
+            
+            # Identify SaaS org for context
+            saas_org = Organization.objects.filter(slug='saas').first()
+            saas_org_id = saas_org.id if saas_org else None
+
             for inv in invoices_created:
-                engine.route_write(
-                    source_module='saas', target_module='finance',
-                    endpoint='billing/plan-change/',
-                    data={'organization_id': str(org.id), 'type': inv['type'], 'amount': inv['amount'], 'description': inv['description']},
-                    organization_id=str(org.id), user=user
+                engine.dispatch_event(
+                    source_module='saas',
+                    event_name='subscription:updated',
+                    payload={
+                        'type': inv['type'],
+                        'amount': inv['amount'],
+                        'description': inv['description'],
+                        'target_org_id': str(org.id),
+                        'target_org_name': org.name
+                    },
+                    organization_id=saas_org_id
                 )
-        except: pass
+        except Exception as e:
+            logger.error(f"Failed to dispatch subscription event: {e}")
 
         return invoices_created
 
@@ -1311,8 +1326,6 @@ class OrgModuleViewSet(viewsets.ViewSet):
             user.set_password(new_password)
             user.save() # Full save to ensure all auth signals fire
             
-            import logging
-            logger = logging.getLogger(__name__)
             logger.info(f"SaaS Admin Reset Password for user {user.username} (ID: {user.id})")
             
             return Response({'message': f'Password reset for "{user.username}"'})

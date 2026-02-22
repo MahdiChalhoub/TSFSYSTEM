@@ -85,7 +85,9 @@ class LedgerService:
                     account_id=l['account_id'], 
                     debit=Decimal(str(l['debit'])), 
                     credit=Decimal(str(l['credit'])), 
-                    description=l.get('description', description)
+                    description=l.get('description', description),
+                    contact_id=l.get('contact_id'),
+                    employee_id=l.get('employee_id')
                 )
             
             if status == 'POSTED': 
