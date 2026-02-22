@@ -12,7 +12,7 @@ import { CommandPalette } from '@/components/admin/CommandPalette';
 
 
 import { getSites } from '@/app/actions/sites';
-import { getOrganizations } from '@/app/(privileged)/(saas)/organizations/actions';
+import { getOrganizations } from '@/app/(privileged)/saas/organizations/actions';
 import { getUser } from '@/app/actions/auth';
 import { getGlobalFinancialSettings } from '@/app/actions/settings';
 
