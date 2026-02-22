@@ -1,5 +1,7 @@
 'use client'
 
+import { useCurrency } from '@/lib/utils/currency'
+
 import { useState, useEffect, useMemo } from "react"
 import type { Employee } from '@/types/erp'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,10 +13,6 @@ import { toast } from "sonner"
 import {
     Banknote, Users, DollarSign, TrendingUp, Search, Briefcase
 } from "lucide-react"
-
-function fmt(n: number) {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
-}
 
 const TYPE_BADGE: Record<string, string> = {
     EMPLOYEE: 'bg-blue-100 text-blue-700',

@@ -1,5 +1,7 @@
 'use client'
 
+import { useCurrency } from '@/lib/utils/currency'
+
 import { useState, useEffect, useMemo } from "react"
 import type { DiscountRule, UsageLog, Category, Brand } from '@/types/erp'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,10 +16,6 @@ import {
     Tag, Plus, Percent, DollarSign, Package, Layers, Calendar,
     History, Edit2, Trash2, X, Check, Power, AlertCircle, ShoppingCart
 } from "lucide-react"
-
-function fmt(n: number) {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
-}
 
 const TYPE_CONFIG: Record<string, { label: string; icon: Record<string, any>; color: string }> = {
     PERCENTAGE: { label: 'Percentage Off', icon: Percent, color: 'text-blue-600 bg-blue-50' },

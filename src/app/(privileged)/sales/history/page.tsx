@@ -1,5 +1,7 @@
 'use client'
 
+import { useCurrency } from '@/lib/utils/currency'
+
 import { useState, useEffect } from "react"
 import type { SalesOrder } from '@/types/erp'
 import { Card, CardContent } from "@/components/ui/card"
@@ -15,10 +17,6 @@ import {
     Filter, Calendar, ChevronRight, User, Hash, MoreVertical,
     History as HistoryIcon
 } from "lucide-react"
-
-function fmt(n: number) {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
-}
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
     DRAFT: { label: 'Draft', color: 'bg-gray-100 text-gray-600' },

@@ -125,6 +125,7 @@ export const MENU_ITEMS = [
                     { title: 'Delivery Zones', path: '/sales/delivery-zones' },
                     { title: 'Sales Returns', path: '/sales/returns' },
                     { title: 'Credit Notes', path: '/sales/credit-notes' },
+                    { title: 'Consignment Settlements', path: '/sales/consignment-settlements' },
                     { title: 'Import Sales', path: '/sales/import' },
                 ]
             },
@@ -136,6 +137,7 @@ export const MENU_ITEMS = [
                     { title: 'Purchase Dashboard', path: '/purchases/dashboard' },
                     { title: 'New RFQ / Order', path: '/purchases/new-order' },
                     { title: 'Quick Purchase', path: '/purchases/new' },
+                    { title: 'Purchase Orders', path: '/purchases/purchase-orders' },
                     { title: 'Purchase Returns', path: '/purchases/returns' },
                     { title: 'Supplier Sourcing', path: '/purchases/sourcing' },
                 ]
@@ -164,6 +166,7 @@ export const MENU_ITEMS = [
                 icon: Warehouse,
                 children: [
                     { title: 'Warehouses & Zones', path: '/inventory/warehouses' },
+                    { title: 'Location Management', path: '/inventory/locations' },
                     { title: 'Stock Adjustments', path: '/inventory/adjustments' },
                     { title: 'Global Inventory', path: '/inventory/global' },
                     { title: 'Barcode Configuration', path: '/inventory/barcode' },

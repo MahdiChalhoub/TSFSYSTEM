@@ -1,5 +1,7 @@
 'use client'
 
+import { useCurrency } from '@/lib/utils/currency'
+
 import { useState, useEffect } from "react"
 import type { PurchaseReturn } from '@/types/erp'
 import { Card, CardContent } from "@/components/ui/card"
@@ -13,10 +15,6 @@ import {
     Filter, Calendar, ChevronRight, User, PackageX
 } from "lucide-react"
 import Link from "next/link"
-
-function fmt(n: number) {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
-}
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
     PENDING: { label: 'Pending Processing', color: 'bg-amber-100 text-amber-700' },

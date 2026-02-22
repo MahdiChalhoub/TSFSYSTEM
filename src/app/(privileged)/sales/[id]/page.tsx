@@ -1,4 +1,5 @@
 import { erpFetch } from "@/lib/erp-api";
+import { formatCurrency } from "@/lib/utils/currency";
 import Link from "next/link";
 import {
     ArrowLeft, Calendar, User, Tag, MapPin,
@@ -17,13 +18,15 @@ async function getOrderDetails(id: string) {
     }
 }
 
-function fmt(n: number) {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
-}
 
 export default async function SaleDetailPage({ params }: { params: { id: string } }) {
     const { id } = await params;
-    const order = await getOrderDetails(id);
+    const [order, orgSettings] = await Promise.all([
+        getOrderDetails(id),
+        erpFetch('settings/global_financial/').catch(() => null)
+    ]);
+    const orgCurrency = orgSettings?.currency || orgSettings?.currency_code || 'XOF';
+    const fmt = (n: number) => formatCurrency(n, orgCurrency);
 
     if (!order) {
         return (

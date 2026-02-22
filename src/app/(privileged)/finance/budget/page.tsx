@@ -1,5 +1,7 @@
 'use client'
 
+import { useCurrency } from '@/lib/utils/currency'
+
 import { useState, useEffect, useMemo } from "react"
 import type { ChartOfAccount } from '@/types/erp'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,10 +12,6 @@ import { toast } from "sonner"
 import {
     Calculator, DollarSign, TrendingUp, TrendingDown, AlertTriangle
 } from "lucide-react"
-
-function fmt(n: number) {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
-}
 
 export default function BudgetPlanningPage() {
     const [accounts, setAccounts] = useState<ChartOfAccount[]>([])

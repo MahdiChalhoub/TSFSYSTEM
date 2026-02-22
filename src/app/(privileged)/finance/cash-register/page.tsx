@@ -1,5 +1,7 @@
 'use client'
 
+import { useCurrency } from '@/lib/utils/currency'
+
 import { useState, useEffect } from "react"
 import { getDailySummary } from "@/app/actions/pos/daily-summary"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,10 +14,6 @@ import {
     Banknote, ShoppingCart, RotateCcw, CreditCard,
     Users, Clock, TrendingUp, Calendar, DollarSign, Receipt
 } from "lucide-react"
-
-function fmt(n: number) {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
-}
 
 const PAYMENT_ICONS: Record<string, string> = {
     CASH: '💵',

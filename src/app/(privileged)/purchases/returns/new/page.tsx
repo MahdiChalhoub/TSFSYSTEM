@@ -1,5 +1,7 @@
 'use client'
 
+import { useCurrency } from '@/lib/utils/currency'
+
 import { useState, useEffect, Suspense } from "react"
 import type { PurchaseOrder } from '@/types/erp'
 import { useSearchParams, useRouter } from "next/navigation"
@@ -12,10 +14,6 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import { ArrowLeft, Truck, AlertCircle, ShoppingBag, CheckCircle2 } from "lucide-react"
 import Link from "next/link"
-
-function fmt(n: number) {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
-}
 
 function CreatePurchaseReturnForm() {
     const searchParams = useSearchParams()

@@ -1,5 +1,7 @@
 'use client'
 
+import { useCurrency } from '@/lib/utils/currency'
+
 import { useState, useEffect } from "react"
 import type { SalesAnalyticsData } from '@/types/erp'
 import { getSalesAnalytics } from "@/app/actions/pos/sales-analytics"
@@ -12,10 +14,6 @@ import {
     BarChart3, DollarSign, TrendingUp, ShoppingCart, Users,
     Package, CreditCard, Building2
 } from "lucide-react"
-
-function fmt(n: number) {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(n)
-}
 
 const PAYMENT_ICONS: Record<string, string> = {
     CASH: '💵', CARD: '💳', MOBILE: '📱', TRANSFER: '🏦', CHECK: '📝', CREDIT: '🧾'
