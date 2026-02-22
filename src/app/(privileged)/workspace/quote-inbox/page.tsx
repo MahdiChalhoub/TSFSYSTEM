@@ -6,7 +6,8 @@ import QuoteInboxClient from './client';
 export const dynamic = 'force-dynamic';
 
 export default async function QuoteInboxPage() {
-    const raw = await getQuoteRequests();
+    let raw: any = [];
+    try { raw = await getQuoteRequests(); } catch { }
     const quotes = Array.isArray(raw) ? raw : (raw as any)?.results || [];
 
     const pending = quotes.filter((q: any) => q.status === 'PENDING').length;

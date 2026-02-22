@@ -9,7 +9,8 @@ export default async function EditJournalEntryPage({ params }: { params: Promise
     const entryId = parseInt(id)
     if (isNaN(entryId)) notFound()
 
-    const entry = await getJournalEntry(entryId)
+    let entry: any = null
+    try { entry = await getJournalEntry(entryId) } catch { }
     if (!entry) notFound()
 
     if (entry.status === 'REVERSED') {
@@ -22,8 +23,9 @@ export default async function EditJournalEntryPage({ params }: { params: Promise
         )
     }
 
-    const accounts = await getChartOfAccounts()
-    const fiscalYears = await getFiscalYears()
+    let accounts: any = [], fiscalYears: any = []
+    try { accounts = await getChartOfAccounts() } catch { }
+    try { fiscalYears = await getFiscalYears() } catch { }
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">

@@ -4,8 +4,9 @@ import { FileUp, Database, History, TrendingUp, HelpCircle } from 'lucide-react'
 import { erpFetch } from '@/lib/erp-api';
 
 export default async function SalesImportPage() {
-    const warehouses = await erpFetch('warehouses/');
-    const accounts = await erpFetch('coa/?is_active=true');
+    let warehouses: any = [], accounts: any = [];
+    try { warehouses = await erpFetch('warehouses/'); } catch { }
+    try { accounts = await erpFetch('coa/?is_active=true'); } catch { }
 
     return (
         <div className="p-4 md:p-8 space-y-8 animate-in fade-in duration-700">

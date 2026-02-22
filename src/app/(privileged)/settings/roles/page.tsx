@@ -4,8 +4,9 @@ import { getRoles, getPermissions } from '@/app/actions/roles';
 import { Shield } from 'lucide-react';
 
 export default async function RolesPage() {
-    const roles = await getRoles();
-    const permissions = await getPermissions();
+    let roles: any = [], permissions: any = [];
+    try { roles = await getRoles(); } catch { }
+    try { permissions = await getPermissions(); } catch { }
 
     return (
         <div className="p-4 md:p-8 space-y-8 animate-in fade-in duration-500">

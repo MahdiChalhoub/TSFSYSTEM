@@ -14,7 +14,8 @@ export default async function FinancialEventDetailPage(props: { params: Promise<
     const id = parseInt(params.id)
     if (isNaN(id)) notFound()
 
-    const event = await getFinancialEvent(id)
+    let event: any = null
+    try { event = await getFinancialEvent(id) } catch { }
     if (!event) notFound()
 
     return (

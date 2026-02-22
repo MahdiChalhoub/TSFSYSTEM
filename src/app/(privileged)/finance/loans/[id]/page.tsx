@@ -11,7 +11,8 @@ import { serialize } from "@/lib/utils/serialization"
 
 export default async function LoanDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
-    const rawLoan = await getLoan(parseInt(id))
+    let rawLoan: any = null
+    try { rawLoan = await getLoan(parseInt(id)) } catch { }
 
     if (!rawLoan) return <div>Loan not found</div>
 

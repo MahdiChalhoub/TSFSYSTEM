@@ -4,14 +4,17 @@ import { getAvailableConsignmentStock, getPendingConsignmentItems, getConsignmen
 import { getContacts } from '@/app/actions/crm/contacts'
 
 export default async function ConsignmentPage() {
-    const [availableStock, pendingItems, settlements, contacts] = await Promise.all([
-        getAvailableConsignmentStock(),
-        getPendingConsignmentItems(),
-        getConsignmentSettlements(),
-        getContacts()
-    ])
+    let availableStock: any = [], pendingItems: any = [], settlements: any = [], contacts: any = [];
+    try {
+        [availableStock, pendingItems, settlements, contacts] = await Promise.all([
+            getAvailableConsignmentStock(),
+            getPendingConsignmentItems(),
+            getConsignmentSettlements(),
+            getContacts()
+        ]);
+    } catch { }
 
-    const suppliers = contacts.filter((c: Record<string, any>) => c.type === 'SUPPLIER')
+    const suppliers = (contacts || []).filter((c: Record<string, any>) => c.type === 'SUPPLIER')
 
     return (
         <div className="p-6 space-y-6">
