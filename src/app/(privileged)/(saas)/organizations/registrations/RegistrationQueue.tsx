@@ -27,7 +27,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 
-export function RegistrationQueue({ initialUsers }: { initialUsers: Record<string, any>[] }) {
+export function RegistrationQueue({ initialUsers, currentUserOrgId }: { initialUsers: Record<string, any>[], currentUserOrgId: string | null }) {
     const [users, setUsers] = useState(initialUsers);
     const [loadingMap, setLoadingMap] = useState<Record<number, boolean>>({});
     const [correctionModal, setCorrectionModal] = useState<{ open: boolean, userId: number | null }>({ open: false, userId: null });
@@ -145,11 +145,17 @@ export function RegistrationQueue({ initialUsers }: { initialUsers: Record<strin
                                 </div>
 
                                 <div className="flex items-center gap-3">
+                                    {user.organization_id === currentUserOrgId && (
+                                        <Badge className="bg-amber-100 text-amber-700 border-none rounded-lg px-3 py-1 text-[10px] font-black uppercase tracking-widest">
+                                            YOUR ORG
+                                        </Badge>
+                                    )}
                                     <Button
                                         variant="outline"
                                         onClick={() => setPendingRejectId(user.id)}
-                                        disabled={loadingMap[user.id]}
-                                        className="h-12 w-12 rounded-2xl border-gray-100 hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all p-0"
+                                        disabled={loadingMap[user.id] || user.organization_id === currentUserOrgId}
+                                        title={user.organization_id === currentUserOrgId ? 'Cannot reject your own organization' : 'Reject'}
+                                        className="h-12 w-12 rounded-2xl border-gray-100 hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all p-0 disabled:opacity-30"
                                     >
                                         <X size={20} />
                                     </Button>

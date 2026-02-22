@@ -1,10 +1,13 @@
 import React from 'react';
 import { RegistrationQueue } from './RegistrationQueue';
-import { getPendingUsers } from '@/app/actions/auth';
+import { getPendingUsers, meAction } from '@/app/actions/auth';
 import { ClipboardList } from 'lucide-react';
 
 export default async function RegistrationsPage() {
-    const pendingUsers = await getPendingUsers();
+    const [pendingUsers, me] = await Promise.all([
+        getPendingUsers(),
+        meAction().catch(() => null),
+    ]);
 
     return (
         <div className="p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
@@ -22,7 +25,7 @@ export default async function RegistrationsPage() {
                 </div>
             </div>
 
-            <RegistrationQueue initialUsers={pendingUsers} />
+            <RegistrationQueue initialUsers={pendingUsers} currentUserOrgId={me?.organization_id ?? null} />
         </div>
     );
 }
