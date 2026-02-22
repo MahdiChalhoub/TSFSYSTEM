@@ -227,9 +227,10 @@ if [[ -d "erp_backend/apps/$MODULE_NAME" ]]; then
     ssh_cmd "cd $REMOTE_DIR/erp_backend && source venv/bin/activate && python manage.py migrate $MODULE_NAME --no-input 2>&1 | tail -5" || warn "Migration had issues"
     ssh_cmd "cd $REMOTE_DIR/erp_backend && source venv/bin/activate && python manage.py collectstatic --noinput -q 2>&1 | tail -3" || true
     
-    log "  Restarting Django..."
-    ssh_cmd "pm2 restart django --update-env 2>&1" || { err "Django restart failed!"; exit 1; }
-    ok "Backend updated and restarted"
+    log "  Restarting Django via official startup script..."
+    ssh_cmd "pm2 delete django 2>/dev/null || true"
+    ssh_cmd "cd $REMOTE_DIR/erp_backend && pm2 start start_django.sh --name django"
+    ok "Backend updated and restarted via start_django.sh"
 else
     log "⏭️  [6/7] No backend app for $MODULE_NAME — skipping"
 fi
