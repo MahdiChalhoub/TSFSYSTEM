@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { erpFetch } from '@/lib/erp-api'
 import { Percent, Plus, Star, Trash2, RefreshCw, CheckCircle, XCircle, Edit2, Save, X, Info, TrendingUp, LayoutGrid } from 'lucide-react'
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -34,6 +35,10 @@ export default function TaxGroupsPage() {
     const [saving, setSaving] = useState(false)
     const [settingDefault, setSettingDefault] = useState<number | null>(null)
     const [deleting, setDeleting] = useState<number | null>(null)
+    const settings = useListViewSettings('fin_tax_groups', {
+        columns: ['name', 'rate', 'description', 'actions'],
+        pageSize: 25, sortKey: 'name', sortDir: 'asc'
+    })
 
     useEffect(() => { load() }, [])
 
@@ -330,6 +335,13 @@ export default function TaxGroupsPage() {
                 getRowId={(tg) => tg.id}
                 columns={columns}
                 className="rounded-3xl border-0 shadow-sm overflow-hidden"
+                visibleColumns={settings.visibleColumns}
+                onToggleColumn={settings.toggleColumn}
+                pageSize={settings.pageSize}
+                onPageSizeChange={settings.setPageSize}
+                sortKey={settings.sortKey}
+                sortDir={settings.sortDir}
+                onSort={settings.setSort}
             />
         </div>
     )

@@ -15,6 +15,7 @@ import {
     Calendar, DollarSign, ArrowRight, RefreshCw, Users, ShieldCheck
 } from "lucide-react"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 
 const STATUS_CONFIG: Record<string, { icon: any; color: string; bg: string }> = {
     ACTIVE: { icon: Timer, color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
@@ -26,6 +27,10 @@ export default function LoansPage() {
     const { fmt } = useCurrency()
     const [loans, setLoans] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
+    const settings = useListViewSettings('fin_loans', {
+        columns: ['startDate', 'partner', 'principalAmount', 'termMonths', 'status', 'actions'],
+        pageSize: 25, sortKey: 'startDate', sortDir: 'desc'
+    })
 
     useEffect(() => { loadData() }, [])
 
@@ -216,6 +221,13 @@ export default function LoansPage() {
                 getRowId={(loan) => loan.id}
                 columns={columns}
                 className="rounded-3xl border-0 shadow-sm overflow-hidden"
+                visibleColumns={settings.visibleColumns}
+                onToggleColumn={settings.toggleColumn}
+                pageSize={settings.pageSize}
+                onPageSizeChange={settings.setPageSize}
+                sortKey={settings.sortKey}
+                sortDir={settings.sortDir}
+                onSort={settings.setSort}
                 headerExtra={
                     <button onClick={loadData} className="p-2 hover:bg-stone-50 rounded-xl transition-colors text-stone-400 hover:text-stone-900">
                         <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />

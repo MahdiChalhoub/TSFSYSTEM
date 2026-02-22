@@ -12,6 +12,7 @@ import {
     User, Clock, FileText, Filter, Eye, Shield
 } from "lucide-react"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 
 const ACTION_CONFIG: Record<string, { icon: any, color: string, bg: string }> = {
     CREATE: { icon: Plus, color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
@@ -27,6 +28,10 @@ export default function AuditTrailPage() {
     const [page, setPage] = useState(1)
     const [filterModel, setFilterModel] = useState('')
     const [filterAction, setFilterAction] = useState('')
+    const settings = useListViewSettings('fin_audit_trail', {
+        columns: ['timestamp', 'change_type', 'model_name', 'object_id', 'actor'],
+        pageSize: 25, sortKey: 'timestamp', sortDir: 'desc'
+    })
 
     useEffect(() => { loadData() }, [page, filterModel, filterAction])
 
@@ -152,6 +157,13 @@ export default function AuditTrailPage() {
                 getRowId={(log) => log.id}
                 columns={columns}
                 className="rounded-3xl border-0 shadow-sm overflow-hidden"
+                visibleColumns={settings.visibleColumns}
+                onToggleColumn={settings.toggleColumn}
+                pageSize={settings.pageSize}
+                onPageSizeChange={settings.setPageSize}
+                sortKey={settings.sortKey}
+                sortDir={settings.sortDir}
+                onSort={settings.setSort}
                 expandable={{
                     render: (log) => (
                         <div className="p-6 bg-slate-50 border-t border-b border-slate-100">

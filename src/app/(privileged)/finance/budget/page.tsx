@@ -12,11 +12,16 @@ import {
     PieChart, Target
 } from "lucide-react"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 
 export default function BudgetPlanningPage() {
     const { fmt } = useCurrency()
     const [accounts, setAccounts] = useState<ChartOfAccount[]>([])
     const [loading, setLoading] = useState(true)
+    const settings = useListViewSettings('fin_budget', {
+        columns: ['code', 'name', 'balance', 'percentage'],
+        pageSize: 25, sortKey: 'balance', sortDir: 'desc'
+    })
 
     useEffect(() => { loadData() }, [])
 
@@ -221,6 +226,13 @@ export default function BudgetPlanningPage() {
                     getRowId={(a) => a.id}
                     columns={columns}
                     className="rounded-2xl border-0 shadow-sm overflow-hidden"
+                    visibleColumns={settings.visibleColumns}
+                    onToggleColumn={settings.toggleColumn}
+                    pageSize={settings.pageSize}
+                    onPageSizeChange={settings.setPageSize}
+                    sortKey={settings.sortKey}
+                    sortDir={settings.sortDir}
+                    onSort={settings.setSort}
                 />
 
                 <TypicalListView
@@ -230,6 +242,13 @@ export default function BudgetPlanningPage() {
                     getRowId={(a) => a.id}
                     columns={columns}
                     className="rounded-2xl border-0 shadow-sm overflow-hidden"
+                    visibleColumns={settings.visibleColumns}
+                    onToggleColumn={settings.toggleColumn}
+                    pageSize={settings.pageSize}
+                    onPageSizeChange={settings.setPageSize}
+                    sortKey={settings.sortKey}
+                    sortDir={settings.sortDir}
+                    onSort={settings.setSort}
                 />
             </div>
         </div>

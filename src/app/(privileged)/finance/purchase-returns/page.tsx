@@ -13,6 +13,7 @@ import {
     Package, Send, RefreshCw, User, ClipboardList
 } from "lucide-react"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { useCurrency } from '@/lib/utils/currency'
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
@@ -27,6 +28,10 @@ export default function PurchaseReturnsPage() {
     const [loading, setLoading] = useState(true)
     const [confirmId, setConfirmId] = useState<number | null>(null)
     const [isPending, startTransition] = useTransition()
+    const settings = useListViewSettings('fin_purchase_returns', {
+        columns: ['return_date', 'supplier', 'reason', 'status', 'actions'],
+        pageSize: 25, sortKey: 'return_date', sortDir: 'desc'
+    })
 
     useEffect(() => { loadData() }, [])
 
@@ -206,6 +211,13 @@ export default function PurchaseReturnsPage() {
                 getRowId={(r) => r.id}
                 columns={columns}
                 className="rounded-3xl border-0 shadow-sm overflow-hidden"
+                visibleColumns={settings.visibleColumns}
+                onToggleColumn={settings.toggleColumn}
+                pageSize={settings.pageSize}
+                onPageSizeChange={settings.setPageSize}
+                sortKey={settings.sortKey}
+                sortDir={settings.sortDir}
+                onSort={settings.setSort}
             />
 
             {/* Confirm Dialog */}

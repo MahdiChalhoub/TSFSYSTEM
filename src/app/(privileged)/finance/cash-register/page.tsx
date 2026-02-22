@@ -12,6 +12,7 @@ import {
     Users, Clock, TrendingUp, Calendar, DollarSign, Receipt, ArrowRight, RefreshCw, BarChart3
 } from "lucide-react"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 
 const PAYMENT_ICONS: Record<string, string> = {
     CASH: '💵',
@@ -33,6 +34,10 @@ export default function CashRegisterPage() {
     const [loading, setLoading] = useState(true)
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
     const [period, setPeriod] = useState<'today' | 'week' | 'month'>('today')
+    const settings = useListViewSettings('fin_cash_register', {
+        columns: ['ref_code', 'type', 'total', 'payment_method', 'user', 'time'],
+        pageSize: 25, sortKey: 'time', sortDir: 'desc'
+    })
 
     useEffect(() => { loadData() }, [selectedDate, period])
 
@@ -330,6 +335,13 @@ export default function CashRegisterPage() {
                 getRowId={(t) => t.id}
                 columns={columns}
                 className="rounded-3xl border-0 shadow-sm overflow-hidden"
+                visibleColumns={settings.visibleColumns}
+                onToggleColumn={settings.toggleColumn}
+                pageSize={settings.pageSize}
+                onPageSizeChange={settings.setPageSize}
+                sortKey={settings.sortKey}
+                sortDir={settings.sortDir}
+                onSort={settings.setSort}
                 headerExtra={
                     <div className="flex items-center gap-3">
                         <Badge variant="outline" className="rounded-xl px-3 py-1 text-stone-400 border-stone-200">

@@ -17,6 +17,7 @@ import {
     CalendarClock, DollarSign, PlayCircle, Filter, ChevronRight, LayoutGrid
 } from "lucide-react"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 
 const STATUS_CONFIG: Record<string, { icon: any; color: string; bg: string }> = {
     ACTIVE: { icon: PlayCircle, color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
@@ -31,6 +32,10 @@ export default function DeferredExpensesPage() {
     const [dialogOpen, setDialogOpen] = useState(false)
     const [activeTab, setActiveTab] = useState<string>("ALL")
     const [isPending, startTransition] = useTransition()
+    const settings = useListViewSettings('fin_deferred_expenses', {
+        columns: ['name', 'total_amount', 'progress', 'remaining_amount', 'status', 'actions'],
+        pageSize: 25, sortKey: 'name', sortDir: 'asc'
+    })
 
     useEffect(() => { loadData() }, [])
 
@@ -310,6 +315,13 @@ export default function DeferredExpensesPage() {
                 getRowId={(exp) => exp.id}
                 columns={columns}
                 className="rounded-3xl border-0 shadow-sm overflow-hidden"
+                visibleColumns={settings.visibleColumns}
+                onToggleColumn={settings.toggleColumn}
+                pageSize={settings.pageSize}
+                onPageSizeChange={settings.setPageSize}
+                sortKey={settings.sortKey}
+                sortDir={settings.sortDir}
+                onSort={settings.setSort}
                 headerExtra={
                     <div className="flex items-center gap-1 bg-stone-100 p-1 rounded-2xl">
                         {[

@@ -12,6 +12,7 @@ import {
     TrendingUp, Users, DollarSign, CalendarClock
 } from "lucide-react"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 
 type AgingBucket = {
     total: number
@@ -46,6 +47,10 @@ export default function AgingReportPage() {
     const [payables, setPayables] = useState<AgingData | null>(null)
     const [loading, setLoading] = useState(true)
     const [activeBucket, setActiveBucket] = useState<string | null>(null)
+    const settings = useListViewSettings('fin_aging', {
+        columns: ['order_id', 'customer', 'amount', 'days', 'date', 'bucket'],
+        pageSize: 25, sortKey: 'days', sortDir: 'desc'
+    })
 
     useEffect(() => { loadData() }, [])
 
@@ -270,6 +275,13 @@ export default function AgingReportPage() {
                 getRowId={(v, i) => `${v.order_id}-${i}`}
                 columns={columns}
                 className="rounded-3xl border-0 shadow-sm overflow-hidden"
+                visibleColumns={settings.visibleColumns}
+                onToggleColumn={settings.toggleColumn}
+                pageSize={settings.pageSize}
+                onPageSizeChange={settings.setPageSize}
+                sortKey={settings.sortKey}
+                sortDir={settings.sortDir}
+                onSort={settings.setSort}
                 headerExtra={
                     <div className="flex items-center gap-2">
                         {activeBucket && (
