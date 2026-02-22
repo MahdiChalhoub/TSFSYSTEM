@@ -170,11 +170,11 @@ class Product(TenantModel):
     description = models.TextField(null=True, blank=True)
     product_type = models.CharField(max_length=20, choices=PRODUCT_TYPES, default='STANDARD')
 
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
     brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
     unit = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True, blank=True)
     country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True, blank=True)
-    parfum = models.ForeignKey(Parfum, on_delete=models.SET_NULL, null=True, blank=True)
+    parfum = models.ForeignKey(Parfum, on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
     product_group = models.ForeignKey(ProductGroup, on_delete=models.SET_NULL, null=True, blank=True)
 
     # Emballage / Size (e.g., 300ml, 500g)

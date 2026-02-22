@@ -729,13 +729,13 @@ class CountryViewSet(viewsets.ModelViewSet):
             products__country_id=pk,
             organization_id=organization_id
         ).distinct().prefetch_related(
-            'product_set', 'product_set__inventory', 'product_set__unit'
+            'products', 'products__inventory', 'products__unit'
         )
 
         data = []
         for brand in brands:
             products_data = []
-            products = brand.product_set.filter(country_id=pk)
+            products = brand.products.filter(country_id=pk)
             brand_total_stock = 0
             for p in products:
                 stock = sum(i.quantity for i in p.inventory.all())
@@ -759,6 +759,9 @@ class CountryViewSet(viewsets.ModelViewSet):
             })
 
         return Response(data)
+
+
+
 
 
 class RoleViewSet(TenantModelViewSet):

@@ -1287,7 +1287,7 @@ class CategoryViewSet(TenantModelViewSet):
         categories = Category.objects.filter(
             organization=organization
         ).annotate(
-            annotated_product_count=Count('product', distinct=True),
+            annotated_product_count=Count('products', distinct=True),
             annotated_brand_count=Count('brands', distinct=True),
             annotated_parfum_count=Count('parfums', distinct=True)
         )
