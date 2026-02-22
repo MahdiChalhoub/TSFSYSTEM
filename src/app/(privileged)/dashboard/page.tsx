@@ -320,35 +320,34 @@ export default function CustomDashboard() {
                     </CardContent>
                 </Card>
             )}
-        </div>
 
-            {/* Quick Access — New Modules */ }
-    <div>
-        <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Quick Access</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            {[
-                { label: 'AI Chat', href: '/mcp/chat', color: 'from-violet-500 to-purple-700', icon: '🤖' },
-                { label: 'E-Invoicing', href: '/finance/einvoicing', color: 'from-blue-500 to-indigo-700', icon: '📋' },
-                { label: 'Tax Groups', href: '/finance/tax-groups', color: 'from-emerald-500 to-teal-700', icon: '%' },
-                { label: 'Balances', href: '/finance/balances', color: 'from-amber-500 to-orange-700', icon: '⚖️' },
-                { label: 'Gateway', href: '/finance/gateway', color: 'from-cyan-500 to-blue-700', icon: '💳' },
-                { label: 'Report Builder', href: '/finance/reports/builder', color: 'from-pink-500 to-rose-700', icon: '📊' },
-                { label: 'Purch. Orders', href: '/purchases/purchase-orders', color: 'from-orange-500 to-red-700', icon: '🛒' },
-                { label: 'Locations', href: '/inventory/locations', color: 'from-lime-500 to-green-700', icon: '📦' },
-                { label: 'HR Overview', href: '/hr/overview', color: 'from-sky-500 to-blue-700', icon: '👥' },
-                { label: 'Client Portal', href: '/workspace/client-portal', color: 'from-rose-500 to-pink-700', icon: '🏪' },
-                { label: 'Supplier Portal', href: '/workspace/supplier-portal', color: 'from-indigo-500 to-violet-700', icon: '🚛' },
-                { label: 'Consignments', href: '/sales/consignment-settlements', color: 'from-teal-500 to-cyan-700', icon: '📝' },
-            ].map(item => (
-                <a key={item.href} href={item.href}
-                    className={`flex flex-col items-center gap-2 p-4 rounded-2xl bg-gradient-to-br ${item.color} text-white shadow-lg hover:scale-105 hover:shadow-xl transition-all text-center`}
-                >
-                    <span className="text-2xl">{item.icon}</span>
-                    <span className="text-xs font-bold leading-tight">{item.label}</span>
-                </a>
-            ))}
+            {/* Quick Access — New Modules */}
+            <div>
+                <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Quick Access</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                    {[
+                        { label: 'AI Chat', href: '/mcp/chat', color: 'from-violet-500 to-purple-700', icon: '🤖' },
+                        { label: 'E-Invoicing', href: '/finance/einvoicing', color: 'from-blue-500 to-indigo-700', icon: '📋' },
+                        { label: 'Tax Groups', href: '/finance/tax-groups', color: 'from-emerald-500 to-teal-700', icon: '%' },
+                        { label: 'Balances', href: '/finance/balances', color: 'from-amber-500 to-orange-700', icon: '⚖️' },
+                        { label: 'Gateway', href: '/finance/gateway', color: 'from-cyan-500 to-blue-700', icon: '💳' },
+                        { label: 'Report Builder', href: '/finance/reports/builder', color: 'from-pink-500 to-rose-700', icon: '📊' },
+                        { label: 'Purch. Orders', href: '/purchases/purchase-orders', color: 'from-orange-500 to-red-700', icon: '🛒' },
+                        { label: 'Locations', href: '/inventory/locations', color: 'from-lime-500 to-green-700', icon: '📦' },
+                        { label: 'HR Overview', href: '/hr/overview', color: 'from-sky-500 to-blue-700', icon: '👥' },
+                        { label: 'Client Portal', href: '/workspace/client-portal', color: 'from-rose-500 to-pink-700', icon: '🏪' },
+                        { label: 'Supplier Portal', href: '/workspace/supplier-portal', color: 'from-indigo-500 to-violet-700', icon: '🚛' },
+                        { label: 'Consignments', href: '/sales/consignment-settlements', color: 'from-teal-500 to-cyan-700', icon: '📝' },
+                    ].map(item => (
+                        <a key={item.href} href={item.href}
+                            className={`flex flex-col items-center gap-2 p-4 rounded-2xl bg-gradient-to-br ${item.color} text-white shadow-lg hover:scale-105 hover:shadow-xl transition-all text-center`}
+                        >
+                            <span className="text-2xl">{item.icon}</span>
+                            <span className="text-xs font-bold leading-tight">{item.label}</span>
+                        </a>
+                    ))}
+                </div>
+            </div>
         </div>
-    </div>
-        </div >
     )
 }
