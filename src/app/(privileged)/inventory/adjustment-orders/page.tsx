@@ -142,13 +142,13 @@ export default function DiscrepancyStrategyPage() {
         <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
             <header className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
-                            <Sparkles size={28} className="text-white" />
+                    <h1 className="text-4xl lg:text-5xl font-black text-gray-900 tracking-tighter flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-3xl bg-amber-600 flex items-center justify-center shadow-lg shadow-amber-100">
+                            <ShieldAlert size={32} className="text-white" />
                         </div>
-                        Resolution <span className="text-emerald-600">Strategy</span>
+                        Discrepancy <span className="text-amber-600">Strategy</span>
                     </h1>
-                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Team Collaboration & Discrepancy Governance documents</p>
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-[0.2em]">Derived from Count Results & Product Analytics</p>
                 </div>
                 <div className="flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-2xl border border-emerald-100">
                     <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />

@@ -157,13 +157,13 @@ export default function LogisticsStrategyPage() {
         <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
             <header className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
-                            <MessageSquare size={28} className="text-white" />
+                    <h1 className="text-4xl lg:text-5xl font-black text-gray-900 tracking-tighter flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-3xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-100">
+                            <ArrowRightLeft size={32} className="text-white" />
                         </div>
                         Logistics <span className="text-indigo-600">Strategy</span>
                     </h1>
-                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Team Communication & Future Planning Documents</p>
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-[0.2em]">Derived from Warehouse Analytics & Store Demand</p>
                 </div>
                 <div className="flex items-center gap-2 bg-indigo-50 px-4 py-2 rounded-2xl border border-indigo-100">
                     <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
