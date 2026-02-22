@@ -12,7 +12,12 @@ import { Badge } from "@/components/ui/badge";
 const ITEMS_PER_LOAD = 50; // Load 50 products at a time
 const SEARCH_DEBOUNCE_MS = 300; // Wait 300ms after user stops typing
 
-export function ProductGrid({ searchQuery, onAddToCart, categoryId }: { searchQuery: string, onAddToCart: (p: Record<string, any>) => void, categoryId?: number | null }) {
+export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '$' }: {
+    searchQuery: string,
+    onAddToCart: (p: Record<string, any>) => void,
+    categoryId?: number | null,
+    currency?: string
+}) {
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -315,8 +320,8 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId }: { searchQu
                             <div className="flex flex-col">
                                 <span className="text-[9px] font-black text-gray-400 uppercase tracking-tighter mb-0.5">Valuation</span>
                                 <div className="flex items-baseline gap-1">
-                                    <span className="font-black text-2xl text-indigo-600 leading-none tracking-tighter">${Number(product.basePrice).toFixed(2)}</span>
-                                    <span className="text-[10px] font-black text-indigo-300">USD</span>
+                                    <span className="font-black text-2xl text-indigo-600 leading-none tracking-tighter">{currency}{(Number(product.basePrice || product.price || 0)).toFixed(2)}</span>
+                                    <span className="text-[10px] font-black text-indigo-300 uppercase">{currency === '$' ? 'USD' : ''}</span>
                                 </div>
                             </div>
                             {Number(product.taxRate) > 0 && (
