@@ -441,7 +441,14 @@ export const MENU_ITEMS = [
         icon: Settings,
         module: 'core',
         children: [
-            { title: 'Cloud Storage', path: '/storage', icon: Cloud },
+            {
+                title: 'Cloud Storage',
+                icon: Cloud,
+                children: [
+                    { title: 'File Browser', path: '/storage' },
+                    { title: 'Package Manager', path: '/storage/packages', icon: Package },
+                ]
+            },
             { title: 'Sites & Branches', path: '/settings/sites', visibility: 'saas' },
             { title: 'Roles & Permissions', path: '/settings/roles' },
             { title: 'Security Settings', path: '/settings/security', icon: Shield },
