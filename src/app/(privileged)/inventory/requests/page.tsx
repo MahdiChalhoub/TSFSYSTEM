@@ -24,16 +24,16 @@ import { TypicalListView, ColumnDef, DetailColumnDef } from "@/components/common
 import { TypicalFilter } from "@/components/common/TypicalFilter"
 
 const TYPE_CONFIG: Record<string, { label: string; icon: any; color: string; bg: string }> = {
-    STOCK_ADJUSTMENT: { label: 'Adjustment Protocol', icon: ArrowDownUp, color: 'text-amber-600', bg: 'bg-amber-50 border-amber-100' },
-    STOCK_TRANSFER: { label: 'Logistics Protocol', icon: ArrowLeftRight, color: 'text-indigo-600', bg: 'bg-indigo-50 border-indigo-100' },
-    PURCHASE_ORDER: { label: 'Procurement Protocol', icon: ShoppingCart, color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-100' },
+    STOCK_ADJUSTMENT: { label: 'Adjustment Request', icon: ArrowDownUp, color: 'text-indigo-600', bg: 'bg-indigo-50 border-indigo-100' },
+    STOCK_TRANSFER: { label: 'Logistics Request', icon: ArrowLeftRight, color: 'text-indigo-600', bg: 'bg-indigo-50 border-indigo-100' },
+    PURCHASE_ORDER: { label: 'Procurement Request', icon: ShoppingCart, color: 'text-indigo-600', bg: 'bg-indigo-50 border-indigo-100' },
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; variant: any }> = {
-    PENDING: { label: 'Awaiting Audit', color: 'text-amber-600', variant: 'warning' },
-    APPROVED: { label: 'Approved Protocol', color: 'text-emerald-600', variant: 'success' },
-    REJECTED: { label: 'Protocol Rejected', color: 'text-rose-600', variant: 'danger' },
-    CONVERTED: { label: 'Executed Strategy', color: 'text-indigo-600', variant: 'info' },
+    PENDING: { label: 'Awaiting Review', color: 'text-amber-600', variant: 'warning' },
+    APPROVED: { label: 'Approved Request', color: 'text-emerald-600', variant: 'success' },
+    REJECTED: { label: 'Request Rejected', color: 'text-rose-600', variant: 'danger' },
+    CONVERTED: { label: 'Promoted to Strategy', color: 'text-indigo-600', variant: 'info' },
 }
 
 export default function OperationalRequestsPage() {
@@ -88,7 +88,7 @@ export default function OperationalRequestsPage() {
     const columns: ColumnDef<OperationalRequest>[] = [
         {
             key: 'reference',
-            label: 'Protocol Reference',
+            label: 'Request Reference',
             alwaysVisible: true,
             render: r => (
                 <div className="flex items-center gap-3">
@@ -109,15 +109,15 @@ export default function OperationalRequestsPage() {
         },
         {
             key: 'date',
-            label: 'Protocol Date',
+            label: 'Requested Date',
             render: r => <span className="text-gray-500 font-medium text-xs">{r.date}</span>
         },
         {
             key: 'priority',
-            label: 'Audit Priority',
+            label: 'Urgency',
             render: r => (
                 <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-widest ${r.priority === 'URGENT' ? 'text-rose-600 border-rose-100 bg-rose-50' :
-                        r.priority === 'HIGH' ? 'text-amber-600 border-amber-100 bg-amber-50' : 'text-gray-400 border-gray-100'
+                    r.priority === 'HIGH' ? 'text-amber-600 border-amber-100 bg-amber-50' : 'text-gray-400 border-gray-100'
                     }`}>
                     {r.priority ?? 'NORMAL'}
                 </Badge>
@@ -147,31 +147,31 @@ export default function OperationalRequestsPage() {
             <header className="flex justify-between items-start">
                 <div>
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-amber-500 rounded-lg text-white shadow-lg shadow-amber-200">
+                        <div className="p-2 bg-indigo-600 rounded-lg text-white shadow-lg shadow-indigo-100">
                             <ClipboardList size={16} />
                         </div>
-                        <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em]">Operational Protocol</span>
+                        <span className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.3em]">Operational Layer</span>
                     </div>
                     <h1 className="text-4xl lg:text-5xl font-black text-gray-900 tracking-tighter">
-                        Request <span className="text-amber-500">Pipeline</span>
+                        Request <span className="text-indigo-600">Pipeline</span>
                     </h1>
                     <p className="mt-2 text-gray-500 font-medium max-w-xl">
-                        Central queue for logistics, procurement, and adjustment requests. Approved protocols are promoted to the Strategy layer for team governance.
+                        Central queue for logistics, procurement, and adjustment requests. Approved requests are promoted to the Strategy layer for team governance.
                     </p>
                 </div>
 
-                <div className="bg-amber-50 px-4 py-3 rounded-2xl border border-amber-100 flex items-center gap-3">
-                    <Activity size={20} className="text-amber-500 animate-pulse" />
+                <div className="bg-indigo-50 px-4 py-3 rounded-2xl border border-indigo-100 flex items-center gap-3">
+                    <Activity size={20} className="text-indigo-600 animate-pulse" />
                     <div className="text-right">
-                        <div className="text-[10px] font-black text-amber-500 uppercase tracking-widest leading-none">Protocol Queue</div>
-                        <div className="text-lg font-black text-amber-700 leading-none mt-1">{requests.filter(r => r.status === 'PENDING').length} PENDING</div>
+                        <div className="text-[10px] font-black text-indigo-500 uppercase tracking-widest leading-none">Queue Status</div>
+                        <div className="text-lg font-black text-indigo-700 leading-none mt-1">{requests.filter(r => r.status === 'PENDING').length} PENDING</div>
                     </div>
                 </div>
             </header>
 
             <TypicalListView<OperationalRequest, any>
-                title="Operational Protocols"
-                addLabel="INITIATE PROTOCOL"
+                title="Requests Manifest"
+                addLabel="INITIATE REQUEST"
                 onAdd={() => setDialogOpen(true)}
                 data={filtered}
                 loading={loading}
@@ -192,18 +192,18 @@ export default function OperationalRequestsPage() {
                     getCanceled: r => r.status === 'REJECTED'
                 }}
                 actions={{
-                    renderCustom: (req) => (
+                    renderCustom: (req: OperationalRequest) => (
                         <div className="flex items-center gap-2">
                             {req.status === 'PENDING' && (
                                 <>
-                                    <Button size="sm" variant="outline" className="h-8 px-3 rounded-xl border-amber-100 text-amber-600 hover:bg-amber-50 font-black text-[10px]" onClick={() => { setActiveRequest(req.id); setLineDialogOpen(true) }}>
+                                    <Button size="sm" variant="outline" className="h-8 px-3 rounded-xl border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-black text-[10px]" onClick={() => { setActiveRequest(req.id); setLineDialogOpen(true) }}>
                                         <Plus size={14} className="mr-1" /> ADD ITEM
                                     </Button>
                                     <Button size="sm" variant="outline" className="h-8 px-3 rounded-xl border-emerald-100 text-emerald-600 hover:bg-emerald-50 font-black text-[10px]" onClick={() => {
                                         toast.promise(approveRequest(req.id).then(() => loadData()), {
-                                            loading: 'Auditing protocol...',
-                                            success: 'Protocol Approved!',
-                                            error: 'Audit failed'
+                                            loading: 'Reviewing request...',
+                                            success: 'Request Approved!',
+                                            error: 'Review failed'
                                         })
                                     }} disabled={isPending}>
                                         <CheckCircle2 size={14} className="mr-1" /> APPROVE
@@ -225,9 +225,9 @@ export default function OperationalRequestsPage() {
                         {
                             key: 'status', label: 'Queue Filter', type: 'select', options: [
                                 { value: 'ALL', label: 'Complete Queue' },
-                                { value: 'PENDING', label: 'Pending Audit' },
-                                { value: 'APPROVED', label: 'Approved Protocols' },
-                                { value: 'CONVERTED', label: 'Executed Strategies' },
+                                { value: 'PENDING', label: 'Pending Review' },
+                                { value: 'APPROVED', label: 'Approved Requests' },
+                                { value: 'CONVERTED', label: 'Promoted' },
                                 { value: 'REJECTED', label: 'Rejected' },
                             ]
                         }
@@ -241,7 +241,7 @@ export default function OperationalRequestsPage() {
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogContent className="sm:max-w-lg rounded-[2.5rem] border-0">
                     <DialogHeader>
-                        <DialogTitle className="text-2xl font-black text-gray-900 tracking-tighter">Initiate Protocol</DialogTitle>
+                        <DialogTitle className="text-2xl font-black text-gray-900 tracking-tighter">Initiate Request</DialogTitle>
                         <DialogDescription className="text-xs font-medium text-gray-400">Submit a new baseline request for procurement or logistics intervention.</DialogDescription>
                     </DialogHeader>
                     <form onSubmit={async (e) => {
@@ -256,7 +256,7 @@ export default function OperationalRequestsPage() {
                                     description: fd.get("description") as string || undefined,
                                 }
                                 await createOperationalRequest(data)
-                                toast.success("Protocol Initiated")
+                                toast.success("Request Initiated")
                                 setDialogOpen(false)
                                 loadData()
                             } catch (err: any) {
@@ -266,15 +266,15 @@ export default function OperationalRequestsPage() {
                     }} className="space-y-4 pt-4">
                         <div className="grid grid-cols-2 gap-3">
                             <div className="col-span-1">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Protocol Type</label>
-                                <select name="request_type" required className="w-full rounded-2xl border-gray-100 bg-gray-50 px-4 py-3 text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-amber-100 transition-all">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Request Type</label>
+                                <select name="request_type" required className="w-full rounded-2xl border-gray-100 bg-gray-50 px-4 py-3 text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-indigo-100 transition-all">
                                     {Object.entries(TYPE_CONFIG).map(([k, v]) => (
                                         <option key={k} value={k}>{v.label}</option>
                                     ))}
                                 </select>
                             </div>
                             <div className="col-span-1">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Protocol Date</label>
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Requested Date</label>
                                 <Input name="date" type="date" required defaultValue={new Date().toISOString().split('T')[0]} className="rounded-2xl bg-gray-50 h-12" />
                             </div>
                             <div className="col-span-2">
@@ -284,8 +284,8 @@ export default function OperationalRequestsPage() {
                         </div>
                         <div className="flex justify-end gap-2 pt-4">
                             <Button type="button" variant="ghost" onClick={() => setDialogOpen(false)} className="rounded-xl font-bold">Discard</Button>
-                            <Button type="submit" disabled={isPending} className="bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-bold h-12 px-8 shadow-lg shadow-amber-100 transition-all">
-                                {isPending ? "Syncing..." : "Publish Protocol"}
+                            <Button type="submit" disabled={isPending} className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold h-12 px-8 shadow-lg shadow-indigo-100 transition-all">
+                                {isPending ? "Syncing..." : "Publish Request"}
                             </Button>
                         </div>
                     </form>
@@ -345,10 +345,10 @@ export default function OperationalRequestsPage() {
                         </div>
                     </form>
                 </DialogContent>
-            </Dialog>
+            </Dialog >
 
             {/* ─── Convert Dialog ─────────────────────────────────── */}
-            <Dialog open={!!convertDialog} onOpenChange={() => setConvertDialog(null)}>
+            < Dialog open={!!convertDialog} onOpenChange={() => setConvertDialog(null)}>
                 <DialogContent className="sm:max-w-md rounded-[2.5rem] border-0">
                     <DialogHeader>
                         <DialogTitle className="text-2xl font-black text-gray-900 tracking-tighter">Promote to Strategy</DialogTitle>
@@ -386,7 +386,7 @@ export default function OperationalRequestsPage() {
                         </div>
                     </form>
                 </DialogContent>
-            </Dialog>
-        </div>
+            </Dialog >
+        </div >
     )
 }

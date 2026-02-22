@@ -155,19 +155,20 @@ export default function LogisticsStrategyPage() {
 
     return (
         <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
-            <header className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-4xl lg:text-5xl font-black text-gray-900 tracking-tighter flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-3xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-100">
-                            <ArrowRightLeft size={32} className="text-white" />
-                        </div>
-                        Logistics <span className="text-indigo-600">Strategy</span>
-                    </h1>
-                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-[0.2em]">Derived from Warehouse Analytics & Store Demand</p>
+            <header className="flex justify-between items-center border-b pb-6">
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <ArrowRightLeft size={20} className="text-indigo-600" />
+                        <h1 className="text-2xl font-black text-gray-900 tracking-tighter uppercase">
+                            Logistics <span className="text-indigo-600">Strategy</span>
+                        </h1>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2 bg-indigo-50 px-4 py-2 rounded-2xl border border-indigo-100">
-                    <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
-                    <span className="text-[10px] font-black uppercase text-indigo-700 tracking-widest">Internal Strategy Layer</span>
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-100">
+                        <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse" />
+                        <span className="text-[9px] font-black uppercase text-indigo-700 tracking-widest">Internal Strategy</span>
+                    </div>
                 </div>
             </header>
 

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ProductGrid } from '@/components/pos/ProductGrid';
 import { TicketSidebar } from '@/components/pos/TicketSidebar';
-import { Search, Loader2, Zap, Keyboard, Plus, User, MapPin, Calendar, FileText, Settings, Wallet, Save, Book, File, ArrowLeft, ChevronLeft, ChevronRight, Maximize, Minimize, Expand, Layout, Fullscreen } from 'lucide-react';
+import { Search, Loader2, Zap, Keyboard, Plus, User, MapPin, Calendar, FileText, Settings, Wallet, Save, Book, File, ArrowLeft, ChevronLeft, ChevronRight, Maximize, Minimize, Expand, Layout, Fullscreen, ShoppingCart, X } from 'lucide-react';
 import clsx from 'clsx';
 import { toast } from 'sonner';
 import { QuickProducts } from '@/components/pos/QuickProducts';
@@ -14,7 +14,18 @@ import { getCommercialContext } from '@/app/actions/commercial';
 type SidebarMode = 'hidden' | 'normal' | 'expanded';
 
 export default function POSPage() {
-    const [cart, setCart] = useState<CartItem[]>([]);
+    // Phase 1: Client State
+    const [clients, setClients] = useState<any[]>([
+        { id: 1, name: 'Walk-in Customer', phone: 'N/A', balance: 0, loyalty: 0, address: 'Counter Sales', zone: 'A' },
+        { id: 2, name: 'John Doe', phone: '+91 54321 098765', balance: 120, loyalty: 50, address: '1st Block, Rammurthy Nagar', zone: 'B' },
+        { id: 3, name: 'Sarah Smith', phone: '+225 07070707', balance: 450, loyalty: 120, address: 'Plateau, Abidjan', zone: 'A' },
+    ]);
+
+    // Phase 5: Multi-Order Sessions
+    const [sessions, setSessions] = useState<any[]>([]);
+    const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+
+    // UI State
     const [searchQuery, setSearchQuery] = useState('');
     const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
     const [sidebarMode, setSidebarMode] = useState<SidebarMode>('normal');
@@ -22,6 +33,69 @@ export default function POSPage() {
     const [currency, setCurrency] = useState('$');
     const [categories, setCategories] = useState<Array<{ id: number; name: string }>>([]);
     const [categoriesLoading, setCategoriesLoading] = useState(true);
+
+    // Initial Session Setup & Persistence
+    useEffect(() => {
+        const saved = localStorage.getItem('pos_sessions');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                if (parsed.length > 0) {
+                    setSessions(parsed);
+                    setActiveSessionId(parsed[0].id);
+                } else {
+                    const initialId = Date.now().toString();
+                    const initial = [{ id: initialId, clientId: 1, cart: [], name: 'Ticket 1' }];
+                    setSessions(initial);
+                    setActiveSessionId(initialId);
+                }
+            } catch (e) {
+                console.error("Failed to load sessions", e);
+            }
+        } else {
+            const initialId = Date.now().toString();
+            const initial = [{ id: initialId, clientId: 1, cart: [], name: 'Ticket 1' }];
+            setSessions(initial);
+            setActiveSessionId(initialId);
+        }
+    }, []);
+
+    // Persist on change
+    useEffect(() => {
+        if (sessions.length > 0) {
+            localStorage.setItem('pos_sessions', JSON.stringify(sessions));
+        }
+    }, [sessions]);
+
+    const activeSession = sessions.find(s => s.id === activeSessionId) || sessions[0] || { cart: [], clientId: 1 };
+    const cart = activeSession.cart;
+    const selectedClientId = activeSession.clientId;
+    const selectedClient = clients.find(c => c.id === selectedClientId) || clients[0];
+
+    const updateActiveSession = useCallback((updates: any) => {
+        setSessions(prev => prev.map(s => s.id === activeSessionId ? { ...s, ...updates } : s));
+    }, [activeSessionId]);
+
+    const createNewSession = () => {
+        const newId = Date.now().toString();
+        const newSession = { id: newId, clientId: 1, cart: [], name: `Ticket ${sessions.length + 1}` };
+        setSessions(prev => [...prev, newSession]);
+        setActiveSessionId(newId);
+        toast.success("New ticket created");
+    };
+
+    const removeSession = (id: string) => {
+        if (sessions.length <= 1) {
+            toast.error("At least one ticket must remain open");
+            return;
+        }
+        setSessions(prev => {
+            const next = prev.filter(s => s.id !== id);
+            if (activeSessionId === id) setActiveSessionId(next[0].id);
+            return next;
+        });
+        toast.info("Ticket closed");
+    };
     // Load context and categories
     useEffect(() => {
         getCommercialContext().then(ctx => {
@@ -37,7 +111,7 @@ export default function POSPage() {
             .finally(() => setCategoriesLoading(false));
     }, []);
 
-    // Add Item to Cart Logic
+    // Phase 2: Cart Logic (Sticky Top Guardrail)
     const addToCart = useCallback((product: Record<string, any>) => {
         const basePrice = Number(product.basePrice || product.price || 0);
         const taxRate = Number(product.taxRate || 0);
@@ -47,41 +121,43 @@ export default function POSPage() {
             return;
         }
 
-        setCart(prev => {
-            const existing = prev.find(p => p.productId === product.id);
-            if (existing) {
-                toast.info(`Increased ${product.name} quantity`, { duration: 1000 });
-                return prev.map(p => p.productId === product.id
-                    ? { ...p, quantity: p.quantity + 1 }
-                    : p
-                );
-            }
-            toast.success(`Added ${product.name} to ticket`, { duration: 1000 });
-            return [...prev, {
+        const existingIndex = cart.findIndex((p: any) => (p as any).productId === product.id);
+        let newCart: any[];
+
+        if (existingIndex !== -1) {
+            const item = { ...cart[existingIndex], quantity: (cart[existingIndex] as any).quantity + 1 };
+            const filtered = cart.filter((_: any, i: number) => i !== existingIndex);
+            newCart = [item, ...filtered];
+            toast.info(`Updated piece: ${product.name}`, { duration: 1000, icon: 'ΓÜí' });
+        } else {
+            newCart = [{
                 productId: product.id,
                 name: product.name,
                 price: basePrice,
                 taxRate: taxRate,
                 quantity: 1,
                 isTaxIncluded: product.isTaxIncluded
-            }];
-        });
-    }, []);
+            }, ...cart];
+            toast.success(`New item: ${product.name}`, { duration: 1000 });
+        }
+        updateActiveSession({ cart: newCart });
+    }, [cart, updateActiveSession]);
 
     const updateQuantity = useCallback((productId: number, delta: number) => {
-        setCart(prev => prev.map(item => {
+        const newCart = cart.map((item: any) => {
             if (item.productId === productId) {
                 const newQty = Math.max(0, item.quantity + delta);
                 return { ...item, quantity: newQty };
             }
             return item;
-        }).filter(i => i.quantity > 0));
-    }, []);
+        }).filter((i: any) => i.quantity > 0);
+        updateActiveSession({ cart: newCart });
+    }, [cart, updateActiveSession]);
 
     const clearCart = useCallback(() => {
-        setCart([]);
+        updateActiveSession({ cart: [] });
         toast.info("Ticket cleared");
-    }, []);
+    }, [updateActiveSession]);
 
     const toggleFullscreen = useCallback(() => {
         if (!document.fullscreenElement) {
@@ -142,11 +218,42 @@ export default function POSPage() {
             "flex flex-col bg-[#F1F5F9] overflow-hidden select-none",
             isFullscreen ? "fixed inset-0 z-[1000] h-screen w-screen" : "absolute inset-0"
         )}>
-            {/* TOP BAR: Utility Actions */}
             <div className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 shrink-0 z-50">
                 <div className="flex items-center gap-4">
                     <button className="p-2.5 bg-gray-50 border border-gray-100 rounded-lg text-gray-400 hover:bg-gray-100 transition-all"><ArrowLeft size={18} /></button>
                     <div className="font-black text-gray-900 tracking-tighter text-lg uppercase italic">POS <span className="text-indigo-600">Terminal V2</span></div>
+
+                    {/* Session Tabs */}
+                    <div className="flex gap-2 ml-8 overflow-x-auto max-w-md custom-scrollbar-hide">
+                        {sessions.map(s => (
+                            <div key={s.id} className="flex shrink-0">
+                                <button
+                                    onClick={() => setActiveSessionId(s.id)}
+                                    className={clsx(
+                                        "flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                                        activeSessionId === s.id
+                                            ? "bg-indigo-600 text-white shadow-lg shadow-indigo-100"
+                                            : "bg-gray-50 text-gray-400 hover:bg-gray-100"
+                                    )}
+                                >
+                                    <ShoppingCart size={14} />
+                                    {s.name}
+                                </button>
+                                <button
+                                    onClick={() => removeSession(s.id)}
+                                    className="ml-[-12px] p-1 text-gray-300 hover:text-rose-500 transition-all"
+                                >
+                                    <X size={12} />
+                                </button>
+                            </div>
+                        ))}
+                        <button
+                            onClick={createNewSession}
+                            className="p-2.5 bg-gray-50 text-gray-400 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition-all"
+                        >
+                            <Plus size={16} />
+                        </button>
+                    </div>
                 </div>
                 <div className="flex items-center gap-2">
                     <button
@@ -168,9 +275,14 @@ export default function POSPage() {
             <div className="bg-white border-b border-gray-100 p-6 flex items-center gap-6 shrink-0">
                 <div className="w-64">
                     <div className="relative">
-                        <select className="w-full pl-4 pr-10 py-3 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold appearance-none outline-none focus:border-indigo-500 transition-all cursor-pointer">
-                            <option>Walk-in Customer</option>
-                            <option>John Doe</option>
+                        <select
+                            value={selectedClientId}
+                            onChange={(e) => updateActiveSession({ clientId: Number(e.target.value) })}
+                            className="w-full pl-4 pr-10 py-3 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold appearance-none outline-none focus:border-indigo-500 transition-all cursor-pointer"
+                        >
+                            {clients.map(c => (
+                                <option key={c.id} value={c.id}>{c.name}</option>
+                            ))}
                         </select>
                         <User className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
                     </div>
@@ -179,7 +291,7 @@ export default function POSPage() {
 
                 <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl">
                     <MapPin size={14} className="text-gray-400" />
-                    <span className="text-xs font-bold text-gray-600">Zone: A</span>
+                    <span className="text-xs font-bold text-gray-600 uppercase tracking-widest">Zone: {selectedClient.zone}</span>
                 </div>
 
                 <div className="relative flex-1">
@@ -293,6 +405,7 @@ export default function POSPage() {
                             onUpdateQuantity={updateQuantity}
                             onClear={clearCart}
                             currency={currency}
+                            client={selectedClient}
                         />
                     </div>
                 </main>
