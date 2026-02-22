@@ -42,13 +42,19 @@ def _get_boto3_client(provider):
     )
 
 
-def _build_storage_key(provider, category, original_filename, linked_model='', linked_id=None):
+def _build_storage_key(provider, category, original_filename, linked_model='', linked_id=None, org_slug=''):
     """
     Build the S3 object key with strict isolation:
     {prefix}{module}/{feature}/{id}/{filename}
     Fallback to: {prefix}{category}/{YYYY-MM}/{uuid}_{filename}
     """
-    prefix = provider.path_prefix if provider else ''
+    # 0. Determine isolation prefix
+    if provider and provider.path_prefix:
+        prefix = provider.path_prefix
+    elif org_slug:
+        prefix = f"{org_slug}/"
+    else:
+        prefix = ''
     
     # 1. Attempt structured path if linked_model exists
     if linked_model and '.' in linked_model:
@@ -85,7 +91,7 @@ def _compute_checksum(file_obj):
     return sha.hexdigest()
 
 
-def upload_to_cloud(provider, file_obj, category, original_filename, linked_model='', linked_id=None):
+def upload_to_cloud(provider, file_obj, category, original_filename, linked_model='', linked_id=None, org_slug=''):
     """
     Upload a file to the configured cloud storage.
     Returns (storage_key, bucket, checksum, file_size).
@@ -94,7 +100,8 @@ def upload_to_cloud(provider, file_obj, category, original_filename, linked_mode
     bucket = provider.bucket_name if provider else getattr(settings, 'STORAGE_R2_BUCKET', 'tsf-files')
     storage_key = _build_storage_key(
         provider, category, original_filename,
-        linked_model=linked_model, linked_id=linked_id
+        linked_model=linked_model, linked_id=linked_id,
+        org_slug=org_slug
     )
     checksum = _compute_checksum(file_obj)
     file_size = file_obj.size if hasattr(file_obj, 'size') else 0

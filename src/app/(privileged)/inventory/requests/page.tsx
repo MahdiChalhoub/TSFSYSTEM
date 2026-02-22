@@ -18,8 +18,10 @@ import { toast } from "sonner"
 import {
     Inbox, Plus, Search, CheckCircle2, XCircle, ArrowRightCircle,
     ChevronDown, ChevronUp, Package, Clock, AlertTriangle,
-    FileQuestion, ArrowDownUp, ArrowLeftRight, ShoppingCart
+    FileQuestion, ArrowDownUp, ArrowLeftRight, ShoppingCart, RefreshCw
 } from "lucide-react"
+import { TypicalListView, ColumnDef, DetailColumnDef } from "@/components/common/TypicalListView"
+import { TypicalFilter } from "@/components/common/TypicalFilter"
 
 const TYPE_CONFIG: Record<string, { label: string; icon: Record<string, any>; color: string }> = {
     STOCK_ADJUSTMENT: { label: 'Stock Adjustment', icon: ArrowDownUp, color: 'bg-blue-100 text-blue-700' },
@@ -53,12 +55,14 @@ export default function OperationalRequestsPage() {
     const [activeTab, setActiveTab] = useState("ALL")
     const [searchQuery, setSearchQuery] = useState("")
     const [isPending, startTransition] = useTransition()
+    const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set())
     const [rejectDialog, setRejectDialog] = useState<number | null>(null)
     const [convertDialog, setConvertDialog] = useState<OperationalRequest | null>(null)
 
     useEffect(() => { loadData() }, [])
 
     async function loadData() {
+        setLoading(true)
         try {
             const [reqRes, whRes, prodRes] = await Promise.all([
                 getOperationalRequests(),
