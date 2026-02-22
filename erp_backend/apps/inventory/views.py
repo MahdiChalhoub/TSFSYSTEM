@@ -1303,6 +1303,57 @@ class CategoryViewSet(TenantModelViewSet):
 
         return Response(data)
 
+    @action(detail=True, methods=['get'])
+    def explore(self, request, pk=None):
+        category = self.get_object()
+        organization = category.organization
+
+        from django.db.models import Count, Q
+
+        # Brands linked to this category, annotated with product count IN THIS CATEGORY
+        brands = Brand.objects.filter(
+            categories=category, 
+            organization=organization
+        ).annotate(
+            cat_product_count=Count('products', filter=Q(products__category=category))
+        ).values('id', 'name', 'logo', 'cat_product_count')
+
+        # Parfums linked to this category, annotated with product count IN THIS CATEGORY
+        parfums = Parfum.objects.filter(
+            categories=category,
+            organization=organization
+        ).annotate(
+            cat_product_count=Count('products', filter=Q(products__category=category))
+        ).values('id', 'name', 'cat_product_count')
+
+        # Products in this category
+        from apps.inventory.serializers import ProductSerializer
+        products = Product.objects.filter(
+            category=category,
+            organization=organization,
+            is_active=True
+        ).select_related('brand', 'parfum', 'unit', 'size_unit')
+        
+        product_data = []
+        for p in products:
+            product_data.append({
+                "id": p.id,
+                "sku": p.sku,
+                "name": p.name,
+                "brand_name": p.brand.name if p.brand else None,
+                "parfum_name": p.parfum.name if p.parfum else None,
+                "unit_code": p.unit.code if p.unit else None,
+                "selling_price_ttc": float(p.selling_price_ttc),
+                "image_url": p.image_url,
+                "status": p.status
+            })
+
+        return Response({
+            "brands": list(brands),
+            "parfums": list(parfums),
+            "products": product_data
+        })
+
     @action(detail=False, methods=['post'])
     def move_products(self, request):
         organization, err = _get_org_or_400()
