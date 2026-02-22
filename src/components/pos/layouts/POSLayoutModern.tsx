@@ -120,7 +120,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                 {/* ════ LEFT COLUMN: Client Info → Search → Categories/Payment ════ */}
                 <aside className={clsx(
                     "flex flex-col bg-white border-r border-gray-100 shrink-0 transition-all duration-500 overflow-hidden",
-                    leftExpanded ? "w-[55%]" : "w-[420px]"
+                    leftExpanded ? "w-[65%]" : "w-[65%]"
                 )}>
                     {/* Client Info Bar */}
                     <CompactClientHeader
@@ -272,8 +272,8 @@ export function POSLayoutModern(props: POSLayoutProps) {
                     )}
                 </aside>
 
-                {/* ════ RIGHT COLUMN: FULL-HEIGHT CART ════ */}
-                <main className="flex-1 flex flex-col bg-[#FAFBFC] overflow-hidden">
+                {/* ════ RIGHT COLUMN: CART (35%) ════ */}
+                <main className="w-[35%] flex flex-col bg-[#FAFBFC] overflow-hidden">
                     {/* Cart Header */}
                     <div className="px-5 py-3 border-b border-gray-100 bg-white flex items-center justify-between shrink-0">
                         <div className="flex items-center gap-2">
