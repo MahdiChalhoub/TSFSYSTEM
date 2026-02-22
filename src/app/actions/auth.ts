@@ -325,7 +325,13 @@ export const getUser = cache(async function getUser() {
  */
 export async function getNotifications() {
     const { erpFetch } = await import("@/lib/erp-api")
-    return erpFetch('notifications/')
+    try {
+        return await erpFetch('notifications/')
+    } catch (e) {
+        // Notifications are optional - if the endpoint doesn't exist (404) or fails, 
+        // return an empty array to keep the dashboard functional.
+        return []
+    }
 }
 
 export async function markNotificationAsRead(id: number) {

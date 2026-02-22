@@ -179,9 +179,14 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
             // Detect HTML responses early and throw a clean, JSON-parseable error instead of crashing on JSON.parse().
             const trimmed = errorText.trimStart();
             if (trimmed.startsWith('<') || trimmed.startsWith('<!')) {
-                console.error(`[ERP_API] HTML error page received from ${path} (HTTP ${response.status})`);
+                const is404 = response.status === 404;
+                console.error(`[ERP_API] ${is404 ? '404 Not Found' : 'HTML error page'} received from ${path} (HTTP ${response.status})`);
+
+                // For 404s, we throw a specific message that callers can catch if they want to be resilient
                 throw new Error(JSON.stringify({
-                    error: `Server error (${response.status}). Please try again later.`
+                    error: is404 ? `Endpoint ${path} not found (404)` : `Server rendering error (${response.status})`,
+                    status: response.status,
+                    isHtml: true
                 }));
             }
 
