@@ -15,7 +15,7 @@ export type MaintenanceEntity = {
 
 export async function getMaintenanceEntities(type: 'category' | 'brand' | 'unit' | 'country' | 'attribute'): Promise<MaintenanceEntity[]> {
     const endpointMap: Record<string, string> = {
-        category: 'categories/',
+        category: 'inventory/categories/',
         brand: 'brands/',
         unit: 'units/',
         country: 'countries/',

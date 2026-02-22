@@ -242,7 +242,7 @@ export const ModuleConnectors = {
             null
         ),
         getCategories: createConnector('inventory',
-            async () => erpFetch('categories/'),
+            async () => erpFetch('inventory/categories/'),
             []
         ),
         getProducts: createConnector('inventory',
@@ -299,7 +299,7 @@ export const ModuleConnectors = {
 export const StateAwareConnectors = {
     inventory: {
         getProducts: createStateAwareConnector('inventory', 'products/', []),
-        getCategories: createStateAwareConnector('inventory', 'categories/', []),
+        getCategories: createStateAwareConnector('inventory', 'inventory/categories/', []),
     },
     finance: {
         getAccounts: createStateAwareConnector('finance', 'accounts/', []),

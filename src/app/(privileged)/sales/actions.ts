@@ -42,7 +42,7 @@ export async function clearProductsCache() {
 
 export async function getCategories() {
     try {
-        return await erpFetch('categories/');
+        return await erpFetch('inventory/categories/');
     } catch (error) {
         console.error('[getCategories] Error:', error);
         return [];

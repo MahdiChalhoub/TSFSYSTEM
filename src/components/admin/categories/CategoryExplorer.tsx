@@ -62,7 +62,7 @@ export function CategoryExplorer({
         if (!categoryId) return;
         setIsLoading(true);
         try {
-            const result = await erpFetch(`categories/${categoryId}/explore/`, {
+            const result = await erpFetch(`inventory/categories/${categoryId}/explore/`, {
                 headers: authToken ? { 'Authorization': `Token ${authToken}` } : {}
             });
             setData(result);

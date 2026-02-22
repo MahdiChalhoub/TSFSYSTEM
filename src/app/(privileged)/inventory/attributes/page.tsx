@@ -4,7 +4,7 @@ import { erpFetch } from "@/lib/erp-api";
 
 async function getCategories() {
     try {
-        const categories = await erpFetch('categories/');
+        const categories = await erpFetch('inventory/categories/');
         // Sort explicitly if backend doesn't guarantee order
         return categories.sort((a: Record<string, any>, b: Record<string, any>) => a.name.localeCompare(b.name));
     } catch (e) {

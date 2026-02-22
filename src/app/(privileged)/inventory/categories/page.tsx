@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 async function getCategoriesData() {
     // erpFetch returns raw array for standard ViewSet list, but we implemented 'with_counts'
     // which returns the enriched list.
-    const categories = await erpFetch('categories/with_counts/');
+    const categories = await erpFetch('inventory/categories/with_counts/');
 
     // Build Tree (Client-side logic moved here or kept? Logic is pure JS, can stay)
     const categoryMap = new Map();

@@ -7,7 +7,7 @@ async function getData() {
     try {
         const [brands, categories, units, countries] = await Promise.all([
             erpFetch('brands/'),
-            erpFetch('categories/'),
+            erpFetch('inventory/categories/'),
             erpFetch('units/'),
             erpFetch('countries/')
         ]);
