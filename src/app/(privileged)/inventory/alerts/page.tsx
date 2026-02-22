@@ -30,29 +30,22 @@ export default async function StockAlertsPage() {
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
-            <header className="flex justify-between items-start">
-                <div>
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-rose-500 rounded-lg text-white shadow-lg shadow-rose-200">
-                            <Activity size={16} />
-                        </div>
-                        <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.3em]">Health Monitoring</span>
+            <header className="flex justify-between items-center border-b pb-6">
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <Activity size={20} className="text-rose-600" />
+                        <h1 className="text-2xl font-black text-gray-900 tracking-tighter uppercase">
+                            Stock <span className="text-rose-600">Health</span>
+                        </h1>
                     </div>
-                    <h1 className="text-4xl lg:text-5xl font-black text-gray-900 tracking-tighter">
-                        Stock <span className="text-rose-500">Alerts</span>
-                    </h1>
-                    <p className="mt-2 text-gray-500 font-medium max-w-xl">
-                        Global inventory health feed. Tactical alerts require immediate intervention to maintain terminal service levels.
-                    </p>
                 </div>
-
-                <div className="flex gap-3">
+                <div className="flex items-center gap-3">
                     <Link
                         href="/inventory/low-stock"
-                        className="bg-white border border-gray-100 text-gray-500 px-6 py-3 rounded-2xl font-bold hover:text-rose-600 hover:border-rose-100 transition-all flex items-center gap-2 shadow-sm"
+                        className="bg-white border border-gray-100 text-gray-400 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest hover:text-rose-600 hover:border-rose-100 transition-all flex items-center gap-2 shadow-sm"
                     >
-                        <BarChart3 size={18} />
-                        <span>Analysis Report</span>
+                        <BarChart3 size={14} />
+                        <span>Tactical Analysis</span>
                     </Link>
                 </div>
             </header>
