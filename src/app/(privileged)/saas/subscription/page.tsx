@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { SaasOrganization, SaasPlan } from "@/types/erp"
-import { getOrganizations } from "@/app/(privileged)/(saas)/organizations/actions"
+import { getOrganizations } from "@/app/(privileged)/saas/organizations/actions"
 import { getSubscriptionPlans, subscribeToPlan } from "./actions"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"

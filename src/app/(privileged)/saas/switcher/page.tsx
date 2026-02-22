@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Loader2, Building, ArrowRight, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
-import { getOrganizations } from "@/app/(privileged)/(saas)/organizations/actions"
+import { getOrganizations } from "@/app/(privileged)/saas/organizations/actions"
 
 export default function SwitcherPage() {
     const [orgs, setOrgs] = useState<SaasOrganization[]>([])
