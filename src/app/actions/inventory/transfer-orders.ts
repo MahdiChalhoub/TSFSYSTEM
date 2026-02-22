@@ -111,6 +111,15 @@ export async function cancelTransferOrder(id: number, comment?: string) {
     return result
 }
 
+export async function promoteToExecution(id: number) {
+    const result = await erpFetch(`inventory/transfer-orders/${id}/promote_to_execution/`, {
+        method: 'POST'
+    })
+    revalidatePath('/inventory/transfer-orders')
+    revalidatePath('/inventory/transfers')
+    return result
+}
+
 export async function getTransferOrderHistory(id: number) {
     return await erpFetch(`inventory/transfer-orders/${id}/lifecycle_history/`)
 }
