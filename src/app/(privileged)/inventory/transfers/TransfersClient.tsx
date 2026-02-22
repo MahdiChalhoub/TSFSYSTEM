@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useTransition } from 'react'
 import { TypicalListView } from '@/components/common/TypicalListView'
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { TypicalFilter } from '@/components/common/TypicalFilter'
 import { getTransferOrders, lockTransferOrder, unlockTransferOrder } from '@/app/actions/inventory/transfer-orders'
 import { Badge } from '@/components/ui/badge'
@@ -11,6 +12,12 @@ import { useCurrency } from '@/lib/utils/currency'
 
 export function TransfersClient() {
     const { fmt } = useCurrency()
+    const settings = useListViewSettings('inv_transfers', {
+        columns: ['reference', 'date', 'route', 'volume', 'driver'],
+        pageSize: 25,
+        sortKey: 'date',
+        sortDir: 'desc',
+    })
     const [data, setData] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [isPending, startTransition] = useTransition()
@@ -73,6 +80,13 @@ export function TransfersClient() {
             loading={loading}
             getRowId={r => r.id}
             columns={columns}
+            visibleColumns={settings.visibleColumns}
+            onToggleColumn={settings.toggleColumn}
+            pageSize={settings.pageSize}
+            onPageSizeChange={settings.setPageSize}
+            sortKey={settings.sortKey}
+            sortDir={settings.sortDir}
+            onSort={settings.setSort}
             addLabel="INITIATE MOVEMENT"
             onAdd={() => toast.info("Execute movements from the Logistics Manifest")}
             headerExtras={

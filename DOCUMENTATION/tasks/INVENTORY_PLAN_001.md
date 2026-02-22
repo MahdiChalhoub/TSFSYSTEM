@@ -93,8 +93,9 @@
 
 ## Definition of Done
 
-- [ ] All 24 pages render without errors
-- [ ] Every page has a working backend connection
-- [ ] Missing action files created
-- [ ] `npm run build` passes
-- [ ] Documentation updated
+- [x] All 24 pages render without errors
+- [x] Every page has a working backend connection
+- [x] Missing action files created
+- [x] `npm run build` passes
+- [x] Documentation updated
+- [x] Dead code removed (`InventoryListView.tsx` — superseded by `TypicalListView`)

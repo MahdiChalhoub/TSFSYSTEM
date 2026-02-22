@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useTransition } from 'react'
 import { TypicalListView } from '@/components/common/TypicalListView'
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { TypicalFilter } from '@/components/common/TypicalFilter'
 import { getAdjustmentOrders, lockAdjustmentOrder, unlockAdjustmentOrder } from '@/app/actions/inventory/adjustment-orders'
 import { adjustStock } from '@/app/actions/inventory/movements'
@@ -12,6 +13,12 @@ import { useCurrency } from '@/lib/utils/currency'
 
 export function AdjustmentsClient({ warehouses }: { warehouses: any[] }) {
     const { fmt } = useCurrency()
+    const settings = useListViewSettings('inv_adjustments', {
+        columns: ['reference', 'date', 'warehouse_name', 'total_qty', 'reason'],
+        pageSize: 25,
+        sortKey: 'date',
+        sortDir: 'desc',
+    })
     const [data, setData] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [isPending, startTransition] = useTransition()
@@ -72,6 +79,13 @@ export function AdjustmentsClient({ warehouses }: { warehouses: any[] }) {
             loading={loading}
             getRowId={r => r.id}
             columns={columns}
+            visibleColumns={settings.visibleColumns}
+            onToggleColumn={settings.toggleColumn}
+            pageSize={settings.pageSize}
+            onPageSizeChange={settings.setPageSize}
+            sortKey={settings.sortKey}
+            sortDir={settings.sortDir}
+            onSort={settings.setSort}
             addLabel="CREATE DRAFT ADJUSTMENT"
             onAdd={() => toast.info("Use the adjustment form to create real stock impact")}
             headerExtras={

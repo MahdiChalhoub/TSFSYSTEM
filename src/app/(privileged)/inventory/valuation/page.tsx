@@ -6,6 +6,7 @@ import type { ValuationResponse, Warehouse as WarehouseType } from '@/types/erp'
 import { getStockValuation, getWarehouses } from "@/app/actions/inventory/valuation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TypicalListView, type ColumnDef } from "@/components/common/TypicalListView"
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { TypicalFilter } from "@/components/common/TypicalFilter"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -29,13 +30,17 @@ const METHOD_BADGES: Record<string, string> = {
 
 export default function AssetValuationEnginePage() {
     const { fmt } = useCurrency()
+    const settings = useListViewSettings('inv_valuation', {
+        columns: ['product_name', 'sku', 'quantity', 'avg_cost', 'total_value', 'method'],
+        pageSize: 25,
+        sortKey: 'total_value',
+        sortDir: 'desc',
+    })
     const [data, setData] = useState<ValuationResponse | null>(null)
     const [warehouses, setWarehouses] = useState<WarehouseType[]>([])
     const [loading, setLoading] = useState(true)
     const [warehouseFilter, setWarehouseFilter] = useState<string>('all')
     const [search, setSearch] = useState('')
-    const [sortKey, setSortKey] = useState<string>('total_value')
-    const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
 
     const loadData = useCallback(async (whId?: number) => {
         setLoading(true)
@@ -168,7 +173,13 @@ export default function AssetValuationEnginePage() {
                         getRowId={r => `${r.product_id}-${r.warehouse || ''}`}
                         columns={columns}
                         className="rounded-3xl border-0 shadow-sm overflow-hidden"
-                        pageSize={25}
+                        visibleColumns={settings.visibleColumns}
+                        onToggleColumn={settings.toggleColumn}
+                        pageSize={settings.pageSize}
+                        onPageSizeChange={settings.setPageSize}
+                        sortKey={settings.sortKey}
+                        sortDir={settings.sortDir}
+                        onSort={settings.setSort}
                         headerExtra={
                             <div className="flex items-center gap-2">
                                 <Button onClick={() => loadData()} variant="ghost" className="h-8 w-8 p-0 text-stone-400 hover:text-emerald-600">

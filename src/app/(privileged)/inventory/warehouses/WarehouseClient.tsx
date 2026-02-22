@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { TypicalListView } from '@/components/common/TypicalListView'
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { TypicalFilter } from '@/components/common/TypicalFilter'
 import { deleteWarehouse } from '@/app/actions/inventory/warehouses'
 import WarehouseModal from './form'
@@ -12,6 +13,12 @@ import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 export function WarehouseClient({ initialWarehouses }: { initialWarehouses: any[] }) {
+    const settings = useListViewSettings('inv_warehouses', {
+        columns: ['name', 'site_name', 'inventory_count'],
+        pageSize: 25,
+        sortKey: 'name',
+        sortDir: 'asc',
+    })
     const [data, setData] = useState(initialWarehouses)
     const [loading, setLoading] = useState(false)
     const [isFormOpen, setIsFormOpen] = useState(false)
@@ -186,6 +193,13 @@ export function WarehouseClient({ initialWarehouses }: { initialWarehouses: any[
                 loading={loading}
                 getRowId={r => r.id}
                 columns={columns}
+                visibleColumns={settings.visibleColumns}
+                onToggleColumn={settings.toggleColumn}
+                pageSize={settings.pageSize}
+                onPageSizeChange={settings.setPageSize}
+                sortKey={settings.sortKey}
+                sortDir={settings.sortDir}
+                onSort={settings.setSort}
                 onAdd={() => { setEditingWarehouse(null); setIsFormOpen(true); }}
                 addLabel="ADD NODE"
                 viewMode="grid"

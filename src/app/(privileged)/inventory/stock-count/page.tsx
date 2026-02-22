@@ -8,6 +8,7 @@ import {
 } from "@/app/actions/inventory/stock-count"
 import { Card, CardContent } from "@/components/ui/card"
 import { TypicalListView, type ColumnDef } from "@/components/common/TypicalListView"
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { TypicalFilter } from "@/components/common/TypicalFilter"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -56,6 +57,12 @@ interface FilterOptions {
 
 // ─── Page ────────────────────────────────────────────────────────
 export default function StockGovernanceConsolePage() {
+    const settings = useListViewSettings('inv_stock_count', {
+        columns: ['reference', 'location', 'section', 'date', 'compliance'],
+        pageSize: 25,
+        sortKey: 'date',
+        sortDir: 'desc',
+    })
     const [sessions, setSessions] = useState<Session[]>([])
     const [loading, setLoading] = useState(true)
     const [isPending, startTransition] = useTransition()
@@ -205,7 +212,13 @@ export default function StockGovernanceConsolePage() {
                         getRowId={r => r.id}
                         columns={columns}
                         className="rounded-3xl border-0 shadow-sm overflow-hidden"
-                        pageSize={25}
+                        visibleColumns={settings.visibleColumns}
+                        onToggleColumn={settings.toggleColumn}
+                        pageSize={settings.pageSize}
+                        onPageSizeChange={settings.setPageSize}
+                        sortKey={settings.sortKey}
+                        sortDir={settings.sortDir}
+                        onSort={settings.setSort}
                         selection={{
                             selectedIds,
                             onSelectionChange: setSelectedIds

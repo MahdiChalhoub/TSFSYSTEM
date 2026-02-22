@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { TypicalListView } from '@/components/common/TypicalListView'
+import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { TypicalFilter } from '@/components/common/TypicalFilter'
 import { getCountryHierarchy, createCountry, updateCountry } from '@/app/actions/inventory/countries'
 import { CountryFormModal } from '@/components/admin/CountryManager'
@@ -10,6 +11,12 @@ import { Package, Factory, Globe } from 'lucide-react'
 import { toast } from 'sonner'
 
 export function CountriesClient({ initialCountries, categories }: { initialCountries: any[], categories: any[] }) {
+    const settings = useListViewSettings('inv_countries', {
+        columns: ['code', 'name', 'product_count'],
+        pageSize: 25,
+        sortKey: 'name',
+        sortDir: 'asc',
+    })
     const [data, setData] = useState(initialCountries)
     const [loading, setLoading] = useState(false)
     const [editingCountry, setEditingCountry] = useState<any>(null)
@@ -84,6 +91,13 @@ export function CountriesClient({ initialCountries, categories }: { initialCount
                 loading={loading}
                 getRowId={r => r.id}
                 columns={columns}
+                visibleColumns={settings.visibleColumns}
+                onToggleColumn={settings.toggleColumn}
+                pageSize={settings.pageSize}
+                onPageSizeChange={settings.setPageSize}
+                sortKey={settings.sortKey}
+                sortDir={settings.sortDir}
+                onSort={settings.setSort}
                 onAdd={() => { setEditingCountry(null); setIsFormOpen(true); }}
                 addLabel="ADD COUNTRY"
                 renderCard={renderCard}
