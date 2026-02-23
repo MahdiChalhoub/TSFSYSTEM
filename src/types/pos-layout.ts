@@ -44,6 +44,7 @@ export interface POSLayoutProps {
     uniqueItems: number;
 
     // UI State
+    highlightedItemId: number | null;
     searchQuery: string;
     activeCategoryId: number | null;
     sidebarMode: 'hidden' | 'normal' | 'expanded';

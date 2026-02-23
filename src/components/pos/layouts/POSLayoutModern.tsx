@@ -36,7 +36,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
         sessions, activeSessionId, currency, total, discount, discountType, totalAmount,
         totalPieces, uniqueItems, searchQuery, activeCategoryId, sidebarMode,
         isFullscreen, paymentMethod, cashReceived, isProcessing,
-        isOverrideOpen, isReceiptOpen, lastOrder,
+        isOverrideOpen, isReceiptOpen, lastOrder, highlightedItemId,
         onSetSearchQuery, onSetActiveCategoryId, onSetActiveSessionId,
         onSetPaymentMethod, onSetCashReceived, onSetDiscount, onSetDiscountType, onAddToCart, onUpdateQuantity,
         onClearCart, onCreateNewSession, onRemoveSession, onUpdateActiveSession,
@@ -246,7 +246,13 @@ export function POSLayoutModern(props: POSLayoutProps) {
                         ) : (
                             <div className="divide-y divide-gray-50">
                                 {cart.map((item: any, idx: number) => (
-                                    <div key={item.productId} className="px-2.5 py-1 group hover:bg-white transition-colors flex items-center gap-1.5">
+                                    <div
+                                        key={item.productId}
+                                        className={clsx(
+                                            "px-2.5 py-1 group transition-colors duration-300 flex items-center gap-1.5",
+                                            highlightedItemId === item.productId ? "bg-emerald-100" : "hover:bg-white"
+                                        )}
+                                    >
                                         <span className="text-[9px] text-gray-300 font-mono w-3 shrink-0 text-center">{idx + 1}</span>
                                         <p className="text-[11px] font-semibold text-gray-900 truncate flex-1 min-w-0">{item.name}</p>
                                         <span className="text-[9px] text-gray-400 shrink-0">{currency}{Number(item.price).toFixed(2)}</span>

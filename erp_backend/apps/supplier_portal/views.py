@@ -445,6 +445,57 @@ class SupplierOrdersViewSet(viewsets.ViewSet):
         serializer = SupplierPOReadSerializer(data, many=True)
         return Response(serializer.data)
 
+    def retrieve(self, request, pk=None):
+        access = request.user.supplier_access
+        contact = access.contact
+        from apps.pos.purchase_order_models import PurchaseOrder
+        from apps.pos.purchase_order_serializers import PurchaseOrderSerializer
+
+        try:
+            po = PurchaseOrder.objects.prefetch_related('lines__product').get(
+                id=pk, organization=contact.organization, supplier=contact
+            )
+            serializer = PurchaseOrderSerializer(po)
+            return Response(serializer.data)
+        except PurchaseOrder.DoesNotExist:
+            return Response({'error': 'Not found'}, status=404)
+
+    @action(detail=True, methods=['post'])
+    def acknowledge(self, request, pk=None):
+        access = request.user.supplier_access
+        contact = access.contact
+        from apps.pos.purchase_order_models import PurchaseOrder
+
+        try:
+            po = PurchaseOrder.objects.get(id=pk, organization=contact.organization, supplier=contact)
+            if po.status != 'SENT':
+                return Response({'error': 'Can only acknowledge SENT orders.'}, status=400)
+            po.status = 'CONFIRMED'
+            po.save(update_fields=['status'])
+            return Response({'status': 'confirmed'})
+        except PurchaseOrder.DoesNotExist:
+            return Response({'error': 'Not found'}, status=404)
+
+    @action(detail=True, methods=['post'])
+    def dispatch_order(self, request, pk=None):
+        access = request.user.supplier_access
+        contact = access.contact
+        from apps.pos.purchase_order_models import PurchaseOrder
+
+        try:
+            po = PurchaseOrder.objects.get(id=pk, organization=contact.organization, supplier=contact)
+            if po.status not in ['SENT', 'CONFIRMED']:
+                return Response({'error': 'Order not ready for dispatch.'}, status=400)
+            
+            tracking = request.data.get('tracking_info', '')
+            po.status = 'IN_TRANSIT'
+            if tracking:
+                po.notes = (po.notes or '') + f"\nDispatched. Tracking: {tracking}"
+            po.save()
+            return Response({'status': 'dispatched', 'tracking_info': tracking})
+        except PurchaseOrder.DoesNotExist:
+            return Response({'error': 'Not found'}, status=404)
+
 
 # =============================================================================
 # SUPPLIER-SIDE: My Stock (permission-gated)

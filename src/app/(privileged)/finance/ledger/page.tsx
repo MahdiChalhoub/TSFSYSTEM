@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback, useMemo } from 'react'
-import { getLedgerEntries } from '@/app/actions/finance/ledger'
+import { getLedgerEntries, getLedgerUsers } from '@/app/actions/finance/ledger'
 import { getFiscalYears } from '@/app/actions/finance/fiscal-year'
 import { LedgerEntryActions } from './ledger-actions'
 import { useCurrency } from '@/lib/utils/currency'
@@ -18,18 +18,13 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent } from '@/components/ui/card'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 const STATUS_OPTIONS = [
     { value: 'ALL', label: 'All Status' },
     { value: 'DRAFT', label: 'Draft' },
     { value: 'POSTED', label: 'Posted' },
     { value: 'REVERSED', label: 'Reversed' },
-]
-
-const TYPE_OPTIONS = [
-    { value: 'ALL', label: 'All Types' },
-    { value: 'OPENING', label: 'Opening Balances' },
-    { value: 'MANUAL', label: 'Manual Entries' },
 ]
 
 export default function GeneralLedgerPage() {
@@ -48,8 +43,13 @@ export default function GeneralLedgerPage() {
     const [dateFrom, setDateFrom] = useState('')
     const [dateTo, setDateTo] = useState('')
     const [entryType, setEntryType] = useState('ALL')
+    const [verified, setVerified] = useState('ALL')
+    const [locked, setLocked] = useState('ALL')
+    const [user, setUser] = useState('ALL')
+    const [autoSource, setAutoSource] = useState('ALL')
     const [search, setSearch] = useState('')
     const [showFilters, setShowFilters] = useState(false)
+    const [users, setUsers] = useState<any[]>([])
 
     const loadEntries = useCallback(async () => {
         setLoading(true)
@@ -60,6 +60,10 @@ export default function GeneralLedgerPage() {
                 date_from: dateFrom || undefined,
                 date_to: dateTo || undefined,
                 entry_type: entryType === 'ALL' ? undefined : entryType,
+                verified: verified === 'ALL' ? undefined : verified,
+                locked: locked === 'ALL' ? undefined : locked,
+                user: user === 'ALL' ? undefined : user,
+                auto_source: autoSource === 'ALL' ? undefined : autoSource,
                 q: search || undefined,
             })
             setEntries(data)
@@ -68,10 +72,11 @@ export default function GeneralLedgerPage() {
         } finally {
             setLoading(false)
         }
-    }, [status, fiscalYear, dateFrom, dateTo, entryType, search])
+    }, [status, fiscalYear, dateFrom, dateTo, entryType, verified, locked, user, autoSource, search])
 
     useEffect(() => {
         getFiscalYears().then(setFiscalYears).catch(() => { })
+        getLedgerUsers().then(setUsers).catch(() => { })
     }, [])
 
     useEffect(() => {
@@ -84,6 +89,10 @@ export default function GeneralLedgerPage() {
         dateFrom,
         dateTo,
         entryType !== 'ALL',
+        verified !== 'ALL',
+        locked !== 'ALL',
+        user !== 'ALL',
+        autoSource !== 'ALL',
         search
     ].filter(Boolean).length
 
@@ -197,119 +206,173 @@ export default function GeneralLedgerPage() {
                 </div>
             </header>
 
-            {/* Enhanced Filter Bar */}
-            <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden">
-                <CardContent className="p-4 space-y-4">
-                    <div className="flex items-center gap-3">
-                        <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                            <Input
-                                placeholder="Search JV narrative or reference..."
-                                value={search}
-                                onChange={e => setSearch(e.target.value)}
-                                className="pl-9 h-11 rounded-2xl bg-stone-50 border-0 focus-visible:ring-indigo-500/30"
-                            />
-                        </div>
-                        <Select value={status} onValueChange={setStatus}>
-                            <SelectTrigger className="w-48 h-11 rounded-2xl bg-stone-50 border-0 text-sm font-bold">
-                                <SelectValue placeholder="All Status" />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-2xl border-0 shadow-xl">
-                                {STATUS_OPTIONS.map(o => <SelectItem key={o.value} value={o.value} className="rounded-xl">{o.label}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                        <Button
-                            variant="ghost"
-                            onClick={() => setShowFilters(!showFilters)}
-                            className={`h-11 px-4 rounded-2xl font-black uppercase tracking-widest text-[10px] gap-2 transition-all ${showFilters || activeFilterCount > 1 ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100' : 'text-gray-400 hover:bg-stone-50 hover:text-gray-900'}`}
-                        >
-                            <Filter size={16} /> Filters
-                            {activeFilterCount > 1 && <Badge className="bg-indigo-600 text-white h-4 w-4 p-0 flex items-center justify-center text-[8px]">{activeFilterCount}</Badge>}
-                        </Button>
-                    </div>
+            <Tabs value={entryType} onValueChange={setEntryType} className="space-y-6">
+                <div className="flex justify-between items-center">
+                    <TabsList className="bg-stone-100/50 p-1.5 rounded-2xl">
+                        <TabsTrigger value="ALL" className="rounded-xl font-bold text-xs px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm">All Entries</TabsTrigger>
+                        <TabsTrigger value="MANUAL" className="rounded-xl font-bold text-xs px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm">Manual Ledger</TabsTrigger>
+                        <TabsTrigger value="AUTO" className="rounded-xl font-bold text-xs px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm">Auto Ledger</TabsTrigger>
+                    </TabsList>
+                </div>
 
-                    {showFilters && (
-                        <div className="grid grid-cols-4 gap-4 p-4 rounded-2xl bg-stone-50 border border-stone-100 animate-in slide-in-from-top-2">
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Fiscal Year</label>
-                                <Select value={fiscalYear} onValueChange={setFiscalYear}>
-                                    <SelectTrigger className="h-10 rounded-xl border-stone-200 bg-white text-xs font-bold">
-                                        <SelectValue placeholder="All Years" />
-                                    </SelectTrigger>
-                                    <SelectContent className="rounded-xl border-0 shadow-xl">
-                                        <SelectItem value="ALL">All Years</SelectItem>
-                                        {fiscalYears.map((fy: any) => <SelectItem key={fy.id} value={String(fy.id)}>{fy.name}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
+                {/* Enhanced Filter Bar */}
+                <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden">
+                    <CardContent className="p-4 space-y-4">
+                        <div className="flex items-center gap-3">
+                            <div className="relative flex-1">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                <Input
+                                    placeholder="Search JV narrative or reference..."
+                                    value={search}
+                                    onChange={e => setSearch(e.target.value)}
+                                    className="pl-9 h-11 rounded-2xl bg-stone-50 border-0 focus-visible:ring-indigo-500/30"
+                                />
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Date Range</label>
-                                <div className="flex items-center gap-2">
-                                    <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="h-10 rounded-xl border-stone-200 bg-white text-xs font-bold" />
-                                    <span className="text-stone-300">to</span>
-                                    <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="h-10 rounded-xl border-stone-200 bg-white text-xs font-bold" />
+                            <Select value={status} onValueChange={setStatus}>
+                                <SelectTrigger className="w-48 h-11 rounded-2xl bg-stone-50 border-0 text-sm font-bold">
+                                    <SelectValue placeholder="All Status" />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-2xl border-0 shadow-xl">
+                                    {STATUS_OPTIONS.map(o => <SelectItem key={o.value} value={o.value} className="rounded-xl">{o.label}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                            <Button
+                                variant="ghost"
+                                onClick={() => setShowFilters(!showFilters)}
+                                className={`h-11 px-4 rounded-2xl font-black uppercase tracking-widest text-[10px] gap-2 transition-all ${showFilters || activeFilterCount > 1 ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100' : 'text-gray-400 hover:bg-stone-50 hover:text-gray-900'}`}
+                            >
+                                <Filter size={16} /> Filters
+                                {activeFilterCount > 1 && <Badge className="bg-indigo-600 text-white h-4 w-4 p-0 flex items-center justify-center text-[8px]">{activeFilterCount}</Badge>}
+                            </Button>
+                        </div>
+
+                        {showFilters && (
+                            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 rounded-2xl bg-stone-50 border border-stone-100 animate-in slide-in-from-top-2">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Fiscal Year</label>
+                                    <Select value={fiscalYear} onValueChange={setFiscalYear}>
+                                        <SelectTrigger className="h-10 rounded-xl border-stone-200 bg-white text-xs font-bold">
+                                            <SelectValue placeholder="All Years" />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-xl border-0 shadow-xl">
+                                            <SelectItem value="ALL">All Years</SelectItem>
+                                            {fiscalYears.map((fy: any) => <SelectItem key={fy.id} value={String(fy.id)}>{fy.name}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2 lg:col-span-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Date Range</label>
+                                    <div className="flex items-center gap-2">
+                                        <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="h-10 rounded-xl border-stone-200 bg-white text-xs font-bold w-full" />
+                                        <span className="text-stone-300">to</span>
+                                        <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="h-10 rounded-xl border-stone-200 bg-white text-xs font-bold w-full" />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">User / Creator</label>
+                                    <Select value={user} onValueChange={setUser}>
+                                        <SelectTrigger className="h-10 rounded-xl border-stone-200 bg-white text-xs font-bold">
+                                            <SelectValue placeholder="All Users" />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-xl border-0 shadow-xl">
+                                            <SelectItem value="ALL">All Users</SelectItem>
+                                            {users.map((u: any) => <SelectItem key={u.id} value={String(u.id)}>{u.first_name || u.username}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Verified Status</label>
+                                    <Select value={verified} onValueChange={setVerified}>
+                                        <SelectTrigger className="h-10 rounded-xl border-stone-200 bg-white text-xs font-bold">
+                                            <SelectValue placeholder="All" />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-xl border-0 shadow-xl">
+                                            <SelectItem value="ALL">All</SelectItem>
+                                            <SelectItem value="TRUE">Verified Only</SelectItem>
+                                            <SelectItem value="FALSE">Unverified Only</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Lock Status</label>
+                                    <Select value={locked} onValueChange={setLocked}>
+                                        <SelectTrigger className="h-10 rounded-xl border-stone-200 bg-white text-xs font-bold">
+                                            <SelectValue placeholder="All" />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-xl border-0 shadow-xl">
+                                            <SelectItem value="ALL">All</SelectItem>
+                                            <SelectItem value="TRUE">Locked</SelectItem>
+                                            <SelectItem value="FALSE">Unlocked</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                {(entryType === 'ALL' || entryType === 'AUTO') && (
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Source Module</label>
+                                        <Select value={autoSource} onValueChange={setAutoSource}>
+                                            <SelectTrigger className="h-10 rounded-xl border-stone-200 bg-white text-xs font-bold">
+                                                <SelectValue placeholder="All Sources" />
+                                            </SelectTrigger>
+                                            <SelectContent className="rounded-xl border-0 shadow-xl">
+                                                <SelectItem value="ALL">All Sources</SelectItem>
+                                                <SelectItem value="INVOICE">Invoices & Bills</SelectItem>
+                                                <SelectItem value="PAYMENT">Payments & Receipts</SelectItem>
+                                                <SelectItem value="RETURN">Returns & Credit Notes</SelectItem>
+                                                <SelectItem value="PAYROLL">Payroll</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                )}
+                                <div className="flex items-end justify-end pb-1 lg:col-span-full">
+                                    <Button
+                                        variant="ghost"
+                                        onClick={() => { setStatus('ALL'); setFiscalYear('ALL'); setDateFrom(''); setDateTo(''); setEntryType('ALL'); setVerified('ALL'); setLocked('ALL'); setUser('ALL'); setAutoSource('ALL'); setSearch('') }}
+                                        className="h-8 text-[9px] font-black uppercase text-gray-400 hover:text-rose-600 gap-1.5"
+                                    >
+                                        <X size={14} /> Clear All Filters
+                                    </Button>
                                 </div>
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Entry Type</label>
-                                <Select value={entryType} onValueChange={setEntryType}>
-                                    <SelectTrigger className="h-10 rounded-xl border-stone-200 bg-white text-xs font-bold">
-                                        <SelectValue placeholder="All Types" />
-                                    </SelectTrigger>
-                                    <SelectContent className="rounded-xl border-0 shadow-xl">
-                                        {TYPE_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="flex items-end justify-end pb-1">
-                                <Button
-                                    variant="ghost"
-                                    onClick={() => { setStatus('ALL'); setFiscalYear('ALL'); setDateFrom(''); setDateTo(''); setEntryType('ALL'); setSearch('') }}
-                                    className="h-8 text-[9px] font-black uppercase text-gray-400 hover:text-rose-600 gap-1.5"
-                                >
-                                    <X size={14} /> Clear All
-                                </Button>
-                            </div>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
+                        )}
+                    </CardContent>
+                </Card>
 
-            <TypicalListView
-                title="Financial Transaction Log"
-                data={entries}
-                loading={loading}
-                getRowId={(e) => e.id}
-                columns={columns}
-                expandable={expandable}
-                lifecycle={{
-                    getStatus: (e) => {
-                        if (e.status === 'POSTED') return { label: 'Posted', variant: 'success' }
-                        if (e.status === 'REVERSED') return { label: 'Reversed', variant: 'danger' }
-                        return { label: 'Draft', variant: 'warning' }
-                    }
-                }}
-                actions={{
-                    extra: (e) => {
-                        const isLocked = e.fiscalYear?.status === 'LOCKED' || e.fiscalYear?.isLocked
-                        return (
-                            <LedgerEntryActions
-                                entryId={e.id}
-                                status={e.status}
-                                isLocked={isLocked}
-                            />
-                        )
-                    }
-                }}
-                visibleColumns={settings.visibleColumns}
-                onToggleColumn={settings.toggleColumn}
-                pageSize={settings.pageSize}
-                onPageSizeChange={settings.setPageSize}
-                sortKey={settings.sortKey}
-                sortDir={settings.sortDir}
-                onSort={settings.setSort}
-                className="rounded-[2.5rem] border-0 shadow-sm overflow-hidden bg-white"
-            />
+                <TypicalListView
+                    title="Financial Transaction Log"
+                    data={entries}
+                    loading={loading}
+                    getRowId={(e) => e.id}
+                    columns={columns}
+                    expandable={expandable}
+                    lifecycle={{
+                        getStatus: (e) => {
+                            if (e.status === 'POSTED') return { label: 'Posted', variant: 'success' }
+                            if (e.status === 'REVERSED') return { label: 'Reversed', variant: 'danger' }
+                            return { label: 'Draft', variant: 'warning' }
+                        }
+                    }}
+                    actions={{
+                        extra: (e) => {
+                            const isLocked = e.fiscalYear?.status === 'LOCKED' || e.fiscalYear?.isLocked
+                            return (
+                                <LedgerEntryActions
+                                    entryId={e.id}
+                                    status={e.status}
+                                    isLocked={isLocked}
+                                />
+                            )
+                        }
+                    }}
+                    visibleColumns={settings.visibleColumns}
+                    onToggleColumn={settings.toggleColumn}
+                    pageSize={settings.pageSize}
+                    onPageSizeChange={settings.setPageSize}
+                    sortKey={settings.sortKey}
+                    sortDir={settings.sortDir}
+                    onSort={settings.setSort}
+                    className="rounded-[2.5rem] border-0 shadow-sm overflow-hidden bg-white"
+                />
+            </Tabs>
         </div>
     )
 }

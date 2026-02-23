@@ -19,6 +19,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth import get_user_model
+from django.core.mail import send_mail
 
 logger = logging.getLogger('erp')
 
@@ -322,9 +323,44 @@ def password_reset_request_view(request):
         for user in users:
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
-            # TODO: Send email with reset link containing uid and token
-            # For now, log server-side only (never expose to client)
-            logger.info(f"[AUTH] Password reset token generated for {email}. UID: {uid}, Token: {token}")
+            
+            # Construct tenant-aware link
+            root_domain = getattr(settings, 'ROOT_DOMAIN', 'localhost')
+            if user.organization and user.organization.slug != 'saas':
+                reset_link = f"https://{user.organization.slug}.{root_domain}/reset-password?uid={uid}&token={token}"
+            else:
+                # Fallback for saas-admin or unassigned users (use base domain)
+                reset_link = f"https://{root_domain}/reset-password?uid={uid}&token={token}"
+                
+            subject = "Password Reset Request"
+            message = (
+                f"Hello {user.first_name or user.username},\n\n"
+                f"We received a request to reset your password. Click the link below to set a new password:\n\n"
+                f"{reset_link}\n\n"
+                f"If you did not request this, please ignore this email.\n\n"
+                f"Thanks,\nThe Team"
+            )
+            html_message = (
+                f"<p>Hello <strong>{user.first_name or user.username}</strong>,</p>"
+                f"<p>We received a request to reset your password. Click the link below to set a new password:</p>"
+                f"<p><a href='{reset_link}' style='display:inline-block;padding:10px 20px;background:#10b981;color:white;text-decoration:none;border-radius:5px;'>Reset Password</a></p>"
+                f"<p>Alternatively, copy and paste this link into your browser:<br><a href='{reset_link}'>{reset_link}</a></p>"
+                f"<p>If you did not request this, please ignore this email.</p>"
+            )
+            
+            try:
+                send_mail(
+                    subject=subject,
+                    message=message,
+                    from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@example.com'),
+                    recipient_list=[user.email],
+                    html_message=html_message,
+                    fail_silently=False,
+                )
+                logger.info(f"[AUTH] Password reset email dispatched to {email}.")
+            except Exception as e:
+                # Log the error but do not crash the API or expose failure to the client
+                logger.error(f"[AUTH] Failed to send password reset email to {email}: {e}")
     
     # Always return identical response to prevent email enumeration
     return Response({

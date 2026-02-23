@@ -30,6 +30,15 @@ import {
     getMCPProviders, getMCPConversations, sendMCPChat
 } from '@/app/actions/saas/mcp'
 import { AIChart, AIInsightCard, AIStrategyCard, parseChartFromResponse } from '@/components/ai/AICharts'
+import jsPDF from 'jspdf'
+import html2canvas from 'html2canvas'
+import * as XLSX from 'xlsx'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 interface Message {
     id: string
@@ -100,6 +109,7 @@ export default function MCPChatPage() {
     const [sending, setSending] = useState(false)
     const [showQuickActions, setShowQuickActions] = useState(true)
     const messagesEndRef = useRef<HTMLDivElement>(null)
+    const chatContainerRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         loadInitialData()
@@ -255,13 +265,78 @@ Always be specific with numbers and actionable recommendations.`
     }
 
     async function handleSaveReport() {
-        // TODO: Implement saving conversation as report
-        toast.success('Report saved to your documents')
+        if (messages.length === 0) return
+
+        let md = '# AI Business Analysis Report\n\n'
+        md += `Generated on: ${new Date().toLocaleString()}\n\n---\n\n`
+
+        messages.forEach(msg => {
+            const roleStr = msg.role.charAt(0).toUpperCase() + msg.role.slice(1)
+            md += `### ${roleStr}\n`
+            if (msg.role === 'chart') {
+                md += `*[Visual Chart: ${msg.data?.title || 'Data view'}]*\n\n`
+            } else if (msg.role === 'tool' && msg.tool_calls) {
+                md += `*Executed tools: ${msg.tool_calls.map(tc => tc.name).join(', ')}*\n\n`
+            } else {
+                md += `${msg.content}\n\n`
+            }
+        })
+
+        const blob = new Blob([md], { type: 'text/markdown' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'ai_analysis_report.md'
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+
+        toast.success('Report saved as Markdown document')
     }
 
-    async function handleExport() {
-        // TODO: Implement export to PDF/Excel
-        toast.info('Export feature coming soon')
+    async function handleExportPDF() {
+        if (!chatContainerRef.current) return
+        try {
+            toast.loading('Generating PDF...', { id: 'pdf-export' })
+            const canvas = await html2canvas(chatContainerRef.current, {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#ffffff'
+            })
+            const imgData = canvas.toDataURL('image/png')
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'px',
+                format: [canvas.width, canvas.height]
+            })
+            pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height)
+            pdf.save('ai_analysis_report.pdf')
+            toast.success('PDF saved successfully!', { id: 'pdf-export' })
+        } catch (error) {
+            toast.error('Failed to generate PDF', { id: 'pdf-export' })
+        }
+    }
+
+    async function handleExportExcel() {
+        if (messages.length === 0) return
+        try {
+            const data = messages.map(msg => ({
+                Time: new Date(msg.timestamp).toLocaleString(),
+                Role: msg.role.toUpperCase(),
+                Content: msg.role === 'chart' ? '[Visual Chart Data]' : msg.content,
+                Details: msg.tool_calls ? 'Used tools: ' + msg.tool_calls.map(tc => tc.name).join(', ') : ''
+            }))
+
+            const ws = XLSX.utils.json_to_sheet(data)
+            const wb = XLSX.utils.book_new()
+            XLSX.utils.book_append_sheet(wb, ws, "Chat History")
+            XLSX.writeFile(wb, "ai_chat_export.xlsx")
+            toast.success('Excel file saved successfully!')
+        } catch (error) {
+            toast.error('Failed to generate Excel file')
+        }
     }
 
     const getProviderLabel = (type: string) => {
@@ -350,11 +425,25 @@ Always be specific with numbers and actionable recommendations.`
                     {messages.length > 0 && (
                         <>
                             <Button variant="outline" size="sm" onClick={handleSaveReport}>
-                                <Save size={14} />
+                                <Save size={14} className="mr-2" />
+                                Save as Report
                             </Button>
-                            <Button variant="outline" size="sm" onClick={handleExport}>
-                                <Download size={14} />
-                            </Button>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" size="sm">
+                                        <Download size={14} className="mr-2" />
+                                        Export
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={handleExportPDF}>
+                                        Export as PDF
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={handleExportExcel}>
+                                        Export as Excel
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </>
                     )}
 
@@ -440,7 +529,7 @@ Always be specific with numbers and actionable recommendations.`
                                 </div>
                             </div>
                         ) : (
-                            <div className="space-y-4">
+                            <div className="space-y-4" ref={chatContainerRef}>
                                 {messages.map((msg) => (
                                     <div key={msg.id}>
                                         {/* Chart messages */}
