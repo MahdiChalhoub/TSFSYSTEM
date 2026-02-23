@@ -48,11 +48,18 @@ export function TicketSidebar({ cart, onUpdateQuantity, onClear, currency = '$',
                     cart,
                     paymentMethod,
                     totalAmount: totalAmount,
-                    scope: 'OFFICIAL'
+                    // scope is now handled on the server by the Integrity Guard
                 });
 
                 if (result.success) {
-                    toast.success(`Sale Processed: ${result.ref}`);
+                    if (result.protectionWarning) {
+                        toast(result.protectionWarning, {
+                            icon: '🛡️',
+                            className: 'bg-amber-50 border-amber-200 text-amber-800 font-bold',
+                            duration: 5000
+                        });
+                    }
+                    toast.success(`Sale Processed: ${result.ref} [${result.scope}]`);
                     setLastOrder({ id: result.orderId, ref: result.ref });
                     setIsReceiptOpen(true);
                     onClear();

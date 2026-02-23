@@ -2,7 +2,7 @@
 set -e
 
 # Version Configuration
-AGENT_VERSION="2.8.2-AG-$(date +'%y%m%d.%H%M')"
+AGENT_VERSION="2.9.1-AG-$(date +'%y%m%d.%H%M')"
 echo "🚀 Preparing deployment for version: $AGENT_VERSION"
 
 # Update version in branding
@@ -23,7 +23,7 @@ rsync -avz -e "ssh -i ~/.ssh/id_deploy" \
     /root/.gemini/antigravity/scratch/TSFSYSTEM/ root@91.99.186.183:/root/TSFSYSTEM/
 
 echo "📊 Applying Database Migrations..."
-ssh -i ~/.ssh/id_deploy root@91.99.186.183 "docker exec tsf_backend python manage.py makemigrations data_migration"
+ssh -i ~/.ssh/id_deploy root@91.99.186.183 "docker exec tsf_backend python manage.py makemigrations"
 ssh -i ~/.ssh/id_deploy root@91.99.186.183 "docker exec tsf_backend python manage.py migrate"
 
 echo "🔄 Restarting Backend Service..."

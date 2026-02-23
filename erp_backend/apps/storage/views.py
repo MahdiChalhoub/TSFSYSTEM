@@ -141,9 +141,18 @@ class StorageProviderViewSet(viewsets.GenericViewSet):
     permission_classes = [IsAuthenticated]
 
     def _get_provider(self, request):
-        org = getattr(request, 'organization', None)
+        from erp.models import Organization
+        org_id = request.headers.get('X-Tenant-Id') or \
+                 getattr(request, 'organization', None) or \
+                 getattr(request.user, 'organization_id', None)
+        
+        if not org_id:
+            return None
+            
+        org = Organization.objects.filter(id=org_id).first() if isinstance(org_id, (int, str)) else org_id
         if not org:
             return None
+            
         provider, _ = StorageProvider.objects.get_or_create(
             organization=org,
             defaults={'provider_type': 'LOCAL', 'bucket_name': 'tsf-files'}

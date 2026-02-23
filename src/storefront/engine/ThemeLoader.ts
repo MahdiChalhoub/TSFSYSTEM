@@ -11,16 +11,16 @@ export async function loadTheme(themeId: string): Promise<ThemeModule | null> {
     try {
         switch (themeId) {
             case 'midnight': {
-                const components = await import('../themes/midnight')
-                return { config, components: components.default }
+                const mod = await import('../themes/midnight')
+                return mod.default
             }
             case 'boutique': {
-                const components = await import('../themes/boutique')
-                return { config, components: components.default }
+                const mod = await import('../themes/boutique')
+                return mod.default
             }
             case 'emporium': {
-                const components = await import('../themes/emporium')
-                return { config, components: components.default }
+                const mod = await import('../themes/emporium')
+                return mod.default
             }
             default:
                 return null

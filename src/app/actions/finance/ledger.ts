@@ -230,3 +230,32 @@ export async function createOpeningBalanceEntry(data: unknown) {
         entry_type: 'OPENING_BALANCE'
     })
 }
+
+/**
+ * Calculates the total turnover (Sales) declared to the OFFICIAL scope for the current day.
+ * Used by the Integrity Guard to enforce daily declaration caps.
+ */
+export async function getDeclaredTurnoverToday() {
+    try {
+        const today = new Date().toISOString().split('T')[0]
+        const entries = await getLedgerEntries('OFFICIAL', {
+            date_from: today,
+            date_to: today,
+            entry_type: 'SALE'
+        })
+
+        let total = 0
+        if (Array.isArray(entries)) {
+            entries.forEach((e: any) => {
+                e.lines?.forEach((l: any) => {
+                    // Credits in a sale entry usually represent revenue/turnover
+                    if (Number(l.credit) > 0) total += Number(l.credit)
+                })
+            })
+        }
+        return total
+    } catch (e) {
+        console.error("Failed to calculate today's declared turnover:", e)
+        return 0
+    }
+}

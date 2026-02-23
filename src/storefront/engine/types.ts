@@ -22,6 +22,26 @@ export interface Product {
     is_active?: boolean
     barcode?: string
     unit_of_measure?: string
+    // ── Variant Support ──
+    has_variants?: boolean
+    variants?: ProductVariant[]
+    options?: ProductOption[]
+}
+
+export interface ProductVariant {
+    id: string
+    sku: string
+    name: string
+    price: number
+    image_url?: string
+    stock_quantity: number
+    option_values: Record<string, string> // e.g. { "Color": "Red", "Size": "XL" }
+}
+
+export interface ProductOption {
+    id: string
+    name: string        // e.g. "Color"
+    values: string[]    // e.g. ["Red", "Blue"]
 }
 
 export interface Category {
@@ -87,6 +107,7 @@ export interface StorefrontConfig {
     currency_symbol?: string
     currency_code?: string
     stripe_publishable_key?: string
+    layout?: StorefrontPageLayout
 }
 
 // ─── Theme Component Interfaces ─────────────────────────────────────────────
@@ -140,6 +161,27 @@ export interface ThemeComponents {
     DashboardPage?: React.ComponentType
 }
 
+// ─── Section Engine ─────────────────────────────────────────────────────────
+
+export interface SectionProps {
+    id: string
+    settings: Record<string, any>
+    products?: Product[]
+    categories?: Category[]
+}
+
+export type SectionComponent = React.ComponentType<SectionProps>
+
+export interface StorefrontSection {
+    type: string           // e.g. "hero", "featured_collection"
+    id: string             // unique instance ID
+    settings: Record<string, any>
+}
+
+export interface StorefrontPageLayout {
+    sections: StorefrontSection[]
+}
+
 export interface ThemeConfig {
     id: string
     name: string
@@ -165,6 +207,7 @@ export interface ThemeConfig {
 export interface ThemeModule {
     config: ThemeConfig
     components: ThemeComponents
+    sections: Record<string, SectionComponent>
 }
 
 // ─── Hook Return Types ──────────────────────────────────────────────────────

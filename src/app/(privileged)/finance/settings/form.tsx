@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { recalculateAccountBalances } from '@/app/actions/finance/ledger'
 import { FinancialSettingsState, updateFinancialSettings } from '@/app/actions/finance/settings'
 import { type Currency } from '@/app/actions/currencies'
-import { ShieldAlert, Target, Lock, GitCompareArrows, X, Pencil, AlertTriangle, Layers } from 'lucide-react'
+import { ShieldAlert, Target, Lock, GitCompareArrows, X, Pencil, AlertTriangle, Layers, Banknote, Landmark, Wallet, Activity } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
@@ -15,6 +15,7 @@ interface Props {
     settings: FinancialSettingsState
     lock: { isLocked: boolean; reason: string | null }
     currencies: Currency[]
+    accounts: any[]
 }
 
 // ────────────────────────────────────────────────────────
@@ -203,7 +204,7 @@ function EditConfirmModal({ onConfirm, onCancel }: { onConfirm: () => void, onCa
     )
 }
 
-export default function FinancialSettingsForm({ settings, lock, currencies }: Props) {
+export default function FinancialSettingsForm({ settings, lock, currencies, accounts }: Props) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const { register, handleSubmit, watch, setValue } = useForm<FinancialSettingsState>({
@@ -468,6 +469,130 @@ export default function FinancialSettingsForm({ settings, lock, currencies }: Pr
                                 <p className="text-[10px] text-stone-400 mt-3 italic">
                                     Manage user scope passwords in HR &amp; Teams → Access Control.
                                 </p>
+                            </div>
+
+                            {/* --- AUTO-DECLARATION STRATEGY --- */}
+                            <div className="mt-4 p-5 bg-white rounded-2xl border border-amber-200 shadow-sm space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <div className="p-1.5 bg-emerald-50 rounded-lg text-emerald-600">
+                                            <Target size={16} />
+                                        </div>
+                                        <h3 className="text-sm font-black text-stone-900 uppercase tracking-tight">Official Transaction Guard</h3>
+                                    </div>
+                                    <div className="flex items-center h-6">
+                                        <input
+                                            {...register('autoDeclarationEnabled')}
+                                            type="checkbox"
+                                            className="h-4 w-4 text-emerald-600 border-stone-300 rounded focus:ring-emerald-500"
+                                        />
+                                    </div>
+                                </div>
+
+                                <p className="text-[11px] text-stone-500 leading-relaxed font-medium">
+                                    Automate which Sales/POS invoices are routed to the <strong>Official Scope</strong>.
+                                    Reduces manual scope toggling during high-speed checkout.
+                                </p>
+
+                                <div className="grid grid-cols-2 gap-4 pt-2">
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest block">Force Declared Threshold</label>
+                                        <div className="relative">
+                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 font-bold">$</span>
+                                            <input
+                                                {...register('autoDeclareThreshold', { valueAsNumber: true })}
+                                                type="number"
+                                                placeholder="e.g. 500"
+                                                className="w-full pl-7 pr-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs font-black text-stone-900 focus:bg-white focus:ring-4 focus:ring-emerald-50 focus:border-emerald-200 transition-all outline-none"
+                                            />
+                                        </div>
+                                        <p className="text-[9px] text-stone-400 italic">Invoices above this amount are ALWAYS Official.</p>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest block">Strategic Sample Rate</label>
+                                        <div className="relative">
+                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 font-bold">%</span>
+                                            <input
+                                                {...register('autoDeclarePercentage', { valueAsNumber: true })}
+                                                type="number"
+                                                placeholder="e.g. 15"
+                                                className="w-full pl-3 pr-8 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs font-black text-stone-900 focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-200 transition-all outline-none"
+                                            />
+                                        </div>
+                                        <p className="text-[9px] text-stone-400 italic">Randomly declare X% of small invoices.</p>
+                                    </div>
+                                </div>
+
+                                {/* --- INTEGRITY PROTECTION --- */}
+                                <div className="mt-2 pt-4 border-t border-stone-100 space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="p-1.5 bg-rose-50 rounded-lg text-rose-600">
+                                                <Activity size={16} />
+                                            </div>
+                                            <h3 className="text-sm font-black text-rose-900 uppercase tracking-tight italic line-through decoration-rose-200">Integrity Protection</h3>
+                                            <h3 className="text-sm font-black text-stone-900 uppercase tracking-tight ml-[-8px]">Shield Module</h3>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[9px] font-bold text-stone-400 uppercase tracking-tighter">Active Protection</span>
+                                            <input
+                                                {...register('integrityAlertEnabled')}
+                                                type="checkbox"
+                                                className="h-4 w-4 text-rose-600 border-stone-300 rounded focus:ring-rose-500"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-6">
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest block">Daily Declaration Limit</label>
+                                            <div className="relative">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 font-bold">$</span>
+                                                <input
+                                                    {...register('autoDeclareDailyLimit', { valueAsNumber: true })}
+                                                    type="number"
+                                                    placeholder="Global daily cap"
+                                                    className="w-full pl-7 pr-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs font-black text-rose-600 focus:bg-white focus:ring-4 focus:ring-rose-50 focus:border-rose-200 transition-all outline-none shadow-inner"
+                                                />
+                                            </div>
+                                            <p className="text-[9px] text-rose-400/80 italic font-bold leading-tight">Max declared turnover allowed per day before safety downgrade.</p>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest block flex items-center gap-1.5">
+                                                <Landmark size={10} className="text-indigo-400" /> Controllable Entry Points
+                                            </label>
+                                            <div className="bg-slate-100/50 border border-slate-200 rounded-2xl p-4 max-h-40 overflow-y-auto custom-scrollbar space-y-2 shadow-inner">
+                                                {accounts.filter(a => ['BANK', 'WALLET', 'CASH'].includes(a.type) || a.nature === 'FINANCIAL').length > 0 ? (
+                                                    accounts.filter(a => ['BANK', 'WALLET', 'CASH'].includes(a.type) || a.nature === 'FINANCIAL').map(account => (
+                                                        <label key={account.id} className="flex items-center gap-3 p-2 bg-white rounded-xl border border-slate-100 hover:border-indigo-100 transition-all cursor-pointer shadow-sm">
+                                                            <input
+                                                                type="checkbox"
+                                                                value={account.id}
+                                                                defaultChecked={settings.controllableAccountIds?.includes(account.id)}
+                                                                onChange={(e) => {
+                                                                    const current = watch('controllableAccountIds') || [];
+                                                                    if (e.target.checked) {
+                                                                        setValue('controllableAccountIds', [...current, account.id]);
+                                                                    } else {
+                                                                        setValue('controllableAccountIds', current.filter(id => id !== account.id));
+                                                                    }
+                                                                }}
+                                                                className="h-3.5 w-3.5 text-indigo-600 border-slate-300 rounded-lg focus:ring-indigo-500"
+                                                            />
+                                                            <div className="flex flex-col min-w-0">
+                                                                <span className="text-[10px] font-black text-slate-700 truncate capitalize">{account.name.toLowerCase()}</span>
+                                                                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">{account.type}</span>
+                                                            </div>
+                                                        </label>
+                                                    ))
+                                                ) : (
+                                                    <p className="text-[9px] text-slate-400 text-center py-4 italic">No controllable accounts found.</p>
+                                                )}
+                                            </div>
+                                            <p className="text-[9px] text-slate-400 italic leading-tight">Select Bank/Card wallets government can track. These always route to Official.</p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     )}

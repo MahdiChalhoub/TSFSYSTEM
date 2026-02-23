@@ -1,7 +1,4 @@
-// ─── Midnight Theme — Component Barrel Export ───────────────────────────────
-// This is the entry point loaded by ThemeRegistry.
-
-import type { ThemeComponents } from '../../engine/types'
+import type { ThemeModule, SectionComponent } from '../../engine/types'
 
 import HomePage from './HomePage'
 import ProductCard from './ProductCard'
@@ -14,7 +11,19 @@ import LoginPage from './LoginPage'
 import SearchPage from './SearchPage'
 import CategoriesPage from './CategoriesPage'
 
-const components: ThemeComponents = {
+// ─── Sections ───────────────────────────────────────────────────────────────
+
+import MidnightHero from './sections/Hero'
+import MidnightFeaturedCollection from './sections/FeaturedCollection'
+
+const sections: Record<string, SectionComponent> = {
+    'hero': MidnightHero,
+    'featured_collection': MidnightFeaturedCollection,
+}
+
+// ─── Component Registry ─────────────────────────────────────────────────────
+
+const components = {
     HomePage,
     ProductCard,
     ProductDetail,
@@ -27,4 +36,14 @@ const components: ThemeComponents = {
     CategoriesPage,
 }
 
-export default components
+// ─── Theme Module ───────────────────────────────────────────────────────────
+
+import { THEME_CONFIGS } from '../../engine/ThemeConfigs'
+
+const midnightModule: ThemeModule = {
+    config: THEME_CONFIGS.midnight,
+    components,
+    sections,
+}
+
+export default midnightModule
