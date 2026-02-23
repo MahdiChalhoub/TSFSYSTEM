@@ -167,7 +167,7 @@ cd "$NEW_RELEASE"
 
 # Link shared node_modules
 if [ ! -L "$NEW_RELEASE/node_modules" ]; then
-    ln -s "$APP_ROOT/node_modules" "$NEW_RELEASE/node_modules"
+    ln -sr "$APP_ROOT/node_modules" "$NEW_RELEASE/node_modules"
 fi
 
 # 3a. Build Next.js
