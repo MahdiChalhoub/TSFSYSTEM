@@ -11,7 +11,7 @@ import { toast } from "sonner"
 import {
     Truck, Package, Clock, CheckCircle2, XCircle, AlertTriangle,
     Search, MapPin, Phone, Navigation, Ban, RefreshCw,
-    ChevronRight, ExternalLink, ShieldCheck, Activity
+    ChevronRight, ExternalLink, ShieldCheck, Activity, User
 } from "lucide-react"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
 import { useListViewSettings } from '@/hooks/useListViewSettings'
@@ -183,7 +183,7 @@ export default function DeliveryOrdersPage() {
     ], [fmt, actionLoading])
 
     const stats = useMemo(() => ({
-        pending: deliveries.filter(d => ['PENDING', 'PREPARING'].includes(d.status)).length,
+        pending: deliveries.filter(d => ['PENDING', 'PREPARING'].includes(d.status ?? '')).length,
         inTransit: deliveries.filter(d => d.status === 'IN_TRANSIT').length,
         delivered: deliveries.filter(d => d.status === 'DELIVERED').length,
         totalFees: deliveries.reduce((s, d) => s + parseFloat(String(d.delivery_fee || 0)), 0)

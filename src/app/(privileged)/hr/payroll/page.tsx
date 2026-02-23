@@ -11,6 +11,7 @@ import { Banknote, Users, DollarSign, TrendingUp, Search, Briefcase, ChevronRigh
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 
 type PayrollRecord = Record<string, any>;
 
