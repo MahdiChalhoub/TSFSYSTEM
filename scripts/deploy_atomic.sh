@@ -165,10 +165,10 @@ log ""
 log "⚛️  [3/6] Validating Frontend..."
 cd "$NEW_RELEASE"
 
-# Link shared node_modules (using hardlinks to avoid Turbopack 'out of root' errors)
+# Copy shared node_modules (flattening symlinks to satisfy Turbopack)
 if [ ! -d "$NEW_RELEASE/node_modules" ]; then
-    mkdir -p "$NEW_RELEASE/node_modules"
-    cp -rl "$APP_ROOT/node_modules/." "$NEW_RELEASE/node_modules/"
+    log "  📂 Flattening node_modules into release (this may take a moment)..."
+    rsync -aL "$APP_ROOT/node_modules/" "$NEW_RELEASE/node_modules/"
 fi
 
 # 3a. Build Next.js
