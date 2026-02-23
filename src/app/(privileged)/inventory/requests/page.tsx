@@ -377,8 +377,17 @@ export default function OperationalRequestsPage() {
                         startTransition(async () => {
                             try {
                                 const data: Record<string, any> = {}
-                                const wh = fd.get("target_warehouse")
-                                if (wh) data.warehouse = Number(wh)
+
+                                if (convertDialog.request_type === 'STOCK_TRANSFER') {
+                                    const fromWh = fd.get("from_warehouse")
+                                    const toWh = fd.get("to_warehouse")
+                                    if (fromWh) data.from_warehouse = Number(fromWh)
+                                    if (toWh) data.to_warehouse = Number(toWh)
+                                } else {
+                                    const wh = fd.get("target_warehouse")
+                                    if (wh) data.warehouse = Number(wh)
+                                }
+
                                 await convertRequest(convertDialog.id, data)
                                 toast.success("Promoted to Strategy Layer!")
                                 setConvertDialog(null)
@@ -388,12 +397,32 @@ export default function OperationalRequestsPage() {
                             }
                         })
                     }} className="space-y-4 pt-4">
-                        <div>
-                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Primary Terminal</label>
-                            <select name="target_warehouse" className="w-full rounded-2xl border-gray-100 bg-gray-50 px-4 py-3 text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-purple-100 transition-all">
-                                {warehouses.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}
-                            </select>
-                        </div>
+                        {convertDialog?.request_type === 'STOCK_TRANSFER' ? (
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Source Terminal</label>
+                                    <select name="from_warehouse" required className="w-full rounded-2xl border-gray-100 bg-gray-50 px-4 py-3 text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-purple-100 transition-all">
+                                        <option value="">Select Source</option>
+                                        {warehouses.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Destination Terminal</label>
+                                    <select name="to_warehouse" required className="w-full rounded-2xl border-gray-100 bg-gray-50 px-4 py-3 text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-purple-100 transition-all">
+                                        <option value="">Select Destination</option>
+                                        {warehouses.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+                        ) : (
+                            <div>
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Target Terminal</label>
+                                <select name="target_warehouse" required className="w-full rounded-2xl border-gray-100 bg-gray-50 px-4 py-3 text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-purple-100 transition-all">
+                                    <option value="">Select Terminal</option>
+                                    {warehouses.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}
+                                </select>
+                            </div>
+                        )}
                         <div className="flex justify-end gap-2 pt-4">
                             <Button type="button" variant="ghost" onClick={() => setConvertDialog(null)} className="rounded-xl font-bold">Back</Button>
                             <Button type="submit" disabled={isPending} className="bg-purple-600 hover:bg-purple-700 text-white rounded-2xl font-bold h-12 px-8 shadow-lg shadow-purple-100 transition-all">
