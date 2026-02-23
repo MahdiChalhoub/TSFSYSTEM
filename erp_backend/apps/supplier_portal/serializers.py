@@ -134,6 +134,10 @@ class SupplierPOReadSerializer(serializers.Serializer):
     currency = serializers.CharField()
     line_count = serializers.IntegerField()
     created_at = serializers.DateTimeField()
+    tracking_number = serializers.CharField(required=False, allow_null=True)
+    tracking_url = serializers.URLField(required=False, allow_null=True)
+    acknowledged_at = serializers.DateTimeField(required=False, allow_null=True)
+    dispatched_at = serializers.DateTimeField(required=False, allow_null=True)
 
 
 class SupplierStockReadSerializer(serializers.Serializer):

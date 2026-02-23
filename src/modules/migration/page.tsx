@@ -65,7 +65,7 @@ type WizardStep = "LIST" | "SOURCE" | "UPLOAD" | "BUSINESSES" | "PREVIEW" | "RUN
 // STATUS VISUALS
 // ─────────────────────────────────────────────────────────────────────────────
 
-const statusConfig: Record<string, { color: string; icon: Record<string, any>; label: string }> = {
+const statusConfig: Record<string, { color: string; icon: any; label: string }> = {
     PENDING: { color: "bg-slate-500/20 text-slate-400 border-slate-500/30", icon: FileUp, label: "Pending" },
     PARSING: { color: "bg-blue-500/20 text-blue-400 border-blue-500/30", icon: Database, label: "Parsing" },
     RUNNING: { color: "bg-amber-500/20 text-amber-400 border-amber-500/30", icon: Loader2, label: "Running" },
@@ -252,14 +252,24 @@ export default function MigrationPage() {
                 formData.append('chunk', blob, `chunk_${i}`);
                 formData.append('offset', String(bytesSent));
 
+                console.log(`[UPLOAD] Sending chunk ${i + 1}/${totalChunks} (Offset: ${bytesSent})`);
+
                 const res = await fetch(`/api/proxy/storage/upload/${session.session_id}/chunk/`, {
                     method: 'POST',
                     body: formData,
+                    // Note: Browser will automatically add cookies if same-origin
                 });
 
                 if (!res.ok) {
-                    const err = await res.json().catch(() => ({}));
-                    throw new Error(err.error || `Chunk ${i + 1} failed`);
+                    let errorDetail = "";
+                    try {
+                        const err = await res.json();
+                        errorDetail = err.error || err.detail || JSON.stringify(err);
+                    } catch {
+                        errorDetail = `Status: ${res.status} ${res.statusText}`;
+                    }
+                    console.error(`[UPLOAD] Chunk ${i + 1} failed:`, errorDetail);
+                    throw new Error(errorDetail || `Chunk ${i + 1} failed`);
                 }
 
                 bytesSent = end;

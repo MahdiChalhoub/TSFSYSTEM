@@ -63,8 +63,15 @@ export function useChunkedUpload() {
                 });
 
                 if (!res.ok) {
-                    const err = await res.json().catch(() => ({}));
-                    throw new Error(err.error || `Chunk ${i + 1} failed`);
+                    let errorDetail = "";
+                    try {
+                        const err = await res.json();
+                        errorDetail = err.error || err.detail || JSON.stringify(err);
+                    } catch {
+                        errorDetail = `Status: ${res.status} ${res.statusText}`;
+                    }
+                    console.error(`[STORAGE] Chunk ${i + 1} failed:`, errorDetail);
+                    throw new Error(errorDetail || `Chunk ${i + 1} failed`);
                 }
 
                 bytesSent = end;

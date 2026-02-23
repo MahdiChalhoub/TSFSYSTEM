@@ -587,15 +587,20 @@ export function Sidebar({
                     ))}
                 </div>
 
-                <div className="p-6 border-t border-gray-800/50 bg-[#0B1120] shrink-0">
-                    <button
-                        onClick={() => logoutAction()}
-                        suppressHydrationWarning={true}
-                        className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl hover:bg-gray-800/50 text-gray-400 hover:text-white transition-all group"
-                    >
-                        <LogOut size={20} className="group-hover:text-red-400 transition-colors" />
-                        <span className="text-sm font-medium">Sign Out</span>
-                    </button>
+                <div className="px-4 py-3 border-t border-gray-800/50 bg-[#0B1120] shrink-0">
+                    <div className="flex items-center justify-between gap-2">
+                        <button
+                            onClick={() => logoutAction()}
+                            suppressHydrationWarning={true}
+                            className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-gray-800/50 text-gray-400 hover:text-white transition-all group flex-1"
+                        >
+                            <LogOut size={18} className="group-hover:text-red-400 transition-colors" />
+                            <span className="text-sm font-medium">Sign Out</span>
+                        </button>
+                        <div className="text-[9px] font-black text-gray-500 bg-gray-900/80 px-2 py-1 rounded border border-gray-800/50 select-none uppercase tracking-tighter whitespace-nowrap">
+                            Version {PLATFORM_CONFIG.version}
+                        </div>
+                    </div>
                 </div>
             </aside>
         </React.Fragment>

@@ -415,7 +415,7 @@ class ProductViewSet(UDLEViewSetMixin, TenantModelViewSet):
                 Q(name__icontains=query) | Q(sku__icontains=query) | Q(barcode__icontains=query)
             )
 
-        products_qs = products_qs[:10]
+        products_qs = products_qs[:100]
 
         thirty_days_ago = timezone.now() - timedelta(days=30)
 

@@ -43,6 +43,8 @@ class PurchaseOrder(TenantModel):
         ('APPROVED', 'Approved'),
         ('REJECTED', 'Rejected'),
         ('ORDERED', 'Ordered (Sent to Supplier)'),
+        ('CONFIRMED', 'Confirmed by Supplier'),
+        ('IN_TRANSIT', 'In Transit / Dispatched'),
         ('PARTIALLY_RECEIVED', 'Partially Received'),
         ('RECEIVED', 'Fully Received'),
         ('INVOICED', 'Invoiced'),
@@ -69,7 +71,9 @@ class PurchaseOrder(TenantModel):
         'SUBMITTED': {'APPROVED', 'REJECTED', 'CANCELLED'},
         'APPROVED': {'ORDERED', 'CANCELLED'},
         'REJECTED': {'DRAFT'},  # Can re-open as draft
-        'ORDERED': {'PARTIALLY_RECEIVED', 'RECEIVED', 'CANCELLED'},
+        'ORDERED': {'CONFIRMED', 'CANCELLED', 'PARTIALLY_RECEIVED', 'RECEIVED'},
+        'CONFIRMED': {'IN_TRANSIT', 'CANCELLED', 'PARTIALLY_RECEIVED', 'RECEIVED'},
+        'IN_TRANSIT': {'PARTIALLY_RECEIVED', 'RECEIVED', 'CANCELLED'},
         'PARTIALLY_RECEIVED': {'RECEIVED', 'CANCELLED'},
         'RECEIVED': {'INVOICED', 'COMPLETED'},
         'INVOICED': {'COMPLETED'},
@@ -133,11 +137,13 @@ class PurchaseOrder(TenantModel):
     notes = models.TextField(null=True, blank=True)
     internal_notes = models.TextField(null=True, blank=True, help_text='Internal notes not shared with supplier')
 
-    # Audit
-    created_by = models.ForeignKey('erp.User', on_delete=models.SET_NULL, null=True, blank=True,
-                                    related_name='created_pos')
-    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+
+    # Supplier Portal Integration
+    tracking_number = models.CharField(max_length=100, null=True, blank=True, help_text='Dispatched tracking ID')
+    tracking_url = models.URLField(max_length=500, null=True, blank=True, help_text='Link to carrier tracking page')
+    acknowledged_at = models.DateTimeField(null=True, blank=True)
+    dispatched_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = 'purchase_order'

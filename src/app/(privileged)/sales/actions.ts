@@ -23,9 +23,11 @@ export async function getPosProducts(options: {
         queryParams.append('offset', String(offset));
 
         // Use fetch cache for high-frequency search
-        return await erpFetch(`products/search_enhanced/?${queryParams.toString()}`, {
-            next: { revalidate: 60, tags: ['products', 'pos'] }
+        const data = await erpFetch(`products/search_enhanced/?${queryParams.toString()}`, {
+            next: { revalidate: 0, tags: ['products', 'pos'] }
         });
+        console.log(`[DEBUG] getPosProducts returned ${data?.length} items. First item price:`, data?.[0]?.basePrice);
+        return data;
     } catch (error) {
         console.error('[getPosProducts] API error:', error);
         return [];
@@ -57,9 +59,11 @@ export async function clearProductsCache() {
 
 export async function getCategories() {
     try {
-        return await erpFetch('inventory/categories/', {
-            next: { revalidate: 3600, tags: ['categories'] } // Categories change rarely
+        const data = await erpFetch('inventory/categories/', {
+            next: { revalidate: 0, tags: ['categories'] } // Disable cache to fix missing categories
         });
+        console.log(`[DEBUG] getCategories returned ${data?.length} categories.`);
+        return data;
     } catch (error) {
         console.error('[getCategories] Error:', error);
         return [];

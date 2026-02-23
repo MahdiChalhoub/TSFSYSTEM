@@ -325,6 +325,11 @@ AUTHENTICATION_BACKENDS = [
 
 AUTH_USER_MODEL = 'erp.User'
 
+# ── Upload Limits ─────────────────────────────────────────────
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 1000
+
 import sys
 # Local dev hacks to bypass model clashes and migration history issues
 if 'runserver' in sys.argv or 'test' in sys.argv or 'migrate' in sys.argv or os.getenv('APP_ENV') == 'production' or os.getenv('LOCAL_DEV') == '1':
