@@ -69,7 +69,10 @@ export default function PurchaseForm({
     const worksInTTC = financialSettings.worksInTTC; // Global policy
     const declareTVA = financialSettings.declareTVA; // Tax recovery policy
     const pricingCostBasis = financialSettings.pricingCostBasis || 'AUTO';
-    const dualViewEnabled = financialSettings.dualViewEnabled || false;
+    // SaaS Switch: [ to hide internal and show just official ] 
+    // If ACTIVE (true) -> Hide Internal. If INACTIVE (false) -> Show Both.
+    const discretionMode = financialSettings.dualViewEnabled || false;
+    const showInternalSwitcher = !discretionMode;
 
     // --- Effects ---
 
@@ -292,8 +295,8 @@ export default function PurchaseForm({
 
                 {/* 1. Transactional Configuration Hub */}
                 <div className="grid lg:grid-cols-12 gap-5">
-                    {/* 1.1 Commercial Scope Card - ONLY SHOWN IF DUAL VIEW ENABLED */}
-                    {dualViewEnabled && (
+                    {/* 1.1 Commercial Scope Card - SHOWN IF DISCRETION MODE IS INACTIVE */}
+                    {showInternalSwitcher && (
                         <div className="lg:col-span-4 card p-6 bg-white/80 backdrop-blur-xl rounded-[2rem] shadow-xl shadow-gray-200/50 border border-white/50 flex flex-col justify-between">
                             <div className="flex justify-between items-start mb-4">
                                 <div>
@@ -313,11 +316,11 @@ export default function PurchaseForm({
                     )}
 
                     {/* 1.2 Fulfillment & Supplier Context Card */}
-                    <div className={`${dualViewEnabled ? 'lg:col-span-8' : 'lg:col-span-12'} card p-6 bg-white/80 backdrop-blur-xl rounded-[2rem] shadow-xl shadow-gray-200/50 border border-white/50 space-y-4`}>
+                    <div className={`${showInternalSwitcher ? 'lg:col-span-8' : 'lg:col-span-12'} card p-6 bg-white/80 backdrop-blur-xl rounded-[2rem] shadow-xl shadow-gray-200/50 border border-white/50 space-y-4`}>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div className="space-y-1.5">
                                 <label className="flex items-center gap-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">
-                                    <FileText size={10} className="text-blue-500" /> {dualViewEnabled ? 'System Sequence' : 'Document ID'}
+                                    <FileText size={10} className="text-blue-500" /> {showInternalSwitcher ? 'System Sequence' : 'Document ID'}
                                 </label>
                                 <div className="bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-[11px] font-black text-slate-400 shadow-inner italic overflow-hidden whitespace-nowrap">
                                     {refCode || 'GENERATING...'}
@@ -450,27 +453,25 @@ export default function PurchaseForm({
                         <input type="hidden" name="invoicePriceType" value={invoicePriceType} />
                     </div>
 
-                    {dualViewEnabled && (
-                        <div className="flex bg-slate-100/50 p-1 rounded-2xl border border-slate-200/50 transition-all">
-                            <button
-                                type="button"
-                                disabled={scope === 'INTERNAL'}
-                                onClick={() => setVatRecoverable(true)}
-                                className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all ${vatRecoverable ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'} ${scope === 'INTERNAL' ? 'opacity-30 cursor-not-allowed grayscale' : ''}`}
-                            >
-                                TVA RECOVERABLE
-                            </button>
-                            <button
-                                type="button"
-                                disabled={scope === 'INTERNAL'}
-                                onClick={() => setVatRecoverable(false)}
-                                className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all ${!vatRecoverable ? 'bg-rose-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'} ${scope === 'INTERNAL' ? 'opacity-100 ring-2 ring-rose-300 ring-offset-2' : ''}`}
-                            >
-                                NON-RECOVERABLE
-                            </button>
-                            <input type="hidden" name="vatRecoverable" value={vatRecoverable ? 'true' : 'false'} />
-                        </div>
-                    )}
+                    <div className="flex bg-slate-100/50 p-1 rounded-2xl border border-slate-200/50 transition-all">
+                        <button
+                            type="button"
+                            disabled={scope === 'INTERNAL'}
+                            onClick={() => setVatRecoverable(true)}
+                            className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all ${vatRecoverable ? 'bg-emerald-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'} ${scope === 'INTERNAL' ? 'opacity-30 cursor-not-allowed grayscale' : ''}`}
+                        >
+                            TVA RECOVERABLE
+                        </button>
+                        <button
+                            type="button"
+                            disabled={scope === 'INTERNAL'}
+                            onClick={() => setVatRecoverable(false)}
+                            className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all ${!vatRecoverable ? 'bg-rose-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'} ${scope === 'INTERNAL' ? 'opacity-100 ring-2 ring-rose-300 ring-offset-2' : ''}`}
+                        >
+                            NON-RECOVERABLE
+                        </button>
+                        <input type="hidden" name="vatRecoverable" value={vatRecoverable ? 'true' : 'false'} />
+                    </div>
 
                     <div className="flex bg-slate-100/50 p-1 rounded-2xl border border-slate-200/50">
                         <button type="button" onClick={() => setProfitMode('MARGIN')} className={`px-4 py-2 rounded-xl text-[10px] font-black transition-all ${profitMode === 'MARGIN' ? 'bg-white text-emerald-600 shadow-md ring-1 ring-emerald-50' : 'text-slate-400 hover:text-slate-600'}`}>MARGIN ANALYSIS</button>

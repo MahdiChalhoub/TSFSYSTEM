@@ -2,12 +2,13 @@
 
 This file tracks deployments and changes made by AI agents to the TSFSYSTEM platform.
 
-## Current Version: 2.8.2-AG-260223.1516 (Antigravity)
+## Current Version: 2.8.2-AG-260223.1548 (Antigravity)
 
 ### Deployment Log
 
 | Date | Agent | Version | Changes |
 | :--- | :--- | :--- | :--- |
+| 2026-02-23 | Antigravity | 2.8.2-AG-260223.1548 | **The Infrastructure Stability Patch**: Fixed `ReferenceError: Cannot access before initialization` in `PortalContext.tsx` by reordering definitions to avoid TDZ. Patched `erp-api.ts` for safe client-side execution by wrapping server-only imports in `isClient` checks. Fixed 404 in `getCommercialContext` by correcting the `/api/settings/global_financial/` endpoint. Rebuild optimized with full project sync. |
 | 2026-02-23 | Antigravity | 2.9.0-AG | **Import Audit & Optimization**: Increased upload limits to 500MB. Implemented background asynchronous analysis for large SQL dumps. Optimized parser with single-pass scanning and streaming SS-cursors for DB connections. Added Taxes and Opening Stock migration. Implemented bulk creation for order lines. |
 | 2026-02-23 | Antigravity | 2.8.2-AG-260223.1516 | **The Stability Patch**: Fixed POS Layout duplication errors (Numpad naming conflict). Resolved Storefront "Application Error" caused by circular theme dependencies. Standardized backend resolution across SSR components (localhost -> backend:8000). |
 | 2026-02-23 | Antigravity | 2.8.2-AG-260223.1512 | Fixed '413 Request Entity Too Large' on Third-Party Import. Increased Nginx & Django upload limits to 500MB. |
