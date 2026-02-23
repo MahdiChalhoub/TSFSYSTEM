@@ -329,7 +329,7 @@ export default function StatementsPage() {
                     title={TAB_CONFIG[activeTab].label}
                     data={activeTab === 'orders' ? (detail.orders || []) : activeTab === 'payments' ? (detail.payments || []) : (detail.journal || [])}
                     loading={loading}
-                    getRowId={(item, idx) => item.id || idx}
+                    getRowId={(item) => item.id || ''}
                     columns={activeTab === 'orders' ? orderColumns : activeTab === 'payments' ? paymentColumns : journalColumns}
                     className="rounded-3xl border-0 shadow-sm overflow-hidden"
                     visibleColumns={settings.visibleColumns}
@@ -339,7 +339,6 @@ export default function StatementsPage() {
                     sortKey={settings.sortKey}
                     sortDir={settings.sortDir}
                     onSort={settings.setSort}
-                    compact
                 />
             </div>
         )

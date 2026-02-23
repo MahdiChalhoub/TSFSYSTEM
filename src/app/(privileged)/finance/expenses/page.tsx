@@ -45,7 +45,7 @@ export default function ExpenseTrackerPage() {
                 String(j.account) === String(a.id) || String(j.account_id) === String(a.id) ||
                 String(j.credit_account) === String(a.id) || String(j.debit_account) === String(a.id)
             )
-            const bal = Math.abs(parseFloat(a.balance || 0))
+            const bal = Math.abs(parseFloat(String(a.balance || 0)))
             return { ...a, journalCount: entries.length, absBalance: bal }
         }).sort((a, b) => b.absBalance - a.absBalance)
     }, [accounts, journals])
