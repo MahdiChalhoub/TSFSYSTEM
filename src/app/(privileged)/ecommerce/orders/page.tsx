@@ -80,12 +80,48 @@ export default function DigitalCommerceStreamPage() {
         const renderers: Record<string, (r: Order) => React.ReactNode> = {
             date: r => <span className="text-gray-500 font-medium">{new Date(r.created_at).toLocaleDateString()}</span>,
             reference: r => <span className="font-mono font-bold text-gray-900">{r.order_number || `#${r.id}`}</span>,
-            client: r => <span className="font-bold text-gray-900">{r.client?.name || r.client_name || 'Anonymous Guest'}</span>,
+            client: r => (
+                <div className="flex flex-col">
+                    <span className="font-bold text-gray-900">{r.client?.name || r.client_name || 'Anonymous Guest'}</span>
+                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-none">External Link Node</span>
+                </div>
+            ),
             items: r => <Badge variant="secondary" className="bg-stone-100 text-stone-600 border-0 font-black text-[10px]">{r.items_count || 0} ITEMS</Badge>,
             amount: r => <span className="font-black text-gray-900">{fmt(r.total_amount)}</span>,
         }
         return { ...c, render: renderers[c.key] }
     })
+
+    const expandable = {
+        getDetails: (r: any) => r.lines || [],
+        columns: [
+            {
+                key: 'product',
+                label: 'SKU / Asset',
+                render: (l: any) => <span className="font-bold text-gray-700">{l.product_name}</span>
+            },
+            {
+                key: 'qty',
+                label: 'Quantity',
+                align: 'center',
+                render: (l: any) => <span className="font-mono text-gray-400 font-black">×{l.quantity}</span>
+            },
+            {
+                key: 'price',
+                label: 'Unit Value',
+                align: 'right',
+                render: (l: any) => <span className="font-bold text-gray-600">{fmt(Number(l.unit_price))}</span>
+            },
+            {
+                key: 'total',
+                label: 'Line Settlement',
+                align: 'right',
+                render: (l: any) => <span className="font-black text-violet-600">{fmt(Number(l.unit_price) * Number(l.quantity))}</span>
+            }
+        ],
+        headerColor: 'bg-violet-50/30',
+        headerTextColor: 'text-violet-400',
+    }
 
     const filtered = orders.filter(o => {
         const q = search.toLowerCase()
@@ -155,6 +191,7 @@ export default function DigitalCommerceStreamPage() {
                 loading={loading}
                 getRowId={r => r.id}
                 columns={columns}
+                expandable={expandable}
                 visibleColumns={settings.visibleColumns}
                 onToggleColumn={settings.toggleColumn}
                 className="rounded-3xl border-0 shadow-sm overflow-hidden"

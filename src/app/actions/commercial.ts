@@ -17,7 +17,8 @@ export async function getCommercialContext() {
             currency,
             tradeSubTypesEnabled: settings?.enable_trade_sub_types ?? false,
             defaultWarehouseId: settings?.default_warehouse_id || 1,
-            organization: org
+            organization: org,
+            posPaymentMethods: org?.settings?.pos_payment_methods || null
         };
     } catch (error) {
         console.error('[getCommercialContext] Error:', error);

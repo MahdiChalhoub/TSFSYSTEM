@@ -275,7 +275,7 @@ class InventoryService:
             return inventory
 
     @staticmethod
-    def reduce_stock(organization, product, warehouse, quantity, reference=None, user=None, scope='OFFICIAL', serials=None, skip_finance=False):
+    def reduce_stock(organization, product, warehouse, quantity, reference=None, user=None, scope='OFFICIAL', serials=None, skip_finance=False, allow_negative=False):
         """Reduces stock and captures AMC for COGS booking."""
         from apps.inventory.models import Inventory, InventoryMovement
         from apps.finance.services import ForensicAuditService
@@ -287,13 +287,14 @@ class InventoryService:
             from apps.inventory.models import Product
             product = Product.objects.select_for_update().get(id=product.id)
             current_amc = Decimal(str(product.cost_price))
-            inventory = Inventory.objects.filter(
+            inventory, _ = Inventory.objects.get_or_create(
                 organization=organization,
                 warehouse=warehouse,
-                product=product
-            ).first()
+                product=product,
+                defaults={'quantity': Decimal('0.00')}
+            )
 
-            if not inventory or inventory.quantity < qty_to_reduce:
+            if not allow_negative and inventory.quantity < qty_to_reduce:
                 raise ValidationError(f"Insufficient stock for {product.name} in {warehouse.name}")
 
             inventory.quantity = Decimal(str(inventory.quantity)) - qty_to_reduce

@@ -3,7 +3,7 @@
 import { POSLayoutProps } from '@/types/pos-layout';
 import { ProductGrid } from '@/components/pos/ProductGrid';
 import { CompactClientHeader } from '@/components/pos/CompactClientHeader';
-import { Numpad as POSNumpad } from '@/components/pos/Numpad';
+import { Numpad as POSNumpad, NumpadMode } from '@/components/pos/Numpad';
 import { ManagerOverride } from '@/components/pos/ManagerOverride';
 import { ReceiptModal } from '@/components/pos/ReceiptModal';
 import {
@@ -48,6 +48,8 @@ export function POSLayoutClassic(props: POSLayoutProps) {
 
     // Draggable Floating Logic
     const [showNumpad, setShowNumpad] = useState(false);
+    const [numpadMode, setNumpadMode] = useState<NumpadMode>('qty');
+    const [selectedCartIdx, setSelectedCartIdx] = useState<number | null>(null);
     const [numpadPos, setNumpadPos] = useState({ x: 400, y: 150 });
 
     // Safety check for window to avoid hydration errors
@@ -393,7 +395,7 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                             </div>
                         ) : (
                             <div className="divide-y divide-gray-50">
-                                {cart.map((item: any) => (
+                                {cart.map((item: any, idx: number) => (
                                     <div
                                         key={item.productId}
                                         className={clsx(
@@ -414,15 +416,23 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                                             </p>
                                         </div>
                                         <div className="flex items-center gap-1">
-                                            <button onClick={() => onUpdateQuantity(item.productId, -1)} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-rose-100 hover:text-rose-600 flex items-center justify-center text-gray-400 transition-all active:scale-90">
+                                            <button onClick={(e) => { e.stopPropagation(); onUpdateQuantity(item.productId, -1); }} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-rose-100 hover:text-rose-600 flex items-center justify-center text-gray-400 transition-all active:scale-90">
                                                 <Minus size={12} />
                                             </button>
-                                            <span className="w-8 text-center text-sm font-black tabular-nums text-gray-900">{item.quantity}</span>
-                                            <button onClick={() => onUpdateQuantity(item.productId, 1)} className="w-7 h-7 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 flex items-center justify-center transition-all active:scale-90">
+                                            <span
+                                                onClick={(e) => { e.stopPropagation(); setSelectedCartIdx(idx); setNumpadMode('qty'); setShowNumpad(true); }}
+                                                className="w-8 text-center text-sm font-black tabular-nums text-gray-900 cursor-pointer hover:text-indigo-600"
+                                            >
+                                                {item.quantity}
+                                            </span>
+                                            <button onClick={(e) => { e.stopPropagation(); onUpdateQuantity(item.productId, 1); }} className="w-7 h-7 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 flex items-center justify-center transition-all active:scale-90">
                                                 <Plus size={12} />
                                             </button>
                                         </div>
-                                        <span className="w-24 text-right text-base font-black tabular-nums text-gray-900">
+                                        <span
+                                            onClick={(e) => { e.stopPropagation(); setSelectedCartIdx(idx); setNumpadMode('price'); setShowNumpad(true); }}
+                                            className="w-24 text-right text-base font-black tabular-nums text-gray-900 cursor-pointer hover:text-indigo-600"
+                                        >
                                             {currency}{(Number(item.price) * item.quantity).toFixed(2)}
                                         </span>
                                         <button onClick={() => onUpdateQuantity(item.productId, -100)} className="opacity-0 group-hover:opacity-100 w-6 h-6 flex items-center justify-center text-gray-300 hover:text-rose-500 transition-all">
@@ -437,11 +447,22 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                     {/* Numpad */}
                     <div className="px-4 py-3 border-t border-gray-100 bg-gray-50/50">
                         <POSNumpad
+                            mode={numpadMode}
+                            onModeChange={setNumpadMode}
                             onValueConfirm={(val, mode) => {
-                                if (mode === 'qty' && cart.length > 0) {
-                                    const lastItem = cart[0] as any;
-                                    const delta = val - lastItem.quantity;
-                                    onUpdateQuantity(lastItem.productId, delta);
+                                const idx = selectedCartIdx ?? 0;
+                                if (cart.length > idx) {
+                                    const target = cart[idx];
+                                    if (mode === 'qty') {
+                                        const delta = val - target.quantity;
+                                        onUpdateQuantity(target.productId, delta);
+                                    } else if (mode === 'price' && props.onUpdatePrice) {
+                                        props.onUpdatePrice(target.productId, val);
+                                    } else if (mode === 'disc' && onSetDiscount) {
+                                        onSetDiscount(val);
+                                    }
+                                } else if (mode === 'disc' && onSetDiscount) {
+                                    onSetDiscount(val);
                                 }
                             }}
                         />
@@ -571,9 +592,12 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                         </button>
                     </div>
                     <POSNumpad
+                        mode={numpadMode}
+                        onModeChange={setNumpadMode}
                         onValueConfirm={(val, mode) => {
-                            if (cart.length > 0) {
-                                const target = cart[0];
+                            const idx = selectedCartIdx ?? 0;
+                            if (cart.length > idx) {
+                                const target = cart[idx];
                                 if (mode === 'qty') {
                                     const delta = val - target.quantity;
                                     onUpdateQuantity(target.productId, delta);
@@ -582,6 +606,8 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                                 } else if (mode === 'disc' && onSetDiscount) {
                                     onSetDiscount(val);
                                 }
+                            } else if (mode === 'disc' && onSetDiscount) {
+                                onSetDiscount(val);
                             } else {
                                 toast.error("Add an item first");
                             }

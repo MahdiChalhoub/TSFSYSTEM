@@ -54,6 +54,13 @@ export interface Category {
     image_url?: string
 }
 
+export interface Brand {
+    id: string
+    name: string
+    short_name?: string
+    logo?: string
+}
+
 export interface CartItem {
     product_id: string
     variant_id?: string
@@ -117,6 +124,7 @@ export interface StorefrontConfig {
 export interface HomePageProps {
     products: Product[]
     categories: Category[]
+    brands: Brand[]
 }
 
 export interface ProductCardProps {
@@ -170,6 +178,7 @@ export interface SectionProps {
     settings: Record<string, any>
     products?: Product[]
     categories?: Category[]
+    brands?: Brand[]
 }
 
 export type SectionComponent = React.ComponentType<SectionProps>

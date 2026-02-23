@@ -1,20 +1,25 @@
 import { getCurrentPortalConfig } from '@/app/actions/client-portal';
 import ThemeSelector from '@/app/(privileged)/workspace/portal-config/ThemeSelector';
 import StoreTypePicker from './StoreTypePicker';
+import StockModePicker from './StockModePicker';
+import SectionBuilder from './SectionBuilder';
 import { Palette } from 'lucide-react';
 
 export default async function EcommerceThemesPage() {
+    let config: any = null;
     let configId = '';
     let currentTheme = 'midnight';
     let currentType = 'PRODUCT_STORE';
+    let currentStockMode = 'STRICT';
     let error: string | null = null;
 
     try {
-        const config = await getCurrentPortalConfig();
+        config = await getCurrentPortalConfig();
         if (config) {
             configId = String(config.id);
             currentTheme = config.storefront_theme || 'midnight';
             currentType = config.storefront_type || 'PRODUCT_STORE';
+            currentStockMode = config.inventory_check_mode || 'STRICT';
         } else {
             error = "No active organization configuration found. Please select an organization from the header.";
         }
@@ -54,11 +59,23 @@ export default async function EcommerceThemesPage() {
             {/* Step 1: Store Type */}
             <StoreTypePicker configId={configId} currentType={currentType} />
 
-            {/* Step 2: Visual Theme */}
+            {/* Step 2: Inventory Behavioral Logic */}
+            <div className="mt-8">
+                <StockModePicker configId={configId} currentMode={currentStockMode} />
+            </div>
+
+            {/* Step 3: Visual Theme */}
             <div className="mt-8">
                 <ThemeSelector configId={configId} currentTheme={currentTheme} />
+            </div>
+
+            {/* Step 4: Page Layout */}
+            <div className="mt-8 pb-12">
+                <SectionBuilder
+                    configId={configId}
+                    initialLayout={config?.layout}
+                />
             </div>
         </div>
     );
 }
-

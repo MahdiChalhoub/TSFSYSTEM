@@ -11,7 +11,7 @@ import {
 import {
     getStorageProvider, updateStorageProvider, testStorageConnection,
     listFiles, deleteFile, getDownloadUrl, initChunkedUpload,
-    completeChunkedUpload, getUploadStatus, getActiveUploads
+    completeChunkedUpload, getUploadStatus, getActiveUploads, abortChunkedUpload
 } from '@/modules/storage/actions';
 
 // ─── Types ───────────────────────────────────────────────────────
@@ -181,9 +181,65 @@ function useChunkedUpload() {
         }
     }, []);
 
+    const resume = useCallback(async (sessionId: string, file: globalThis.File) => {
+        setUploading(true);
+        setError(null);
+        abortRef.current = false;
+
+        try {
+            const status = await getUploadStatus(sessionId);
+            if (!status || status.error) throw new Error(status?.error || 'Failed to get status');
+
+            let bytesSent = status.bytes_received;
+            const CHUNK_SIZE = 2 * 1024 * 1024;
+            const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+            const startChunk = Math.floor(bytesSent / CHUNK_SIZE);
+
+            const startTime = Date.now();
+
+            for (let i = startChunk; i < totalChunks; i++) {
+                if (abortRef.current) break;
+
+                const start = i * CHUNK_SIZE;
+                const end = Math.min(start + CHUNK_SIZE, file.size);
+                const blob = file.slice(start, end);
+
+                const formData = new FormData();
+                formData.append('chunk', blob, `chunk_${i}`);
+                formData.append('offset', String(start));
+
+                const res = await fetch(`/api/proxy/storage/upload/${sessionId}/chunk/`, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || `Chunk ${i + 1} failed`);
+                }
+
+                bytesSent = end;
+                setProgress(Math.round((bytesSent / file.size) * 100));
+
+                const elapsed = (Date.now() - startTime) / 1000;
+                if (elapsed > 0) setSpeed(`${formatBytes(bytesSent / elapsed)}/s`);
+            }
+
+            const result = await completeChunkedUpload(sessionId);
+            setProgress(100);
+            setUploading(false);
+            return result;
+
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Resume failed');
+            setUploading(false);
+            return null;
+        }
+    }, []);
+
     const abort = useCallback(() => { abortRef.current = true; }, []);
 
-    return { upload, abort, uploading, progress, speed, error };
+    return { upload, resume, abort, uploading, progress, speed, error };
 }
 
 // ─── Tab type ────────────────────────────────────────────────────
@@ -265,6 +321,33 @@ export default function StoragePage() {
         if (res?.download_url) {
             window.open(res.download_url, '_blank');
         }
+    };
+
+    const handleAbortUpload = async (sessionId: string) => {
+        if (!confirm('Are you sure you want to cancel and delete this upload?')) return;
+        await abortChunkedUpload(sessionId);
+        await fetchData();
+    };
+
+    const handleResumeUpload = async (sessionId: string, filename: string) => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.onchange = async (e: any) => {
+            const file = e.target.files?.[0];
+            if (file) {
+                if (file.name !== filename) {
+                    alert('Please select the original file to resume.');
+                    return;
+                }
+                setShowUpload(true);
+                const result = await chunked.resume(sessionId, file);
+                if (result) {
+                    await fetchData();
+                    setShowUpload(false);
+                }
+            }
+        };
+        input.click();
     };
 
     const handleDelete = async (file: StoredFile) => {
@@ -383,14 +466,32 @@ export default function StoragePage() {
                     </div>
                     <div className="space-y-2">
                         {activeUploads.map(u => (
-                            <div key={u.session_id} className="flex items-center gap-3 bg-white rounded-xl p-3 border border-amber-100">
+                            <div key={u.session_id} className="flex items-center gap-3 bg-white rounded-xl p-3 border border-amber-100 group">
                                 <File size={16} className="text-gray-400" />
-                                <span className="text-sm text-gray-700 flex-1 truncate">{u.filename}</span>
-                                <div className="w-24 bg-gray-100 rounded-full h-1.5">
-                                    <div className="bg-amber-500 h-full rounded-full" style={{ width: `${u.progress}%` }} />
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-semibold text-gray-900 truncate mb-1">{u.filename}</p>
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex-1 bg-gray-100 rounded-full h-1.5 max-w-[200px]">
+                                            <div className="bg-amber-500 h-full rounded-full transition-all" style={{ width: `${u.progress}%` }} />
+                                        </div>
+                                        <span className="text-[10px] text-amber-600 font-bold whitespace-nowrap">{u.progress}% • {formatBytes(u.bytes_received)} / {formatBytes(u.total_size)}</span>
+                                    </div>
                                 </div>
-                                <span className="text-xs text-amber-600 font-mono w-10 text-right">{u.progress}%</span>
-                                <span className="text-xs text-gray-400">{formatBytes(u.bytes_received)} / {formatBytes(u.total_size)}</span>
+                                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button
+                                        onClick={() => handleResumeUpload(u.session_id, u.filename)}
+                                        className="h-8 px-3 rounded-lg bg-amber-100 text-amber-700 text-xs font-bold hover:bg-amber-200 transition-colors flex items-center gap-1"
+                                    >
+                                        <RefreshCcw size={12} /> Resume
+                                    </button>
+                                    <button
+                                        onClick={() => handleAbortUpload(u.session_id)}
+                                        className="h-8 w-8 flex items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition-colors"
+                                        title="Cancel & Delete"
+                                    >
+                                        <Trash2 size={12} />
+                                    </button>
+                                </div>
                             </div>
                         ))}
                     </div>

@@ -1,35 +1,65 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Delete } from 'lucide-react';
 import clsx from 'clsx';
 
-type NumpadMode = 'qty' | 'disc' | 'price';
+export type NumpadMode = 'qty' | 'disc' | 'price';
 
 export function Numpad({
     onValueConfirm,
-    mode: initialMode = 'qty'
+    mode: activeMode = 'qty',
+    onModeChange
 }: {
     onValueConfirm: (value: number, mode: NumpadMode) => void;
     mode?: NumpadMode;
+    onModeChange?: (mode: NumpadMode) => void;
 }) {
     const [buffer, setBuffer] = useState('');
-    const [mode, setMode] = useState<NumpadMode>(initialMode);
+    const [localMode, setLocalMode] = useState<NumpadMode>(activeMode);
 
-    const handleDigit = (d: string) => {
-        if (d === '.' && buffer.includes('.')) return;
-        setBuffer(prev => prev + d);
-    };
+    const mode = onModeChange ? activeMode : localMode;
+    const setMode = onModeChange || setLocalMode;
 
-    const handleBackspace = () => setBuffer(prev => prev.slice(0, -1));
+    const handleDigit = useCallback((d: string) => {
+        setBuffer(prev => {
+            if (d === '.' && prev.includes('.')) return prev;
+            return prev + d;
+        });
+    }, []);
 
-    const handleConfirm = () => {
+    const handleBackspace = useCallback(() => setBuffer(prev => prev.slice(0, -1)), []);
+
+    const handleConfirm = useCallback(() => {
         const val = parseFloat(buffer);
         if (!isNaN(val) && val >= 0) {
             onValueConfirm(val, mode);
             setBuffer('');
         }
-    };
+    }, [buffer, mode, onValueConfirm]);
+
+    // Keyboard Support
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Ignore if typing in an input or textarea
+            if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+                return;
+            }
+
+            if (e.key >= '0' && e.key <= '9') {
+                handleDigit(e.key);
+            } else if (e.key === '.' || e.key === ',') {
+                handleDigit('.');
+            } else if (e.key === 'Backspace') {
+                handleBackspace();
+            } else if (e.key === 'Enter') {
+                handleConfirm();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [handleDigit, handleBackspace, handleConfirm]);
 
     const modeLabels: Record<NumpadMode, string> = {
         qty: 'Qty',

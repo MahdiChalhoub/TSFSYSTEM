@@ -10,7 +10,7 @@ from decimal import Decimal
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view, permission_classes, authentication_classes
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
@@ -20,13 +20,16 @@ from django.db.models import Sum, Count
 from erp.views import TenantModelViewSet
 from .models import (
     ClientPortalConfig, ClientPortalAccess, ClientWallet, WalletTransaction,
-    ClientOrder, ClientOrderLine, ClientTicket, QuoteRequest, QuoteItem
+    ClientOrder, ClientOrderLine, ClientTicket, QuoteRequest, QuoteItem,
+    ProductReview, WishlistItem
 )
+from .services import IntegratedCheckoutService
 from .serializers import (
     ClientPortalAccessSerializer,
     ClientWalletSerializer, WalletTransactionSerializer,
     ClientOrderSerializer, ClientOrderListSerializer, ClientOrderLineSerializer,
     ClientTicketSerializer, QuoteRequestSerializer,
+    ProductReviewSerializer, WishlistItemSerializer,
     ClientDashboardSerializer,
 )
 from .permissions import IsClientUser, HasClientPermission
@@ -155,6 +158,7 @@ class StorefrontPublicConfigView(APIView):
             'wallet_enabled': config.wallet_enabled,
             'tickets_enabled': config.tickets_enabled,
             'require_approval_for_orders': config.require_approval_for_orders,
+            'layout': config.layout,
             'stripe_publishable_key': self._get_stripe_key(org),
         })
 
@@ -597,7 +601,19 @@ class ClientMyOrdersViewSet(viewsets.ModelViewSet):
                     response_data['stripe_client_secret'] = intent['client_secret']
                     response_data['stripe_payment_intent_id'] = intent['payment_intent_id']
             except Exception as e:
-                return Response({'error': f"Stripe integration error: {str(e)}"}, status=400)
+                logger.error(f"Stripe error in place_order: {e}")
+
+        # ── 3. Integrated Checkout Execution ────────────────────────────
+        # Trigger Inventory reduction, Commercial Invoice, and CRM Analytics
+        try:
+            IntegratedCheckoutService.process_checkout(order.id, user=request.user)
+            response_data['status'] = 'confirmed'
+        except ValidationError as e:
+            # If stock reduction or validation fails, rollback occurs in service
+            return Response({'error': str(e)}, status=400)
+        except Exception as e:
+            logger.error(f"Integrated checkout integration failed: {e}")
+            return Response({'error': str(e)}, status=500)
 
         return Response(response_data)
 
@@ -750,12 +766,74 @@ class ClientPortalConfigViewSet(TenantModelViewSet):
                 except Organization.DoesNotExist:
                     pass
         
+        if not org and (request.user.is_staff or request.user.is_superuser):
+            # SaaS Admin fallback: If no explicit tenant context, use the first available org.
+            # This allows Platform Admins to access settings from the SaaS root.
+            org = Organization.objects.first()
+
         if not org:
             return Response({"error": "No organization context found"}, status=400)
 
         config = ClientPortalConfig.get_config(org)
         from .serializers import ClientPortalConfigSerializer
         return Response(ClientPortalConfigSerializer(config).data)
+
+
+class ProductReviewViewSet(viewsets.ModelViewSet):
+    """API for product reviews."""
+    queryset = ProductReview.objects.filter(is_visible=True)
+    serializer_class = ProductReviewSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        product_id = self.request.query_params.get('product')
+        if product_id:
+            qs = qs.filter(product_id=product_id)
+        return qs
+
+    def perform_create(self, serializer):
+        from erp.middleware import get_current_tenant_id
+        from erp.models import Organization
+        
+        tenant_id = get_current_tenant_id()
+        org = Organization.objects.get(id=tenant_id)
+        
+        # Auto-assign contact if user is logged in
+        contact = None
+        if hasattr(self.request.user, 'client_access'):
+            contact = self.request.user.client_access.contact
+        
+        serializer.save(
+            organization=org,
+            contact=contact,
+            name=self.request.user.first_name or self.request.user.email
+        )
+
+class WishlistItemViewSet(viewsets.ModelViewSet):
+    """API for customer wishlist."""
+    serializer_class = WishlistItemSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        if not hasattr(self.request.user, 'client_access'):
+            return WishlistItem.objects.none()
+        return WishlistItem.objects.filter(contact=self.request.user.client_access.contact)
+
+    def perform_create(self, serializer):
+        from erp.middleware import get_current_tenant_id
+        from erp.models import Organization
+        
+        tenant_id = get_current_tenant_id()
+        org = Organization.objects.get(id=tenant_id)
+        
+        if not hasattr(self.request.user, 'client_access'):
+            raise serializers.ValidationError("Only customers with portal access can have a wishlist.")
+        
+        serializer.save(
+            organization=org,
+            contact=self.request.user.client_access.contact
+        )
 
     @action(detail=False, methods=['get'])
     def stats(self, request):

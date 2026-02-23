@@ -26,7 +26,8 @@ export default function MidnightHeader() {
     const storeName = config?.storefront_title || orgName || ''
 
     // Don't show on the main storefront page
-    const isMainPage = pathname === `/tenant/${slug}`
+    // (In Next.js, pathname might be / or /tenant/[slug] depending on middle-ware and environment)
+    const isMainPage = pathname === `/tenant/${slug}` || pathname === '/'
     if (isMainPage) return null
 
     return (
@@ -96,7 +97,7 @@ export default function MidnightHeader() {
                             {user?.name?.charAt(0).toUpperCase() || 'U'}
                         </Link>
                     ) : (
-                        <Link href={`/tenant/${slug}/register`}
+                        <Link href={`/tenant/${slug}/login`}
                             className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-500 transition-all">
                             Sign In
                         </Link>

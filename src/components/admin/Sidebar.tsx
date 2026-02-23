@@ -342,6 +342,7 @@ export const MENU_ITEMS = [
             { title: 'Storefront Settings', path: '/ecommerce/settings', icon: Settings },
             { title: 'Theme Manager', path: '/ecommerce/themes', icon: Layers },
             { title: 'Online Orders', path: '/ecommerce/orders', icon: ShoppingCart },
+            { title: 'Product Reviews', path: '/ecommerce/catalog/reviews', icon: Star },
             { title: 'Product Catalog', path: '/ecommerce/catalog', icon: Tag },
         ]
     },
@@ -457,7 +458,11 @@ export function Sidebar({
     dualViewEnabled?: boolean;
 }) {
     const { sidebarOpen, toggleSidebar, openTab, activeTab, viewScope, setViewScope, canToggleScope, scopeAccess } = useAdmin();
-    const [installedModules, setInstalledModules] = useState<Set<string>>(new Set(['core']));
+    // Initialize with ALL known modules to prevent "flash of SaaS sidebar" on first render.
+    // The useEffect below will correct this to the actual installed set from the backend.
+    // This ensures tenant users see their full menu immediately while data loads.
+    const ALL_KNOWN_MODULES = ['core', 'pos', 'finance', 'inventory', 'crm', 'hr', 'purchases', 'ecommerce'];
+    const [installedModules, setInstalledModules] = useState<Set<string>>(new Set(isSaas ? ['core'] : ALL_KNOWN_MODULES));
     const [dynamicItems, setDynamicItems] = useState<SidebarDynamicItem[]>([]);
 
     useEffect(() => {

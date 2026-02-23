@@ -32,7 +32,15 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ p
 }
 
 async function proxyRequest(req: NextRequest, pathParts: string[]) {
-    const apiPath = pathParts.join('/');
+    // Use pathParts to get the clean structure, but explicitly add the trailing slash
+    // that Django REST Framework expects for POST/PUT/PATCH requests.
+    let apiPath = pathParts.join('/');
+
+    // Always append trailing slash for backend parity if it's missing
+    if (!apiPath.endsWith('/')) {
+        apiPath += '/';
+    }
+
     const searchParams = req.nextUrl.searchParams.toString();
     const targetUrl = `${DJANGO_URL}/api/${apiPath}${searchParams ? `?${searchParams}` : ''}`;
 

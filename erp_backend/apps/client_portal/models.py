@@ -141,6 +141,22 @@ class ClientPortalConfig(TenantModel):
     )
     allow_wallet_payment = models.BooleanField(default=True, help_text='Allow paying with wallet balance')
 
+    INVENTORY_CHECK_MODES = (
+        ('STRICT', 'Strict — Prevent order if stock is insufficient'),
+        ('ALLOW_OVERSALE', 'Allow Oversale — Proceed even if stock is low (goes negative)'),
+        ('DISABLED', 'Disabled — Do not check or reduce stock during checkout'),
+    )
+    inventory_check_mode = models.CharField(
+        max_length=20, choices=INVENTORY_CHECK_MODES, default='STRICT',
+        help_text='Controls how the storefront interacts with Inventory stock levels'
+    )
+
+    # ── Section Engine ────────────────────────────────────────────────────────
+    layout = models.JSONField(
+        default=dict, blank=True,
+        help_text='JSON configuration for the storefront layout/sections'
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -155,7 +171,14 @@ class ClientPortalConfig(TenantModel):
     @classmethod
     def get_config(cls, organization):
         """Get or create config for organization with sensible defaults."""
-        config, _ = cls.objects.get_or_create(organization=organization)
+        # Use .first() to handle cases where multiple records might exist due to legacy data
+        config = cls.objects.filter(organization=organization).first()
+        if not config:
+            try:
+                config = cls.objects.create(organization=organization)
+            except:
+                # Fallback in case of race condition
+                config = cls.objects.filter(organization=organization).first()
         return config
 
     def get_loyalty_value(self, points):
@@ -392,9 +415,9 @@ class ClientOrder(TenantModel):
     currency = models.CharField(max_length=10, default='USD')
     notes = models.TextField(blank=True, default='')
 
-    # Linked POS order (when converted)
-    pos_order = models.ForeignKey('pos.Order', on_delete=models.SET_NULL, null=True, blank=True,
-                                   related_name='client_orders')
+    # Linked Commercial/Financial document
+    invoice = models.ForeignKey('finance.Invoice', on_delete=models.SET_NULL, null=True, blank=True,
+                                 related_name='client_orders')
 
     placed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -592,3 +615,47 @@ class QuoteItem(TenantModel):
 
     def __str__(self):
         return f"{self.product_name} x {self.quantity}"
+
+
+# =============================================================================
+# PRODUCT REVIEWS & FEEDBACK
+# =============================================================================
+
+class ProductReview(TenantModel):
+    """Customer-submitted reviews for products."""
+    product = models.ForeignKey('inventory.Product', on_delete=models.CASCADE, related_name='reviews')
+    contact = models.ForeignKey('crm.Contact', on_delete=models.SET_NULL, null=True, blank=True, related_name='product_reviews')
+    name = models.CharField(max_length=255, help_text="Display name (snapshot if guest/not logged in)")
+    rating = models.IntegerField(default=5, help_text="Rating from 1 to 5 stars")
+    title = models.CharField(max_length=255, blank=True, default='')
+    content = models.TextField()
+    is_verified_purchase = models.BooleanField(default=False)
+    is_visible = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'client_product_review'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Review: {self.product.name} ({self.rating} stars) by {self.name}"
+
+
+# =============================================================================
+# WISHLIST / SAVED ITEMS
+# =============================================================================
+
+class WishlistItem(TenantModel):
+    """Saved products for logged-in clients."""
+    contact = models.ForeignKey('crm.Contact', on_delete=models.CASCADE, related_name='wishlist_items')
+    product = models.ForeignKey('inventory.Product', on_delete=models.CASCADE, related_name='wishlisted_by')
+    variant = models.ForeignKey('inventory.ProductVariant', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'client_wishlist_item'
+        unique_together = ('contact', 'product', 'variant')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Wishlist: {self.contact} -> {self.product.name}"

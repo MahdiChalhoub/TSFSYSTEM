@@ -5,32 +5,8 @@ import { Button } from "@/components/ui/button"
 export function LandingHomePage({ org }: { org: any }) {
     return (
         <div className="min-h-screen bg-white">
-            {/* Minimal Header */}
-            <header className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b border-gray-100">
-                <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        {org.logo ? (
-                            <img src={org.logo} alt={org.name} className="h-8 object-contain" />
-                        ) : (
-                            <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
-                                <Building2 size={20} className="text-white" />
-                            </div>
-                        )}
-                        <span className="font-black text-xl text-gray-900 tracking-tight">{org.name}</span>
-                    </div>
-                    <nav className="hidden md:flex items-center gap-8 font-semibold text-sm text-gray-600">
-                        <a href="#services" className="hover:text-indigo-600 transition-colors">Services</a>
-                        <a href="#about" className="hover:text-indigo-600 transition-colors">About Us</a>
-                        <a href="#contact" className="hover:text-indigo-600 transition-colors">Contact</a>
-                    </nav>
-                    <Button className="rounded-full px-6 font-bold shadow-lg shadow-indigo-200" onClick={() => window.location.href = '/login'}>
-                        Client Portal
-                    </Button>
-                </div>
-            </header>
-
             {/* Hero Section */}
-            <section className="pt-40 pb-20 px-6 max-w-7xl mx-auto text-center">
+            <section className="pt-24 pb-20 px-6 max-w-7xl mx-auto text-center">
                 <Badge className="mb-6 bg-indigo-50 text-indigo-600 border-indigo-100 font-bold uppercase tracking-widest px-4 py-1">
                     Welcome to {org.name}
                 </Badge>

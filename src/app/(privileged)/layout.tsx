@@ -33,19 +33,24 @@ export default async function AdminLayout({
     const hostname = host.split(':')[0].toLowerCase();
     const parts = hostname.split('.');
 
-    let subdomain = "";
     const isIp = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?::[0-9]+)?$/.test(hostname);
+    const rootDomain = (process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost').toLowerCase();
 
-    if (isIp) {
-        subdomain = ""; // IP is always root/saas context
-    } else if (hostname.includes("localhost")) {
-        if (parts.length > 1) subdomain = parts[0];
-    } else {
-        if (parts.length > 2) subdomain = parts[0];
+    // 1. Determine if we are at SaaS Root or a Tenant Workspace
+    // SaaS Root = root domain, www subdomain, saas subdomain, or direct IP access
+    const isSaas =
+        hostname === rootDomain ||
+        hostname === `www.${rootDomain}` ||
+        hostname === `saas.${rootDomain}` ||
+        isIp ||
+        hostname.includes('vercel.app'); // Treat Vercel previews as SaaS root by default
+
+    // 2. Extract Subdomain (Slug)
+    let currentSlug = "saas";
+    if (!isSaas) {
+        // If not SaaS, the first part of the hostname is the tenant slug
+        currentSlug = parts[0];
     }
-
-    const isSaas = !subdomain || subdomain === 'saas' || subdomain === 'www';
-    const currentSlug = subdomain || 'saas'; // Default to saas if at root
 
     // Parallel data fetching
     // 1. Authenticate FIRST (Sequential check to prevent 401 floods)

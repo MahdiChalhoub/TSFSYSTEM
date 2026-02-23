@@ -21,6 +21,8 @@ router.register(r'dashboard', views.ClientDashboardViewSet, basename='client-das
 router.register(r'my-orders', views.ClientMyOrdersViewSet, basename='client-orders')
 router.register(r'my-wallet', views.ClientWalletViewSet, basename='client-wallet')
 router.register(r'my-tickets', views.ClientMyTicketsViewSet, basename='client-tickets')
+router.register(r'reviews', views.ProductReviewViewSet, basename='product-reviews')
+router.register(r'wishlist', views.WishlistItemViewSet, basename='wishlist')
 
 urlpatterns = [
     # Portal auth (public)

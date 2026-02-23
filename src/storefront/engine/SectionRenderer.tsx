@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useMemo } from 'react'
-import type { StorefrontPageLayout, ThemeComponents, Product, Category } from './types'
+import type { StorefrontPageLayout, ThemeComponents, Product, Category, Brand } from './types'
 
 interface SectionRendererProps {
     layout: StorefrontPageLayout
@@ -9,6 +9,7 @@ interface SectionRendererProps {
     sectionsRegistry: Record<string, React.ComponentType<any>>
     products: Product[]
     categories: Category[]
+    brands: Brand[]
 }
 
 /**
@@ -20,7 +21,8 @@ export function SectionRenderer({
     themeComponents,
     sectionsRegistry,
     products,
-    categories
+    categories,
+    brands
 }: SectionRendererProps) {
     if (!layout?.sections) return null
 
@@ -41,6 +43,7 @@ export function SectionRenderer({
                         settings={sectionConfig.settings}
                         products={products}
                         categories={categories}
+                        brands={brands}
                     />
                 )
             })}
