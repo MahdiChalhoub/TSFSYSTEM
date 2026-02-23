@@ -19,9 +19,26 @@ export type FinancialSettingsState = {
     // Auto-Declaration & Protection Strategy (Sales/POS)
     autoDeclarationEnabled?: boolean
     autoDeclareThreshold?: number // Transactions > X are always OFFICIAL
+    autoDeclareThresholdMode?: 'ABOVE' | 'BELOW'
     autoDeclarePercentage?: number // X% of transactions <= Threshold are OFFICIAL
 
-    // Integrity Protection (Prevention of Over-Declaration)
+    // Advanced Rules Engine (Rules of Engagement)
+    declarationRules?: {
+        id: string
+        name: string
+        startTime: string // "HH:mm"
+        endTime: string // "HH:mm"
+        maxTransactionAmount?: number
+        minTransactionAmount?: number
+        limitDailyTurnover?: number // Stop rule if total declared > X
+        allowedMethods?: string[] // ["CASH", "WAVE", "OM"]
+        allowedAccountIds?: number[] // For "WAVE Declared vs WAVE Internal" scenarios
+        forceScope: 'OFFICIAL' | 'INTERNAL'
+    }[]
+
+    // Emergency & Integrity Controls
+    emergencyForceDeclared?: boolean // Panic button: everything becomes OFFICIAL
+    highValueAlertThreshold?: number // Amount > X asks for user confirmation
     autoDeclareDailyLimit?: number // Max daily amount to route to OFFICIAL
     controllableAccountIds?: number[] // Wallets/Banks that MUST be OFFICIAL
     integrityAlertEnabled?: boolean // Alert cashier when daily limit reached

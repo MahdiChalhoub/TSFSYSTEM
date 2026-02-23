@@ -219,6 +219,60 @@ class Product(TenantModel):
         return f"{self.sku} - {self.name}"
 
 
+class ProductAttribute(TenantModel):
+    """e.g. Color, Size, Material"""
+    name = models.CharField(max_length=100)
+    code = models.CharField(max_length=50, null=True, blank=True)
+
+    class Meta:
+        db_table = 'product_attribute'
+        constraints = [
+            models.UniqueConstraint(fields=['name', 'organization'], name='unique_attribute_name_org')
+        ]
+
+    def __str__(self):
+        return self.name
+
+
+class ProductAttributeValue(TenantModel):
+    """e.g. Red, Blue, XL, 500ml"""
+    attribute = models.ForeignKey(ProductAttribute, on_delete=models.CASCADE, related_name='values')
+    value = models.CharField(max_length=100)
+    code = models.CharField(max_length=50, null=True, blank=True)
+
+    class Meta:
+        db_table = 'product_attribute_value'
+        unique_together = ('attribute', 'value', 'organization')
+
+    def __str__(self):
+        return f"{self.attribute.name}: {self.value}"
+
+
+class ProductVariant(TenantModel):
+    """A specific combination of attributes for a parent product."""
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
+    sku = models.CharField(max_length=100)
+    barcode = models.CharField(max_length=100, null=True, blank=True)
+    attribute_values = models.ManyToManyField(ProductAttributeValue, related_name='variants')
+    
+    # Overrides (if null, use parent product values)
+    selling_price_ht = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
+    selling_price_ttc = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
+    image_url = models.CharField(max_length=500, null=True, blank=True)
+    
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'product_variant'
+        constraints = [
+            models.UniqueConstraint(fields=['sku', 'organization'], name='unique_variant_sku_org')
+        ]
+
+    def __str__(self):
+        return f"{self.product.name} ({self.sku})"
+
+
 class ComboComponent(TenantModel):
     """Links a COMBO product to its child products with quantities."""
     combo_product = models.ForeignKey(
@@ -269,6 +323,7 @@ class Warehouse(TenantModel):
 class Inventory(TenantModel):
     warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='inventory')
+    variant = models.ForeignKey(ProductVariant, on_delete=models.SET_NULL, null=True, blank=True, related_name='inventory_stock')
     quantity = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
     expiry_date = models.DateField(null=True, blank=True)
 
@@ -288,7 +343,7 @@ class Inventory(TenantModel):
 
     class Meta:
         db_table = 'inventory'
-        unique_together = ('warehouse', 'product', 'organization')
+        unique_together = ('warehouse', 'product', 'variant', 'organization')
 
 
 class InventoryMovement(TenantModel):

@@ -48,50 +48,53 @@ export default function MidnightCartPage() {
 
             {/* Items */}
             <div className="space-y-4">
-                {cart.map(item => (
-                    <div key={item.product_id} className="bg-slate-900/40 border border-white/5 rounded-2xl p-6 flex items-center gap-6">
-                        {/* Image */}
-                        <div className="w-20 h-20 bg-slate-950 rounded-xl overflow-hidden shrink-0">
-                            {item.image_url ? (
-                                <img src={item.image_url} alt={item.product_name} className="w-full h-full object-cover" />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center">
-                                    <Package size={24} className="text-slate-800" />
-                                </div>
-                            )}
-                        </div>
+                {cart.map(item => {
+                    const itemKey = `${item.product_id}-${item.variant_id || 'base'}`
+                    return (
+                        <div key={itemKey} className="bg-slate-900/40 border border-white/5 rounded-2xl p-6 flex items-center gap-6">
+                            {/* Image */}
+                            <div className="w-20 h-20 bg-slate-950 rounded-xl overflow-hidden shrink-0">
+                                {item.image_url ? (
+                                    <img src={item.image_url} alt={item.product_name} className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center">
+                                        <Package size={24} className="text-slate-800" />
+                                    </div>
+                                )}
+                            </div>
 
-                        {/* Details */}
-                        <div className="flex-1 min-w-0">
-                            <h3 className="text-sm font-bold text-white truncate">{item.product_name}</h3>
-                            <p className="text-xs text-slate-500 mt-1">{formatPrice(item.unit_price)} each</p>
-                        </div>
+                            {/* Details */}
+                            <div className="flex-1 min-w-0">
+                                <h3 className="text-sm font-bold text-white truncate">{item.product_name}</h3>
+                                <p className="text-xs text-slate-500 mt-1">{formatPrice(item.unit_price)} each</p>
+                            </div>
 
-                        {/* Quantity */}
-                        <div className="flex items-center bg-white/5 border border-white/10 rounded-xl">
-                            <button onClick={() => updateQuantity(item.product_id, Math.max(1, item.quantity - 1))}
-                                className="w-9 h-9 flex items-center justify-center text-white hover:bg-white/5 rounded-l-xl transition-colors">
-                                <Minus size={12} />
+                            {/* Quantity */}
+                            <div className="flex items-center bg-white/5 border border-white/10 rounded-xl">
+                                <button onClick={() => updateQuantity(item.product_id, Math.max(1, item.quantity - 1), item.variant_id)}
+                                    className="w-9 h-9 flex items-center justify-center text-white hover:bg-white/5 rounded-l-xl transition-colors">
+                                    <Minus size={12} />
+                                </button>
+                                <span className="w-10 text-center text-white font-bold text-xs">{item.quantity}</span>
+                                <button onClick={() => updateQuantity(item.product_id, item.quantity + 1, item.variant_id)}
+                                    className="w-9 h-9 flex items-center justify-center text-white hover:bg-white/5 rounded-r-xl transition-colors">
+                                    <Plus size={12} />
+                                </button>
+                            </div>
+
+                            {/* Line Total */}
+                            <div className="text-right shrink-0">
+                                <p className="text-sm font-black text-white">{formatPrice(item.unit_price * item.quantity)}</p>
+                            </div>
+
+                            {/* Remove */}
+                            <button onClick={() => removeFromCart(item.product_id, item.variant_id)}
+                                className="w-9 h-9 flex items-center justify-center text-red-400/50 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all">
+                                <Trash2 size={16} />
                             </button>
-                            <span className="w-10 text-center text-white font-bold text-xs">{item.quantity}</span>
-                            <button onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
-                                className="w-9 h-9 flex items-center justify-center text-white hover:bg-white/5 rounded-r-xl transition-colors">
-                                <Plus size={12} />
-                            </button>
                         </div>
-
-                        {/* Line Total */}
-                        <div className="text-right shrink-0">
-                            <p className="text-sm font-black text-white">{formatPrice(item.unit_price * item.quantity)}</p>
-                        </div>
-
-                        {/* Remove */}
-                        <button onClick={() => removeFromCart(item.product_id)}
-                            className="w-9 h-9 flex items-center justify-center text-red-400/50 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all">
-                            <Trash2 size={16} />
-                        </button>
-                    </div>
-                ))}
+                    )
+                })}
             </div>
 
             {/* Summary */}

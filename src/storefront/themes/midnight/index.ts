@@ -6,6 +6,7 @@ import ProductDetail from './ProductDetail'
 import Header from './Header'
 import Footer from './Footer'
 import CartPage from './CartPage'
+import CartDrawer from './CartDrawer'
 import CheckoutPage from './CheckoutPage'
 import LoginPage from './LoginPage'
 import SearchPage from './SearchPage'
@@ -30,6 +31,7 @@ const components = {
     Header,
     Footer,
     CartPage,
+    CartDrawer,
     CheckoutPage,
     LoginPage,
     SearchPage,

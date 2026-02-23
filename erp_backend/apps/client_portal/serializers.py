@@ -91,6 +91,7 @@ class ClientOrderSerializer(serializers.ModelSerializer):
         for line_data in lines_data:
             # Basic validation/mapping for product-based lines
             product_id = line_data.get('product_id')
+            variant_id = line_data.get('variant_id')
             qty = Decimal(str(line_data.get('quantity', 1)))
             price = Decimal(str(line_data.get('unit_price', 0)))
             
@@ -101,7 +102,8 @@ class ClientOrderSerializer(serializers.ModelSerializer):
                 from apps.inventory.models import Product
                 try:
                     product = Product.objects.get(id=product_id)
-                    product_name = product.name
+                    if not line_data.get('product_name'):
+                        product_name = product.name
                     tax_rate = product.tva_rate
                 except Product.DoesNotExist:
                     pass
@@ -110,6 +112,7 @@ class ClientOrderSerializer(serializers.ModelSerializer):
                 organization=order.organization,
                 order=order,
                 product_id=product_id,
+                variant_id=variant_id,
                 product_name=product_name,
                 quantity=qty,
                 unit_price=price,
@@ -182,8 +185,17 @@ class QuoteRequestSerializer(serializers.ModelSerializer):
         read_only_fields = ('quote_number', 'created_at', 'updated_at')
 
     def create(self, validated_data):
-        items_data = validated_data.pop('items', [])
+        items_data = self.initial_data.get('items', [])
         quote_request = QuoteRequest.objects.create(**validated_data)
         for item_data in items_data:
-            QuoteItem.objects.create(quote_request=quote_request, **item_data)
+            # Handle possible nested data if not already cleaned by DRF
+            QuoteItem.objects.create(
+                organization=quote_request.organization,
+                quote_request=quote_request,
+                product_id=item_data.get('product_id') or item_data.get('product'),
+                variant_id=item_data.get('variant_id') or item_data.get('variant'),
+                product_name=item_data.get('product_name', 'Product'),
+                quantity=item_data.get('quantity', 1),
+                notes=item_data.get('notes', '')
+            )
         return quote_request

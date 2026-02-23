@@ -97,7 +97,8 @@ export async function processSale(data: {
     clientId?: number,
     pointsRedeemed?: number,
     storeChangeInWallet?: boolean,
-    cashReceived?: number
+    cashReceived?: number,
+    userConfirmedDeclaration?: boolean // Added for high-value override
 }) {
     try {
         const [context, financialSettings] = await Promise.all([
@@ -107,21 +108,81 @@ export async function processSale(data: {
 
         let effectiveScope = data.scope || 'INTERNAL';
         let protectionWarning = null;
+        let requiresConfirmation = false;
 
-        // --- AUTOMATED INTEGRITY GUARD ---
-        if (financialSettings.dualViewEnabled && financialSettings.autoDeclarationEnabled) {
-            // 1. Check if payment account is "Controllable" (Goverment visible: Bank, Card, Wave)
-            const isControllable = financialSettings.controllableAccountIds?.includes(Number(data.paymentAccountId));
+        // 0. EMERGENCY OVERRIDE (Panic Button)
+        if (financialSettings.emergencyForceDeclared) {
+            effectiveScope = 'OFFICIAL';
+        } else if (financialSettings.dualViewEnabled && financialSettings.autoDeclarationEnabled) {
 
-            // 2. Threshold Check
-            const isAbovethreshold = financialSettings.autoDeclareThreshold && data.totalAmount >= financialSettings.autoDeclareThreshold;
+            // 1. HIGH-VALUE CONFIRMATION GUARD
+            if (financialSettings.highValueAlertThreshold && data.totalAmount >= financialSettings.highValueAlertThreshold) {
+                if (!data.userConfirmedDeclaration) {
+                    return {
+                        success: false,
+                        needsConfirmation: true,
+                        message: `High-value transaction detected ($${data.totalAmount}). Please confirm if this should be DECLARED.`
+                    };
+                }
+            }
 
-            // 3. Strategic Sampling
-            const dice = Math.random() * 100;
-            const shouldSample = financialSettings.autoDeclarePercentage && dice <= financialSettings.autoDeclarePercentage;
+            // 1.5 GLOBAL THRESHOLD OVERRIDE
+            if (financialSettings.autoDeclareThreshold) {
+                const amount = data.totalAmount;
+                const threshold = financialSettings.autoDeclareThreshold;
+                const isMatch = financialSettings.autoDeclareThresholdMode === 'BELOW' ? amount <= threshold : amount >= threshold;
 
-            if (isControllable || isAbovethreshold || shouldSample) {
-                effectiveScope = 'OFFICIAL';
+                if (isMatch) {
+                    effectiveScope = 'OFFICIAL';
+                }
+            }
+
+            // 2. RULES OF ENGAGEMENT (ROE) ENGINE
+            if (financialSettings.declarationRules && financialSettings.declarationRules.length > 0) {
+                const now = new Date();
+                const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+                // Find matching rule (First matching rule wins)
+                const matchingRule = financialSettings.declarationRules.find((rule: any) => {
+                    const timeMatch = currentTime >= rule.startTime && currentTime <= rule.endTime;
+                    if (!timeMatch) return false;
+
+                    const methodMatch = !rule.allowedMethods || rule.allowedMethods.length === 0 || rule.allowedMethods.includes(data.paymentMethod);
+                    if (!methodMatch) return false;
+
+                    const accountMatch = !rule.allowedAccountIds || rule.allowedAccountIds.length === 0 || rule.allowedAccountIds.includes(Number(data.paymentAccountId));
+                    if (!accountMatch) return false;
+
+                    const amountMatch = (!rule.minTransactionAmount || data.totalAmount >= rule.minTransactionAmount) &&
+                        (!rule.maxTransactionAmount || data.totalAmount <= rule.maxTransactionAmount);
+
+                    return amountMatch;
+                });
+
+                if (matchingRule) {
+                    // Check if rule has a turnover limit
+                    if (matchingRule.limitDailyTurnover) {
+                        const { getDeclaredTurnoverToday } = await import('@/app/actions/finance/ledger');
+                        const turnover = await getDeclaredTurnoverToday();
+                        if (turnover < matchingRule.limitDailyTurnover) {
+                            effectiveScope = matchingRule.forceScope;
+                        }
+                    } else {
+                        effectiveScope = matchingRule.forceScope;
+                    }
+                }
+            }
+
+            // 3. LEGACY / FALLBACK: CONTROLLABLE ACCOUNTS GUARD
+            if (effectiveScope === 'INTERNAL') {
+                const isControllable = financialSettings.controllableAccountIds?.includes(Number(data.paymentAccountId));
+                if (isControllable) effectiveScope = 'OFFICIAL';
+
+                // Random Sampling if still Internal
+                if (effectiveScope === 'INTERNAL' && financialSettings.autoDeclarePercentage) {
+                    const dice = Math.random() * 100;
+                    if (dice <= financialSettings.autoDeclarePercentage) effectiveScope = 'OFFICIAL';
+                }
             }
 
             // --- INTEGRITY PROTECTION (DAILY LIMIT) ---
@@ -130,9 +191,10 @@ export async function processSale(data: {
                 const dailyTurnover = await getDeclaredTurnoverToday();
 
                 if (dailyTurnover + data.totalAmount > financialSettings.autoDeclareDailyLimit) {
-                    // Downgrade to INTERNAL to protect the company from over-declaration
                     effectiveScope = 'INTERNAL';
-                    protectionWarning = "Daily Declaration Cap Reached. Transaction routed to Internal for Protection.";
+                    protectionWarning = "Declaration Strategy Halted: Daily Cap Matched. Use alternative payment to protect company integrity.";
+                } else if (dailyTurnover + data.totalAmount > (financialSettings.autoDeclareDailyLimit * 0.9)) {
+                    protectionWarning = "Advisory: Daily Declaration approaching limit. Consider switching to Internal methods.";
                 }
             }
         }

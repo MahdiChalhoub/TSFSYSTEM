@@ -1,7 +1,5 @@
-// ─── Boutique Theme — Component Barrel Export ───────────────────────────────
-// Light, elegant storefront theme with violet/pink color palette.
-
-import type { ThemeComponents } from '../../engine/types'
+import type { ThemeModule } from '../../engine/types'
+import { THEME_CONFIGS } from '../../engine/ThemeConfigs'
 
 import HomePage from './HomePage'
 import ProductCard from './ProductCard'
@@ -14,7 +12,7 @@ import LoginPage from './LoginPage'
 import SearchPage from './SearchPage'
 import CategoriesPage from './CategoriesPage'
 
-const components: ThemeComponents = {
+const components = {
     HomePage,
     ProductCard,
     ProductDetail,
@@ -27,4 +25,10 @@ const components: ThemeComponents = {
     CategoriesPage,
 }
 
-export default components
+const themeModule: ThemeModule = {
+    config: THEME_CONFIGS.boutique,
+    components,
+    sections: {},
+}
+
+export default themeModule

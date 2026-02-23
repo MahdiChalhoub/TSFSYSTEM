@@ -36,12 +36,14 @@ function ThemeShell({ children }: { children: ReactNode }) {
 
     const Header = components.Header
     const Footer = components.Footer
+    const CartDrawer = (components as any).CartDrawer
 
     return (
         <>
             <Header />
             {children}
             <Footer />
+            {CartDrawer && <CartDrawer />}
         </>
     )
 }

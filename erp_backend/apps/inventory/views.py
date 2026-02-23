@@ -49,7 +49,7 @@ from apps.inventory.serializers import (
     StockTransferOrderSerializer, StockTransferLineSerializer,
     OperationalRequestSerializer, OperationalRequestLineSerializer,
     ProductAnalyticsSerializer, ComboComponentSerializer,
-    ProductSerialSerializer, SerialLogSerializer,
+    ProductSerialSerializer, SerialLogSerializer, StorefrontProductSerializer,
 )
 from apps.inventory.services import InventoryService
 from erp.lifecycle_mixin import LifecycleViewSetMixin
@@ -118,19 +118,12 @@ class ProductViewSet(UDLEViewSetMixin, TenantModelViewSet):
             org = Organization.objects.get(slug=slug)
             products = Product.objects.filter(
                 organization=org, status='ACTIVE'
-            ).select_related('brand', 'category', 'unit')[:100]  # pagination cap
+            ).select_related('brand', 'category', 'unit').prefetch_related(
+                'variants__attribute_values__attribute'
+            )[:100]
 
-            data = [{
-                "id": p.id,
-                "name": p.name,
-                "sku": p.sku,
-                "category": p.category.name if p.category else None,
-                "brand": p.brand.name if p.brand else None,
-                "unit": p.unit.code if p.unit else None,
-                "selling_price_ttc": float(p.selling_price_ttc),
-                "is_active": p.is_active,
-            } for p in products]
-            return Response(data)
+            serializer = StorefrontProductSerializer(products, many=True)
+            return Response(serializer.data)
         except Organization.DoesNotExist:
             return Response({"error": "Organization not found"}, status=404)
 

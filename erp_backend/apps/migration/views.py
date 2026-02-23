@@ -66,28 +66,27 @@ class MigrationViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'], url_path='upload')
     def upload(self, request):
-        """Upload a SQL dump file and create a pending migration job via Cloud Storage."""
+        """Upload a SQL dump file and start a migration job."""
         serializer = MigrationUploadSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         uploaded_file = serializer.validated_data['file']
         name = serializer.validated_data.get('name', 'UltimatePOS Migration')
 
-        # Get tenant context
-        org_id = request.headers.get('X-Tenant-Id') or \
-                 getattr(request.user, 'organization_id', None)
+        # Get tenant context from middleware
+        org = getattr(request, 'organization', None)
+        if not org:
+             return Response({'error': 'Organization context required.'}, status=status.HTTP_400_BAD_REQUEST)
         
-        from erp.models import Organization
-        org = Organization.objects.filter(id=org_id).first()
-        org_slug = org.slug if org else 'default'
+        org_id = org.id
+        org_slug = org.slug
 
-        # Upload to Cloud Storage
-        from apps.storage.backends import upload_to_cloud
-        from apps.storage.models import StoredFile, StorageProvider
-        
-        provider = StorageProvider.objects.filter(organization_id=org_id).first()
+        # Get storage provider
+        from apps.storage.models import StorageProvider
+        provider = StorageProvider.get_for_organization(org)
         
         # Use the universal storage logic
+        from apps.storage.backends import upload_to_cloud
         storage_key, bucket, checksum, file_size = upload_to_cloud(
             provider=provider,
             file_obj=uploaded_file,

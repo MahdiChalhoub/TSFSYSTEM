@@ -41,6 +41,7 @@ export interface StorefrontConfig {
 
 export interface CartItem {
     product_id: string
+    variant_id?: string
     product_name: string
     unit_price: number
     quantity: number
@@ -64,6 +65,8 @@ export interface PortalState {
     // Cart (client only)
     cart: CartItem[]
     cartTotal: number
+    isCartOpen: boolean
+    setCartOpen: (open: boolean) => void
 
     // Wishlist
     wishlist: string[]
@@ -75,8 +78,8 @@ export interface PortalState {
     login: (email: string, password: string, slug: string, portalType: 'client' | 'supplier') => Promise<{ success: boolean; error?: string }>
     logout: () => void
     addToCart: (item: CartItem) => void
-    removeFromCart: (productId: string) => void
-    updateCartQuantity: (productId: string, quantity: number) => void
+    removeFromCart: (productId: string, variantId?: string) => void
+    updateCartQuantity: (productId: string, quantity: number, variantId?: string) => void
     clearCart: () => void
     loadConfig: (slug: string) => Promise<void>
 }
@@ -92,6 +95,8 @@ const initialState: PortalState = {
     config: null,
     cart: [],
     cartTotal: 0,
+    isCartOpen: false,
+    setCartOpen: () => { },
     wishlist: [],
     wishlistCount: 0,
     toggleWishlist: () => { },
@@ -150,6 +155,7 @@ export function PortalProvider({ children, slug }: { children: React.ReactNode; 
     const [permissions, setPermissions] = useState<string[]>([])
     const [config, setConfig] = useState<StorefrontConfig | null>(null)
     const [cart, setCart] = useState<CartItem[]>([])
+    const [isCartOpen, setCartOpen] = useState(false)
     const [wishlist, setWishlist] = useState<string[]>([])
 
     // ─── Callbacks (Must be defined BEFORE useEffects that use them) ────────
@@ -221,28 +227,29 @@ export function PortalProvider({ children, slug }: { children: React.ReactNode; 
 
     const addToCart = useCallback((item: CartItem) => {
         setCart(prev => {
-            const existing = prev.find(i => i.product_id === item.product_id)
+            const existing = prev.find(i => i.product_id === item.product_id && i.variant_id === item.variant_id)
             if (existing) {
                 return prev.map(i =>
-                    i.product_id === item.product_id
+                    (i.product_id === item.product_id && i.variant_id === item.variant_id)
                         ? { ...i, quantity: i.quantity + item.quantity }
                         : i
                 )
             }
             return [...prev, item]
         })
+        setCartOpen(true) // Auto-open cart on add
     }, [])
 
-    const removeFromCart = useCallback((productId: string) => {
-        setCart(prev => prev.filter(i => i.product_id !== productId))
+    const removeFromCart = useCallback((productId: string, variantId?: string) => {
+        setCart(prev => prev.filter(i => !(i.product_id === productId && i.variant_id === variantId)))
     }, [])
 
-    const updateCartQuantity = useCallback((productId: string, quantity: number) => {
+    const updateCartQuantity = useCallback((productId: string, quantity: number, variantId?: string) => {
         if (quantity <= 0) {
-            setCart(prev => prev.filter(i => i.product_id !== productId))
+            setCart(prev => prev.filter(i => !(i.product_id === productId && i.variant_id === variantId)))
         } else {
             setCart(prev => prev.map(i =>
-                i.product_id === productId ? { ...i, quantity } : i
+                (i.product_id === productId && i.variant_id === variantId) ? { ...i, quantity } : i
             ))
         }
     }, [])
@@ -320,6 +327,8 @@ export function PortalProvider({ children, slug }: { children: React.ReactNode; 
             config,
             cart,
             cartTotal,
+            isCartOpen,
+            setCartOpen,
             wishlist,
             wishlistCount,
             toggleWishlist,

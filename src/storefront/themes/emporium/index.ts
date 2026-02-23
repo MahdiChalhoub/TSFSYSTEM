@@ -1,3 +1,6 @@
+import type { ThemeModule } from '../../engine/types'
+import { THEME_CONFIGS } from '../../engine/ThemeConfigs'
+
 import HomePage from './HomePage'
 import Header from './Header'
 import Footer from './Footer'
@@ -11,7 +14,7 @@ import CheckoutPage from '../midnight/CheckoutPage'
 import SearchPage from '../midnight/SearchPage'
 import LoginPage from '../midnight/LoginPage'
 
-const EmporiumComponents = {
+const components = {
     HomePage,
     Header,
     Footer,
@@ -24,4 +27,10 @@ const EmporiumComponents = {
     LoginPage,
 }
 
-export default EmporiumComponents
+const themeModule: ThemeModule = {
+    config: THEME_CONFIGS.emporium,
+    components,
+    sections: {},
+}
+
+export default themeModule

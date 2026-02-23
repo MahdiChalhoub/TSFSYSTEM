@@ -11,6 +11,7 @@ import { useAuth } from '../../engine/hooks/useAuth'
 import { useCart } from '../../engine/hooks/useCart'
 import { useConfig } from '../../engine/hooks/useConfig'
 import { useWishlist } from '../../engine/hooks/useWishlist'
+import { usePortal } from '@/context/PortalContext'
 
 export default function MidnightHeader() {
     const { slug } = useParams<{ slug: string }>()
@@ -19,6 +20,7 @@ export default function MidnightHeader() {
     const { cartCount } = useCart()
     const { orgName, orgLogo, storeMode, config } = useConfig()
     const { wishlistCount } = useWishlist()
+    const { setCartOpen } = usePortal()
     const [menuOpen, setMenuOpen] = useState(false)
 
     const storeName = config?.storefront_title || orgName || ''
@@ -78,12 +80,15 @@ export default function MidnightHeader() {
                         </>
                     )}
                     {storeMode !== 'CATALOG_QUOTE' && (
-                        <Link href={`/tenant/${slug}/cart`} className="relative w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
+                        <button
+                            onClick={() => setCartOpen(true)}
+                            className="relative w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+                        >
                             <ShoppingCart size={20} />
                             {cartCount > 0 && (
                                 <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-emerald-500 text-[10px] font-black text-white rounded-full flex items-center justify-center px-1">{cartCount}</span>
                             )}
-                        </Link>
+                        </button>
                     )}
                     {isAuthenticated ? (
                         <Link href={`/tenant/${slug}/account`}
@@ -110,7 +115,12 @@ export default function MidnightHeader() {
                     <Link href={`/tenant/${slug}/categories`} onClick={() => setMenuOpen(false)} className="block px-4 py-3 text-white font-medium rounded-xl hover:bg-white/5 transition-all">Categories</Link>
                     <Link href={`/tenant/${slug}/search`} onClick={() => setMenuOpen(false)} className="block px-4 py-3 text-white font-medium rounded-xl hover:bg-white/5 transition-all">Search</Link>
                     {storeMode !== 'CATALOG_QUOTE' && (
-                        <Link href={`/tenant/${slug}/cart`} onClick={() => setMenuOpen(false)} className="block px-4 py-3 text-white font-medium rounded-xl hover:bg-white/5 transition-all">Cart {cartCount > 0 && `(${cartCount})`}</Link>
+                        <button
+                            onClick={() => { setCartOpen(true); setMenuOpen(false); }}
+                            className="w-full text-left px-4 py-3 text-white font-medium rounded-xl hover:bg-white/5 transition-all flex items-center gap-3"
+                        >
+                            <ShoppingCart size={18} className="text-emerald-400" /> Cart {cartCount > 0 && `(${cartCount})`}
+                        </button>
                     )}
                     {isAuthenticated && (
                         <>

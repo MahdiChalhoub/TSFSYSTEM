@@ -1,11 +1,11 @@
 'use client'
 
 import { useTransition, useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useFieldArray } from 'react-hook-form'
 import { recalculateAccountBalances } from '@/app/actions/finance/ledger'
 import { FinancialSettingsState, updateFinancialSettings } from '@/app/actions/finance/settings'
 import { type Currency } from '@/app/actions/currencies'
-import { ShieldAlert, Target, Lock, GitCompareArrows, X, Pencil, AlertTriangle, Layers, Banknote, Landmark, Wallet, Activity } from 'lucide-react'
+import { ShieldAlert, Target, Lock, GitCompareArrows, X, Pencil, AlertTriangle, Layers, Banknote, Landmark, Wallet, Activity, Plus, Trash2, Clock, ArrowRight, Zap, Ghost } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
@@ -207,8 +207,16 @@ function EditConfirmModal({ onConfirm, onCancel }: { onConfirm: () => void, onCa
 export default function FinancialSettingsForm({ settings, lock, currencies, accounts }: Props) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
-    const { register, handleSubmit, watch, setValue } = useForm<FinancialSettingsState>({
-        defaultValues: settings
+    const { register, handleSubmit, watch, setValue, control } = useForm<FinancialSettingsState>({
+        defaultValues: {
+            ...settings,
+            declarationRules: settings.declarationRules || []
+        }
+    })
+
+    const { fields, append, remove } = useFieldArray({
+        control,
+        name: "declarationRules"
     })
     const [isRecalcPending, startRecalc] = useTransition()
     const [showCompare, setShowCompare] = useState(false)
@@ -494,9 +502,174 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                                     Reduces manual scope toggling during high-speed checkout.
                                 </p>
 
-                                <div className="grid grid-cols-2 gap-4 pt-2">
+                                {/* --- STRATEGIC OVERRIDES --- */}
+                                <div className="mt-4 p-5 bg-rose-50/50 rounded-2xl border border-rose-100 space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="p-1.5 bg-rose-500 rounded-lg text-white shadow-lg shadow-rose-100">
+                                                <Zap size={16} />
+                                            </div>
+                                            <h3 className="text-sm font-black text-rose-900 uppercase tracking-tight">Management Overrides</h3>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-rose-200 shadow-sm">
+                                            <div className="flex flex-col">
+                                                <span className="text-[10px] font-black text-rose-900 uppercase tracking-widest">Panic Mode</span>
+                                                <span className="text-[9px] text-rose-500 font-bold uppercase tracking-tighter">Force ALL Transactions to OFFICIAL</span>
+                                            </div>
+                                            <input
+                                                {...register('emergencyForceDeclared')}
+                                                type="checkbox"
+                                                className="h-5 w-5 text-rose-600 border-rose-300 rounded-lg focus:ring-rose-500 shadow-sm"
+                                            />
+                                        </div>
+                                        <div className="flex flex-col gap-1.5 p-3 bg-white rounded-xl border border-stone-200 shadow-sm">
+                                            <label className="text-[10px] font-black text-stone-900 uppercase tracking-widest block">High-Value Guard ($)</label>
+                                            <input
+                                                {...register('highValueAlertThreshold', { valueAsNumber: true })}
+                                                type="number"
+                                                placeholder="Amount for alert"
+                                                className="w-full px-3 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs font-black text-stone-900 focus:bg-white outline-none transition-all"
+                                            />
+                                            <p className="text-[8px] text-stone-400 italic">User must confirm if amount &gt; X is declared.</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* --- RULES OF ENGAGEMENT --- */}
+                                <div className="mt-4 space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="p-1.5 bg-stone-100 rounded-lg text-stone-600">
+                                                <GitCompareArrows size={16} />
+                                            </div>
+                                            <h3 className="text-sm font-black text-stone-900 uppercase tracking-tight">Rules of Engagement</h3>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => append({ id: Math.random().toString(36).substr(2, 9), name: 'New Strategy', startTime: '08:00', endTime: '17:00', forceScope: 'OFFICIAL' })}
+                                            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100"
+                                        >
+                                            <Plus size={12} /> Add Rule
+                                        </button>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        {fields.length === 0 && (
+                                            <div className="p-8 text-center bg-stone-50 rounded-2xl border-2 border-dashed border-stone-200">
+                                                <Ghost size={32} className="mx-auto text-stone-300 mb-2" />
+                                                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">No active windows defined</p>
+                                            </div>
+                                        )}
+                                        {fields.map((field, index) => (
+                                            <div key={field.id} className="p-4 bg-white rounded-2xl border border-stone-200 shadow-sm space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-3">
+                                                        <Clock size={14} className="text-indigo-500" />
+                                                        <div className="flex items-center border border-stone-100 rounded-lg overflow-hidden bg-stone-50">
+                                                            <input {...register(`declarationRules.${index}.startTime`)} type="time" className="px-2 py-1 text-[10px] font-black bg-transparent outline-none w-20" />
+                                                            <div className="px-1 text-stone-400 font-black"><ArrowRight size={10} /></div>
+                                                            <input {...register(`declarationRules.${index}.endTime`)} type="time" className="px-2 py-1 text-[10px] font-black bg-transparent outline-none w-20" />
+                                                        </div>
+                                                        <input {...register(`declarationRules.${index}.name`)} placeholder="Window Name" className="text-xs font-black text-stone-900 uppercase tracking-tight bg-transparent border-none focus:ring-0 w-32" />
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        <select
+                                                            {...register(`declarationRules.${index}.forceScope`)}
+                                                            className="text-[10px] font-black uppercase bg-stone-100 rounded-lg px-2 py-1 outline-none border-none focus:ring-0"
+                                                        >
+                                                            <option value="OFFICIAL">Official</option>
+                                                            <option value="INTERNAL">Internal</option>
+                                                        </select>
+                                                        <button onClick={() => remove(index)} className="p-1.5 text-stone-300 hover:text-rose-500 transition-all"><Trash2 size={14} /></button>
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-6 bg-stone-50/50 p-4 rounded-xl border border-stone-100">
+                                                    <div className="space-y-2">
+                                                        <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest block">Allowed Payment Methods</label>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {['CASH', 'WAVE', 'OM', 'CARD'].map(method => (
+                                                                <button
+                                                                    key={method}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        const current = watch(`declarationRules.${index}.allowedMethods`) || [];
+                                                                        if (current.includes(method)) {
+                                                                            setValue(`declarationRules.${index}.allowedMethods`, current.filter(m => m !== method));
+                                                                        } else {
+                                                                            setValue(`declarationRules.${index}.allowedMethods`, [...current, method]);
+                                                                        }
+                                                                    }}
+                                                                    className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest transition-all ${(watch(`declarationRules.${index}.allowedMethods`) || []).includes(method)
+                                                                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100'
+                                                                        : 'bg-white text-stone-400 border border-stone-100 hover:border-indigo-100'
+                                                                        }`}
+                                                                >
+                                                                    {method}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest block">Restricted Accounts</label>
+                                                        <div className="max-h-24 overflow-y-auto custom-scrollbar space-y-1.5 p-1">
+                                                            {accounts.filter(a => ['BANK', 'WALLET', 'CASH'].includes(a.type) || a.nature === 'FINANCIAL').map(account => (
+                                                                <label key={account.id} className="flex items-center gap-2 cursor-pointer group">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={(watch(`declarationRules.${index}.allowedAccountIds`) || []).includes(account.id)}
+                                                                        onChange={(e) => {
+                                                                            const current = watch(`declarationRules.${index}.allowedAccountIds`) || [];
+                                                                            if (e.target.checked) {
+                                                                                setValue(`declarationRules.${index}.allowedAccountIds`, [...current, account.id]);
+                                                                            } else {
+                                                                                setValue(`declarationRules.${index}.allowedAccountIds`, current.filter(id => id !== account.id));
+                                                                            }
+                                                                        }}
+                                                                        className="h-3 w-3 text-indigo-600 border-stone-200 rounded transition-all group-hover:border-indigo-300"
+                                                                    />
+                                                                    <span className="text-[9px] font-bold text-stone-500 truncate group-hover:text-indigo-600 transition-all">{account.name}</span>
+                                                                </label>
+                                                            ))}
+                                                        </div>
+                                                        <p className="text-[7px] text-stone-300 uppercase font-black">Leave empty to apply to all accounts</p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-3 gap-3">
+                                                    <div className="space-y-1">
+                                                        <label className="text-[8px] font-black text-stone-400 uppercase tracking-widest block">Tx Min ($)</label>
+                                                        <input {...register(`declarationRules.${index}.minTransactionAmount`, { valueAsNumber: true })} type="number" placeholder="0" className="w-full px-2 py-1.5 bg-stone-50 border border-stone-100 rounded-lg text-xs font-bold" />
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <label className="text-[8px] font-black text-stone-400 uppercase tracking-widest block">Tx Max ($)</label>
+                                                        <input {...register(`declarationRules.${index}.maxTransactionAmount`, { valueAsNumber: true })} type="number" placeholder="Any" className="w-full px-2 py-1.5 bg-stone-50 border border-stone-100 rounded-lg text-xs font-bold" />
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <label className="text-[8px] font-black text-stone-400 uppercase tracking-widest block">Turnover Limit ($)</label>
+                                                        <input {...register(`declarationRules.${index}.limitDailyTurnover`, { valueAsNumber: true })} type="number" placeholder="No limit" className="w-full px-2 py-1.5 bg-stone-50 border border-stone-100 rounded-lg text-xs font-bold" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-stone-100">
                                     <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest block">Force Declared Threshold</label>
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest block">Global Threshold ($)</label>
+                                            <select
+                                                {...register('autoDeclareThresholdMode')}
+                                                className="text-[9px] font-black uppercase text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded border-none outline-none"
+                                            >
+                                                <option value="ABOVE">Declare Above</option>
+                                                <option value="BELOW">Declare Below</option>
+                                            </select>
+                                        </div>
                                         <div className="relative">
                                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 font-bold">$</span>
                                             <input
@@ -506,10 +679,9 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                                                 className="w-full pl-7 pr-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs font-black text-stone-900 focus:bg-white focus:ring-4 focus:ring-emerald-50 focus:border-emerald-200 transition-all outline-none"
                                             />
                                         </div>
-                                        <p className="text-[9px] text-stone-400 italic">Invoices above this amount are ALWAYS Official.</p>
                                     </div>
                                     <div className="space-y-1.5">
-                                        <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest block">Strategic Sample Rate</label>
+                                        <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest block">Sampling Strategy (%)</label>
                                         <div className="relative">
                                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 font-bold">%</span>
                                             <input
@@ -519,7 +691,6 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                                                 className="w-full pl-3 pr-8 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs font-black text-stone-900 focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-200 transition-all outline-none"
                                             />
                                         </div>
-                                        <p className="text-[9px] text-stone-400 italic">Randomly declare X% of small invoices.</p>
                                     </div>
                                 </div>
 
@@ -527,35 +698,34 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                                 <div className="mt-2 pt-4 border-t border-stone-100 space-y-4">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
-                                            <div className="p-1.5 bg-rose-50 rounded-lg text-rose-600">
+                                            <div className="p-1.5 bg-amber-50 rounded-lg text-amber-600">
                                                 <Activity size={16} />
                                             </div>
-                                            <h3 className="text-sm font-black text-rose-900 uppercase tracking-tight italic line-through decoration-rose-200">Integrity Protection</h3>
-                                            <h3 className="text-sm font-black text-stone-900 uppercase tracking-tight ml-[-8px]">Shield Module</h3>
+                                            <h3 className="text-sm font-black text-stone-900 uppercase tracking-tight">Financial Health Shield</h3>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-[9px] font-bold text-stone-400 uppercase tracking-tighter">Active Protection</span>
+                                            <span className="text-[9px] font-bold text-stone-400 uppercase tracking-tighter">Safety Margin Active</span>
                                             <input
                                                 {...register('integrityAlertEnabled')}
                                                 type="checkbox"
-                                                className="h-4 w-4 text-rose-600 border-stone-300 rounded focus:ring-rose-500"
+                                                className="h-4 w-4 text-amber-600 border-stone-300 rounded focus:ring-amber-500"
                                             />
                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-6">
                                         <div className="space-y-1.5">
-                                            <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest block">Daily Declaration Limit</label>
+                                            <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest block">Daily Operation Cap ($)</label>
                                             <div className="relative">
                                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 font-bold">$</span>
                                                 <input
                                                     {...register('autoDeclareDailyLimit', { valueAsNumber: true })}
                                                     type="number"
                                                     placeholder="Global daily cap"
-                                                    className="w-full pl-7 pr-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs font-black text-rose-600 focus:bg-white focus:ring-4 focus:ring-rose-50 focus:border-rose-200 transition-all outline-none shadow-inner"
+                                                    className="w-full pl-7 pr-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs font-black text-amber-600 focus:bg-white focus:ring-4 focus:ring-amber-50 focus:border-amber-200 transition-all outline-none shadow-inner"
                                                 />
                                             </div>
-                                            <p className="text-[9px] text-rose-400/80 italic font-bold leading-tight">Max declared turnover allowed per day before safety downgrade.</p>
+                                            <p className="text-[9px] text-amber-500 font-bold italic leading-tight uppercase tracking-tighter">Strategic downgrade point to avoid over-exposure.</p>
                                         </div>
                                         <div className="space-y-2">
                                             <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest block flex items-center gap-1.5">
@@ -589,7 +759,7 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                                                     <p className="text-[9px] text-slate-400 text-center py-4 italic">No controllable accounts found.</p>
                                                 )}
                                             </div>
-                                            <p className="text-[9px] text-slate-400 italic leading-tight">Select Bank/Card wallets government can track. These always route to Official.</p>
+                                            <p className="text-[9px] text-slate-400 italic leading-tight">Digital channels gov can trace. These always route to Official.</p>
                                         </div>
                                     </div>
                                 </div>
