@@ -14,7 +14,7 @@ export default async function SaasLayout({
     // You must be a system-level Superuser.
     if (!user || !user.is_superuser) {
         console.warn(`[SECURITY] Unauthorized access attempt to SaaS Panel by ${user?.username || 'Guest'}`);
-        redirect('/admin?error=unauthorized_saas_access');
+        redirect('/admin/?error=unauthorized_saas_access');
     }
 
     return (

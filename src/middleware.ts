@@ -92,20 +92,9 @@ export default async function middleware(req: NextRequest) {
     }
 
     // ─── HTTPS ENFORCEMENT (Security) ───
-    // Force HTTPS on ALL non-static routes in production.
-    // Cloudflare sets x-forwarded-proto; if it's "http", redirect to https.
-    // Skip for localhost/dev environments.
-    const proto = req.headers.get('x-forwarded-proto') || 'https';
-    const host = req.headers.get('host') || '';
-    const isLocal = host.includes('localhost') || host.includes('127.0.0.1') || host.includes('0.0.0.0') || host.includes('.local');
-
-    if (proto === 'http' && !isLocal) {
-        const httpsUrl = url.clone();
-        httpsUrl.protocol = 'https:';
-        httpsUrl.hostname = hostname;
-        httpsUrl.port = "";
-        return NextResponse.redirect(httpsUrl, 301);
-    }
+    // Removed: Cloudflare handles "Always Use HTTPS". Doing this here causes
+    // an infinite redirect loop if Cloudflare connects to Nginx over HTTP (Flexible SSL).
+    // The loop: CF connects -> Nginx sets X-Forwarded-Proto: http -> Next.js redirects to https -> CF connects over HTTP -> repeat.
 
     // ─── AUTH REDIRECT (Security) ───
     // Redirect unauthenticated users away from privileged routes.
