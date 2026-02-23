@@ -1,7 +1,8 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { loadTheme, getDefaultThemeId } from './ThemeRegistry'
+import { loadTheme } from './ThemeLoader'
+import { getDefaultThemeId } from './ThemeRegistry'
 import type { ThemeModule, ThemeComponents, ThemeConfig } from './types'
 
 // ─── Context ────────────────────────────────────────────────────────────────

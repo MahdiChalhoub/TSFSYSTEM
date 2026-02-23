@@ -174,7 +174,7 @@ class InventorySessionViewSet(viewsets.ModelViewSet):
 
         from apps.crm.models import Contact
         suppliers = list(
-            Contact.objects.filter(organization=org, is_supplier=True)
+            Contact.objects.filter(organization=org, type='SUPPLIER')
             .values('id', 'company_name')
         )
 
@@ -204,7 +204,8 @@ class InventorySessionViewSet(viewsets.ModelViewSet):
         if category:
             products = products.filter(category__name=category)
         if supplier_id:
-            products = products.filter(supplier_id=supplier_id)
+            # Filter via POSSourcing relation
+            products = products.filter(qualified_suppliers__supplier_id=supplier_id)
 
         if qty_filter == 'zero':
             zero_ids = Inventory.objects.filter(
@@ -322,7 +323,7 @@ class SyncViewSet(viewsets.ViewSet):
         if session.category_filter:
             products = products.filter(category__name=session.category_filter)
         if session.supplier_filter:
-            products = products.filter(supplier=session.supplier_filter)
+            products = products.filter(qualified_suppliers__supplier=session.supplier_filter)
 
         # Apply Qty filters from session
         if session.qty_filter == 'zero':

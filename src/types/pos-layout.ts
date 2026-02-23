@@ -48,6 +48,7 @@ export interface POSLayoutProps {
     lastAddedItemId: number | null;
     searchQuery: string;
     activeCategoryId: number | null;
+    currentParentId: number | null;
     sidebarMode: 'hidden' | 'normal' | 'expanded';
     isFullscreen: boolean;
     paymentMethod: string;
@@ -58,10 +59,15 @@ export interface POSLayoutProps {
     lastOrder: { id: number; ref: string } | null;
     storeChangeInWallet: boolean;
     pointsRedeemed: number;
+    isOnline: boolean;
+    clientSearchQuery: string;
+    deliveryZone: string;
+    deliveryZones: any[];
 
     // Handlers
     onSetSearchQuery: (q: string) => void;
     onSetActiveCategoryId: (id: number | null) => void;
+    onSetCurrentParentId: (id: number | null) => void;
     onSetActiveSessionId: (id: string) => void;
     onSetPaymentMethod: (m: string) => void;
     onSetCashReceived: (v: string) => void;
@@ -73,6 +79,7 @@ export interface POSLayoutProps {
     onSetPointsRedeemed: (v: number) => void;
     onAddToCart: (product: Record<string, any>) => void;
     onUpdateQuantity: (productId: number, delta: number) => void;
+    onUpdatePrice: (productId: number, price: number) => void;
     onClearCart: () => void;
     onCreateNewSession: () => void;
     onRemoveSession: (id: string) => void;
@@ -80,6 +87,10 @@ export interface POSLayoutProps {
     onToggleFullscreen: () => void;
     onCycleSidebarMode: () => void;
     onCharge: () => void;
+    onSync: () => void;
+    onSetIsOnline: (v: boolean) => void;
+    onSetClientSearchQuery: (v: string) => void;
+    onSetDeliveryZone: (v: string) => void;
 
     // Layout switching
     currentLayout: POSLayoutVariant;

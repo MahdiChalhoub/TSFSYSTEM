@@ -3,7 +3,9 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { ShoppingBag, Heart, Minus, Plus, ArrowLeft, Truck, Shield, RotateCcw, Star } from 'lucide-react'
-import { useCart, useConfig, useWishlist } from '../../engine'
+import { useCart } from '../../engine/hooks/useCart'
+import { useConfig } from '../../engine/hooks/useConfig'
+import { useWishlist } from '../../engine/hooks/useWishlist'
 import type { ProductDetailProps } from '../../engine/types'
 
 export default function BoutiqueProductDetail({ product }: ProductDetailProps) {

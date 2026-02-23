@@ -40,7 +40,7 @@ async function fetchUserPermissions(): Promise<string[]> {
             return [];
         }
 
-        const backendUrl = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
+        const backendUrl = process.env.NEXT_PUBLIC_API_BASE || 'http://backend:8000';
         const headers: Record<string, string> = {
             'Authorization': `Token ${token}`,
             'Content-Type': 'application/json',

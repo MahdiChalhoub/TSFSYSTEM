@@ -3,7 +3,8 @@
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, ArrowLeft, Package } from 'lucide-react'
-import { useCart, useConfig } from '../../engine/hooks'
+import { useCart } from '../../engine/hooks/useCart'
+import { useConfig } from '../../engine/hooks/useConfig'
 
 export default function MidnightCartPage() {
     const { slug } = useParams<{ slug: string }>()

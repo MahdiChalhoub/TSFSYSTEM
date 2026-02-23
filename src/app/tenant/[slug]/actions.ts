@@ -36,12 +36,13 @@ export async function validateTenantAccess(slug: string) {
  */
 export async function getPublicProducts(slug: string) {
     try {
-        const djangoUrl = process.env.DJANGO_URL || 'http://127.0.0.1:8000';
+        const djangoUrl = process.env.DJANGO_URL || 'http://backend:8000';
         const res = await fetch(`${djangoUrl}/api/products/storefront/?organization_slug=${slug}`, {
-            next: { revalidate: 300 } // Cache for 5 mins
+            next: { revalidate: 0 } // No cache for testing phase
         });
         if (!res.ok) return [];
-        return await res.json();
+        const data = await res.json();
+        return Array.isArray(data) ? data : (data.results || []);
     } catch (error) {
         // Storefront products are optional — fail silently
         return [];
@@ -53,9 +54,9 @@ export async function getPublicProducts(slug: string) {
  */
 export async function getStorefrontConfig(slug: string) {
     try {
-        const djangoUrl = process.env.DJANGO_URL || 'http://127.0.0.1:8000';
-        const res = await fetch(`${djangoUrl}/api/client-portal/storefront/config/?slug=${slug}`, {
-            next: { revalidate: 300 }
+        const djangoUrl = process.env.DJANGO_URL || 'http://backend:8000';
+        const res = await fetch(`${djangoUrl}/api/client_portal/storefront/config/?slug=${slug}`, {
+            cache: 'no-store'
         });
         if (!res.ok) return null;
         return await res.json();
@@ -69,8 +70,8 @@ export async function getStorefrontConfig(slug: string) {
  */
 export async function clientLogin(slug: string, email: string, password: string) {
     try {
-        const djangoUrl = process.env.DJANGO_URL || 'http://127.0.0.1:8000';
-        const res = await fetch(`${djangoUrl}/api/client-portal/portal-auth/login/`, {
+        const djangoUrl = process.env.DJANGO_URL || 'http://backend:8000';
+        const res = await fetch(`${djangoUrl}/api/client_portal/portal-auth/login/`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password, slug }),
@@ -88,8 +89,8 @@ export async function clientLogin(slug: string, email: string, password: string)
  */
 export async function getMyOrders(token: string) {
     try {
-        const djangoUrl = process.env.DJANGO_URL || 'http://127.0.0.1:8000';
-        const res = await fetch(`${djangoUrl}/api/client-portal/my-orders/`, {
+        const djangoUrl = process.env.DJANGO_URL || 'http://backend:8000';
+        const res = await fetch(`${djangoUrl}/api/client_portal/my-orders/`, {
             headers: { 'Authorization': `Token ${token}` },
             cache: 'no-store',
         });
@@ -106,8 +107,8 @@ export async function getMyOrders(token: string) {
  */
 export async function getMyWallet(token: string) {
     try {
-        const djangoUrl = process.env.DJANGO_URL || 'http://127.0.0.1:8000';
-        const res = await fetch(`${djangoUrl}/api/client-portal/my-wallet/`, {
+        const djangoUrl = process.env.DJANGO_URL || 'http://backend:8000';
+        const res = await fetch(`${djangoUrl}/api/client_portal/my-wallet/`, {
             headers: { 'Authorization': `Token ${token}` },
             cache: 'no-store',
         });
@@ -124,8 +125,8 @@ export async function getMyWallet(token: string) {
  */
 export async function getMyTickets(token: string) {
     try {
-        const djangoUrl = process.env.DJANGO_URL || 'http://127.0.0.1:8000';
-        const res = await fetch(`${djangoUrl}/api/client-portal/my-tickets/`, {
+        const djangoUrl = process.env.DJANGO_URL || 'http://backend:8000';
+        const res = await fetch(`${djangoUrl}/api/client_portal/my-tickets/`, {
             headers: { 'Authorization': `Token ${token}` },
             cache: 'no-store',
         });
@@ -142,8 +143,8 @@ export async function getMyTickets(token: string) {
  */
 export async function createTicket(token: string, payload: { ticket_type: string; subject: string; description: string }) {
     try {
-        const djangoUrl = process.env.DJANGO_URL || 'http://127.0.0.1:8000';
-        const res = await fetch(`${djangoUrl}/api/client-portal/my-tickets/`, {
+        const djangoUrl = process.env.DJANGO_URL || 'http://backend:8000';
+        const res = await fetch(`${djangoUrl}/api/client_portal/my-tickets/`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Token ${token}` },
             body: JSON.stringify(payload),
@@ -163,8 +164,8 @@ export async function createTicket(token: string, payload: { ticket_type: string
  */
 export async function createOrder(token: string, payload: Record<string, any>) {
     try {
-        const djangoUrl = process.env.DJANGO_URL || 'http://127.0.0.1:8000';
-        const res = await fetch(`${djangoUrl}/api/client-portal/my-orders/`, {
+        const djangoUrl = process.env.DJANGO_URL || 'http://backend:8000';
+        const res = await fetch(`${djangoUrl}/api/client_portal/my-orders/`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Token ${token}` },
             body: JSON.stringify(payload),
@@ -184,13 +185,13 @@ export async function createOrder(token: string, payload: Record<string, any>) {
  */
 export async function submitQuoteRequest(slug: string, payload: Record<string, any>, token?: string) {
     try {
-        const djangoUrl = process.env.DJANGO_URL || 'http://127.0.0.1:8000';
+        const djangoUrl = process.env.DJANGO_URL || 'http://backend:8000';
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',
             'X-Tenant-Id': slug,
         };
         if (token) headers['Authorization'] = `Token ${token}`;
-        const res = await fetch(`${djangoUrl}/api/client-portal/quote-requests/`, {
+        const res = await fetch(`${djangoUrl}/api/client_portal/quote-requests/`, {
             method: 'POST',
             headers,
             body: JSON.stringify(payload),
@@ -210,8 +211,8 @@ export async function submitQuoteRequest(slug: string, payload: Record<string, a
  */
 export async function getClientDashboard(token: string) {
     try {
-        const djangoUrl = process.env.DJANGO_URL || 'http://127.0.0.1:8000';
-        const res = await fetch(`${djangoUrl}/api/client-portal/dashboard/`, {
+        const djangoUrl = process.env.DJANGO_URL || 'http://backend:8000';
+        const res = await fetch(`${djangoUrl}/api/client_portal/dashboard/`, {
             headers: { 'Authorization': `Token ${token}` },
             cache: 'no-store',
         });

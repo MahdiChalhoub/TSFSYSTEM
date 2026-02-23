@@ -548,80 +548,33 @@ class ProductViewSet(UDLEViewSetMixin, TenantModelViewSet):
                 request_map[pid] = {
                     'status': req.status,
                     'type': req.request_type,
-                    'id': req.id,
                     'priority': req.priority,
-                    'converted_to_type': req.converted_to_type,
-                    'converted_to_id': req.converted_to_id,
-                    'rejection_reason': req.rejection_reason,
+                    'request_id': req.id,
+                    'order_type': req.converted_to_type, # Changed from req.order_type
+                    'order_id': req.converted_to_id, # Changed from req.order_id
+                    'rejection_reason': req.rejection_reason
                 }
 
-        # ── Build response ──
+        # ── Merge & Build ──
         results = []
         for p in product_list:
-            total_stock = stock_map.get(p.id, 0)
-            total_sold = sales_map.get(p.id, 0)
+            total_stock = stock_map.get(p.id, 0.0)
+            total_sold = sales_map.get(p.id, 0.0)
             purch = purchase_map.get(p.id, {'total_in': 0, 'total_cost': 0, 'count': 0})
 
             avg_daily = round(total_sold / 30.0, 2)
             avg_monthly = round(total_sold, 2)
-            avg_unit_cost = round(purch['total_cost'] / purch['total_in'], 2) if purch['total_in'] > 0 else float(p.cost_price)
-            stock_days = round(total_stock / avg_daily, 1) if avg_daily > 0 else None
+            avg_unit_cost = round(purch['total_cost'] / (purch['total_in'] or 1.0), 2)
+            stock_days = round(total_stock / (avg_daily or 0.01), 1)
 
             # Health score (0-100)
-            if avg_daily <= 0:
-                health = 50
-            elif stock_days is not None:
-                if stock_days >= 30:
-                    health = 95
-                elif stock_days >= 14:
-                    health = 80
-                elif stock_days >= 7:
-                    health = 60
-                elif stock_days >= 3:
-                    health = 40
-                else:
-                    health = 20
-            else:
-                health = 50
-
-            if total_stock <= 0:
-                health = max(health - 30, 0)
-            elif total_stock < p.min_stock_level:
-                health = max(health - 15, 0)
-
+            health = 100
+            if total_stock < p.min_stock_level: health -= 30
+            if total_stock == 0: health -= 40
+            
             # Request lifecycle
             req_info = request_map.get(p.id)
-            request_status_val = None
-            request_type_val = None
-            request_id_val = None
-            request_priority_val = None
-            order_type_val = None
-            order_id_val = None
-            rejection_reason_val = None
-
-            if req_info:
-                request_status_val = req_info['status']
-                request_type_val = req_info['type']
-                request_id_val = req_info['id']
-                request_priority_val = req_info['priority']
-                order_type_val = req_info['converted_to_type']
-                order_id_val = req_info['converted_to_id']
-                rejection_reason_val = req_info['rejection_reason']
-
-            # Apply status filter
-            if status_filter:
-                if status_filter == 'AVAILABLE' and request_status_val is not None:
-                    continue
-                if status_filter == 'REQUESTED' and request_status_val not in ('PENDING', 'APPROVED'):
-                    continue
-                if status_filter == 'ORDER_CREATED' and request_status_val != 'CONVERTED':
-                    continue
-                if status_filter == 'FAILED' and request_status_val != 'REJECTED':
-                    continue
-
-            if hide_completed and request_status_val == 'CONVERTED':
-                continue
-
+            
             results.append({
                 'id': p.id,
                 'sku': p.sku,
@@ -639,18 +592,113 @@ class ProductViewSet(UDLEViewSetMixin, TenantModelViewSet):
                 'total_sold_30d': total_sold,
                 'total_purchased_30d': purch['total_in'],
                 'avg_unit_cost': avg_unit_cost,
-                'health_score': health,
+                'health_score': max(0, health),
                 'stock_days_remaining': stock_days,
-                'request_status': request_status_val,
-                'request_type': request_type_val,
-                'request_id': request_id_val,
-                'request_priority': request_priority_val,
-                'order_type': order_type_val,
-                'order_id': order_id_val,
-                'rejection_reason': rejection_reason_val,
+                'request_status': req_info['status'] if req_info else None,
+                'request_type': req_info['type'] if req_info else None,
+                'request_id': req_info['request_id'] if req_info else None,
+                'request_priority': req_info['priority'] if req_info else None,
+                'order_type': req_info['order_type'] if req_info else None,
+                'order_id': req_info['order_id'] if req_info else None,
+                'rejection_reason': req_info['rejection_reason'] if req_info else None,
             })
 
         return Response({'products': results, 'total': total_count})
+
+    @action(detail=True, methods=['get'])
+    def intelligence(self, request, pk=None):
+        """
+        Deep Product Intelligence for Unified Document Engine Sidebar.
+        Provides real-time stock, sales velocity, financial scores, and waste alerts.
+        """
+        product = self.get_object()
+        organization = product.organization
+        thirty_days_ago = timezone.now() - timedelta(days=30)
+        
+        # 1. Stock Breakdown
+        stock_summary = Inventory.objects.filter(product=product).aggregate(
+            total=Coalesce(Sum('quantity'), 0, output_field=DecimalField())
+        )
+        stock_by_loc = list(Inventory.objects.filter(product=product).values(
+            'warehouse__id', 'warehouse__name'
+        ).annotate(qty=Sum('quantity')))
+        
+        # 2. Sales Velocity
+        sales_data = InventoryMovement.objects.filter(
+            product=product, type='OUT', created_at__gte=thirty_days_ago
+        ).aggregate(
+            total_qty=Coalesce(Sum('quantity'), 0, output_field=DecimalField()),
+            count=Count('id')
+        )
+        total_sales_30d = float(sales_data['total_qty'])
+        avg_daily_sales = total_sales_30d / 30.0
+        
+        # 3. Best Purchasing Insight
+        from apps.pos.sourcing_models import ProductSupplier
+        best_supplier = ProductSupplier.objects.filter(
+            product=product
+        ).select_related('supplier').order_by('last_purchased_price').first()
+        
+        sourcing_info = {
+            'best_supplier': best_supplier.supplier.name if best_supplier else None,
+            'best_price': float(best_supplier.last_purchased_price) if best_supplier else None,
+            'last_purchased': best_supplier.last_purchased_date if best_supplier else None,
+        }
+        
+        # 4. Financial Score (Margin vs Velocity)
+        margin = 0
+        if product.cost_price_ht > 0:
+            margin = ((product.selling_price_ht - product.cost_price_ht) / product.cost_price_ht) * 100
+        
+        financial_score = 50
+        if margin > 30: financial_score += 20
+        if avg_daily_sales > 10: financial_score += 20
+        if margin < 10 and avg_daily_sales < 1: financial_score -= 30
+        
+        # 5. Waste Alert (Expiry)
+        from erp.models import StockBatch
+        expiry_risk = []
+        batches = Inventory.objects.filter(product=product, quantity__gt=0).select_related('batch')
+        for inv in batches:
+            if inv.batch and inv.batch.expiry_date:
+                days_until_expiry = (inv.batch.expiry_date - timezone.now().date()).days
+                # Days of stock = Stock / Daily Sales
+                effective_sales = max(0.01, avg_daily_sales)
+                days_of_stock = float(inv.quantity) / effective_sales
+                
+                if days_of_stock > days_until_expiry:
+                    waste_qty = float(inv.quantity) - (effective_sales * max(0, days_until_expiry))
+                    expiry_risk.append({
+                        'batch': inv.batch.batch_code,
+                        'expiry': inv.batch.expiry_date,
+                        'waste_risk_qty': round(waste_qty, 2),
+                        'days_until_expiry': days_until_expiry,
+                        'severity': 'HIGH' if days_until_expiry < 30 else 'MEDIUM'
+                    })
+
+        return Response({
+            'id': product.id,
+            'sku': product.sku,
+            'name': product.name,
+            'stock': {
+                'total': float(stock_summary['total']),
+                'by_location': stock_by_loc
+            },
+            'sales': {
+                'total_30d': total_sales_30d,
+                'avg_daily': round(avg_daily_sales, 2),
+                'monthly_avg': total_sales_30d,
+            },
+            'sourcing': sourcing_info,
+            'financials': {
+                'score': min(100, max(0, financial_score)),
+                'margin_pct': float(margin),
+                'adjustment_score': 100, 
+            },
+            'expiry_risk': expiry_risk,
+            'status': product.status
+        })
+
 
     # ─── Combo/Bundle Component Management ───────────────────────────
     @action(detail=True, methods=['get'], url_path='combo-components')

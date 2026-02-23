@@ -143,18 +143,20 @@ export function TypicalListView<T, D = any>({
         return columns.filter(c => c.alwaysVisible || visibleColumns.includes(c.key))
     }, [columns, visibleColumns])
 
+    const safeData = Array.isArray(data) ? data : []
+
     // Client-side Sort Logic
     const sortedData = useMemo(() => {
-        if (!sortKey) return data
+        if (!sortKey) return safeData
         const dir = sortDir === 'desc' ? -1 : 1
-        return [...data].sort((a: any, b: any) => {
+        return [...safeData].sort((a: any, b: any) => {
             const valA = a[sortKey]
             const valB = b[sortKey]
             if (valA < valB) return -1 * dir
             if (valA > valB) return 1 * dir
             return 0
         })
-    }, [data, sortKey, sortDir])
+    }, [safeData, sortKey, sortDir])
 
     // Client-side Pagination Logic
     const totalPages = Math.ceil(sortedData.length / pageSize)
@@ -200,7 +202,7 @@ export function TypicalListView<T, D = any>({
                 <div className="flex items-center gap-3">
                     <h2 className="text-xl font-bold text-gray-900 tracking-tight">{title}</h2>
                     <Badge variant="secondary" className="bg-gray-100 text-gray-500 hover:bg-gray-100 font-bold border-none">
-                        {data.length}
+                        {safeData.length}
                     </Badge>
                     {headerExtras}
                     {headerExtra}

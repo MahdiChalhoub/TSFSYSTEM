@@ -597,7 +597,10 @@ export function Sidebar({
                             <LogOut size={18} className="group-hover:text-red-400 transition-colors" />
                             <span className="text-sm font-medium">Sign Out</span>
                         </button>
-                        <div className="text-[9px] font-black text-gray-500 bg-gray-900/80 px-2 py-1 rounded border border-gray-800/50 select-none uppercase tracking-tighter whitespace-nowrap">
+                        <div
+                            title="Versioning Rule: [Standard]-AG-[YYMMDD.HHMM] (Antigravity Agent Build)"
+                            className="text-[9px] font-black text-gray-500 bg-gray-900/80 px-2 py-1 rounded border border-gray-800/50 select-none uppercase tracking-tighter whitespace-nowrap cursor-help transition-all hover:text-emerald-500 hover:border-emerald-500/30"
+                        >
                             Version {PLATFORM_CONFIG.version}
                         </div>
                     </div>

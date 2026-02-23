@@ -46,7 +46,7 @@ export default function ProformasPage() {
     const fetchProformas = () => {
         const token = getToken(slug)
         if (!token) { setLoading(false); return }
-        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://127.0.0.1:8000'
+        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://backend:8000'
         fetch(`${djangoUrl}/api/supplier-portal/my-proformas/`, {
             headers: { 'Authorization': `Token ${token}` },
         })
@@ -74,7 +74,7 @@ export default function ProformasPage() {
         if (!token) return
         setCreating(true)
         setError('')
-        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://127.0.0.1:8000'
+        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://backend:8000'
         try {
             const res = await fetch(`${djangoUrl}/api/supplier-portal/my-proformas/`, {
                 method: 'POST',

@@ -326,9 +326,9 @@ AUTHENTICATION_BACKENDS = [
 AUTH_USER_MODEL = 'erp.User'
 
 # ── Upload Limits ─────────────────────────────────────────────
-DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
-FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
-DATA_UPLOAD_MAX_NUMBER_FIELDS = 1000
+DATA_UPLOAD_MAX_MEMORY_SIZE = 500 * 1024 * 1024  # 500MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 500 * 1024 * 1024  # 500MB
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 5000
 
 import sys
 # Local dev hacks to bypass model clashes and migration history issues

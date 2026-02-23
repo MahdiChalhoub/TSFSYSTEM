@@ -1,6 +1,6 @@
 'use client'
 
-import { useConfig } from '@/storefront/engine/hooks'
+import { useConfig } from '@/storefront/engine/hooks/useConfig'
 import { ShoppingCart, ArrowRight, Star, Zap, Shield, Globe } from 'lucide-react'
 
 /**

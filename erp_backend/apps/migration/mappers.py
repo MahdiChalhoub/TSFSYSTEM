@@ -129,8 +129,8 @@ class ProductMapper:
 
     @staticmethod
     def map_row(row, variation_data=None, brand_mapping=None,
-                category_mapping=None, unit_mapping=None):
-        # Get variation pricing data
+                category_mapping=None, unit_mapping=None, tax_mapping=None):
+        # ...pricing...
         purchase_price = Decimal('0.00')
         sell_price = Decimal('0.00')
         if variation_data:
@@ -154,8 +154,11 @@ class ProductMapper:
         if row.get('unit_id') and unit_mapping:
             unit_id = unit_mapping.get(safe_int(row.get('unit_id')))
 
-        # Build tax rate from the tax_type field
+        # Resolve tax from the 'tax' field (tax_rate_id in UltimatePOS)
         tax_rate = Decimal('0.00')
+        source_tax_id = safe_int(row.get('tax'))
+        if source_tax_id and tax_mapping:
+            tax_rate = tax_mapping.get(source_tax_id, Decimal('0.00'))
 
         result = {
             'sku': safe_str(row.get('sku'), max_length=100),
@@ -507,6 +510,25 @@ class AccountMapper:
             'account_type_id': safe_int(row.get('account_type_id')),
             'note': safe_str(row.get('note')),
             'is_closed': safe_bool(row.get('is_closed')),
+        }
+
+
+class TaxGroupMapper:
+    """Maps UltimatePOS `tax_rates` → TSF `TaxGroup`."""
+
+    @staticmethod
+    def map_row(row):
+        return {
+            'name': safe_str(row.get('name'), max_length=100),
+            'rate': safe_decimal(row.get('amount')),
+            'is_active': True,
+        }
+
+    @staticmethod
+    def extra_data(row):
+        return {
+            'is_tax_group': safe_bool(row.get('is_tax_group')),
+            'created_by': safe_int(row.get('created_by')),
         }
 
 

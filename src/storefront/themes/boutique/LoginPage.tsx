@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useAuth, useConfig } from '../../engine'
+import { useAuth } from '../../engine/hooks/useAuth'
+import { useConfig } from '../../engine/hooks/useConfig'
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
 
 export default function BoutiqueLoginPage() {

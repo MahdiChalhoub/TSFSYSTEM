@@ -945,6 +945,14 @@ class PurchaseOrderViewSet(TenantModelViewSet):
     search_fields = ['po_number', 'supplier_name', 'notes']
     ordering_fields = ['created_at', 'total_amount', 'order_date', 'expected_date']
 
+    @action(detail=False, methods=['get'], url_path='pending-invoice')
+    def pending_invoice(self, request):
+        supplier_id = request.query_params.get('supplier')
+        qs = self.get_queryset().filter(status__in=['APPROVED', 'ORDERED', 'RECEIVED', 'PARTIALLY_RECEIVED', 'IN_TRANSIT'])
+        if supplier_id:
+            qs = qs.filter(supplier_id=supplier_id)
+        return Response(PurchaseOrderSerializer(qs, many=True).data)
+
     def get_queryset(self):
         qs = super().get_queryset()
         po_status = self.request.query_params.get('status')

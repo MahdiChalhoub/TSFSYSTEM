@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Palette, Check, Sparkles, Sun, Moon } from 'lucide-react'
 import { updatePortalConfig } from '@/app/actions/client-portal'
-import { THEME_CONFIGS } from '@/storefront/engine/ThemeRegistry'
+import { THEME_CONFIGS } from '@/storefront/engine/ThemeConfigs'
 
 interface ThemeSelectorProps {
     configId: string

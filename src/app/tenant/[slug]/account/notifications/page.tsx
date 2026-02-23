@@ -48,7 +48,7 @@ export default function NotificationsPage() {
 
     useEffect(() => {
         if (!isAuthenticated || !token) { setLoading(false); return }
-        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://127.0.0.1:8000'
+        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://backend:8000'
         fetch(`${djangoUrl}/api/client-portal/my-notifications/`, {
             headers: { 'Authorization': `Token ${token}` },
         })
@@ -76,7 +76,7 @@ export default function NotificationsPage() {
         )
         // In real implementation, call API
         if (token) {
-            const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://127.0.0.1:8000'
+            const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://backend:8000'
             fetch(`${djangoUrl}/api/client-portal/my-notifications/${id}/read/`, {
                 method: 'POST',
                 headers: { 'Authorization': `Token ${token}` },
@@ -87,7 +87,7 @@ export default function NotificationsPage() {
     const markAllRead = () => {
         setNotifications(prev => prev.map(n => ({ ...n, is_read: true })))
         if (token) {
-            const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://127.0.0.1:8000'
+            const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://backend:8000'
             fetch(`${djangoUrl}/api/client-portal/my-notifications/read-all/`, {
                 method: 'POST',
                 headers: { 'Authorization': `Token ${token}` },

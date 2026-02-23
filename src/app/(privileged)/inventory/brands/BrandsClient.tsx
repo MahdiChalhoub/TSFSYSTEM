@@ -164,12 +164,18 @@ function BrandHierarchy({ brandId }: { brandId: number }) {
     const [data, setData] = useState<any | null>(null)
     const [loading, setLoading] = useState(true)
 
-    useState(() => {
+    useEffect(() => {
+        let mounted = true;
         getBrandHierarchy(brandId).then(res => {
-            setData(res)
-            setLoading(false)
-        })
-    })
+            if (mounted) {
+                setData(res)
+                setLoading(false)
+            }
+        }).catch(() => {
+            if (mounted) setLoading(false);
+        });
+        return () => { mounted = false; };
+    }, [brandId])
 
     if (loading) return (
         <div className="p-12 text-center">
@@ -177,7 +183,10 @@ function BrandHierarchy({ brandId }: { brandId: number }) {
         </div>
     )
 
-    if (!data || (data.groups.length === 0 && data.looseProducts.length === 0)) return (
+    const groups = data?.productGroups || [];
+    const loose = data?.products || [];
+
+    if (!data || (groups.length === 0 && loose.length === 0)) return (
         <div className="p-12 text-center text-gray-400 italic font-medium">
             No product clusters found for this brand hub.
         </div>
@@ -185,7 +194,7 @@ function BrandHierarchy({ brandId }: { brandId: number }) {
 
     return (
         <div className="p-8 space-y-8 bg-gray-50/50">
-            {data.groups.map((group: any) => (
+            {groups.map((group: any) => (
                 <div key={group.id} className="bg-white border border-gray-100 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
                     <div className="px-6 py-4 bg-gray-50/30 border-b border-gray-100 flex justify-between items-center">
                         <div className="flex items-center gap-3">
@@ -194,25 +203,25 @@ function BrandHierarchy({ brandId }: { brandId: number }) {
                             </div>
                             <div>
                                 <h5 className="font-black text-gray-900 leading-tight">{group.name}</h5>
-                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{group.products.length} Variants Available</p>
+                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{group.products?.length || 0} Variants Available</p>
                             </div>
                         </div>
                         <div className="text-right">
                             <span className="block text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">Total Hub Stock</span>
                             <Badge className="bg-emerald-50 text-emerald-700 border-emerald-100 font-mono font-black text-lg px-4 py-1 rounded-xl">
-                                {group.totalStock}
+                                {group.products?.reduce((acc: number, p: any) => acc + (p.stock || 0), 0) || 0}
                             </Badge>
                         </div>
                     </div>
                     <div className="divide-y divide-gray-50">
-                        {group.products.map((p: any) => (
+                        {group.products?.map((p: any) => (
                             <div key={p.id} className="px-6 py-4 flex justify-between items-center hover:bg-gray-50 transition-colors">
                                 <div className="flex items-center gap-4">
                                     <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-[10px] font-black text-gray-400 border border-gray-100">
-                                        {p.countryName?.substring(0, 2) || 'WW'}
+                                        {p.country_name?.substring(0, 2) || 'WW'}
                                     </div>
                                     <div className="flex flex-col">
-                                        <span className="font-bold text-gray-900 text-sm">{p.name} {p.size && `- ${p.size}${p.unitName}`}</span>
+                                        <span className="font-bold text-gray-900 text-sm">{p.name} {p.size && `- ${p.size}${p.unit_name || ''}`}</span>
                                         <span className="text-[10px] text-gray-400 font-mono tracking-tighter">SKU: {p.sku || 'PENDING'}</span>
                                     </div>
                                 </div>
@@ -228,14 +237,14 @@ function BrandHierarchy({ brandId }: { brandId: number }) {
                 </div>
             ))}
 
-            {data.looseProducts.length > 0 && (
+            {loose.length > 0 && (
                 <div className="bg-white border border-dashed border-gray-200 rounded-[2rem] p-6">
                     <div className="flex items-center gap-2 mb-4 px-2">
                         <Package size={16} className="text-gray-400" />
                         <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Ungrouped Assets</span>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {data.looseProducts.map((p: any) => (
+                        {loose.map((p: any) => (
                             <div key={p.id} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 flex justify-between items-center">
                                 <div className="flex flex-col">
                                     <span className="font-bold text-gray-800 text-xs">{p.name}</span>

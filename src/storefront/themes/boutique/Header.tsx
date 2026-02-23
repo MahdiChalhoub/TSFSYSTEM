@@ -2,7 +2,10 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useAuth, useCart, useConfig, useWishlist } from '../../engine'
+import { useAuth } from '../../engine/hooks/useAuth'
+import { useCart } from '../../engine/hooks/useCart'
+import { useConfig } from '../../engine/hooks/useConfig'
+import { useWishlist } from '../../engine/hooks/useWishlist'
 import {
     ShoppingBag, Heart, User, Search, Menu, X,
     LogOut, Package, ChevronDown

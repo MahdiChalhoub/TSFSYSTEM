@@ -6,7 +6,8 @@ export const dynamic = 'force-dynamic';
 async function getBrandsData() {
     try {
         const brands = await erpFetch('brands/');
-        return (brands as any[]) || [];
+        const data = (brands as any);
+        return Array.isArray(data) ? data : data?.results || [];
     } catch {
         return [];
     }
@@ -15,7 +16,8 @@ async function getBrandsData() {
 async function getCountriesData() {
     try {
         const countries = await erpFetch('countries/');
-        return (countries as any[]) || [];
+        const data = (countries as any);
+        return Array.isArray(data) ? data : data?.results || [];
     } catch {
         return [];
     }
@@ -23,8 +25,9 @@ async function getCountriesData() {
 
 async function getCategoriesData() {
     try {
-        const categories = await erpFetch('inventory/categories/');
-        return (categories as any[]) || [];
+        const categories = await erpFetch('inventory/categories/with_counts/');
+        const data = (categories as any);
+        return Array.isArray(data) ? data : data?.results || [];
     } catch {
         return [];
     }

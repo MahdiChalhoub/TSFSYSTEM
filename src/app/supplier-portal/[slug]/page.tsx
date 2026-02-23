@@ -49,7 +49,7 @@ export default function SupplierPortalPage() {
         setError('')
         setLoading(true)
 
-        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://127.0.0.1:8000'
+        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://backend:8000'
         try {
             const res = await fetch(`${djangoUrl}/api/supplier-portal/portal-auth/login/`, {
                 method: 'POST',
@@ -161,7 +161,7 @@ function SupplierDashboard({ session, slug, onLogout }: { session: SupplierSessi
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://127.0.0.1:8000'
+        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://backend:8000'
         fetch(`${djangoUrl}/api/supplier-portal/dashboard/`, {
             headers: { 'Authorization': `Token ${session.token}` },
         })

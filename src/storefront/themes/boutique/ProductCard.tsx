@@ -2,7 +2,9 @@
 
 import Link from 'next/link'
 import { Heart, ShoppingBag, Eye } from 'lucide-react'
-import { useCart, useConfig, useWishlist } from '../../engine'
+import { useCart } from '../../engine/hooks/useCart'
+import { useConfig } from '../../engine/hooks/useConfig'
+import { useWishlist } from '../../engine/hooks/useWishlist'
 import type { ProductCardProps } from '../../engine/types'
 
 export default function BoutiqueProductCard({ product }: ProductCardProps) {

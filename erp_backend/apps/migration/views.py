@@ -123,6 +123,10 @@ class MigrationViewSet(viewsets.ModelViewSet):
         stored_file.linked_id = job.id
         stored_file.save()
 
+        # Trigger background analysis
+        from apps.migration.tasks import analyze_migration_task
+        analyze_migration_task.delay(job.id)
+
         return Response(
             MigrationJobSerializer(job).data,
             status=status.HTTP_201_CREATED
@@ -181,6 +185,10 @@ class MigrationViewSet(viewsets.ModelViewSet):
             created_by=request.user if request.user.is_authenticated else None,
         )
 
+        # Trigger background analysis
+        from apps.migration.tasks import analyze_migration_task
+        analyze_migration_task.delay(job.id)
+
         return Response(
             MigrationJobSerializer(job).data,
             status=status.HTTP_201_CREATED
@@ -188,63 +196,46 @@ class MigrationViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'], url_path='businesses')
     def businesses(self, request, pk=None):
-        """Discover available businesses in the uploaded SQL dump."""
+        """Get discovered businesses from metadata (analyzed in background)."""
         job = self.get_object()
 
-        if job.source_type == 'SQL_DUMP':
-            file_path = self._get_job_file_path(job)
-            parser = SQLDumpParser(file_path=file_path)
-            parser.parse()
-            businesses = parser.get_businesses()
+        if job.discovered_data and 'businesses' in job.discovered_data:
+            return Response({'businesses': job.discovered_data['businesses']})
+        
+        if job.status == 'PARSING':
+            return Response({'status': 'analyzing', 'message': 'Still analyzing source file...'}, 
+                            status=status.HTTP_202_ACCEPTED)
+        
+        if job.status == 'FAILED' and job.error_log:
+             return Response({'status': 'failed', 'error': job.error_log}, 
+                             status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
-            # Also count records per business for context
-            for biz in businesses:
-                biz_id = biz['id']
-                # Use streaming counts
-                counts = parser.get_table_counts(business_id=biz_id)
-                biz['products'] = counts.get('products', 0)
-                biz['contacts'] = counts.get('contacts', 0)
-                biz['transactions'] = counts.get('transactions', 0)
-                biz['locations'] = counts.get('business_locations', 0)
-        else:
-            # For direct DB, query the business table
-            from apps.migration.parsers import DirectDBReader
-            reader = DirectDBReader(
-                host=job.db_host, port=job.db_port or 3306,
-                database=job.db_name, user=job.db_user, password=job.db_password,
-            )
-            reader.connect()
-            businesses_raw = reader.read_table('business')
-            reader.close()
-            businesses = [
-                {'id': b.get('id'), 'name': b.get('name', f"Business #{b.get('id')}")}
-                for b in businesses_raw
-            ]
-
-        return Response({'businesses': businesses})
+        # Fallback: Trigger analysis if missing and not already running
+        from apps.migration.tasks import analyze_migration_task
+        analyze_migration_task.delay(job.id)
+        
+        return Response({'status': 'analyzing', 'message': 'Analysis started...'}, 
+                        status=status.HTTP_202_ACCEPTED)
 
     @action(detail=True, methods=['get'], url_path='preview')
     def preview(self, request, pk=None):
-        """Preview what data will be migrated (table counts), optionally filtered by business_id."""
+        """Preview table counts from background analysis."""
         job = self.get_object()
         business_id = request.query_params.get('business_id') or job.source_business_id
-
-        if job.source_type == 'SQL_DUMP':
-            file_path = self._get_job_file_path(job)
-            parser = SQLDumpParser(file_path=file_path)
-            parser.parse()
-            counts = parser.get_table_counts(business_id=business_id)
-        else:
-            from apps.migration.parsers import DirectDBReader
-            reader = DirectDBReader(
-                host=job.db_host, port=job.db_port or 3306,
-                database=job.db_name, user=job.db_user, password=job.db_password,
-            )
-            reader.connect()
-            counts = reader.get_table_counts()
-            reader.close()
-
-        return Response({'tables': counts})
+        
+        if not job.discovered_data:
+            return Response({'status': 'analyzing', 'message': 'Analysis in progress...'}, 
+                            status=status.HTTP_202_ACCEPTED)
+        
+        # If business_id is specified, find that business's counts
+        if business_id:
+            businesses = job.discovered_data.get('businesses', [])
+            for biz in businesses:
+                if str(biz['id']) == str(business_id):
+                    return Response({'tables': biz.get('counts', {})})
+        
+        # Fallback to global counts
+        return Response({'tables': job.discovered_data.get('global_counts', {})})
 
     @action(detail=True, methods=['post'], url_path='start')
     def start(self, request, pk=None):

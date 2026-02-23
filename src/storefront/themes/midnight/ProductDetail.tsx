@@ -7,7 +7,9 @@ import {
     ArrowLeft, ShoppingCart, FileQuestion, Loader2, CheckCircle2,
     Package, Star, Minus, Plus, Tag, Layers, AlertCircle, Heart
 } from 'lucide-react'
-import { useCart, useConfig, useWishlist } from '../../engine/hooks'
+import { useCart } from '../../engine/hooks/useCart'
+import { useConfig } from '../../engine/hooks/useConfig'
+import { useWishlist } from '../../engine/hooks/useWishlist'
 import type { ProductDetailProps, Product } from '../../engine/types'
 
 export default function MidnightProductDetail({ product }: ProductDetailProps) {

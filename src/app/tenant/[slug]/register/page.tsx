@@ -36,7 +36,7 @@ export default function RegisterPage() {
         }
 
         setLoading(true)
-        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://127.0.0.1:8000'
+        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://backend:8000'
         try {
             const res = await fetch(`${djangoUrl}/api/client-portal/register/`, {
                 method: 'POST',

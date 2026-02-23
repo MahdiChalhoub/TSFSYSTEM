@@ -54,7 +54,7 @@ export default function SupplierNotificationsPage() {
     useEffect(() => {
         const token = getToken(slug)
         if (!token) { setLoading(false); return }
-        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://127.0.0.1:8000'
+        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://backend:8000'
         fetch(`${djangoUrl}/api/supplier-portal/notifications/`, {
             headers: { 'Authorization': `Token ${token}` },
         })
@@ -80,7 +80,7 @@ export default function SupplierNotificationsPage() {
         setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n))
         const token = getToken(slug)
         if (!token) return
-        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://127.0.0.1:8000'
+        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://backend:8000'
         fetch(`${djangoUrl}/api/supplier-portal/notifications/${id}/read/`, {
             method: 'POST',
             headers: { 'Authorization': `Token ${token}` },
@@ -91,7 +91,7 @@ export default function SupplierNotificationsPage() {
         setNotifications(prev => prev.map(n => ({ ...n, is_read: true })))
         const token = getToken(slug)
         if (!token) return
-        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://127.0.0.1:8000'
+        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://backend:8000'
         fetch(`${djangoUrl}/api/supplier-portal/notifications/mark-all-read/`, {
             method: 'POST',
             headers: { 'Authorization': `Token ${token}` },

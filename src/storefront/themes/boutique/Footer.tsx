@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useConfig } from '../../engine'
+import { useConfig } from '../../engine/hooks/useConfig'
 import { Heart } from 'lucide-react'
 
 export default function BoutiqueFooter() {

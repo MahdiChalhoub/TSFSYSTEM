@@ -12,13 +12,15 @@ export async function getPosProducts(options: {
     limit?: number;
     offset?: number;
     categoryId?: number;
+    category?: number;
 } = {}) {
-    const { search = '', limit = 100, offset = 0, categoryId } = options;
+    const { search = '', limit = 100, offset = 0, categoryId, category } = options;
+    const effectiveCategoryId = categoryId || category;
 
     try {
         const queryParams = new URLSearchParams();
         if (search) queryParams.append('query', search);
-        if (categoryId) queryParams.append('category_id', String(categoryId));
+        if (effectiveCategoryId) queryParams.append('category', String(effectiveCategoryId));
         queryParams.append('limit', String(limit));
         queryParams.append('offset', String(offset));
 
@@ -41,7 +43,8 @@ export async function getProductCount(options: { search?: string; categoryId?: n
     try {
         const queryParams = new URLSearchParams();
         if (options.search) queryParams.append('query', options.search);
-        if (options.categoryId) queryParams.append('category_id', String(options.categoryId));
+        const catId = options.categoryId || (options as any).category;
+        if (catId) queryParams.append('category', String(catId));
 
         const res = await erpFetch(`products/count/?${queryParams.toString()}`);
         return res.count || 0;
@@ -59,13 +62,26 @@ export async function clearProductsCache() {
 
 export async function getCategories() {
     try {
-        const data = await erpFetch('inventory/categories/', {
-            next: { revalidate: 0, tags: ['categories'] } // Disable cache to fix missing categories
+        const data = await erpFetch('inventory/categories/with_counts/?limit=500', {
+            next: { revalidate: 0, tags: ['categories'] }
         });
-        console.log(`[DEBUG] getCategories returned ${data?.length} categories.`);
-        return data;
+        const cats = Array.isArray(data) ? data : (data?.results || []);
+        console.log(`[DEBUG] getCategories returned ${cats.length} categories.`);
+        return cats;
     } catch (error) {
         console.error('[getCategories] Error:', error);
+        return [];
+    }
+}
+
+export async function getDeliveryZones() {
+    try {
+        const data = await erpFetch('pos/delivery-zones/', {
+            next: { revalidate: 0, tags: ['delivery-zones'] }
+        });
+        return Array.isArray(data) ? data : (data?.results || []);
+    } catch (error) {
+        console.error('[getDeliveryZones] Error:', error);
         return [];
     }
 }

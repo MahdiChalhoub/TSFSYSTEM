@@ -12,6 +12,18 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import { toast } from 'sonner';
+import Link from 'next/link';
+import { History, Calculator, GripHorizontal } from 'lucide-react';
+import { useRef, useState, useEffect } from 'react';
+import { Numpad as POSNumpad } from '@/components/pos/Numpad';
+import { RefreshCw, Wifi, WifiOff, MapPin } from 'lucide-react';
+
+const formatNumber = (num: number | string) => {
+    const val = Number(num) || 0;
+    const parts = val.toFixed(2).split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    return parts[1] === '00' ? parts[0] : parts.join('.');
+};
 
 /**
  * Layout C: "Compact" — Speed Terminal
@@ -23,17 +35,67 @@ export function POSLayoutCompact(props: POSLayoutProps) {
     const {
         cart, clients, selectedClient, selectedClientId, categories,
         sessions, activeSessionId, currency, total, discount, totalAmount,
-        totalPieces, uniqueItems, searchQuery, activeCategoryId,
+        totalPieces, uniqueItems, searchQuery, activeCategoryId, currentParentId,
         isFullscreen, paymentMethod, cashReceived, isProcessing,
         isOverrideOpen, isReceiptOpen, lastOrder, highlightedItemId, lastAddedItemId,
-        onSetSearchQuery, onSetActiveCategoryId, onSetActiveSessionId,
+        isOnline, clientSearchQuery, deliveryZone, deliveryZones,
+        onSetSearchQuery, onSetActiveCategoryId, onSetCurrentParentId, onSetActiveSessionId,
         onSetPaymentMethod, onSetCashReceived, onSetDiscount, onAddToCart, onUpdateQuantity,
         onClearCart, onCreateNewSession, onRemoveSession, onUpdateActiveSession,
-        onToggleFullscreen, onCharge, onOpenLayoutSelector,
+        onToggleFullscreen, onCharge, onSync, onSetIsOnline,
+        onSetClientSearchQuery, onSetDeliveryZone, onOpenLayoutSelector,
         onSetOverrideOpen, onSetReceiptOpen
     } = props;
     const receivedNum = Number(cashReceived) || 0;
     const changeDue = receivedNum > totalAmount ? receivedNum - totalAmount : 0;
+
+    // Draggable Floating Logic
+    const [showNumpad, setShowNumpad] = useState(false);
+    const [numpadPos, setNumpadPos] = useState({ x: 400, y: 150 });
+
+    // Safety check for window to avoid hydration errors
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            setNumpadPos({ x: window.innerWidth - 350, y: 150 });
+        }
+    }, []);
+    const [isDragging, setIsDragging] = useState(false);
+    const dragOffset = useRef({ x: 0, y: 0 });
+
+    const startDragging = (e: React.MouseEvent) => {
+        setIsDragging(true);
+        dragOffset.current = {
+            x: e.clientX - numpadPos.x,
+            y: e.clientY - numpadPos.y
+        };
+    };
+
+    useEffect(() => {
+        const handleMove = (e: MouseEvent) => {
+            if (!isDragging) return;
+            requestAnimationFrame(() => {
+                setNumpadPos({
+                    x: e.clientX - dragOffset.current.x,
+                    y: e.clientY - dragOffset.current.y
+                });
+            });
+        };
+        const stopDragging = () => setIsDragging(false);
+
+        if (isDragging) {
+            window.addEventListener('mousemove', handleMove);
+            window.addEventListener('mouseup', stopDragging);
+        }
+        return () => {
+            window.removeEventListener('mousemove', handleMove);
+            window.removeEventListener('mouseup', stopDragging);
+        };
+    }, [isDragging]);
+
+    const filteredClients = clients.filter(c =>
+        c.name.toLowerCase().includes(clientSearchQuery.toLowerCase()) ||
+        c.phone.includes(clientSearchQuery)
+    );
 
     return (
         <div className={clsx(
@@ -77,6 +139,26 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                 </div>
 
                 <div className="flex items-center gap-1.5">
+                    <div className="flex bg-[#0f1117] p-0.5 rounded gap-0.5 border border-[#2a2d37]">
+                        <button
+                            onClick={() => onSetIsOnline(!isOnline)}
+                            className={clsx(
+                                "h-6 px-2 rounded text-[8px] font-black flex items-center gap-1 transition-all outline-none font-mono",
+                                isOnline ? "bg-amber-500 text-black shadow-sm" : "bg-rose-500/10 text-rose-500"
+                            )}
+                        >
+                            {isOnline ? <Wifi size={10} /> : <WifiOff size={10} />}
+                            {isOnline ? 'ON' : 'OFF'}
+                        </button>
+                        <button
+                            onClick={onSync}
+                            className="h-6 px-2 rounded text-[8px] font-black text-gray-500 hover:bg-white/5 hover:text-amber-400 transition-all flex items-center gap-1 font-mono"
+                        >
+                            <RefreshCw size={10} className={isProcessing ? "animate-spin" : ""} />
+                            SYNC
+                        </button>
+                    </div>
+
                     <button onClick={onToggleFullscreen} className="bg-amber-500/10 border border-amber-500/20 text-amber-400 h-7 px-2.5 rounded font-bold hover:bg-amber-500 hover:text-black transition-all flex items-center gap-1">
                         {isFullscreen ? <Minimize size={12} /> : <Maximize size={12} />}
                         <span className="text-[8px] uppercase tracking-widest font-black font-mono">{isFullscreen ? 'Exit' : 'Full'}</span>
@@ -85,11 +167,28 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                     <button onClick={onOpenLayoutSelector} className="w-7 h-7 flex items-center justify-center bg-[#1a1d27] border border-[#2a2d37] rounded text-gray-500 hover:text-amber-400 hover:border-amber-500/30 transition-all" title="Switch Layout">
                         <Layout size={13} />
                     </button>
-                    {[FileText, Settings, Wallet, Save, Book, File].map((Icon, i) => (
+                    <Link
+                        href="/sales/history"
+                        className="w-7 h-7 flex items-center justify-center bg-amber-500 text-black rounded hover:bg-amber-400 transition-all shadow-lg shadow-amber-500/10"
+                        title="Registry Stream"
+                    >
+                        <History size={13} />
+                    </Link>
+                    {[Settings, Wallet, Save, Book, File].map((Icon, i) => (
                         <button key={i} className="w-7 h-7 flex items-center justify-center bg-[#1a1d27] border border-[#2a2d37] rounded text-gray-500 hover:text-amber-400 hover:border-amber-500/30 transition-all">
                             <Icon size={13} />
                         </button>
                     ))}
+                    <button
+                        onClick={() => setShowNumpad(!showNumpad)}
+                        className={clsx(
+                            "w-7 h-7 flex items-center justify-center rounded border transition-all",
+                            showNumpad ? "bg-amber-500 text-black border-amber-500" : "bg-[#1a1d27] border-[#2a2d37] text-gray-500 hover:text-amber-400"
+                        )}
+                        title="Floating Speed Calc"
+                    >
+                        <Calculator size={13} />
+                    </button>
                     <button className="w-7 h-7 flex items-center justify-center bg-white/5 text-gray-400 rounded hover:bg-white/10 transition-all ml-0.5">
                         <ArrowLeft size={13} />
                     </button>
@@ -97,27 +196,59 @@ export function POSLayoutCompact(props: POSLayoutProps) {
             </header>
 
             {/* ═══════ CLIENT INFO (Dark) ═══════ */}
-            <div className="h-8 bg-[#15171f] border-b border-[#2a2d37] px-4 flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-3">
-                    <div className="relative group">
-                        <User className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-600" size={10} />
-                        <select
-                            value={selectedClientId}
-                            onChange={(e) => onUpdateActiveSession({ clientId: Number(e.target.value) })}
-                            className="pl-6 pr-4 py-0.5 bg-transparent text-[9px] font-black text-gray-300 appearance-none outline-none cursor-pointer uppercase tracking-widest"
-                        >
-                            {clients.map(c => <option key={c.id} value={c.id} className="bg-[#1a1d27]">{c.name}</option>)}
-                        </select>
-                    </div>
-                    <span className="text-[8px] font-mono text-gray-600">|</span>
-                    <span className="text-[8px] font-mono text-gray-500">{selectedClient.phone}</span>
-                    <span className="text-[8px] font-mono text-gray-600">|</span>
-                    <span className="text-[8px] font-mono text-amber-500/60">BAL: {currency}{selectedClient.balance}</span>
+            <div className="h-10 bg-[#15171f] border-b border-[#2a2d37] px-4 flex items-center gap-3 shrink-0">
+                <div className="flex-1 relative group max-w-xs">
+                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-600" size={10} />
+                    <input
+                        type="text"
+                        placeholder="Find customer..."
+                        value={clientSearchQuery}
+                        onChange={(e) => onSetClientSearchQuery(e.target.value)}
+                        className="w-full pl-6 pr-3 py-1 bg-transparent border border-[#2a2d37] rounded text-[9px] font-black text-gray-300 outline-none focus:border-amber-500/50 transition-all placeholder:text-gray-700"
+                    />
+                    {clientSearchQuery && (
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-[#1a1d27] border border-[#2a2d37] rounded shadow-2xl z-[100] max-h-32 overflow-y-auto custom-scrollbar">
+                            {filteredClients.map(c => (
+                                <button
+                                    key={c.id}
+                                    onClick={() => {
+                                        onUpdateActiveSession({ clientId: c.id });
+                                        onSetClientSearchQuery('');
+                                    }}
+                                    className="w-full text-left px-3 py-1.5 hover:bg-amber-500/10 border-b border-[#2a2d37]/50 flex items-center justify-between group"
+                                >
+                                    <div>
+                                        <p className="text-[9px] font-black text-gray-300 group-hover:text-amber-400">{c.name}</p>
+                                        <p className="text-[8px] text-gray-600 font-mono">{c.phone}</p>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
-                <div className="flex items-center gap-3 text-[8px] font-mono text-gray-600">
-                    <span>{uniqueItems} SKU</span>
-                    <span>·</span>
-                    <span>{totalPieces} PCS</span>
+
+                <div className="w-24 relative group shrink-0">
+                    <MapPin className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-600" size={10} />
+                    <select
+                        value={deliveryZone}
+                        onChange={(e) => onSetDeliveryZone(e.target.value)}
+                        className="w-full pl-6 pr-4 py-1 bg-transparent text-[9px] font-black text-gray-400 appearance-none outline-none cursor-pointer uppercase tracking-widest border border-[#2a2d37] rounded"
+                    >
+                        {deliveryZones.map(z => (
+                            <option key={z.id} value={z.name} className="bg-[#1a1d27]">{z.name}</option>
+                        ))}
+                        {deliveryZones.length === 0 && (
+                            <option value="A" className="bg-[#1a1d27]">Zone A</option>
+                        )}
+                    </select>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <span className="text-[9px] font-black text-gray-200 uppercase tracking-widest truncate max-w-[100px]">{selectedClient.name}</span>
+                    <span className="text-[8px] font-mono text-gray-600">|</span>
+                    <span className="text-[8px] font-mono text-amber-500/60 font-black">BAL: {currency}{formatNumber(selectedClient.balance)}</span>
+                    <span className="text-[8px] font-mono text-gray-600">|</span>
+                    <span className="text-[8px] font-mono text-gray-500 font-bold">{formatNumber(totalPieces)} PCS</span>
                 </div>
             </div>
 
@@ -133,28 +264,70 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                         onChange={(e) => onSetSearchQuery(e.target.value)}
                     />
                 </div>
-                <div className="flex gap-1 overflow-x-auto no-scrollbar shrink-0">
-                    <button
-                        onClick={() => onSetActiveCategoryId(null)}
-                        className={clsx(
-                            "px-3 py-1.5 whitespace-nowrap rounded text-[11px] font-black uppercase tracking-widest transition-all font-mono border",
-                            activeCategoryId === null ? 'bg-amber-500 text-black border-amber-500' : 'bg-[#2a2d37] text-gray-400 border-[#2a2d37] hover:text-amber-400'
-                        )}
-                    >
-                        ALL
-                    </button>
-                    {categories.map(cat => (
-                        <button
-                            key={cat.id}
-                            onClick={() => onSetActiveCategoryId(cat.id)}
-                            className={clsx(
-                                "px-3 py-1.5 whitespace-nowrap rounded text-[11px] font-black uppercase tracking-widest transition-all font-mono border",
-                                activeCategoryId === cat.id ? 'bg-amber-500 text-black border-amber-500' : 'bg-[#2a2d37] text-gray-400 border-[#2a2d37] hover:text-amber-400'
-                            )}
-                        >
-                            {cat.name}
-                        </button>
-                    ))}
+                <div className="flex gap-1 overflow-x-auto no-scrollbar shrink-0 items-center">
+                    {currentParentId === null ? (
+                        <>
+                            <button
+                                onClick={() => {
+                                    onSetActiveCategoryId(null);
+                                    onSetCurrentParentId(null);
+                                }}
+                                className={clsx(
+                                    "px-3 py-1.5 whitespace-nowrap rounded text-[11px] font-black uppercase tracking-widest transition-all font-mono border",
+                                    activeCategoryId === null ? 'bg-amber-500 text-black border-amber-500' : 'bg-[#2a2d37] text-gray-400 border-[#2a2d37] hover:text-amber-400'
+                                )}
+                            >
+                                ALL
+                            </button>
+                            {categories.filter(c => !((c as any).parent || (c as any).parentId || (c as any).parent_id)).map(cat => (
+                                <button
+                                    key={cat.id}
+                                    onClick={() => {
+                                        onSetActiveCategoryId(cat.id);
+                                        onSetCurrentParentId(cat.id);
+                                    }}
+                                    className={clsx(
+                                        "px-3 py-1.5 whitespace-nowrap rounded text-[11px] font-black uppercase tracking-widest transition-all font-mono border",
+                                        (activeCategoryId === cat.id || currentParentId === cat.id) ? 'bg-amber-500 text-black border-amber-500' : 'bg-[#2a2d37] text-gray-400 border-[#2a2d37] hover:text-amber-400'
+                                    )}
+                                >
+                                    {cat.name}
+                                </button>
+                            ))}
+                        </>
+                    ) : (
+                        <>
+                            <button
+                                onClick={() => {
+                                    const parent = categories.find(c => c.id === currentParentId);
+                                    const grandParentId = (parent as any)?.parent || (parent as any)?.parentId || (parent as any)?.parent_id || null;
+                                    onSetCurrentParentId(grandParentId);
+                                    if (grandParentId === null) onSetActiveCategoryId(null);
+                                }}
+                                className="h-7 px-3 bg-amber-500 text-black rounded text-[9px] font-black uppercase tracking-widest hover:bg-amber-400 transition-all flex items-center gap-1 font-mono shrink-0"
+                            >
+                                <ArrowLeft size={12} />
+                                {categories.find(c => c.id === currentParentId)?.name}
+                            </button>
+                            <div className="w-[1px] h-4 bg-[#2a2d37] mx-1 shrink-0" />
+                            {categories.filter(c => ((c as any).parent || (c as any).parentId || (c as any).parent_id) === currentParentId).map(cat => (
+                                <button
+                                    key={cat.id}
+                                    onClick={() => {
+                                        onSetActiveCategoryId(cat.id);
+                                        const hasChildren = categories.some(c => ((c as any).parent || (c as any).parentId || (c as any).parent_id) === cat.id);
+                                        if (hasChildren) onSetCurrentParentId(cat.id);
+                                    }}
+                                    className={clsx(
+                                        "px-3 py-1.5 whitespace-nowrap rounded text-[11px] font-black uppercase tracking-widest transition-all font-mono border",
+                                        activeCategoryId === cat.id ? 'bg-amber-500 text-black border-amber-500' : 'bg-[#2a2d37] text-gray-400 border-[#2a2d37] hover:text-amber-400'
+                                    )}
+                                >
+                                    {cat.name}
+                                </button>
+                            ))}
+                        </>
+                    )}
                 </div>
                 <button className="h-7 px-3 bg-amber-500 text-black rounded text-[8px] font-black uppercase tracking-widest hover:bg-amber-400 transition-all flex items-center gap-1 font-mono shrink-0">
                     <Plus size={12} />
@@ -263,9 +436,9 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                         {/* Totals Row */}
                         <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-4 text-[9px] font-mono">
-                                <span className="text-gray-600">SUB: <span className="text-gray-400 font-bold">{currency}{total.toFixed(2)}</span></span>
+                                <span className="text-gray-600 uppercase tracking-widest font-black">Sub: <span className="text-gray-400 font-black">{currency}{formatNumber(total)}</span></span>
                                 {discount > 0 && (
-                                    <span className="text-amber-600 flex items-center gap-1">
+                                    <span className="text-amber-600 flex items-center gap-1 font-black">
                                         DISC:
                                         {props.onSetDiscountType && (
                                             <div className="flex bg-[#2a2d37] rounded overflow-hidden cursor-pointer" onClick={(e) => {
@@ -276,12 +449,12 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                                                 <span className={clsx("px-1.5 py-px", props.discountType === 'percentage' ? "bg-amber-500 text-black" : "text-amber-600")}>%</span>
                                             </div>
                                         )}
-                                        <span className="font-bold ml-1">-{props.discountType === 'fixed' ? currency : ''}{discount.toFixed(2)}{props.discountType === 'percentage' ? '%' : ''}</span>
+                                        <span className="font-black ml-1">-{props.discountType === 'fixed' ? currency : ''}{formatNumber(discount)}{props.discountType === 'percentage' ? '%' : ''}</span>
                                     </span>
                                 )}
                             </div>
                             <div className="text-right">
-                                <span className="text-lg font-black tabular-nums text-amber-400 font-mono">{currency}{totalAmount.toFixed(2)}</span>
+                                <span className="text-xl font-black tabular-nums text-amber-500 font-mono tracking-tighter">{currency}{formatNumber(totalAmount)}</span>
                             </div>
                         </div>
                         {(selectedClient?.loyalty || 0) > 0 && props.onSetPointsRedeemed && (
@@ -339,10 +512,12 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                                 type="text"
                                 inputMode="numeric"
                                 placeholder="Cash received..."
-                                value={cashReceived ? Number(cashReceived.replace(/\D/g, '')).toLocaleString('fr-FR') : ''}
+                                value={cashReceived ? cashReceived.replace(/\B(?=(\d{3})+(?!\d))/g, " ") : ''}
                                 onChange={(e) => {
-                                    const numVal = e.target.value.replace(/\s+/g, '').replace(/,/g, '.');
-                                    if (/^\d*\.?\d*$/.test(numVal)) onSetCashReceived(numVal);
+                                    const raw = e.target.value.replace(/\s+/g, '').replace(',', '.');
+                                    if (raw === '' || /^\d*\.?\d*$/.test(raw)) {
+                                        onSetCashReceived(raw);
+                                    }
                                 }}
                                 className="flex-1 px-3 py-2 bg-[#0f1117] border border-[#2a2d37] rounded-lg text-sm font-mono font-bold text-gray-200 outline-none focus:border-amber-500/50 placeholder:text-gray-700 text-right tabular-nums"
                             />
@@ -376,11 +551,11 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                             ) : (
                                 <div className="flex flex-col items-center">
                                     <span className="text-sm font-black uppercase tracking-widest font-mono">
-                                        {changeDue > 0 ? "⚡ RETURN CHANGE" : `⚡ CHARGE ${currency}${totalAmount.toFixed(2)}`}
+                                        {changeDue > 0 ? "⚡ RETURN CHANGE" : `⚡ CHARGE ${currency}${formatNumber(totalAmount)}`}
                                     </span>
                                     {changeDue > 0 && (
                                         <span className="text-2xl font-black font-mono mt-1 animate-pulse">
-                                            {currency}{changeDue.toFixed(2)}
+                                            {currency}{formatNumber(changeDue)}
                                         </span>
                                     )}
                                 </div>
@@ -389,6 +564,54 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                     </div>
                 </div>
             </div>
+
+            {/* Floating Speed Calc Overlay */}
+            {showNumpad && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        left: 0,
+                        top: 0,
+                        transform: `translate3d(${numpadPos.x}px, ${numpadPos.y}px, 0)`,
+                        cursor: isDragging ? 'grabbing' : 'default',
+                        willChange: 'transform'
+                    }}
+                    className={clsx(
+                        "z-[50] w-[280px] p-2 bg-[#1a1d27]/95 backdrop-blur-md rounded-2xl border border-amber-500/30 shadow-2xl shadow-black/60 animate-in zoom-in-95 ring-4 ring-amber-500/10",
+                        !isDragging && "transition-transform duration-200 ease-out"
+                    )}
+                >
+                    <div
+                        onMouseDown={startDragging}
+                        className="flex items-center justify-between px-2 mb-2 cursor-grab active:cursor-grabbing hover:bg-white/5 rounded-lg p-1 transition-colors group/handle"
+                    >
+                        <div className="flex items-center gap-1.5">
+                            <GripHorizontal size={14} className="text-amber-500/60 group-hover/handle:text-amber-500 transition-colors" />
+                            <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest font-mono">Speed Calc</span>
+                        </div>
+                        <button onClick={() => setShowNumpad(false)} className="w-6 h-6 flex items-center justify-center rounded-full bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-black transition-all">
+                            <X size={12} />
+                        </button>
+                    </div>
+                    <POSNumpad
+                        onValueConfirm={(val, mode) => {
+                            if (cart.length > 0) {
+                                const target = cart[0];
+                                if (mode === 'qty') {
+                                    const delta = val - target.quantity;
+                                    onUpdateQuantity(target.productId, delta);
+                                } else if (mode === 'price' && (props as any).onUpdatePrice) {
+                                    (props as any).onUpdatePrice(target.productId, val);
+                                } else if (mode === 'disc' && onSetDiscount) {
+                                    onSetDiscount(val);
+                                }
+                            } else {
+                                toast.error("Add an item first");
+                            }
+                        }}
+                    />
+                </div>
+            )}
 
             <ManagerOverride
                 isOpen={isOverrideOpen}

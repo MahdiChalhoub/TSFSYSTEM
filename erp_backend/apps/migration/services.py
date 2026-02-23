@@ -32,12 +32,14 @@ class MigrationService:
     # Migration order (dependencies first)
     MIGRATION_STEPS = [
         ('sites', 'Importing Sites/Locations', 5),
+        ('taxes', 'Importing Tax Rates', 8),
         ('units', 'Importing Units', 10),
         ('categories', 'Importing Categories', 20),
         ('brands', 'Importing Brands', 30),
         ('products', 'Importing Products', 50),
         ('contacts', 'Importing Contacts', 65),
         ('accounts', 'Importing Financial Accounts', 70),
+        ('inventory', 'Importing Opening Stock', 75),
         ('transactions', 'Importing Transactions', 85),
         ('sell_lines', 'Importing Sale Lines', 90),
         ('purchase_lines', 'Importing Purchase Lines', 95),
@@ -50,15 +52,24 @@ class MigrationService:
         self.errors = []
         self.parser = None
         self.id_maps = {
-            'units': {},
-            'categories': {},
-            'brands': {},
-            'products': {},
-            'contacts': {},
-            'transactions': {},
-            'accounts': {},
-            'sites': {},
+            'SITE': {},
+            'UNIT': {},
+            'CATEGORY': {},
+            'BRAND': {},
+            'PRODUCT': {},
+            'CONTACT': {},
+            'TRANSACTION': {},
+            'ACCOUNT': {},
         }
+        self._load_existing_mappings()
+
+    def _load_existing_mappings(self):
+        """Pre-load existing mappings for this job into memory to prevent N+1 DB lookups."""
+        mappings = MigrationMapping.objects.filter(job=self.job)
+        for m in mappings:
+            if m.entity_type in self.id_maps:
+                self.id_maps[m.entity_type][m.source_id] = m.target_id
+        logger.info(f"Pre-loaded {len(mappings)} mappings for job {self.job.id}")
 
     def run(self):
         """Execute the full migration pipeline."""
@@ -131,32 +142,32 @@ class MigrationService:
             logger.info("SQL dump parser initialized (streaming mode)")
 
         elif self.job.source_type == 'DIRECT_DB':
-            # For direct DB, we still load into memory for now as it's usually smaller
-            # or we could implement streaming here too if needed.
-            reader = DirectDBReader(
+            from apps.migration.parsers import DirectDBReader
+            self.db_reader = DirectDBReader(
                 host=self.job.db_host,
                 port=self.job.db_port or 3306,
                 database=self.job.db_name,
                 user=self.job.db_user,
                 password=self.job.db_password,
             )
-            reader.connect()
-            self.tables_data = {}
-            try:
-                for table_name in SQLDumpParser.TABLE_COLUMNS.keys():
-                    try:
-                        self.tables_data[table_name] = reader.read_table(table_name, None)
-                    except Exception as e:
-                        self._log_error(f"Failed to read table {table_name}: {str(e)}")
-            finally:
-                reader.close()
+            self.db_reader.connect()
+            logger.info("Direct DB connection established (streaming mode)")
 
     def _get_rows(self, table_name):
-        """Helper to get rows: either from streaming parser or memory (Direct DB fallback)."""
+        """Helper to get rows: either from streaming parser or Direct DB connection."""
         biz_id = self.job.source_business_id
         if self.parser:
             return self.parser.stream_rows(table_name, business_id=biz_id)
-        return self.tables_data.get(table_name, [])
+        
+        if hasattr(self, 'db_reader'):
+            where = f"business_id = {biz_id}" if biz_id else None
+            # Some tables don't have business_id (e.g. variations linked via products)
+            if table_name in ('variations', 'transaction_sell_lines', 'purchase_lines', 'account_transactions'):
+                where = None # Will filter in logic if needed
+            
+            return self.db_reader.read_table(table_name, where)
+        
+        return []
 
     def _log_error(self, message):
         """Log an error for reporting."""
@@ -169,16 +180,10 @@ class MigrationService:
         In SYNC mode, also checks mappings from ALL previous jobs for the same org,
         so we skip records that were imported in any prior migration.
         """
-        # First check current job
-        try:
-            mapping = MigrationMapping.objects.get(
-                job=self.job,
-                entity_type=entity_type,
-                source_id=source_id,
-            )
-            return mapping.target_id
-        except MigrationMapping.DoesNotExist:
-            pass
+        # Check current job memory cache first
+        cached = self.id_maps.get(entity_type, {}).get(source_id)
+        if cached:
+            return cached
 
         # In SYNC mode, check all previous completed jobs for the same org
         if self.job.migration_mode == 'SYNC':
@@ -190,9 +195,10 @@ class MigrationService:
                     source_id=source_id,
                 ).exclude(job=self.job).first()
                 if previous:
-                    # Record it in current job too for completeness
+                    # Record it in current job too for completeness and caching
                     self._save_mapping(entity_type, source_id, previous.target_id,
                                         source_table, {'synced_from_job': previous.job_id})
+                    self.id_maps.setdefault(entity_type, {})[source_id] = previous.target_id
                     return previous.target_id
             except Exception:
                 pass
@@ -200,7 +206,7 @@ class MigrationService:
         return None
 
     def _save_mapping(self, entity_type, source_id, target_id, source_table, extra_data=None):
-        """Save an old_id → new_id mapping."""
+        """Save an old_id → new_id mapping and update memory cache."""
         MigrationMapping.objects.create(
             job=self.job,
             entity_type=entity_type,
@@ -209,6 +215,7 @@ class MigrationService:
             source_table=source_table,
             extra_data=extra_data,
         )
+        self.id_maps.setdefault(entity_type, {})[source_id] = target_id
 
     # =========================================================================
     # INDIVIDUAL ENTITY MIGRATIONS
@@ -229,17 +236,32 @@ class MigrationService:
             # Check idempotency
             existing = self._get_or_create_mapping('SITE', source_id, 'business_locations')
             if existing:
-                self.id_maps['sites'][source_id] = existing
+                self.id_maps['SITE'][source_id] = existing
+                # Also load corresponding warehouse
+                from apps.inventory.models import Warehouse
+                wh = Warehouse.objects.filter(site_id=existing).first()
+                if wh:
+                    self.id_maps.setdefault('WAREHOUSE', {})[source_id] = wh.id
                 continue
 
             try:
                 mapped = SiteMapper.map_row(row)
+                from apps.inventory.models import Warehouse
                 site = Site.objects.create(
                     organization_id=self.organization_id,
                     name=mapped['name'],
                     code=mapped.get('code', f'LOC-{source_id}'),
                 )
-                self.id_maps['sites'][source_id] = site.id
+                warehouse = Warehouse.objects.create(
+                    organization_id=self.organization_id,
+                    site=site,
+                    name=f"Main Warehouse - {site.name}",
+                    code=f"WH-{site.code}",
+                    is_active=True
+                )
+                self.id_maps['SITE'][source_id] = site.id
+                self.id_maps.setdefault('WAREHOUSE', {})[source_id] = warehouse.id
+                
                 self._save_mapping('SITE', source_id, site.id, 'business_locations',
                                    SiteMapper.extra_data(row))
                 count += 1
@@ -248,6 +270,41 @@ class MigrationService:
 
         self.job.total_inventory = count  # Reuse field
         logger.info(f"Migrated {count} sites")
+
+    def _migrate_taxes(self):
+        """Migrate UltimatePOS tax_rates → TSF TaxGroup."""
+        from apps.finance.models import TaxGroup
+        from apps.migration.mappers import TaxGroupMapper
+
+        rows = self._get_rows('tax_rates')
+        count = 0
+
+        for row in rows:
+            source_id = safe_int(row.get('id'))
+            if not source_id:
+                continue
+
+            existing = self._get_or_create_mapping('TAX_GROUP', source_id, 'tax_rates')
+            if existing:
+                self.id_maps['TAX_GROUP'][source_id] = existing
+                continue
+
+            try:
+                mapped = TaxGroupMapper.map_row(row)
+                tax_group, created = TaxGroup.objects.get_or_create(
+                    organization_id=self.organization_id,
+                    name=mapped['name'],
+                    defaults=mapped
+                )
+                self.id_maps['TAX_GROUP'][source_id] = tax_group.id
+                if created:
+                    self._save_mapping('TAX_GROUP', source_id, tax_group.id, 'tax_rates',
+                                       TaxGroupMapper.extra_data(row))
+                    count += 1
+            except Exception as e:
+                self._log_error(f"Tax rate {source_id}: {str(e)}")
+
+        logger.info(f"Migrated {count} tax rates")
 
     def _migrate_units(self):
         """Migrate units → Unit."""
@@ -267,7 +324,7 @@ class MigrationService:
 
             existing = self._get_or_create_mapping('UNIT', source_id, 'units')
             if existing:
-                self.id_maps['units'][source_id] = existing
+                self.id_maps['UNIT'][source_id] = existing
                 continue
 
             try:
@@ -277,7 +334,7 @@ class MigrationService:
                     code=mapped['code'],
                     defaults=mapped
                 )
-                self.id_maps['units'][source_id] = unit.id
+                self.id_maps['UNIT'][source_id] = unit.id
                 if created:
                     self._save_mapping('UNIT', source_id, unit.id, 'units',
                                        UnitMapper.extra_data(row))
@@ -308,7 +365,7 @@ class MigrationService:
 
             existing = self._get_or_create_mapping('CATEGORY', source_id, 'categories')
             if existing:
-                self.id_maps['categories'][source_id] = existing
+                self.id_maps['CATEGORY'][source_id] = existing
                 continue
 
             try:
@@ -320,7 +377,7 @@ class MigrationService:
                     name=mapped['name'],
                     defaults=mapped
                 )
-                self.id_maps['categories'][source_id] = cat.id
+                self.id_maps['CATEGORY'][source_id] = cat.id
                 if created:
                     self._save_mapping('CATEGORY', source_id, cat.id, 'categories',
                                        CategoryMapper.extra_data(row))
@@ -337,8 +394,8 @@ class MigrationService:
             if not source_id or not parent_source_id or parent_source_id == 0:
                 continue
 
-            target_id = self.id_maps['categories'].get(source_id)
-            parent_target_id = self.id_maps['categories'].get(parent_source_id)
+            target_id = self.id_maps['CATEGORY'].get(source_id)
+            parent_target_id = self.id_maps['CATEGORY'].get(parent_source_id)
 
             if target_id and parent_target_id:
                 try:
@@ -365,7 +422,7 @@ class MigrationService:
 
             existing = self._get_or_create_mapping('BRAND', source_id, 'brands')
             if existing:
-                self.id_maps['brands'][source_id] = existing
+                self.id_maps['BRAND'][source_id] = existing
                 continue
 
             try:
@@ -375,7 +432,7 @@ class MigrationService:
                     name=mapped['name'],
                     defaults=mapped
                 )
-                self.id_maps['brands'][source_id] = brand.id
+                self.id_maps['BRAND'][source_id] = brand.id
                 if created:
                     self._save_mapping('BRAND', source_id, brand.id, 'brands',
                                        BrandMapper.extra_data(row))
@@ -401,6 +458,20 @@ class MigrationService:
                     variations_by_product[pid] = []
                 variations_by_product[pid].append(v)
 
+        # Pre-load tax mapping (source_id -> rate Decimal)
+        tax_rate_mapping = {}
+        try:
+            from apps.finance.models import TaxGroup
+            reverse_tax_map = {v: k for k, v in self.id_maps['TAX_GROUP'].items()}
+            if reverse_tax_map:
+                mapped_taxes = TaxGroup.objects.filter(id__in=reverse_tax_map.keys())
+                for tg in mapped_taxes:
+                    sid = reverse_tax_map.get(tg.id)
+                    if sid:
+                        tax_rate_mapping[sid] = tg.rate / Decimal('100')
+        except Exception as e:
+            logger.error(f"Failed to pre-load tax mappings: {str(e)}")
+
         product_rows = self._get_rows('products')
         count = 0
         for row in product_rows:
@@ -410,7 +481,7 @@ class MigrationService:
 
             existing = self._get_or_create_mapping('PRODUCT', source_id, 'products')
             if existing:
-                self.id_maps['products'][source_id] = existing
+                self.id_maps['PRODUCT'][source_id] = existing
                 continue
 
             try:
@@ -425,9 +496,10 @@ class MigrationService:
                 mapped = ProductMapper.map_row(
                     row,
                     variation_data=default_variation,
-                    brand_mapping=self.id_maps['brands'],
-                    category_mapping=self.id_maps['categories'],
-                    unit_mapping=self.id_maps['units'],
+                    brand_mapping=self.id_maps['BRAND'],
+                    category_mapping=self.id_maps['CATEGORY'],
+                    unit_mapping=self.id_maps['UNIT'],
+                    tax_mapping=tax_rate_mapping,
                 )
 
                 # Build the product
@@ -435,15 +507,14 @@ class MigrationService:
                     'organization_id': self.organization_id,
                     'sku': mapped['sku'],
                     'name': mapped['name'],
-                    'type': mapped.get('type', 'STANDARD'),
-                    'purchase_price_ht': mapped.get('purchase_price_ht', Decimal('0.00')),
-                    'sell_price_ht': mapped.get('sell_price_ht', Decimal('0.00')),
-                    'sell_price_ttc': mapped.get('sell_price_ttc', Decimal('0.00')),
+                    'product_type': mapped.get('type', 'STANDARD'), # Fixed field name: product_type
+                    'selling_price_ht': mapped.get('sell_price_ht', Decimal('0.00')), # Fixed field names
+                    'selling_price_ttc': mapped.get('sell_price_ttc', Decimal('0.00')),
+                    'cost_price_ht': mapped.get('purchase_price_ht', Decimal('0.00')),
                     'description': mapped.get('description'),
-                    'image': mapped.get('image'),
                     'is_active': mapped.get('is_active', True),
-                    'manage_stock': mapped.get('manage_stock', False),
-                    'alert_quantity': mapped.get('alert_quantity', Decimal('0')),
+                    'min_stock_level': int(mapped.get('alert_quantity', 0)), # map alert_quantity
+                    'tva_rate': mapped.get('tax_rate', Decimal('0.00')) * 100, # tva_rate is percentage in model
                 }
 
                 if mapped.get('barcode'):
@@ -454,15 +525,13 @@ class MigrationService:
                     product_kwargs['category_id'] = mapped['category_id']
                 if mapped.get('unit_id'):
                     product_kwargs['unit_id'] = mapped['unit_id']
-                if mapped.get('tax_rate'):
-                    product_kwargs['tax_rate'] = mapped['tax_rate']
 
                 product, created = Product.objects.get_or_create(
                     organization_id=self.organization_id,
                     sku=mapped['sku'],
                     defaults=product_kwargs
                 )
-                self.id_maps['products'][source_id] = product.id
+                self.id_maps['PRODUCT'][source_id] = product.id
                 if created:
                     self._save_mapping('PRODUCT', source_id, product.id, 'products',
                                        ProductMapper.extra_data(row, default_variation))
@@ -491,7 +560,7 @@ class MigrationService:
 
             existing = self._get_or_create_mapping('CONTACT', source_id, 'contacts')
             if existing:
-                self.id_maps['contacts'][source_id] = existing
+                self.id_maps['CONTACT'][source_id] = existing
                 continue
 
             try:
@@ -501,7 +570,7 @@ class MigrationService:
                     organization_id=self.organization_id,
                     **mapped
                 )
-                self.id_maps['contacts'][source_id] = contact.id
+                self.id_maps['CONTACT'][source_id] = contact.id
                 self._save_mapping('CONTACT', source_id, contact.id, 'contacts',
                                    ContactMapper.extra_data(row))
                 count += 1
@@ -539,7 +608,7 @@ class MigrationService:
 
             existing = self._get_or_create_mapping('ACCOUNT', source_id, 'accounts')
             if existing:
-                self.id_maps['accounts'][source_id] = existing
+                self.id_maps['ACCOUNT'][source_id] = existing
                 continue
 
             try:
@@ -549,7 +618,7 @@ class MigrationService:
                     name=mapped['name'],
                     type=mapped.get('type', 'BANK'),
                 )
-                self.id_maps['accounts'][source_id] = account.id
+                self.id_maps['ACCOUNT'][source_id] = account.id
                 self._save_mapping('ACCOUNT', source_id, account.id, 'accounts',
                                    AccountMapper.extra_data(row))
                 count += 1
@@ -558,6 +627,40 @@ class MigrationService:
 
         self.job.total_accounts = count
         logger.info(f"Migrated {count} accounts")
+
+    def _migrate_inventory(self):
+        """Migrate UltimatePOS variation_location_details → TSF Inventory."""
+        from apps.inventory.models import Inventory
+        
+        rows = self._get_rows('variation_location_details')
+        count = 0
+        
+        for row in rows:
+            source_pid = safe_int(row.get('product_id'))
+            source_loc_id = safe_int(row.get('location_id'))
+            qty = safe_decimal(row.get('qty_available'))
+            
+            if qty <= 0:
+                continue
+                
+            target_product_id = self.id_maps['PRODUCT'].get(source_pid)
+            target_warehouse_id = self.id_maps.get('WAREHOUSE', {}).get(source_loc_id)
+            
+            if not target_product_id or not target_warehouse_id:
+                continue
+                
+            try:
+                Inventory.objects.update_or_create(
+                    organization_id=self.organization_id,
+                    product_id=target_product_id,
+                    warehouse_id=target_warehouse_id,
+                    defaults={'quantity': qty}
+                )
+                count += 1
+            except Exception as e:
+                self._log_error(f"Inventory {source_pid}/{source_loc_id}: {str(e)}")
+                
+        logger.info(f"Migrated {count} inventory records")
 
     def _migrate_transactions(self):
         """Migrate transactions → Order."""
@@ -573,14 +676,14 @@ class MigrationService:
 
             existing = self._get_or_create_mapping('TRANSACTION', source_id, 'transactions')
             if existing:
-                self.id_maps['transactions'][source_id] = existing
+                self.id_maps['TRANSACTION'][source_id] = existing
                 continue
 
             try:
                 mapped = TransactionMapper.map_row(
                     row,
-                    contact_mapping=self.id_maps['contacts'],
-                    site_mapping=self.id_maps['sites'],
+                    contact_mapping=self.id_maps['CONTACT'],
+                    site_mapping=self.id_maps['SITE'],
                 )
 
                 if mapped is None:
@@ -609,7 +712,7 @@ class MigrationService:
                 # Bypass immutability guards for migration
                 super(Order, order).save()
 
-                self.id_maps['transactions'][source_id] = order.id
+                self.id_maps['TRANSACTION'][source_id] = order.id
                 self._save_mapping('TRANSACTION', source_id, order.id, 'transactions',
                                    TransactionMapper.extra_data(row))
                 count += 1
@@ -620,10 +723,12 @@ class MigrationService:
         logger.info(f"Migrated {count} transactions")
 
     def _migrate_sell_lines(self):
-        """Migrate transaction_sell_lines → OrderLine."""
+        """Migrate transaction_sell_lines → OrderLine with bulk optimization."""
         from apps.pos.models import OrderLine
 
         rows = self._get_rows('transaction_sell_lines')
+        batch = []
+        row_data_batch = []
         count = 0
 
         for row in rows:
@@ -631,36 +736,42 @@ class MigrationService:
             if not source_id:
                 continue
 
-            existing = self._get_or_create_mapping('ORDER_LINE', source_id, 'transaction_sell_lines')
-            if existing:
+            if self._get_or_create_mapping('ORDER_LINE', source_id, 'transaction_sell_lines'):
                 continue
 
             try:
                 mapped = SellLineMapper.map_row(
                     row,
-                    order_mapping=self.id_maps['transactions'],
-                    product_mapping=self.id_maps['products'],
+                    order_mapping=self.id_maps['TRANSACTION'],
+                    product_mapping=self.id_maps['PRODUCT'],
                 )
                 if mapped is None:
                     continue
 
-                line = OrderLine.objects.create(
-                    organization_id=self.organization_id,
-                    **mapped
-                )
-                self._save_mapping('ORDER_LINE', source_id, line.id,
-                                   'transaction_sell_lines', SellLineMapper.extra_data(row))
-                count += 1
+                batch.append(OrderLine(organization_id=self.organization_id, **mapped))
+                row_data_batch.append((source_id, row))
+
+                if len(batch) >= 1000:
+                    self._bulk_save_lines(batch, row_data_batch, 'transaction_sell_lines')
+                    count += len(batch)
+                    batch = []
+                    row_data_batch = []
             except Exception as e:
                 self._log_error(f"Sell line {source_id}: {str(e)}")
 
-        logger.info(f"Migrated {count} sell lines")
+        if batch:
+            self._bulk_save_lines(batch, row_data_batch, 'transaction_sell_lines')
+            count += len(batch)
+
+        logger.info(f"Migrated {count} sell lines (bulk)")
 
     def _migrate_purchase_lines(self):
-        """Migrate purchase_lines → OrderLine."""
+        """Migrate purchase_lines → OrderLine with bulk optimization."""
         from apps.pos.models import OrderLine
 
         rows = self._get_rows('purchase_lines')
+        batch = []
+        row_data_batch = []
         count = 0
 
         for row in rows:
@@ -669,51 +780,87 @@ class MigrationService:
                 continue
 
             # Use negative ID to distinguish from sell lines
-            existing = self._get_or_create_mapping('ORDER_LINE', -source_id, 'purchase_lines')
-            if existing:
+            if self._get_or_create_mapping('ORDER_LINE', -source_id, 'purchase_lines'):
                 continue
 
             try:
                 mapped = PurchaseLineMapper.map_row(
                     row,
-                    order_mapping=self.id_maps['transactions'],
-                    product_mapping=self.id_maps['products'],
+                    order_mapping=self.id_maps['TRANSACTION'],
+                    product_mapping=self.id_maps['PRODUCT'],
                 )
                 if mapped is None:
                     continue
 
-                # Handle expiry_date
+                # Temp storage for expiry_date as it needs manual update if field isn't in bulk_create
                 expiry_date = mapped.pop('expiry_date', None)
-
-                line = OrderLine.objects.create(
-                    organization_id=self.organization_id,
-                    **mapped
-                )
+                
+                line_obj = OrderLine(organization_id=self.organization_id, **mapped)
                 if expiry_date:
-                    try:
-                        OrderLine.objects.filter(id=line.id).update(expiry_date=expiry_date)
-                    except Exception:
-                        pass
+                    line_obj.expiry_date = expiry_date
+                
+                batch.append(line_obj)
+                row_data_batch.append((-source_id, row))
 
-                self._save_mapping('ORDER_LINE', -source_id, line.id,
-                                   'purchase_lines', PurchaseLineMapper.extra_data(row))
-                count += 1
+                if len(batch) >= 1000:
+                    self._bulk_save_lines(batch, row_data_batch, 'purchase_lines')
+                    count += len(batch)
+                    batch = []
+                    row_data_batch = []
             except Exception as e:
                 self._log_error(f"Purchase line {source_id}: {str(e)}")
 
-        logger.info(f"Migrated {count} purchase lines")
+        if batch:
+            self._bulk_save_lines(batch, row_data_batch, 'purchase_lines')
+            count += len(batch)
+
+        logger.info(f"Migrated {count} purchase lines (bulk)")
+
+    def _bulk_save_lines(self, entity_batch, row_batch, table_name):
+        """Hepler to perform bulk creation of lines and their mappings."""
+        from apps.pos.models import OrderLine
+        from apps.migration.models import MigrationMapping
+        
+        # bulk_create in Postgres returns IDs
+        created_objs = OrderLine.objects.bulk_create(entity_batch)
+        
+        mappings = []
+        for i, obj in enumerate(created_objs):
+            source_id, original_row = row_batch[i]
+            
+            extra = {}
+            if table_name == 'transaction_sell_lines':
+                extra = SellLineMapper.extra_data(original_row)
+            else:
+                extra = PurchaseLineMapper.extra_data(original_row)
+
+            mappings.append(MigrationMapping(
+                job=self.job,
+                entity_type='ORDER_LINE',
+                source_id=source_id,
+                target_id=obj.id,
+                source_table=table_name,
+                extra_data=extra
+            ))
+            # Cache in memory (though lines are usually not looked up)
+            # self.id_maps.setdefault('ORDER_LINE', {})[source_id] = obj.id
+        
+        MigrationMapping.objects.bulk_create(mappings)
 
     def _migrate_finalize(self):
         """Final cleanup and summary."""
+        if hasattr(self, 'db_reader'):
+            self.db_reader.close()
+        
         logger.info(f"Migration #{self.job.id} finalized")
-        logger.info(f"  Sites: {len(self.id_maps['sites'])}")
-        logger.info(f"  Units: {len(self.id_maps['units'])}")
-        logger.info(f"  Categories: {len(self.id_maps['categories'])}")
-        logger.info(f"  Brands: {len(self.id_maps['brands'])}")
-        logger.info(f"  Products: {len(self.id_maps['products'])}")
-        logger.info(f"  Contacts: {len(self.id_maps['contacts'])}")
-        logger.info(f"  Transactions: {len(self.id_maps['transactions'])}")
-        logger.info(f"  Accounts: {len(self.id_maps['accounts'])}")
+        logger.info(f"  Sites: {len(self.id_maps['SITE'])}")
+        logger.info(f"  Units: {len(self.id_maps['UNIT'])}")
+        logger.info(f"  Categories: {len(self.id_maps['CATEGORY'])}")
+        logger.info(f"  Brands: {len(self.id_maps['BRAND'])}")
+        logger.info(f"  Products: {len(self.id_maps['PRODUCT'])}")
+        logger.info(f"  Contacts: {len(self.id_maps['CONTACT'])}")
+        logger.info(f"  Transactions: {len(self.id_maps['TRANSACTION'])}")
+        logger.info(f"  Accounts: {len(self.id_maps['ACCOUNT'])}")
         logger.info(f"  Total errors: {len(self.errors)}")
 
 

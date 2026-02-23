@@ -1,6 +1,6 @@
 'use client'
 
-import { useConfig } from '@/storefront/engine/hooks'
+import { useConfig } from '@/storefront/engine/hooks/useConfig'
 import { FileText, Search, Mail, X, Send, CheckCircle, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import type { Product } from '@/storefront/engine/types'

@@ -71,7 +71,7 @@ class StorageProvider(models.Model):
         help_text='Auto-set to {org_slug}/ if blank'
     )
     is_active = models.BooleanField(default=True)
-    max_file_size_mb = models.IntegerField(default=50, help_text='Maximum upload size in MB')
+    max_file_size_mb = models.IntegerField(default=500, help_text='Maximum upload size in MB')
     allowed_extensions = models.JSONField(
         default=list, blank=True,
         help_text='Allowed file extensions, e.g. ["pdf","jpg","png"]'

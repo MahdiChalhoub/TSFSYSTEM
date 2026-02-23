@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { useTheme } from '@/storefront/engine'
+import { useTheme } from '@/storefront/engine/ThemeProvider'
 import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
@@ -13,7 +13,8 @@ export default function ProductDetailRoute() {
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://127.0.0.1:8000'
+        const isClient = typeof window !== 'undefined'
+        const djangoUrl = isClient ? '' : (process.env.DJANGO_URL || 'http://backend:8000')
         fetch(`${djangoUrl}/api/products/storefront/${id}/?organization_slug=${slug}`)
             .then(r => r.ok ? r.json() : null)
             .then(data => { setProduct(data); setLoading(false) })

@@ -28,7 +28,7 @@ export default function WishlistPage() {
     useEffect(() => {
         if (wishlist.length === 0) { setLoading(false); return }
 
-        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://127.0.0.1:8000'
+        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://backend:8000'
         fetch(`${djangoUrl}/api/products/public/?organization_slug=${slug}`)
             .then(r => r.ok ? r.json() : [])
             .then(data => {

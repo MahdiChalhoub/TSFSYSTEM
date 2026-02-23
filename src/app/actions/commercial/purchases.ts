@@ -35,16 +35,25 @@ export type PurchaseFormState = {
 };
 
 export async function createPurchaseInvoice(prevState: PurchaseFormState, formData: FormData): Promise<PurchaseFormState> {
-    // 1. Extract & Parse Complex FormData
-    const rawLines: Record<string, any>[] = [];
+    const extraFees: any[] = [];
+    const rawLines: any[] = [];
+    const initialPayment: any = { amount: 0, accountId: null };
 
     for (const [key, value] of Array.from(formData.entries())) {
-        const match = key.match(/^lines\[(\d+)\]\[(\w+)\]$/);
-        if (match) {
-            const index = parseInt(match[1]);
-            const field = match[2];
+        const lineMatch = key.match(/^lines\[(\d+)\]\[(\w+)\]$/);
+        if (lineMatch) {
+            const index = parseInt(lineMatch[1]);
+            const field = lineMatch[2];
             if (!rawLines[index]) rawLines[index] = {};
             rawLines[index][field] = value;
+        }
+
+        const feeMatch = key.match(/^extraFees\[(\d+)\]\[(\w+)\]$/);
+        if (feeMatch) {
+            const index = parseInt(feeMatch[1]);
+            const field = feeMatch[2];
+            if (!extraFees[index]) extraFees[index] = {};
+            extraFees[index][field] = value;
         }
     }
 
@@ -56,34 +65,51 @@ export async function createPurchaseInvoice(prevState: PurchaseFormState, formDa
         invoicePriceType: formData.get('invoicePriceType'),
         vatRecoverable: formData.get('vatRecoverable') === 'true',
         refCode: formData.get('refCode'),
+        declaredRef: formData.get('declaredRef'),
+        supplierRef: formData.get('supplierRef'),
+        deliveryNoteRef: formData.get('deliveryNoteRef'),
         notes: formData.get('notes'),
+        discountAmount: Number(formData.get('discountAmount') || 0),
+        extraFees: extraFees.filter(f => f && f.amount && Number(f.amount) > 0),
+        initialPayment: {
+            amount: Number(formData.get('paidAmount') || 0),
+            accountId: Number(formData.get('paymentAccountId') || 0)
+        },
         lines: rawLines.filter(l => l && l.productId)
     };
-
-    const validated = purchaseSchema.safeParse(rawData);
-
-    if (!validated.success) {
-        return {
-            errors: validated.error.flatten().fieldErrors,
-            message: "Some fields are missing or invalid."
-        };
-    }
-
-    const { data } = validated;
 
     try {
         await erpFetch('purchase/quick_purchase/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+            body: JSON.stringify(rawData)
         });
     } catch (e: unknown) {
         console.error("Purchase Creation Error:", e);
         return { message: (e instanceof Error ? e.message : String(e)) || "Critical Error: Could not process purchase replenishment." };
     }
-
     revalidatePath('/purchases');
     redirect('/purchases');
+}
+
+export async function getOpenPurchaseOrders(supplierId: number) {
+    try {
+        const res = await erpFetch(`purchase/pending-invoice/?supplier=${supplierId}`);
+        return res;
+    } catch (e) {
+        console.error("Fetch Open POs Error:", e);
+        return [];
+    }
+}
+
+export async function getPurchaseOrder(id: number) {
+    try {
+        const res = await erpFetch(`purchase/${id}/`);
+        return res;
+    } catch (e) {
+        console.error("Fetch PO Detail Error:", e);
+        return null;
+    }
 }
 
 export async function authorizePurchaseOrder(id: string) {

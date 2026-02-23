@@ -33,7 +33,7 @@ export default function ProfilePage() {
         setSaving(true)
         setError('')
         try {
-            const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://127.0.0.1:8000'
+            const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://backend:8000'
             const res = await fetch(`${djangoUrl}/api/client-portal/profile/update/`, {
                 method: 'PATCH',
                 headers: {
@@ -67,7 +67,7 @@ export default function ProfilePage() {
         setPwSaving(true)
         setPwError('')
         try {
-            const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://127.0.0.1:8000'
+            const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://backend:8000'
             const res = await fetch(`${djangoUrl}/api/client-portal/profile/change-password/`, {
                 method: 'POST',
                 headers: {

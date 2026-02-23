@@ -1,7 +1,8 @@
 // ─── Storefront Engine — Public API ─────────────────────────────────────────
-// Import from '@/storefront/engine' for types, hooks, and theme utilities.
+// AVOID BARREL EXPORTS if possible to prevent circular dependencies in Turbopack.
+// Import directly from specific files instead.
 
 export * from './types'
-export { useCart, useAuth, useConfig, useStore, useWishlist } from './hooks'
-export { ThemeProvider, useTheme } from './ThemeProvider'
-export { getAvailableThemes, getDefaultThemeId, THEME_CONFIGS } from './ThemeRegistry'
+// Hooks should be imported from '@/storefront/engine/hooks/useXXX'
+// ThemeProvider from '@/storefront/engine/ThemeProvider'
+// ThemeRegistry from '@/storefront/engine/ThemeRegistry'

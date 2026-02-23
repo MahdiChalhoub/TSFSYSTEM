@@ -1,6 +1,6 @@
 'use client'
 
-import { ThemeProvider, useTheme } from '@/storefront/engine'
+import { ThemeProvider, useTheme } from '@/storefront/engine/ThemeProvider'
 import { usePortal } from '@/context/PortalContext'
 import { ReactNode } from 'react'
 

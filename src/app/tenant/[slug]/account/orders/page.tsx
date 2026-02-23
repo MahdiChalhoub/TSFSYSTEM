@@ -39,7 +39,7 @@ export default function OrdersPage() {
 
     useEffect(() => {
         if (!isAuthenticated || !token) return
-        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://127.0.0.1:8000'
+        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://backend:8000'
         fetch(`${djangoUrl}/api/client-portal/my-orders/`, {
             headers: { 'Authorization': `Token ${token}` },
         })
