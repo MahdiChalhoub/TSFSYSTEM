@@ -114,22 +114,39 @@ export default function MidnightCheckoutPage() {
 
     if (step === 'complete') {
         return (
-            <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
-                <div className="w-20 h-20 bg-emerald-500/20 border border-emerald-500/30 rounded-3xl flex items-center justify-center mb-6 animate-pulse">
-                    <CheckCircle2 size={36} className="text-emerald-400" />
-                </div>
-                <h2 className="text-3xl font-black text-white mb-2">Order Placed!</h2>
-                <p className="text-slate-400 mb-1">Thank you for your order</p>
-                {orderId && <p className="text-xs text-slate-600 font-mono">Order #{orderId}</p>}
-                <div className="flex gap-4 mt-8">
-                    <Link href={`/tenant/${slug}/account/orders`}
-                        className="px-6 py-3 bg-white/5 border border-white/10 text-white rounded-xl font-bold text-sm hover:bg-white/10 transition-all">
-                        View Orders
-                    </Link>
-                    <Link href={`/tenant/${slug}`}
-                        className="px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-500 transition-all">
-                        Continue Shopping
-                    </Link>
+            <div className="min-h-[70vh] flex flex-col items-center justify-center text-center px-4 relative overflow-hidden">
+                {/* Celebration background */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-[120px] animate-pulse pointer-events-none" />
+
+                <div className="relative z-10 space-y-8 animate-in fade-in zoom-in duration-700">
+                    <div className="w-24 h-24 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-[2rem] flex items-center justify-center mx-auto shadow-2xl shadow-emerald-500/40 rotate-12 hover:rotate-0 transition-transform duration-500">
+                        <CheckCircle2 size={48} className="text-white" />
+                    </div>
+
+                    <div className="space-y-3">
+                        <h2 className="text-4xl sm:text-5xl font-black text-white tracking-tighter">Order Success!</h2>
+                        <p className="text-slate-400 max-w-sm mx-auto">
+                            Your order has been placed in our secure ledger and is currently being processed by the tenant.
+                        </p>
+                    </div>
+
+                    <div className="bg-slate-950/80 border border-white/5 rounded-3xl p-6 backdrop-blur-xl inline-block min-w-[300px]">
+                        <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] mb-2 text-center">Reference Identification</p>
+                        <div className="bg-white/5 rounded-xl py-3 px-6 flex items-center justify-center gap-3">
+                            <span className="text-white font-mono font-bold tracking-widest">{orderId}</span>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
+                        <Link href={`/tenant/${slug}/account/orders`}
+                            className="px-8 py-4 bg-white/5 border border-white/10 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-white/10 transition-all hover:scale-105">
+                            Track Order
+                        </Link>
+                        <Link href={`/tenant/${slug}`}
+                            className="px-8 py-4 bg-emerald-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-emerald-500 transition-all shadow-xl shadow-emerald-900/40 hover:scale-105">
+                            Back to Store
+                        </Link>
+                    </div>
                 </div>
             </div>
         )
@@ -175,7 +192,17 @@ export default function MidnightCheckoutPage() {
             <button onClick={() => router.back()} className="flex items-center gap-2 text-xs text-slate-500 hover:text-white mb-4 transition-colors">
                 <ArrowLeft size={14} /> Back to Cart
             </button>
-            <h1 className="text-3xl font-black text-white tracking-tight mb-8">Checkout</h1>
+            {/* Progress Indicator */}
+            <div className="flex gap-2 mb-8">
+                {['Info', 'Review', 'Payment'].map((s, i) => (
+                    <div key={s} className="flex-1 flex flex-col gap-2">
+                        <div className={`h-1 rounded-full transition-colors duration-500 ${i === 0 ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-white/5'}`} />
+                        <span className={`text-[9px] font-black uppercase tracking-[0.2em] ${i === 0 ? 'text-emerald-500' : 'text-slate-700'}`}>{s}</span>
+                    </div>
+                ))}
+            </div>
+
+            <h1 className="text-4xl font-black text-white tracking-tighter mb-8 uppercase italic">Secure Checkout</h1>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Form Column */}
@@ -259,9 +286,24 @@ export default function MidnightCheckoutPage() {
                                 </div>
                             ))}
                         </div>
-                        <div className="border-t border-white/5 pt-4 flex justify-between">
-                            <span className="text-white font-bold text-sm">Total</span>
-                            <span className="text-xl font-black text-white">
+                        <div className="space-y-3 pt-4 border-t border-white/5">
+                            <div className="flex justify-between text-xs">
+                                <span className="text-slate-500">Subtotal</span>
+                                <span className="text-slate-300 font-mono">${cartTotal.toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                                <span className="text-slate-500">Shipping</span>
+                                <span className="text-emerald-500 font-bold uppercase tracking-widest text-[9px]">Calculated Live: Free</span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                                <span className="text-slate-500">Dynamic Tax (VAT)</span>
+                                <span className="text-slate-300 font-mono italic">Included</span>
+                            </div>
+                        </div>
+
+                        <div className="pt-4 flex justify-between items-end">
+                            <span className="text-white font-black uppercase text-xs tracking-widest mb-1">Total Due</span>
+                            <span className="text-3xl font-black text-white">
                                 <span className="text-emerald-500 mr-1">$</span>{cartTotal.toFixed(2)}
                             </span>
                         </div>
