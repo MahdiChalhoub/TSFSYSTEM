@@ -165,9 +165,10 @@ log ""
 log "⚛️  [3/6] Validating Frontend..."
 cd "$NEW_RELEASE"
 
-# Link shared node_modules
-if [ ! -L "$NEW_RELEASE/node_modules" ]; then
-    ln -sr "$APP_ROOT/node_modules" "$NEW_RELEASE/node_modules"
+# Link shared node_modules (using hardlinks to avoid Turbopack 'out of root' errors)
+if [ ! -d "$NEW_RELEASE/node_modules" ]; then
+    mkdir -p "$NEW_RELEASE/node_modules"
+    cp -rl "$APP_ROOT/node_modules/." "$NEW_RELEASE/node_modules/"
 fi
 
 # 3a. Build Next.js
