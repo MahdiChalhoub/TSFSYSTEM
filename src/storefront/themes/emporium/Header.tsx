@@ -21,6 +21,7 @@ import { useAuth } from '../../engine/hooks/useAuth'
 import { useCart } from '../../engine/hooks/useCart'
 import { useConfig } from '../../engine/hooks/useConfig'
 import { useWishlist } from '../../engine/hooks/useWishlist'
+import { usePortal } from '@/context/PortalContext'
 
 export default function EmporiumHeader() {
     const { slug } = useParams<{ slug: string }>()
@@ -29,6 +30,7 @@ export default function EmporiumHeader() {
     const { cartCount } = useCart()
     const { orgName, orgLogo, config } = useConfig()
     const { wishlistCount } = useWishlist()
+    const { setCartOpen } = usePortal()
     const [menuOpen, setMenuOpen] = useState(false)
 
     const storeName = config?.storefront_title || orgName || ''
@@ -110,14 +112,17 @@ export default function EmporiumHeader() {
 
                     <div className="h-8 w-px bg-slate-200 hidden lg:block" />
 
-                    <Link href={`/tenant/${slug}/cart`} className="relative w-12 h-12 flex items-center justify-center text-slate-900 hover:text-yellow-600 transition-all active:scale-90">
+                    <button
+                        onClick={() => setCartOpen(true)}
+                        className="relative w-12 h-12 flex items-center justify-center text-slate-900 hover:text-yellow-600 transition-all active:scale-90"
+                    >
                         <ShoppingCart size={24} />
                         {cartCount > 0 && (
                             <span className="absolute top-1 right-1 min-w-[20px] h-[20px] bg-yellow-400 border-2 border-white text-[10px] font-black text-slate-900 rounded-full flex items-center justify-center shadow-sm">
                                 {cartCount}
                             </span>
                         )}
-                    </Link>
+                    </button>
 
                     <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden w-12 h-12 flex items-center justify-center text-slate-900">
                         {menuOpen ? <X size={24} /> : <Menu size={24} />}
