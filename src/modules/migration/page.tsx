@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 import { erpFetch } from "@/lib/erp-api"
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { initChunkedUpload, completeChunkedUpload, getActiveUploads, getUploadStatus } from "@/modules/storage/actions"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -135,11 +136,13 @@ export default function MigrationPage() {
     const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null)
     const [syncMode, setSyncMode] = useState(false)
     const [uploading, setUploading] = useState(false)
+    const [uploadProgress, setUploadProgress] = useState(0)
     const [loadingBusinesses, setLoadingBusinesses] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [dragActive, setDragActive] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
     const pollRef = useRef<NodeJS.Timeout | null>(null)
+    const activeUploadPollRef = useRef<NodeJS.Timeout | null>(null)
     const [rollbackTarget, setRollbackTarget] = useState<MigrationJob | null>(null)
 
     // ── Fetch Jobs ──────────────────────────────────────────────────────────
@@ -153,6 +156,45 @@ export default function MigrationPage() {
     useEffect(() => {
         fetchJobs()
     }, [fetchJobs])
+
+    // ── Polling for Active Uploads (Resumption) ─────────────────────────────
+    useEffect(() => {
+        const checkActiveUpload = async () => {
+            try {
+                const res = await getActiveUploads('file');
+                const uploads = res?.uploads || [];
+                const activeMigUpload = uploads.find((u: any) => u.category === 'MIGRATION');
+
+                if (activeMigUpload && activeMigUpload.progress < 100) {
+                    setUploading(true);
+                    setUploadProgress(activeMigUpload.progress);
+
+                    // Start polling status until complete
+                    activeUploadPollRef.current = setInterval(async () => {
+                        try {
+                            const status = await getUploadStatus(activeMigUpload.session_id);
+                            if (status && status.progress !== undefined) {
+                                setUploadProgress(status.progress);
+                                if (status.progress >= 100 || status.status === 'complete' || status.status === 'failed') {
+                                    if (activeUploadPollRef.current) clearInterval(activeUploadPollRef.current);
+                                    if (status.status === 'complete') {
+                                        setUploading(false);
+                                        fetchJobs();
+                                    } else if (status.status === 'failed') {
+                                        setUploading(false);
+                                        setError("Background upload failed");
+                                    }
+                                }
+                            }
+                        } catch { }
+                    }, 1000);
+                }
+            } catch { }
+        };
+        checkActiveUpload();
+
+        return () => { if (activeUploadPollRef.current) clearInterval(activeUploadPollRef.current); }
+    }, [fetchJobs]);
 
     // ── Polling for Running Jobs ────────────────────────────────────────────
     useEffect(() => {
@@ -180,16 +222,67 @@ export default function MigrationPage() {
         }
 
         setUploading(true)
+        setUploadProgress(0)
         setError(null)
         try {
-            const formData = new FormData()
-            formData.append("file", file)
-            formData.append("name", `UltimatePOS Import - ${new Date().toLocaleDateString()}`)
+            // 1. Chunked Upload Initialization
+            const CHUNK_SIZE = 2 * 1024 * 1024; // 2MB chunks
+            const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
-            const job = await erpFetch("migration/jobs/upload/", {
+            const session = await initChunkedUpload({
+                filename: file.name,
+                total_size: file.size,
+                content_type: file.type || 'application/octet-stream',
+                category: 'MIGRATION',
+                upload_type: 'file',
+            });
+
+            if (!session?.session_id) {
+                throw new Error(session?.error || 'Failed to initialize upload');
+            }
+
+            // 2. Upload Chunks
+            let bytesSent = 0;
+            for (let i = 0; i < totalChunks; i++) {
+                const start = i * CHUNK_SIZE;
+                const end = Math.min(start + CHUNK_SIZE, file.size);
+                const blob = file.slice(start, end);
+
+                const formData = new FormData();
+                formData.append('chunk', blob, `chunk_${i}`);
+                formData.append('offset', String(bytesSent));
+
+                const res = await fetch(`/api/proxy/storage/upload/${session.session_id}/chunk/`, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || `Chunk ${i + 1} failed`);
+                }
+
+                bytesSent = end;
+                setUploadProgress(Math.round((bytesSent / file.size) * 100));
+            }
+
+            // 3. Complete Chunked Upload
+            const uploadResult = await completeChunkedUpload(session.session_id);
+            setUploadProgress(100);
+
+            if (!uploadResult?.uuid) {
+                throw new Error("Failed to complete upload");
+            }
+
+            // 4. Link StoredFile to Migration Job
+            const job = await erpFetch("migration/jobs/link/", {
                 method: "POST",
-                body: formData,
+                body: JSON.stringify({
+                    file_uuid: uploadResult.uuid,
+                    name: `UltimatePOS Import - ${new Date().toLocaleDateString()}`
+                }),
             })
+
             setActiveJob(job)
             fetchJobs()
 
@@ -568,9 +661,18 @@ export default function MigrationPage() {
                                 onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])}
                             />
                             {uploading ? (
-                                <div className="flex flex-col items-center">
-                                    <Loader2 className="w-12 h-12 text-purple-400 animate-spin mb-4" />
-                                    <p className="text-white/60">Uploading and analyzing businesses...</p>
+                                <div className="flex flex-col items-center w-full max-w-md mx-auto">
+                                    <h3 className="text-white font-medium mb-3">Uploading Database...</h3>
+                                    <div className="w-full bg-slate-800 rounded-full h-3 mb-2 overflow-hidden border border-slate-700">
+                                        <div
+                                            className="bg-purple-500 h-3 rounded-full transition-all duration-300 relative overflow-hidden"
+                                            style={{ width: `${uploadProgress}%` }}
+                                        >
+                                            <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+                                        </div>
+                                    </div>
+                                    <p className="text-sm text-purple-400 font-medium">{uploadProgress}% Complete</p>
+                                    <p className="text-xs text-white/40 mt-4 max-w-xs leading-relaxed">Please keep this page open. Analyzing businesses will start automatically after upload completes.</p>
                                 </div>
                             ) : (
                                 <div className="flex flex-col items-center">
@@ -581,7 +683,7 @@ export default function MigrationPage() {
                                         Drop your .sql file here
                                     </p>
                                     <p className="text-white/40 text-sm">
-                                        or click to browse • Supports files up to 500MB
+                                        or click to browse • Supports large database files
                                     </p>
                                 </div>
                             )}
