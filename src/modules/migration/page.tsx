@@ -798,53 +798,71 @@ export default function MigrationPage() {
 
             {/* ─── STEP: RUNNING ──────────────────────────────────────────────── */}
             {step === "RUNNING" && activeJob && (
-                <Card className="bg-white/5 border-white/10 backdrop-blur-xl max-w-2xl mx-auto">
-                    <CardContent className="py-12 text-center">
-                        <Loader2 className="w-16 h-16 text-purple-400 animate-spin mx-auto mb-6" />
-                        <h2 className="text-2xl font-bold text-white mb-2">
-                            {activeJob.migration_mode === "SYNC" ? "Syncing Data..." : "Import in Progress"}
-                        </h2>
-                        <p className="text-white/50 mb-1">
-                            {activeJob.current_step || "Starting..."}
-                        </p>
-                        {selectedBusiness && (
-                            <p className="text-orange-400/60 text-sm mb-4 flex items-center justify-center gap-1">
-                                <Building2 className="w-3 h-3" />
-                                {selectedBusiness.name}
-                            </p>
-                        )}
-
-                        {/* Progress bar */}
-                        <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden mx-auto max-w-md mb-4">
-                            <div
-                                className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-500 rounded-full transition-all duration-700 ease-out"
-                                style={{ width: `${activeJob.progress}%` }}
-                            />
-                        </div>
-                        <p className="text-white/40 text-sm">{activeJob.progress}% complete</p>
-
-                        {/* Live stats */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8">
-                            {[
-                                { label: "Products", value: activeJob.total_products, icon: Package },
-                                { label: "Contacts", value: activeJob.total_contacts, icon: Users },
-                                { label: "Orders", value: activeJob.total_transactions, icon: ShoppingCart },
-                                { label: "Errors", value: activeJob.total_errors, icon: XCircle },
-                            ].map(({ label, value, icon: Icon }) => (
-                                <div key={label} className="p-3 rounded-xl bg-white/5 border border-white/10">
-                                    <Icon className="w-5 h-5 text-purple-400 mx-auto mb-1" />
-                                    <p className="text-white font-bold text-xl">{value}</p>
-                                    <p className="text-white/40 text-xs">{label}</p>
+                <div className="max-w-4xl mx-auto">
+                    <Card className="bg-white/5 border-white/10 backdrop-blur-xl mb-6 overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-transparent animate-pulse" />
+                        <CardContent className="py-12 text-center relative pointer-events-none">
+                            <div className="relative w-32 h-32 mx-auto mb-6">
+                                {/* Animated spinning ring */}
+                                <svg className="absolute inset-0 w-full h-full text-white/10" viewBox="0 0 100 100">
+                                    <circle cx="50" cy="50" r="45" fill="none" strokeWidth="8" stroke="currentColor" />
+                                </svg>
+                                <svg className="absolute inset-0 w-full h-full text-purple-500" viewBox="0 0 100 100">
+                                    <circle
+                                        cx="50"
+                                        cy="50"
+                                        r="45"
+                                        fill="none"
+                                        strokeWidth="8"
+                                        stroke="currentColor"
+                                        strokeLinecap="round"
+                                        className="transition-all duration-700 ease-out origin-center -rotate-90"
+                                        strokeDasharray="283"
+                                        strokeDashoffset={283 - (283 * activeJob.progress) / 100}
+                                    />
+                                </svg>
+                                <div className="absolute inset-0 flex items-center justify-center flex-col">
+                                    <span className="text-3xl font-black text-white">{activeJob.progress}%</span>
                                 </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
+                            </div>
+
+                            <h2 className="text-2xl font-bold text-white mb-2">
+                                {activeJob.migration_mode === "SYNC" ? "Syncing Data..." : "Import in Progress"}
+                            </h2>
+                            <p className="text-purple-300 font-medium mb-1 animate-pulse">
+                                {activeJob.current_step || "Initializing..."}
+                            </p>
+                            {selectedBusiness && (
+                                <p className="text-orange-400/80 text-sm mb-4 flex items-center justify-center gap-1">
+                                    <Building2 className="w-3 h-3" />
+                                    {selectedBusiness.name}
+                                </p>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Live stats */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        {[
+                            { label: "Products", value: activeJob.total_products, icon: Package, color: "text-purple-400" },
+                            { label: "Contacts", value: activeJob.total_contacts, icon: Users, color: "text-pink-400" },
+                            { label: "Orders", value: activeJob.total_transactions, icon: ShoppingCart, color: "text-amber-400" },
+                            { label: "Errors", value: activeJob.total_errors, icon: XCircle, color: activeJob.total_errors > 0 ? "text-red-400 animate-bounce" : "text-white/20" },
+                        ].map(({ label, value, icon: Icon, color }) => (
+                            <div key={label} className="p-4 rounded-xl bg-white/5 border border-white/10 text-center relative overflow-hidden">
+                                {value > 0 && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-white/20 to-transparent" />}
+                                <Icon className={`w-6 h-6 ${color} mx-auto mb-2`} />
+                                <p className="text-white font-black text-3xl tracking-tighter">{value.toLocaleString()}</p>
+                                <p className="text-white/40 text-xs font-bold uppercase tracking-widest mt-1">{label}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             )}
 
             {/* ─── STEP: RESULTS ──────────────────────────────────────────────── */}
             {step === "RESULTS" && activeJob && (
-                <div className="max-w-3xl mx-auto space-y-6">
+                <div className="max-w-4xl mx-auto space-y-6">
                     {/* Status banner */}
                     <Card className={`border backdrop-blur-xl ${activeJob.status === "COMPLETED"
                         ? "bg-emerald-500/10 border-emerald-500/30"
@@ -852,24 +870,30 @@ export default function MigrationPage() {
                             ? "bg-red-500/10 border-red-500/30"
                             : "bg-amber-500/10 border-amber-500/30"
                         }`}>
-                        <CardContent className="flex items-center gap-4 py-5">
+                        <CardContent className="flex items-center gap-6 py-8">
                             {activeJob.status === "COMPLETED" ? (
-                                <CheckCircle2 className="w-10 h-10 text-emerald-400" />
+                                <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 flex items-center justify-center shrink-0">
+                                    <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+                                </div>
                             ) : activeJob.status === "FAILED" ? (
-                                <XCircle className="w-10 h-10 text-red-400" />
+                                <div className="w-16 h-16 rounded-2xl bg-red-500/20 flex items-center justify-center shrink-0">
+                                    <XCircle className="w-8 h-8 text-red-400" />
+                                </div>
                             ) : (
-                                <Loader2 className="w-10 h-10 text-amber-400 animate-spin" />
+                                <div className="w-16 h-16 rounded-2xl bg-amber-500/20 flex items-center justify-center shrink-0">
+                                    <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+                                </div>
                             )}
                             <div>
-                                <h2 className="text-xl font-bold text-white">
+                                <h2 className="text-3xl font-black text-white tracking-tighter shadow-sm">
                                     {activeJob.status === "COMPLETED"
-                                        ? (activeJob.migration_mode === "SYNC" ? "Sync Completed!" : "Import Completed!")
+                                        ? (activeJob.migration_mode === "SYNC" ? "Sync Completed Successfully" : "Import Completed Successfully")
                                         : activeJob.status === "FAILED" ? "Import Failed" : "Import Running..."}
                                 </h2>
-                                <p className="text-white/50 text-sm">
+                                <p className="text-white/60 font-medium mt-1">
                                     {activeJob.source_business_name && (
-                                        <span className="text-orange-400 mr-2">
-                                            {activeJob.source_business_name} •
+                                        <span className="text-orange-400 mr-2 border border-orange-400/30 bg-orange-400/10 px-2 py-0.5 rounded-md text-[10px] uppercase tracking-widest">
+                                            {activeJob.source_business_name}
                                         </span>
                                     )}
                                     {activeJob.completed_at
@@ -892,11 +916,11 @@ export default function MigrationPage() {
                             { label: "Accounts", value: activeJob.total_accounts, icon: Banknote, color: "text-emerald-400" },
                             { label: "Errors", value: activeJob.total_errors, icon: XCircle, color: activeJob.total_errors > 0 ? "text-red-400" : "text-white/20" },
                         ].map(({ label, value, icon: Icon, color }) => (
-                            <Card key={label} className="bg-white/5 border-white/10">
-                                <CardContent className="py-4 text-center">
-                                    <Icon className={`w-5 h-5 ${color} mx-auto mb-2`} />
-                                    <p className="text-white text-2xl font-bold">{value}</p>
-                                    <p className="text-white/40 text-xs mt-1">{label}</p>
+                            <Card key={label} className="bg-white/5 border-white/10 shadow-lg">
+                                <CardContent className="py-6 text-center">
+                                    <Icon className={`w-8 h-8 ${color} mx-auto mb-3`} />
+                                    <p className="text-white text-3xl font-black tracking-tighter">{value.toLocaleString()}</p>
+                                    <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-1">{label}</p>
                                 </CardContent>
                             </Card>
                         ))}
@@ -905,15 +929,18 @@ export default function MigrationPage() {
                     {/* Error log */}
                     {activeJob.error_log && (
                         <Card className="bg-white/5 border-white/10 backdrop-blur-xl">
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-sm text-red-400 flex items-center gap-2">
-                                    <AlertTriangle className="w-4 h-4" /> Error Log
+                            <CardHeader className="pb-2 border-b border-white/10 relative">
+                                <div className="absolute top-0 left-0 w-full h-1 bg-red-500 rounded-t-xl" />
+                                <CardTitle className="text-sm font-bold uppercase tracking-widest text-red-400 flex items-center gap-2 mt-2">
+                                    <AlertTriangle className="w-4 h-4" /> Migration Warnings & Errors
                                 </CardTitle>
                             </CardHeader>
-                            <CardContent>
-                                <pre className="text-xs text-white/40 bg-black/30 p-4 rounded-xl max-h-48 overflow-auto whitespace-pre-wrap font-mono">
-                                    {activeJob.error_log}
-                                </pre>
+                            <CardContent className="pt-4">
+                                <div className="bg-[#0a0a0a] border border-white/5 p-4 rounded-xl max-h-64 overflow-auto custom-scrollbar">
+                                    <pre className="text-[11px] leading-relaxed text-red-300 w-full whitespace-pre-wrap font-mono">
+                                        {activeJob.error_log}
+                                    </pre>
+                                </div>
                             </CardContent>
                         </Card>
                     )}

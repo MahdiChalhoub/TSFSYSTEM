@@ -33,12 +33,12 @@ import { toast } from 'sonner';
 export function POSLayoutModern(props: POSLayoutProps) {
     const {
         cart, clients, selectedClient, selectedClientId, categories,
-        sessions, activeSessionId, currency, total, discount, totalAmount,
+        sessions, activeSessionId, currency, total, discount, discountType, totalAmount,
         totalPieces, uniqueItems, searchQuery, activeCategoryId, sidebarMode,
         isFullscreen, paymentMethod, cashReceived, isProcessing,
         isOverrideOpen, isReceiptOpen, lastOrder,
         onSetSearchQuery, onSetActiveCategoryId, onSetActiveSessionId,
-        onSetPaymentMethod, onSetCashReceived, onSetDiscount, onAddToCart, onUpdateQuantity,
+        onSetPaymentMethod, onSetCashReceived, onSetDiscount, onSetDiscountType, onAddToCart, onUpdateQuantity,
         onClearCart, onCreateNewSession, onRemoveSession, onUpdateActiveSession,
         onToggleFullscreen, onCycleSidebarMode, onCharge,
         onSetOverrideOpen, onSetReceiptOpen, onOpenLayoutSelector
@@ -275,31 +275,51 @@ export function POSLayoutModern(props: POSLayoutProps) {
                     </div>
 
                     {/* ── Cart Footer: Compact payment + Charge ── */}
-                    <div className="border-t border-gray-200 bg-white px-3 py-2 shrink-0 space-y-1">
+                    <div className="border-t border-gray-200 bg-white px-3 py-2 shrink-0 space-y-2">
                         {/* Subtotal + Discount row */}
-                        <div className="flex items-center justify-between text-[11px]">
-                            <span className="text-gray-400">Subtotal</span>
-                            <span className="font-semibold tabular-nums text-gray-600">{currency}{total.toFixed(2)}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-[11px]">
-                            <span className="text-gray-400">Discount</span>
-                            <div className="relative w-20">
-                                <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-[10px] text-amber-500">{currency}</span>
-                                <input
-                                    type="number" min="0" step="0.01"
-                                    value={discount || ''}
-                                    onChange={(e) => onSetDiscount(Math.max(0, Number(e.target.value) || 0))}
-                                    placeholder="0.00"
-                                    className="w-full pl-4 pr-1 py-0.5 text-right bg-amber-50/50 border border-gray-200 rounded text-[11px] font-semibold tabular-nums text-amber-600 outline-none focus:border-amber-400 transition-all"
-                                />
+                        <div className="flex flex-col gap-1">
+                            <div className="flex items-center justify-between text-[11px]">
+                                <span className="text-gray-400">Subtotal</span>
+                                <span className="font-semibold tabular-nums text-gray-600">{currency}{total.toFixed(2)}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-[11px]">
+                                <span className="text-gray-400">Discount</span>
+                                <div className="flex items-center gap-1">
+                                    {/* Discount Type Toggle */}
+                                    <div className="flex items-center bg-gray-100 rounded p-0.5">
+                                        <button
+                                            onClick={() => onSetDiscountType('fixed')}
+                                            className={clsx("px-2 py-0.5 rounded text-[10px] font-bold transition-all", discountType === 'fixed' ? "bg-white shadow text-gray-800" : "text-gray-400")}
+                                        >
+                                            {currency}
+                                        </button>
+                                        <button
+                                            onClick={() => onSetDiscountType('percentage')}
+                                            className={clsx("px-2 py-0.5 rounded text-[10px] font-bold transition-all", discountType === 'percentage' ? "bg-white shadow text-gray-800" : "text-gray-400")}
+                                        >
+                                            %
+                                        </button>
+                                    </div>
+                                    <div className="relative w-24">
+                                        <input
+                                            type="number" min="0" step="0.01"
+                                            value={discount || ''}
+                                            onChange={(e) => onSetDiscount(Math.max(0, Number(e.target.value) || 0))}
+                                            placeholder="0"
+                                            className="w-full pl-2 pr-1 py-1 text-right bg-amber-50/50 border border-gray-200 rounded text-[12px] font-semibold tabular-nums text-amber-600 outline-none focus:border-amber-400 transition-all"
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         </div>
+
                         {/* Total */}
                         <div className="flex items-center justify-between border-t border-gray-100 pt-1">
                             <span className="text-sm font-bold text-gray-900">Total</span>
                             <span className="text-lg font-extrabold tabular-nums text-gray-900">{currency}{totalAmount.toFixed(2)}</span>
                         </div>
-                        {/* Payment methods — compact 2-row grid */}
+
+                        {/* Payment methods */}
                         <div className="grid grid-cols-4 gap-1">
                             {[
                                 { key: 'CASH', label: 'Cash', icon: Banknote },
@@ -325,42 +345,66 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 </button>
                             ))}
                         </div>
-                        {/* Cash Received + Change + Charge — all in one row */}
-                        <div className="flex items-center gap-2 pt-0.5">
-                            <div className="flex items-center gap-1 shrink-0">
-                                <span className="text-[10px] text-gray-400">Received</span>
-                                <div className="relative w-20">
-                                    <span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">{currency}</span>
+
+                        {/* Advanced Input & Integrated Charge Button */}
+                        <div className="flex items-center gap-2 pt-1">
+                            {/* Received Amount Input (Formatted) */}
+                            <div className="flex-1">
+                                <label className="text-[10px] font-bold text-gray-500 mb-0.5 block">Received Amount</label>
+                                <div className="relative">
+                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">{currency}</span>
                                     <input
-                                        type="number" min="0" step="0.01"
-                                        value={cashReceived}
-                                        onChange={(e) => onSetCashReceived(e.target.value)}
-                                        placeholder={totalAmount.toFixed(2)}
-                                        className="w-full pl-4 pr-1 py-1 text-right bg-gray-50 border border-gray-200 rounded text-[11px] font-semibold tabular-nums outline-none focus:border-emerald-400 transition-all"
+                                        type="text"
+                                        inputMode="numeric"
+                                        value={cashReceived ? Number(cashReceived.replace(/\D/g, '')).toLocaleString('fr-FR') : ''}
+                                        onChange={(e) => {
+                                            const numericValue = e.target.value.replace(/\s+/g, '').replace(/,/g, '.');
+                                            if (/^\d*\.?\d*$/.test(numericValue)) {
+                                                onSetCashReceived(numericValue);
+                                            }
+                                        }}
+                                        placeholder={totalAmount.toFixed(0)}
+                                        className="w-full pl-6 pr-2 py-2 text-right bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold tabular-nums outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
                                     />
                                 </div>
                             </div>
-                            <div className="flex items-center gap-1 shrink-0">
-                                <span className="text-[10px] text-gray-400">Change</span>
-                                <span className={clsx(
-                                    "text-xs font-bold tabular-nums",
-                                    changeDue > 0 ? "text-emerald-600" : "text-gray-400"
-                                )}>{currency}{changeDue.toFixed(2)}</span>
-                            </div>
-                            <div className="flex-1" />
+
+                            {/* Integrated Charge Button */}
                             <button
                                 onClick={onCharge}
                                 disabled={cart.length === 0 || isProcessing}
                                 className={clsx(
-                                    "py-2 px-6 rounded-lg text-xs font-bold transition-all shrink-0",
+                                    "px-4 py-2 mt-4 rounded-lg flex flex-col items-center justify-center transition-all h-[42px] min-w-[140px]",
                                     cart.length > 0 && !isProcessing
                                         ? "bg-emerald-500 text-white shadow-md shadow-emerald-200 hover:bg-emerald-600 active:scale-[0.98]"
                                         : "bg-gray-200 text-gray-400 cursor-not-allowed"
                                 )}
                             >
-                                {isProcessing ? '...' : `Charge ${currency}${totalAmount.toFixed(2)}`}
+                                {isProcessing ? (
+                                    <span className="text-sm font-bold">Processing...</span>
+                                ) : (
+                                    <>
+                                        <span>Charge</span>
+                                        {changeDue > 0 && (
+                                            <span className="text-[9px] font-medium text-emerald-100 uppercase tracking-widest leading-none mt-0.5">
+                                                Change: {currency}{changeDue.toLocaleString('fr-FR', { minimumFractionDigits: 0 })}
+                                            </span>
+                                        )}
+                                    </>
+                                )}
                             </button>
                         </div>
+                        {changeDue > 0 && props.onSetStoreChangeInWallet && (
+                            <label className="flex items-center justify-center gap-1.5 cursor-pointer mt-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 py-1.5 px-2 rounded-lg hover:bg-emerald-100 transition-colors w-full border border-emerald-100">
+                                <input
+                                    type="checkbox"
+                                    checked={props.storeChangeInWallet}
+                                    onChange={(e) => props.onSetStoreChangeInWallet!(e.target.checked)}
+                                    className="rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500 w-3 h-3"
+                                />
+                                Save {currency}{changeDue.toLocaleString('fr-FR', { minimumFractionDigits: 0 })} change to Wallet
+                            </label>
+                        )}
                     </div>
                 </main>
             </div>

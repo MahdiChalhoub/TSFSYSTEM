@@ -38,6 +38,7 @@ export interface POSLayoutProps {
     // Computed
     total: number;
     discount: number;
+    discountType: 'fixed' | 'percentage';
     totalAmount: number;
     totalPieces: number;
     uniqueItems: number;
@@ -53,6 +54,8 @@ export interface POSLayoutProps {
     isOverrideOpen: boolean;
     isReceiptOpen: boolean;
     lastOrder: { id: number; ref: string } | null;
+    storeChangeInWallet: boolean;
+    pointsRedeemed: number;
 
     // Handlers
     onSetSearchQuery: (q: string) => void;
@@ -61,8 +64,11 @@ export interface POSLayoutProps {
     onSetPaymentMethod: (m: string) => void;
     onSetCashReceived: (v: string) => void;
     onSetDiscount: (v: number) => void;
+    onSetDiscountType: (type: 'fixed' | 'percentage') => void;
     onSetOverrideOpen: (v: boolean) => void;
     onSetReceiptOpen: (v: boolean) => void;
+    onSetStoreChangeInWallet: (v: boolean) => void;
+    onSetPointsRedeemed: (v: number) => void;
     onAddToCart: (product: Record<string, any>) => void;
     onUpdateQuantity: (productId: number, delta: number) => void;
     onClearCart: () => void;

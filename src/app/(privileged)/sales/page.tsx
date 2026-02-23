@@ -10,6 +10,8 @@ import { POSLayoutCompact } from '@/components/pos/layouts/POSLayoutCompact';
 import { POSLayoutSelector } from '@/components/pos/layouts/POSLayoutSelector';
 import { getCategories, processSale } from './actions';
 import { getCommercialContext } from '@/app/actions/commercial';
+import { getUser } from '@/app/actions/auth';
+import { getContacts } from '@/app/actions/crm/contacts';
 
 type SidebarMode = 'hidden' | 'normal' | 'expanded';
 
@@ -43,6 +45,9 @@ export default function POSPage() {
     // ─── Multi-Order Sessions ───
     const [sessions, setSessions] = useState<any[]>([]);
     const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+
+    // ─── User Role State ───
+    const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
     // ─── UI State ───
     const [searchQuery, setSearchQuery] = useState('');
@@ -107,6 +112,13 @@ export default function POSPage() {
             toast.error("At least one ticket must remain open");
             return;
         }
+
+        const sessionToRemove = sessions.find(s => s.id === id);
+        if (sessionToRemove && sessionToRemove.cart.length > 0 && !isSuperAdmin) {
+            toast.error("Security Rule: Cannot close a ticket with items. (Manager override required)");
+            return;
+        }
+
         setSessions(prev => {
             const next = prev.filter(s => s.id !== id);
             if (activeSessionId === id) setActiveSessionId(next[0].id);
@@ -117,6 +129,29 @@ export default function POSPage() {
 
     // ─── Load Context ───
     useEffect(() => {
+        getUser().then(user => {
+            if (user && user.is_superuser) setIsSuperAdmin(true);
+        });
+
+        getContacts().then((data: any[]) => {
+            if (Array.isArray(data) && data.length > 0) {
+                const mapped = data.map(c => ({
+                    id: c.id,
+                    name: c.name || 'Unknown',
+                    phone: c.phone || 'N/A',
+                    balance: Number(c.wallet_balance || 0),
+                    loyalty: Number(c.loyalty_points || 0),
+                    address: c.address || 'N/A',
+                    zone: 'A'
+                }));
+                // Keep Walk-in Customer as ID 1, map the rest
+                setClients([
+                    { id: 1, name: 'Walk-in Customer', phone: 'N/A', balance: 0, loyalty: 0, address: 'Counter Sales', zone: 'A' },
+                    ...mapped.filter(c => c.id !== 1)
+                ]);
+            }
+        }).catch(err => console.error("Failed to fetch CRM contacts:", err));
+
         getCommercialContext().then(ctx => {
             setCurrency(ctx.currency === 'USD' ? '$' : ctx.currency);
         });
@@ -174,9 +209,15 @@ export default function POSPage() {
     }, [cart, updateActiveSession]);
 
     const clearCart = useCallback(() => {
+        const currentSession = sessions.find(s => s.id === activeSessionId);
+        if (currentSession && currentSession.cart.length > 0 && !isSuperAdmin) {
+            toast.error("Security Rule: Cannot clear ticket with items. (Manager override required)");
+            return;
+        }
+
         updateActiveSession({ cart: [] });
         toast.info("Ticket cleared");
-    }, [updateActiveSession]);
+    }, [updateActiveSession, sessions, activeSessionId, isSuperAdmin]);
 
     const toggleFullscreen = useCallback(() => {
         if (!document.fullscreenElement) {
@@ -203,13 +244,23 @@ export default function POSPage() {
     // ─── Payment State ───
     const [paymentMethod, setPaymentMethod] = useState<string>('CASH');
     const [cashReceived, setCashReceived] = useState<string>('');
+    const [storeChangeInWallet, setStoreChangeInWallet] = useState(false);
+    const [pointsRedeemed, setPointsRedeemed] = useState(0);
     const [isProcessing, setIsProcessing] = useState(false);
 
     const total = cart.reduce((acc: number, item: any) => acc + (Number(item.price) * item.quantity), 0);
     const totalPieces = cart.reduce((acc: number, item: any) => acc + item.quantity, 0);
     const uniqueItems = cart.length;
+
+    // Discount State
     const [discount, setDiscount] = useState(0);
-    const totalAmount = Math.max(0, total - discount);
+    const [discountType, setDiscountType] = useState<'fixed' | 'percentage'>('fixed');
+
+    // Calculate final total based on discount type
+    const discountAmount = discountType === 'percentage'
+        ? total * (discount / 100)
+        : discount;
+    const totalAmount = Math.max(0, total - discountAmount);
 
     // ─── Override & Receipt ───
     const [isOverrideOpen, setIsOverrideOpen] = useState(false);
@@ -220,32 +271,41 @@ export default function POSPage() {
         if (cart.length === 0 || isProcessing) return;
         setIsProcessing(true);
         try {
+            const parsedCash = cashReceived ? parseFloat(cashReceived.replace(/\s/g, '')) : 0;
             const result = await processSale({
                 cart,
                 paymentMethod,
                 totalAmount: totalAmount,
-                scope: 'OFFICIAL'
+                scope: 'OFFICIAL',
+                clientId: selectedClientId,
+                storeChangeInWallet,
+                pointsRedeemed,
+                cashReceived: parsedCash
             });
 
             if (result.success) {
                 toast.success(`Sale Processed: ${result.ref}`);
                 clearCart();
                 setCashReceived('');
+                setStoreChangeInWallet(false);
+                setPointsRedeemed(0);
+                setDiscount(0);
             }
         } catch (error) {
             toast.error("Process Logic Failure.");
         } finally {
             setIsProcessing(false);
         }
-    }, [cart, isProcessing, paymentMethod, totalAmount, clearCart]);
+    }, [cart, isProcessing, paymentMethod, totalAmount, clearCart, selectedClientId, storeChangeInWallet, pointsRedeemed, cashReceived]);
 
     // ─── Shared Props ───
     const layoutProps = {
         cart, clients, selectedClient, selectedClientId, categories,
-        sessions, activeSessionId, currency, total, discount, totalAmount,
+        sessions, activeSessionId, currency, total, discount, discountType, totalAmount,
         totalPieces, uniqueItems, searchQuery, activeCategoryId, sidebarMode,
         isFullscreen, paymentMethod, cashReceived, isProcessing,
         isOverrideOpen, isReceiptOpen, lastOrder,
+        storeChangeInWallet, pointsRedeemed,
 
         onSetSearchQuery: setSearchQuery,
         onSetActiveCategoryId: setActiveCategoryId,
@@ -253,8 +313,11 @@ export default function POSPage() {
         onSetPaymentMethod: setPaymentMethod,
         onSetCashReceived: setCashReceived,
         onSetDiscount: setDiscount,
+        onSetDiscountType: setDiscountType,
         onSetOverrideOpen: setIsOverrideOpen,
         onSetReceiptOpen: setIsReceiptOpen,
+        onSetStoreChangeInWallet: setStoreChangeInWallet,
+        onSetPointsRedeemed: setPointsRedeemed,
         onAddToCart: addToCart,
         onUpdateQuantity: updateQuantity,
         onClearCart: clearCart,

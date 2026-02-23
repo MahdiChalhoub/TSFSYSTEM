@@ -266,6 +266,23 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                                     <span className="font-bold tabular-nums">-{currency}{discount.toFixed(2)}</span>
                                 </div>
                             )}
+                            {(selectedClient?.loyalty || 0) > 0 && props.onSetPointsRedeemed && (
+                                <div className="flex items-center justify-between text-xs pt-1">
+                                    <span className="font-medium text-emerald-600">Loyalty ({selectedClient?.loyalty} pts)</span>
+                                    <button
+                                        onClick={() => {
+                                            const toggleTo = props.pointsRedeemed === selectedClient?.loyalty ? 0 : selectedClient?.loyalty;
+                                            props.onSetPointsRedeemed!(toggleTo || 0);
+                                        }}
+                                        className={clsx(
+                                            "px-2 py-0.5 border rounded text-[10px] font-bold transition-all",
+                                            props.pointsRedeemed! > 0 ? "bg-emerald-500 text-white border-emerald-500" : "bg-white text-emerald-600 border-emerald-200 hover:bg-emerald-50"
+                                        )}
+                                    >
+                                        {props.pointsRedeemed! > 0 ? `Redeeming ${props.pointsRedeemed}` : 'Redeem All'}
+                                    </button>
+                                </div>
+                            )}
                             <div className="flex justify-between text-lg font-black text-gray-900 pt-2 border-t border-gray-100">
                                 <span>Total</span>
                                 <span className="tabular-nums">{currency}{totalAmount.toFixed(2)}</span>
