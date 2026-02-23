@@ -36,7 +36,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
         sessions, activeSessionId, currency, total, discount, discountType, totalAmount,
         totalPieces, uniqueItems, searchQuery, activeCategoryId, sidebarMode,
         isFullscreen, paymentMethod, cashReceived, isProcessing,
-        isOverrideOpen, isReceiptOpen, lastOrder, highlightedItemId,
+        isOverrideOpen, isReceiptOpen, lastOrder, highlightedItemId, lastAddedItemId,
         onSetSearchQuery, onSetActiveCategoryId, onSetActiveSessionId,
         onSetPaymentMethod, onSetCashReceived, onSetDiscount, onSetDiscountType, onAddToCart, onUpdateQuantity,
         onClearCart, onCreateNewSession, onRemoveSession, onUpdateActiveSession,
@@ -250,7 +250,9 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                         key={item.productId}
                                         className={clsx(
                                             "px-2.5 py-1 group transition-colors duration-300 flex items-center gap-1.5",
-                                            highlightedItemId === item.productId ? "bg-emerald-100" : "hover:bg-white"
+                                            highlightedItemId === item.productId ? "bg-emerald-100"
+                                                : lastAddedItemId === item.productId ? "bg-emerald-500/20 hover:bg-emerald-500/30"
+                                                    : "hover:bg-white"
                                         )}
                                     >
                                         <span className="text-[9px] text-gray-300 font-mono w-3 shrink-0 text-center">{idx + 1}</span>

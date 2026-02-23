@@ -24,7 +24,7 @@ export function POSLayoutClassic(props: POSLayoutProps) {
         sessions, activeSessionId, currency, total, discount, totalAmount,
         totalPieces, uniqueItems, searchQuery, activeCategoryId,
         isFullscreen, paymentMethod, cashReceived, isProcessing,
-        isOverrideOpen, isReceiptOpen, lastOrder, highlightedItemId,
+        isOverrideOpen, isReceiptOpen, lastOrder, highlightedItemId, lastAddedItemId,
         onSetSearchQuery, onSetActiveCategoryId, onSetActiveSessionId,
         onSetPaymentMethod, onSetCashReceived, onSetDiscount, onAddToCart, onUpdateQuantity,
         onClearCart, onCreateNewSession, onRemoveSession, onUpdateActiveSession,
@@ -214,7 +214,12 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                                 {cart.map((item: any) => (
                                     <div
                                         key={item.productId}
-                                        className={`px-5 py-3 flex items-center gap-3 group transition-colors duration-300 ${highlightedItemId === item.productId ? "bg-indigo-50" : "hover:bg-gray-50/50"}`}
+                                        className={clsx(
+                                            "px-5 py-3 flex items-center gap-3 group transition-colors duration-300",
+                                            highlightedItemId === item.productId ? "bg-indigo-100"
+                                                : lastAddedItemId === item.productId ? "bg-indigo-500/10 hover:bg-indigo-500/20"
+                                                    : "hover:bg-gray-50/50"
+                                        )}
                                     >
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-bold text-gray-900 truncate">{item.name}</p>

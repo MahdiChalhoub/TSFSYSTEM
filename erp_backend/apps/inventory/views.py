@@ -447,6 +447,10 @@ class ProductViewSet(UDLEViewSetMixin, TenantModelViewSet):
                 "costPriceHT": float(p.cost_price_ht),
                 "sellingPriceHT": float(p.selling_price_ht),
                 "sellingPriceTTC": float(p.selling_price_ttc),
+                "basePrice": float(p.selling_price_ttc),
+                "price": float(p.selling_price_ttc),
+                "taxRate": float(getattr(p, 'tva_rate', 0) or 0),
+                "isTaxIncluded": True,
                 "stockLevel": float(stock_level),
                 "dailySales": round(daily_sales, 2),
                 "proposedQty": max(0, int(daily_sales * 14 - float(stock_level)))

@@ -7,14 +7,14 @@ import { TypicalFilter } from '@/components/common/TypicalFilter'
 import { getAdjustmentOrders, lockAdjustmentOrder, unlockAdjustmentOrder } from '@/app/actions/inventory/adjustment-orders'
 import { adjustStock } from '@/app/actions/inventory/movements'
 import { Badge } from '@/components/ui/badge'
-import { Sparkles, Sliders, Box, AlertTriangle, CheckCircle2, RefreshCw } from 'lucide-react'
+import { Sparkles, Sliders, Box, AlertTriangle, CheckCircle2, RefreshCw, Eye, Pencil } from 'lucide-react'
 import { toast } from 'sonner'
 import { useCurrency } from '@/lib/utils/currency'
 
 export function AdjustmentsClient({ warehouses }: { warehouses: any[] }) {
     const { fmt } = useCurrency()
-    const settings = useListViewSettings('inv_adjustments', {
-        columns: ['reference', 'date', 'warehouse_name', 'total_qty', 'reason'],
+    const settings = useListViewSettings('inv_adjustments_ui', {
+        columns: ['date', 'supplier_name', 'reference', 'total_qty_adjustment', 'total_amount_adjustment', 'warehouse_name', 'reason'],
         pageSize: 25,
         sortKey: 'date',
         sortDir: 'desc',
@@ -40,41 +40,46 @@ export function AdjustmentsClient({ warehouses }: { warehouses: any[] }) {
 
     const columns = [
         {
-            key: 'reference',
-            label: 'Adjustment ID',
-            alwaysVisible: true,
-            render: (row: any) => <span className="font-mono font-bold text-gray-900">ADJ-{row.reference || row.id}</span>
-        },
-        {
             key: 'date',
-            label: 'Effective Date',
+            label: 'Date',
             render: (row: any) => <span className="text-gray-500">{new Date(row.date).toLocaleDateString()}</span>
         },
         {
-            key: 'warehouse_name',
-            label: 'Terminal',
-            render: (row: any) => <Badge variant="outline" className="bg-gray-50 border-gray-100 font-black uppercase text-[10px]">{row.warehouse_name || 'Global'}</Badge>
+            key: 'supplier_name',
+            label: 'Supplier',
+            render: (row: any) => <span className="text-gray-500">{row.supplier_name || '-'}</span>
         },
         {
-            key: 'total_qty',
-            label: 'Delta',
-            align: 'right' as const,
-            render: (row: any) => (
-                <span className={`font-black ${(row.total_qty_adjustment || 0) < 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
-                    {(row.total_qty_adjustment || 0) > 0 ? '+' : ''}{row.total_qty_adjustment || 0}
-                </span>
-            )
+            key: 'reference',
+            label: 'Reference',
+            alwaysVisible: true,
+            render: (row: any) => <span className="text-gray-500">{row.reference || `ADJ-${row.id}`}</span>
+        },
+        {
+            key: 'total_qty_adjustment',
+            label: 'QTY Adj.',
+            render: (row: any) => <span className="text-gray-700 font-medium">{row.total_qty_adjustment || 0}</span>
+        },
+        {
+            key: 'total_amount_adjustment',
+            label: 'Amt Adj',
+            render: (row: any) => <span className="font-mono text-gray-700">{fmt.currency(row.total_amount_adjustment || 0)}</span>
+        },
+        {
+            key: 'warehouse_name',
+            label: 'Location',
+            render: (row: any) => <span className="text-gray-500">{row.warehouse_name || 'Global'}</span>
         },
         {
             key: 'reason',
-            label: 'Operational Reason',
-            render: (row: any) => <span className="text-xs italic text-gray-400">{row.reason || 'Manual Correction'}</span>
+            label: 'Reason',
+            render: (row: any) => <span className="text-gray-500">{row.reason || '-'}</span>
         }
     ]
 
     return (
         <TypicalListView
-            title="Stock Adjustments (Execution)"
+            title="Stock Adjustment"
             data={data}
             loading={loading}
             getRowId={r => r.id}
@@ -86,23 +91,48 @@ export function AdjustmentsClient({ warehouses }: { warehouses: any[] }) {
             sortKey={settings.sortKey}
             sortDir={settings.sortDir}
             onSort={settings.setSort}
-            addLabel="CREATE DRAFT ADJUSTMENT"
+            addLabel="Add STOCK ADJUSMENT"
             onAdd={() => toast.info("Use the adjustment form to create real stock impact")}
-            headerExtras={
-                <div className="flex items-center gap-2 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
-                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                    <span className="text-[9px] font-black uppercase text-emerald-700 tracking-widest">Live Inventory Impact</span>
-                </div>
-            }
+            onExport={() => toast.info("Exporting records...")}
+            expandable={{
+                columns: [
+                    { key: 'warehouse_name', label: 'Location' },
+                    {
+                        key: 'reflect_transfer',
+                        label: 'Reflect Transfer',
+                        render: (line) => <span className="text-gray-500 capitalize">{line.qty_adjustment > 0 ? "Addition" : "Subtraction"}</span>
+                    },
+                    {
+                        key: 'amount_adjustment',
+                        label: 'Total Amount',
+                        render: (line) => <span className="font-mono">{fmt.currency(line.amount_adjustment || 0)}</span>
+                    },
+                    {
+                        key: 'recovered_amount',
+                        label: 'Recovered Amt',
+                        render: (line) => <span className="font-mono">{fmt.currency(line.recovered_amount || 0)}</span>
+                    },
+                    { key: 'reason', label: 'Reason' },
+                    { key: 'added_by_name', label: 'Added By' }
+                ],
+                getDetails: (row) => row.lines || [],
+                renderActions: (detail, parent) => (
+                    <div className="flex gap-3 justify-end items-center mr-2">
+                        <button className="text-gray-400 hover:text-gray-600"><Eye size={14} /></button>
+                        <button className="text-gray-400 hover:text-gray-600"><Pencil size={14} /></button>
+                    </div>
+                )
+            }}
             lifecycle={{
                 getStatus: r => {
                     const m: Record<string, any> = {
-                        OPEN: { label: 'Operational Draft', variant: 'warning' },
-                        LOCKED: { label: 'Finalized Record', variant: 'success' },
+                        OPEN: { label: 'Draft', variant: 'warning' },
+                        LOCKED: { label: 'Approved', variant: 'success' },
                         CANCELED: { label: 'Aborted', variant: 'danger' }
                     }
                     return m[r.lifecycle_status || 'OPEN'] || { label: r.lifecycle_status, variant: 'default' }
                 },
+                getVerified: r => r.current_verification_level > 0,
                 getLocked: r => r.lifecycle_status === 'LOCKED',
                 onLockToggle: (row) => {
                     startTransition(async () => {
@@ -111,7 +141,7 @@ export function AdjustmentsClient({ warehouses }: { warehouses: any[] }) {
                                 toast.error("Locked adjustments cannot be modified by standard users")
                             } else {
                                 await lockAdjustmentOrder(row.id)
-                                toast.success("Adjustment finalized and locked")
+                                toast.success("Adjustment approved and locked")
                                 loadData()
                             }
                         } catch {
@@ -123,10 +153,17 @@ export function AdjustmentsClient({ warehouses }: { warehouses: any[] }) {
         >
             <TypicalFilter
                 search={{
-                    placeholder: "Search by ID or reason...",
+                    placeholder: "Search adjustments...",
                     value: "",
                     onChange: () => { }
                 }}
+                filters={[
+                    { key: 'category', label: 'Category', options: [] },
+                    { key: 'stock_adjustment', label: 'Stock Adjustment', options: [] },
+                    { key: 'supplier', label: 'Supplier', options: [] },
+                    { key: 'location', label: 'Location', options: [] },
+                    { key: 'dates', label: 'Dates', options: [] },
+                ]}
             />
         </TypicalListView>
     )

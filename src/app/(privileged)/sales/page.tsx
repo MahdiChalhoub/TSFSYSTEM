@@ -49,6 +49,7 @@ export default function POSPage() {
     // ─── User Role State ───
     const [isSuperAdmin, setIsSuperAdmin] = useState(false);
     const [highlightedItemId, setHighlightedItemId] = useState<number | null>(null);
+    const [lastAddedItemId, setLastAddedItemId] = useState<number | null>(null);
 
     // ─── UI State ───
     const [searchQuery, setSearchQuery] = useState('');
@@ -197,6 +198,7 @@ export default function POSPage() {
         }
         updateActiveSession({ cart: newCart });
         setHighlightedItemId(product.id);
+        setLastAddedItemId(product.id);
         setTimeout(() => setHighlightedItemId(null), 500);
     }, [cart, updateActiveSession]);
 
@@ -210,6 +212,7 @@ export default function POSPage() {
         }).filter((i: any) => i.quantity > 0);
         updateActiveSession({ cart: newCart });
         setHighlightedItemId(productId);
+        setLastAddedItemId(productId);
         setTimeout(() => setHighlightedItemId(null), 500);
     }, [cart, updateActiveSession]);
 
@@ -310,7 +313,7 @@ export default function POSPage() {
         totalPieces, uniqueItems, searchQuery, activeCategoryId, sidebarMode,
         isFullscreen, paymentMethod, cashReceived, isProcessing,
         isOverrideOpen, isReceiptOpen, lastOrder,
-        storeChangeInWallet, pointsRedeemed, highlightedItemId,
+        storeChangeInWallet, pointsRedeemed, highlightedItemId, lastAddedItemId,
 
         onSetSearchQuery: setSearchQuery,
         onSetActiveCategoryId: setActiveCategoryId,
