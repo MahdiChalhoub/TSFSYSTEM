@@ -25,11 +25,17 @@ interface PurchaseOrder {
     notes: string
     lines: OrderLine[]
     created_at: string
+    tracking_number: string | null
+    tracking_url: string | null
+    acknowledged_at: string | null
+    dispatched_at: string | null
 }
 
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
     DRAFT: { label: 'Draft', color: 'text-slate-400', bg: 'bg-slate-500/10' },
-    SENT: { label: 'Requires Acknowledgment', color: 'text-blue-400', bg: 'bg-blue-500/10' },
+    SUBMITTED: { label: 'Pending Approval', color: 'text-slate-400', bg: 'bg-slate-500/10' },
+    APPROVED: { label: 'Approved', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+    ORDERED: { label: 'Requires Acknowledgment', color: 'text-blue-400', bg: 'bg-blue-500/10' },
     CONFIRMED: { label: 'Preparing for Dispatch', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
     IN_TRANSIT: { label: 'In Transit', color: 'text-amber-400', bg: 'bg-amber-500/10' },
     RECEIVED: { label: 'Received', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
@@ -50,7 +56,8 @@ export default function SupplierOrderDetail() {
     const [order, setOrder] = useState<PurchaseOrder | null>(null)
     const [loading, setLoading] = useState(true)
     const [actionLoading, setActionLoading] = useState(false)
-    const [tracking, setTracking] = useState('')
+    const [trackingNo, setTrackingNo] = useState('')
+    const [trackingUrl, setTrackingUrl] = useState('')
 
     useEffect(() => {
         const token = getToken(slug)
@@ -146,11 +153,11 @@ export default function SupplierOrderDetail() {
                 </div>
 
                 {/* Actions Panel */}
-                {(order.status === 'SENT' || order.status === 'CONFIRMED') && (
+                {(order.status === 'ORDERED' || order.status === 'CONFIRMED') && (
                     <div className="bg-slate-900/80 border border-white/5 rounded-3xl p-6 lg:p-8 backdrop-blur-xl">
                         <h2 className="text-xl font-black text-white mb-4">Action Required</h2>
 
-                        {order.status === 'SENT' && (
+                        {order.status === 'ORDERED' && (
                             <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
                                 <p className="text-slate-400 flex-1">
                                     The buyer has issued this Purchase Order. Please review the line items carefully.
@@ -158,7 +165,11 @@ export default function SupplierOrderDetail() {
                                 </p>
                                 <div className="flex gap-3">
                                     <button
-                                        onClick={() => handleAction('acknowledge')}
+                                        onClick={() => {
+                                            if (confirm('Are you sure you want to acknowledge this order? This confirms your ability to fulfill the request.')) {
+                                                handleAction('acknowledge')
+                                            }
+                                        }}
                                         disabled={actionLoading}
                                         className="px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl font-bold flex items-center gap-2 transition-all">
                                         <CheckCircle2 size={18} />
@@ -169,26 +180,39 @@ export default function SupplierOrderDetail() {
                         )}
 
                         {order.status === 'CONFIRMED' && (
-                            <div className="flex flex-col gap-4">
+                            <div className="flex flex-col gap-6">
                                 <p className="text-slate-400">
                                     This order has been acknowledged and is awaiting dispatch. Submit tracking details once the goods have been shipped.
                                 </p>
-                                <div className="flex flex-col sm:flex-row gap-3">
-                                    <input
-                                        type="text"
-                                        placeholder="Tracking Number or Dispatch Note (optional)"
-                                        value={tracking}
-                                        onChange={e => setTracking(e.target.value)}
-                                        className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500/50"
-                                    />
-                                    <button
-                                        onClick={() => handleAction('dispatch_order', { tracking_info: tracking })}
-                                        disabled={actionLoading}
-                                        className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-xl font-bold flex items-center gap-2 transition-all hover:shadow-lg hover:shadow-emerald-900/20 whitespace-nowrap">
-                                        <Truck size={18} />
-                                        {actionLoading ? 'Processing...' : 'Mark as Dispatched'}
-                                    </button>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Tracking Number</label>
+                                        <input
+                                            type="text"
+                                            placeholder="e.g. DHL-12345678"
+                                            value={trackingNo}
+                                            onChange={e => setTrackingNo(e.target.value)}
+                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500/50"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Tracking URL (Optional)</label>
+                                        <input
+                                            type="url"
+                                            placeholder="https://carrier.com/track/..."
+                                            value={trackingUrl}
+                                            onChange={e => setTrackingUrl(e.target.value)}
+                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500/50"
+                                        />
+                                    </div>
                                 </div>
+                                <button
+                                    onClick={() => handleAction('dispatch_order', { tracking_number: trackingNo, tracking_url: trackingUrl })}
+                                    disabled={actionLoading || !trackingNo}
+                                    className="w-full sm:w-auto px-8 py-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-2xl font-black text-lg flex items-center justify-center gap-3 transition-all hover:shadow-2xl hover:shadow-emerald-900/40">
+                                    <Truck size={22} />
+                                    {actionLoading ? 'Processing...' : 'Confirm Dispatch'}
+                                </button>
                             </div>
                         )}
                     </div>
@@ -242,13 +266,36 @@ export default function SupplierOrderDetail() {
                     </div>
                 </div>
 
-                {/* Notes */}
-                {order.notes && (
-                    <div className="bg-slate-900/60 border border-white/5 rounded-3xl p-6 backdrop-blur-xl">
-                        <h3 className="text-white font-bold mb-2 text-sm flex items-center gap-2">
-                            <FileText size={16} className="text-slate-500" /> Notes & Conditions
-                        </h3>
-                        <p className="text-slate-400 text-sm whitespace-pre-wrap">{order.notes}</p>
+                {/* Deployment Integrity Notes */}
+                {(order.tracking_number || order.notes) && (
+                    <div className="bg-slate-900/60 border border-white/5 rounded-3xl p-6 backdrop-blur-xl space-y-4">
+                        {order.tracking_number && (
+                            <div>
+                                <h3 className="text-white font-bold mb-2 text-sm flex items-center gap-2">
+                                    <Truck size={16} className="text-emerald-500" /> Dispatch Info
+                                </h3>
+                                <div className="bg-white/5 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-white/5">
+                                    <div>
+                                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Tracking Number</p>
+                                        <p className="text-white font-mono text-lg">{order.tracking_number}</p>
+                                    </div>
+                                    {order.tracking_url && (
+                                        <a href={order.tracking_url} target="_blank" rel="noopener noreferrer"
+                                            className="px-4 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-xl text-sm font-bold transition-colors border border-emerald-500/20">
+                                            Track Package
+                                        </a>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                        {order.notes && (
+                            <div>
+                                <h3 className="text-white font-bold mb-2 text-sm flex items-center gap-2">
+                                    <FileText size={16} className="text-slate-500" /> Internal Notes
+                                </h3>
+                                <p className="text-slate-400 text-sm whitespace-pre-wrap">{order.notes}</p>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
