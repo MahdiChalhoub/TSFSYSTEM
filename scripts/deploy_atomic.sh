@@ -156,7 +156,14 @@ log ""
 log "⚛️  [3/6] Building Frontend in $APP_ROOT..."
 cd "$APP_ROOT"
 
-# 3a. Build Next.js
+# 3a. Install & Build Next.js
+log "  📦 Installing Node dependencies..."
+if npm install --no-audit --no-fund >> "$LOG_FILE" 2>&1; then
+    ok "  Node dependencies synchronized"
+else
+    err "  npm install failed! Check $LOG_FILE"
+fi
+
 log "  🔨 Running npm run build..."
 if npm run build >> "$LOG_FILE" 2>&1; then
     ok "  Frontend build succeeded"
