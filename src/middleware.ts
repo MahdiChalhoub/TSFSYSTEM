@@ -102,7 +102,16 @@ export default async function middleware(req: NextRequest) {
     const isAuthRoute = url.pathname.startsWith('/login') || url.pathname.startsWith('/register');
     const isPortalRoute = url.pathname.startsWith('/tenant') || url.pathname.startsWith('/supplier-portal');
     const isStorefrontAlias = url.pathname === '/store' || url.pathname === '/home';
-    const isPublicRoute = url.pathname === '/' || url.pathname.startsWith('/landing') || isAuthRoute || isPortalRoute || isStorefrontAlias;
+
+    // Additional Storefront sub-routes that should be public
+    const isStorefrontSubRoute =
+        url.pathname.startsWith('/product') ||
+        url.pathname.startsWith('/categories') ||
+        url.pathname.startsWith('/cart') ||
+        url.pathname.startsWith('/checkout') ||
+        url.pathname.startsWith('/search');
+
+    const isPublicRoute = url.pathname === '/' || url.pathname.startsWith('/landing') || isAuthRoute || isPortalRoute || isStorefrontAlias || isStorefrontSubRoute;
     const hasAuthToken = req.cookies.get('auth_token')?.value && req.cookies.get('auth_token')?.value !== '';
 
     if (!hasAuthToken && !isPublicRoute && !url.pathname.startsWith('/saas/login')) {

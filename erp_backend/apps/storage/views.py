@@ -45,12 +45,7 @@ class StoredFileViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'], url_path='upload')
     def upload(self, request):
         """Upload a file to cloud storage."""
-        org_id = request.headers.get('X-Tenant-Id') or \
-                 getattr(request, 'organization', None) or \
-                 getattr(request.user, 'organization_id', None)
-        
-        from erp.models import Organization
-        org = Organization.objects.filter(id=org_id).first() if org_id else None
+        org = getattr(request, 'organization', None)
         provider = StorageProvider.get_for_organization(org)
 
         serializer = FileUploadSerializer(
@@ -142,20 +137,29 @@ class StorageProviderViewSet(viewsets.GenericViewSet):
 
     def _get_provider(self, request):
         from erp.models import Organization
-        org_id = request.headers.get('X-Tenant-Id') or \
-                 getattr(request, 'organization', None) or \
-                 getattr(request.user, 'organization_id', None)
+        from erp.middleware import get_current_tenant_id
+        
+        org_id = get_current_tenant_id()
+        if not org_id:
+            org_id = request.headers.get('X-Tenant-Id') or \
+                     getattr(request, 'organization', None) or \
+                     getattr(request.user, 'organization_id', None)
         
         if not org_id:
             return None
             
-        org = Organization.objects.filter(id=org_id).first() if isinstance(org_id, (int, str)) else org_id
+        # Resolve org object if it's an ID
+        if isinstance(org_id, (int, str)):
+            org = Organization.objects.filter(id=org_id).first()
+        else:
+            org = org_id
+            
         if not org:
             return None
             
         provider, _ = StorageProvider.objects.get_or_create(
             organization=org,
-            defaults={'provider_type': 'LOCAL', 'bucket_name': 'tsf-files'}
+            defaults={'provider_type': 'LOCAL', 'bucket_name': 'tsf-files', 'is_active': True}
         )
         return provider
 

@@ -429,6 +429,7 @@ class ClientOrderLine(TenantModel):
 
     order = models.ForeignKey(ClientOrder, on_delete=models.CASCADE, related_name='lines')
     product = models.ForeignKey('inventory.Product', on_delete=models.SET_NULL, null=True, blank=True)
+    variant = models.ForeignKey('inventory.ProductVariant', on_delete=models.SET_NULL, null=True, blank=True)
     product_name = models.CharField(max_length=255, help_text='Snapshot at time of order')
     quantity = models.DecimalField(max_digits=15, decimal_places=2, default=1)
     unit_price = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
@@ -581,6 +582,7 @@ class QuoteItem(TenantModel):
     """
     quote_request = models.ForeignKey(QuoteRequest, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey('inventory.Product', on_delete=models.SET_NULL, null=True, blank=True)
+    variant = models.ForeignKey('inventory.ProductVariant', on_delete=models.SET_NULL, null=True, blank=True)
     product_name = models.CharField(max_length=255, help_text='Snapshot of product name')
     quantity = models.DecimalField(max_digits=15, decimal_places=2, default=1)
     notes = models.TextField(blank=True, default='')

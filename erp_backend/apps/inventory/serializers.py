@@ -160,6 +160,54 @@ class ProductGroupSerializer(serializers.ModelSerializer):
         return obj.products.count()
 
 
+class ProductAttributeValueSerializer(serializers.ModelSerializer):
+    attribute_name = serializers.CharField(source='attribute.name', read_only=True)
+    
+    class Meta:
+        from .models import ProductAttributeValue
+        model = ProductAttributeValue
+        fields = ['id', 'attribute', 'attribute_name', 'value', 'code']
+
+
+class ProductVariantSerializer(serializers.ModelSerializer):
+    attribute_values = ProductAttributeValueSerializer(many=True, read_only=True)
+    option_values = serializers.SerializerMethodField()
+    stock_quantity = serializers.SerializerMethodField()
+
+    class Meta:
+        from .models import ProductVariant
+        model = ProductVariant
+        fields = [
+            'id', 'sku', 'name', 'price', 'barcode', 'attribute_values', 'option_values',
+            'selling_price_ht', 'selling_price_ttc', 'image_url',
+            'stock_quantity', 'is_active'
+        ]
+
+    def get_option_values(self, obj):
+        return {
+            av.attribute.name: av.value 
+            for av in obj.attribute_values.all().select_related('attribute')
+        }
+
+    @property
+    def price(self, obj):
+        return obj.selling_price_ttc
+
+    name = serializers.SerializerMethodField()
+    price = serializers.DecimalField(source='selling_price_ttc', max_digits=15, decimal_places=2, read_only=True)
+
+    def get_name(self, obj):
+        attrs = obj.attribute_values.all().select_related('attribute')
+        if not attrs: return obj.sku
+        return ", ".join([f"{av.attribute.name}: {av.value}" for av in attrs])
+
+    def get_stock_quantity(self, obj):
+        from .models import Inventory
+        from django.db.models import Sum
+        return float(Inventory.objects.filter(variant=obj).aggregate(
+            total=Sum('quantity'))['total'] or 0)
+
+
 # =============================================================================
 # PRODUCT SERIALIZERS
 # =============================================================================
@@ -174,11 +222,13 @@ class ProductSerializer(serializers.ModelSerializer):
     parfum_name = serializers.CharField(source='parfum.name', read_only=True, default=None)
     size_unit_name = serializers.CharField(source='size_unit.short_name', read_only=True, default=None)
 
+    variants = ProductVariantSerializer(many=True, read_only=True)
+
     class Meta:
         model = Product
         fields = [
             'id', 'sku', 'barcode', 'name', 'description',
-            'product_type',
+            'product_type', 'variants',
             'category', 'brand', 'unit', 'country', 'parfum',
             'product_group', 'size', 'size_unit',
             'brand_name', 'country_name', 'country_code',
@@ -208,6 +258,22 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             'min_stock_level', 'is_expiry_tracked',
         ]
         read_only_fields = ['organization']
+
+
+class StorefrontProductSerializer(serializers.ModelSerializer):
+    """Secure serializer for public storefront with limited fields."""
+    category_name = serializers.CharField(source='category.name', read_only=True, default=None)
+    brand_name = serializers.CharField(source='brand.name', read_only=True, default=None)
+    variants = ProductVariantSerializer(many=True, read_only=True)
+    
+    class Meta:
+        from .models import Product
+        model = Product
+        fields = [
+            'id', 'sku', 'name', 'description', 'image_url',
+            'selling_price_ttc', 'category_name', 'brand_name',
+            'variants', 'status'
+        ]
 
 
 class ComboComponentSerializer(serializers.ModelSerializer):

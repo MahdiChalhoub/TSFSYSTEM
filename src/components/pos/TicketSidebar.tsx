@@ -40,7 +40,8 @@ export function TicketSidebar({ cart, onUpdateQuantity, onClear, currency = '$',
     const receivedAmount = Number(cashReceived) || totalAmount;
     const changeDue = Math.max(0, receivedAmount - totalAmount);
 
-    const handleCharge = useCallback(() => {
+    const handleCharge = useCallback((override?: boolean | React.MouseEvent) => {
+        const confirmedOverride = override === true;
         if (cart.length === 0 || isPending) return;
         startTransition(async () => {
             try {
@@ -48,8 +49,17 @@ export function TicketSidebar({ cart, onUpdateQuantity, onClear, currency = '$',
                     cart,
                     paymentMethod,
                     totalAmount: totalAmount,
+                    userConfirmedDeclaration: confirmedOverride
                     // scope is now handled on the server by the Integrity Guard
                 });
+
+                if (!result.success && (result as any).needsConfirmation) {
+                    const proceed = window.confirm((result as any).message || "High-value transaction detected. Declare to Official scope?");
+                    if (proceed) {
+                        handleCharge(true); // Retry with confirmation
+                    }
+                    return;
+                }
 
                 if (result.success) {
                     if (result.protectionWarning) {

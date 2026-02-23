@@ -25,6 +25,15 @@ class TenantMiddleware:
                 tenant_id = str(user.organization_id)
         
         set_current_tenant_id(tenant_id)
+
+        # Attach organization to request for easy access in views
+        request.organization_id = tenant_id
+        request.organization = None
+        if tenant_id:
+            from erp.models import Organization
+            # Resolve the actual object to avoid N+1 in every view
+            # Note: We use .first() to avoid exceptions if tenant_id is invalid
+            request.organization = Organization.objects.filter(id=tenant_id).first()
         
         response = self.get_response(request)
         

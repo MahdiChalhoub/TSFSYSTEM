@@ -1,6 +1,4 @@
-'use client'
-
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -10,7 +8,7 @@ import {
 import { useCart } from '../../engine/hooks/useCart'
 import { useConfig } from '../../engine/hooks/useConfig'
 import { useWishlist } from '../../engine/hooks/useWishlist'
-import type { ProductDetailProps, Product } from '../../engine/types'
+import type { ProductDetailProps, ProductVariant } from '../../engine/types'
 
 export default function MidnightProductDetail({ product }: ProductDetailProps) {
     const router = useRouter()
@@ -19,28 +17,65 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
     const { showPrice, isQuoteMode } = useConfig()
     const { isInWishlist, toggleWishlist } = useWishlist()
 
+    // ── Variant Logic ────────────────────────────────────────────────────────
+
+    // Extract logical options from variants
+    const options = useMemo(() => {
+        if (product.options?.length) return product.options
+        if (!product.variants?.length) return []
+
+        const optMap: Record<string, Set<string>> = {}
+        product.variants.forEach(v => {
+            Object.entries(v.option_values).forEach(([name, val]) => {
+                if (!optMap[name]) optMap[name] = new Set()
+                optMap[name].add(val)
+            })
+        })
+        return Object.entries(optMap).map(([name, set]) => ({
+            id: name,
+            name,
+            values: Array.from(set)
+        }))
+    }, [product.options, product.variants])
+
+    // Initial selections (first available value for each option)
+    const [selections, setSelections] = useState<Record<string, string>>(() => {
+        const initial: Record<string, string> = {}
+        options.forEach(opt => {
+            if (opt.values.length) initial[opt.name] = opt.values[0]
+        })
+        return initial
+    })
+
+    const activeVariant = useMemo(() => {
+        if (!product.variants?.length) return null
+        return product.variants.find(v => {
+            return Object.entries(selections).every(([name, val]) => v.option_values[name] === val)
+        })
+    }, [product.variants, selections])
+
+    // UI Values (Product or Active Variant)
+    const currentPrice = activeVariant?.price ?? product.selling_price_ttc
+    const currentPriceHT = activeVariant?.selling_price_ht ?? product.selling_price_ht
+    const currentImage = activeVariant?.image_url ?? product.image_url
+    const currentSKU = activeVariant?.sku ?? product.sku
+    const currentStock = activeVariant?.stock_quantity ?? product.stock_quantity
+
     const [quantity, setQuantity] = useState(1)
     const [added, setAdded] = useState(false)
 
     const handleAddToCart = () => {
         addToCart({
             product_id: product.id,
-            product_name: product.name,
-            unit_price: product.selling_price_ttc,
+            variant_id: activeVariant?.id,
+            product_name: product.name + (activeVariant ? ` - ${activeVariant.name}` : ''),
+            unit_price: currentPrice,
             quantity,
-            image_url: product.image_url,
-            tax_rate: product.tax_rate || 0,
+            image_url: currentImage,
+            tax_rate: (product as any).tax_rate || 0,
         })
         setAdded(true)
         setTimeout(() => setAdded(false), 2000)
-    }
-
-    const detail = product as Product & {
-        description?: string
-        selling_price_ht?: number
-        stock_quantity?: number
-        barcode?: string
-        unit_of_measure?: string
     }
 
     return (
@@ -55,8 +90,8 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                     {/* Image */}
                     <div className="bg-slate-900/40 border border-white/5 rounded-[2.5rem] overflow-hidden aspect-square">
-                        {detail.image_url ? (
-                            <img src={detail.image_url} alt={detail.name} className="w-full h-full object-cover" />
+                        {currentImage ? (
+                            <img src={currentImage} alt={product.name} className="w-full h-full object-cover" />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-950">
                                 <Package size={64} className="text-slate-800" />
@@ -66,13 +101,13 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
 
                     {/* Info */}
                     <div className="space-y-6">
-                        {detail.category_name && (
+                        {product.category_name && (
                             <span className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 text-emerald-400 rounded-full text-[10px] font-black uppercase tracking-wider border border-emerald-500/20">
-                                <Tag size={10} /> {detail.category_name}
+                                <Tag size={10} /> {product.category_name}
                             </span>
                         )}
 
-                        <h1 className="text-4xl font-black text-white tracking-tight">{detail.name}</h1>
+                        <h1 className="text-4xl font-black text-white tracking-tight">{product.name}</h1>
 
                         <div className="flex items-center gap-3">
                             <div className="flex items-center gap-1 text-emerald-400">
@@ -81,55 +116,66 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
                             <span className="text-xs text-slate-500">Premium Quality</span>
                         </div>
 
-                        <p className="text-[10px] text-slate-600 font-mono tracking-widest">SKU: {detail.sku}</p>
+                        <p className="text-[10px] text-slate-600 font-mono tracking-widest uppercase">
+                            SKU: {currentSKU}
+                        </p>
 
-                        {detail.description && (
-                            <p className="text-slate-400 leading-relaxed">{detail.description}</p>
+                        {product.description && (
+                            <p className="text-slate-400 leading-relaxed text-sm">{product.description}</p>
+                        )}
+
+                        {/* Variant Selectors */}
+                        {options.length > 0 && (
+                            <div className="space-y-6 pt-2">
+                                {options.map(opt => (
+                                    <div key={opt.id} className="space-y-3">
+                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{opt.name}</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {opt.values.map(val => (
+                                                <button
+                                                    key={val}
+                                                    onClick={() => setSelections(prev => ({ ...prev, [opt.name]: val }))}
+                                                    className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all
+                                                        ${selections[opt.name] === val
+                                                            ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                                                            : 'bg-white/5 text-slate-400 border-white/5 hover:border-white/20 hover:text-white'
+                                                        }`}>
+                                                    {val}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         )}
 
                         {/* Price */}
                         {showPrice ? (
-                            <div className="space-y-1">
+                            <div className="space-y-1 pt-4">
                                 <div className="text-4xl font-black text-white">
-                                    <span className="text-emerald-500 mr-1">$</span>{detail.selling_price_ttc}
+                                    <span className="text-emerald-500 mr-1">$</span>{currentPrice}
                                 </div>
-                                {detail.selling_price_ht && detail.selling_price_ht !== detail.selling_price_ttc && (
-                                    <p className="text-xs text-slate-600">Before tax: ${detail.selling_price_ht}</p>
+                                {currentPriceHT && currentPriceHT !== currentPrice && (
+                                    <p className="text-xs text-slate-600">Before tax: ${currentPriceHT}</p>
                                 )}
                             </div>
                         ) : (
-                            <div className="text-amber-400 flex items-center gap-2 text-lg font-bold">
+                            <div className="text-amber-400 flex items-center gap-2 text-lg font-bold pt-4">
                                 <FileQuestion size={20} /> Price on Request
                             </div>
                         )}
 
                         {/* Stock */}
-                        {detail.stock_quantity !== undefined && (
+                        {currentStock !== undefined && (
                             <div className={`flex items-center gap-2 text-xs font-bold
-                                ${detail.stock_quantity > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                                {detail.stock_quantity > 0 ? (
-                                    <><CheckCircle2 size={14} /> {detail.stock_quantity} in stock</>
+                                ${Number(currentStock) > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                {Number(currentStock) > 0 ? (
+                                    <><CheckCircle2 size={14} /> {Math.round(Number(currentStock))} in stock</>
                                 ) : (
                                     <><AlertCircle size={14} /> Out of stock</>
                                 )}
                             </div>
                         )}
-
-                        {/* Details */}
-                        <div className="grid grid-cols-2 gap-3">
-                            {detail.barcode && (
-                                <div className="bg-white/5 border border-white/5 rounded-xl p-3">
-                                    <p className="text-[10px] text-slate-600 mb-1">Barcode</p>
-                                    <p className="text-xs text-white font-mono">{detail.barcode}</p>
-                                </div>
-                            )}
-                            {detail.unit_of_measure && (
-                                <div className="bg-white/5 border border-white/5 rounded-xl p-3">
-                                    <p className="text-[10px] text-slate-600 mb-1">Unit</p>
-                                    <p className="text-xs text-white font-bold">{detail.unit_of_measure}</p>
-                                </div>
-                            )}
-                        </div>
 
                         {/* Quantity + Add to Cart */}
                         {!isQuoteMode && (
@@ -152,7 +198,7 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
                                 <div className="flex gap-3">
                                     <button
                                         onClick={handleAddToCart}
-                                        disabled={detail.stock_quantity !== undefined && detail.stock_quantity <= 0}
+                                        disabled={currentStock !== undefined && Number(currentStock) <= 0}
                                         className={`flex-1 py-4 rounded-2xl font-bold text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2
                                             ${added
                                                 ? 'bg-emerald-500 text-white'

@@ -33,6 +33,7 @@ export interface ProductVariant {
     sku: string
     name: string
     price: number
+    selling_price_ht?: number
     image_url?: string
     stock_quantity: number
     option_values: Record<string, string> // e.g. { "Color": "Red", "Size": "XL" }
@@ -55,11 +56,12 @@ export interface Category {
 
 export interface CartItem {
     product_id: string
+    variant_id?: string
     product_name: string
     unit_price: number
     quantity: number
     image_url?: string
-    tax_rate: number
+    tax_rate?: number
 }
 
 export interface Order {

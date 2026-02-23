@@ -1,5 +1,7 @@
 import { useTheme } from '../../engine/ThemeProvider'
+import { useConfig } from '../../engine/hooks/useConfig'
 import { SectionRenderer } from '../../engine/SectionRenderer'
+import { Sparkles } from 'lucide-react'
 import type { HomePageProps, StorefrontPageLayout } from '../../engine/types'
 
 const DEFAULT_LAYOUT: StorefrontPageLayout = {
@@ -10,7 +12,8 @@ const DEFAULT_LAYOUT: StorefrontPageLayout = {
 }
 
 export default function MidnightHomePage({ products, categories }: HomePageProps) {
-    const { components, sections, config } = useTheme()
+    const { components, sections } = useTheme()
+    const { config } = useConfig()
 
     // Use layout from config or fallback to default
     const layout = config?.layout || DEFAULT_LAYOUT
