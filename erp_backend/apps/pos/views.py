@@ -1127,3 +1127,55 @@ class PurchaseOrderLineViewSet(TenantModelViewSet):
     """Direct CRUD for PO lines (typically managed via PurchaseOrderViewSet)."""
     queryset = PurchaseOrderLine.objects.select_related('product', 'warehouse', 'order').all()
     serializer_class = PurchaseOrderLineSerializer
+
+
+# ── POS Tickets (Cloud Sync) ───────────────────────────────────
+
+from .models import PosTicket
+from .serializers import PosTicketSerializer
+
+
+class PosTicketViewSet(TenantModelViewSet):
+    """Handles cloud synchronization of pending POS sessions."""
+    queryset = PosTicket.objects.all()
+    serializer_class = PosTicketSerializer
+
+    def get_queryset(self):
+        # Only show tickets for the current user in this organization
+        return super().get_queryset().filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(
+            organization_id=get_current_tenant_id(),
+            user=self.request.user
+        )
+
+    @action(detail=False, methods=['post'], url_path='sync-all')
+    def sync_all(self, request):
+        """
+        Bulk sync tickets from frontend.
+        Expects a list of tickets.
+        Updates existing ones or creates new ones.
+        """
+        organization_id = get_current_tenant_id()
+        tickets_data = request.data.get('tickets', [])
+        synced_ids = []
+
+        with transaction.atomic():
+            for data in tickets_data:
+                ticket_id = data.get('ticket_id')
+                if not ticket_id: continue
+                
+                ticket, _ = PosTicket.objects.update_or_create(
+                    organization_id=organization_id,
+                    user=request.user,
+                    ticket_id=ticket_id,
+                    defaults={
+                        'name': data.get('name', 'Untitled'),
+                        'client_id': data.get('client_id'),
+                        'cart_data': data.get('cart_data', []),
+                    }
+                )
+                synced_ids.append(ticket_id)
+
+        return Response({"status": "synced", "count": len(synced_ids)})

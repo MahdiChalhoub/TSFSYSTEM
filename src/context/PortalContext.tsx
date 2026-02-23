@@ -146,31 +146,98 @@ function getStoredWishlist(): string[] {
 
 // ─── Provider ───────────────────────────────────────────────────────────────
 
-export function PortalProvider({ children, slug }: { children: React.ReactNode; slug: string }) {
+export function PortalProvider({
+    children,
+    slug,
+    initialConfig,
+    initialOrg
+}: {
+    children: React.ReactNode;
+    slug: string;
+    initialConfig?: StorefrontConfig;
+    initialOrg?: PortalOrg;
+}) {
     const [token, setToken] = useState<string | null>(null)
     const [portalType, setPortalType] = useState<'client' | 'supplier' | null>(null)
     const [user, setUser] = useState<PortalUser | null>(null)
     const [contact, setContact] = useState<PortalContact | null>(null)
-    const [organization, setOrganization] = useState<PortalOrg | null>(null)
+    const [organization, setOrganization] = useState<PortalOrg | null>(initialOrg || null)
     const [permissions, setPermissions] = useState<string[]>([])
-    const [config, setConfig] = useState<StorefrontConfig | null>(null)
+    const [config, setConfig] = useState<StorefrontConfig | null>(initialConfig || null)
     const [cart, setCart] = useState<CartItem[]>([])
     const [isCartOpen, setCartOpen] = useState(false)
     const [wishlist, setWishlist] = useState<string[]>([])
 
     // ─── Callbacks (Must be defined BEFORE useEffects that use them) ────────
 
-    const toggleWishlist = useCallback((productId: string) => {
+    const toggleWishlist = useCallback(async (productId: string) => {
+        const isCurrentlyIn = wishlist.includes(productId)
+
+        // Optimistic update
         setWishlist(prev =>
-            prev.includes(productId)
+            isCurrentlyIn
                 ? prev.filter(id => id !== productId)
                 : [...prev, productId]
         )
-    }, [])
+
+        // Backend sync if logged in
+        if (token && portalType === 'client') {
+            try {
+                // Determine if we are adding or removing
+                if (isCurrentlyIn) {
+                    // Find the item to delete
+                    const res = await fetch(`/api/client_portal/wishlist/`, {
+                        headers: { 'Authorization': `Token ${token}` }
+                    })
+                    if (res.ok) {
+                        const items = await res.json()
+                        const item = items.find((i: any) => String(i.product) === String(productId))
+                        if (item) {
+                            await fetch(`/api/client_portal/wishlist/${item.id}/`, {
+                                method: 'DELETE',
+                                headers: { 'Authorization': `Token ${token}` }
+                            })
+                        }
+                    }
+                } else {
+                    await fetch('/api/client_portal/wishlist/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Token ${token}`
+                        },
+                        body: JSON.stringify({ product: productId })
+                    })
+                }
+            } catch (err) {
+                console.error('[Portal] Wishlist sync failed:', err)
+            }
+        }
+    }, [wishlist, token, portalType])
 
     const isInWishlist = useCallback((productId: string) => {
         return wishlist.includes(productId)
     }, [wishlist])
+
+    // Fetch wishlist from backend on login
+    useEffect(() => {
+        if (token && portalType === 'client') {
+            const loadWishlist = async () => {
+                try {
+                    const res = await fetch('/api/client_portal/wishlist/', {
+                        headers: { 'Authorization': `Token ${token}` }
+                    })
+                    if (res.ok) {
+                        const data = await res.json()
+                        setWishlist(data.map((item: any) => String(item.product)))
+                    }
+                } catch (err) {
+                    console.error('[Portal] Failed to load wishlist:', err)
+                }
+            }
+            loadWishlist()
+        }
+    }, [token, portalType])
 
     const login = useCallback(async (email: string, password: string, loginSlug: string, type: 'client' | 'supplier') => {
         const isClient = typeof window !== 'undefined'

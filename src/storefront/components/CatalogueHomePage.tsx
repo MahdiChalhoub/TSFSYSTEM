@@ -10,7 +10,7 @@ import { submitQuoteRequest } from '@/app/tenant/[slug]/actions'
  * Catalogue homepage — browse products with no prices displayed.
  * "Request Quote" opens a modal form. Used when storefront_type = CATALOGUE.
  */
-export default function CatalogueHomePage({ products, categories }: { products: Product[]; categories: any[] }) {
+export default function CatalogueHomePage({ products, categories, brands }: { products: Product[]; categories: any[]; brands?: any[] }) {
     const { orgName, config, slug } = useConfig()
     const [search, setSearch] = useState('')
     const [activeCat, setActiveCat] = useState<string | null>(null)

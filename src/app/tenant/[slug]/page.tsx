@@ -1,4 +1,10 @@
-import { getOrganizationBySlug, getPublicProducts, getStorefrontConfig } from "./actions"
+import {
+    getOrganizationBySlug,
+    getPublicProducts,
+    getStorefrontConfig,
+    getPublicCategories,
+    getPublicBrands
+} from "./actions"
 import { notFound } from "next/navigation"
 import { ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -12,6 +18,8 @@ export default async function TenantWelcomePage({ params }: { params: Promise<{ 
     const org = await getOrganizationBySlug(slug)
     const products = await getPublicProducts(slug)
     const storefrontConfig = await getStorefrontConfig(slug)
+    const categories = await getPublicCategories(slug)
+    const brands = await getPublicBrands(slug)
 
     if (!org) {
         return notFound()
@@ -43,23 +51,8 @@ export default async function TenantWelcomePage({ params }: { params: Promise<{ 
     }
 
     if (homePageType === 'CATALOGUE' || homePageType === 'SUBSCRIPTION') {
-        // We will re-use the Blog placeholder as a generic secondary template for now,
-        // but normally this would render specific Catalog or Auth flows.
         return <BlogHomePage org={org} />
     }
 
-    // Default 'PRODUCT_STORE' logic
-    // Derive categories from products
-    const categoryMap = new Map<string, { id: string; name: string; product_count: number }>()
-    products.forEach((p: any) => {
-        const key = p.category_name || 'Uncategorized'
-        if (categoryMap.has(key)) {
-            categoryMap.get(key)!.product_count++
-        } else {
-            categoryMap.set(key, { id: p.category_id || key, name: key, product_count: 1 })
-        }
-    })
-    const categories = Array.from(categoryMap.values()).sort((a, b) => a.name.localeCompare(b.name))
-
-    return <ThemedHomePage products={products} categories={categories} />
+    return <ThemedHomePage products={products} categories={categories} brands={brands} />
 }

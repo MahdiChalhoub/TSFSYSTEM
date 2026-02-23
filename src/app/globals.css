@@ -217,3 +217,26 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
 }
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+.animate-shimmer {
+  animation: shimmer 2.5s infinite linear;
+}
+
+/* Blur Transition Utility */
+.theme-blur-transition {
+  filter: blur(20px);
+  transform: scale(0.98);
+  opacity: 0;
+  transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-active {
+  filter: blur(0) !important;
+  transform: scale(1) !important;
+  opacity: 1 !important;
+}

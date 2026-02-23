@@ -72,6 +72,13 @@ class CategorySimpleSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'code']
 
 
+class StorefrontCategorySerializer(serializers.ModelSerializer):
+    """Secure category serializer for storefront."""
+    class Meta:
+        model = Category
+        fields = ['id', 'name', 'code', 'short_name', 'full_path', 'level', 'products_count']
+
+
 # =============================================================================
 # BRAND SERIALIZERS
 # =============================================================================
@@ -112,6 +119,13 @@ class BrandDetailSerializer(serializers.ModelSerializer):
 
     def get_product_count(self, obj):
         return obj.products.count()
+
+
+class StorefrontBrandSerializer(serializers.ModelSerializer):
+    """Secure brand serializer for storefront."""
+    class Meta:
+        model = Brand
+        fields = ['id', 'name', 'short_name', 'logo']
 
 
 # =============================================================================

@@ -42,24 +42,26 @@ export async function getTenantContext() {
     const hostname = host.split(':')[0].toLowerCase();
     const parts = hostname.split('.');
 
-    let subdomain = "";
     const isIp = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?::[0-9]+)?$/.test(hostname);
+    const rootDomain = (process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost').toLowerCase();
 
-    if (isIp) {
-        subdomain = "";
-    } else if (hostname.includes("localhost")) {
-        if (parts.length > 1) subdomain = parts[0];
-    } else {
-        // Production: expect xxx.domain.com (3 parts or more)
-        if (parts.length > 2) subdomain = parts[0];
-    }
+    // SaaS Root detection
+    const isSaas =
+        hostname === rootDomain ||
+        hostname === `www.${rootDomain}` ||
+        hostname === `saas.${rootDomain}` ||
+        isIp ||
+        hostname.includes('vercel.app');
 
-    debug(`[DEBUG] Subdomain detected: ${subdomain}`);
+    debug(`[DEBUG] isSaas: ${isSaas}`);
 
-    if (!subdomain || subdomain === "www") {
-        // Root Domain (e.g. tsf.ci or www.tsf.ci) - No Tenant Context (Fallback)
+    if (isSaas) {
+        // Root Domain - No Tenant Context (Fallback to global scope)
         return null;
     }
+
+    const subdomain = parts[0];
+    debug(`[DEBUG] Subdomain detected: ${subdomain}`);
 
     try {
         // Resolve via Django API to avoid direct DB access

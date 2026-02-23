@@ -25,5 +25,6 @@ urlpatterns = [
     path('upload/<uuid:session_id>/chunk/', views_chunked.chunked_upload_chunk),
     path('upload/<uuid:session_id>/complete/', views_chunked.chunked_upload_complete),
     path('upload/<uuid:session_id>/status/', views_chunked.chunked_upload_status),
+    path('upload/<uuid:session_id>/abort/', views_chunked.chunked_upload_abort),
 ]
 

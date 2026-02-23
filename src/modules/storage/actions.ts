@@ -119,6 +119,15 @@ export async function getActiveUploads(type?: 'file' | 'package') {
     return await erpFetch(url);
 }
 
+/**
+ * Abort/Cancel a chunked upload session and delete temp data.
+ */
+export async function abortChunkedUpload(sessionId: string) {
+    return await erpFetch(`storage/upload/${sessionId}/abort/`, {
+        method: 'DELETE',
+    });
+}
+
 // ── Package Actions ──────────────────────────────────────────────────────────
 
 /**

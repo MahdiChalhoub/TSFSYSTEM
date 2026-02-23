@@ -40,6 +40,9 @@ self.addEventListener('activate', (event) => {
 
 // ── Fetch: Route requests based on type ─────────────────────────
 self.addEventListener('fetch', (event) => {
+    // Skip non-http/https schemes (prevents chrome-extension errors)
+    if (!event.request.url.startsWith('http')) return;
+
     const url = new URL(event.request.url);
 
     // Skip non-GET requests (POST orders etc. handled by sync queue)

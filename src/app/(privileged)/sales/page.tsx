@@ -12,6 +12,7 @@ import { getCategories, processSale, getDeliveryZones } from './actions';
 import { getCommercialContext } from '@/app/actions/commercial';
 import { getUser } from '@/app/actions/auth';
 import { getContacts } from '@/app/actions/crm/contacts';
+import { erpFetch } from "@/lib/erp-api";
 
 type SidebarMode = 'hidden' | 'normal' | 'expanded';
 
@@ -62,37 +63,82 @@ export default function POSPage() {
     const [clientSearchQuery, setClientSearchQuery] = useState('');
     const [deliveryZones, setDeliveryZones] = useState<any[]>([]);
     const [deliveryZone, setDeliveryZone] = useState('');
+    const [paymentMethods, setPaymentMethods] = useState<any[]>([
+        { key: 'CASH', label: 'Cash', accountId: null },
+        { key: 'CARD', label: 'Card', accountId: null },
+        { key: 'WALLET', label: 'Wallet', accountId: null },
+        { key: 'WAVE', label: 'Wave', accountId: null },
+        { key: 'OM', label: 'OM', accountId: null },
+        { key: 'MULTI', label: 'Multi', accountId: null },
+        { key: 'DELIVERY', label: 'Delivery', accountId: null },
+    ]);
 
     // ─── Session Setup & Persistence ───
     useEffect(() => {
         const saved = localStorage.getItem('pos_sessions');
+        let initialSessions = [];
         if (saved) {
             try {
                 const parsed = JSON.parse(saved);
                 if (parsed.length > 0) {
-                    setSessions(parsed);
-                    setActiveSessionId(parsed[0].id);
-                } else {
-                    const initialId = Date.now().toString();
-                    const initial = [{ id: initialId, clientId: 1, cart: [], name: 'Ticket 1' }];
-                    setSessions(initial);
-                    setActiveSessionId(initialId);
+                    initialSessions = parsed;
                 }
-            } catch (e) {
-                console.error("Failed to load sessions", e);
-            }
-        } else {
-            const initialId = Date.now().toString();
-            const initial = [{ id: initialId, clientId: 1, cart: [], name: 'Ticket 1' }];
-            setSessions(initial);
-            setActiveSessionId(initialId);
+            } catch (e) { console.error(e); }
         }
+
+        if (initialSessions.length === 0) {
+            const initialId = Date.now().toString();
+            initialSessions = [{ id: initialId, clientId: 1, cart: [], name: 'Ticket 1' }];
+        }
+
+        setSessions(initialSessions);
+        setActiveSessionId(initialSessions[0].id);
+
+        // Fetch cloud backup for redundancy
+        erpFetch('pos-tickets/').then((cloudTickets: any) => {
+            if (Array.isArray(cloudTickets) && cloudTickets.length > 0) {
+                const mapped = cloudTickets.map((ct: any) => ({
+                    id: ct.ticket_id,
+                    name: ct.name,
+                    clientId: ct.client_id || 1,
+                    cart: ct.cart_data || []
+                }));
+
+                setSessions(prev => {
+                    const merged = [...prev];
+                    mapped.forEach(ct => {
+                        if (!merged.find(m => m.id === ct.id)) {
+                            merged.push(ct);
+                        }
+                    });
+                    return merged;
+                });
+            }
+        }).catch(e => console.warn("[POS] Cloud Restore Failed:", e));
     }, []);
 
     useEffect(() => {
         if (sessions.length > 0) {
             localStorage.setItem('pos_sessions', JSON.stringify(sessions));
         }
+
+        // Debounced Cloud Sync
+        const timer = setTimeout(() => {
+            if (sessions.length > 0) {
+                erpFetch('pos-tickets/sync-all/', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        tickets: sessions.map(s => ({
+                            ticket_id: s.id,
+                            name: s.name,
+                            client_id: s.clientId,
+                            cart_data: s.cart
+                        }))
+                    })
+                }).catch(e => console.warn("[POS] Cloud Sync Failed:", e));
+            }
+        }, 2000);
+        return () => clearTimeout(timer);
     }, [sessions]);
 
     const activeSession = sessions.find(s => s.id === activeSessionId) || sessions[0] || { cart: [], clientId: 1 };
@@ -159,6 +205,14 @@ export default function POSPage() {
 
         getCommercialContext().then(ctx => {
             setCurrency(ctx.currency === 'USD' ? '$' : ctx.currency);
+            if (ctx.posPaymentMethods && Array.isArray(ctx.posPaymentMethods) && ctx.posPaymentMethods.length > 0) {
+                // Normalize: support both string[] and object[] from settings
+                const normalized = ctx.posPaymentMethods.map((m: any) => {
+                    if (typeof m === 'string') return { key: m, label: m, accountId: null };
+                    return { key: m.key, label: m.label || m.key, accountId: m.accountId || null };
+                });
+                setPaymentMethods(normalized);
+            }
         });
 
         getCategories()
@@ -318,6 +372,9 @@ export default function POSPage() {
         setIsProcessing(true);
         try {
             const parsedCash = cashReceived ? parseFloat(cashReceived.replace(/\s/g, '')) : 0;
+            // Look up the linked account for the selected payment method
+            const methodConfig = paymentMethods.find((m: any) => (m.key || m) === paymentMethod);
+            const linkedAccountId = methodConfig?.accountId || undefined;
             const result = await processSale({
                 cart,
                 paymentMethod,
@@ -326,7 +383,8 @@ export default function POSPage() {
                 clientId: selectedClientId,
                 storeChangeInWallet,
                 pointsRedeemed,
-                cashReceived: parsedCash
+                cashReceived: parsedCash,
+                paymentAccountId: linkedAccountId
             });
 
             if (result.success) {
@@ -353,6 +411,7 @@ export default function POSPage() {
         isOverrideOpen, isReceiptOpen, lastOrder,
         storeChangeInWallet, pointsRedeemed, highlightedItemId, lastAddedItemId,
         isOnline, clientSearchQuery, deliveryZone, deliveryZones,
+        paymentMethods,
 
         onSetSearchQuery: setSearchQuery,
         onSetActiveCategoryId: setActiveCategoryId,

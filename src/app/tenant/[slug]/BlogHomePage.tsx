@@ -9,23 +9,6 @@ export function BlogHomePage({ org }: { org: any }) {
 
     return (
         <div className="min-h-screen bg-[#FAFAFA]">
-            {/* Minimal Header */}
-            <header className="border-b border-gray-200 bg-white">
-                <div className="max-w-5xl mx-auto px-6 h-20 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        {org.logo ? (
-                            <img src={org.logo} alt={org.name} className="h-8 object-contain" />
-                        ) : (
-                            <div className="w-10 h-10 rounded-xl bg-gray-900 flex items-center justify-center text-white">
-                                <Building2 size={20} />
-                            </div>
-                        )}
-                        <span className="font-black text-xl text-gray-900 tracking-tight">{org.name} Blog</span>
-                    </div>
-                    <a href="/login" className="text-sm font-bold text-gray-600 hover:text-gray-900">Sign In &rarr;</a>
-                </div>
-            </header>
-
             {/* Main Content */}
             <main className="max-w-5xl mx-auto px-6 py-16">
                 <div className="mb-16">

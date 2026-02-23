@@ -28,9 +28,10 @@ export default async function TenantLayout({
     params: Promise<{ slug: string }>
 }) {
     const { slug } = await params
+    const config = await getStorefrontConfig(slug)
 
     return (
-        <PortalProvider slug={slug}>
+        <PortalProvider slug={slug} initialConfig={config || undefined}>
             <ThemeLayout>
                 {children}
             </ThemeLayout>

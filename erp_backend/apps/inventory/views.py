@@ -50,6 +50,7 @@ from apps.inventory.serializers import (
     OperationalRequestSerializer, OperationalRequestLineSerializer,
     ProductAnalyticsSerializer, ComboComponentSerializer,
     ProductSerialSerializer, SerialLogSerializer, StorefrontProductSerializer,
+    StorefrontCategorySerializer, StorefrontBrandSerializer,
 )
 from apps.inventory.services import InventoryService
 from erp.lifecycle_mixin import LifecycleViewSetMixin
@@ -1346,6 +1347,26 @@ class BrandViewSet(TenantModelViewSet):
 
         return Response(hierarchy)
 
+    @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny], authentication_classes=[], throttle_classes=[AnonRateThrottle])
+    def storefront(self, request):
+        organization_slug = request.query_params.get('organization_slug')
+        if not organization_slug:
+            return Response({"error": "organization_slug required"}, status=400)
+
+        try:
+            organization = Organization.objects.get(slug=organization_slug)
+        except Organization.DoesNotExist:
+            return Response({"error": "Organization not found"}, status=404)
+
+        # Only return brands that have products
+        brands = Brand.objects.filter(
+            organization=organization,
+            products__is_active=True
+        ).distinct()
+        
+        serializer = StorefrontBrandSerializer(brands, many=True)
+        return Response(serializer.data)
+
 
 # =============================================================================
 # CATEGORY
@@ -1430,6 +1451,26 @@ class CategoryViewSet(TenantModelViewSet):
             "parfums": list(parfums),
             "products": product_data
         })
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny], authentication_classes=[], throttle_classes=[AnonRateThrottle])
+    def storefront(self, request):
+        organization_slug = request.query_params.get('organization_slug')
+        if not organization_slug:
+            return Response({"error": "organization_slug required"}, status=400)
+
+        try:
+            organization = Organization.objects.get(slug=organization_slug)
+        except Organization.DoesNotExist:
+            return Response({"error": "Organization not found"}, status=404)
+
+        # Only return categories that have products or subcategories
+        categories = Category.objects.filter(
+            organization=organization,
+            products_count__gt=0
+        )
+        
+        serializer = StorefrontCategorySerializer(categories, many=True)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['post'])
     def move_products(self, request):

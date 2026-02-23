@@ -11,7 +11,7 @@ const DEFAULT_LAYOUT: StorefrontPageLayout = {
     ]
 }
 
-export default function MidnightHomePage({ products, categories }: HomePageProps) {
+export default function MidnightHomePage({ products, categories, brands }: HomePageProps) {
     const { components, sections } = useTheme()
     const { config } = useConfig()
 
@@ -29,8 +29,6 @@ export default function MidnightHomePage({ products, categories }: HomePageProps
                 </p>
             </div>
 
-            <components.Header />
-
             <main>
                 <SectionRenderer
                     layout={layout}
@@ -38,20 +36,9 @@ export default function MidnightHomePage({ products, categories }: HomePageProps
                     sectionsRegistry={sections}
                     products={products}
                     categories={categories}
+                    brands={brands}
                 />
             </main>
-
-            <components.Footer />
-
-            {/* Platform Badge */}
-            <div className="py-12 flex flex-col items-center gap-4 bg-slate-950/50 border-t border-white/5">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
-                    <Sparkles size={16} />
-                </div>
-                <p className="text-[9px] font-black text-slate-800 uppercase tracking-[0.5em]">
-                    Enterprise commerce via TSF PLATFORM
-                </p>
-            </div>
         </div>
     )
 }

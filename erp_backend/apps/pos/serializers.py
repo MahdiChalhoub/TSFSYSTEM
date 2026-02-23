@@ -284,3 +284,17 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
         received = sum(1 for l in lines if l.qty_received >= l.quantity)
         return round(received / len(lines) * 100)
 
+
+# ── POS Tickets (Cloud Sync) ───────────────────────────────────
+
+from .models import PosTicket
+
+
+class PosTicketSerializer(serializers.ModelSerializer):
+    user_name = serializers.ReadOnlyField(source='user.username')
+
+    class Meta:
+        model = PosTicket
+        fields = '__all__'
+        read_only_fields = ['organization', 'user']
+

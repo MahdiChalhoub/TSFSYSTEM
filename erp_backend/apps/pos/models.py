@@ -137,6 +137,26 @@ class OrderLine(TenantModel):
         db_table = 'pos_orderline'
 
 
+class PosTicket(TenantModel):
+    """
+    Pending POS Ticket stored in cloud for cross-device/cross-session persistence.
+    Acts as a 'sync' layer to prevent loss when localStorage is cleared.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    ticket_id = models.CharField(max_length=100) # Frontend-generated unique ID (ts)
+    name = models.CharField(max_length=255)
+    client_id = models.IntegerField(null=True, blank=True)
+    cart_data = models.JSONField(default=list)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'pos_ticket'
+        unique_together = ('user', 'ticket_id')
+
+    def __str__(self):
+        return f"Ticket {self.name} ({self.user.username})"
+
+
 # Import models from sub-files so Django discovers them for migrations
 from apps.pos.returns_models import SalesReturn, SalesReturnLine, CreditNote, PurchaseReturn, PurchaseReturnLine  # noqa: E402, F401
 from apps.pos.quotation_models import Quotation, QuotationLine  # noqa: E402, F401

@@ -66,6 +66,38 @@ export async function getStorefrontConfig(slug: string) {
 }
 
 /**
+ * Fetches the public category list for the storefront.
+ */
+export async function getPublicCategories(slug: string) {
+    try {
+        const djangoUrl = process.env.DJANGO_URL || 'http://backend:8000';
+        const res = await fetch(`${djangoUrl}/api/categories/storefront/?organization_slug=${slug}`, {
+            next: { revalidate: 60 }
+        });
+        if (!res.ok) return [];
+        return await res.json();
+    } catch {
+        return [];
+    }
+}
+
+/**
+ * Fetches the public brand list for the storefront.
+ */
+export async function getPublicBrands(slug: string) {
+    try {
+        const djangoUrl = process.env.DJANGO_URL || 'http://backend:8000';
+        const res = await fetch(`${djangoUrl}/api/brands/storefront/?organization_slug=${slug}`, {
+            next: { revalidate: 60 }
+        });
+        if (!res.ok) return [];
+        return await res.json();
+    } catch {
+        return [];
+    }
+}
+
+/**
  * Client portal login — authenticates client credentials against the portal.
  */
 export async function clientLogin(slug: string, email: string, password: string) {

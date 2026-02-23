@@ -12,10 +12,12 @@ from apps.pos.views import (
     ConsignmentSettlementViewSet,
     ProductSupplierViewSet, SupplierPriceHistoryViewSet,
     PurchaseOrderViewSet, PurchaseOrderLineViewSet,
+    PosTicketViewSet,
 )
 
 router = DefaultRouter()
 router.register(r'pos', POSViewSet, basename='pos')
+router.register(r'pos-tickets', PosTicketViewSet, basename='pos-tickets')
 router.register(r'purchase', PurchaseViewSet, basename='purchase')
 router.register(r'sales-returns', SalesReturnViewSet)
 router.register(r'credit-notes', CreditNoteViewSet)

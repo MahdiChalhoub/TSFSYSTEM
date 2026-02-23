@@ -14,7 +14,7 @@ import clsx from 'clsx';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { History, RefreshCw, Wifi, WifiOff } from 'lucide-react';
-import { Numpad as POSNumpad } from '@/components/pos/Numpad';
+import { Numpad as POSNumpad, NumpadMode } from '@/components/pos/Numpad';
 
 const formatNumber = (num: number | string) => {
     const val = Number(num) || 0;
@@ -24,6 +24,8 @@ const formatNumber = (num: number | string) => {
     return parts[1] === '00' ? parts[0] : parts.join('.');
 };
 
+const DEFAULT_PAYMENT_METHODS = ['CASH', 'CARD', 'WALLET', 'WAVE', 'OM', 'MULTI', 'DELIVERY'];
+
 export function POSLayoutModern(props: POSLayoutProps) {
     const {
         cart, clients, selectedClient, selectedClientId, categories,
@@ -32,19 +34,24 @@ export function POSLayoutModern(props: POSLayoutProps) {
         isFullscreen, paymentMethod, cashReceived, isProcessing,
         isOverrideOpen, isReceiptOpen, lastOrder, highlightedItemId, lastAddedItemId,
         isOnline, clientSearchQuery, deliveryZone, deliveryZones,
+        storeChangeInWallet, pointsRedeemed,
         onSetSearchQuery, onSetActiveCategoryId, onSetCurrentParentId, onSetActiveSessionId,
         onSetPaymentMethod, onSetCashReceived, onSetDiscount, onSetDiscountType, onAddToCart,
         onUpdateQuantity, onUpdatePrice,
         onClearCart, onCreateNewSession, onRemoveSession, onUpdateActiveSession,
         onToggleFullscreen, onCycleSidebarMode, onCharge,
         onSync, onSetIsOnline, onSetClientSearchQuery, onSetDeliveryZone,
-        onSetOverrideOpen, onSetReceiptOpen, onOpenLayoutSelector
+        onSetOverrideOpen, onSetReceiptOpen, onOpenLayoutSelector,
+        onSetStoreChangeInWallet, onSetPointsRedeemed
     } = props;
+
+    const paymentMethods = (props as any).paymentMethods || DEFAULT_PAYMENT_METHODS;
 
     const receivedNum = Number(cashReceived) || 0;
     const changeDue = receivedNum > totalAmount ? receivedNum - totalAmount : 0;
     const [leftExpanded, setLeftExpanded] = useState(false);
     const [showNumpad, setShowNumpad] = useState(false);
+    const [numpadMode, setNumpadMode] = useState<NumpadMode>('qty');
     const [selectedCartIdx, setSelectedCartIdx] = useState<number | null>(null);
     const [pendingAction, setPendingAction] = useState<{ label: string, execute: () => void } | null>(null);
 
@@ -504,6 +511,8 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                     </button>
                                 </div>
                                 <POSNumpad
+                                    mode={numpadMode}
+                                    onModeChange={setNumpadMode}
                                     onValueConfirm={(val, mode) => {
                                         const idx = selectedCartIdx ?? 0;
                                         if (cart.length > idx) {
@@ -516,6 +525,11 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                             } else if (mode === 'disc') {
                                                 handleProtectedDiscount(val);
                                             }
+                                            setShowNumpad(false);
+                                        } else if (mode === 'disc') {
+                                            // Global discount if no item selected or mode is disc
+                                            handleProtectedDiscount(val);
+                                            setShowNumpad(false);
                                         } else {
                                             toast.error("Add an item first");
                                         }
@@ -550,10 +564,6 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 {cart.map((item: any, idx: number) => (
                                     <div
                                         key={item.productId}
-                                        onClick={() => {
-                                            setSelectedCartIdx(idx);
-                                            setShowNumpad(true);
-                                        }}
                                         className={clsx(
                                             "px-2.5 py-1.5 group transition-colors duration-300 flex items-center gap-1.5 cursor-pointer",
                                             selectedCartIdx === idx ? "bg-amber-50 ring-1 ring-amber-200"
@@ -570,7 +580,12 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                                 <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1 rounded">Stock: {item.stock || 0}</span>
                                             </div>
                                         </div>
-                                        <span className="text-[12px] font-black text-gray-400 shrink-0">{currency}{Number(item.price).toFixed(2)}</span>
+                                        <span
+                                            onClick={() => { setSelectedCartIdx(idx); setNumpadMode('price'); setShowNumpad(true); }}
+                                            className="text-[12px] font-black text-gray-400 shrink-0 hover:text-emerald-600 transition-colors"
+                                        >
+                                            {currency}{Number(item.price).toFixed(2)}
+                                        </span>
                                         <div className="flex items-center gap-px shrink-0">
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); handleProtectedQuantity(item.productId, -1); }}
@@ -578,7 +593,12 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                             >
                                                 <Minus size={12} />
                                             </button>
-                                            <span className="w-7 text-center text-[13px] font-black tabular-nums text-gray-900">{item.quantity}</span>
+                                            <span
+                                                onClick={() => { setSelectedCartIdx(idx); setNumpadMode('qty'); setShowNumpad(true); }}
+                                                className="w-7 text-center text-[13px] font-black tabular-nums text-gray-900 hover:text-emerald-600 transition-colors"
+                                            >
+                                                {item.quantity}
+                                            </span>
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); onUpdateQuantity(item.productId, 1); }}
                                                 className="w-6 h-6 rounded-lg bg-emerald-50 hover:bg-emerald-500 hover:text-white text-emerald-600 flex items-center justify-center transition-all border border-emerald-100"
@@ -602,60 +622,111 @@ export function POSLayoutModern(props: POSLayoutProps) {
                         )}
                     </div>
 
-                    <div className="border-t-2 border-gray-100 bg-white px-4 py-3 shrink-0 space-y-3">
-                        <div className="flex items-center justify-between pb-1 border-b border-gray-50">
+                    <div className="border-t border-gray-200 bg-white px-3 py-2 shrink-0 space-y-2">
+                        <div className="flex items-center gap-4 justify-between">
                             <div className="flex items-center gap-4">
                                 <div className="flex flex-col">
                                     <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Subtotal</span>
-                                    <span className="text-sm font-black text-gray-700 tabular-nums">{currency}{total.toFixed(2)}</span>
+                                    <span className="text-[11px] font-black text-gray-700 tabular-nums">{currency}{total.toFixed(2)}</span>
                                 </div>
                                 <div className="w-px h-6 bg-gray-100" />
                                 <div className="flex flex-col">
                                     <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Discount</span>
-                                    <div className="flex items-center gap-1.5 mt-0.5">
-                                        <div className="flex items-center bg-gray-50 border border-gray-100 rounded-md p-0.5 scale-90 origin-left">
+                                    <div className="flex items-center gap-1 mt-0.5">
+                                        <div className="flex items-center bg-gray-100 rounded p-0.5 scale-90 origin-left">
                                             <button
                                                 onClick={() => onSetDiscountType('fixed')}
-                                                className={clsx("px-2 py-0.5 rounded text-[10px] font-black transition-all", discountType === 'fixed' ? "bg-white shadow-sm text-gray-800 ring-1 ring-black/5" : "text-gray-400")}
+                                                className={clsx("px-2 py-0.5 rounded text-[10px] font-bold", discountType === 'fixed' ? "bg-white shadow text-gray-800" : "text-gray-400")}
                                             >{currency}</button>
                                             <button
                                                 onClick={() => onSetDiscountType('percentage')}
-                                                className={clsx("px-2 py-0.5 rounded text-[10px] font-black transition-all", discountType === 'percentage' ? "bg-white shadow-sm text-gray-800 ring-1 ring-black/5" : "text-gray-400")}
+                                                className={clsx("px-2 py-0.5 rounded text-[10px] font-bold", discountType === 'percentage' ? "bg-white shadow text-gray-800" : "text-gray-400")}
                                             >%</button>
                                         </div>
                                         <input
                                             type="number" min="0" step="0.01"
                                             value={discount || ''}
+                                            onFocus={(e) => {
+                                                e.target.blur();
+                                                setNumpadMode('disc');
+                                                setShowNumpad(true);
+                                            }}
                                             onChange={(e) => handleProtectedDiscount(Number(e.target.value) || 0)}
-                                            className="w-16 py-0.5 text-right bg-amber-50/30 border border-gray-100 rounded text-[13px] font-black text-amber-600 outline-none focus:border-amber-400 focus:bg-white transition-all"
+                                            className="w-16 py-0.5 text-right bg-amber-50/50 border border-gray-200 rounded text-[11px] font-bold text-amber-600 outline-none cursor-pointer"
                                             placeholder="0"
+                                            readOnly
                                         />
                                     </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <div className="flex items-center justify-between pt-1">
-                            <span className="text-xl font-black text-gray-900 uppercase tracking-tighter">Total</span>
-                            <span className="text-4xl font-black tabular-nums text-gray-900 tracking-tight drop-shadow-sm">{currency}{formatNumber(totalAmount)}</span>
+                            <div className="flex flex-col items-end">
+                                <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Total</span>
+                                <span className="text-xl font-black tabular-nums text-gray-900 leading-none">{currency}{totalAmount.toFixed(2)}</span>
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-4 gap-1">
-                            {['CASH', 'CARD', 'WALLET', 'WAVE', 'OM', 'MULTI', 'DELIVERY'].map(m => (
-                                <button
-                                    key={m}
-                                    onClick={() => onSetPaymentMethod(m)}
-                                    className={clsx(
-                                        "py-1 rounded text-[9px] font-bold border transition-all",
-                                        paymentMethod === m ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-gray-50 border-gray-100 text-gray-400"
-                                    )}
-                                >{m}</button>
-                            ))}
+                            {paymentMethods.map((m: any) => {
+                                const key = typeof m === 'string' ? m : m.key;
+                                const label = typeof m === 'string' ? m : (m.label || m.key);
+                                return (
+                                    <button
+                                        key={key}
+                                        onClick={() => onSetPaymentMethod(key)}
+                                        className={clsx(
+                                            "py-1 rounded text-[9px] font-bold border transition-all",
+                                            paymentMethod === key ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-gray-50 border-gray-100 text-gray-400"
+                                        )}
+                                    >{label}</button>
+                                );
+                            })}
                         </div>
+
+                        {/* ── Wallet & Loyalty Quick-Pay ── */}
+                        {selectedClient && selectedClientId > 1 && (
+                            <div className="flex items-center gap-2 flex-wrap">
+                                {(selectedClient as any).balance > 0 && (
+                                    <button
+                                        onClick={() => {
+                                            onSetPaymentMethod('WALLET');
+                                            const bal = (selectedClient as any).balance;
+                                            onSetCashReceived(String(Math.min(bal, totalAmount)));
+                                            toast.success(`Wallet: ${currency}${bal.toFixed(2)} applied`);
+                                        }}
+                                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-100 text-blue-700 text-[10px] font-bold hover:bg-blue-100 transition-all"
+                                    >
+                                        <Wallet size={12} />
+                                        <span>Balance: {currency}{((selectedClient as any).balance || 0).toFixed(2)}</span>
+                                        <span className="bg-blue-200 text-blue-800 px-1.5 py-0.5 rounded text-[9px] font-black">USE</span>
+                                    </button>
+                                )}
+                                {(selectedClient as any).loyalty > 0 && (
+                                    <button
+                                        onClick={() => {
+                                            const pts = (selectedClient as any).loyalty;
+                                            if (onSetPointsRedeemed) onSetPointsRedeemed(pts);
+                                            toast.success(`${pts} loyalty points will be redeemed`);
+                                        }}
+                                        className={clsx(
+                                            "flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-bold transition-all",
+                                            pointsRedeemed > 0
+                                                ? "bg-amber-100 border-amber-300 text-amber-800"
+                                                : "bg-amber-50 border-amber-100 text-amber-700 hover:bg-amber-100"
+                                        )}
+                                    >
+                                        <Star size={12} />
+                                        <span>{(selectedClient as any).loyalty} pts</span>
+                                        <span className="bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded text-[9px] font-black">
+                                            {pointsRedeemed > 0 ? '✓' : 'REDEEM'}
+                                        </span>
+                                    </button>
+                                )}
+                            </div>
+                        )}
 
                         <div className="flex items-center gap-2 pt-1 border-t border-gray-50 mt-1">
                             <div className="flex-1">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">Received</label>
+                                <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 block">Received</label>
                                 <input
                                     type="text"
                                     value={cashReceived ? cashReceived.replace(/\B(?=(\d{3})+(?!\d))/g, " ") : ''}
@@ -666,21 +737,48 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                         }
                                     }}
                                     placeholder={totalAmount.toFixed(2)}
-                                    className="w-full px-3 py-3 text-right bg-gray-50 border border-gray-200 rounded-xl text-xl font-black outline-none focus:border-emerald-500 focus:bg-white transition-all font-mono shadow-inner"
+                                    className="w-full px-2 py-2 text-right bg-gray-50 border border-gray-100 rounded-lg text-sm font-bold outline-none focus:border-emerald-500 transition-all font-mono"
                                 />
                             </div>
                             <button
                                 onClick={onCharge}
                                 disabled={cart.length === 0 || isProcessing}
                                 className={clsx(
-                                    "flex-1 py-2 rounded-xl h-[64px] flex flex-col items-center justify-center transition-all shadow-xl shadow-emerald-100/50",
-                                    cart.length > 0 && !isProcessing ? "bg-emerald-500 text-white hover:bg-emerald-600 active:scale-95" : "bg-gray-200 text-gray-400"
+                                    "flex-1 py-2 rounded-xl h-[48px] flex flex-col items-center justify-center transition-all shadow-lg shadow-emerald-100",
+                                    cart.length > 0 && !isProcessing ? "bg-emerald-500 text-white hover:bg-emerald-600" : "bg-gray-200 text-gray-400"
                                 )}
                             >
-                                <span className="text-[14px] font-black uppercase tracking-widest">{changeDue > 0 ? "Change" : "Charge"}</span>
-                                <span className="text-2xl font-black leading-none mt-1">{currency}{formatNumber(changeDue > 0 ? changeDue : totalAmount)}</span>
+                                <span className="text-[12px] font-black uppercase tracking-widest">{changeDue > 0 ? "Change" : "Charge"}</span>
+                                <span className="text-[14px] font-black leading-none">{currency}{formatNumber(changeDue > 0 ? changeDue : totalAmount)}</span>
                             </button>
                         </div>
+
+                        {/* ── Change Management ── */}
+                        {changeDue > 0 && (
+                            <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">
+                                <div className="flex items-center gap-2">
+                                    <Banknote size={16} className="text-emerald-600" />
+                                    <div>
+                                        <span className="text-[10px] font-black text-emerald-700 uppercase">Change Due</span>
+                                        <span className="text-sm font-black text-emerald-800 ml-2 tabular-nums">{currency}{formatNumber(changeDue)}</span>
+                                    </div>
+                                </div>
+                                {selectedClientId > 1 && onSetStoreChangeInWallet && (
+                                    <button
+                                        onClick={() => onSetStoreChangeInWallet(!storeChangeInWallet)}
+                                        className={clsx(
+                                            "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all",
+                                            storeChangeInWallet
+                                                ? "bg-blue-500 border-blue-500 text-white"
+                                                : "bg-white border-gray-200 text-gray-500 hover:border-blue-300"
+                                        )}
+                                    >
+                                        <Wallet size={12} />
+                                        {storeChangeInWallet ? '✓ Store in Wallet' : 'Store in Wallet'}
+                                    </button>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </main>
             </div>

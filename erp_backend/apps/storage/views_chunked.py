@@ -415,3 +415,28 @@ def active_uploads(request):
     } for s in sessions[:50]]
 
     return Response({'uploads': data, 'count': len(data)})
+
+
+# ── 6. ABORT — Cancel and cleanup a session ───────────────────────────────
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def chunked_upload_abort(request, session_id):
+    """
+    DELETE /api/storage/upload/<session_id>/abort/
+    Cancels the upload, deletes temp file, and removes the session record.
+    """
+    try:
+        session = UploadSession.objects.get(id=session_id)
+    except UploadSession.DoesNotExist:
+        return Response({'error': 'Session not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Cleanup temp file
+    if os.path.exists(session.temp_path):
+        try:
+            os.remove(session.temp_path)
+        except Exception as e:
+            logger.error(f"Failed to delete temp file {session.temp_path}: {e}")
+
+    session.delete()
+    return Response({'status': 'aborted'}, status=status.HTTP_200_OK)

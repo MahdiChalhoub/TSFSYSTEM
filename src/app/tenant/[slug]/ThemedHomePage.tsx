@@ -2,7 +2,7 @@
 
 import { useTheme } from '@/storefront/engine/ThemeProvider'
 import { useConfig } from '@/storefront/engine/hooks/useConfig'
-import type { Product, Category } from '@/storefront/engine/types'
+import type { Product, Category, Brand } from '@/storefront/engine/types'
 import dynamic from 'next/dynamic'
 
 // ── Type-specific homepage components (lazy-loaded) ──────────────────────────
@@ -22,20 +22,17 @@ const PortfolioHomePage = dynamic(() => import('@/storefront/components/Portfoli
 export function ThemedHomePage({
     products,
     categories,
+    brands,
 }: {
     products: Product[]
     categories: Category[]
+    brands: Brand[]
 }) {
     const { components, loading } = useTheme()
     const { config } = useConfig()
 
-    if (loading || !components) {
-        return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-            </div>
-        )
-    }
+    // Single source of truth for loading is now in ThemeLayout/ThemeShell
+    if (loading || !components) return null
 
     const storeType = config?.storefront_type || 'PRODUCT_STORE'
 
@@ -52,7 +49,7 @@ export function ThemedHomePage({
         default: {
             // Use the theme's HomePage component (product grid e-commerce)
             const HomePage = components.HomePage
-            return <HomePage products={products} categories={categories} />
+            return <HomePage products={products} categories={categories} brands={brands} />
         }
     }
 }
