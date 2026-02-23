@@ -116,7 +116,11 @@ log "🐍 [2/6] Validating Backend..."
 cd "$NEW_RELEASE/erp_backend"
 
 # Link shared node_modules and venv (using relative symlinks for host compatibility)
-ln -sr "$APP_ROOT/node_modules" "$NEW_RELEASE/node_modules"
+# Copy shared node_modules (flattening symlinks to satisfy Turbopack)
+if [ ! -d "$NEW_RELEASE/node_modules" ]; then
+    log "  📂 Flattening node_modules (this may take a moment)..."
+    rsync -aL "$APP_ROOT/node_modules/" "$NEW_RELEASE/node_modules/"
+fi
 ln -sr "$APP_ROOT/erp_backend/venv" "$NEW_RELEASE/erp_backend/venv"
 source venv/bin/activate
 
@@ -165,9 +169,9 @@ log ""
 log "⚛️  [3/6] Validating Frontend..."
 cd "$NEW_RELEASE"
 
-# Copy shared node_modules (flattening symlinks to satisfy Turbopack)
+# Ensure shared node_modules are present (should have been copied in Step 2)
 if [ ! -d "$NEW_RELEASE/node_modules" ]; then
-    log "  📂 Flattening node_modules into release (this may take a moment)..."
+    log "  📂 Flattening node_modules (this may take a moment)..."
     rsync -aL "$APP_ROOT/node_modules/" "$NEW_RELEASE/node_modules/"
 fi
 
