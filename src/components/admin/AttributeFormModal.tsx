@@ -9,14 +9,14 @@ import { CategoryTreeSelector } from './CategoryTreeSelector';
 type AttributeFormModalProps = {
     isOpen: boolean;
     onClose: () => void;
-    attribute?: Record<string, any>; // If provided, edit mode
+    attribute?: Record<string, any> | null; // If provided, edit mode
     categories: Record<string, any>[]; // Categories for linking
 };
 
 type CategoryNode = {
     id: number;
     name: string;
-    parentId: number | null;
+    parent: number | null;
     children?: CategoryNode[];
     code?: string;
 };
@@ -31,7 +31,7 @@ function buildCategoryTree(flatCategories: Record<string, any>[]): CategoryNode[
         categoryMap.set(cat.id, {
             id: cat.id,
             name: cat.name,
-            parentId: cat.parent,
+            parent: cat.parent,
             code: cat.code,
             children: []
         });

@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { Search, ArrowRight, Sparkles } from 'lucide-react'
-import { useConfig } from '../../engine'
+import { useConfig } from '../../engine/hooks/useConfig'
 import type { HomePageProps } from '../../engine/types'
 import BoutiqueProductCard from './ProductCard'
 

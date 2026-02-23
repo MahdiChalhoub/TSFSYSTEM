@@ -3,7 +3,9 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { ShoppingBag, ShoppingCart, Star, Heart, ArrowRight, X, FileQuestion, Search } from 'lucide-react'
-import { useCart, useConfig, useWishlist } from '../../engine/hooks'
+import { useCart } from '../../engine/hooks/useCart'
+import { useConfig } from '../../engine/hooks/useConfig'
+import { useWishlist } from '../../engine/hooks/useWishlist'
 import type { ProductCardProps } from '../../engine/types'
 
 export default function MidnightProductCard({ product }: ProductCardProps) {

@@ -396,15 +396,16 @@ class PurchaseService:
             return order
 
     @staticmethod
-    def quick_purchase(organization, supplier_id, warehouse_id, site_id, scope, invoice_price_type, vat_recoverable, lines, notes=None, ref_code=None, user=None):
+    def quick_purchase(organization, supplier_id, warehouse_id, site_id, scope, invoice_price_type, vat_recoverable, lines, notes=None, ref_code=None, user=None, **kwargs):
         from apps.pos.models import Order, OrderLine
         from erp.services import ConfigurationService
         from erp.models import StockBatch
+        from apps.inventory.models import InventoryMovement
         
         # Gated cross-module imports
         (Product, Inventory) = _safe_import('apps.inventory.models', ['Product', 'Inventory'])
         (Contact,) = _safe_import('apps.crm.models', ['Contact'])
-        (ChartOfAccount,) = _safe_import('apps.finance.models', ['ChartOfAccount'])
+        (ChartOfAccount, FinancialAccount) = _safe_import('apps.finance.models', ['ChartOfAccount', 'FinancialAccount'])
         (LedgerService,) = _safe_import('apps.finance.services', ['LedgerService'])
         
         if not Product or not Inventory:
@@ -433,6 +434,10 @@ class PurchaseService:
                     apply_airsi = True
                     airsi_rate = supplier.airsi_tax_rate if supplier.airsi_tax_rate is not None else global_airsi_rate
 
+            discount_amount = Decimal(str(kwargs.get('discountAmount', 0)))
+            extra_fees = kwargs.get('extraFees', [])
+            total_extra_fees = sum(Decimal(str(f.get('amount', 0))) for f in extra_fees)
+
             order = Order.objects.create(
                 organization=organization,
                 type='PURCHASE',
@@ -448,7 +453,9 @@ class PurchaseService:
                 payment_method='CREDIT',
                 total_amount=Decimal('0'),
                 tax_amount=Decimal('0'),
-                airsi_amount=Decimal('0')
+                airsi_amount=Decimal('0'),
+                discount_amount=discount_amount,
+                extra_fees=extra_fees,
             )
 
             total_amount_ht = Decimal('0')
@@ -527,7 +534,6 @@ class PurchaseService:
                 inv.quantity += qty
                 inv.save()
                 
-                # 2. Scope-Aware Inventory Movement (Missing in original quick_purchase)
                 InventoryMovement.objects.create(
                     organization=organization,
                     product=product,
@@ -540,7 +546,6 @@ class PurchaseService:
                     scope=scope
                 )
 
-                # Serial Integration for Quick Purchase
                 if product.tracks_serials:
                     current_serials = line.get('serials', [])
                     if len(current_serials) != int(qty):
@@ -559,7 +564,6 @@ class PurchaseService:
                 if line.get('sellingPriceTTC'): product.selling_price_ttc = Decimal(str(line['sellingPriceTTC']))
                 product.save()
 
-                # ── Sourcing Intelligence Update ───────────────────────
                 from apps.pos.sourcing_models import ProductSupplier, SupplierPriceHistory
                 sourcing_link, _ = ProductSupplier.objects.get_or_create(
                     organization=organization,
@@ -579,7 +583,7 @@ class PurchaseService:
                     notes=f"Quick Purchase #{order.id}"
                 )
 
-            order.total_amount = total_amount_ht + total_tax + total_airsi
+            order.total_amount = total_amount_ht + total_tax + total_airsi + total_extra_fees - discount_amount
             order.tax_amount = total_tax
             order.airsi_amount = total_airsi
             order.save()
@@ -590,6 +594,7 @@ class PurchaseService:
             stock_account_id = rules['purchases']['inventory']
             tax_account_id = rules['purchases']['tax']
             airsi_account_id = rules['purchases'].get('airsi')
+            discount_earned_account_id = rules['purchases'].get('discount_earned') # e.g. 7xxx
             
             if not ap_account_id or not stock_account_id:
                 raise ValidationError("Finance mapping missing: Accounts Payable or Inventory account not configured.")
@@ -610,6 +615,26 @@ class PurchaseService:
                 {"account_id": stock_account_id, "debit": inventory_debit_amount, "credit": Decimal('0'), "description": "Inventory Value"}
             ]
             
+            # Handling Extra Fees in Ledger
+            for fee in extra_fees:
+                fee_acc = fee.get('accountId') or rules['purchases'].get('delivery_fees') or stock_account_id
+                posting_lines.append({
+                    "account_id": fee_acc,
+                    "debit": Decimal(str(fee['amount'])),
+                    "credit": Decimal('0'),
+                    "description": f"Fee: {fee['name']}"
+                })
+
+            # Handling Discount Earned
+            if discount_amount > 0:
+                target_disc_acc = discount_earned_account_id or stock_account_id
+                posting_lines.append({
+                    "account_id": target_disc_acc,
+                    "debit": Decimal('0'),
+                    "credit": discount_amount,
+                    "description": "Purchase Discount Earned"
+                })
+
             if vat_recoverable and total_tax > 0:
                 posting_lines.append({
                     "account_id": tax_account_id,
@@ -637,8 +662,36 @@ class PurchaseService:
                 site_id=site_id,
                 lines=posting_lines
             )
+
+            # Handling Initial Payment
+            initial_payment = kwargs.get('initialPayment')
+            if initial_payment and Decimal(str(initial_payment.get('amount', 0))) > 0:
+                pay_amount = Decimal(str(initial_payment['amount']))
+                pay_account_id = initial_payment['accountId']
+                
+                # Check if pay_account_id is a FinancialAccount, get its Ledger ID
+                if FinancialAccount:
+                    fin_acc = FinancialAccount.objects.filter(id=pay_account_id, organization=organization).first()
+                    if fin_acc: pay_account_id = fin_acc.ledger_account_id
+
+                pay_lines = [
+                    {"account_id": ap_account_id, "debit": pay_amount, "credit": Decimal('0'), "description": f"Payment for Purchase #{order.id}"},
+                    {"account_id": pay_account_id, "debit": Decimal('0'), "credit": pay_amount, "description": f"Cash/Bank Payment"}
+                ]
+                
+                LedgerService.create_journal_entry(
+                    organization=organization,
+                    transaction_date=timezone.now(),
+                    description=f"Initial Payment for Purchase #{order.id} | {supplier.name}",
+                    reference=f"PAY-PUR-{order.id}",
+                    status='POSTED',
+                    scope=scope,
+                    site_id=site_id,
+                    lines=pay_lines
+                )
             
             return order
+
 
     @staticmethod
     def invoice_po(organization, order_id, invoice_number, invoice_date=None, user=None):

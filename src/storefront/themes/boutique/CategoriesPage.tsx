@@ -2,7 +2,9 @@
 
 import { useState, useMemo } from 'react'
 import { Grid3X3, Tag, ArrowRight } from 'lucide-react'
-import { useStore, useConfig } from '../../engine'
+import { useStore } from '../../engine/hooks/useStore'
+import { useConfig } from '../../engine/hooks/useConfig'
+import type { Product, Category } from '../../engine/types'
 import BoutiqueProductCard from './ProductCard'
 import Link from 'next/link'
 
@@ -51,12 +53,12 @@ export default function BoutiqueCategoriesPage() {
                                 <button key={cat.id}
                                     onClick={() => setActiveCat(activeCat === cat.id ? null : cat.id)}
                                     className={`group p-6 rounded-2xl border-2 text-left transition-all ${activeCat === cat.id
-                                            ? 'border-violet-500 bg-violet-50 shadow-lg shadow-violet-100'
-                                            : 'border-violet-100 bg-white hover:border-violet-300 hover:shadow-md'
+                                        ? 'border-violet-500 bg-violet-50 shadow-lg shadow-violet-100'
+                                        : 'border-violet-100 bg-white hover:border-violet-300 hover:shadow-md'
                                         }`}>
                                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition ${activeCat === cat.id
-                                            ? 'bg-violet-600 text-white'
-                                            : 'bg-violet-50 text-violet-500 group-hover:bg-violet-100'
+                                        ? 'bg-violet-600 text-white'
+                                        : 'bg-violet-50 text-violet-500 group-hover:bg-violet-100'
                                         }`}>
                                         <Tag size={20} />
                                     </div>

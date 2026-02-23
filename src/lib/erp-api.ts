@@ -5,7 +5,7 @@ const isClient = typeof window !== 'undefined';
 // Client-side: use relative URL — Nginx proxies /api/* to Django automatically
 const DJANGO_URL = isClient
     ? ''  // Relative URL — browser calls /api/... and Nginx forwards to Django
-    : (process.env.DJANGO_URL || 'http://127.0.0.1:8000');
+    : (process.env.DJANGO_URL || 'http://backend:8000');
 
 // Performance: Only log in development to avoid I/O overhead in production
 const isDev = process.env.NODE_ENV === 'development';
@@ -24,7 +24,7 @@ export class ErpApiError extends Error {
 export async function getTenantContext() {
     let host = '';
 
-    if (typeof window !== 'undefined') {
+    if (isClient) {
         host = window.location.host;
     } else {
         try {
@@ -56,8 +56,8 @@ export async function getTenantContext() {
 
     debug(`[DEBUG] Subdomain detected: ${subdomain}`);
 
-    if (!subdomain || subdomain === "www" || subdomain === "saas") {
-        // Root Domain only - No Tenant Context (Fallback)
+    if (!subdomain || subdomain === "www") {
+        // Root Domain (e.g. tsf.ci or www.tsf.ci) - No Tenant Context (Fallback)
         return null;
     }
 
@@ -88,7 +88,7 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
     // EXCEPT for login endpoint - sending stale token causes "Invalid token" error
     const isLoginEndpoint = path.includes('auth/login');
 
-    if (!headersRaw.has('Authorization') && !isLoginEndpoint) {
+    if (!isClient && !headersRaw.has('Authorization') && !isLoginEndpoint) {
         try {
             const { cookies } = await import('next/headers');
             const cookieStore = await cookies();
@@ -98,7 +98,7 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
                 debug(`[ERP_API] Token injected for ${path}`);
             }
         } catch (e) {
-            // Cookies not available (client context or static generation)
+            // Cookies not available (static generation)
         }
     }
 

@@ -253,7 +253,7 @@ export async function loginAction(prevState: any, formData: FormData) {
 export async function logoutAction() {
     const cookieStore = await cookies()
     const token = cookieStore.get('auth_token')?.value
-    const djangoUrl = process.env.DJANGO_URL || 'http://localhost:8000'
+    const djangoUrl = process.env.DJANGO_URL || 'http://backend:8000'
 
     if (token) {
         try {

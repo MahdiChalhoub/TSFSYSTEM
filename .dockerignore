@@ -1,0 +1,17 @@
+node_modules
+.next
+.git
+.gitignore
+.env
+.env.local
+.env.production.local
+*.log
+npm-debug.log*
+README.md
+Dockerfile*
+docker-compose*
+*.sh
+data
+erp_backend
+db_data
+postgres_data

@@ -11,9 +11,9 @@ type AttributeManagerProps = {
     categories: Record<string, any>[];
 };
 
-export function AttributeManager({ attributes, categories }: AttributeManagerProps) {
+export function AttributeManager({ attributes = [], categories = [] }: AttributeManagerProps) {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingAttribute, setEditingAttribute] = useState<AdminEntity | null>(null);
+    const [editingAttribute, setEditingAttribute] = useState<Record<string, any> | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
@@ -182,10 +182,12 @@ function AttributeRow({ attribute, onEdit }: Record<string, any>) {
                                             <Factory size={14} className="text-purple-500" />
                                             <span className="font-bold text-sm text-gray-800">{brand.name}</span>
                                         </div>
-                                        <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Stock: {brand.totalStock}</span>
+                                        <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                                            Stock: {brand.totalStock ?? (brand.products?.reduce((acc: number, p: any) => acc + (p.stock || 0), 0) || 0)}
+                                        </span>
                                     </div>
                                     <div className="divide-y divide-gray-50">
-                                        {brand.products.map((p: Record<string, any>) => (
+                                        {brand.products?.map((p: Record<string, any>) => (
                                             <div key={p.id} className="px-4 py-2 flex justify-between items-center text-sm hover:bg-gray-50">
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-1.5 h-1.5 rounded-full bg-gray-200"></div>

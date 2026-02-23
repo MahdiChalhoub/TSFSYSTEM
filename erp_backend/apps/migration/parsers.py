@@ -283,20 +283,32 @@ class SQLDumpParser:
         """Extract business records by streaming the 'business' table."""
         return list(self.stream_rows('business'))
 
-    def get_table_counts(self, business_id=None):
-        """Get counts per table (estimates based on scan if business_id is None, exact if business_id is set)."""
-        counts = {}
-        for table in self.table_offsets.keys():
-            if business_id:
-                # Need to count exactly
-                count = 0
-                for _ in self.stream_rows(table, business_id):
-                    count += 1
-                counts[table] = count
-            else:
-                # Heuristic: count Statements (not rows) initially, or just return placeholder
-                counts[table] = len(self.table_offsets[table])
-        return counts
+    def analyze_all_businesses(self):
+        """
+        Scan all relevant tables in one pass to count records per business.
+        Returns {business_id: {table_name: count}, 'global': {table_name: count}}
+        """
+        analysis = {'global': {}}
+        businesses = self.get_businesses()
+        for biz in businesses:
+            analysis[str(biz['id'])] = {}
+
+        relevant_tables = list(self.TABLE_COLUMNS.keys())
+        
+        for table in relevant_tables:
+            if table not in self.table_offsets:
+                continue
+            
+            global_count = 0
+            for row in self.stream_rows(table):
+                global_count += 1
+                biz_id = str(row.get('business_id')) if 'business_id' in row else None
+                if biz_id and biz_id in analysis:
+                    analysis[biz_id][table] = analysis[biz_id].get(table, 0) + 1
+            
+            analysis['global'][table] = global_count
+            
+        return analysis, businesses
 
     def _parse_values_block(self, values_block):
         """Parse the VALUES (...), (...), ... block into list of tuples."""
@@ -424,19 +436,25 @@ class DirectDBReader:
         )
 
     def read_table(self, table_name, where_clause=None):
-        """Read all rows from a table, returned as list of dicts."""
+        """Read rows from a table using a streaming cursor (yields rows)."""
         if not self.connection:
             self.connect()
 
-        with self.connection.cursor() as cursor:
+        import pymysql
+        # Use a separate streaming cursor
+        with self.connection.cursor(pymysql.cursors.SSDictCursor) as cursor:
             sql = f"SELECT * FROM `{table_name}`"
             if where_clause:
                 sql += f" WHERE {where_clause}"
             cursor.execute(sql)
-            return cursor.fetchall()
+            while True:
+                row = cursor.fetchone()
+                if not row:
+                    break
+                yield row
 
-    def get_table_counts(self):
-        """Get row counts for all known tables."""
+    def get_table_counts(self, where_clause=None):
+        """Get row counts for all known tables, optionally filtered."""
         if not self.connection:
             self.connect()
 
@@ -444,12 +462,34 @@ class DirectDBReader:
         for table_name in SQLDumpParser.TABLE_COLUMNS.keys():
             try:
                 with self.connection.cursor() as cursor:
-                    cursor.execute(f"SELECT COUNT(*) as cnt FROM `{table_name}`")
+                    sql = f"SELECT COUNT(*) as cnt FROM `{table_name}`"
+                    if where_clause:
+                        sql += f" WHERE {where_clause}"
+                    cursor.execute(sql)
                     result = cursor.fetchone()
-                    counts[table_name] = result['cnt'] if result else 0
+                    counts[table_name] = result.get('cnt', 0) if result else 0
             except Exception:
                 counts[table_name] = 0
         return counts
+
+    def analyze_all_businesses(self):
+        """Analyze business counts efficiently using SQL aggregations."""
+        if not self.connection:
+            self.connect()
+        
+        businesses_raw = list(self.read_table('business'))
+        businesses = [
+            {'id': b.get('id'), 'name': b.get('name', f"Business #{b.get('id')}")}
+            for b in businesses_raw
+        ]
+        
+        analysis = {'global': self.get_table_counts()}
+        for biz in businesses:
+            biz_id = biz['id']
+            # Only count for tables that have business_id
+            analysis[str(biz_id)] = self.get_table_counts(f"business_id = {biz_id}")
+            
+        return analysis, businesses
 
     def close(self):
         """Close the connection."""

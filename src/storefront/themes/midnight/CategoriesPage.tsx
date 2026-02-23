@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { Grid3x3, ArrowRight, Package } from 'lucide-react'
-import { useStore } from '../../engine/hooks'
+import { useStore } from '../../engine/hooks/useStore'
 
 export default function MidnightCategoriesPage() {
     const { slug } = useParams<{ slug: string }>()

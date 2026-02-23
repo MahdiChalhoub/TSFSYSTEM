@@ -62,7 +62,7 @@ export default function SupplierProfilePage() {
         if (!session) return
         setSaving(true); setError(''); setSaved(false)
         try {
-            const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://127.0.0.1:8000'
+            const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://backend:8000'
             const res = await fetch(`${djangoUrl}/api/supplier-portal/profile/update/`, {
                 method: 'POST',
                 headers: {
@@ -88,7 +88,7 @@ export default function SupplierProfilePage() {
         if (newPassword !== confirmPassword) { setPwError('Passwords do not match'); return }
         setPwSaving(true); setPwSaved(false)
         try {
-            const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://127.0.0.1:8000'
+            const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://backend:8000'
             const res = await fetch(`${djangoUrl}/api/supplier-portal/profile/change-password/`, {
                 method: 'POST',
                 headers: {

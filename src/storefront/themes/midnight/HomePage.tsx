@@ -2,7 +2,9 @@
 
 import { useState, useMemo } from 'react'
 import { ShoppingBag, Search, X, Sparkles, ArrowRight, Store, Package, Grid3x3 } from 'lucide-react'
-import { useStore, useConfig, useCart } from '../../engine/hooks'
+import { useStore } from '../../engine/hooks/useStore'
+import { useConfig } from '../../engine/hooks/useConfig'
+import { useCart } from '../../engine/hooks/useCart'
 import MidnightProductCard from './ProductCard'
 import type { HomePageProps } from '../../engine/types'
 import Link from 'next/link'
@@ -97,9 +99,9 @@ export default function MidnightHomePage({ products, categories }: HomePageProps
 
                         {/* Hero Visual — Featured Product or Decorative */}
                         {products.length > 0 && products[0]?.image_url ? (
-                            <div className="relative hidden lg:block">
+                            <div className="relative hidden lg:block animate-in fade-in zoom-in duration-1000">
                                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-indigo-500/20 rounded-[3rem] blur-3xl" />
-                                <div className="relative bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-[3rem] overflow-hidden aspect-square">
+                                <div className="relative bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-[3rem] overflow-hidden aspect-square shadow-2xl">
                                     <img src={products[0].image_url} alt={products[0].name}
                                         className="w-full h-full object-cover opacity-80" />
                                     <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent p-8">
@@ -116,10 +118,15 @@ export default function MidnightHomePage({ products, categories }: HomePageProps
                             </div>
                         ) : (
                             <div className="relative hidden lg:block">
-                                <div className="bg-slate-900/40 border border-white/5 rounded-[3rem] p-12 text-center aspect-square flex flex-col items-center justify-center">
-                                    <ShoppingBag size={64} className="text-slate-800 mb-4" />
-                                    <h3 className="text-xl font-bold text-white">Catalog Coming Soon</h3>
-                                    <p className="text-slate-500 mt-2 text-sm">Products will appear here</p>
+                                <div className="absolute inset-0 bg-emerald-500/10 blur-[100px] rounded-full" />
+                                <div className="bg-slate-900/40 border border-white/5 rounded-[3rem] p-12 text-center aspect-square flex flex-col items-center justify-center relative overflow-hidden group">
+                                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    <Sparkles size={64} className="text-emerald-500/20 mb-6 animate-pulse" />
+                                    <h3 className="text-2xl font-black text-white tracking-tight uppercase">Premium Collection</h3>
+                                    <p className="text-slate-400 mt-2 text-sm font-medium">Experience {orgName}'s curated inventory.</p>
+                                    <div className="mt-8 flex gap-2">
+                                        {[1, 2, 3].map(i => <div key={i} className="w-8 h-12 bg-white/5 rounded-lg border border-white/5" />)}
+                                    </div>
                                 </div>
                             </div>
                         )}

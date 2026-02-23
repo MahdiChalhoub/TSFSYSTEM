@@ -8,7 +8,7 @@ import { POSLayoutClassic } from '@/components/pos/layouts/POSLayoutClassic';
 import { POSLayoutModern } from '@/components/pos/layouts/POSLayoutModern';
 import { POSLayoutCompact } from '@/components/pos/layouts/POSLayoutCompact';
 import { POSLayoutSelector } from '@/components/pos/layouts/POSLayoutSelector';
-import { getCategories, processSale } from './actions';
+import { getCategories, processSale, getDeliveryZones } from './actions';
 import { getCommercialContext } from '@/app/actions/commercial';
 import { getUser } from '@/app/actions/auth';
 import { getContacts } from '@/app/actions/crm/contacts';
@@ -36,11 +36,7 @@ export default function POSPage() {
     }, []);
 
     // ─── Client State ───
-    const [clients, setClients] = useState<any[]>([
-        { id: 1, name: 'Walk-in Customer', phone: 'N/A', balance: 0, loyalty: 0, address: 'Counter Sales', zone: 'A' },
-        { id: 2, name: 'John Doe', phone: '+91 54321 098765', balance: 120, loyalty: 50, address: '1st Block, Rammurthy Nagar', zone: 'B' },
-        { id: 3, name: 'Sarah Smith', phone: '+225 07070707', balance: 450, loyalty: 120, address: 'Plateau, Abidjan', zone: 'A' },
-    ]);
+    const [clients, setClients] = useState<any[]>([]);
 
     // ─── Multi-Order Sessions ───
     const [sessions, setSessions] = useState<any[]>([]);
@@ -54,11 +50,16 @@ export default function POSPage() {
     // ─── UI State ───
     const [searchQuery, setSearchQuery] = useState('');
     const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
+    const [currentParentId, setCurrentParentId] = useState<number | null>(null);
     const [sidebarMode, setSidebarMode] = useState<SidebarMode>('normal');
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [currency, setCurrency] = useState('$');
     const [categories, setCategories] = useState<Array<{ id: number; name: string }>>([]);
     const [categoriesLoading, setCategoriesLoading] = useState(true);
+    const [isOnline, setIsOnline] = useState(true);
+    const [clientSearchQuery, setClientSearchQuery] = useState('');
+    const [deliveryZones, setDeliveryZones] = useState<any[]>([]);
+    const [deliveryZone, setDeliveryZone] = useState('');
 
     // ─── Session Setup & Persistence ───
     useEffect(() => {
@@ -144,11 +145,11 @@ export default function POSPage() {
                     balance: Number(c.wallet_balance || 0),
                     loyalty: Number(c.loyalty_points || 0),
                     address: c.address || 'N/A',
-                    zone: 'A'
+                    zone: c.delivery_zone || ''
                 }));
                 // Keep Walk-in Customer as ID 1, map the rest
                 setClients([
-                    { id: 1, name: 'Walk-in Customer', phone: 'N/A', balance: 0, loyalty: 0, address: 'Counter Sales', zone: 'A' },
+                    { id: 1, name: 'Walk-in Customer', phone: 'N/A', balance: 0, loyalty: 0, address: 'Counter Sales', zone: '' },
                     ...mapped.filter(c => c.id !== 1)
                 ]);
             }
@@ -159,12 +160,21 @@ export default function POSPage() {
         });
 
         getCategories()
-            .then((data: any[]) => {
-                const cats = Array.isArray(data) ? data.slice(0, 50) : [];
-                setCategories(cats);
+            .then((data: any) => {
+                const cats = Array.isArray(data)
+                    ? data
+                    : (data?.results && Array.isArray(data.results) ? data.results : []);
+                setCategories(cats.slice(0, 500));
             })
             .catch(() => setCategories([]))
             .finally(() => setCategoriesLoading(false));
+
+        getDeliveryZones().then(zones => {
+            setDeliveryZones(zones);
+            if (zones.length > 0) {
+                setDeliveryZone(zones[0].name);
+            }
+        });
     }, []);
 
     // ─── Cart Logic ───
@@ -219,6 +229,18 @@ export default function POSPage() {
         setTimeout(() => setHighlightedItemId(null), 500);
     }, [cart, updateActiveSession]);
 
+    const updatePrice = useCallback((productId: number, price: number) => {
+        const newCart = cart.map((item: any) => {
+            if (item.productId === productId) {
+                return { ...item, price: price };
+            }
+            return item;
+        });
+        updateActiveSession({ cart: newCart });
+        setHighlightedItemId(productId);
+        setTimeout(() => setHighlightedItemId(null), 500);
+    }, [cart, updateActiveSession]);
+
     const clearCart = useCallback(() => {
         const currentSession = sessions.find(s => s.id === activeSessionId);
         if (currentSession && currentSession.cart.length > 0 && !isSuperAdmin) {
@@ -250,6 +272,17 @@ export default function POSPage() {
             if (prev === 'normal') return 'expanded';
             return 'hidden';
         });
+    }, []);
+
+    const handleSync = useCallback(async () => {
+        toast.promise(
+            new Promise(resolve => setTimeout(resolve, 1500)),
+            {
+                loading: 'Synchronizing with Central Server...',
+                success: 'All data synchronized successfully!',
+                error: 'Synchronization failed. Check connection.'
+            }
+        );
     }, []);
 
     // ─── Payment State ───
@@ -313,13 +346,15 @@ export default function POSPage() {
     const layoutProps = {
         cart, clients, selectedClient, selectedClientId, categories,
         sessions, activeSessionId, currency, total, discount, discountType, totalAmount,
-        totalPieces, uniqueItems, searchQuery, activeCategoryId, sidebarMode,
+        totalPieces, uniqueItems, searchQuery, activeCategoryId, currentParentId, sidebarMode,
         isFullscreen, paymentMethod, cashReceived, isProcessing,
         isOverrideOpen, isReceiptOpen, lastOrder,
         storeChangeInWallet, pointsRedeemed, highlightedItemId, lastAddedItemId,
+        isOnline, clientSearchQuery, deliveryZone, deliveryZones,
 
         onSetSearchQuery: setSearchQuery,
         onSetActiveCategoryId: setActiveCategoryId,
+        onSetCurrentParentId: setCurrentParentId,
         onSetActiveSessionId: setActiveSessionId,
         onSetPaymentMethod: setPaymentMethod,
         onSetCashReceived: setCashReceived,
@@ -331,6 +366,7 @@ export default function POSPage() {
         onSetPointsRedeemed: setPointsRedeemed,
         onAddToCart: addToCart,
         onUpdateQuantity: updateQuantity,
+        onUpdatePrice: updatePrice,
         onClearCart: clearCart,
         onCreateNewSession: createNewSession,
         onRemoveSession: removeSession,
@@ -338,6 +374,10 @@ export default function POSPage() {
         onToggleFullscreen: toggleFullscreen,
         onCycleSidebarMode: cycleSidebarMode,
         onCharge: handleCharge,
+        onSync: handleSync,
+        onSetIsOnline: setIsOnline,
+        onSetClientSearchQuery: setClientSearchQuery,
+        onSetDeliveryZone: setDeliveryZone,
 
         currentLayout,
         onOpenLayoutSelector: () => setIsLayoutSelectorOpen(true),

@@ -67,6 +67,12 @@ class MigrationJob(TenantModel):
     total_inventory = models.IntegerField(default=0)
     total_errors = models.IntegerField(default=0)
 
+    # Discovered metadata for preview/selection
+    discovered_data = models.JSONField(
+        null=True, blank=True,
+        help_text='JSON result of source analysis (businesses, table counts)'
+    )
+
     # Progress tracking (0-100)
     progress = models.IntegerField(default=0)
     current_step = models.CharField(max_length=100, null=True, blank=True)
@@ -104,6 +110,7 @@ class MigrationMapping(models.Model):
         ('ACCOUNT', 'Account'),
         ('INVENTORY', 'Inventory'),
         ('SITE', 'Site'),
+        ('TAX_GROUP', 'Tax Group'),
     )
 
     job = models.ForeignKey(MigrationJob, on_delete=models.CASCADE, related_name='mappings')

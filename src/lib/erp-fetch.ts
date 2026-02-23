@@ -8,7 +8,7 @@
 import { cookies } from 'next/headers'
 
 // Use 127.0.0.1 to avoid IPv6 resolution issues with localhost on Windows/Node 18+
-const DJANGO_URL = process.env.DJANGO_URL || 'http://127.0.0.1:8000'
+const DJANGO_URL = process.env.DJANGO_URL || 'http://backend:8000'
 
 export interface ErpFetchOptions extends RequestInit {
     skipAuth?: boolean

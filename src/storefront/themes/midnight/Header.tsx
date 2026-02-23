@@ -7,7 +7,10 @@ import {
     LayoutDashboard, Store, FileQuestion, User
 } from 'lucide-react'
 import { useState } from 'react'
-import { useAuth, useCart, useConfig, useWishlist } from '../../engine/hooks'
+import { useAuth } from '../../engine/hooks/useAuth'
+import { useCart } from '../../engine/hooks/useCart'
+import { useConfig } from '../../engine/hooks/useConfig'
+import { useWishlist } from '../../engine/hooks/useWishlist'
 
 export default function MidnightHeader() {
     const { slug } = useParams<{ slug: string }>()

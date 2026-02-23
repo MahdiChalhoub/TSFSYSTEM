@@ -51,10 +51,10 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = [
             'id', 'name', 'code', 'short_name', 'parent', 
-            'level', 'full_path', 'products_count', 'product_count',
+            'level', 'full_path', 'product_count',
             'brand_count', 'parfum_count', 'organization'
         ]
-        read_only_fields = ['organization', 'level', 'full_path', 'products_count']
+        read_only_fields = ['organization', 'level', 'full_path']
 
     def get_product_count(self, obj):
         return obj.products.count()
@@ -66,34 +66,34 @@ class CategorySerializer(serializers.ModelSerializer):
         return obj.parfums.count()
 
 
+class CategorySimpleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'name', 'code']
+
+
 # =============================================================================
 # BRAND SERIALIZERS
 # =============================================================================
 
 class BrandSerializer(serializers.ModelSerializer):
-    """List serializer — includes counts and country/category names."""
+    """List serializer — includes counts and country/category objects."""
     product_count = serializers.SerializerMethodField()
-    country_names = serializers.SerializerMethodField()
-    category_names = serializers.SerializerMethodField()
+    countries = CountrySimpleSerializer(many=True, read_only=True)
+    categories = CategorySimpleSerializer(many=True, read_only=True)
 
     class Meta:
         model = Brand
         fields = [
             'id', 'name', 'short_name', 'logo',
             'countries', 'categories',
-            'product_count', 'country_names', 'category_names',
+            'product_count',
             'created_at', 'organization',
         ]
         read_only_fields = ['organization']
 
     def get_product_count(self, obj):
         return obj.products.count()
-
-    def get_country_names(self, obj):
-        return list(obj.countries.values_list('name', flat=True))
-
-    def get_category_names(self, obj):
-        return list(obj.categories.values_list('name', flat=True))
 
 
 class BrandDetailSerializer(serializers.ModelSerializer):
@@ -120,23 +120,20 @@ class BrandDetailSerializer(serializers.ModelSerializer):
 
 class ParfumSerializer(serializers.ModelSerializer):
     product_count = serializers.SerializerMethodField()
-    category_names = serializers.SerializerMethodField()
+    categories = CategorySimpleSerializer(many=True, read_only=True)
 
     class Meta:
         model = Parfum
         fields = [
             'id', 'name', 'short_name',
             'categories',
-            'product_count', 'category_names',
+            'product_count',
             'organization',
         ]
         read_only_fields = ['organization']
 
     def get_product_count(self, obj):
         return obj.products.count()
-
-    def get_category_names(self, obj):
-        return list(obj.categories.values_list('name', flat=True))
 
 
 # =============================================================================

@@ -1,6 +1,6 @@
 'use client'
 
-import { useConfig } from '@/storefront/engine/hooks'
+import { useConfig } from '@/storefront/engine/hooks/useConfig'
 import { Check, Star, Zap, Crown, ArrowRight } from 'lucide-react'
 
 /**

@@ -152,37 +152,7 @@ export function PortalProvider({ children, slug }: { children: React.ReactNode; 
     const [cart, setCart] = useState<CartItem[]>([])
     const [wishlist, setWishlist] = useState<string[]>([])
 
-    // Hydrate from localStorage
-    useEffect(() => {
-        const session = getStoredSession()
-        if (session && session.organization?.slug === slug) {
-            setToken(session.token)
-            setPortalType(session.portalType)
-            setUser(session.user)
-            setContact(session.contact)
-            setOrganization(session.organization)
-            setPermissions(session.permissions || [])
-        }
-        setCart(getStoredCart())
-        setWishlist(getStoredWishlist())
-    }, [slug])
-
-    // Persist cart
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem(CART_KEY, JSON.stringify(cart))
-        }
-    }, [cart])
-
-    // Persist wishlist
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem(WISHLIST_KEY, JSON.stringify(wishlist))
-        }
-    }, [wishlist])
-
-    const cartTotal = cart.reduce((sum, item) => sum + item.unit_price * item.quantity, 0)
-    const wishlistCount = wishlist.length
+    // ─── Callbacks (Must be defined BEFORE useEffects that use them) ────────
 
     const toggleWishlist = useCallback((productId: string) => {
         setWishlist(prev =>
@@ -197,10 +167,11 @@ export function PortalProvider({ children, slug }: { children: React.ReactNode; 
     }, [wishlist])
 
     const login = useCallback(async (email: string, password: string, loginSlug: string, type: 'client' | 'supplier') => {
-        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://127.0.0.1:8000'
+        const isClient = typeof window !== 'undefined'
+        const djangoUrl = isClient ? '' : (process.env.DJANGO_URL || 'http://backend:8000')
         const endpoint = type === 'client'
-            ? `${djangoUrl}/api/client-portal/portal-auth/login/`
-            : `${djangoUrl}/api/supplier-portal/portal-auth/login/`
+            ? `${djangoUrl}/api/client_portal/portal-auth/login/`
+            : `${djangoUrl}/api/supplier_portal/portal-auth/login/`
 
         try {
             const res = await fetch(endpoint, {
@@ -282,9 +253,11 @@ export function PortalProvider({ children, slug }: { children: React.ReactNode; 
     }, [])
 
     const loadConfig = useCallback(async (configSlug: string) => {
-        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://127.0.0.1:8000'
+        const isClient = typeof window !== 'undefined'
+        const djangoUrl = isClient ? '' : (process.env.DJANGO_URL || 'http://backend:8000')
+
         try {
-            const res = await fetch(`${djangoUrl}/api/client-portal/storefront/config/?slug=${configSlug}`)
+            const res = await fetch(`${djangoUrl}/api/client_portal/storefront/config/?slug=${configSlug}`)
             if (res.ok) {
                 const data = await res.json()
                 setConfig(data)
@@ -293,6 +266,47 @@ export function PortalProvider({ children, slug }: { children: React.ReactNode; 
             console.error('[Portal] Failed to load config:', err)
         }
     }, [])
+
+    // ─── Effects ──────────────────────────────────────────────────────────
+
+    // Hydrate from localStorage
+    useEffect(() => {
+        const session = getStoredSession()
+        if (session && session.organization?.slug === slug) {
+            setToken(session.token)
+            setPortalType(session.portalType)
+            setUser(session.user)
+            setContact(session.contact)
+            setOrganization(session.organization)
+            setPermissions(session.permissions || [])
+        }
+        setCart(getStoredCart())
+        setWishlist(getStoredWishlist())
+    }, [slug])
+
+    // Load/Sync config
+    useEffect(() => {
+        if (slug) {
+            loadConfig(slug)
+        }
+    }, [slug, loadConfig])
+
+    // Persist cart
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem(CART_KEY, JSON.stringify(cart))
+        }
+    }, [cart])
+
+    // Persist wishlist
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem(WISHLIST_KEY, JSON.stringify(wishlist))
+        }
+    }, [wishlist])
+
+    const cartTotal = cart.reduce((sum, item) => sum + item.unit_price * item.quantity, 0)
+    const wishlistCount = wishlist.length
 
     return (
         <PortalContext.Provider value={{

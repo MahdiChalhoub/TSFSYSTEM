@@ -20,18 +20,19 @@ export function useStore(): UseStoreReturn {
         const fetchProducts = async () => {
             try {
                 setLoading(true)
-                const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://127.0.0.1:8000'
+                const isClient = typeof window !== 'undefined'
+                const djangoUrl = isClient
+                    ? ''
+                    : (process.env.DJANGO_URL || process.env.NEXT_PUBLIC_DJANGO_URL || 'http://backend:8000')
+
                 // Use the public storefront API (no auth needed)
-                const res = await fetch(`${djangoUrl}/api/products/public/?organization_slug=${params.slug}`)
+                const res = await fetch(`${djangoUrl}/api/products/storefront/?organization_slug=${params.slug}`)
                 if (!res.ok) {
-                    // Fallback to server action
-                    const { getPublicProducts } = await import('@/app/tenant/[slug]/actions')
-                    const data = await getPublicProducts(params.slug)
-                    setProducts(Array.isArray(data) ? data : [])
+                    setProducts([])
                     return
                 }
                 const data = await res.json()
-                const arr = Array.isArray(data) ? data : data.results || []
+                const arr = Array.isArray(data) ? data : (data.results || [])
                 setProducts(arr)
             } catch (err: any) {
                 setError(err.message)

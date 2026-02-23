@@ -1,6 +1,6 @@
 'use client'
 
-import { useConfig } from '../../engine/hooks'
+import { useConfig } from '../../engine/hooks/useConfig'
 
 export default function MidnightFooter() {
     const { orgName } = useConfig()

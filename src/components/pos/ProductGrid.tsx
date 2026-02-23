@@ -29,6 +29,22 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
     const { isOnline } = useOnlineStatus();
     const observerTarget = useRef<HTMLDivElement>(null);
     const searchTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+    const productsCountRef = useRef(0);
+    const hasMoreRef = useRef(true);
+    const loadingMoreRef = useRef(false);
+
+    // Sync refs with state
+    useEffect(() => {
+        productsCountRef.current = products.length;
+    }, [products.length]);
+
+    useEffect(() => {
+        hasMoreRef.current = hasMore;
+    }, [hasMore]);
+
+    useEffect(() => {
+        loadingMoreRef.current = loadingMore;
+    }, [loadingMore]);
 
     // Cache products to IndexedDB after successful fetch
     const cacheToOffline = useCallback(async (data: Record<string, any>[]) => {
@@ -76,137 +92,77 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
         return false;
     }, []);
 
-    // Debounced search handler
-    const debouncedSearch = useCallback((query: string) => {
-        // Clear existing timeout
-        if (searchTimeoutRef.current) {
-            clearTimeout(searchTimeoutRef.current);
-        }
-
-        // Set loading state immediately for UX
-        setLoading(true);
-
-        // Wait for user to stop typing
-        searchTimeoutRef.current = setTimeout(async () => {
-            try {
-                setError(null);
-                const data = await getPosProducts({
-                    search: query,
-                    limit: ITEMS_PER_LOAD,
-                    offset: 0
-                });
-                setProducts(data);
-                setHasMore(data.length >= ITEMS_PER_LOAD);
-                setOfflineMode(false);
-                cacheToOffline(data);
-            } catch (err) {
-                console.error('Search error:', err);
-                const loaded = await loadFromCache();
-                if (!loaded) {
-                    setError('Failed to search products. Please try again.');
-                }
-            } finally {
-                setLoading(false);
-            }
-        }, SEARCH_DEBOUNCE_MS);
-    }, [cacheToOffline, loadFromCache]);
-
-    // Initial load
-    useEffect(() => {
-        const loadInitial = async () => {
-            try {
-                setLoading(true);
-                setError(null);
-                const data = await getPosProducts({ limit: ITEMS_PER_LOAD, categoryId: categoryId ?? undefined });
-                console.log(`[DEBUG] ProductGrid Loaded ${data.length} products. Entry 0:`, data[0]);
-                setProducts(data);
-                setHasMore(data.length >= ITEMS_PER_LOAD);
-                setOfflineMode(false);
-                cacheToOffline(data);
-            } catch (err) {
-                console.error('Initial load error:', err);
-                const loaded = await loadFromCache();
-                if (!loaded) {
-                    setError('Failed to load products. Please refresh the page.');
-                }
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        loadInitial();
-    }, [cacheToOffline, loadFromCache, categoryId]);
-
-    // Handle search changes
-    useEffect(() => {
-        if (searchQuery) {
-            debouncedSearch(searchQuery);
-        } else {
-            // Reset to initial load when search is cleared
-            setLoading(true);
-            getPosProducts({ limit: ITEMS_PER_LOAD, categoryId: categoryId ?? undefined })
-                .then(data => {
-                    setProducts(data);
-                    setHasMore(data.length >= ITEMS_PER_LOAD);
-                })
-                .catch(err => {
-                    console.error('Reset error:', err);
-                    setError('Failed to load products.');
-                })
-                .finally(() => setLoading(false));
-        }
-
-        // Cleanup timeout on unmount
-        return () => {
-            if (searchTimeoutRef.current) {
-                clearTimeout(searchTimeoutRef.current);
-            }
-        };
-    }, [searchQuery, debouncedSearch, categoryId]);
-
-    // Load more products
-    const loadMore = useCallback(async () => {
-        if (loadingMore || !hasMore) return;
+    // Load products with combined filters
+    const loadProducts = useCallback(async (query: string, catId: number | null | undefined, isLoadMore = false) => {
+        if (isLoadMore && (!hasMoreRef.current || loadingMoreRef.current)) return;
 
         try {
-            setLoadingMore(true);
+            if (isLoadMore) setLoadingMore(true);
+            else {
+                setLoading(true);
+                setProducts([]); // Clear for immediate feedback
+            }
+            setError(null);
+
             const data = await getPosProducts({
-                search: searchQuery,
+                search: query,
                 limit: ITEMS_PER_LOAD,
-                offset: products.length
+                offset: isLoadMore ? productsCountRef.current : 0,
+                categoryId: catId ?? undefined
             });
 
-            if (data.length < ITEMS_PER_LOAD) {
-                setHasMore(false);
+            if (isLoadMore) {
+                setProducts(prev => [...prev, ...data]);
+                setHasMore(data.length >= ITEMS_PER_LOAD);
+            } else {
+                setProducts(data);
+                setHasMore(data.length >= ITEMS_PER_LOAD);
+                setOfflineMode(false);
+                cacheToOffline(data);
             }
-
-            setProducts(prev => [...prev, ...data]);
         } catch (err) {
-            console.error('Load more error:', err);
-            // Don't show error for load more failures, just stop loading
-            setHasMore(false);
+            console.error('Load products error:', err);
+            if (!isLoadMore) {
+                const loaded = await loadFromCache();
+                if (!loaded) setError('Failed to load products. Please check your connection.');
+            }
         } finally {
+            setLoading(false);
             setLoadingMore(false);
         }
-    }, [loadingMore, hasMore, searchQuery, products.length]);
+    }, [hasMore, loadingMore, cacheToOffline, loadFromCache]);
+
+    // Handle search and category changes with debounce
+    useEffect(() => {
+        if (searchQuery) {
+            if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+            setLoading(true); // Immediate feedback
+            searchTimeoutRef.current = setTimeout(() => {
+                loadProducts(searchQuery, categoryId);
+            }, SEARCH_DEBOUNCE_MS);
+        } else {
+            loadProducts('', categoryId);
+        }
+
+        return () => {
+            if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+        };
+    }, [searchQuery, categoryId]); // Removed loadProducts to prevent infinite loops
 
     // Infinite scroll observer
     useEffect(() => {
         const observer = new IntersectionObserver(
             (entries) => {
                 if (entries[0].isIntersecting && hasMore && !loading && !loadingMore) {
-                    loadMore();
+                    loadProducts(searchQuery, categoryId, true);
                 }
             },
             { threshold: 0.1 }
         );
 
-        if (observerTarget.current) {
-            observer.observe(observerTarget.current);
-        }
-
+        if (observerTarget.current) observer.observe(observerTarget.current);
         return () => observer.disconnect();
-    }, [hasMore, loading, loadingMore, loadMore]);
+    }, [hasMore, loading, loadingMore, searchQuery, categoryId, loadProducts]);
 
     // Velocity Calculator (Fake for Intelligence Mode Demo)
     const getVelocityBadge = (id: number) => {
@@ -225,7 +181,7 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
     const retry = () => {
         setError(null);
         setLoading(true);
-        getPosProducts({ search: searchQuery, limit: ITEMS_PER_LOAD })
+        getPosProducts({ search: searchQuery, limit: ITEMS_PER_LOAD, category: categoryId ?? undefined })
             .then(data => {
                 setProducts(data);
                 setHasMore(data.length >= ITEMS_PER_LOAD);

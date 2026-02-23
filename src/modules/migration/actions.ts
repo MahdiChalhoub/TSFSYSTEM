@@ -75,3 +75,11 @@ export async function rollbackMigration(jobId: number) {
     });
     return res;
 }
+
+export async function linkMigrationFile(params: { file_uuid: string; name: string }) {
+    const res = await erpFetch('migration/jobs/link/', {
+        method: 'POST',
+        body: JSON.stringify(params),
+    });
+    return res;
+}

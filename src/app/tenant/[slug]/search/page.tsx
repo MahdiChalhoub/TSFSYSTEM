@@ -1,6 +1,6 @@
 'use client'
 
-import { useTheme } from '@/storefront/engine'
+import { useTheme } from '@/storefront/engine/ThemeProvider'
 
 export default function SearchPageRoute() {
     const { components, loading } = useTheme()

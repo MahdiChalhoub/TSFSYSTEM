@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { LogIn, Mail, Lock, Loader2, Eye, EyeOff, UserPlus, Store } from 'lucide-react'
-import { useAuth, useConfig } from '../../engine/hooks'
+import { useAuth } from '../../engine/hooks/useAuth'
+import { useConfig } from '../../engine/hooks/useConfig'
 
 export default function MidnightLoginPage() {
     const { slug } = useParams<{ slug: string }>()

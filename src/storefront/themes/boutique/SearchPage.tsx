@@ -2,7 +2,8 @@
 
 import { useState, useMemo } from 'react'
 import { Search as SearchIcon, X, SlidersHorizontal } from 'lucide-react'
-import { useStore, useConfig } from '../../engine'
+import { useStore } from '../../engine/hooks/useStore'
+import { useConfig } from '../../engine/hooks/useConfig'
 import BoutiqueProductCard from './ProductCard'
 
 export default function BoutiqueSearchPage() {

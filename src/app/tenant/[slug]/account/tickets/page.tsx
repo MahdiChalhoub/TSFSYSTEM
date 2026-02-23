@@ -55,7 +55,7 @@ export default function TicketsPage() {
 
     const fetchTickets = () => {
         if (!token) return
-        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://127.0.0.1:8000'
+        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://backend:8000'
         fetch(`${djangoUrl}/api/client-portal/my-tickets/`, {
             headers: { 'Authorization': `Token ${token}` },
         })
@@ -81,7 +81,7 @@ export default function TicketsPage() {
         e.preventDefault()
         setCreating(true)
         setError('')
-        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://127.0.0.1:8000'
+        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://backend:8000'
         try {
             const res = await fetch(`${djangoUrl}/api/client-portal/my-tickets/`, {
                 method: 'POST',

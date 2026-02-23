@@ -1,6 +1,6 @@
 'use server'
 
-const DJANGO_URL = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://127.0.0.1:8000'
+const DJANGO_URL = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://backend:8000'
 
 // ─── Auth ────────────────────────────────────────────────────────────────
 

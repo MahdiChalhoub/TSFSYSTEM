@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, ArrowLeft } from 'lucide-react'
-import { useCart, useConfig } from '../../engine'
+import { useCart } from '../../engine/hooks/useCart'
+import { useConfig } from '../../engine/hooks/useConfig'
 
 export default function BoutiqueCartPage() {
     const { cart, cartTotal, removeFromCart, updateQuantity, clearCart } = useCart()

@@ -1,7 +1,7 @@
 'use client'
 
-import { useTheme } from '@/storefront/engine'
-import { useConfig } from '@/storefront/engine/hooks'
+import { useTheme } from '@/storefront/engine/ThemeProvider'
+import { useConfig } from '@/storefront/engine/hooks/useConfig'
 import type { Product, Category } from '@/storefront/engine/types'
 import dynamic from 'next/dynamic'
 

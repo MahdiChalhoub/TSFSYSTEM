@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const DJANGO_URL = process.env.DJANGO_URL || 'http://localhost:8000';
+const DJANGO_URL = process.env.DJANGO_URL || 'http://backend:8000';
 
 /**
  * Next.js ERP Proxy

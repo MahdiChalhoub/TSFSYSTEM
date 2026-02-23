@@ -64,7 +64,7 @@ export default function SupplierOrderDetail() {
         if (!token) return
 
         const fetchOrder = async () => {
-            const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://127.0.0.1:8000'
+            const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://backend:8000'
             try {
                 const res = await fetch(`${djangoUrl}/api/supplier-portal/my-orders/${id}/`, {
                     headers: { 'Authorization': `Token ${token}` },
@@ -85,7 +85,7 @@ export default function SupplierOrderDetail() {
         const token = getToken(slug)
         if (!token) return
         setActionLoading(true)
-        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://127.0.0.1:8000'
+        const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://backend:8000'
         try {
             const res = await fetch(`${djangoUrl}/api/supplier-portal/my-orders/${id}/${endpoint}/`, {
                 method: 'POST',

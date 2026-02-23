@@ -738,7 +738,21 @@ class ClientPortalConfigViewSet(TenantModelViewSet):
     @action(detail=False, methods=['get'])
     def current(self, request):
         """Get the current org's config (auto-creates with defaults if none exists)."""
+        from erp.middleware import get_current_tenant_id
+        from erp.models import Organization
+        
         org = request.user.organization
+        if not org:
+            tenant_id = get_current_tenant_id()
+            if tenant_id:
+                try:
+                    org = Organization.objects.get(id=tenant_id)
+                except Organization.DoesNotExist:
+                    pass
+        
+        if not org:
+            return Response({"error": "No organization context found"}, status=400)
+
         config = ClientPortalConfig.get_config(org)
         from .serializers import ClientPortalConfigSerializer
         return Response(ClientPortalConfigSerializer(config).data)

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { POSLayoutProps } from '@/types/pos-layout';
 import { ProductGrid } from '@/components/pos/ProductGrid';
 import { ManagerOverride } from '@/components/pos/ManagerOverride';
@@ -8,45 +8,132 @@ import { ReceiptModal } from '@/components/pos/ReceiptModal';
 import {
     Search, ShoppingCart, Plus, Minus, Trash2, X, Layout,
     ChevronDown, Maximize, Minimize, Eye, EyeOff, Package, Tag,
-    CreditCard, Banknote, Wallet, MapPin, Star
+    CreditCard, Banknote, Wallet, MapPin, Star, Calculator, GripHorizontal, ArrowLeft, ArrowRight
 } from 'lucide-react';
 import clsx from 'clsx';
 import { toast } from 'sonner';
+import Link from 'next/link';
+import { History, RefreshCw, Wifi, WifiOff } from 'lucide-react';
+import { Numpad as POSNumpad } from '@/components/pos/Numpad';
 
-/* ═══════════════════════════════════════════════════════════════
- * MODERN POS — Per User Wireframe
- * ┌──────────────────────────────────────────────────────────────┐
- * │ HEADER (full width)                                          │
- * ├─────────────────────────────┬────────────────────────────────┤
- * │ Client (name,addr,zone,loy) │  Order header                 │
- * ├─────────────────────────────┤  ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─  │
- * │ Search + Category Pills     │  Compact item rows            │
- * ├─────────────────────────────┤  (name, price, qty, tax, tot) │
- * │ Category Tiles (only)       │                                │
- * │  OR expanded → Products     │  ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─  │
- * │                             │  Subtotal · Discount · Total   │
- * │                             │  Cash/Card/Wallet              │
- * │                             │  Cash Received + Charge        │
- * └─────────────────────────────┴────────────────────────────────┘
- * ═══════════════════════════════════════════════════════════════ */
+const formatNumber = (num: number | string) => {
+    const val = Number(num) || 0;
+    // Manual formatting for hydration stability across SSR/CSR
+    const parts = val.toFixed(2).split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    return parts[1] === '00' ? parts[0] : parts.join('.');
+};
 
 export function POSLayoutModern(props: POSLayoutProps) {
     const {
         cart, clients, selectedClient, selectedClientId, categories,
         sessions, activeSessionId, currency, total, discount, discountType, totalAmount,
-        totalPieces, uniqueItems, searchQuery, activeCategoryId, sidebarMode,
+        totalPieces, uniqueItems, searchQuery, activeCategoryId, currentParentId, sidebarMode,
         isFullscreen, paymentMethod, cashReceived, isProcessing,
         isOverrideOpen, isReceiptOpen, lastOrder, highlightedItemId, lastAddedItemId,
-        onSetSearchQuery, onSetActiveCategoryId, onSetActiveSessionId,
-        onSetPaymentMethod, onSetCashReceived, onSetDiscount, onSetDiscountType, onAddToCart, onUpdateQuantity,
+        isOnline, clientSearchQuery, deliveryZone, deliveryZones,
+        onSetSearchQuery, onSetActiveCategoryId, onSetCurrentParentId, onSetActiveSessionId,
+        onSetPaymentMethod, onSetCashReceived, onSetDiscount, onSetDiscountType, onAddToCart,
+        onUpdateQuantity, onUpdatePrice,
         onClearCart, onCreateNewSession, onRemoveSession, onUpdateActiveSession,
         onToggleFullscreen, onCycleSidebarMode, onCharge,
+        onSync, onSetIsOnline, onSetClientSearchQuery, onSetDeliveryZone,
         onSetOverrideOpen, onSetReceiptOpen, onOpenLayoutSelector
     } = props;
 
     const receivedNum = Number(cashReceived) || 0;
     const changeDue = receivedNum > totalAmount ? receivedNum - totalAmount : 0;
     const [leftExpanded, setLeftExpanded] = useState(false);
+    const [showNumpad, setShowNumpad] = useState(false);
+    const [selectedCartIdx, setSelectedCartIdx] = useState<number | null>(null);
+    const [pendingAction, setPendingAction] = useState<{ label: string, execute: () => void } | null>(null);
+
+    const handleProtectedQuantity = useCallback((productId: number, delta: number) => {
+        const item = cart.find(i => i.productId === productId);
+        const currentQty = item?.quantity || 0;
+
+        // Only require override for full deletion or if clearing multiple items
+        if (delta < 0 && (currentQty + delta <= 0)) {
+            setPendingAction({
+                label: `Remove ${item?.name || 'Item'}`,
+                execute: () => onUpdateQuantity(productId, delta)
+            });
+            onSetOverrideOpen(true);
+        } else {
+            onUpdateQuantity(productId, delta);
+        }
+    }, [cart, onUpdateQuantity, onSetOverrideOpen]);
+
+    const handleProtectedDiscount = useCallback((val: number) => {
+        setPendingAction({
+            label: `Apply ${val}% Discount`,
+            execute: () => onSetDiscount(val)
+        });
+        onSetOverrideOpen(true);
+    }, [onSetDiscount, onSetOverrideOpen]);
+
+    const handleProtectedPrice = useCallback((productId: number, newPrice: number) => {
+        const item = cart.find(i => i.productId === productId);
+        const currentPrice = Number(item?.price || 0);
+
+        if (newPrice < currentPrice) {
+            setPendingAction({
+                label: `Decrease Price to ${currency}${newPrice.toFixed(2)}`,
+                execute: () => onUpdatePrice(productId, newPrice)
+            });
+            onSetOverrideOpen(true);
+        } else {
+            onUpdatePrice(productId, newPrice);
+        }
+    }, [cart, currency, onUpdatePrice, onSetOverrideOpen]);
+
+    // Draggable Floating Logic
+    const [numpadPos, setNumpadPos] = useState({ x: 20, y: 150 });
+    const [isDragging, setIsDragging] = useState(false);
+    const dragOffset = useRef({ x: 0, y: 0 });
+
+    const startDragging = (e: React.MouseEvent) => {
+        setIsDragging(true);
+        dragOffset.current = {
+            x: e.clientX - numpadPos.x,
+            y: e.clientY - numpadPos.y
+        };
+    };
+
+    useEffect(() => {
+        const handleMove = (e: MouseEvent) => {
+            if (!isDragging) return;
+            // Use requestAnimationFrame for smoother movement
+            requestAnimationFrame(() => {
+                setNumpadPos({
+                    x: e.clientX - dragOffset.current.x,
+                    y: e.clientY - dragOffset.current.y
+                });
+            });
+        };
+        const stopDragging = () => setIsDragging(false);
+
+        if (isDragging) {
+            window.addEventListener('mousemove', handleMove);
+            window.addEventListener('mouseup', stopDragging);
+        }
+        return () => {
+            window.removeEventListener('mousemove', handleMove);
+            window.removeEventListener('mouseup', stopDragging);
+        };
+    }, [isDragging]);
+
+    const filteredCategories = categories.filter(cat => {
+        const parentId = (cat as any).parent || (cat as any).parentId || (cat as any).parent_id || null;
+        return parentId === currentParentId;
+    });
+
+    const currentParentName = currentParentId ? categories.find(c => c.id === currentParentId)?.name : null;
+
+    const filteredClients = clients.filter(c =>
+        c.name.toLowerCase().includes(clientSearchQuery.toLowerCase()) ||
+        c.phone.includes(clientSearchQuery)
+    );
 
     return (
         <div className={clsx(
@@ -55,7 +142,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
         )}>
 
             {/* ═══════════ HEADER ═══════════ */}
-            <header className="h-[48px] bg-white border-b border-gray-200/80 flex items-center justify-between px-4 shrink-0 z-50 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+            <header className="h-[48px] bg-white border-b border-gray-200/80 flex items-center justify-between px-4 shrink-0 z-50">
                 <div className="flex items-center gap-3">
                     <div className="flex items-center gap-2">
                         <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-sm">
@@ -90,14 +177,41 @@ export function POSLayoutModern(props: POSLayoutProps) {
                     </div>
                 </div>
                 <div className="flex items-center gap-3 text-xs text-gray-500">
-                    <span className="bg-gray-100 px-2 py-0.5 rounded font-semibold">{uniqueItems} items</span>
-                    <span className="bg-gray-100 px-2 py-0.5 rounded font-semibold">{totalPieces} pcs</span>
+                    <div className="flex bg-gray-100 p-1 rounded-lg gap-1">
+                        <button
+                            onClick={() => onSetIsOnline(!isOnline)}
+                            className={clsx(
+                                "h-7 px-3 rounded-md text-[10px] font-bold flex items-center gap-1.5 transition-all outline-none",
+                                isOnline ? "bg-white text-emerald-600 shadow-sm" : "text-rose-500"
+                            )}
+                        >
+                            {isOnline ? <Wifi size={12} /> : <WifiOff size={12} />}
+                            {isOnline ? 'ONLINE' : 'OFFLINE'}
+                        </button>
+                        <button
+                            onClick={onSync}
+                            className="h-7 px-3 rounded-md text-[10px] font-bold text-gray-500 hover:bg-white hover:text-indigo-600 transition-all flex items-center gap-1.5"
+                        >
+                            <RefreshCw size={12} className={isProcessing ? "animate-spin" : ""} />
+                            SYNC
+                        </button>
+                    </div>
+
+                    <span className="bg-gray-100 px-2 py-0.5 rounded font-semibold">{formatNumber(uniqueItems)} items</span>
+                    <span className="bg-gray-100 px-2 py-0.5 rounded font-semibold">{formatNumber(totalPieces)} pcs</span>
                     <button onClick={onToggleFullscreen} className="h-7 px-2 bg-gray-100 text-gray-600 rounded-md text-[11px] font-semibold hover:bg-gray-200 transition-all flex items-center gap-1">
                         {isFullscreen ? <Minimize size={12} /> : <Maximize size={12} />}
                     </button>
                     <button onClick={onOpenLayoutSelector} className="w-7 h-7 flex items-center justify-center bg-gray-100 rounded-md text-gray-500 hover:bg-gray-200 transition-all">
                         <Layout size={13} />
                     </button>
+                    <Link
+                        href="/sales/history"
+                        className="h-7 px-2.5 bg-indigo-50 text-indigo-600 rounded-md text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all flex items-center gap-1.5 shadow-sm"
+                    >
+                        <History size={11} />
+                        History
+                    </Link>
                 </div>
             </header>
 
@@ -107,70 +221,174 @@ export function POSLayoutModern(props: POSLayoutProps) {
                 {/* ════ LEFT COLUMN (62%) ════ */}
                 <aside className="w-[62%] flex flex-col bg-white border-r border-gray-200/80 shrink-0 overflow-hidden">
 
-                    {/* Client Info */}
-                    <div className="px-3 py-2 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white shrink-0">
-                        <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white text-xs font-bold shadow-sm shrink-0">
+                    {/* Client Selector & Search */}
+                    <div className="px-3 py-2 border-b border-gray-100 bg-gray-50/50 shrink-0">
+                        <div className="flex gap-2">
+                            <div className="flex-1 relative group">
+                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-500 transition-colors" size={12} />
+                                <input
+                                    type="text"
+                                    placeholder="Find customer..."
+                                    value={clientSearchQuery}
+                                    onChange={(e) => onSetClientSearchQuery(e.target.value)}
+                                    className="w-full pl-8 pr-3 py-1.5 bg-white border border-gray-200 rounded-lg text-[11px] font-bold outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 transition-all"
+                                />
+                                {clientSearchQuery && (
+                                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-100 rounded-xl shadow-2xl z-[100] max-h-48 overflow-y-auto custom-scrollbar">
+                                        {filteredClients.map(c => (
+                                            <button
+                                                key={c.id}
+                                                onClick={() => {
+                                                    onUpdateActiveSession({ clientId: c.id });
+                                                    onSetClientSearchQuery('');
+                                                }}
+                                                className="w-full text-left px-4 py-2 hover:bg-emerald-50 border-b border-gray-50 flex items-center justify-between group"
+                                            >
+                                                <div>
+                                                    <p className="text-[11px] font-black text-gray-900 group-hover:text-emerald-700">{c.name}</p>
+                                                    <p className="text-[9px] text-gray-400 font-mono">{c.phone}</p>
+                                                </div>
+                                                <span className="text-[9px] font-bold text-emerald-600 opacity-0 group-hover:opacity-100">Select</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="relative group shrink-0">
+                                <MapPin className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-500 transition-colors" size={12} />
+                                <select
+                                    value={deliveryZone}
+                                    onChange={(e) => onSetDeliveryZone(e.target.value)}
+                                    className="pl-8 pr-8 py-1.5 bg-white border border-gray-200 rounded-lg text-[11px] font-black outline-none appearance-none cursor-pointer focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 transition-all uppercase tracking-wider"
+                                >
+                                    {deliveryZones.map(z => (
+                                        <option key={z.id} value={z.name}>{z.name}</option>
+                                    ))}
+                                    {deliveryZones.length === 0 && (
+                                        <option value="A">Zone A</option>
+                                    )}
+                                </select>
+                                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={10} />
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 mt-2">
+                            <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-black shadow-lg shadow-indigo-100 shrink-0">
                                 {selectedClient?.name?.charAt(0) || 'C'}
                             </div>
                             <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-1.5">
-                                    <select
-                                        value={selectedClientId}
-                                        onChange={(e) => onUpdateActiveSession({ clientId: Number(e.target.value) })}
-                                        className="text-xs font-bold text-gray-900 bg-transparent border-none outline-none cursor-pointer appearance-none pr-3"
-                                    >
-                                        {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                    </select>
-                                    <ChevronDown size={10} className="text-gray-400 -ml-2" />
-                                    <span className="text-[10px] text-gray-400 ml-1">{selectedClient?.phone || '—'}</span>
-                                    <span className="bg-emerald-50 text-emerald-700 px-1.5 py-px rounded text-[10px] font-bold ml-1">Bal: {currency}{(selectedClient?.balance || 0).toFixed(2)}</span>
-                                    <span className="bg-amber-50 text-amber-700 px-1.5 py-px rounded text-[10px] font-bold flex items-center gap-0.5"><Star size={8} />{selectedClient?.loyalty || 0} pts</span>
-                                </div>
-                                <div className="flex items-center gap-3 text-[10px] text-gray-400 mt-0.5">
-                                    <span className="flex items-center gap-0.5 truncate"><MapPin size={8} />{selectedClient?.address || 'No address'}</span>
-                                    <span className="shrink-0">Zone: {selectedClient?.zone || '—'}</span>
+                                <p className="text-xs font-black text-gray-900 truncate">{selectedClient?.name || 'Walk-in'}</p>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                    <span className="text-[10px] text-gray-400 font-bold">{selectedClient?.phone || 'No phone'}</span>
+                                    <span className="bg-emerald-50 text-emerald-700 px-1.5 py-px rounded text-[10px] font-black">BAL: {currency}{formatNumber(selectedClient?.balance || 0)}</span>
+                                    <span className="bg-amber-50 text-amber-700 px-1.5 py-px rounded text-[10px] font-black flex items-center gap-0.5"><Star size={8} />{selectedClient?.loyalty || 0} PTS</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Search + Category Pills */}
+                    {/* Search + Calculator Button + Category Pills */}
                     <div className="px-3 py-2 border-b border-gray-100 space-y-1.5 shrink-0">
-                        <div className="relative">
-                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                            <input
-                                type="text"
-                                placeholder="Search products, scan barcode..."
-                                className="w-full pl-8 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs outline-none focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-50 transition-all"
-                                value={searchQuery}
-                                onChange={(e) => onSetSearchQuery(e.target.value)}
-                            />
-                        </div>
-                        <div className="flex gap-1 overflow-x-auto no-scrollbar">
-                            <button
-                                onClick={() => onSetActiveCategoryId(null)}
-                                className={clsx(
-                                    "px-4 py-1.5 whitespace-nowrap rounded-xl text-[13px] font-bold transition-all border",
-                                    activeCategoryId === null ? 'bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-200' : 'bg-white border-gray-200 text-gray-600 hover:border-emerald-300 hover:text-emerald-600'
+                        <div className="flex items-center gap-2">
+                            <div className="relative flex-1">
+                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                                <input
+                                    type="text"
+                                    placeholder="Search products, scan barcode..."
+                                    className="w-full pl-8 pr-10 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs outline-none focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-50 transition-all font-medium"
+                                    value={searchQuery}
+                                    onChange={(e) => onSetSearchQuery(e.target.value)}
+                                />
+                                {searchQuery && (
+                                    <button
+                                        onClick={() => onSetSearchQuery('')}
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-rose-500 transition-colors"
+                                    >
+                                        <X size={12} />
+                                    </button>
                                 )}
-                            >All</button>
-                            {categories.map(cat => (
-                                <button
-                                    key={cat.id}
-                                    onClick={() => onSetActiveCategoryId(cat.id)}
-                                    className={clsx(
-                                        "px-4 py-1.5 whitespace-nowrap rounded-xl text-[13px] font-bold transition-all border",
-                                        activeCategoryId === cat.id
-                                            ? 'bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-200'
-                                            : 'bg-white border-gray-200 text-gray-600 hover:border-emerald-300 hover:text-emerald-600'
-                                    )}
-                                >{cat.name}</button>
-                            ))}
+                            </div>
+                            <button
+                                onClick={() => setShowNumpad(!showNumpad)}
+                                title={showNumpad ? "Hide Calculator" : "Show Calculator"}
+                                className={clsx(
+                                    "p-1.5 rounded-lg border transition-all shrink-0 active:scale-95 shadow-sm",
+                                    showNumpad
+                                        ? "bg-amber-100 border-amber-300 text-amber-700 ring-2 ring-amber-50"
+                                        : "bg-white border-gray-200 text-gray-400 hover:border-amber-300 hover:text-amber-600"
+                                )}
+                            >
+                                <Calculator size={18} />
+                            </button>
+                        </div>
+                        <div className="flex gap-2 overflow-x-auto custom-scrollbar-h pb-1 pt-1 items-center">
+                            {currentParentId === null ? (
+                                <>
+                                    <button
+                                        onClick={() => {
+                                            onSetActiveCategoryId(null);
+                                            onSetCurrentParentId(null);
+                                            setLeftExpanded(true);
+                                        }}
+                                        className={clsx(
+                                            "px-4 py-2 whitespace-nowrap rounded-xl text-[12px] font-black uppercase tracking-widest transition-all border shrink-0",
+                                            (activeCategoryId === null && currentParentId === null) ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100' : 'bg-white border-gray-100 text-gray-500 hover:border-indigo-300 hover:text-indigo-600'
+                                        )}
+                                    >ALL</button>
+                                    {categories.filter(c => !((c as any).parent || (c as any).parentId || (c as any).parent_id)).map(cat => (
+                                        <button
+                                            key={cat.id}
+                                            onClick={() => {
+                                                onSetActiveCategoryId(cat.id);
+                                                onSetCurrentParentId(cat.id);
+                                                setLeftExpanded(true);
+                                            }}
+                                            className={clsx(
+                                                "px-4 py-2 whitespace-nowrap rounded-xl text-[12px] font-black uppercase tracking-widest transition-all border shrink-0",
+                                                (activeCategoryId === cat.id || currentParentId === cat.id)
+                                                    ? 'bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-200'
+                                                    : 'bg-white border-gray-100 text-gray-500 hover:border-emerald-300 hover:text-emerald-600'
+                                            )}
+                                        >{cat.name}</button>
+                                    ))}
+                                </>
+                            ) : (
+                                <>
+                                    <button
+                                        onClick={() => {
+                                            const parent = categories.find(c => c.id === currentParentId);
+                                            const grandParentId = (parent as any)?.parent || (parent as any)?.parentId || (parent as any)?.parent_id || null;
+                                            onSetCurrentParentId(grandParentId);
+                                            onSetActiveCategoryId(grandParentId);
+                                            setLeftExpanded(true);
+                                        }}
+                                        className="h-9 px-4 bg-indigo-600 border border-indigo-600 text-white rounded-xl text-[12px] font-black uppercase tracking-widest transition-all shrink-0 flex items-center gap-2 shadow-lg shadow-indigo-100"
+                                    >
+                                        <ArrowLeft size={14} />
+                                        {currentParentName}
+                                    </button>
+                                    <div className="w-px h-6 bg-gray-200 mx-1 shrink-0" />
+                                    {categories.filter(c => ((c as any).parent || (c as any).parentId || (c as any).parent_id) === currentParentId).map(cat => (
+                                        <button
+                                            key={cat.id}
+                                            onClick={() => {
+                                                onSetActiveCategoryId(cat.id);
+                                                setLeftExpanded(true);
+                                            }}
+                                            className={clsx(
+                                                "px-4 py-2 whitespace-nowrap rounded-xl text-[12px] font-black uppercase tracking-widest transition-all border shrink-0",
+                                                activeCategoryId === cat.id
+                                                    ? 'bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-200'
+                                                    : 'bg-white border-gray-100 text-gray-500 hover:border-emerald-300 hover:text-emerald-600'
+                                            )}
+                                        >{cat.name}</button>
+                                    ))}
+                                </>
+                            )}
                         </div>
                     </div>
 
-                    {/* Toggle */}
+                    {/* Toggle View Mode */}
                     <div className="px-3 py-1 border-b border-gray-50 flex items-center justify-between shrink-0 bg-gray-50/50">
                         <span className="text-[10px] font-semibold text-gray-500 flex items-center gap-1">
                             <span className="w-1 h-1 bg-emerald-500 rounded-full" />
@@ -185,48 +403,131 @@ export function POSLayoutModern(props: POSLayoutProps) {
                         </button>
                     </div>
 
-                    {/* Expanded → Product Grid */}
-                    {leftExpanded && (
-                        <div className="flex-1 overflow-y-auto p-3 custom-scrollbar bg-gray-50/30">
-                            <ProductGrid searchQuery={searchQuery} categoryId={activeCategoryId} onAddToCart={onAddToCart} currency={currency} />
-                        </div>
-                    )}
+                    {/* Main Area (Products or Categories) */}
+                    <div className="flex-1 relative bg-gray-50/10 overflow-hidden">
+                        <div className="absolute inset-0 overflow-y-auto custom-scrollbar p-3">
+                            {leftExpanded ? (
+                                <ProductGrid searchQuery={searchQuery} categoryId={activeCategoryId} onAddToCart={onAddToCart} currency={currency} />
+                            ) : (
+                                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                                    {/* Back Button / Navigation Context */}
+                                    {currentParentId !== null ? (
+                                        <button
+                                            onClick={() => {
+                                                const parent = categories.find(c => c.id === currentParentId);
+                                                const grandParentId = (parent as any)?.parent || (parent as any)?.parentId || (parent as any)?.parent_id || null;
+                                                onSetCurrentParentId(grandParentId);
+                                                onSetActiveCategoryId(grandParentId);
+                                            }}
+                                            className="p-8 rounded-2xl bg-[#f0f4ff] border border-indigo-100 text-indigo-600 text-center hover:bg-indigo-100 transition-all flex flex-col items-center justify-center font-black uppercase text-[12px] tracking-widest gap-2 shadow-sm"
+                                        >
+                                            <ArrowLeft size={24} />
+                                            BACK
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={() => { onSetActiveCategoryId(null); setLeftExpanded(true); }}
+                                            className="p-4 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white text-center group hover:shadow-xl transition-all border-none"
+                                        >
+                                            <Package size={20} className="mx-auto mb-1.5" />
+                                            <span className="text-[12px] font-black uppercase tracking-wider">All Products</span>
+                                        </button>
+                                    )}
 
-                    {/* Collapsed → Category Tiles ONLY (no payment) */}
-                    {!leftExpanded && (
-                        <div className="flex-1 p-3 overflow-y-auto custom-scrollbar">
-                            <div className="grid grid-cols-3 gap-2">
-                                <button
-                                    onClick={() => { onSetActiveCategoryId(null); setLeftExpanded(true); }}
-                                    className="p-3 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 text-center group hover:shadow-md hover:border-emerald-200 transition-all"
-                                >
-                                    <Package size={18} className="mx-auto text-emerald-500 mb-1" />
-                                    <span className="text-[10px] font-semibold text-gray-700">All Products</span>
-                                </button>
-                                {categories.map(cat => (
-                                    <button
-                                        key={cat.id}
-                                        onClick={() => { onSetActiveCategoryId(cat.id); setLeftExpanded(true); }}
-                                        className={clsx(
-                                            "p-4 rounded-xl border text-center group hover:shadow-xl transition-all",
-                                            activeCategoryId === cat.id
-                                                ? "bg-emerald-50 border-emerald-300 ring-2 ring-emerald-100"
-                                                : "bg-white border-gray-100 hover:border-emerald-200"
-                                        )}
-                                    >
-                                        <Tag size={18} className={clsx("mx-auto mb-1.5", activeCategoryId === cat.id ? "text-emerald-500" : "text-gray-400 group-hover:text-emerald-500")} />
-                                        <span className="text-[12px] font-bold text-gray-800 uppercase tracking-tight line-clamp-2">{cat.name}</span>
-                                    </button>
-                                ))}
-                            </div>
+                                    {filteredCategories.map(cat => {
+                                        const hasChildren = categories.some(c => ((c as any).parent || (c as any).parentId || (c as any).parent_id) === cat.id);
+                                        return (
+                                            <button
+                                                key={cat.id}
+                                                onClick={() => {
+                                                    onSetActiveCategoryId(cat.id);
+                                                    if (hasChildren) {
+                                                        onSetCurrentParentId(cat.id);
+                                                    }
+                                                    setLeftExpanded(true);
+                                                }}
+                                                className={clsx(
+                                                    "p-6 rounded-2xl border text-center group hover:shadow-2xl transition-all bg-white relative flex flex-col items-center justify-center gap-3",
+                                                    (activeCategoryId === cat.id || currentParentId === cat.id)
+                                                        ? "border-emerald-400 ring-4 ring-emerald-50 shadow-xl"
+                                                        : "border-gray-100 hover:border-emerald-200"
+                                                )}
+                                            >
+                                                <div className={clsx(
+                                                    "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500",
+                                                    (activeCategoryId === cat.id || currentParentId === cat.id) ? 'bg-emerald-600 text-white rotate-12' : 'bg-gray-50 text-gray-400 group-hover:bg-emerald-50 group-hover:text-emerald-500'
+                                                )}>
+                                                    <Tag size={20} />
+                                                </div>
+                                                <div className="flex flex-col items-center">
+                                                    <span className={clsx(
+                                                        "text-[13px] font-black uppercase tracking-wider transition-colors line-clamp-2",
+                                                        (activeCategoryId === cat.id || currentParentId === cat.id) ? 'text-emerald-700' : 'text-gray-900'
+                                                    )}>{cat.name}</span>
+                                                    {hasChildren && <span className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">Browse Sub-items</span>}
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </div>
-                    )}
+
+                        {/* Speed Calc Floating Overlay */}
+                        {showNumpad && (
+                            <div
+                                style={{
+                                    position: 'fixed',
+                                    left: 0,
+                                    top: 0,
+                                    transform: `translate3d(${numpadPos.x}px, ${numpadPos.y}px, 0)`,
+                                    cursor: isDragging ? 'grabbing' : 'default',
+                                    willChange: 'transform'
+                                }}
+                                className={clsx(
+                                    "z-[50] w-[280px] p-2 bg-white/95 backdrop-blur-md rounded-2xl border border-amber-200 shadow-2xl shadow-amber-200/40 animate-in zoom-in-95 ring-4 ring-amber-50",
+                                    !isDragging && "transition-transform duration-200 ease-out"
+                                )}
+                            >
+                                <div
+                                    onMouseDown={startDragging}
+                                    className="flex items-center justify-between px-2 mb-2 cursor-grab active:cursor-grabbing hover:bg-amber-50 rounded-lg p-1 transition-colors group/handle"
+                                >
+                                    <div className="flex items-center gap-1.5">
+                                        <GripHorizontal size={14} className="text-amber-400 group-hover/handle:text-amber-600 transition-colors" />
+                                        <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest">
+                                            {selectedCartIdx !== null ? `Editing Item #${selectedCartIdx + 1}` : 'Speed Calc'}
+                                        </span>
+                                    </div>
+                                    <button onClick={() => setShowNumpad(false)} className="w-6 h-6 flex items-center justify-center rounded-full bg-amber-100 text-amber-600 hover:bg-amber-600 hover:text-white transition-all">
+                                        <X size={12} />
+                                    </button>
+                                </div>
+                                <POSNumpad
+                                    onValueConfirm={(val, mode) => {
+                                        const idx = selectedCartIdx ?? 0;
+                                        if (cart.length > idx) {
+                                            const target = cart[idx];
+                                            if (mode === 'qty') {
+                                                const delta = val - target.quantity;
+                                                handleProtectedQuantity(target.productId, delta);
+                                            } else if (mode === 'price') {
+                                                handleProtectedPrice(target.productId, val);
+                                            } else if (mode === 'disc') {
+                                                handleProtectedDiscount(val);
+                                            }
+                                        } else {
+                                            toast.error("Add an item first");
+                                        }
+                                    }}
+                                />
+                            </div>
+                        )}
+                    </div>
                 </aside>
 
                 {/* ════ RIGHT COLUMN: CART (full height) ════ */}
                 <main className="flex-1 flex flex-col bg-[#fafbfc] overflow-hidden">
-
-                    {/* Cart Header */}
                     <div className="px-3 py-1.5 border-b border-gray-200/80 bg-white flex items-center justify-between shrink-0">
                         <div className="flex items-center gap-1.5">
                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -238,7 +539,6 @@ export function POSLayoutModern(props: POSLayoutProps) {
                         )}
                     </div>
 
-                    {/* Cart Items — COMPACT single row */}
                     <div className="flex-1 overflow-y-auto custom-scrollbar">
                         {cart.length === 0 ? (
                             <div className="flex flex-col items-center justify-center h-full text-gray-300 gap-2">
@@ -250,16 +550,21 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 {cart.map((item: any, idx: number) => (
                                     <div
                                         key={item.productId}
+                                        onClick={() => {
+                                            setSelectedCartIdx(idx);
+                                            setShowNumpad(true);
+                                        }}
                                         className={clsx(
-                                            "px-2.5 py-1 group transition-colors duration-300 flex items-center gap-1.5",
-                                            highlightedItemId === item.productId ? "bg-emerald-400"
-                                                : lastAddedItemId === item.productId ? "bg-emerald-500/20"
-                                                    : "hover:bg-white"
+                                            "px-2.5 py-1.5 group transition-colors duration-300 flex items-center gap-1.5 cursor-pointer",
+                                            selectedCartIdx === idx ? "bg-amber-50 ring-1 ring-amber-200"
+                                                : highlightedItemId === item.productId ? "bg-emerald-400 text-white"
+                                                    : lastAddedItemId === item.productId ? "bg-emerald-500/20"
+                                                        : "hover:bg-white"
                                         )}
                                     >
                                         <span className="text-[10px] text-gray-300 font-mono w-4 shrink-0 text-center">{idx + 1}</span>
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-[14px] font-black text-gray-900 truncate leading-tight">{item.name}</p>
+                                            <p className="text-[14px] font-black text-gray-900 truncate leading-tight group-hover:text-emerald-600">{item.name}</p>
                                             <div className="flex items-center gap-2 mt-0.5">
                                                 {item.barcode && <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">#{item.barcode}</span>}
                                                 <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1 rounded">Stock: {item.stock || 0}</span>
@@ -267,22 +572,29 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                         </div>
                                         <span className="text-[12px] font-black text-gray-400 shrink-0">{currency}{Number(item.price).toFixed(2)}</span>
                                         <div className="flex items-center gap-px shrink-0">
-                                            <button onClick={() => onUpdateQuantity(item.productId, -1)} className="w-6 h-6 rounded-lg bg-gray-100 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-center text-gray-400 transition-all active:scale-90 border border-transparent hover:border-rose-200">
-                                                <Minus size={12} strokeWidth={3} />
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handleProtectedQuantity(item.productId, -1); }}
+                                                className="w-6 h-6 rounded-lg bg-gray-100 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-center text-gray-400 transition-all border border-transparent"
+                                            >
+                                                <Minus size={12} />
                                             </button>
-                                            <span className="w-7 text-center text-[14px] font-black tabular-nums text-gray-900">{item.quantity}</span>
-                                            <button onClick={() => onUpdateQuantity(item.productId, 1)} className="w-6 h-6 rounded-lg bg-emerald-50 hover:bg-emerald-500 hover:text-white text-emerald-600 flex items-center justify-center transition-all active:scale-90 border border-emerald-100 hover:border-emerald-500">
-                                                <Plus size={12} strokeWidth={3} />
+                                            <span className="w-7 text-center text-[13px] font-black tabular-nums text-gray-900">{item.quantity}</span>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); onUpdateQuantity(item.productId, 1); }}
+                                                className="w-6 h-6 rounded-lg bg-emerald-50 hover:bg-emerald-500 hover:text-white text-emerald-600 flex items-center justify-center transition-all border border-emerald-100"
+                                            >
+                                                <Plus size={12} />
                                             </button>
                                         </div>
-                                        {(item.taxRate || 0) > 0 && (
-                                            <span className="text-[8px] font-black text-gray-400 bg-gray-100 px-1 rounded shrink-0 uppercase">VAT {item.taxRate}%</span>
-                                        )}
-                                        <p className="text-[14px] font-black text-emerald-700 tabular-nums shrink-0 w-16 text-right">
+                                        <p className="text-[13px] font-black text-emerald-700 tabular-nums shrink-0 w-16 text-right">
                                             {currency}{(Number(item.price) * item.quantity).toFixed(2)}
                                         </p>
-                                        <button onClick={() => onUpdateQuantity(item.productId, -100)} className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-rose-500 transition-all shrink-0">
-                                            <Trash2 size={10} />
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); handleProtectedQuantity(item.productId, -item.quantity); }}
+                                            className="ml-2 w-8 h-8 rounded-lg bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all shrink-0 flex items-center justify-center border border-rose-100"
+                                            title="Delete product from cart"
+                                        >
+                                            <Trash2 size={14} />
                                         </button>
                                     </div>
                                 ))}
@@ -290,9 +602,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                         )}
                     </div>
 
-                    {/* ── Cart Footer: Compact payment + Charge ── */}
                     <div className="border-t border-gray-200 bg-white px-3 py-2 shrink-0 space-y-2">
-                        {/* Subtotal + Discount row */}
                         <div className="flex flex-col gap-1">
                             <div className="flex items-center justify-between text-[11px]">
                                 <span className="text-gray-400">Subtotal</span>
@@ -301,139 +611,96 @@ export function POSLayoutModern(props: POSLayoutProps) {
                             <div className="flex items-center justify-between text-[11px]">
                                 <span className="text-gray-400">Discount</span>
                                 <div className="flex items-center gap-1">
-                                    {/* Discount Type Toggle */}
                                     <div className="flex items-center bg-gray-100 rounded p-0.5">
                                         <button
                                             onClick={() => onSetDiscountType('fixed')}
-                                            className={clsx("px-2 py-0.5 rounded text-[10px] font-bold transition-all", discountType === 'fixed' ? "bg-white shadow text-gray-800" : "text-gray-400")}
-                                        >
-                                            {currency}
-                                        </button>
+                                            className={clsx("px-2 py-0.5 rounded text-[10px] font-bold", discountType === 'fixed' ? "bg-white shadow text-gray-800" : "text-gray-400")}
+                                        >{currency}</button>
                                         <button
                                             onClick={() => onSetDiscountType('percentage')}
-                                            className={clsx("px-2 py-0.5 rounded text-[10px] font-bold transition-all", discountType === 'percentage' ? "bg-white shadow text-gray-800" : "text-gray-400")}
-                                        >
-                                            %
-                                        </button>
+                                            className={clsx("px-2 py-0.5 rounded text-[10px] font-bold", discountType === 'percentage' ? "bg-white shadow text-gray-800" : "text-gray-400")}
+                                        >%</button>
                                     </div>
-                                    <div className="relative w-24">
-                                        <input
-                                            type="number" min="0" step="0.01"
-                                            value={discount || ''}
-                                            onChange={(e) => onSetDiscount(Math.max(0, Number(e.target.value) || 0))}
-                                            placeholder="0"
-                                            className="w-full pl-2 pr-1 py-1 text-right bg-amber-50/50 border border-gray-200 rounded text-[12px] font-semibold tabular-nums text-amber-600 outline-none focus:border-amber-400 transition-all"
-                                        />
-                                    </div>
+                                    <input
+                                        type="number" min="0" step="0.01"
+                                        value={discount || ''}
+                                        onChange={(e) => handleProtectedDiscount(Number(e.target.value) || 0)}
+                                        className="w-20 py-1 text-right bg-amber-50/50 border border-gray-200 rounded text-[12px] font-bold text-amber-600 outline-none"
+                                        placeholder="0"
+                                    />
                                 </div>
                             </div>
                         </div>
 
-                        {/* Total */}
                         <div className="flex items-center justify-between border-t border-gray-100 pt-1">
                             <span className="text-sm font-bold text-gray-900">Total</span>
                             <span className="text-lg font-extrabold tabular-nums text-gray-900">{currency}{totalAmount.toFixed(2)}</span>
                         </div>
 
-                        {/* Payment methods */}
                         <div className="grid grid-cols-4 gap-1">
-                            {[
-                                { key: 'CASH', label: 'Cash', icon: Banknote },
-                                { key: 'CARD', label: 'Card', icon: CreditCard },
-                                { key: 'WALLET', label: 'Wallet', icon: Wallet },
-                                { key: 'WAVE', label: 'Wave', icon: Wallet },
-                                { key: 'OM', label: 'OM', icon: Wallet },
-                                { key: 'MULTI', label: 'Multi', icon: CreditCard },
-                                { key: 'DELIVERY', label: 'Delivery', icon: Package },
-                            ].map(m => (
+                            {['CASH', 'CARD', 'WALLET', 'WAVE', 'OM', 'MULTI', 'DELIVERY'].map(m => (
                                 <button
-                                    key={m.key}
-                                    onClick={() => onSetPaymentMethod(m.key)}
+                                    key={m}
+                                    onClick={() => onSetPaymentMethod(m)}
                                     className={clsx(
-                                        "flex items-center justify-center gap-0.5 py-1 rounded text-[9px] font-semibold transition-all border",
-                                        paymentMethod === m.key
-                                            ? "bg-emerald-50 border-emerald-200 text-emerald-700"
-                                            : "bg-gray-50 border-gray-100 text-gray-400"
+                                        "py-1 rounded text-[9px] font-bold border transition-all",
+                                        paymentMethod === m ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-gray-50 border-gray-100 text-gray-400"
                                     )}
-                                >
-                                    <m.icon size={10} />
-                                    {m.label}
-                                </button>
+                                >{m}</button>
                             ))}
                         </div>
 
-                        {/* Advanced Input & Integrated Charge Button */}
-                        <div className="flex items-center gap-2 pt-1">
-                            {/* Received Amount Input (Formatted) */}
+                        <div className="flex items-center gap-2 pt-1 border-t border-gray-50 mt-1">
                             <div className="flex-1">
-                                <label className="text-[10px] font-bold text-gray-500 mb-0.5 block">Received Amount</label>
-                                <div className="relative">
-                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">{currency}</span>
-                                    <input
-                                        type="text"
-                                        inputMode="numeric"
-                                        value={cashReceived ? Number(cashReceived.replace(/\D/g, '')).toLocaleString('fr-FR') : ''}
-                                        onChange={(e) => {
-                                            const numericValue = e.target.value.replace(/\s+/g, '').replace(/,/g, '.');
-                                            if (/^\d*\.?\d*$/.test(numericValue)) {
-                                                onSetCashReceived(numericValue);
-                                            }
-                                        }}
-                                        placeholder={totalAmount.toFixed(0)}
-                                        className="w-full pl-6 pr-2 py-2 text-right bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold tabular-nums outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
-                                    />
-                                </div>
+                                <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 block">Received</label>
+                                <input
+                                    type="text"
+                                    value={cashReceived ? cashReceived.replace(/\B(?=(\d{3})+(?!\d))/g, " ") : ''}
+                                    onChange={(e) => {
+                                        const raw = e.target.value.replace(/\s+/g, '').replace(',', '.');
+                                        if (raw === '' || /^\d*\.?\d*$/.test(raw)) {
+                                            onSetCashReceived(raw);
+                                        }
+                                    }}
+                                    placeholder={totalAmount.toFixed(2)}
+                                    className="w-full px-2 py-2 text-right bg-gray-50 border border-gray-100 rounded-lg text-sm font-bold outline-none focus:border-emerald-500 transition-all font-mono"
+                                />
                             </div>
-
-                            {/* Integrated Charge Button */}
                             <button
                                 onClick={onCharge}
                                 disabled={cart.length === 0 || isProcessing}
                                 className={clsx(
-                                    "px-4 py-2 mt-4 rounded-lg flex flex-col items-center justify-center transition-all h-[42px] min-w-[140px]",
-                                    cart.length > 0 && !isProcessing
-                                        ? "bg-emerald-500 text-white shadow-md shadow-emerald-200 hover:bg-emerald-600 active:scale-[0.98]"
-                                        : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                    "flex-1 py-2 rounded-xl h-[48px] flex flex-col items-center justify-center transition-all shadow-lg shadow-emerald-100",
+                                    cart.length > 0 && !isProcessing ? "bg-emerald-500 text-white hover:bg-emerald-600" : "bg-gray-200 text-gray-400"
                                 )}
                             >
-                                {isProcessing ? (
-                                    <span className="text-sm font-bold uppercase tracking-widest">Processing...</span>
-                                ) : (
-                                    <div className="flex flex-col items-center">
-                                        <span className="text-sm font-black uppercase tracking-wider">
-                                            {changeDue > 0 ? "Return Change" : "Charge"}
-                                        </span>
-                                        {changeDue > 0 ? (
-                                            <span className="text-[16px] font-black text-white leading-none mt-1 animate-bounce">
-                                                {currency}{changeDue.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}
-                                            </span>
-                                        ) : (
-                                            <span className="text-[10px] opacity-70 font-bold uppercase tracking-widest leading-none mt-1">
-                                                {currency}{totalAmount.toFixed(2)}
-                                            </span>
-                                        )}
-                                    </div>
-                                )}
+                                <span className="text-[12px] font-black uppercase tracking-widest">{changeDue > 0 ? "Change" : "Charge"}</span>
+                                <span className="text-[14px] font-black leading-none">{currency}{formatNumber(changeDue > 0 ? changeDue : totalAmount)}</span>
                             </button>
                         </div>
-                        {changeDue > 0 && props.onSetStoreChangeInWallet && (
-                            <label className="flex items-center justify-center gap-1.5 cursor-pointer mt-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 py-1.5 px-2 rounded-lg hover:bg-emerald-100 transition-colors w-full border border-emerald-100">
-                                <input
-                                    type="checkbox"
-                                    checked={props.storeChangeInWallet}
-                                    onChange={(e) => props.onSetStoreChangeInWallet!(e.target.checked)}
-                                    className="rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500 w-3 h-3"
-                                />
-                                Save {currency}{changeDue.toLocaleString('fr-FR', { minimumFractionDigits: 0 })} change to Wallet
-                            </label>
-                        )}
                     </div>
                 </main>
             </div>
 
-            {/* Modals */}
-            <ManagerOverride isOpen={isOverrideOpen} actionLabel="Authorize Change" onClose={() => onSetOverrideOpen(false)} onSuccess={() => toast.success("Action authorized")} />
-            <ReceiptModal isOpen={isReceiptOpen} onClose={() => onSetReceiptOpen(false)} orderId={lastOrder?.id || null} refCode={lastOrder?.ref || null} />
+            {/* ═══════════ MODALS ═══════════ */}
+            <ManagerOverride
+                isOpen={isOverrideOpen}
+                onClose={() => onSetOverrideOpen(false)}
+                onSuccess={() => {
+                    if (pendingAction) {
+                        pendingAction.execute();
+                        setPendingAction(null);
+                    }
+                }}
+                actionLabel={pendingAction?.label || "Protected Action"}
+            />
+
+            <ReceiptModal
+                isOpen={isReceiptOpen}
+                onClose={() => onSetReceiptOpen(false)}
+                orderId={lastOrder?.id || null}
+                refCode={lastOrder?.ref || null}
+            />
         </div>
     );
 }

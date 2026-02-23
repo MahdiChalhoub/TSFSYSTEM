@@ -70,7 +70,7 @@ export default async function PurchaseDetailPage({ params }: { params: { id: str
 
                 <div className="flex gap-3">
                     <a
-                        href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/purchase/${id}/print/`}
+                        href={`${process.env.NEXT_PUBLIC_API_URL || 'http://backend:8000/api'}/purchase/${id}/print/`}
                         target="_blank"
                         className="p-3.5 bg-white border border-gray-100 rounded-2xl text-gray-400 hover:text-emerald-600 hover:border-emerald-100 transition-all shadow-sm flex items-center gap-2"
                     >

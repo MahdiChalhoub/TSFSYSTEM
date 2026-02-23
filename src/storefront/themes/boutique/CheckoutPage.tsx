@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { useCart, useAuth, useConfig } from '../../engine'
+import { useCart } from '../../engine/hooks/useCart'
+import { useAuth } from '../../engine/hooks/useAuth'
+import { useConfig } from '../../engine/hooks/useConfig'
 import { CreditCard, Truck, Wallet, Lock, ArrowLeft, CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
 import { createOrder } from '@/app/tenant/[slug]/actions'
