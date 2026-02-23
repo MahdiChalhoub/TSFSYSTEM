@@ -23,7 +23,7 @@ rsync -avz -e "ssh -i ~/.ssh/id_deploy" \
     /root/.gemini/antigravity/scratch/TSFSYSTEM/ root@91.99.186.183:/root/TSFSYSTEM/
 
 echo "📊 Applying Database Migrations..."
-ssh -i ~/.ssh/id_deploy root@91.99.186.183 "docker exec tsf_backend python manage.py makemigrations migration"
+ssh -i ~/.ssh/id_deploy root@91.99.186.183 "docker exec tsf_backend python manage.py makemigrations data_migration"
 ssh -i ~/.ssh/id_deploy root@91.99.186.183 "docker exec tsf_backend python manage.py migrate"
 
 echo "🔄 Restarting Backend Service..."
