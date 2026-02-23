@@ -13,6 +13,7 @@ interface ThemeContextState {
     loading: boolean
     components: ThemeComponents | null
     config: ThemeConfig | null
+    sections: Record<string, any>
 }
 
 const ThemeContext = createContext<ThemeContextState>({
@@ -21,6 +22,7 @@ const ThemeContext = createContext<ThemeContextState>({
     loading: true,
     components: null,
     config: null,
+    sections: {},
 })
 
 export const useTheme = () => useContext(ThemeContext)
@@ -64,6 +66,7 @@ export function ThemeProvider({ children, themeId: propThemeId }: ThemeProviderP
             loading,
             components: theme?.components || null,
             config: theme?.config || null,
+            sections: theme?.sections || {},
         }}>
             {children}
         </ThemeContext.Provider>

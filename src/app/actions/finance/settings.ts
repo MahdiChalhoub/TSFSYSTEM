@@ -16,6 +16,15 @@ export type FinancialSettingsState = {
     customTaxRules?: string
     pricingCostBasis?: string
     officialAccessPin?: string
+    // Auto-Declaration & Protection Strategy (Sales/POS)
+    autoDeclarationEnabled?: boolean
+    autoDeclareThreshold?: number // Transactions > X are always OFFICIAL
+    autoDeclarePercentage?: number // X% of transactions <= Threshold are OFFICIAL
+
+    // Integrity Protection (Prevention of Over-Declaration)
+    autoDeclareDailyLimit?: number // Max daily amount to route to OFFICIAL
+    controllableAccountIds?: number[] // Wallets/Banks that MUST be OFFICIAL
+    integrityAlertEnabled?: boolean // Alert cashier when daily limit reached
 }
 
 export async function getSettingsLockStatus() {

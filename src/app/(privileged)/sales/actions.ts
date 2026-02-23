@@ -100,7 +100,42 @@ export async function processSale(data: {
     cashReceived?: number
 }) {
     try {
-        const context = await getCommercialContext();
+        const [context, financialSettings] = await Promise.all([
+            getCommercialContext(),
+            import('@/app/actions/finance/settings').then(m => m.getFinancialSettings())
+        ]);
+
+        let effectiveScope = data.scope || 'INTERNAL';
+        let protectionWarning = null;
+
+        // --- AUTOMATED INTEGRITY GUARD ---
+        if (financialSettings.dualViewEnabled && financialSettings.autoDeclarationEnabled) {
+            // 1. Check if payment account is "Controllable" (Goverment visible: Bank, Card, Wave)
+            const isControllable = financialSettings.controllableAccountIds?.includes(Number(data.paymentAccountId));
+
+            // 2. Threshold Check
+            const isAbovethreshold = financialSettings.autoDeclareThreshold && data.totalAmount >= financialSettings.autoDeclareThreshold;
+
+            // 3. Strategic Sampling
+            const dice = Math.random() * 100;
+            const shouldSample = financialSettings.autoDeclarePercentage && dice <= financialSettings.autoDeclarePercentage;
+
+            if (isControllable || isAbovethreshold || shouldSample) {
+                effectiveScope = 'OFFICIAL';
+            }
+
+            // --- INTEGRITY PROTECTION (DAILY LIMIT) ---
+            if (effectiveScope === 'OFFICIAL' && financialSettings.autoDeclareDailyLimit) {
+                const { getDeclaredTurnoverToday } = await import('@/app/actions/finance/ledger');
+                const dailyTurnover = await getDeclaredTurnoverToday();
+
+                if (dailyTurnover + data.totalAmount > financialSettings.autoDeclareDailyLimit) {
+                    // Downgrade to INTERNAL to protect the company from over-declaration
+                    effectiveScope = 'INTERNAL';
+                    protectionWarning = "Daily Declaration Cap Reached. Transaction routed to Internal for Protection.";
+                }
+            }
+        }
 
         const response = await erpFetch('pos/checkout/', {
             method: 'POST',
@@ -114,7 +149,7 @@ export async function processSale(data: {
                 payment_account_id: data.paymentAccountId,
                 payment_method: data.paymentMethod,
                 notes: data.notes,
-                scope: data.scope || 'OFFICIAL',
+                scope: effectiveScope,
                 total_amount: data.totalAmount,
                 contact_id: data.clientId,
                 points_redeemed: data.pointsRedeemed || 0,
@@ -124,7 +159,13 @@ export async function processSale(data: {
         });
 
         revalidatePath('/sales/history');
-        return { success: true, orderId: response.order_id, ref: response.ref || "POS-WEB" };
+        return {
+            success: true,
+            orderId: response.order_id,
+            ref: response.ref || "POS-WEB",
+            scope: effectiveScope,
+            protectionWarning
+        };
     } catch (e: unknown) {
         console.error("POS Checkout Error:", e);
         throw new Error((e instanceof Error ? e.message : String(e)) || "Checkout Failed");
