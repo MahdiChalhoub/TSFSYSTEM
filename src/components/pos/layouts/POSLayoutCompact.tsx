@@ -25,7 +25,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
         sessions, activeSessionId, currency, total, discount, totalAmount,
         totalPieces, uniqueItems, searchQuery, activeCategoryId,
         isFullscreen, paymentMethod, cashReceived, isProcessing,
-        isOverrideOpen, isReceiptOpen, lastOrder,
+        isOverrideOpen, isReceiptOpen, lastOrder, highlightedItemId,
         onSetSearchQuery, onSetActiveCategoryId, onSetActiveSessionId,
         onSetPaymentMethod, onSetCashReceived, onSetDiscount, onAddToCart, onUpdateQuantity,
         onClearCart, onCreateNewSession, onRemoveSession, onUpdateActiveSession,
@@ -214,7 +214,10 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                                 </thead>
                                 <tbody className="divide-y divide-[#1e2029]">
                                     {cart.map((item: any) => (
-                                        <tr key={item.productId} className="group hover:bg-amber-500/5 transition-colors">
+                                        <tr
+                                            key={item.productId}
+                                            className={`group transition-colors duration-300 ${highlightedItemId === item.productId ? "bg-amber-500/20" : "hover:bg-amber-500/5"}`}
+                                        >
                                             <td className="px-3 py-2">
                                                 <span className="font-bold text-gray-200 text-[11px]">{item.name}</span>
                                             </td>

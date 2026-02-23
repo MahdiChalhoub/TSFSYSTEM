@@ -1,0 +1,89 @@
+import { Building2, ArrowRight, ShieldCheck, Zap, Globe } from "lucide-react"
+import { Button } from "@/components/ui/button"
+
+export function LandingHomePage({ org }: { org: any }) {
+    return (
+        <div className="min-h-screen bg-white">
+            {/* Minimal Header */}
+            <header className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b border-gray-100">
+                <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        {org.logo ? (
+                            <img src={org.logo} alt={org.name} className="h-8 object-contain" />
+                        ) : (
+                            <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
+                                <Building2 size={20} className="text-white" />
+                            </div>
+                        )}
+                        <span className="font-black text-xl text-gray-900 tracking-tight">{org.name}</span>
+                    </div>
+                    <nav className="hidden md:flex items-center gap-8 font-semibold text-sm text-gray-600">
+                        <a href="#services" className="hover:text-indigo-600 transition-colors">Services</a>
+                        <a href="#about" className="hover:text-indigo-600 transition-colors">About Us</a>
+                        <a href="#contact" className="hover:text-indigo-600 transition-colors">Contact</a>
+                    </nav>
+                    <Button className="rounded-full px-6 font-bold shadow-lg shadow-indigo-200" onClick={() => window.location.href = '/login'}>
+                        Client Portal
+                    </Button>
+                </div>
+            </header>
+
+            {/* Hero Section */}
+            <section className="pt-40 pb-20 px-6 max-w-7xl mx-auto text-center">
+                <Badge className="mb-6 bg-indigo-50 text-indigo-600 border-indigo-100 font-bold uppercase tracking-widest px-4 py-1">
+                    Welcome to {org.name}
+                </Badge>
+                <h1 className="text-6xl md:text-8xl font-black text-gray-900 tracking-tighter leading-[1.1] mb-8">
+                    Elevating your <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">business standards.</span>
+                </h1>
+                <p className="text-xl text-gray-500 max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
+                    We provide top-tier industry solutions backed by robust technology and a dedicated team of experts.
+                </p>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <Button size="lg" className="h-14 px-8 rounded-full text-lg font-bold shadow-xl shadow-indigo-200/50 w-full sm:w-auto hover:-translate-y-1 transition-all">
+                        Get Started <ArrowRight className="ml-2 w-5 h-5" />
+                    </Button>
+                    <Button size="lg" variant="outline" className="h-14 px-8 rounded-full text-lg font-bold border-2 w-full sm:w-auto hover:bg-gray-50">
+                        Learn More
+                    </Button>
+                </div>
+            </section>
+
+            {/* Features Grid */}
+            <section id="services" className="py-24 bg-gray-50/50 border-t border-gray-100">
+                <div className="max-w-7xl mx-auto px-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all">
+                            <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-6">
+                                <ShieldCheck size={28} />
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-3">Enterprise Security</h3>
+                            <p className="text-gray-500 font-medium leading-relaxed">Your data and daily operations are protected by military-grade encryption and compliance standards.</p>
+                        </div>
+                        <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all">
+                            <div className="w-14 h-14 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center mb-6">
+                                <Zap size={28} />
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-3">Lightning Fast</h3>
+                            <p className="text-gray-500 font-medium leading-relaxed">Built on modern edge infrastructure ensuring operations resolve in milliseconds globally.</p>
+                        </div>
+                        <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all">
+                            <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-6">
+                                <Globe size={28} />
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-3">Global Reach</h3>
+                            <p className="text-gray-500 font-medium leading-relaxed">Scale your localized business seamlessly to international markets with our robust network.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Footer */}
+            <footer className="border-t border-gray-100 py-12 text-center text-gray-500 font-medium">
+                <p>&copy; {new Date().getFullYear()} {org.name}. All rights reserved.</p>
+            </footer>
+        </div>
+    )
+}
+
+import { Badge } from "@/components/ui/badge"

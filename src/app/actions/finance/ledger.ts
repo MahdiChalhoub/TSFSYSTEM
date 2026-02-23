@@ -119,6 +119,10 @@ export async function getLedgerEntries(
         date_from?: string
         date_to?: string
         entry_type?: string
+        verified?: string
+        locked?: string
+        user?: string
+        auto_source?: string
     }
 ) {
     try {
@@ -131,6 +135,10 @@ export async function getLedgerEntries(
         if (filters?.date_from) params.append('date_from', filters.date_from)
         if (filters?.date_to) params.append('date_to', filters.date_to)
         if (filters?.entry_type) params.append('entry_type', filters.entry_type)
+        if (filters?.verified) params.append('verified', filters.verified)
+        if (filters?.locked) params.append('locked', filters.locked)
+        if (filters?.user) params.append('user', filters.user)
+        if (filters?.auto_source) params.append('auto_source', filters.auto_source)
 
         const queryString = params.toString()
         if (queryString) path += `?${queryString}`
@@ -138,6 +146,14 @@ export async function getLedgerEntries(
         return await erpFetch(path)
     } catch (error) {
         console.error("Failed to fetch ledger entries:", error)
+        return []
+    }
+}
+
+export async function getLedgerUsers() {
+    try {
+        return await erpFetch('users/')
+    } catch (error) {
         return []
     }
 }

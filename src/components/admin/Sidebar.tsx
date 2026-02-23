@@ -155,11 +155,12 @@ export const MENU_ITEMS = [
                 icon: Tag,
                 children: [
                     { title: 'Product Master', path: '/products' },
+                    { title: 'Product Groups', path: '/products?view=grouped' },
                     { title: 'Product Analytics', path: '/inventory/analytics' },
                     { title: 'Combo & Bundles', path: '/inventory/combo' },
                     { title: 'Label Printing', path: '/inventory/labels' },
-                    { title: 'Product Groups', path: '/products?view=grouped' },
-                    { title: 'New Product Group', path: '/products/create-group' },
+                    { title: 'Serial Numbers', path: '/inventory/serials' },
+                    { title: 'Barcode Configuration', path: '/inventory/barcode' },
                 ]
             },
             {
@@ -167,32 +168,28 @@ export const MENU_ITEMS = [
                 icon: Warehouse,
                 children: [
                     { title: 'Warehouses & Zones', path: '/inventory/warehouses' },
-                    { title: 'Zones, Racks & Bins', path: '/inventory/locations' },
-                    { title: 'Stock Adjustments', path: '/inventory/adjustments' },
-                    { title: 'Multi-Site Stock View', path: '/inventory/global' },
-                    { title: 'Barcode Configuration', path: '/inventory/barcode' },
-                    { title: 'Serial Numbers', path: '/inventory/serials' },
                     { title: 'Stock Count', path: '/inventory/stock-count' },
+                ]
+            },
+            {
+                title: 'Stock Operations',
+                icon: ClipboardList,
+                children: [
+                    { title: 'Operational Requests', path: '/inventory/requests' },
+                    { title: 'Transfer Orders', path: '/inventory/transfer-orders' },
+                    { title: 'Adjustment Orders', path: '/inventory/adjustment-orders' },
+                    { title: 'Quick Adjustments', path: '/inventory/adjustments' },
+                    { title: 'Stock Valuation', path: '/inventory/valuation' },
                 ]
             },
             {
                 title: 'Alerts & Monitoring',
                 icon: Bell,
                 children: [
-                    { title: 'Expiry Alerts', path: '/inventory/expiry-alerts' },
-                    { title: 'Low Stock Alerts', path: '/inventory/low-stock' },
                     { title: 'Stock Movements', path: '/inventory/movements' },
                     { title: 'Inventory Alerts', path: '/inventory/alerts' },
-                ]
-            },
-            {
-                title: 'Stock Orders',
-                icon: ClipboardList,
-                children: [
-                    { title: 'Adjustment Orders', path: '/inventory/adjustment-orders' },
-                    { title: 'Transfer Orders', path: '/inventory/transfer-orders' },
-                    { title: 'Operational Requests', path: '/inventory/requests' },
-                    { title: 'Stock Valuation', path: '/inventory/valuation' },
+                    { title: 'Low Stock Alerts', path: '/inventory/low-stock' },
+                    { title: 'Expiry Alerts', path: '/inventory/expiry-alerts' },
                 ]
             },
             {
@@ -225,44 +222,62 @@ export const MENU_ITEMS = [
         children: [
             { title: 'Performance Dashboard', path: '/finance/dashboard', icon: BarChart3 },
             {
-                title: 'Accounts & Ledger',
+                title: 'Definitions',
                 icon: BookOpen,
                 children: [
-                    { title: 'Accounts & Drawers', path: '/finance/accounts' },
                     { title: 'Chart of Accounts', path: '/finance/chart-of-accounts' },
-                    { title: 'COA Templates', path: '/finance/chart-of-accounts/templates' },
-                    { title: 'Migration Tool', path: '/finance/chart-of-accounts/migrate' },
-                    { title: 'General Ledger', path: '/finance/ledger' },
-                    { title: 'Opening Balances', path: '/finance/ledger/opening' },
+                    { title: 'Accounts & Drawers', path: '/finance/accounts' },
+                    { title: 'Tax Groups', path: '/finance/tax-groups' },
+                    { title: 'Financial Events', path: '/finance/events' },
+                    { title: 'Pricing Engine', path: '/finance/pricing' },
                 ]
             },
             {
-                title: 'Operations',
+                title: 'General Ledger',
+                icon: FileText,
+                children: [
+                    { title: 'Journal Entries', path: '/finance/ledger' },
+                    { title: 'Opening Balances', path: '/finance/ledger/opening' },
+                    { title: 'Audit Trail', path: '/finance/audit-trail' },
+                ]
+            },
+            {
+                title: 'Transactions',
                 icon: ClipboardList,
                 children: [
                     { title: 'Invoices', path: '/finance/invoices' },
-                    { title: 'Payments', path: '/finance/payments' },
+                    { title: 'Payments & Receipts', path: '/finance/payments' },
                     { title: 'Vouchers', path: '/finance/vouchers' },
                     { title: 'Expenses', path: '/finance/expenses' },
                     { title: 'Deferred Expenses', path: '/finance/deferred-expenses' },
-                    { title: 'Assets & Depreciation', path: '/finance/assets' },
                     { title: 'Purchase Returns', path: '/finance/purchase-returns' },
                     { title: 'Sales Returns', path: '/finance/sales-returns' },
+                    { title: 'Assets & Depreciation', path: '/finance/assets' },
+                    { title: 'Loan Contracts', path: '/finance/loans' },
+                    { title: 'Contact Balances', path: '/finance/balances' },
+                    { title: 'Payment Gateway', path: '/finance/gateway' },
                 ]
             },
             {
-                title: 'Reports',
+                title: 'Fiscal & Closing',
+                icon: Calendar,
+                children: [
+                    { title: 'Fiscal Years', path: '/finance/fiscal-years' },
+                    { title: 'Bank Reconciliation', path: '/finance/bank-reconciliation' },
+                    { title: 'Profit Distribution', path: '/finance/profit-distribution' },
+                ]
+            },
+            {
+                title: 'Reports & Analytics',
                 icon: TrendingUp,
                 children: [
                     { title: 'Account Statement', path: '/finance/reports/statement' },
+                    { title: 'Period Statements', path: '/finance/statements' },
                     { title: 'Trial Balance', path: '/finance/reports/trial-balance' },
                     { title: 'Profit & Loss', path: '/finance/reports/pnl' },
                     { title: 'Balance Sheet', path: '/finance/reports/balance-sheet' },
                     { title: 'Aging Report', path: '/finance/reports/aging' },
-                    { title: 'Audit Trail', path: '/finance/audit-trail' },
                     { title: 'Cash Register', path: '/finance/cash-register' },
-                    { title: 'Bank Reconciliation', path: '/finance/bank-reconciliation' },
-                    { title: 'Period Statements', path: '/finance/statements' },
                     { title: 'Tax Reports', path: '/finance/tax-reports' },
                     { title: 'Budget Overview', path: '/finance/budget' },
                     { title: 'Profit Centers', path: '/finance/profit-centers' },
@@ -271,41 +286,15 @@ export const MENU_ITEMS = [
                 ]
             },
             {
-                title: 'Payments & Balances',
-                icon: Wallet,
+                title: 'Settings',
+                icon: Settings,
                 children: [
-                    { title: 'Contact Balances', path: '/finance/balances' },
-                    { title: 'Payment Gateway', path: '/finance/gateway' },
-                ]
-            },
-            { title: 'E-Invoicing', path: '/finance/einvoicing', icon: FileCheck },
-            {
-                title: 'Fiscal & Periods',
-                icon: Calendar,
-                children: [
-                    { title: 'Fiscal Years', path: '/finance/fiscal-years' },
-                    { title: 'Profit Distribution', path: '/finance/profit-distribution' },
-                ]
-            },
-            {
-                title: 'Loans & Pricing',
-                icon: DollarSign,
-                children: [
-                    { title: 'Loan Contracts', path: '/finance/loans' },
-                    { title: 'Pricing Engine', path: '/finance/pricing' },
-                ]
-            },
-            {
-                title: 'Events & Automation',
-                icon: Bell,
-                children: [
-                    { title: 'Financial Events', path: '/finance/events' },
+                    { title: 'General Settings', path: '/finance/settings' },
+                    { title: 'COA Templates', path: '/finance/chart-of-accounts/templates' },
                     { title: 'Posting Rules', path: '/finance/settings/posting-rules' },
+                    { title: 'E-Invoicing Setup', path: '/finance/einvoicing' },
                 ]
             },
-            { title: 'Tax Groups', path: '/finance/tax-groups', icon: Percent },
-            { title: 'Financial Settings', path: '/finance/settings', icon: Settings },
-
         ]
     },
     {

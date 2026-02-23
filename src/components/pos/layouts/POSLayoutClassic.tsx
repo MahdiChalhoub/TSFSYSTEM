@@ -24,7 +24,7 @@ export function POSLayoutClassic(props: POSLayoutProps) {
         sessions, activeSessionId, currency, total, discount, totalAmount,
         totalPieces, uniqueItems, searchQuery, activeCategoryId,
         isFullscreen, paymentMethod, cashReceived, isProcessing,
-        isOverrideOpen, isReceiptOpen, lastOrder,
+        isOverrideOpen, isReceiptOpen, lastOrder, highlightedItemId,
         onSetSearchQuery, onSetActiveCategoryId, onSetActiveSessionId,
         onSetPaymentMethod, onSetCashReceived, onSetDiscount, onAddToCart, onUpdateQuantity,
         onClearCart, onCreateNewSession, onRemoveSession, onUpdateActiveSession,
@@ -212,7 +212,10 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                         ) : (
                             <div className="divide-y divide-gray-50">
                                 {cart.map((item: any) => (
-                                    <div key={item.productId} className="px-5 py-3 flex items-center gap-3 group hover:bg-gray-50/50 transition-colors">
+                                    <div
+                                        key={item.productId}
+                                        className={`px-5 py-3 flex items-center gap-3 group transition-colors duration-300 ${highlightedItemId === item.productId ? "bg-indigo-50" : "hover:bg-gray-50/50"}`}
+                                    >
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-bold text-gray-900 truncate">{item.name}</p>
                                             <p className="text-[10px] text-gray-400 font-medium tabular-nums">

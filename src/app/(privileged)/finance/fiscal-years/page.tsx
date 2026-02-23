@@ -1,45 +1,24 @@
-'use client'
-
-import { useEffect, useState } from 'react'
 import { getFiscalYears, getFiscalGaps } from '@/app/actions/finance/fiscal-year'
-import type { FiscalYear } from '@/types/erp'
 import FiscalYearWizard from './wizard'
 import FiscalYearCard from './year-card'
-import { AlertTriangle, Loader2 , CalendarDays } from 'lucide-react'
+import { AlertTriangle, CalendarDays } from 'lucide-react'
+import type { FiscalYear } from '@/types/erp'
 
-export default function FiscalYearsPage() {
-    const [years, setYears] = useState<FiscalYear[]>([])
-    const [gaps, setGaps] = useState<{ days: number; after: string; startDate: string; endDate: string }[]>([])
-    const [loading, setLoading] = useState(true)
+export default async function FiscalYearsPage() {
+    let yearsData: unknown = []
+    let gapsData: unknown = []
 
-    useEffect(() => {
-        async function load() {
-            try {
-                const [yearsData, gapsData] = await Promise.all([
-                    getFiscalYears(),
-                    getFiscalGaps()
-                ])
-                setYears(Array.isArray(yearsData) ? yearsData : [])
-                setGaps(Array.isArray(gapsData) ? gapsData : [])
-            } catch (err) {
-                console.error('Failed to load fiscal years:', err)
-            } finally {
-                setLoading(false)
-            }
-        }
-        load()
-    }, [])
-
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="text-center space-y-4">
-                    <Loader2 size={40} className="animate-spin text-stone-400 mx-auto" />
-                    <p className="text-stone-400 font-medium text-sm">Loading fiscal years...</p>
-                </div>
-            </div>
-        )
+    try {
+        [yearsData, gapsData] = await Promise.all([
+            getFiscalYears(),
+            getFiscalGaps()
+        ])
+    } catch (err) {
+        console.error('Failed to load fiscal years:', err)
     }
+
+    const years = Array.isArray(yearsData) ? (yearsData as FiscalYear[]) : []
+    const gaps = Array.isArray(gapsData) ? (gapsData as any[]) : []
 
     return (
         <div className="p-6">
@@ -80,7 +59,7 @@ export default function FiscalYearsPage() {
             )}
 
             <div className="space-y-6">
-                {years.map((y: Record<string, any>, idx: number) => (
+                {years.map((y: any, idx: number) => (
                     <FiscalYearCard
                         key={y.id}
                         year={y}

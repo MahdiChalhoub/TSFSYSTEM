@@ -422,17 +422,48 @@ class JournalEntryViewSet(UDLEViewSetMixin, TenantModelViewSet):
         if scope:
             qs = qs.filter(scope=scope)
 
-        # Filter by entry type (opening vs manual)
+        # Filter by entry type (opening vs manual vs auto)
         entry_type = params.get('entry_type')
+        from django.db.models import Q
         if entry_type == 'OPENING':
             qs = qs.filter(reference__startswith='OPEN-')
         elif entry_type == 'MANUAL':
-            qs = qs.exclude(reference__startswith='OPEN-')
+            qs = qs.filter(Q(reference__startswith='OFF-') | Q(reference__startswith='INT-'))
+        elif entry_type == 'AUTO':
+            qs = qs.exclude(
+                Q(reference__startswith='OPEN-') | 
+                Q(reference__startswith='OFF-') | 
+                Q(reference__startswith='INT-')
+            )
 
         # Search
         search = params.get('search')
         if search:
             qs = qs.filter(description__icontains=search)
+
+        # Advanced Filters
+        is_verified = params.get('verified')
+        if is_verified is not None:
+            qs = qs.filter(is_verified=(is_verified.lower() == 'true'))
+
+        is_locked = params.get('locked')
+        if is_locked is not None:
+            qs = qs.filter(is_locked=(is_locked.lower() == 'true'))
+
+        user_id = params.get('user')
+        if user_id:
+            qs = qs.filter(created_by_id=user_id)
+
+        auto_source = params.get('auto_source')
+        if auto_source:
+            if auto_source == 'INVOICE':
+                qs = qs.filter(reference__startswith='INV-')
+            elif auto_source == 'PAYMENT':
+                qs = qs.filter(Q(reference__startswith='CUS-') | Q(reference__startswith='SUP-'))
+            elif auto_source == 'RETURN':
+                qs = qs.filter(Q(reference__startswith='SAL-') | Q(reference__startswith='PUR-') | Q(reference__startswith='CRE-'))
+            elif auto_source == 'PAYROLL':
+                qs = qs.filter(Q(reference__startswith='PAYROLL-') | Q(reference__startswith='PRL-'))
 
         return qs
 

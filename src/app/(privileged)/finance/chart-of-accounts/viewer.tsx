@@ -222,7 +222,7 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
     }
 
     const openEditModal = (account: Record<string, any>) => {
-        setEditingAccount(account)
+        setEditingAccount(account as unknown as ChartOfAccount)
     }
 
     // Expose globally for children to use
@@ -276,13 +276,6 @@ export function ChartOfAccountsViewer({ accounts }: { accounts: Record<string, a
                     )}
                 </div>
                 <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => router.push('/finance/chart-of-accounts/migrate')}
-                        className="flex items-center gap-2 text-xs font-bold text-amber-600 hover:text-amber-700 border border-amber-100 px-3 py-1.5 rounded-md hover:bg-amber-50 transition-all shadow-sm"
-                    >
-                        <Zap size={14} />
-                        Migration Tool
-                    </button>
                     <button
                         onClick={() => router.push('/finance/chart-of-accounts/templates')}
                         className="flex items-center gap-2 text-xs font-bold text-stone-500 hover:text-stone-900 border border-stone-200 px-3 py-1.5 rounded-md hover:bg-white transition-all shadow-sm"

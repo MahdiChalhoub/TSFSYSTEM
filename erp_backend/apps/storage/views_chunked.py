@@ -410,6 +410,7 @@ def active_uploads(request):
         'progress': s.progress,
         'upload_type': s.upload_type,
         'package_type': s.package_type,
+        'category': s.category,
         'created_at': s.created_at.isoformat() if s.created_at else None,
     } for s in sessions[:50]]
 

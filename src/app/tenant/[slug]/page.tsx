@@ -1,14 +1,17 @@
-import { getOrganizationBySlug, getPublicProducts } from "./actions"
+import { getOrganizationBySlug, getPublicProducts, getStorefrontConfig } from "./actions"
 import { notFound } from "next/navigation"
 import { ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { ThemedHomePage } from "./ThemedHomePage"
+import { LandingHomePage } from "./LandingHomePage"
+import { BlogHomePage } from "./BlogHomePage"
 
 export default async function TenantWelcomePage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params
     const org = await getOrganizationBySlug(slug)
     const products = await getPublicProducts(slug)
+    const storefrontConfig = await getStorefrontConfig(slug)
 
     if (!org) {
         return notFound()
@@ -33,6 +36,19 @@ export default async function TenantWelcomePage({ params }: { params: Promise<{ 
         )
     }
 
+    const homePageType = storefrontConfig?.storefront_type || 'PRODUCT_STORE'
+
+    if (homePageType === 'LANDING_PAGE' || homePageType === 'PORTFOLIO') {
+        return <LandingHomePage org={org} />
+    }
+
+    if (homePageType === 'CATALOGUE' || homePageType === 'SUBSCRIPTION') {
+        // We will re-use the Blog placeholder as a generic secondary template for now,
+        // but normally this would render specific Catalog or Auth flows.
+        return <BlogHomePage org={org} />
+    }
+
+    // Default 'PRODUCT_STORE' logic
     // Derive categories from products
     const categoryMap = new Map<string, { id: string; name: string; product_count: number }>()
     products.forEach((p: any) => {

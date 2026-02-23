@@ -145,14 +145,14 @@ export default function JournalEntryForm({ accounts, fiscalYears, initialEntry }
         startTransition(async () => {
             try {
                 const payload = {
-                    transactionDate: new Date(header.transactionDate),
+                    transaction_date: header.transactionDate,
                     description: header.description,
                     reference: header.reference,
-                    fiscalYearId: yearId,
-                    fiscalPeriodId: periodId,
+                    fiscal_year_id: yearId,
+                    fiscal_period_id: periodId,
                     status,
                     lines: lines.map((l: Record<string, any>) => ({
-                        accountId: Number(l.accountId),
+                        account_id: Number(l.accountId),
                         debit: Number(l.debit) || 0,
                         credit: Number(l.credit) || 0,
                         description: l.description || header.description

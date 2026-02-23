@@ -74,3 +74,13 @@ This file is the **Single Source of Truth** for all AI agents.
 ## �📂 RECENT REQUEST HISTORY & PLANS
 - **Request 1**: Scale SQL Imports (>100MB). **Result**: Streaming parser + Celery implemented.
 - **Request 2**: Prevent multi-agent conflicts. **Result**: MASTER_HUB.md created.
+
+---
+
+## 🚀 UPCOMING INITIATIVES (POST-AUDIT)
+
+1. ✅ **DONE:** **Implement the Auth Password Reset Flow**: Resolve the `TODO` in `erp_backend/erp/views_auth.py`. Integrate Django's `send_mail` (SMTP/SendGrid/Resend) to make password recovery fully functional.
+2. ✅ **DONE:** **Build the MCP Chat Export Feature**: Resolve `TODO` placeholders in the MCP (AI Agent) module for "Export to PDF/Excel" and "Save as Report". Build utility functions to render chat conversations into downloadable PDFs or structured Excel sheets.
+3. ✅ **DONE:** **Dashboard Analytics Enhancements**: Replaced random math and dummy values on the Intelligence Console with live analytical streams from `pos_daily_summary` and `coa` ledgers.
+4. ✅ **DONE:** **E-Commerce / Storefront**: Built dynamic subdomain routing to let tenants inject Landing Pages, Catalogs, or Product Stores directly onto their wildcard URL. Engineered a persistent Cart engine and fully connected the React checkout flow to generate live uncaptured Stripe Intents via the Django `ClientMyOrdersViewSet`.
+5. ✅ **DONE:** **Supplier Portal**: Constructed the B2B dashboard (`supplier.tsf.ci`) enabling external vendors to view assigned Purchase Orders securely. Engineered the REST API hooks (`acknowledge`, `dispatch_order`) and corresponding React UI to allow Suppliers to physically Accept orders and submit live Carrier Tracking metrics directly into the Tenant's supply chain ledger.

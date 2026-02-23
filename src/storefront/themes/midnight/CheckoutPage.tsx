@@ -75,15 +75,17 @@ export default function MidnightCheckoutPage() {
             }
 
             const result = await createOrder(authToken, {
+                status: 'PLACED',
+                currency: 'USD',
                 lines: cart.map(item => ({
                     product_id: item.product_id,
                     quantity: item.quantity,
                     unit_price: item.unit_price,
                 })),
                 delivery_address: form.address ? `${form.address}, ${form.city}` : undefined,
-                notes: form.notes || undefined,
+                delivery_notes: form.notes || undefined,
                 payment_method: form.paymentMethod.toUpperCase(),
-                contact_phone: form.phone || undefined,
+                delivery_phone: form.phone || undefined,
             })
 
             if (result.success) {

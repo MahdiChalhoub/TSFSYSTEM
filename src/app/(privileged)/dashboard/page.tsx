@@ -73,32 +73,47 @@ export default function AdvancedIntelligenceDashboard() {
             .reduce((s: number, a: any) => s + Math.abs(parseFloat(a.balance || 0)), 0) +
             data.employees.reduce((s: number, e: any) => s + parseFloat(e.salary || 0), 0)
 
-        // 2. Mock Chart Data (Derived from daily summary if available, else extrapolated)
-        const dummyChart = [
-            { name: 'W1', liquidity: liquidity * 0.8, exposure: exposure * 0.9 },
-            { name: 'W2', liquidity: liquidity * 0.85, exposure: exposure * 0.88 },
-            { name: 'W3', liquidity: liquidity * 0.95, exposure: exposure * 0.92 },
-            { name: 'W4', liquidity: liquidity, exposure: exposure },
-        ]
+        // 2. Real Chart Data (Derived from daily_sales)
+        // Expected format from pos/pos/daily-summary: { daily_sales: [{ date: '2023-10-01', total: 1500, count: 5 }, ...] }
+        let realChart: any[] = []
+        if (data.salesSummary?.daily_sales && Array.isArray(data.salesSummary.daily_sales)) {
+            realChart = data.salesSummary.daily_sales.map((day: any) => ({
+                name: new Date(day.date).toLocaleDateString([], { month: 'short', day: 'numeric' }),
+                liquidity: parseFloat(day.total || 0),
+                // Without a dedicated COGS daily endpoint we will extrapolate exposure based on a standard 60% margin or actual liabilities
+                // for the visualization of the "Financial Convergence" 
+                exposure: parseFloat(day.total || 0) * 0.6
+            })).slice(-14) // Last 14 days for cleaner UI
+        } else {
+            // Fallback empty state if no sales exist yet
+            realChart = [
+                { name: 'No Data', liquidity: 0, exposure: 0 }
+            ]
+        }
 
-        // 3. Terminal Performance (Heatmap Data)
+        // 3. Terminal Performance (Real Heatmap Data)
+        const totalMovements = data.movements.length || 1 // prevent div by zero
         const terminals = Array.from(new Set(data.movements.map((m: any) => m.warehouse_name || 'Global Terminal')))
             .map(name => {
-                const count = data.movements.filter((m: any) => m.warehouse_name === name).length
-                const value = Math.floor(Math.random() * 100) // Mock activity score
+                const count = data.movements.filter((m: any) => (m.warehouse_name || 'Global Terminal') === name).length
+                const value = Math.floor((count / totalMovements) * 100)
                 return { name, count, value }
             })
+        // Fill with empty states if none exist
+        if (terminals.length === 0) {
+            terminals.push({ name: 'System Core Node', count: 0, value: 0 })
+        }
 
         // 4. Top Sellers
         const sellers = Object.entries(data.salesSummary?.user_stats || {})
-            .map(([name, stats]: [string, any]) => ({ name, revenue: stats.total, count: stats.count }))
+            .map(([name, stats]: [string, any]) => ({ name, revenue: stats.total || 0, count: stats.count || 0 }))
             .sort((a, b) => b.revenue - a.revenue)
             .slice(0, 5)
 
         return {
             revenueLiquidity: liquidity,
             economicExposure: exposure,
-            chartData: dummyChart,
+            chartData: realChart,
             terminalPerformance: terminals,
             topSellers: sellers,
             recentMovements: data.movements.slice(0, 5)
@@ -315,7 +330,11 @@ export default function AdvancedIntelligenceDashboard() {
                         <h3 className="text-lg font-bold text-gray-900">Top Strategic Sellers</h3>
                     </CardHeader>
                     <CardContent className="p-8 space-y-5">
-                        {topSellers.map((s: any, i: number) => (
+                        {topSellers.length === 0 ? (
+                            <div className="flex items-center justify-center py-8 text-sm font-bold text-gray-400">
+                                Awaiting Transactional Data
+                            </div>
+                        ) : topSellers.map((s: any, i: number) => (
                             <div key={i} className="flex items-center gap-4 group">
                                 <div className="w-12 h-12 rounded-2xl bg-stone-50 flex items-center justify-center font-black text-stone-400 group-hover:bg-indigo-600 group-hover:text-white transition-all">
                                     {i + 1}
@@ -328,8 +347,8 @@ export default function AdvancedIntelligenceDashboard() {
                                     <div className="flex items-center gap-2">
                                         <div className="flex-1 h-1 bg-gray-50 rounded-full overflow-hidden">
                                             <div
-                                                className="h-full bg-indigo-400 rounded-full"
-                                                style={{ width: `${(s.revenue / topSellers[0].revenue * 100)}%` }}
+                                                className="h-full bg-indigo-400 rounded-full transition-all duration-1000"
+                                                style={{ width: `${(s.revenue / (topSellers[0]?.revenue || 1) * 100)}%` }}
                                             />
                                         </div>
                                         <span className="text-[9px] font-black text-gray-300 uppercase tracking-widest">{s.count} TRF</span>
@@ -347,7 +366,11 @@ export default function AdvancedIntelligenceDashboard() {
                         <h3 className="text-lg font-bold text-gray-900">Economic Movement Logs</h3>
                     </CardHeader>
                     <CardContent className="p-8 space-y-6">
-                        {recentMovements.map((m: any, i: number) => (
+                        {recentMovements.length === 0 ? (
+                            <div className="flex items-center justify-center py-8 text-sm font-bold text-gray-400">
+                                Global Supply Chain Dormant
+                            </div>
+                        ) : recentMovements.map((m: any, i: number) => (
                             <div key={i} className="flex items-start gap-4 hover:translate-x-1 transition-all">
                                 <div className={`mt-1.5 w-2 h-2 rounded-full ${m.type === 'IN' ? 'bg-emerald-500' : 'bg-rose-500'} shadow-[0_0_10px_rgba(0,0,0,0.1)]`} />
                                 <div className="flex-1">
@@ -366,9 +389,11 @@ export default function AdvancedIntelligenceDashboard() {
                                 </div>
                             </div>
                         ))}
-                        <button className="w-full h-12 rounded-2xl bg-indigo-50 text-indigo-600 font-bold text-xs uppercase tracking-widest hover:bg-indigo-100 transition-all mt-4">
-                            DIVE INTO AUDIT TRAILS
-                        </button>
+                        {recentMovements.length > 0 && (
+                            <button className="w-full h-12 rounded-2xl bg-indigo-50 text-indigo-600 font-bold text-xs uppercase tracking-widest hover:bg-indigo-100 transition-all mt-4">
+                                DIVE INTO AUDIT TRAILS
+                            </button>
+                        )}
                     </CardContent>
                 </Card>
             </div>

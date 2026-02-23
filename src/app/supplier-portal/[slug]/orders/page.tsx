@@ -91,8 +91,8 @@ export default function SupplierOrdersPage() {
                         {orders.map(order => {
                             const st = STATUS_MAP[order.status] || STATUS_MAP.DRAFT
                             return (
-                                <div key={order.id}
-                                    className="p-6 bg-slate-900/60 border border-white/5 rounded-2xl flex items-center gap-6 hover:border-white/10 transition-all">
+                                <Link href={`/supplier-portal/${slug}/orders/${order.id}`} key={order.id}
+                                    className="p-6 bg-slate-900/60 border border-white/5 rounded-2xl flex items-center gap-6 hover:border-white/10 hover:bg-slate-800/60 transition-all group">
                                     <div className={`w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center ${st.color}`}>
                                         <Package size={22} />
                                     </div>
@@ -106,11 +106,14 @@ export default function SupplierOrdersPage() {
                                             {order.expected_delivery && ` • ETA: ${new Date(order.expected_delivery).toLocaleDateString()}`}
                                         </p>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="text-white font-black text-lg">${parseFloat(order.total_amount).toFixed(2)}</p>
-                                        <p className="text-slate-600 text-[10px] uppercase">{order.currency}</p>
+                                    <div className="flex items-center gap-6 text-right">
+                                        <div>
+                                            <p className="text-white font-black text-lg">${parseFloat(order.total_amount).toFixed(2)}</p>
+                                            <p className="text-slate-600 text-[10px] uppercase">{order.currency}</p>
+                                        </div>
+                                        <Eye size={20} className="text-slate-500 group-hover:text-white transition-colors" />
                                     </div>
-                                </div>
+                                </Link>
                             )
                         })}
                     </div>
