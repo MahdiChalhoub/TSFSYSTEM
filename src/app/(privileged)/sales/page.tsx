@@ -160,7 +160,7 @@ export default function POSPage() {
 
         getCategories()
             .then((data: any[]) => {
-                const cats = Array.isArray(data) ? data.slice(0, 12) : [];
+                const cats = Array.isArray(data) ? data.slice(0, 50) : [];
                 setCategories(cats);
             })
             .catch(() => setCategories([]))
@@ -192,7 +192,10 @@ export default function POSPage() {
                 price: basePrice,
                 taxRate: taxRate,
                 quantity: 1,
-                isTaxIncluded: product.isTaxIncluded
+                isTaxIncluded: product.isTaxIncluded,
+                sku: product.sku,
+                barcode: product.barcode,
+                stock: product.total_stock || product.stock || 0
             }, ...cart];
             toast.success(`New item: ${product.name}`, { duration: 1000 });
         }

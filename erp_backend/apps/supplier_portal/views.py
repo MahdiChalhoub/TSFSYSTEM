@@ -465,13 +465,16 @@ class SupplierOrdersViewSet(viewsets.ViewSet):
         access = request.user.supplier_access
         contact = access.contact
         from apps.pos.purchase_order_models import PurchaseOrder
+        from django.utils import timezone
 
         try:
             po = PurchaseOrder.objects.get(id=pk, organization=contact.organization, supplier=contact)
-            if po.status != 'SENT':
-                return Response({'error': 'Can only acknowledge SENT orders.'}, status=400)
+            if po.status != 'ORDERED':
+                return Response({'error': f'Can only acknowledge ORDERED orders. Current status: {po.status}'}, status=400)
+            
             po.status = 'CONFIRMED'
-            po.save(update_fields=['status'])
+            po.acknowledged_at = timezone.now()
+            po.save(update_fields=['status', 'acknowledged_at'])
             return Response({'status': 'confirmed'})
         except PurchaseOrder.DoesNotExist:
             return Response({'error': 'Not found'}, status=404)
@@ -481,18 +484,25 @@ class SupplierOrdersViewSet(viewsets.ViewSet):
         access = request.user.supplier_access
         contact = access.contact
         from apps.pos.purchase_order_models import PurchaseOrder
+        from django.utils import timezone
 
         try:
             po = PurchaseOrder.objects.get(id=pk, organization=contact.organization, supplier=contact)
-            if po.status not in ['SENT', 'CONFIRMED']:
+            if po.status not in ['ORDERED', 'CONFIRMED']:
                 return Response({'error': 'Order not ready for dispatch.'}, status=400)
             
-            tracking = request.data.get('tracking_info', '')
+            tracking_number = request.data.get('tracking_number') or request.data.get('tracking_info', '')
+            tracking_url = request.data.get('tracking_url', '')
+
             po.status = 'IN_TRANSIT'
-            if tracking:
-                po.notes = (po.notes or '') + f"\nDispatched. Tracking: {tracking}"
-            po.save()
-            return Response({'status': 'dispatched', 'tracking_info': tracking})
+            po.dispatched_at = timezone.now()
+            if tracking_number:
+                po.tracking_number = tracking_number
+            if tracking_url:
+                po.tracking_url = tracking_url
+            
+            po.save(update_fields=['status', 'dispatched_at', 'tracking_number', 'tracking_url'])
+            return Response({'status': 'dispatched', 'tracking_number': tracking_number})
         except PurchaseOrder.DoesNotExist:
             return Response({'error': 'Not found'}, status=404)
 

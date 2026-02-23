@@ -6,7 +6,7 @@ export async function getCommercialContext() {
     try {
         const [orgs, settings] = await Promise.all([
             erpFetch('organizations/'),
-            erpFetch('organizations/settings/')
+            erpFetch('settings/')
         ]);
 
         const org = Array.isArray(orgs) ? orgs[0] : orgs;

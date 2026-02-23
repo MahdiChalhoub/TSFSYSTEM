@@ -32,6 +32,8 @@ export function POSLayoutCompact(props: POSLayoutProps) {
         onToggleFullscreen, onCharge, onOpenLayoutSelector,
         onSetOverrideOpen, onSetReceiptOpen
     } = props;
+    const receivedNum = Number(cashReceived) || 0;
+    const changeDue = receivedNum > totalAmount ? receivedNum - totalAmount : 0;
 
     return (
         <div className={clsx(
@@ -135,8 +137,8 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                     <button
                         onClick={() => onSetActiveCategoryId(null)}
                         className={clsx(
-                            "px-2.5 py-1 whitespace-nowrap rounded text-[8px] font-black uppercase tracking-widest transition-all font-mono",
-                            activeCategoryId === null ? 'bg-amber-500 text-black' : 'bg-[#2a2d37] text-gray-500 hover:text-amber-400'
+                            "px-3 py-1.5 whitespace-nowrap rounded text-[11px] font-black uppercase tracking-widest transition-all font-mono border",
+                            activeCategoryId === null ? 'bg-amber-500 text-black border-amber-500' : 'bg-[#2a2d37] text-gray-400 border-[#2a2d37] hover:text-amber-400'
                         )}
                     >
                         ALL
@@ -146,8 +148,8 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                             key={cat.id}
                             onClick={() => onSetActiveCategoryId(cat.id)}
                             className={clsx(
-                                "px-2.5 py-1 whitespace-nowrap rounded text-[8px] font-black uppercase tracking-widest transition-all font-mono",
-                                activeCategoryId === cat.id ? 'bg-amber-500 text-black' : 'bg-[#2a2d37] text-gray-500 hover:text-amber-400'
+                                "px-3 py-1.5 whitespace-nowrap rounded text-[11px] font-black uppercase tracking-widest transition-all font-mono border",
+                                activeCategoryId === cat.id ? 'bg-amber-500 text-black border-amber-500' : 'bg-[#2a2d37] text-gray-400 border-[#2a2d37] hover:text-amber-400'
                             )}
                         >
                             {cat.name}
@@ -218,15 +220,19 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                                             key={item.productId}
                                             className={clsx(
                                                 "group transition-colors duration-300",
-                                                highlightedItemId === item.productId ? "bg-amber-500/40"
-                                                    : lastAddedItemId === item.productId ? "bg-amber-500/20 hover:bg-amber-500/30"
+                                                highlightedItemId === item.productId ? "bg-amber-500/50"
+                                                    : lastAddedItemId === item.productId ? "bg-amber-500/20"
                                                         : "hover:bg-amber-500/5"
                                             )}
                                         >
                                             <td className="px-3 py-2">
-                                                <span className="font-bold text-gray-200 text-[11px]">{item.name}</span>
+                                                <span className="font-black text-gray-100 text-[13px]">{item.name}</span>
+                                                <div className="flex items-center gap-2 mt-0.5">
+                                                    {item.barcode && <span className="text-[10px] font-bold text-gray-600 font-mono">#{item.barcode}</span>}
+                                                    <span className="text-[10px] font-bold text-amber-500/80 bg-amber-500/5 px-1 rounded border border-amber-500/10">STK: {item.stock || 0}</span>
+                                                </div>
                                             </td>
-                                            <td className="px-2 py-2 text-center tabular-nums text-gray-500 text-[10px]">{Number(item.price).toFixed(2)}</td>
+                                            <td className="px-2 py-2 text-center tabular-nums text-gray-500 text-[12px] font-mono">{Number(item.price).toFixed(2)}</td>
                                             <td className="px-2 py-2">
                                                 <div className="flex items-center justify-center gap-0.5">
                                                     <button onClick={() => onUpdateQuantity(item.productId, -1)} className="w-5 h-5 rounded bg-[#2a2d37] hover:bg-rose-500/20 hover:text-rose-400 flex items-center justify-center text-gray-500 transition-all">
@@ -238,8 +244,8 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                                                     </button>
                                                 </div>
                                             </td>
-                                            <td className="px-1 py-2 text-center text-[9px] text-gray-600">{(item.taxRate || 0)}%</td>
-                                            <td className="px-3 py-2 text-right font-black tabular-nums text-gray-200 text-[11px]">{(Number(item.price) * item.quantity).toFixed(2)}</td>
+                                            <td className="px-1 py-2 text-center text-[10px] text-gray-600 font-mono">VAT {(item.taxRate || 0)}%</td>
+                                            <td className="px-3 py-2 text-right font-black tabular-nums text-amber-400 text-[13px] font-mono">{(Number(item.price) * item.quantity).toFixed(2)}</td>
                                             <td className="pr-2 py-2">
                                                 <button onClick={() => onUpdateQuantity(item.productId, -100)} className="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center text-gray-600 hover:text-rose-400 transition-all">
                                                     <Trash2 size={10} />
@@ -359,23 +365,25 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                             onClick={onCharge}
                             disabled={cart.length === 0 || isProcessing}
                             className={clsx(
-                                "w-full py-3 rounded-xl flex flex-col items-center justify-center transition-all",
+                                "w-full py-4 rounded-xl flex flex-col items-center justify-center transition-all shadow-2xl",
                                 cart.length > 0 && !isProcessing
-                                    ? "bg-amber-500 text-black hover:bg-amber-400 active:scale-[0.98]"
+                                    ? "bg-amber-500 text-black hover:bg-amber-400 active:scale-[0.98] shadow-amber-500/20"
                                     : "bg-[#2a2d37] text-gray-700 cursor-not-allowed"
                             )}
                         >
                             {isProcessing ? (
                                 <span className="text-sm font-black font-mono tracking-widest">⏳ PROCESSING...</span>
                             ) : (
-                                <>
-                                    <span className="text-sm font-black uppercase tracking-widest font-mono leading-tight">⚡ CHARGE {currency}{totalAmount.toFixed(2)}</span>
-                                    {cashReceived && Number(cashReceived.replace(/\D/g, '')) > totalAmount && (
-                                        <span className="text-[10px] font-black font-mono tracking-widest bg-black/20 px-2 py-0.5 rounded mt-1">
-                                            CHG: {currency}{(Number(cashReceived.replace(/\D/g, '')) - totalAmount).toLocaleString('fr-FR', { minimumFractionDigits: 0 })}
+                                <div className="flex flex-col items-center">
+                                    <span className="text-sm font-black uppercase tracking-widest font-mono">
+                                        {changeDue > 0 ? "⚡ RETURN CHANGE" : `⚡ CHARGE ${currency}${totalAmount.toFixed(2)}`}
+                                    </span>
+                                    {changeDue > 0 && (
+                                        <span className="text-2xl font-black font-mono mt-1 animate-pulse">
+                                            {currency}{changeDue.toFixed(2)}
                                         </span>
                                     )}
-                                </>
+                                </div>
                             )}
                         </button>
                     </div>

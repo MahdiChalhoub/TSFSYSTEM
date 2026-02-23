@@ -31,6 +31,8 @@ export function POSLayoutClassic(props: POSLayoutProps) {
         onToggleFullscreen, onCharge, onOpenLayoutSelector,
         onSetOverrideOpen, onSetReceiptOpen
     } = props;
+    const receivedNum = Number(cashReceived) || 0;
+    const changeDue = receivedNum > totalAmount ? receivedNum - totalAmount : 0;
 
     return (
         <div className={clsx(
@@ -125,23 +127,23 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                     <button
                         onClick={() => onSetActiveCategoryId(null)}
                         className={clsx(
-                            "px-3 py-1.5 whitespace-nowrap rounded-full text-[9px] font-black uppercase tracking-widest transition-all border",
+                            "px-4 py-2 whitespace-nowrap rounded-lg text-[12px] font-black uppercase tracking-wider transition-all border",
                             activeCategoryId === null
-                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-100'
-                                : 'bg-white text-gray-500 border-gray-200 hover:border-indigo-200 hover:text-indigo-600'
+                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-100'
+                                : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300 hover:text-indigo-600'
                         )}
                     >
-                        All
+                        All Products
                     </button>
                     {categories.map(cat => (
                         <button
                             key={cat.id}
                             onClick={() => onSetActiveCategoryId(cat.id)}
                             className={clsx(
-                                "px-3 py-1.5 whitespace-nowrap rounded-full text-[9px] font-black uppercase tracking-widest transition-all border",
+                                "px-4 py-2 whitespace-nowrap rounded-lg text-[12px] font-black uppercase tracking-wider transition-all border",
                                 activeCategoryId === cat.id
-                                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-100'
-                                    : 'bg-white text-gray-500 border-gray-200 hover:border-indigo-200 hover:text-indigo-600'
+                                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-100'
+                                    : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300 hover:text-indigo-600'
                             )}
                         >
                             {cat.name}
@@ -216,15 +218,19 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                                         key={item.productId}
                                         className={clsx(
                                             "px-5 py-3 flex items-center gap-3 group transition-colors duration-300",
-                                            highlightedItemId === item.productId ? "bg-indigo-100"
-                                                : lastAddedItemId === item.productId ? "bg-indigo-500/10 hover:bg-indigo-500/20"
+                                            highlightedItemId === item.productId ? "bg-indigo-400 text-white"
+                                                : lastAddedItemId === item.productId ? "bg-indigo-500/20"
                                                     : "hover:bg-gray-50/50"
                                         )}
                                     >
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-bold text-gray-900 truncate">{item.name}</p>
-                                            <p className="text-[10px] text-gray-400 font-medium tabular-nums">
-                                                {currency}{Number(item.price).toFixed(2)} × {item.quantity}
+                                            <p className="text-base font-black text-gray-900 truncate">{item.name}</p>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                {item.barcode && <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">#{item.barcode}</span>}
+                                                <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1 rounded">Stock: {item.stock || 0}</span>
+                                            </div>
+                                            <p className="text-[11px] text-gray-500 font-bold mt-1 uppercase tracking-tight">
+                                                {currency}{Number(item.price).toFixed(2)} / unit
                                             </p>
                                         </div>
                                         <div className="flex items-center gap-1">
@@ -236,7 +242,7 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                                                 <Plus size={12} />
                                             </button>
                                         </div>
-                                        <span className="w-20 text-right text-sm font-black tabular-nums text-gray-900">
+                                        <span className="w-24 text-right text-base font-black tabular-nums text-gray-900">
                                             {currency}{(Number(item.price) * item.quantity).toFixed(2)}
                                         </span>
                                         <button onClick={() => onUpdateQuantity(item.productId, -100)} className="opacity-0 group-hover:opacity-100 w-6 h-6 flex items-center justify-center text-gray-300 hover:text-rose-500 transition-all">
@@ -301,13 +307,26 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                             onClick={onCharge}
                             disabled={cart.length === 0 || isProcessing}
                             className={clsx(
-                                "w-full mt-4 py-4 rounded-2xl text-sm font-black uppercase tracking-widest transition-all",
+                                "w-full mt-4 py-4 rounded-2xl flex flex-col items-center gap-0.5 shadow-xl transition-all",
                                 cart.length > 0 && !isProcessing
-                                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 active:scale-[0.98]"
-                                    : "bg-gray-100 text-gray-300 cursor-not-allowed"
+                                    ? "bg-indigo-600 text-white shadow-indigo-200 hover:bg-indigo-700 active:scale-[0.98]"
+                                    : "bg-gray-100 text-gray-300 cursor-not-allowed shadow-none"
                             )}
                         >
-                            {isProcessing ? 'Processing...' : `Payment · ${currency}${totalAmount.toFixed(2)}`}
+                            {isProcessing ? (
+                                <span className="text-sm font-black uppercase tracking-widest">Processing...</span>
+                            ) : (
+                                <>
+                                    <span className="text-sm font-black uppercase tracking-widest">
+                                        {changeDue > 0 ? "Return Change" : "Charge"}
+                                    </span>
+                                    {changeDue > 0 ? (
+                                        <span className="text-xl font-black">{currency}{changeDue.toFixed(2)}</span>
+                                    ) : (
+                                        <span className="text-[11px] opacity-70 font-bold uppercase tracking-widest">{currency}{totalAmount.toFixed(2)}</span>
+                                    )}
+                                </>
+                            )}
                         </button>
                     </div>
                 </aside>

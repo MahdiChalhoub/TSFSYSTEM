@@ -151,8 +151,8 @@ export function POSLayoutModern(props: POSLayoutProps) {
                             <button
                                 onClick={() => onSetActiveCategoryId(null)}
                                 className={clsx(
-                                    "px-2.5 py-0.5 whitespace-nowrap rounded-full text-[10px] font-semibold transition-all",
-                                    activeCategoryId === null ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                                    "px-4 py-1.5 whitespace-nowrap rounded-xl text-[13px] font-bold transition-all border",
+                                    activeCategoryId === null ? 'bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-200' : 'bg-white border-gray-200 text-gray-600 hover:border-emerald-300 hover:text-emerald-600'
                                 )}
                             >All</button>
                             {categories.map(cat => (
@@ -160,8 +160,10 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                     key={cat.id}
                                     onClick={() => onSetActiveCategoryId(cat.id)}
                                     className={clsx(
-                                        "px-2.5 py-0.5 whitespace-nowrap rounded-full text-[10px] font-semibold transition-all",
-                                        activeCategoryId === cat.id ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                                        "px-4 py-1.5 whitespace-nowrap rounded-xl text-[13px] font-bold transition-all border",
+                                        activeCategoryId === cat.id
+                                            ? 'bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-200'
+                                            : 'bg-white border-gray-200 text-gray-600 hover:border-emerald-300 hover:text-emerald-600'
                                     )}
                                 >{cat.name}</button>
                             ))}
@@ -206,14 +208,14 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                         key={cat.id}
                                         onClick={() => { onSetActiveCategoryId(cat.id); setLeftExpanded(true); }}
                                         className={clsx(
-                                            "p-3 rounded-xl border text-center group hover:shadow-md transition-all",
+                                            "p-4 rounded-xl border text-center group hover:shadow-xl transition-all",
                                             activeCategoryId === cat.id
-                                                ? "bg-emerald-50 border-emerald-200"
-                                                : "bg-white border-gray-100 hover:border-emerald-100"
+                                                ? "bg-emerald-50 border-emerald-300 ring-2 ring-emerald-100"
+                                                : "bg-white border-gray-100 hover:border-emerald-200"
                                         )}
                                     >
-                                        <Tag size={14} className={clsx("mx-auto mb-1", activeCategoryId === cat.id ? "text-emerald-500" : "text-gray-300 group-hover:text-emerald-400")} />
-                                        <span className="text-[10px] font-semibold text-gray-700">{cat.name}</span>
+                                        <Tag size={18} className={clsx("mx-auto mb-1.5", activeCategoryId === cat.id ? "text-emerald-500" : "text-gray-400 group-hover:text-emerald-500")} />
+                                        <span className="text-[12px] font-bold text-gray-800 uppercase tracking-tight line-clamp-2">{cat.name}</span>
                                     </button>
                                 ))}
                             </div>
@@ -250,27 +252,33 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                         key={item.productId}
                                         className={clsx(
                                             "px-2.5 py-1 group transition-colors duration-300 flex items-center gap-1.5",
-                                            highlightedItemId === item.productId ? "bg-emerald-100"
-                                                : lastAddedItemId === item.productId ? "bg-emerald-500/20 hover:bg-emerald-500/30"
+                                            highlightedItemId === item.productId ? "bg-emerald-400"
+                                                : lastAddedItemId === item.productId ? "bg-emerald-500/20"
                                                     : "hover:bg-white"
                                         )}
                                     >
-                                        <span className="text-[9px] text-gray-300 font-mono w-3 shrink-0 text-center">{idx + 1}</span>
-                                        <p className="text-[11px] font-semibold text-gray-900 truncate flex-1 min-w-0">{item.name}</p>
-                                        <span className="text-[9px] text-gray-400 shrink-0">{currency}{Number(item.price).toFixed(2)}</span>
+                                        <span className="text-[10px] text-gray-300 font-mono w-4 shrink-0 text-center">{idx + 1}</span>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-[14px] font-black text-gray-900 truncate leading-tight">{item.name}</p>
+                                            <div className="flex items-center gap-2 mt-0.5">
+                                                {item.barcode && <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">#{item.barcode}</span>}
+                                                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1 rounded">Stock: {item.stock || 0}</span>
+                                            </div>
+                                        </div>
+                                        <span className="text-[12px] font-black text-gray-400 shrink-0">{currency}{Number(item.price).toFixed(2)}</span>
                                         <div className="flex items-center gap-px shrink-0">
-                                            <button onClick={() => onUpdateQuantity(item.productId, -1)} className="w-5 h-5 rounded bg-gray-100 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-center text-gray-400 transition-all active:scale-90">
-                                                <Minus size={9} />
+                                            <button onClick={() => onUpdateQuantity(item.productId, -1)} className="w-6 h-6 rounded-lg bg-gray-100 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-center text-gray-400 transition-all active:scale-90 border border-transparent hover:border-rose-200">
+                                                <Minus size={12} strokeWidth={3} />
                                             </button>
-                                            <span className="w-5 text-center text-[11px] font-bold tabular-nums">{item.quantity}</span>
-                                            <button onClick={() => onUpdateQuantity(item.productId, 1)} className="w-5 h-5 rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-600 flex items-center justify-center transition-all active:scale-90">
-                                                <Plus size={9} />
+                                            <span className="w-7 text-center text-[14px] font-black tabular-nums text-gray-900">{item.quantity}</span>
+                                            <button onClick={() => onUpdateQuantity(item.productId, 1)} className="w-6 h-6 rounded-lg bg-emerald-50 hover:bg-emerald-500 hover:text-white text-emerald-600 flex items-center justify-center transition-all active:scale-90 border border-emerald-100 hover:border-emerald-500">
+                                                <Plus size={12} strokeWidth={3} />
                                             </button>
                                         </div>
                                         {(item.taxRate || 0) > 0 && (
-                                            <span className="text-[8px] text-gray-400 bg-gray-100 px-1 rounded shrink-0">{item.taxRate}%</span>
+                                            <span className="text-[8px] font-black text-gray-400 bg-gray-100 px-1 rounded shrink-0 uppercase">VAT {item.taxRate}%</span>
                                         )}
-                                        <p className="text-[11px] font-bold text-gray-900 tabular-nums shrink-0 w-12 text-right">
+                                        <p className="text-[14px] font-black text-emerald-700 tabular-nums shrink-0 w-16 text-right">
                                             {currency}{(Number(item.price) * item.quantity).toFixed(2)}
                                         </p>
                                         <button onClick={() => onUpdateQuantity(item.productId, -100)} className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-rose-500 transition-all shrink-0">
@@ -389,16 +397,22 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 )}
                             >
                                 {isProcessing ? (
-                                    <span className="text-sm font-bold">Processing...</span>
+                                    <span className="text-sm font-bold uppercase tracking-widest">Processing...</span>
                                 ) : (
-                                    <>
-                                        <span>Charge</span>
-                                        {changeDue > 0 && (
-                                            <span className="text-[9px] font-medium text-emerald-100 uppercase tracking-widest leading-none mt-0.5">
-                                                Change: {currency}{changeDue.toLocaleString('fr-FR', { minimumFractionDigits: 0 })}
+                                    <div className="flex flex-col items-center">
+                                        <span className="text-sm font-black uppercase tracking-wider">
+                                            {changeDue > 0 ? "Return Change" : "Charge"}
+                                        </span>
+                                        {changeDue > 0 ? (
+                                            <span className="text-[16px] font-black text-white leading-none mt-1 animate-bounce">
+                                                {currency}{changeDue.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}
+                                            </span>
+                                        ) : (
+                                            <span className="text-[10px] opacity-70 font-bold uppercase tracking-widest leading-none mt-1">
+                                                {currency}{totalAmount.toFixed(2)}
                                             </span>
                                         )}
-                                    </>
+                                    </div>
                                 )}
                             </button>
                         </div>

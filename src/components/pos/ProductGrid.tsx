@@ -118,6 +118,7 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
                 setLoading(true);
                 setError(null);
                 const data = await getPosProducts({ limit: ITEMS_PER_LOAD, categoryId: categoryId ?? undefined });
+                console.log(`[DEBUG] ProductGrid Loaded ${data.length} products. Entry 0:`, data[0]);
                 setProducts(data);
                 setHasMore(data.length >= ITEMS_PER_LOAD);
                 setOfflineMode(false);
@@ -319,7 +320,7 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
                         <div className="flex justify-between items-end mt-2 pt-2 border-t border-gray-50 relative z-10">
                             <div className="flex flex-col">
                                 <span className="text-[8px] font-black text-gray-400 uppercase tracking-tighter">Price</span>
-                                <span className="font-black text-sm text-indigo-600 leading-none tracking-tighter">{currency}{(Number(product.basePrice || product.price || 0)).toFixed(2)}</span>
+                                <span className="font-black text-sm text-indigo-600 leading-none tracking-tighter">{currency}{(Number(product.basePrice || product.price || product.sellingPriceTTC || 0)).toFixed(2)}</span>
                             </div>
                             {Number(product.taxRate) > 0 && (
                                 <span className="text-[7px] font-black text-gray-300 uppercase">
