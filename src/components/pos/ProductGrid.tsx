@@ -12,11 +12,12 @@ import { Badge } from "@/components/ui/badge";
 const ITEMS_PER_LOAD = 50; // Load 50 products at a time
 const SEARCH_DEBOUNCE_MS = 300; // Wait 300ms after user stops typing
 
-export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '$' }: {
+export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '$', variant = 'default' }: {
     searchQuery: string,
     onAddToCart: (p: Record<string, any>) => void,
     categoryId?: number | null,
-    currency?: string
+    currency?: string,
+    variant?: string
 }) {
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);

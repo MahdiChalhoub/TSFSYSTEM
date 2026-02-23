@@ -250,12 +250,43 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                         <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-4 text-[9px] font-mono">
                                 <span className="text-gray-600">SUB: <span className="text-gray-400 font-bold">{currency}{total.toFixed(2)}</span></span>
-                                {discount > 0 && <span className="text-amber-600">DISC: <span className="font-bold">-{currency}{discount.toFixed(2)}</span></span>}
+                                {discount > 0 && (
+                                    <span className="text-amber-600 flex items-center gap-1">
+                                        DISC:
+                                        {props.onSetDiscountType && (
+                                            <div className="flex bg-[#2a2d37] rounded overflow-hidden cursor-pointer" onClick={(e) => {
+                                                e.stopPropagation();
+                                                props.onSetDiscountType!(props.discountType === 'fixed' ? 'percentage' : 'fixed')
+                                            }}>
+                                                <span className={clsx("px-1.5 py-px", props.discountType === 'fixed' ? "bg-amber-500 text-black" : "text-amber-600")}>{currency}</span>
+                                                <span className={clsx("px-1.5 py-px", props.discountType === 'percentage' ? "bg-amber-500 text-black" : "text-amber-600")}>%</span>
+                                            </div>
+                                        )}
+                                        <span className="font-bold ml-1">-{props.discountType === 'fixed' ? currency : ''}{discount.toFixed(2)}{props.discountType === 'percentage' ? '%' : ''}</span>
+                                    </span>
+                                )}
                             </div>
                             <div className="text-right">
                                 <span className="text-lg font-black tabular-nums text-amber-400 font-mono">{currency}{totalAmount.toFixed(2)}</span>
                             </div>
                         </div>
+                        {(selectedClient?.loyalty || 0) > 0 && props.onSetPointsRedeemed && (
+                            <div className="flex items-center justify-between mb-3 text-[9px] font-mono border-t border-[#2a2d37] pt-2">
+                                <span className="text-emerald-500 font-bold">LOYALTY: {selectedClient?.loyalty} PTS</span>
+                                <button
+                                    onClick={() => {
+                                        const toggleTo = props.pointsRedeemed === selectedClient?.loyalty ? 0 : selectedClient?.loyalty;
+                                        props.onSetPointsRedeemed!(toggleTo || 0);
+                                    }}
+                                    className={clsx(
+                                        "px-2 py-1 rounded font-black transition-all",
+                                        props.pointsRedeemed! > 0 ? "bg-emerald-500 text-black border-emerald-500" : "bg-[#2a2d37] text-gray-400 hover:text-emerald-400"
+                                    )}
+                                >
+                                    {props.pointsRedeemed! > 0 ? `REDEEMING ${props.pointsRedeemed}` : 'USE ALL'}
+                                </button>
+                            </div>
+                        )}
 
                         {/* Payment Method */}
                         <div className="flex gap-1.5 mb-3">
@@ -277,24 +308,42 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                             >
                                 <CreditCard size={12} /> CARD
                             </button>
+                            <button
+                                onClick={() => onSetPaymentMethod('WALLET')}
+                                className={clsx(
+                                    "flex-1 py-2 rounded-lg text-[8px] font-black uppercase tracking-widest font-mono flex items-center justify-center gap-1.5 transition-all",
+                                    paymentMethod === 'WALLET' ? 'bg-indigo-500 text-black' : 'bg-[#2a2d37] text-gray-500 hover:text-indigo-400'
+                                )}
+                            >
+                                <Wallet size={12} /> WALLET
+                            </button>
                         </div>
 
-                        {/* Cash Input (when CASH selected) */}
-                        {paymentMethod === 'CASH' && (
-                            <div className="flex items-center gap-2 mb-3">
+                        {/* Cash Input */}
+                        <div className="flex items-center gap-2 mb-3">
+                            <input
+                                type="text"
+                                inputMode="numeric"
+                                placeholder="Cash received..."
+                                value={cashReceived ? Number(cashReceived.replace(/\D/g, '')).toLocaleString('fr-FR') : ''}
+                                onChange={(e) => {
+                                    const numVal = e.target.value.replace(/\s+/g, '').replace(/,/g, '.');
+                                    if (/^\d*\.?\d*$/.test(numVal)) onSetCashReceived(numVal);
+                                }}
+                                className="flex-1 px-3 py-2 bg-[#0f1117] border border-[#2a2d37] rounded-lg text-sm font-mono font-bold text-gray-200 outline-none focus:border-amber-500/50 placeholder:text-gray-700 text-right tabular-nums"
+                            />
+                        </div>
+
+                        {cashReceived && Number(cashReceived.replace(/\D/g, '')) > totalAmount && props.onSetStoreChangeInWallet && (
+                            <label className="flex items-center justify-center gap-2 cursor-pointer mb-3 text-[9px] font-black tracking-widest text-[#a8b8d0] bg-[#2a2d37] px-2 py-2 rounded-lg hover:bg-[#343844] transition-colors font-mono w-full">
                                 <input
-                                    type="text"
-                                    placeholder="Cash received..."
-                                    value={cashReceived}
-                                    onChange={(e) => onSetCashReceived(e.target.value)}
-                                    className="flex-1 px-3 py-1.5 bg-[#0f1117] border border-[#2a2d37] rounded-lg text-xs font-mono font-bold text-gray-200 outline-none focus:border-emerald-500/50 placeholder:text-gray-700"
+                                    type="checkbox"
+                                    checked={props.storeChangeInWallet}
+                                    onChange={(e) => props.onSetStoreChangeInWallet!(e.target.checked)}
+                                    className="rounded border-[#4c5265] text-amber-500 focus:ring-amber-500 w-3 h-3 bg-[#0f1117]"
                                 />
-                                {cashReceived && Number(cashReceived) >= totalAmount && (
-                                    <span className="text-[9px] font-mono font-bold text-emerald-400">
-                                        CHG: {currency}{(Number(cashReceived) - totalAmount).toFixed(2)}
-                                    </span>
-                                )}
-                            </div>
+                                SAVE CHANGE TO WALLET ({currency}{(Number(cashReceived.replace(/\D/g, '')) - totalAmount).toLocaleString('fr-FR', { minimumFractionDigits: 0 })})
+                            </label>
                         )}
 
                         {/* Charge Button */}
@@ -302,13 +351,24 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                             onClick={onCharge}
                             disabled={cart.length === 0 || isProcessing}
                             className={clsx(
-                                "w-full py-3 rounded-xl text-sm font-black uppercase tracking-widest font-mono transition-all",
+                                "w-full py-3 rounded-xl flex flex-col items-center justify-center transition-all",
                                 cart.length > 0 && !isProcessing
                                     ? "bg-amber-500 text-black hover:bg-amber-400 active:scale-[0.98]"
                                     : "bg-[#2a2d37] text-gray-700 cursor-not-allowed"
                             )}
                         >
-                            {isProcessing ? '⏳ PROCESSING...' : `⚡ CHARGE ${currency}${totalAmount.toFixed(2)}`}
+                            {isProcessing ? (
+                                <span className="text-sm font-black font-mono tracking-widest">⏳ PROCESSING...</span>
+                            ) : (
+                                <>
+                                    <span className="text-sm font-black uppercase tracking-widest font-mono leading-tight">⚡ CHARGE {currency}{totalAmount.toFixed(2)}</span>
+                                    {cashReceived && Number(cashReceived.replace(/\D/g, '')) > totalAmount && (
+                                        <span className="text-[10px] font-black font-mono tracking-widest bg-black/20 px-2 py-0.5 rounded mt-1">
+                                            CHG: {currency}{(Number(cashReceived.replace(/\D/g, '')) - totalAmount).toLocaleString('fr-FR', { minimumFractionDigits: 0 })}
+                                        </span>
+                                    )}
+                                </>
+                            )}
                         </button>
                     </div>
                 </div>

@@ -47,7 +47,7 @@ This file is the **Single Source of Truth** for all AI agents.
 *Format: [From] -> [To]: [Task Description] ([Status: Pending/Accepted/Rejected])*
 
 - **#1632 -> ALL**: Review the background migration logic in `apps/migration/tasks.py`. (✅ Reviewed by #1877 - Looks solid)
-- **#1632 -> Frontend Agent**: Create UI progress indicators for the new background tasks. (Pending)
+- **#1632 -> Frontend Agent**: Create UI progress indicators for the new background tasks. (✅ Completed by #1877)
 
 ---
 

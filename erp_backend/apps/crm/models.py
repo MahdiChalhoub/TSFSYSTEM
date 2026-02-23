@@ -56,6 +56,10 @@ class Contact(TenantModel):
         help_text='Client pricing tier: Standard, VIP, Wholesale, Retail'
     )
     loyalty_points = models.IntegerField(default=0, help_text='Accumulated loyalty points')
+    wallet_balance = models.DecimalField(
+        max_digits=15, decimal_places=2, default=Decimal('0.00'),
+        help_text='Customer wallet balance from stored change or top-ups'
+    )
 
     # ── Customer Analytics (auto-computed) ─────────────────────
     first_purchase_date = models.DateTimeField(null=True, blank=True)

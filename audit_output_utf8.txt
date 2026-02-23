@@ -1,0 +1,23 @@
+﻿Platform Integrity Verified: PostgreSQL Engine Active.
+--- RAW DB TABLE AUDIT ---
+Total tables found: 2
+  - django_migrations
+  - system_settings
+
+--- MIGRATION STATUS ---
+  [2026-02-16 18:03:09.135221+00:00] sessions: 0001_initial
+  [2026-02-16 18:03:09.083566+00:00] crm: 0001_initial
+  [2026-02-16 18:03:09.078376+00:00] auth: 0012_alter_user_first_name_max_length
+  [2026-02-16 18:03:09.077792+00:00] auth: 0011_update_proxy_permissions
+  [2026-02-16 18:03:09.077149+00:00] auth: 0010_alter_group_name_max_length
+  [2026-02-16 18:03:09.076567+00:00] auth: 0009_alter_user_last_name_max_length
+  [2026-02-16 18:03:09.075645+00:00] auth: 0008_alter_user_username_max_length
+  [2026-02-16 18:03:09.074735+00:00] auth: 0007_alter_validators_add_error_messages
+  [2026-02-16 18:03:09.073784+00:00] auth: 0006_require_contenttypes_0002
+  [2026-02-16 18:03:09.072976+00:00] auth: 0005_alter_user_last_login_null
+  [2026-02-16 18:03:09.072134+00:00] auth: 0004_alter_user_username_opts
+  [2026-02-16 18:03:09.071000+00:00] auth: 0003_alter_user_email_max_length
+  [2026-02-16 18:03:09.070275+00:00] auth: 0002_alter_permission_name_max_length
+  [2026-02-16 18:03:09.069740+00:00] auth: 0001_initial
+  [2026-02-16 18:03:09.069016+00:00] contenttypes: 0002_remove_content_type_name
+  [2026-02-16 18:03:09.066097+00:00] contenttypes: 0001_initial

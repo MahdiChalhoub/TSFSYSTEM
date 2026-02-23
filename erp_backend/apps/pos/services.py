@@ -31,7 +31,9 @@ def _safe_import(module_path, names):
 
 class POSService:
     @staticmethod
-    def checkout(organization, user, warehouse, payment_account_id, items, scope='OFFICIAL'):
+    def checkout(organization, user, warehouse, payment_account_id, items, scope='OFFICIAL',
+                 contact_id=None, payment_method='CASH', points_redeemed=0, 
+                 store_change_in_wallet=False, cash_received=0):
         from apps.pos.models import Order, OrderLine
         from erp.services import ConfigurationService
         
@@ -74,7 +76,9 @@ class POSService:
                 status='COMPLETED',
                 scope=scope,
                 invoice_number=invoice_num,
-                previous_hash=prev_hash
+                previous_hash=prev_hash,
+                payment_method=payment_method,
+                contact_id=contact_id
             )
             
             for item in items:
@@ -148,6 +152,34 @@ class POSService:
             order.total_amount = total_amount
             order.tax_amount = total_tax
             
+            # Loyalty & Wallet CRM update
+            (Contact,) = _safe_import('apps.crm.models', ['Contact'])
+            contact = None
+            if contact_id and Contact:
+                contact = Contact.objects.select_for_update().filter(id=contact_id, organization=organization).first()
+                if contact:
+                    # 1. Redeem Points
+                    pts_to_redeem = Decimal(str(points_redeemed))
+                    if pts_to_redeem > 0 and contact.loyalty_points >= pts_to_redeem:
+                        contact.loyalty_points -= pts_to_redeem
+                        # Optional: discount the total_amount by a conversion rate, if not already discounted by frontend
+                        # Assuming frontend already discounted it.
+                    
+                    # 2. Earn Points (e.g. 1 point per $10 spent)
+                    earned_points = int(total_amount / Decimal('10.0'))
+                    contact.loyalty_points += Decimal(str(earned_points))
+                    
+                    # 3. Store Change in Wallet
+                    cash_received_dec = Decimal(str(cash_received))
+                    change_due = max(Decimal('0'), cash_received_dec - total_amount)
+                    
+                    wallet_added = Decimal('0')
+                    if store_change_in_wallet and change_due > 0 and payment_method in ['CASH']:
+                        contact.wallet_balance += change_due
+                        wallet_added = change_due
+                        
+                    contact.save()
+            
             # 5. Cryptographic Seal
             order.receipt_hash = order.calculate_hash()
             order.save(force_audit_bypass=True)
@@ -168,6 +200,21 @@ class POSService:
                 fin_acc = FinancialAccount.objects.filter(id=payment_account_id, organization=organization).first()
                 actual_payment_acc_id = fin_acc.ledger_account_id if fin_acc else payment_account_id
 
+            lines = [
+                {"account_id": rev_acc, "debit": Decimal('0'), "credit": (total_amount - total_tax)},
+                {"account_id": tax_acc or rev_acc, "debit": Decimal('0'), "credit": total_tax},
+                {"account_id": cogs_acc, "debit": total_cogs, "credit": Decimal('0')},
+                {"account_id": inv_acc, "debit": Decimal('0'), "credit": total_cogs},
+            ]
+            
+            if contact and wallet_added > 0:
+                # Wallet Liability Account
+                wallet_liability_acc = rules.get('sales', {}).get('receivable') # Usually advances are liabilities, fallback to AR
+                lines.append({"account_id": actual_payment_acc_id, "debit": (total_amount + wallet_added), "credit": Decimal('0')})
+                lines.append({"account_id": wallet_liability_acc, "debit": Decimal('0'), "credit": wallet_added})
+            else:
+                lines.append({"account_id": actual_payment_acc_id, "debit": total_amount, "credit": Decimal('0')})
+
             LedgerService.create_journal_entry(
                 organization=organization,
                 transaction_date=timezone.now(),
@@ -177,13 +224,7 @@ class POSService:
                 scope='INTERNAL',
                 site_id=warehouse.site_id,
                 user=user,
-                lines=[
-                    {"account_id": actual_payment_acc_id, "debit": total_amount, "credit": Decimal('0')},
-                    {"account_id": rev_acc, "debit": Decimal('0'), "credit": (total_amount - total_tax)},
-                    {"account_id": tax_acc or rev_acc, "debit": Decimal('0'), "credit": total_tax},
-                    {"account_id": cogs_acc, "debit": total_cogs, "credit": Decimal('0')},
-                    {"account_id": inv_acc, "debit": Decimal('0'), "credit": total_cogs},
-                ]
+                lines=lines
             )
             
             return order

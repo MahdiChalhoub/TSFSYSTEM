@@ -73,7 +73,11 @@ export async function processSale(data: {
     scope?: string,
     notes?: string,
     warehouseId?: number,
-    paymentAccountId?: number
+    paymentAccountId?: number,
+    clientId?: number,
+    pointsRedeemed?: number,
+    storeChangeInWallet?: boolean,
+    cashReceived?: number
 }) {
     try {
         const context = await getCommercialContext();
@@ -91,7 +95,11 @@ export async function processSale(data: {
                 payment_method: data.paymentMethod,
                 notes: data.notes,
                 scope: data.scope || 'OFFICIAL',
-                total_amount: data.totalAmount
+                total_amount: data.totalAmount,
+                contact_id: data.clientId,
+                points_redeemed: data.pointsRedeemed || 0,
+                store_change_in_wallet: data.storeChangeInWallet || false,
+                cash_received: data.cashReceived || 0
             })
         });
 
