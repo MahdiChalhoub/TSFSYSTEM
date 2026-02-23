@@ -137,6 +137,10 @@ class PurchaseOrder(TenantModel):
     notes = models.TextField(null=True, blank=True)
     internal_notes = models.TextField(null=True, blank=True, help_text='Internal notes not shared with supplier')
 
+    # Audit
+    created_by = models.ForeignKey('erp.User', on_delete=models.SET_NULL, null=True, blank=True,
+                                    related_name='created_pos')
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
     # Supplier Portal Integration
