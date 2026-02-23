@@ -165,13 +165,15 @@ export default function PurchaseForm({
         const isOfficial = scope === 'OFFICIAL';
         setVatRecoverable(isOfficial);
 
-        // Generate auto reference
-        const timestamp = new Date().toISOString().replace(/[-:T]/g, '').slice(2, 12);
-        // "All official will be just with their name" (INV-)
-        // "Just all internal... will add internal to them" (INV-INTERNAL-)
-        const ref = isOfficial ? `INV-${timestamp}` : `INV-INTERNAL-${timestamp}`;
+        // Generate auto reference using a count hint if available, else standard padding
+        const nextNum = (financialSettings.purchaseCount || 0) + 1;
+        const paddedNum = nextNum.toString().padStart(4, '0');
+
+        // "All official will be just with their name" (INV-COUNT)
+        // "Just all internal... will add internal to them" (INV-INTERNAL-COUNT)
+        const ref = isOfficial ? `INV-${paddedNum}` : `INV-INTERNAL-${paddedNum}`;
         setRefCode(ref);
-    }, [scope]);
+    }, [scope, financialSettings.purchaseCount]);
 
     const addProductToLines = (product: Record<string, any>) => {
         // Prevent duplicate products in same invoice? (Option-dependent, usually yes for simplicity)
@@ -322,10 +324,13 @@ export default function PurchaseForm({
                                 <label className="flex items-center gap-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">
                                     <FileText size={10} className="text-blue-500" /> {showInternalSwitcher ? 'System Sequence' : 'Document ID'}
                                 </label>
-                                <div className="bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-[11px] font-black text-slate-400 shadow-inner italic overflow-hidden whitespace-nowrap">
-                                    {refCode || 'GENERATING...'}
-                                    <input type="hidden" name="refCode" value={refCode} />
-                                </div>
+                                <input
+                                    name="refCode"
+                                    value={refCode}
+                                    onChange={(e) => setRefCode(e.target.value)}
+                                    placeholder="INV-XXXX"
+                                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-[11px] font-black text-blue-600 focus:bg-white focus:ring-4 focus:ring-blue-50 focus:border-blue-200 transition-all outline-none"
+                                />
                             </div>
                             <div className="space-y-1.5">
                                 <label className="flex items-center gap-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">
