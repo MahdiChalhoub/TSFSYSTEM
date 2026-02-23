@@ -215,7 +215,7 @@ log "🗃️  [4/6] Applying migrations..."
 cd "$APP_ROOT/erp_backend"
 source venv/bin/activate
 python manage.py migrate --no-input >> "$LOG_FILE" 2>&1
-python manage.py collectstatic --noinput -q >> "$LOG_FILE" 2>&1
+python manage.py collectstatic --noinput >> "$LOG_FILE" 2>&1
 ok "Migrations applied"
 
 # ── Step 5: Atomic Symlink Swap ───────────────────────────────────────────────
