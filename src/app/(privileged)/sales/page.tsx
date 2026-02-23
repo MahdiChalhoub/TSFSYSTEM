@@ -36,7 +36,9 @@ export default function POSPage() {
     }, []);
 
     // ─── Client State ───
-    const [clients, setClients] = useState<any[]>([]);
+    const [clients, setClients] = useState<any[]>([
+        { id: 1, name: 'Walk-in Customer', phone: 'N/A', balance: 0, loyalty: 0, address: 'Counter Sales', zone: '' }
+    ]);
 
     // ─── Multi-Order Sessions ───
     const [sessions, setSessions] = useState<any[]>([]);
@@ -96,7 +98,7 @@ export default function POSPage() {
     const activeSession = sessions.find(s => s.id === activeSessionId) || sessions[0] || { cart: [], clientId: 1 };
     const cart = activeSession.cart;
     const selectedClientId = activeSession.clientId;
-    const selectedClient = clients.find(c => c.id === selectedClientId) || clients[0];
+    const selectedClient = clients.find(c => c.id === selectedClientId) || clients[0] || { name: 'Walk-in' };
 
     const updateActiveSession = useCallback((updates: any) => {
         setSessions(prev => prev.map(s => s.id === activeSessionId ? { ...s, ...updates } : s));
@@ -148,8 +150,8 @@ export default function POSPage() {
                     zone: c.delivery_zone || ''
                 }));
                 // Keep Walk-in Customer as ID 1, map the rest
-                setClients([
-                    { id: 1, name: 'Walk-in Customer', phone: 'N/A', balance: 0, loyalty: 0, address: 'Counter Sales', zone: '' },
+                setClients(prev => [
+                    prev[0], // Keep Walk-in
                     ...mapped.filter(c => c.id !== 1)
                 ]);
             }

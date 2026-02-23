@@ -6,6 +6,7 @@ import Header from './Header'
 import Footer from './Footer'
 import ProductDetail from './ProductDetail'
 import ProductCard from './ProductCard'
+import CartDrawer from './CartDrawer'
 
 // Shared components that don't need overrides yet
 import CartPage from '../midnight/CartPage'
@@ -21,6 +22,7 @@ const components = {
     ProductDetail,
     ProductCard,
     CartPage,
+    CartDrawer,
     CategoriesPage,
     CheckoutPage,
     SearchPage,

@@ -138,6 +138,16 @@ class ThemeListView(APIView):
                     'background': '#faf5ff',
                 },
             },
+            {
+                'id': 'emporium',
+                'name': 'Emporium',
+                'description': 'Elite marketplace theme for massive catalogs. Industrial-strength navigation.',
+                'colors': {
+                    'primary': '#facc15',
+                    'secondary': '#1e293b',
+                    'background': '#f8fafc',
+                },
+            },
         ]
         return Response({'themes': themes})
 

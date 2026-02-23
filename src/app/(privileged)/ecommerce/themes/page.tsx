@@ -7,6 +7,7 @@ export default async function EcommerceThemesPage() {
     let configId = '';
     let currentTheme = 'midnight';
     let currentType = 'PRODUCT_STORE';
+    let error: string | null = null;
 
     try {
         const config = await getCurrentPortalConfig();
@@ -14,9 +15,28 @@ export default async function EcommerceThemesPage() {
             configId = String(config.id);
             currentTheme = config.storefront_theme || 'midnight';
             currentType = config.storefront_type || 'PRODUCT_STORE';
+        } else {
+            error = "No active organization configuration found. Please select an organization from the header.";
         }
-    } catch {
-        // fallback defaults
+    } catch (err) {
+        error = "Failed to load storefront configuration. The backend service might be restarting.";
+    }
+
+    if (error) {
+        return (
+            <div className="p-8 max-w-7xl mx-auto flex flex-col items-center justify-center min-h-[50vh] text-center">
+                <div className="w-20 h-20 bg-amber-100 rounded-[2rem] flex items-center justify-center text-amber-600 mb-6">
+                    <Palette size={40} />
+                </div>
+                <h2 className="text-2xl font-black text-gray-900 tracking-tight">Configuration Unavailable</h2>
+                <p className="text-gray-500 mt-4 max-w-md mx-auto font-medium">
+                    {error}
+                </p>
+                <div className="mt-8 p-4 bg-gray-50 rounded-2xl border border-gray-100 text-xs font-mono text-gray-400">
+                    Path: /ecommerce/themes
+                </div>
+            </div>
+        );
     }
 
     return (

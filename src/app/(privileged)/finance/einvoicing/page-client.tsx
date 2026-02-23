@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { getInvoices } from '@/app/actions/finance/invoices'
 import { submitEInvoice, getEInvoiceStatus, getEInvoiceQR } from '@/app/actions/finance/einvoice'
-import { FileCheck, Send, QrCode, RefreshCw, CheckCircle, XCircle, Clock, Search, ChevronRight, Shield, Zap } from 'lucide-react'
+import { FileCheck, Send, QrCode, RefreshCw, CheckCircle, XCircle, Clock, Search, ChevronRight, Shield, Zap, Activity, ShieldCheck } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 
 type Invoice = {
     id: string | number

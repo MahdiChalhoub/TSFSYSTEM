@@ -244,7 +244,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <span className="text-[9px] font-black text-gray-200 uppercase tracking-widest truncate max-w-[100px]">{selectedClient.name}</span>
+                    <span className="text-[9px] font-black text-gray-200 uppercase tracking-widest truncate max-w-[100px]">{selectedClient?.name}</span>
                     <span className="text-[8px] font-mono text-gray-600">|</span>
                     <span className="text-[8px] font-mono text-amber-500/60 font-black">BAL: {currency}{formatNumber(selectedClient.balance)}</span>
                     <span className="text-[8px] font-mono text-gray-600">|</span>

@@ -10,12 +10,14 @@ import {
     ShoppingBag, Heart, User, Search, Menu, X,
     LogOut, Package, ChevronDown
 } from 'lucide-react'
+import { usePortal } from '@/context/PortalContext'
 
 export default function BoutiqueHeader() {
     const { user, isAuthenticated, logout } = useAuth()
     const { cartCount } = useCart()
     const { wishlistCount } = useWishlist()
     const { orgName, slug } = useConfig()
+    const { setCartOpen } = usePortal()
     const [mobileOpen, setMobileOpen] = useState(false)
     const [userMenuOpen, setUserMenuOpen] = useState(false)
 
@@ -70,15 +72,17 @@ export default function BoutiqueHeader() {
                                 )}
                             </Link>
 
-                            <Link href={`${base}/cart`}
-                                className="p-2.5 rounded-xl text-gray-500 hover:text-violet-600 hover:bg-violet-50 transition relative">
+                            <button
+                                onClick={() => setCartOpen(true)}
+                                className="p-2.5 rounded-xl text-gray-500 hover:text-violet-600 hover:bg-violet-50 transition relative"
+                            >
                                 <ShoppingBag size={20} />
                                 {cartCount > 0 && (
                                     <span className="absolute -top-0.5 -right-0.5 w-4.5 h-4.5 bg-violet-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
                                         {cartCount}
                                     </span>
                                 )}
-                            </Link>
+                            </button>
 
                             {isAuthenticated ? (
                                 <div className="relative">
@@ -140,13 +144,20 @@ export default function BoutiqueHeader() {
                                     { label: 'Home', href: base },
                                     { label: 'Collections', href: `${base}/categories` },
                                     { label: 'Shop All', href: `${base}/search` },
-                                    { label: 'Cart', href: `${base}/cart` },
+                                    { label: 'Cart', onClick: () => setCartOpen(true) },
                                     { label: 'Wishlist', href: `${base}/account/wishlist` },
                                 ].map(link => (
-                                    <Link key={link.href} href={link.href} onClick={() => setMobileOpen(false)}
-                                        className="px-4 py-3 rounded-xl text-gray-700 hover:bg-violet-50 hover:text-violet-600 text-sm font-medium transition">
-                                        {link.label}
-                                    </Link>
+                                    link.href ? (
+                                        <Link key={link.label} href={link.href} onClick={() => setMobileOpen(false)}
+                                            className="px-4 py-3 rounded-xl text-gray-700 hover:bg-violet-50 hover:text-violet-600 text-sm font-medium transition">
+                                            {link.label}
+                                        </Link>
+                                    ) : (
+                                        <button key={link.label} onClick={() => { link.onClick?.(); setMobileOpen(false) }}
+                                            className="w-full text-left px-4 py-3 rounded-xl text-gray-700 hover:bg-violet-50 hover:text-violet-600 text-sm font-medium transition">
+                                            {link.label}
+                                        </button>
+                                    )
                                 ))}
                             </nav>
                             <div className="mt-auto pt-4 border-t border-violet-100">
