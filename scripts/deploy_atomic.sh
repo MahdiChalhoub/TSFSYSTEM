@@ -97,31 +97,18 @@ log "  PHASE 1: PRE-DEPLOY VALIDATION — $TIMESTAMP"
 log "═══════════════════════════════════════════════════"
 log ""
 
-# ── Step 1: Pull Latest Code ──────────────────────────────────────────────────
-log "📥 [1/6] Pulling latest code from $BRANCH..."
+# ── Step 1: Update Source Code ────────────────────────────────────────────────
+log "📥 [1/6] Updating source code in $APP_ROOT..."
 cd "$APP_ROOT"
 git fetch origin "$BRANCH"
 git reset --hard "origin/$BRANCH"
-
-# Create staging release directory
-mkdir -p "$NEW_RELEASE"
-rsync -a --exclude 'node_modules' --exclude '.git' --exclude 'venv' \
-    --exclude '__pycache__' --exclude '.next' \
-    "$APP_ROOT/" "$NEW_RELEASE/"
-ok "Code pulled and staged at $NEW_RELEASE"
+ok "Code updated to $BRANCH"
 
 # ── Step 2: Backend Validation ────────────────────────────────────────────────
 log ""
-log "🐍 [2/6] Validating Backend..."
-cd "$NEW_RELEASE/erp_backend"
+log "🐍 [2/6] Validating Backend in $APP_ROOT..."
+cd "$APP_ROOT/erp_backend"
 
-# Link shared node_modules and venv (using relative symlinks for host compatibility)
-# Copy shared node_modules (flattening symlinks to satisfy Turbopack)
-if [ ! -d "$NEW_RELEASE/node_modules" ]; then
-    log "  📂 Flattening node_modules (this may take a moment)..."
-    rsync -aL "$APP_ROOT/node_modules/" "$NEW_RELEASE/node_modules/"
-fi
-ln -sr "$APP_ROOT/erp_backend/venv" "$NEW_RELEASE/erp_backend/venv"
 source venv/bin/activate
 
 # 2a. Install dependencies
@@ -164,19 +151,13 @@ fi
 
 gate
 
-# ── Step 3: Frontend Validation ───────────────────────────────────────────────
+# ── Step 3: Frontend Validation & Build ───────────────────────────────────────
 log ""
-log "⚛️  [3/6] Validating Frontend..."
-cd "$NEW_RELEASE"
-
-# Ensure shared node_modules are present (should have been copied in Step 2)
-if [ ! -d "$NEW_RELEASE/node_modules" ]; then
-    log "  📂 Flattening node_modules (this may take a moment)..."
-    rsync -aL "$APP_ROOT/node_modules/" "$NEW_RELEASE/node_modules/"
-fi
+log "⚛️  [3/6] Building Frontend in $APP_ROOT..."
+cd "$APP_ROOT"
 
 # 3a. Build Next.js
-log "  🔨 Building Next.js application..."
+log "  🔨 Running npm run build..."
 if npm run build >> "$LOG_FILE" 2>&1; then
     ok "  Frontend build succeeded"
 else
@@ -205,13 +186,26 @@ fi
 # PHASE 2: GO LIVE
 # ══════════════════════════════════════════════════════════════════════════════
 log "═══════════════════════════════════════════════════"
-log "  PHASE 2: GOING LIVE"
+log "  PHASE 2: PREPARING RELEASE & GOING LIVE"
 log "═══════════════════════════════════════════════════"
 log ""
 
+# ── Step 3.5: Create Staging Release ──────────────────────────────────────────
+log "🏗️  [3.5/6] Syncing artifacts to release directory..."
+mkdir -p "$NEW_RELEASE"
+# Sync everything except source control and active envs/nodes (which we will symlink)
+rsync -a --exclude '.git' --exclude 'node_modules' --exclude 'venv' \
+    --exclude 'erp_backend/__pycache__' \
+    "$APP_ROOT/" "$NEW_RELEASE/"
+
+# Atomic Symlinks within the release for dependencies
+ln -sr "$APP_ROOT/node_modules" "$NEW_RELEASE/node_modules"
+ln -sr "$APP_ROOT/erp_backend/venv" "$NEW_RELEASE/erp_backend/venv"
+ok "Artifacts staged at $NEW_RELEASE"
+
 # ── Step 4: Apply Migrations ──────────────────────────────────────────────────
 log "🗃️  [4/6] Applying migrations..."
-cd "$NEW_RELEASE/erp_backend"
+cd "$APP_ROOT/erp_backend"
 source venv/bin/activate
 python manage.py migrate --no-input >> "$LOG_FILE" 2>&1
 python manage.py collectstatic --noinput -q >> "$LOG_FILE" 2>&1
