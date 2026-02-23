@@ -22,6 +22,13 @@ export default function MidnightHomePage({ products, categories }: HomePageProps
 
     return (
         <div className="min-h-screen bg-slate-950">
+            {/* Promo Bar */}
+            <div className="bg-emerald-600 py-2 px-4 text-center">
+                <p className="text-[10px] font-black text-white uppercase tracking-[0.3em]">
+                    ⚡️ Global Launch Offer: Free Shipping on all orders this week
+                </p>
+            </div>
+
             {/* Hero Section */}
             <section className="relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-950/20 via-transparent to-indigo-950/20" />
@@ -96,8 +103,11 @@ export default function MidnightHomePage({ products, categories }: HomePageProps
                                     <img src={products[0].image_url} alt={products[0].name}
                                         className="w-full h-full object-cover opacity-80" />
                                     <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent p-8">
-                                        <p className="text-[10px] text-emerald-400 font-black uppercase tracking-widest mb-1">Featured</p>
-                                        <h3 className="text-2xl font-black text-white">{products[0].name}</h3>
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <div className="px-2 py-0.5 bg-emerald-500 rounded text-[8px] font-black text-white uppercase tracking-widest">Trending</div>
+                                            <p className="text-[10px] text-emerald-400 font-black uppercase tracking-widest">Featured Release</p>
+                                        </div>
+                                        <h3 className="text-3xl font-black text-white tracking-tighter">{products[0].name}</h3>
                                         <p className="text-2xl font-black text-emerald-400 mt-1">
                                             ${products[0].selling_price_ttc}
                                         </p>
