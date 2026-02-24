@@ -23,6 +23,7 @@ _PUBLIC_PATHS = frozenset([
     '/api/health/',
     '/api/saas/pricing/',
     '/api/tenant/resolve/',
+    '/api/domains/resolve/',
 ])
 
 

@@ -17,3 +17,4 @@ django-storages[s3]
 stripe
 openpyxl>=3.1
 requests>=2.31
+dnspython>=2.4.0
