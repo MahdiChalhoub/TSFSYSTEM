@@ -96,6 +96,15 @@ export default async function middleware(req: NextRequest) {
     // an infinite redirect loop if Cloudflare connects to Nginx over HTTP (Flexible SSL).
     // The loop: CF connects -> Nginx sets X-Forwarded-Proto: http -> Next.js redirects to https -> CF connects over HTTP -> repeat.
 
+    // ─── HOSTNAME DETECTION (needed for auth redirect logic) ───
+    const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost";
+    const isRootDomain = hostname === rootDomain || hostname === `www.${rootDomain}`;
+    const isLocalhost = hostname.endsWith("localhost") || hostname.includes("127.0.0.1") || hostname.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/);
+    const isVercel = hostname.includes("vercel.app"); // Fallback for previews
+    const isSaaSSubdomain = hostname === `saas.${rootDomain}` || (hostname.startsWith("saas.") && hostname.includes("localhost"));
+    const isOnRootOrSaaS = isLocalhost || isVercel || isRootDomain || isSaaSSubdomain;
+    const isOnTenantSubdomain = !isOnRootOrSaaS;
+
     // ─── AUTH REDIRECT (Security) ───
     // Redirect unauthenticated users away from privileged routes.
     // This prevents layout shells from rendering for unauthenticated visitors.
@@ -121,23 +130,22 @@ export default async function middleware(req: NextRequest) {
 
     if (!hasAuthToken && !isPublicRoute && !url.pathname.startsWith('/saas/login')) {
         const loginUrl = url.clone();
+        // On tenant subdomains, admin/ERP routes should redirect to the ROOT domain
+        // login page (tsf.ci/login), NOT the storefront login (tenant/slug/login).
+        // The storefront /login is for customers; the ERP /login is for employees.
+        if (isOnTenantSubdomain) {
+            loginUrl.hostname = rootDomain;
+        } else {
+            loginUrl.hostname = hostname;
+        }
         loginUrl.pathname = '/login';
-        loginUrl.hostname = hostname;
         loginUrl.port = "";
         loginUrl.searchParams.set('error', 'session_expired');
         return NextResponse.redirect(loginUrl);
     }
 
-    // IP Address or Localhost handling for Root
-    const isLocalhost = hostname.endsWith("localhost") || hostname.includes("127.0.0.1") || hostname.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/);
-    const isVercel = hostname.includes("vercel.app"); // Fallback for previews
-    const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost";
-    const isRootDomain = hostname === rootDomain || hostname === `www.${rootDomain}`;
-    // Enhanced Localhost Subdomain detection
-    const isSaaSSubdomain = hostname === `saas.${rootDomain}` || (hostname.startsWith("saas.") && hostname.includes("localhost"));
-
     // ROOT / SAAS PLATFORM LOGIC
-    if (isLocalhost || isVercel || isRootDomain || isSaaSSubdomain) {
+    if (isOnRootOrSaaS) {
 
         if (isSaaSSubdomain) {
             // 1. Redirect legacy /saas/xxx to /xxx (Clean URL enforcement)
@@ -193,6 +201,17 @@ export default async function middleware(req: NextRequest) {
             || url.pathname.startsWith('/settings')
             || url.pathname.startsWith('/workspace')
             || url.pathname.startsWith('/users')
+            || url.pathname.startsWith('/connector')
+            || url.pathname.startsWith('/encryption')
+            || url.pathname.startsWith('/health')
+            || url.pathname.startsWith('/subscription')
+            || url.pathname.startsWith('/updates')
+            || url.pathname.startsWith('/apps')
+            || url.pathname.startsWith('/currencies')
+            || url.pathname.startsWith('/kernel')
+            || url.pathname.startsWith('/mcp')
+            || url.pathname.startsWith('/switcher')
+            || url.pathname.startsWith('/supplier-portal')
             || url.pathname.startsWith('/tsf-system-kernel-7788');
 
         if (isAppRoute) {
@@ -229,15 +248,45 @@ export default async function middleware(req: NextRequest) {
     // ERP admin routes (sales, finance, inventory, etc.) still pass through
     // directly since those belong to the authenticated admin panel.
 
-    // These are the ERP/admin routes that should NOT be rewritten to /tenant/[slug]/...
-    // They work on their own within the admin panel route group.
-    // Note: /login and /register are storefront routes on tenant subdomains,
-    // so they ARE rewritten. The ERP login lives on the root domain only.
-    const isAdminRoute =
-        url.pathname.startsWith('/dashboard') ||
-        url.pathname.startsWith('/admin') ||
+    // ─── SECURITY: SaaS-Only Routes ─────────────────────────────────────
+    // These routes are EXCLUSIVELY for the SaaS master panel (saas.tsf.ci).
+    // They must NEVER be accessible from tenant subdomains, even if the
+    // user is authenticated. These control global platform infrastructure.
+    const isSaaSOnlyRoute =
         url.pathname.startsWith('/organizations') ||
         url.pathname.startsWith('/modules') ||
+        url.pathname.startsWith('/saas') ||
+        url.pathname.startsWith('/connector') ||
+        url.pathname.startsWith('/encryption') ||
+        url.pathname.startsWith('/health') ||
+        url.pathname.startsWith('/subscription') ||
+        url.pathname.startsWith('/updates') ||
+        url.pathname.startsWith('/migration') ||
+        url.pathname.startsWith('/apps') ||
+        url.pathname.startsWith('/currencies') ||
+        url.pathname.startsWith('/kernel') ||
+        url.pathname.startsWith('/mcp') ||
+        url.pathname.startsWith('/switcher') ||
+        url.pathname.startsWith('/tsf-system-kernel-7788');
+
+    // BLOCK: Tenant users cannot access SaaS infrastructure pages
+    if (isSaaSOnlyRoute) {
+        const blockedUrl = url.clone();
+        blockedUrl.pathname = '/dashboard';
+        blockedUrl.hostname = hostname;
+        blockedUrl.port = "";
+        blockedUrl.searchParams.set('error', 'access_denied');
+        blockedUrl.searchParams.set('reason', 'saas_only');
+        return NextResponse.redirect(blockedUrl);
+    }
+
+    // These are the tenant ERP/admin routes that should NOT be rewritten
+    // to /tenant/[slug]/... — they pass through to the admin panel directly.
+    // Note: /login and /register are storefront routes on tenant subdomains,
+    // so they ARE rewritten. The ERP login lives on the root domain only.
+    const isTenantAdminRoute =
+        url.pathname.startsWith('/dashboard') ||
+        url.pathname.startsWith('/admin') ||
         url.pathname.startsWith('/storage') ||
         url.pathname.startsWith('/inventory') ||
         url.pathname.startsWith('/finance') ||
@@ -247,21 +296,18 @@ export default async function middleware(req: NextRequest) {
         url.pathname.startsWith('/hr') ||
         url.pathname.startsWith('/products') ||
         url.pathname.startsWith('/ecommerce') ||
-        url.pathname.startsWith('/migration') ||
         url.pathname.startsWith('/settings') ||
         url.pathname.startsWith('/workspace') ||
         url.pathname.startsWith('/users') ||
-        url.pathname.startsWith('/saas') ||
-        url.pathname.startsWith('/supplier-portal') ||
-        url.pathname.startsWith('/tsf-system-kernel-7788');
+        url.pathname.startsWith('/supplier-portal');
 
     // If it's already a /tenant/... path, let it through (prevent double rewrite)
     if (url.pathname.startsWith('/tenant')) {
         return NextResponse.next();
     }
 
-    // If it's an ERP admin route, let it through on the tenant subdomain
-    if (isAdminRoute) {
+    // If it's a tenant-allowed ERP admin route, let it through
+    if (isTenantAdminRoute) {
         return NextResponse.next();
     }
 
