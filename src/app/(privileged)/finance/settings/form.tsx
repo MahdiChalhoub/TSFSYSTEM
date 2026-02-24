@@ -1,5 +1,4 @@
 'use client'
-
 import { useTransition, useState, useEffect } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { recalculateAccountBalances } from '@/app/actions/finance/ledger'
@@ -10,14 +9,12 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { getTradeSubTypeSettings, updateTradeSubTypeSettings } from '@/app/actions/settings/trade-settings'
-
 interface Props {
     settings: FinancialSettingsState
     lock: { isLocked: boolean; reason: string | null }
     currencies: Currency[]
     accounts: any[]
 }
-
 // ────────────────────────────────────────────────────────
 // Company Type Definitions
 // ────────────────────────────────────────────────────────
@@ -31,7 +28,6 @@ const COMPARE_ROWS = [
     { label: 'Access Control', key: 'accessControl' },
     { label: 'Best For', key: 'bestFor' },
 ] as const
-
 const COMPANY_TYPES = [
     {
         key: 'REGULAR',
@@ -134,7 +130,6 @@ const COMPANY_TYPES = [
         }
     }
 ]
-
 const COLOR_MAP: Record<string, { bg: string, border: string, badge: string, text: string, dot: string }> = {
     emerald: { bg: 'bg-emerald-50', border: 'border-emerald-200', badge: 'bg-emerald-100 text-emerald-700', text: 'text-emerald-700', dot: 'bg-emerald-500' },
     blue: { bg: 'bg-blue-50', border: 'border-blue-200', badge: 'bg-blue-100 text-blue-700', text: 'text-blue-700', dot: 'bg-blue-500' },
@@ -142,7 +137,6 @@ const COLOR_MAP: Record<string, { bg: string, border: string, badge: string, tex
     amber: { bg: 'bg-amber-50', border: 'border-amber-200', badge: 'bg-amber-100 text-amber-700', text: 'text-amber-700', dot: 'bg-amber-500' },
     stone: { bg: 'bg-stone-50', border: 'border-stone-200', badge: 'bg-stone-200 text-stone-700', text: 'text-stone-700', dot: 'bg-stone-500' },
 }
-
 // ─── Type Detail Card ───
 function TypeDetailCard({ type, compact = false }: { type: typeof COMPANY_TYPES[0], compact?: boolean }) {
     const colors = COLOR_MAP[type.color]
@@ -166,7 +160,6 @@ function TypeDetailCard({ type, compact = false }: { type: typeof COMPANY_TYPES[
         </div>
     )
 }
-
 // ─── Edit Confirmation Modal ───
 function EditConfirmModal({ onConfirm, onCancel }: { onConfirm: () => void, onCancel: () => void }) {
     return (
@@ -203,7 +196,6 @@ function EditConfirmModal({ onConfirm, onCancel }: { onConfirm: () => void, onCa
         </div>
     )
 }
-
 export default function FinancialSettingsForm({ settings, lock, currencies, accounts }: Props) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
@@ -213,7 +205,6 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
             declarationRules: settings.declarationRules || []
         }
     })
-
     const { fields, append, remove } = useFieldArray({
         control,
         name: "declarationRules"
@@ -224,27 +215,21 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
     const [showEditConfirm, setShowEditConfirm] = useState(false)
     const [tradeSubTypesEnabled, setTradeSubTypesEnabled] = useState(false)
     const [tradeTogglePending, setTradeTogglePending] = useState(false)
-
     // Load trade sub-type setting on mount
     useEffect(() => {
         getTradeSubTypeSettings().then(s => setTradeSubTypesEnabled(s?.enabled ?? false)).catch(() => { })
     }, [])
-
     // Settings lock: after save, core fields are locked until user explicitly unlocks
     const [settingsAreSaved, setSettingsAreSaved] = useState(() => {
         // If currency and defaultTaxRate have values, settings were previously saved
         return !!(settings.currency && settings.defaultTaxRate !== undefined && settings.defaultTaxRate !== null)
     })
     const [isUnlocked, setIsUnlocked] = useState(false)
-
     const isCoreFieldsLocked = lock.isLocked || (settingsAreSaved && !isUnlocked)
-
     const companyType = watch('companyType')
     const dualView = watch('dualView')
-
     const selectedType = COMPANY_TYPES.find(t => t.key === companyType)
     const compareTypeObj = COMPANY_TYPES.find(t => t.key === compareType)
-
     // Auto-configure settings when company type changes
     useEffect(() => {
         const type = COMPANY_TYPES.find(t => t.key === companyType)
@@ -254,7 +239,6 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
             })
         }
     }, [companyType, setValue])
-
     const onSubmit = (data: FinancialSettingsState) => {
         startTransition(async () => {
             try {
@@ -267,9 +251,7 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
             }
         })
     }
-
     const [settingsPendingAction, setSettingsPendingAction] = useState<{ type: string; title: string; description: string; variant: 'danger' | 'warning' | 'info' } | null>(null)
-
     const handleRecalculate = () => {
         setSettingsPendingAction({
             type: 'recalculate',
@@ -278,16 +260,13 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
             variant: 'warning',
         })
     }
-
     const handleUnlockRequest = () => {
         setShowEditConfirm(true)
     }
-
     const handleConfirmUnlock = () => {
         setIsUnlocked(true)
         setShowEditConfirm(false)
     }
-
     return (
         <div className="flex gap-6 items-start">
             {/* Edit Confirmation Modal */}
@@ -297,7 +276,6 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                     onCancel={() => setShowEditConfirm(false)}
                 />
             )}
-
             {/* ─── LEFT COLUMN: Main Form ─── */}
             <div className={`space-y-8 transition-all duration-300 ${showCompare ? 'w-1/2 shrink-0' : 'max-w-3xl w-full'}`}>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border border-stone-200">
@@ -317,7 +295,6 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                             </div>
                         </div>
                     )}
-
                     {/* Settings Saved Lock Banner */}
                     {settingsAreSaved && !isUnlocked && !lock.isLocked && (
                         <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg flex gap-3 items-center justify-between">
@@ -342,11 +319,9 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                             </button>
                         </div>
                     )}
-
                     {/* ─── COMPANY TYPE ─── */}
                     <div>
                         <h2 className="text-lg font-medium text-stone-900 mb-4">Core Configuration</h2>
-
                         <div>
                             <div className="flex items-center justify-between mb-1">
                                 <label className="block text-sm font-medium text-stone-700">Company Type</label>
@@ -359,7 +334,6 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                                     {showCompare ? 'Hide Comparison' : 'Compare Types'}
                                 </button>
                             </div>
-
                             <select
                                 {...register('companyType')}
                                 disabled={isCoreFieldsLocked}
@@ -372,17 +346,13 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                             <p className="mt-1 text-xs text-stone-500">
                                 Determines how costs, prices, and taxes are calculated.
                             </p>
-
                             {/* Selected Type Detail */}
                             {selectedType && (
                                 <div className="mt-3">
                                     <TypeDetailCard type={selectedType} />
                                 </div>
                             )}
-
-
                         </div>
-
                         {/* Currency & Tax */}
                         <div className="grid grid-cols-2 gap-4 mt-4">
                             <div>
@@ -415,7 +385,6 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                             </div>
                         </div>
                     </div>
-
                     {/* ─── DUAL VIEW / OFFICIAL ACCESS ─── */}
                     {(dualView || companyType === 'MIXED') && (
                         <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
@@ -425,12 +394,10 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                                 </div>
                                 <h3 className="text-sm font-bold text-amber-900">Dual View Active</h3>
                             </div>
-
                             <p className="text-xs text-amber-700 mb-4 leading-relaxed">
                                 Two scopes are active: <strong>Official</strong> (declared/posted data) and <strong>Internal</strong> (full picture).
                                 The scope toggle appears in the sidebar. Each user has separate credentials for each scope.
                             </p>
-
                             {/* Scope Preview */}
                             <div className="grid grid-cols-2 gap-3 mb-4">
                                 <div className="p-3 bg-white rounded-lg border border-amber-200">
@@ -454,7 +421,6 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                                     </p>
                                 </div>
                             </div>
-
                             {/* Per-User Access Info */}
                             <div className="bg-white rounded-lg border border-amber-200 p-4">
                                 <div className="flex items-center gap-2 mb-2">
@@ -478,7 +444,6 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                                     Manage user scope passwords in HR &amp; Teams → Access Control.
                                 </p>
                             </div>
-
                             {/* --- AUTO-DECLARATION STRATEGY --- */}
                             <div className="mt-4 p-5 bg-white rounded-2xl border border-amber-200 shadow-sm space-y-4">
                                 <div className="flex items-center justify-between">
@@ -496,12 +461,10 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                                         />
                                     </div>
                                 </div>
-
                                 <p className="text-[11px] text-stone-500 leading-relaxed font-medium">
                                     Automate which Sales/POS invoices are routed to the <strong>Official Scope</strong>.
                                     Reduces manual scope toggling during high-speed checkout.
                                 </p>
-
                                 {/* --- STRATEGIC OVERRIDES --- */}
                                 <div className="mt-4 p-5 bg-rose-50/50 rounded-2xl border border-rose-100 space-y-4">
                                     <div className="flex items-center justify-between">
@@ -512,7 +475,6 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                                             <h3 className="text-sm font-black text-rose-900 uppercase tracking-tight">Management Overrides</h3>
                                         </div>
                                     </div>
-
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-rose-200 shadow-sm">
                                             <div className="flex flex-col">
@@ -537,7 +499,6 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                                         </div>
                                     </div>
                                 </div>
-
                                 {/* --- RULES OF ENGAGEMENT --- */}
                                 <div className="mt-4 space-y-4">
                                     <div className="flex items-center justify-between">
@@ -555,7 +516,6 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                                             <Plus size={12} /> Add Rule
                                         </button>
                                     </div>
-
                                     <div className="space-y-3">
                                         {fields.length === 0 && (
                                             <div className="p-8 text-center bg-stone-50 rounded-2xl border-2 border-dashed border-stone-200">
@@ -586,7 +546,6 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                                                         <button onClick={() => remove(index)} className="p-1.5 text-stone-300 hover:text-rose-500 transition-all"><Trash2 size={14} /></button>
                                                     </div>
                                                 </div>
-
                                                 <div className="grid grid-cols-2 gap-6 bg-stone-50/50 p-4 rounded-xl border border-stone-100">
                                                     <div className="space-y-2">
                                                         <label className="text-[9px] font-black text-stone-400 uppercase tracking-widest block">Allowed Payment Methods</label>
@@ -638,7 +597,6 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                                                         <p className="text-[7px] text-stone-300 uppercase font-black">Leave empty to apply to all accounts</p>
                                                     </div>
                                                 </div>
-
                                                 <div className="grid grid-cols-3 gap-3">
                                                     <div className="space-y-1">
                                                         <label className="text-[8px] font-black text-stone-400 uppercase tracking-widest block">Tx Min ($)</label>
@@ -657,7 +615,6 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                                         ))}
                                     </div>
                                 </div>
-
                                 <div className="grid grid-cols-2 gap-4 pt-4 border-t border-stone-100">
                                     <div className="space-y-1.5">
                                         <div className="flex items-center justify-between">
@@ -693,7 +650,6 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                                         </div>
                                     </div>
                                 </div>
-
                                 {/* --- INTEGRITY PROTECTION --- */}
                                 <div className="mt-2 pt-4 border-t border-stone-100 space-y-4">
                                     <div className="flex items-center justify-between">
@@ -712,7 +668,6 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                                             />
                                         </div>
                                     </div>
-
                                     <div className="grid grid-cols-2 gap-6">
                                         <div className="space-y-1.5">
                                             <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest block">Daily Operation Cap ($)</label>
@@ -766,7 +721,6 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                             </div>
                         </div>
                     )}
-
                     {/* ─── CUSTOM FLAGS ─── */}
                     {companyType === 'CUSTOM' && (
                         <div className="p-4 bg-stone-50 rounded-md border border-stone-100">
@@ -791,7 +745,6 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                             </div>
                         </div>
                     )}
-
                     {/* ─── MICRO TAX RULES ─── */}
                     {companyType === 'MICRO' && (
                         <div className="p-4 bg-blue-50 rounded-md border border-blue-100">
@@ -816,7 +769,6 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                             </div>
                         </div>
                     )}
-
                     {/* ─── POSTING RULES ─── */}
                     <div className="p-4 bg-emerald-50 rounded-md border border-emerald-100 flex items-center justify-between">
                         <div className="flex gap-3 items-center">
@@ -836,7 +788,6 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                             Configure Auto-Mapping
                         </button>
                     </div>
-
                     {/* ─── TRADE SUB-TYPES TOGGLE ─── */}
                     <div className="p-4 bg-indigo-50 rounded-md border border-indigo-100 flex items-center justify-between">
                         <div className="flex gap-3 items-center">
@@ -873,7 +824,6 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                                 }`} />
                         </button>
                     </div>
-
                     {/* ─── SUBMIT ─── */}
                     <div className="pt-4 border-t border-stone-200">
                         <button
@@ -885,7 +835,6 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                         </button>
                     </div>
                 </form>
-
                 {/* ─── MAINTENANCE ZONE ─── */}
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-stone-200">
                     <h2 className="text-lg font-medium text-rose-600 mb-4 flex items-center gap-2">
@@ -909,7 +858,6 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                                 {isRecalcPending ? 'Processing...' : 'Recalculate Now'}
                             </button>
                         </div>
-
                         <div className="bg-rose-50 border border-rose-100 rounded-md p-4 flex items-center justify-between">
                             <div>
                                 <h3 className="text-sm font-bold text-rose-900 uppercase tracking-wider">CRITICAL: Fresh Version (Wipe All Data)</h3>
@@ -934,7 +882,6 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                                 {isPending ? 'Wiping...' : 'FRESH VERSION'}
                             </button>
                         </div>
-
                         <div className="bg-emerald-50 border border-emerald-100 rounded-md p-4 flex items-center justify-between">
                             <div>
                                 <h3 className="text-sm font-bold text-emerald-900 uppercase tracking-wider">Fill Real Data (Seed System)</h3>
@@ -962,7 +909,6 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                     </div>
                 </div>
             </div>{/* close left column */}
-
             {/* ─── RIGHT COLUMN: Type Comparison ─── */}
             {showCompare && (
                 <div className="w-1/2 shrink-0 sticky top-6">
@@ -977,7 +923,6 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                                 <X size={14} />
                             </button>
                         </div>
-
                         {/* Two Type Column Headers */}
                         <div className="grid grid-cols-2 border-b border-indigo-100">
                             {/* Current Type Header */}
@@ -1004,7 +949,6 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                                 </select>
                             </div>
                         </div>
-
                         {/* Feature Rows */}
                         <div>
                             {COMPARE_ROWS.map((row, i) => (
@@ -1028,7 +972,6 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                     </div>
                 </div>
             )}
-
             <ConfirmDialog
                 open={settingsPendingAction !== null}
                 onOpenChange={(open) => { if (!open) setSettingsPendingAction(null) }}

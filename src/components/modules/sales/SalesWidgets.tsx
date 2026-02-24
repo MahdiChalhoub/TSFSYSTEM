@@ -1,8 +1,7 @@
 import React from 'react';
-import { ShoppingCart, TrendingUp, DollarSign, Clock } from 'lucide-react';
+import { ShoppingCart, TrendingUp, DollarSign, Clock, ChevronRight } from 'lucide-react';
 import clsx from 'clsx';
 import Link from 'next/link';
-import { ChevronRight } from 'lucide-react';
 
 export const SalesStatsWidget = ({ data }: { data: Record<string, any> }) => {
     const value = data?.totalSales || 0;

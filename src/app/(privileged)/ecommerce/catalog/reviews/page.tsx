@@ -1,6 +1,4 @@
 'use client'
-import { Star } from 'lucide-react'
-
 import { useEffect, useState, useCallback } from 'react'
 import {
     Star, Search, Filter, Trash2, Eye, EyeOff,
@@ -13,7 +11,6 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import Link from 'next/link'
-
 export default function ReviewManagementPage() {
     const [reviews, setReviews] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
@@ -22,7 +19,6 @@ export default function ReviewManagementPage() {
         columns: ['product', 'customer', 'rating', 'title', 'status', 'date', 'actions'],
         pageSize: 25, sortKey: 'created_at', sortDir: 'desc'
     })
-
     const loadReviews = useCallback(async () => {
         setLoading(true)
         try {
@@ -37,9 +33,7 @@ export default function ReviewManagementPage() {
             setLoading(false)
         }
     }, [])
-
     useEffect(() => { loadReviews() }, [loadReviews])
-
     const toggleVisibility = async (review: any) => {
         try {
             const res = await fetch(`/api/client_portal/reviews/${review.id}/`, {
@@ -50,7 +44,6 @@ export default function ReviewManagementPage() {
             if (res.ok) loadReviews()
         } catch (err) { console.error(err) }
     }
-
     const deleteReview = async (id: string) => {
         if (!confirm('Are you sure you want to delete this review?')) return
         try {
@@ -58,7 +51,6 @@ export default function ReviewManagementPage() {
             if (res.ok) loadReviews()
         } catch (err) { console.error(err) }
     }
-
     const columns: ColumnDef<any>[] = [
         {
             key: 'product',
@@ -140,7 +132,6 @@ export default function ReviewManagementPage() {
             )
         }
     ]
-
     return (
         <div className="p-6 space-y-6 max-w-7xl mx-auto">
             <header className="flex justify-between items-end">
@@ -156,7 +147,6 @@ export default function ReviewManagementPage() {
                     </h1>
                 </div>
             </header>
-
             <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden">
                 <CardContent className="p-4">
                     <div className="relative">
@@ -170,7 +160,6 @@ export default function ReviewManagementPage() {
                     </div>
                 </CardContent>
             </Card>
-
             <TypicalListView
                 title="Review Moderation Queue"
                 data={reviews.filter(r =>

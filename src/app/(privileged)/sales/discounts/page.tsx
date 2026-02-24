@@ -1,6 +1,4 @@
 'use client'
-import { Activity, ShieldCheck } from 'lucide-react'
-
 import { useCurrency } from '@/lib/utils/currency'
 import { useState, useEffect, useMemo } from "react"
 import type { DiscountRule, UsageLog, Category, Brand } from '@/types/erp'
@@ -14,23 +12,21 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
     Tag, Plus, Percent, DollarSign, Package, Layers, Calendar,
     History, Edit2, Trash2, X, Check, Power, AlertCircle, ShoppingCart,
-    Tags, RefreshCw, Zap, TrendingUp, Activity, ShieldCheck} from "lucide-react"
+    Activity, ShieldCheck,
+    Tags, RefreshCw, Zap, TrendingUp,} from "lucide-react"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
 import { useListViewSettings } from '@/hooks/useListViewSettings'
-
 const TYPE_CONFIG: Record<string, { label: string; icon: any; color: string; bg: string }> = {
     PERCENTAGE: { label: 'Percentage Off', icon: Percent, color: 'text-blue-600', bg: 'bg-blue-50' },
     FIXED: { label: 'Fixed Amount', icon: DollarSign, color: 'text-emerald-600', bg: 'bg-emerald-50' },
     BUY_X_GET_Y: { label: 'Buy X Get Y', icon: Plus, color: 'text-purple-600', bg: 'bg-purple-50' },
 }
-
 const SCOPE_CONFIG: Record<string, { label: string; icon: any }> = {
     ORDER: { label: 'Entire Order', icon: ShoppingCart },
     PRODUCT: { label: 'Specific Product', icon: Package },
     CATEGORY: { label: 'Category', icon: Layers },
     BRAND: { label: 'Brand', icon: Tag },
 }
-
 export default function DiscountRulesPage() {
     const { fmt } = useCurrency()
     const [rules, setRules] = useState<DiscountRule[]>([])
@@ -44,12 +40,10 @@ export default function DiscountRulesPage() {
     const [usageRuleId, setUsageRuleId] = useState<number | null>(null)
     const [usageLogs, setUsageLogs] = useState<UsageLog[]>([])
     const [loadingLogs, setLoadingLogs] = useState(false)
-
     // Lookup data
     const [products, setProducts] = useState<Record<string, any>[]>([])
     const [categories, setCategories] = useState<Category[]>([])
     const [brands, setBrands] = useState<Brand[]>([])
-
     const [form, setForm] = useState({
         name: '', code: '', discount_type: 'PERCENTAGE', scope: 'ORDER',
         value: '0', max_discount: '', min_order_amount: '', min_quantity: '',
@@ -57,9 +51,7 @@ export default function DiscountRulesPage() {
         is_active: true, auto_apply: false,
         start_date: '', end_date: '', usage_limit: '', priority: '0'
     })
-
     useEffect(() => { loadData(); loadLookups() }, [])
-
     async function loadData() {
         setLoading(true)
         try {
@@ -72,7 +64,6 @@ export default function DiscountRulesPage() {
             setLoading(false)
         }
     }
-
     async function loadLookups() {
         try {
             const { erpFetch } = await import("@/lib/erp-api")
@@ -86,7 +77,6 @@ export default function DiscountRulesPage() {
             setBrands(Array.isArray(b) ? b : b.results || [])
         } catch (e) { console.error("Lookup load failed", e) }
     }
-
     async function viewUsage(id: number) {
         setUsageRuleId(id)
         setLoadingLogs(true)
@@ -97,7 +87,6 @@ export default function DiscountRulesPage() {
         } catch { toast.error("Failed to load redemption logs") }
         finally { setLoadingLogs(false) }
     }
-
     async function toggleRule(id: number) {
         try {
             const { erpFetch } = await import("@/lib/erp-api")
@@ -106,7 +95,6 @@ export default function DiscountRulesPage() {
             await loadData()
         } catch { toast.error("Failed to toggle rule") }
     }
-
     function startEdit(rule: Record<string, any>) {
         setEditId(rule.id)
         setForm({
@@ -130,7 +118,6 @@ export default function DiscountRulesPage() {
         })
         setShowForm(true)
     }
-
     function startCreate() {
         setEditId(null)
         setForm({
@@ -142,7 +129,6 @@ export default function DiscountRulesPage() {
         })
         setShowForm(true)
     }
-
     async function handleSave() {
         if (!form.name.trim()) { toast.error("Rule designation is required"); return }
         try {
@@ -161,7 +147,6 @@ export default function DiscountRulesPage() {
                 start_date: form.start_date || null,
                 end_date: form.end_date || null,
             }
-
             if (editId) {
                 await erpFetch(`pos/discount-rules/${editId}/`, { method: 'PATCH', body: JSON.stringify(payload) })
                 toast.success("Rule configuration updated")
@@ -173,9 +158,7 @@ export default function DiscountRulesPage() {
             await loadData()
         } catch { toast.error("Failed to commit rule configuration") }
     }
-
     const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
-
     async function handleDelete() {
         if (deleteTarget === null) return
         try {
@@ -186,7 +169,6 @@ export default function DiscountRulesPage() {
         } catch { toast.error("Failed to delete rule") }
         setDeleteTarget(null)
     }
-
     const columns: ColumnDef<any>[] = useMemo(() => [
         {
             key: 'name',
@@ -291,7 +273,6 @@ export default function DiscountRulesPage() {
             )
         }
     ], [fmt])
-
     if (loading && rules.length === 0) {
         return (
             <div className="p-6 space-y-6 max-w-7xl mx-auto">
@@ -301,7 +282,6 @@ export default function DiscountRulesPage() {
             </div>
         )
     }
-
     return (
         <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
             <header className="flex justify-between items-center">
@@ -323,7 +303,6 @@ export default function DiscountRulesPage() {
                     </Button>
                 </div>
             </header>
-
             {/* Tactical KPIs */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden group">
@@ -375,7 +354,6 @@ export default function DiscountRulesPage() {
                     </CardContent>
                 </Card>
             </div>
-
             {/* Rule Form Overlay */}
             {showForm && (
                 <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-in fade-in zoom-in duration-300">
@@ -426,7 +404,6 @@ export default function DiscountRulesPage() {
                                         </div>
                                     </div>
                                 </div>
-
                                 {/* Section 2: Application Scope */}
                                 <div className="space-y-6">
                                     <div className="space-y-4">
@@ -450,7 +427,6 @@ export default function DiscountRulesPage() {
                                                 <Input type="number" value={form.priority} onChange={e => setForm({ ...form, priority: e.target.value })} className="h-10 rounded-xl" />
                                             </div>
                                         </div>
-
                                         {form.scope === 'PRODUCT' && (
                                             <div>
                                                 <label className="text-[10px] font-black uppercase text-stone-400 mb-1.5 block">Target Entity</label>
@@ -463,7 +439,6 @@ export default function DiscountRulesPage() {
                                             </div>
                                         )}
                                         {/* (Other scopes similarly logicized ...) */}
-
                                         <div className="grid grid-cols-2 gap-3">
                                             <div>
                                                 <label className="text-[10px] font-black uppercase text-stone-400 mb-1.5 block">Threshold Amnt</label>
@@ -476,7 +451,6 @@ export default function DiscountRulesPage() {
                                         </div>
                                     </div>
                                 </div>
-
                                 {/* Section 3: Temporal & Logic */}
                                 <div className="space-y-6">
                                     <div className="space-y-4">
@@ -510,7 +484,6 @@ export default function DiscountRulesPage() {
                                     </div>
                                 </div>
                             </div>
-
                             <div className="flex justify-end gap-3 mt-12 pt-8 border-t border-stone-50">
                                 <Button onClick={() => setShowForm(false)} variant="ghost" className="h-12 px-8 rounded-2xl font-black text-stone-400 uppercase tracking-widest text-[10px]">Abandon</Button>
                                 <Button onClick={handleSave} className="h-12 px-10 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-black uppercase tracking-widest text-xs shadow-lg shadow-amber-100 gap-2 transition-all hover:scale-[1.02]">
@@ -521,7 +494,6 @@ export default function DiscountRulesPage() {
                     </Card>
                 </div>
             )}
-
             <TypicalListView
                 title="Rule Orchestration Stream"
                 data={rules}
@@ -545,7 +517,6 @@ export default function DiscountRulesPage() {
                     </div>
                 }
             />
-
             {/* Redemption Logs Sidebar */}
             {usageRuleId && (
                 <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-[60] flex justify-end">
@@ -561,7 +532,6 @@ export default function DiscountRulesPage() {
                                 <X size={24} />
                             </Button>
                         </header>
-
                         <div className="flex-1 overflow-y-auto p-8">
                             {loadingLogs ? (
                                 <div className="space-y-6">
@@ -596,7 +566,6 @@ export default function DiscountRulesPage() {
                     </div>
                 </div>
             )}
-
             <ConfirmDialog
                 open={deleteTarget !== null}
                 onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}

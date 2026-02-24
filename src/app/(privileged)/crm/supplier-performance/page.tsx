@@ -1,9 +1,6 @@
 'use client'
-import { Star } from 'lucide-react'
-
 import { useCurrency } from '@/lib/utils/currency'
 import { safeDateSort } from '@/lib/utils/safe-date'
-
 import { useState, useEffect, useMemo } from "react"
 import { Contact } from "@/types/erp"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,16 +12,13 @@ import { toast } from "sonner"
 import {
     Truck, DollarSign, Package, Star, Search, TrendingUp, Clock
 , Award } from "lucide-react"
-
 export default function SupplierPerformancePage() {
     const { fmt } = useCurrency()
     const [suppliers, setSuppliers] = useState<Contact[]>([])
     const [orders, setOrders] = useState<Record<string, unknown>[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
-
     useEffect(() => { loadData() }, [])
-
     async function loadData() {
         setLoading(true)
         try {
@@ -42,7 +36,6 @@ export default function SupplierPerformancePage() {
             setLoading(false)
         }
     }
-
     // Enrich suppliers with their order stats
     const enriched = useMemo(() => {
         return suppliers.map(s => {
@@ -53,7 +46,6 @@ export default function SupplierPerformancePage() {
             const completedOrders = sOrders.filter(o => o.status === 'COMPLETED')
             const completionRate = sOrders.length > 0 ? (completedOrders.length / sOrders.length * 100) : 0
             const lastOrder = sOrders.sort((a: Record<string, any>, b: Record<string, any>) => (safeDateSort(b.created_at)) - (safeDateSort(a.created_at)))[0]
-
             return {
                 ...s,
                 orderCount: sOrders.length,
@@ -65,7 +57,6 @@ export default function SupplierPerformancePage() {
             }
         }).sort((a, b) => b.totalSpent - a.totalSpent)
     }, [suppliers, orders])
-
     const filtered = useMemo(() => {
         if (!search) return enriched
         const s = search.toLowerCase()
@@ -74,12 +65,10 @@ export default function SupplierPerformancePage() {
             (sup.email || '').toLowerCase().includes(s)
         )
     }, [enriched, search])
-
     const totalPurchaseValue = enriched.reduce((s, sup) => s + sup.totalSpent, 0)
     const activeSuppliers = enriched.filter(s => s.orderCount > 0).length
     const avgCompletionRate = enriched.length > 0
         ? enriched.reduce((s, sup) => s + sup.completionRate, 0) / enriched.length : 0
-
     if (loading) {
         return (
             <div className="p-6 space-y-6">
@@ -89,7 +78,6 @@ export default function SupplierPerformancePage() {
             </div>
         )
     }
-
     return (
         <div className="p-6 space-y-6">
             <header className="flex items-center justify-between">
@@ -107,7 +95,6 @@ export default function SupplierPerformancePage() {
                     <Input placeholder="Search suppliers..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-9" />
                 </div>
             </header>
-
             <div className="grid grid-cols-4 gap-4">
                 <Card className="border-l-4 border-l-teal-500 bg-gradient-to-r from-teal-50 to-white">
                     <CardContent className="py-4">
@@ -154,7 +141,6 @@ export default function SupplierPerformancePage() {
                     </CardContent>
                 </Card>
             </div>
-
             <Card>
                 <CardContent className="p-0">
                     {filtered.length === 0 ? (

@@ -1,5 +1,4 @@
 'use client';
-
 import React, { useState } from 'react';
 import { ShieldCheck, ShieldAlert, Loader2, QrCode, CheckCircle2, X, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,14 +6,12 @@ import { Input } from '@/components/ui/input';
 import { setup2FAAction, verify2FAAction, disable2FAAction } from '@/app/actions/auth';
 import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'sonner';
-
 export function TwoFactorSettings({ initialEnabled }: { initialEnabled: boolean }) {
     const [enabled, setEnabled] = useState(initialEnabled);
     const [step, setStep] = useState<'IDLE' | 'SETUP'>('IDLE');
     const [setupData, setSetupData] = useState<{ secret: string, otp_uri: string } | null>(null);
     const [token, setToken] = useState("");
     const [loading, setLoading] = useState(false);
-
     const handleStartSetup = async () => {
         setLoading(true);
         try {
@@ -28,7 +25,6 @@ export function TwoFactorSettings({ initialEnabled }: { initialEnabled: boolean 
             setLoading(false);
         }
     };
-
     const handleVerify = async () => {
         if (!token) return;
         setLoading(true);
@@ -44,11 +40,9 @@ export function TwoFactorSettings({ initialEnabled }: { initialEnabled: boolean 
             setLoading(false);
         }
     };
-
     const handleDisable = async () => {
         const confirmToken = prompt("Please enter a verification code from your device to disable 2FA:");
         if (!confirmToken) return;
-
         setLoading(true);
         try {
             await disable2FAAction(confirmToken);
@@ -60,7 +54,6 @@ export function TwoFactorSettings({ initialEnabled }: { initialEnabled: boolean 
             setLoading(false);
         }
     };
-
     return (
         <div className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm transition-all overflow-hidden">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -77,7 +70,6 @@ export function TwoFactorSettings({ initialEnabled }: { initialEnabled: boolean 
                         </p>
                     </div>
                 </div>
-
                 {!enabled && step === 'IDLE' && (
                     <Button
                         onClick={handleStartSetup}
@@ -87,7 +79,6 @@ export function TwoFactorSettings({ initialEnabled }: { initialEnabled: boolean 
                         {loading ? <Loader2 className="animate-spin" /> : "Initialize 2FA"}
                     </Button>
                 )}
-
                 {enabled && (
                     <Button
                         variant="outline"
@@ -99,7 +90,6 @@ export function TwoFactorSettings({ initialEnabled }: { initialEnabled: boolean 
                     </Button>
                 )}
             </div>
-
             {step === 'SETUP' && setupData && (
                 <div className="mt-8 p-10 bg-slate-50 rounded-[2.5rem] border border-slate-100 animate-in zoom-in-95 duration-500">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
@@ -113,11 +103,9 @@ export function TwoFactorSettings({ initialEnabled }: { initialEnabled: boolean 
                                     Open your authenticator app (e.g., Google Authenticator, Authy, or Microsoft Authenticator) and scan this QR code.
                                 </p>
                             </div>
-
                             <div className="bg-white p-8 rounded-[2rem] flex justify-center border border-gray-100 shadow-sm w-fit mx-auto lg:ml-11">
                                 <QRCodeSVG value={setupData.otp_uri} size={180} />
                             </div>
-
                             <div className="space-y-3 pl-11">
                                 <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Manual Setup Key</p>
                                 <div className="flex items-center gap-2">
@@ -127,7 +115,6 @@ export function TwoFactorSettings({ initialEnabled }: { initialEnabled: boolean 
                                 </div>
                             </div>
                         </div>
-
                         <div className="space-y-8">
                             <div className="space-y-3">
                                 <div className="flex items-center gap-3">
@@ -138,7 +125,6 @@ export function TwoFactorSettings({ initialEnabled }: { initialEnabled: boolean 
                                     Enter the 6-digit verification code showing in your authenticator app to finalize the link.
                                 </p>
                             </div>
-
                             <div className="space-y-6 pl-11">
                                 <Input
                                     placeholder="0 0 0 0 0 0"

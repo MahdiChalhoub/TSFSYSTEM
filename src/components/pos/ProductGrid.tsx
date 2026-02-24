@@ -1,5 +1,4 @@
 'use client';
-
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Product } from "@/types/erp";
 import { getPosProducts } from '@/app/(privileged)/sales/actions';
@@ -8,10 +7,8 @@ import { AlertCircle, Loader2, PackageX, WifiOff, Zap, TrendingUp, TrendingDown,
 import { cacheProducts, getCachedProducts, type OfflineProduct } from '@/lib/offline/db';
 import { useOnlineStatus } from '@/lib/offline/hooks';
 import { Badge } from "@/components/ui/badge";
-
 const ITEMS_PER_LOAD = 50; // Load 50 products at a time
 const SEARCH_DEBOUNCE_MS = 300; // Wait 300ms after user stops typing
-
 export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '$', variant = 'default' }: {
     searchQuery: string,
     onAddToCart: (p: Record<string, any>) => void,
@@ -25,27 +22,22 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
     const [hasMore, setHasMore] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [offlineMode, setOfflineMode] = useState(false);
-
     const { isOnline } = useOnlineStatus();
     const observerTarget = useRef<HTMLDivElement>(null);
     const searchTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
     const productsCountRef = useRef(0);
     const hasMoreRef = useRef(true);
     const loadingMoreRef = useRef(false);
-
     // Sync refs with state
     useEffect(() => {
         productsCountRef.current = products.length;
     }, [products.length]);
-
     useEffect(() => {
         hasMoreRef.current = hasMore;
     }, [hasMore]);
-
     useEffect(() => {
         loadingMoreRef.current = loadingMore;
     }, [loadingMore]);
-
     // Cache products to IndexedDB after successful fetch
     const cacheToOffline = useCallback(async (data: Record<string, any>[]) => {
         try {
@@ -65,7 +57,6 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
             console.warn('Failed to cache products offline:', e);
         }
     }, []);
-
     // Load from IndexedDB cache when offline
     const loadFromCache = useCallback(async () => {
         try {
@@ -91,11 +82,9 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
         }
         return false;
     }, []);
-
     // Load products with combined filters
     const loadProducts = useCallback(async (query: string, catId: number | null | undefined, isLoadMore = false) => {
         if (isLoadMore && (!hasMoreRef.current || loadingMoreRef.current)) return;
-
         try {
             if (isLoadMore) setLoadingMore(true);
             else {
@@ -103,14 +92,12 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
                 setProducts([]); // Clear for immediate feedback
             }
             setError(null);
-
             const data = await getPosProducts({
                 search: query,
                 limit: ITEMS_PER_LOAD,
                 offset: isLoadMore ? productsCountRef.current : 0,
                 categoryId: catId ?? undefined
             });
-
             if (isLoadMore) {
                 setProducts(prev => [...prev, ...data]);
                 setHasMore(data.length >= ITEMS_PER_LOAD);
@@ -131,7 +118,6 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
             setLoadingMore(false);
         }
     }, [hasMore, loadingMore, cacheToOffline, loadFromCache]);
-
     // Handle search and category changes with debounce
     useEffect(() => {
         if (searchQuery) {
@@ -143,12 +129,10 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
         } else {
             loadProducts('', categoryId);
         }
-
         return () => {
             if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
         };
     }, [searchQuery, categoryId]); // Removed loadProducts to prevent infinite loops
-
     // Infinite scroll observer
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -159,16 +143,13 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
             },
             { threshold: 0.1 }
         );
-
         if (observerTarget.current) observer.observe(observerTarget.current);
         return () => observer.disconnect();
     }, [hasMore, loading, loadingMore, searchQuery, categoryId, loadProducts]);
-
     // Velocity Calculator (Fake for Intelligence Mode Demo)
     const getVelocityBadge = (id: number) => {
         const velocities = ['HIGH', 'MEDIUM', 'LOW', 'STABLE'];
         const vel = velocities[id % 4];
-
         switch (vel) {
             case 'HIGH': return <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[7px] font-black tracking-widest gap-1"><TrendingUp size={8} /> FAST</Badge>;
             case 'MEDIUM': return <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/20 text-[7px] font-black tracking-widest gap-1"><Activity size={8} /> STEADY</Badge>;
@@ -176,7 +157,6 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
             default: return <Badge className="bg-slate-500/10 text-slate-500 border-slate-500/20 text-[7px] font-black tracking-widest opacity-50">STABLE</Badge>;
         }
     };
-
     // Retry handler
     const retry = () => {
         setError(null);
@@ -191,7 +171,6 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
             })
             .finally(() => setLoading(false));
     };
-
     // Loading state
     if (loading && products.length === 0) {
         return (
@@ -202,7 +181,6 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
             </div>
         );
     }
-
     // Error state
     if (error && products.length === 0) {
         return (
@@ -221,7 +199,6 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
             </div>
         );
     }
-
     // Empty state
     if (products.length === 0 && !loading) {
         return (
@@ -239,7 +216,6 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
             </div>
         );
     }
-
     return (
         <div className="space-y-4">
             {/* Offline Mode Banner */}
@@ -250,7 +226,6 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
                     <span className="text-amber-600">— Showing cached products. Orders will sync when you reconnect.</span>
                 </div>
             )}
-
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                 {products.map(product => (
                     <div
@@ -261,7 +236,6 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
                         <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-all duration-500 scale-50 group-hover:scale-100">
                             <Zap size={16} className="text-indigo-400 fill-indigo-400 animate-pulse" />
                         </div>
-
                         <div className="relative z-10">
                             <div className="flex justify-between items-start mb-2">
                                 <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-[10px] font-black group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
@@ -272,7 +246,6 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
                             <h3 className="font-bold text-gray-900 leading-tight line-clamp-2 text-[11px] tracking-tight mb-0.5 group-hover:text-indigo-600 transition-colors uppercase italic">{product.name}</h3>
                             <p className="text-[8px] font-black text-gray-300 uppercase tracking-widest leading-none">{product.sku || 'SKU-NONE'}</p>
                         </div>
-
                         <div className="flex justify-between items-end mt-2 pt-2 border-t border-gray-50 relative z-10">
                             <div className="flex flex-col">
                                 <span className="text-[8px] font-black text-gray-400 uppercase tracking-tighter">Price</span>
@@ -287,7 +260,6 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
                     </div>
                 ))}
             </div>
-
             {/* Infinite Scroll Target */}
             {hasMore && (
                 <div ref={observerTarget} className="flex justify-center py-8">
@@ -299,7 +271,6 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
                     )}
                 </div>
             )}
-
             {/* End of catalog indicator */}
             {!hasMore && products.length > 0 && (
                 <div className="text-center py-6 text-sm text-gray-400">

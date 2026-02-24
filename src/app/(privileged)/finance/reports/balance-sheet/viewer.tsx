@@ -1,11 +1,9 @@
 'use client'
-
 import { useState, useTransition, useMemo, useEffect } from 'react'
 import { getBalanceSheetReport } from '@/app/actions/finance/accounts'
 import { Printer, Calendar, ShieldCheck, Landmark, PieChart, ChevronRight, ChevronDown, Target, AlertTriangle, X, Search, Sparkles } from 'lucide-react'
 import { diagnoseFinancialDiscrepancy, healLedgerResidues } from '@/app/actions/finance/diagnostics'
 import { useRouter } from 'next/navigation'
-
 export default function BalanceSheetViewer({ initialData, fiscalYears }: { initialData: Record<string, any>, fiscalYears: Record<string, any>[] }) {
     const [asOfDate, setAsOfDate] = useState(new Date().toISOString().split('T')[0])
     const [data, setData] = useState(initialData)
@@ -15,11 +13,9 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
     const [mounted, setMounted] = useState(false)
     const [isHealing, setIsHealing] = useState(false)
     const router = useRouter()
-
     useEffect(() => {
         setMounted(true)
     }, [])
-
     const handleRefresh = () => {
         const dateObj = new Date(asOfDate)
         if (isNaN(dateObj.getTime())) {
@@ -30,18 +26,15 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
             setData(report)
         })
     }
-
     const runDiagnostics = async () => {
         const issues = await diagnoseFinancialDiscrepancy()
         setDiagnostics(issues)
     }
-
     useEffect(() => {
         if (showDiagnostics) {
             runDiagnostics()
         }
     }, [showDiagnostics])
-
     const handleAction = async (issue: Record<string, any>) => {
         if (issue.action === 'HEAL_RESIDUE') {
             setIsHealing(true)
@@ -53,17 +46,14 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
             router.push(issue.action)
         }
     }
-
     const { assets, liabilities, equity, totalAssets, totalLiabEq } = useMemo(() => {
         const accounts = data.accounts as any[]
         const ass = accounts.filter(a => a.type === 'ASSET' && !a.parentId).sort((a, b) => a.code.localeCompare(b.code))
         const liab = accounts.filter(a => a.type === 'LIABILITY' && !a.parentId).sort((a, b) => a.code.localeCompare(b.code))
         const eq = accounts.filter(a => a.type === 'EQUITY' && !a.parentId).sort((a, b) => a.code.localeCompare(b.code))
-
         const totalAss = ass.reduce((sum, a) => sum + a.balance, 0)
         const totalLiab = liab.reduce((sum, a) => sum + a.balance, 0)
         const totalEq = eq.reduce((sum, a) => sum + a.balance, 0) + data.netProfit
-
         return {
             assets: ass,
             liabilities: liab,
@@ -72,14 +62,11 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
             totalLiabEq: totalLiab + totalEq
         }
     }, [data])
-
     const isBalanced = Math.abs(totalAssets - totalLiabEq) < 0.01
-
     const formatAmount = (val: number) => {
         if (!mounted) return val.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")
         return val.toLocaleString(undefined, { minimumFractionDigits: 2 })
     }
-
     return (
         <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-700">
             {/* Controls */}
@@ -104,7 +91,6 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
                         {isPending ? 'Revaluing...' : 'Generate Statement'}
                     </button>
                 </div>
-
                 <div className="flex gap-2">
                     <button
                         onClick={() => window.print()}
@@ -114,7 +100,6 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
                     </button>
                 </div>
             </div>
-
             {/* Health Status */}
             {!isPending && (
                 <div className={`p-4 rounded-xl border flex items-center justify-between gap-4 ${isBalanced ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-rose-50 border-rose-100 text-rose-800'}`}>
@@ -135,10 +120,8 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
                     )}
                 </div>
             )}
-
             {/* Main Statement Content */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-
                 {/* Left Side: ASSETS */}
                 <div className="bg-white rounded-3xl shadow-xl shadow-stone-100 border border-stone-200 overflow-hidden">
                     <div className="bg-stone-900 p-6 text-white flex items-center gap-3">
@@ -161,7 +144,6 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
                         </tfoot>
                     </table>
                 </div>
-
                 {/* Right Side: LIABILITIES & EQUITY */}
                 <div className="space-y-8">
                     {/* Liabilities */}
@@ -178,7 +160,6 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
                             </tbody>
                         </table>
                     </div>
-
                     {/* Equity */}
                     <div className="bg-white rounded-3xl shadow-xl shadow-stone-100 border border-stone-200 overflow-hidden">
                         <div className="bg-stone-700 p-6 text-white flex items-center gap-3">
@@ -214,13 +195,10 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
                         </table>
                     </div>
                 </div>
-
             </div>
-
             <div className="text-center py-10 opacity-30 text-[10px] font-bold uppercase tracking-[0.3em] font-mono">
                 {mounted && `Institutional Financial Integrity Header • ${new Date().toLocaleDateString()}`}
             </div>
-
             {/* Diagnostics Modal */}
             {showDiagnostics && (
                 <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -237,7 +215,6 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
                                 <X size={20} />
                             </button>
                         </div>
-
                         <div className="p-8 max-h-[60vh] overflow-y-auto space-y-4">
                             {diagnostics.length === 0 ? (
                                 <div className="text-center py-10 space-y-4">
@@ -274,7 +251,6 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
                                     </div>
                                 ))
                             )}
-
                             {/* Standard Education Guide */}
                             <div className="mt-8 p-6 bg-stone-50 rounded-2xl border border-stone-200">
                                 <h4 className="font-bold text-xs uppercase tracking-widest text-stone-400 mb-4">Standard Resolution Guide</h4>
@@ -294,7 +270,6 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
                                 </ul>
                             </div>
                         </div>
-
                         <div className="p-6 bg-stone-50 border-t border-stone-100 flex justify-end">
                             <button
                                 onClick={() => setShowDiagnostics(false)}
@@ -309,14 +284,11 @@ export default function BalanceSheetViewer({ initialData, fiscalYears }: { initi
         </div>
     )
 }
-
 function ReportRow({ account, level, allAccounts, formatAmount }: Record<string, any>) {
     const [expanded, setExpanded] = useState(level < 1)
     const isParent = account.children && account.children.length > 0
     const hasBalance = Math.abs(account.balance) > 0.001
-
     if (!hasBalance && !isParent) return null
-
     return (
         <>
             <tr className={`group transition-colors ${isParent ? 'bg-stone-50/40 font-bold' : 'hover:bg-stone-50/30'}`}>

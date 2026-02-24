@@ -1,6 +1,4 @@
 'use client'
-import { ShieldCheck } from 'lucide-react'
-
 import { useState, useMemo } from 'react'
 import {
     Search,
@@ -21,13 +19,11 @@ import { useCart } from '../../engine/hooks/useCart'
 import type { HomePageProps } from '../../engine/types'
 import EmporiumProductCard from './ProductCard'
 import Link from 'next/link'
-
 export default function EmporiumHomePage({ products = [], categories = [] }: HomePageProps) {
     const { orgName, slug, config } = useConfig()
     const [search, setSearch] = useState('')
     const [layout, setLayout] = useState<'grid' | 'compact'>('grid')
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-
     const filtered = useMemo(() => {
         return products.filter(p => {
             const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.sku?.toLowerCase().includes(search.toLowerCase())
@@ -35,7 +31,6 @@ export default function EmporiumHomePage({ products = [], categories = [] }: Hom
             return matchSearch && matchCat
         })
     }, [products, search, selectedCategory])
-
     return (
         <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
             {/* Value Props Bar */}
@@ -46,10 +41,8 @@ export default function EmporiumHomePage({ products = [], categories = [] }: Hom
                     <div className="flex items-center gap-2"><Zap size={12} className="text-orange-400" /> Flash Deals: Up to 70% Off Today</div>
                 </div>
             </div>
-
             <main className="max-w-7xl mx-auto px-4 py-8 lg:px-6">
                 <div className="flex flex-col lg:flex-row gap-8">
-
                     {/* Left Sidebar — Marketplace Navigation */}
                     <aside className="hidden lg:block w-72 shrink-0 space-y-6">
                         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -77,7 +70,6 @@ export default function EmporiumHomePage({ products = [], categories = [] }: Hom
                                 ))}
                             </nav>
                         </div>
-
                         {/* Marketplace Promo Card */}
                         <div className="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-2xl p-6 text-white overflow-hidden relative group">
                             <Sparkles className="absolute -right-2 -top-2 w-24 h-24 text-white/10 rotate-12 group-hover:scale-110 transition-transform" />
@@ -88,7 +80,6 @@ export default function EmporiumHomePage({ products = [], categories = [] }: Hom
                             </button>
                         </div>
                     </aside>
-
                     {/* Main Content Area */}
                     <div className="flex-1 space-y-6">
                         {/* Search & Orientation Bar */}
@@ -126,7 +117,6 @@ export default function EmporiumHomePage({ products = [], categories = [] }: Hom
                                 </button>
                             </div>
                         </div>
-
                         {/* Results Heading */}
                         <div className="flex items-center justify-between">
                             <div className="space-y-1">
@@ -139,7 +129,6 @@ export default function EmporiumHomePage({ products = [], categories = [] }: Hom
                                 </p>
                             </div>
                         </div>
-
                         {/* Product Grid / Empty State */}
                         {filtered.length === 0 ? (
                             <div className="bg-white rounded-3xl border border-slate-200 p-20 text-center space-y-4">
@@ -166,7 +155,6 @@ export default function EmporiumHomePage({ products = [], categories = [] }: Hom
                                 ))}
                             </div>
                         )}
-
                         {/* Marketplace Pager — Future Implementation */}
                         <div className="flex justify-center pt-8 pb-12">
                             <div className="bg-white rounded-2xl border border-slate-200 p-1.5 flex gap-1 shadow-sm">
@@ -182,7 +170,6 @@ export default function EmporiumHomePage({ products = [], categories = [] }: Hom
                     </div>
                 </div>
             </main>
-
             {/* Sticky Mobile Navbar */}
             <div className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-sm bg-slate-900/90 backdrop-blur-xl rounded-2xl border border-white/10 p-2 flex justify-between items-center shadow-2xl z-50">
                 <button className="flex-1 py-3 text-white flex flex-col items-center gap-1">

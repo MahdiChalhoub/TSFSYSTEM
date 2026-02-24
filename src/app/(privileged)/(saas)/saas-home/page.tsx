@@ -1,5 +1,4 @@
 ﻿import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Activity, ShieldCheck } from 'lucide-react'
 import {
     Activity,
     Plus,
@@ -14,18 +13,15 @@ import {
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { getSaasStats } from "./actions";
-
 export default async function SaasMasterDashboard() {
     let stats: any = {};
     try { stats = await getSaasStats(); } catch { }
-
     const quickStats = [
         { label: "Provisioned Tenants", value: stats?.tenants || "0", icon: Building, color: "emerald", trend: "Stable" },
         { label: "Pending Registrations", value: stats?.pendingRegistrations || "0", icon: Activity, color: "amber", trend: "Review Required", href: "/organizations/registrations" },
         { label: "Module Registries", value: stats?.modules || "0", icon: Database, color: "purple", trend: "Global" },
         { label: "Module Deployments", value: stats?.deployments || "0", icon: Zap, color: "orange", trend: "Active" },
     ];
-
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             {/* Header Section */}
@@ -57,7 +53,6 @@ export default async function SaasMasterDashboard() {
                     </Link>
                 </div>
             </div>
-
             {/* Quick Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {quickStats.map((stat, i) => {
@@ -80,7 +75,6 @@ export default async function SaasMasterDashboard() {
                             </CardContent>
                         </Card>
                     );
-
                     if (stat.label.includes("Module") || stat.href) {
                         return (
                             <Link href={stat.href || "/modules"} key={i} className="block group">
@@ -88,11 +82,9 @@ export default async function SaasMasterDashboard() {
                             </Link>
                         );
                     }
-
                     return <div key={i}>{CardComponent}</div>;
                 })}
             </div>
-
             {/* Main Content Area */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Recent Provisioning */}
@@ -134,7 +126,6 @@ export default async function SaasMasterDashboard() {
                         </div>
                     </CardContent>
                 </Card>
-
                 {/* Quick Actions */}
                 <Card className="bg-white border-gray-100 rounded-[2.5rem] shadow-xl relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-8 opacity-10 text-gray-200">

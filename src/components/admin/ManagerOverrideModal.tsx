@@ -1,10 +1,8 @@
 'use client'
-
 import React, { useState } from 'react'
 import { ShieldAlert, X, ShieldCheck, Loader2 } from 'lucide-react'
 import { verifyManagerOverride } from '@/app/actions/overrides'
 import { toast } from 'sonner'
-
 interface ManagerOverrideModalProps {
     isOpen: boolean
     onClose: () => void
@@ -15,7 +13,6 @@ interface ManagerOverrideModalProps {
     title?: string
     description?: string
 }
-
 export default function ManagerOverrideModal({
     isOpen,
     onClose,
@@ -29,16 +26,12 @@ export default function ManagerOverrideModal({
     const [pin, setPin] = useState('')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
-
     if (!isOpen) return null
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (pin.length < 4) return
-
         setLoading(true)
         setError(null)
-
         try {
             const result = await verifyManagerOverride(pin, action, orderId, details)
             if (result.verified) {
@@ -55,13 +48,11 @@ export default function ManagerOverrideModal({
             setLoading(false)
         }
     }
-
     const handlePinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value.replace(/\D/g, '').slice(0, 6)
         setPin(val)
         if (error) setError(null)
     }
-
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in duration-200">
@@ -77,10 +68,8 @@ export default function ManagerOverrideModal({
                             <X size={20} />
                         </button>
                     </div>
-
                     <h3 className="text-xl font-bold text-gray-900">{title}</h3>
                     <p className="text-sm text-gray-500 mt-1 mb-6">{description}</p>
-
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
                             <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
@@ -101,7 +90,6 @@ export default function ManagerOverrideModal({
                                 <p className="text-xs text-red-600 mt-2 text-center font-medium animate-bounce">{error}</p>
                             )}
                         </div>
-
                         <button
                             type="submit"
                             disabled={loading || pin.length < 4}
@@ -121,7 +109,6 @@ export default function ManagerOverrideModal({
                         </button>
                     </form>
                 </div>
-
                 <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
                     <div className="flex items-center gap-2 text-[10px] text-gray-400 font-medium">
                         <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />

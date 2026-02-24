@@ -1,12 +1,9 @@
 'use client'
-import { Star } from 'lucide-react'
-
 /**
  * MCP AI Providers - Configuration Page
  * ======================================
  * Add and manage AI providers (OpenAI, Claude, Gemini, etc.)
  */
-
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
@@ -39,7 +36,6 @@ import {
     getMCPProviders, createMCPProvider, updateMCPProvider,
     deleteMCPProvider, testMCPProvider, setDefaultProvider
 } from '@/app/actions/saas/mcp'
-
 interface Provider {
     id: number
     name: string
@@ -54,7 +50,6 @@ interface Provider {
     last_tested_at: string | null
     last_test_success: boolean
 }
-
 const PROVIDER_TYPES = [
     { value: 'openai', label: 'OpenAI', models: ['gpt-4', 'gpt-4-turbo', 'gpt-3.5-turbo'] },
     { value: 'anthropic', label: 'Anthropic (Claude)', models: ['claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307'] },
@@ -63,7 +58,6 @@ const PROVIDER_TYPES = [
     { value: 'ollama', label: 'Ollama (Local)', models: ['llama2', 'mistral', 'codellama'] },
     { value: 'custom', label: 'Custom API', models: [] },
 ]
-
 const emptyProvider = {
     name: '',
     provider_type: 'openai',
@@ -74,7 +68,6 @@ const emptyProvider = {
     temperature: 0.7,
     timeout_seconds: 30
 }
-
 export default function MCPProvidersPage() {
     const [providers, setProviders] = useState<Provider[]>([])
     const [loading, setLoading] = useState(true)
@@ -85,11 +78,9 @@ export default function MCPProvidersPage() {
     const [testing, setTesting] = useState<number | null>(null)
     const [showApiKey, setShowApiKey] = useState(false)
     const [deleteProviderId, setDeleteProviderId] = useState<number | null>(null)
-
     useEffect(() => {
         loadData()
     }, [])
-
     async function loadData() {
         setLoading(true)
         try {
@@ -101,7 +92,6 @@ export default function MCPProvidersPage() {
             setLoading(false)
         }
     }
-
     function handleEdit(provider: Provider) {
         setEditingProvider(provider)
         setFormData({
@@ -116,19 +106,16 @@ export default function MCPProvidersPage() {
         })
         setIsDialogOpen(true)
     }
-
     function handleNew() {
         setEditingProvider(null)
         setFormData(emptyProvider)
         setIsDialogOpen(true)
     }
-
     async function handleSave() {
         if (!formData.name || !formData.provider_type) {
             toast.error('Name and provider type are required')
             return
         }
-
         setSaving(true)
         try {
             if (editingProvider) {
@@ -148,11 +135,9 @@ export default function MCPProvidersPage() {
             setSaving(false)
         }
     }
-
     async function handleDelete(id: number) {
         setDeleteProviderId(id)
     }
-
     async function confirmDeleteProvider() {
         if (deleteProviderId === null) return
         try {
@@ -165,7 +150,6 @@ export default function MCPProvidersPage() {
         }
         setDeleteProviderId(null)
     }
-
     async function handleTest(id: number) {
         setTesting(id)
         try {
@@ -182,7 +166,6 @@ export default function MCPProvidersPage() {
             setTesting(null)
         }
     }
-
     async function handleSetDefault(id: number) {
         try {
             const res = await setDefaultProvider(id)
@@ -193,15 +176,12 @@ export default function MCPProvidersPage() {
             toast.error((e instanceof Error ? e.message : String(e)))
         }
     }
-
     const getProviderLabel = (type: string) => {
         return PROVIDER_TYPES.find(p => p.value === type)?.label || type
     }
-
     const getModelsForType = (type: string) => {
         return PROVIDER_TYPES.find(p => p.value === type)?.models || []
     }
-
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             {/* Header */}
@@ -239,7 +219,6 @@ export default function MCPProvidersPage() {
                     </Button>
                 </div>
             </div>
-
             {/* Provider Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="max-w-lg">
@@ -249,7 +228,6 @@ export default function MCPProvidersPage() {
                             Configure an AI provider for MCP integration.
                         </DialogDescription>
                     </DialogHeader>
-
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
                             <Label>Name</Label>
@@ -259,7 +237,6 @@ export default function MCPProvidersPage() {
                                 placeholder="My OpenAI Provider"
                             />
                         </div>
-
                         <div className="space-y-2">
                             <Label>Provider Type</Label>
                             <Select
@@ -280,7 +257,6 @@ export default function MCPProvidersPage() {
                                 </SelectContent>
                             </Select>
                         </div>
-
                         <div className="space-y-2">
                             <Label>API Key</Label>
                             <div className="relative">
@@ -301,7 +277,6 @@ export default function MCPProvidersPage() {
                                 </Button>
                             </div>
                         </div>
-
                         {(formData.provider_type === 'azure' || formData.provider_type === 'ollama' || formData.provider_type === 'custom') && (
                             <div className="space-y-2">
                                 <Label>API Base URL</Label>
@@ -312,7 +287,6 @@ export default function MCPProvidersPage() {
                                 />
                             </div>
                         )}
-
                         <div className="space-y-2">
                             <Label>Model</Label>
                             {getModelsForType(formData.provider_type).length > 0 ? (
@@ -337,7 +311,6 @@ export default function MCPProvidersPage() {
                                 />
                             )}
                         </div>
-
                         <div className="grid grid-cols-3 gap-4">
                             <div className="space-y-2">
                                 <Label>Max Tokens</Label>
@@ -368,7 +341,6 @@ export default function MCPProvidersPage() {
                             </div>
                         </div>
                     </div>
-
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
                         <Button onClick={handleSave} disabled={saving} className="bg-purple-600 hover:bg-purple-500">
@@ -378,7 +350,6 @@ export default function MCPProvidersPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-
             {/* Providers Grid */}
             {loading ? (
                 <div className="flex items-center justify-center py-20">
@@ -428,7 +399,6 @@ export default function MCPProvidersPage() {
                                         )}
                                     </div>
                                 </div>
-
                                 <div className="p-3 rounded-xl bg-gray-50 mb-4">
                                     <p className="text-sm font-mono text-gray-600">{provider.model_name}</p>
                                     <div className="flex gap-4 mt-2 text-xs text-gray-400">
@@ -436,7 +406,6 @@ export default function MCPProvidersPage() {
                                         <span>Temp: {provider.temperature}</span>
                                     </div>
                                 </div>
-
                                 <div className="flex gap-2 flex-wrap">
                                     <Button
                                         size="sm"
@@ -478,7 +447,6 @@ export default function MCPProvidersPage() {
                     ))}
                 </div>
             )}
-
             <ConfirmDialog
                 open={deleteProviderId !== null}
                 onOpenChange={(open) => { if (!open) setDeleteProviderId(null) }}

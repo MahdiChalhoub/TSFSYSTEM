@@ -1,12 +1,9 @@
 'use client'
-import { Activity } from 'lucide-react'
-
 /**
  * Connector Admin Panel - Dashboard & Overview
  * ==============================================
  * SuperAdmin panel for monitoring and configuring the Connector Module.
  */
-
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -19,7 +16,6 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { getConnectorDashboard, getModuleStates, cleanupExpiredBuffers } from '@/app/actions/saas/connector'
-
 // Types
 interface DashboardData {
     summary: {
@@ -43,7 +39,6 @@ interface DashboardData {
         created_at: string
     }>
 }
-
 interface ModuleStateInfo {
     module_code: string
     module_name: string
@@ -52,31 +47,26 @@ interface ModuleStateInfo {
     pending_buffers: number
     last_activity: string | null
 }
-
 const stateColors = {
     available: 'bg-emerald-500',
     missing: 'bg-amber-500',
     disabled: 'bg-blue-500',
     unauthorized: 'bg-red-500'
 }
-
 const stateLabels = {
     available: '🟢 Available',
     missing: '🟡 Missing',
     disabled: '🔵 Disabled',
     unauthorized: '🔴 Unauthorized'
 }
-
 export default function ConnectorDashboardPage() {
     const [dashboard, setDashboard] = useState<DashboardData | null>(null)
     const [moduleStates, setModuleStates] = useState<ModuleStateInfo[]>([])
     const [loading, setLoading] = useState(true)
     const [refreshing, setRefreshing] = useState(false)
-
     useEffect(() => {
         loadData()
     }, [])
-
     async function loadData() {
         setLoading(true)
         try {
@@ -92,14 +82,12 @@ export default function ConnectorDashboardPage() {
             setLoading(false)
         }
     }
-
     async function handleRefresh() {
         setRefreshing(true)
         await loadData()
         setRefreshing(false)
         toast.success('Dashboard refreshed')
     }
-
     async function handleCleanup() {
         try {
             const res = await cleanupExpiredBuffers()
@@ -113,7 +101,6 @@ export default function ConnectorDashboardPage() {
             toast.error('Cleanup failed')
         }
     }
-
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
@@ -121,7 +108,6 @@ export default function ConnectorDashboardPage() {
             </div>
         )
     }
-
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             {/* Header */}
@@ -158,7 +144,6 @@ export default function ConnectorDashboardPage() {
                     </Button>
                 </div>
             </div>
-
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Card className="bg-gradient-to-br from-emerald-500 to-teal-600 border-0 text-white rounded-3xl shadow-xl">
@@ -170,7 +155,6 @@ export default function ConnectorDashboardPage() {
                         <p className="text-emerald-100 text-sm mt-2">Routing rules configured</p>
                     </CardContent>
                 </Card>
-
                 <Card className="bg-gradient-to-br from-blue-500 to-indigo-600 border-0 text-white rounded-3xl shadow-xl">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-lg font-bold text-white/80">Registered Contracts</CardTitle>
@@ -180,7 +164,6 @@ export default function ConnectorDashboardPage() {
                         <p className="text-blue-100 text-sm mt-2">Module declarations</p>
                     </CardContent>
                 </Card>
-
                 <Card className="bg-gradient-to-br from-amber-500 to-orange-600 border-0 text-white rounded-3xl shadow-xl">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-lg font-bold text-white/80">Pending Buffers</CardTitle>
@@ -191,7 +174,6 @@ export default function ConnectorDashboardPage() {
                     </CardContent>
                 </Card>
             </div>
-
             {/* Buffer Stats */}
             <Card className="rounded-3xl shadow-xl border-gray-100">
                 <CardHeader>
@@ -226,7 +208,6 @@ export default function ConnectorDashboardPage() {
                     </div>
                 </CardContent>
             </Card>
-
             {/* Module States Grid */}
             <Card className="rounded-3xl shadow-xl border-gray-100">
                 <CardHeader>
@@ -269,7 +250,6 @@ export default function ConnectorDashboardPage() {
                     )}
                 </CardContent>
             </Card>
-
             {/* Quick Links */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Link href="/connector/policies">
@@ -286,7 +266,6 @@ export default function ConnectorDashboardPage() {
                         </CardContent>
                     </Card>
                 </Link>
-
                 <Link href="/connector/buffer">
                     <Card className="rounded-3xl border-gray-100 hover:border-amber-300 hover:shadow-lg transition-all cursor-pointer group">
                         <CardContent className="p-6 flex items-center gap-4">
@@ -301,7 +280,6 @@ export default function ConnectorDashboardPage() {
                         </CardContent>
                     </Card>
                 </Link>
-
                 <Link href="/connector/logs">
                     <Card className="rounded-3xl border-gray-100 hover:border-emerald-300 hover:shadow-lg transition-all cursor-pointer group">
                         <CardContent className="p-6 flex items-center gap-4">
@@ -317,7 +295,6 @@ export default function ConnectorDashboardPage() {
                     </Card>
                 </Link>
             </div>
-
             {/* Recent Activity */}
             {dashboard?.recent_logs && dashboard.recent_logs.length > 0 && (
                 <Card className="rounded-3xl shadow-xl border-gray-100">

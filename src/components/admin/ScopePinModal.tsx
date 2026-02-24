@@ -1,17 +1,13 @@
 'use client'
-
 import { useState } from 'react'
 import { Lock, X, ShieldCheck, ShieldAlert, Eye, Layers } from 'lucide-react'
-
 type ScopeAccess = 'official' | 'internal'
-
 interface ScopePinModalProps {
     /** Which scope password the user is entering */
     targetAccess: ScopeAccess
     onVerified: (access: ScopeAccess) => void
     onCancel: () => void
 }
-
 /**
  * ScopePinModal — Access control for dual-view scopes.
  *
@@ -23,19 +19,15 @@ export default function ScopePinModal({ targetAccess, onVerified, onCancel }: Sc
     const [pin, setPin] = useState('')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
-
     const isOfficial = targetAccess === 'official'
     const label = isOfficial ? 'Official (Viewer)' : 'Internal (Full Access)'
-
     const handleVerify = async () => {
         if (pin.length < 4) {
             setError('PIN must be at least 4 characters')
             return
         }
-
         setLoading(true)
         setError('')
-
         try {
             const res = await fetch('http://backend:8000/api/users/verify-scope-pin/', {
                 method: 'POST',
@@ -45,9 +37,7 @@ export default function ScopePinModal({ targetAccess, onVerified, onCancel }: Sc
                 },
                 body: JSON.stringify({ scope: targetAccess, pin }),
             })
-
             const data = await res.json()
-
             if (data.verified) {
                 onVerified(targetAccess)
             } else {
@@ -60,12 +50,10 @@ export default function ScopePinModal({ targetAccess, onVerified, onCancel }: Sc
             setLoading(false)
         }
     }
-
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') handleVerify()
         if (e.key === 'Escape') onCancel()
     }
-
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
             onClick={onCancel}
@@ -93,7 +81,6 @@ export default function ScopePinModal({ targetAccess, onVerified, onCancel }: Sc
                         <X size={14} />
                     </button>
                 </div>
-
                 {/* Body */}
                 <div className="px-6 py-5 space-y-4">
                     <p className="text-sm text-stone-600">
@@ -102,7 +89,6 @@ export default function ScopePinModal({ targetAccess, onVerified, onCancel }: Sc
                             : 'Enter your Full Access Password to access both Official and Internal scopes.'
                         }
                     </p>
-
                     <input
                         type="password"
                         value={pin}
@@ -115,7 +101,6 @@ export default function ScopePinModal({ targetAccess, onVerified, onCancel }: Sc
                             focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200
                             placeholder:tracking-normal placeholder:text-sm placeholder:font-sans"
                     />
-
                     {/* Error */}
                     {error && (
                         <div className="flex items-center gap-2 text-red-600 text-xs bg-red-50 px-3 py-2 rounded-lg">
@@ -123,7 +108,6 @@ export default function ScopePinModal({ targetAccess, onVerified, onCancel }: Sc
                             {error}
                         </div>
                     )}
-
                     {/* Info */}
                     <div className="text-[11px] text-stone-400 bg-stone-50 px-3 py-2 rounded-lg">
                         {isOfficial
@@ -131,7 +115,6 @@ export default function ScopePinModal({ targetAccess, onVerified, onCancel }: Sc
                             : '🔓 Full Access mode: You can toggle between Official and Internal views.'
                         }
                     </div>
-
                     {/* Actions */}
                     <div className="flex gap-2">
                         <button

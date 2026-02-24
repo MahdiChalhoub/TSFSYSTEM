@@ -2,9 +2,7 @@
 import { erpFetch } from "@/lib/erp-api";
 import EmployeeManager from "./manager";
 import { Users, Briefcase, Fingerprint, ShieldCheck } from "lucide-react";
-
 export const dynamic = 'force-dynamic';
-
 async function getEmployees() {
     try {
         const data = await erpFetch('employees/');
@@ -30,7 +28,6 @@ async function getEmployees() {
         return [];
     }
 }
-
 async function getStandaloneUsers(employeeUserIds: string[]) {
     try {
         const users = await erpFetch('users/');
@@ -61,7 +58,6 @@ async function getStandaloneUsers(employeeUserIds: string[]) {
         return [];
     }
 }
-
 async function getSites() {
     try {
         return await erpFetch('sites/');
@@ -69,7 +65,6 @@ async function getSites() {
         return [];
     }
 }
-
 async function getRoles() {
     try {
         const data = await erpFetch('roles/');
@@ -83,19 +78,16 @@ async function getRoles() {
         return [];
     }
 }
-
 export default async function EmployeesPage() {
     const [employees, sites, roles] = await Promise.all([
         getEmployees(),
         getSites(),
         getRoles()
     ]);
-
     // Fetch users that don't have Employee records (e.g. superusers)
     const employeeUserIds = employees.filter((e: Record<string, any>) => e.user).map((e: Record<string, any>) => e.user.id);
     const standaloneUsers = await getStandaloneUsers(employeeUserIds);
     const allPeople = [...employees, ...standaloneUsers];
-
     return (
         <div className="p-8 space-y-10 animate-in fade-in duration-500 max-w-[1600px] mx-auto">
             {/* Header */}
@@ -131,7 +123,6 @@ export default async function EmployeesPage() {
                     </div>
                 </div>
             </header>
-
             <EmployeeManager
                 employees={allPeople}
                 sites={sites}

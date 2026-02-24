@@ -1,5 +1,4 @@
 'use client'
-
 import { useState } from 'react'
 import Link from 'next/link'
 import { ShoppingBag, Heart, Minus, Plus, ArrowLeft, Truck, Shield, RotateCcw, Star } from 'lucide-react'
@@ -7,7 +6,6 @@ import { useCart } from '../../engine/hooks/useCart'
 import { useConfig } from '../../engine/hooks/useConfig'
 import { useWishlist } from '../../engine/hooks/useWishlist'
 import type { ProductDetailProps } from '../../engine/types'
-
 export default function BoutiqueProductDetail({ product }: ProductDetailProps) {
     const { addToCart, cart } = useCart()
     const { slug, showPrice, isQuoteMode } = useConfig()
@@ -15,14 +13,12 @@ export default function BoutiqueProductDetail({ product }: ProductDetailProps) {
     const [qty, setQty] = useState(1)
     const inCart = cart.some(i => i.product_id === product.id)
     const inWishlist = isInWishlist(product.id)
-
     const price = product.selling_price_ttc
     const imgUrl = product.image_url?.startsWith('http')
         ? product.image_url
         : `${process.env.NEXT_PUBLIC_DJANGO_URL || ''}${product.image_url || ''}`
     const hasImage = !!product.image_url
     const inStock = product.stock_quantity === undefined || product.stock_quantity > 0
-
     const handleAdd = () => {
         addToCart({
             product_id: product.id,
@@ -33,7 +29,6 @@ export default function BoutiqueProductDetail({ product }: ProductDetailProps) {
             tax_rate: product.tax_rate || 0,
         })
     }
-
     return (
         <div className="min-h-screen bg-gradient-to-b from-violet-50/30 to-white"
             style={{ fontFamily: "'DM Sans', sans-serif" }}>
@@ -43,7 +38,6 @@ export default function BoutiqueProductDetail({ product }: ProductDetailProps) {
                     className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-violet-600 mb-8 font-medium transition">
                     <ArrowLeft size={16} /> Back to Store
                 </Link>
-
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                     {/* Image */}
                     <div className="relative">
@@ -56,25 +50,21 @@ export default function BoutiqueProductDetail({ product }: ProductDetailProps) {
                                 </div>
                             )}
                         </div>
-
                         {product.category_name && (
                             <span className="absolute top-4 left-4 px-4 py-1.5 bg-white/90 backdrop-blur text-xs font-bold uppercase tracking-widest text-violet-600 rounded-full shadow">
                                 {product.category_name}
                             </span>
                         )}
                     </div>
-
                     {/* Details */}
                     <div className="flex flex-col justify-center">
                         {product.sku && (
                             <p className="text-xs font-mono text-gray-400 uppercase tracking-wider mb-2">SKU: {product.sku}</p>
                         )}
-
                         <h1 className="text-3xl md:text-4xl font-bold text-indigo-950 tracking-tight"
                             style={{ fontFamily: "'Playfair Display', serif" }}>
                             {product.name}
                         </h1>
-
                         {/* Rating placeholder */}
                         <div className="flex items-center gap-1 mt-3">
                             {[1, 2, 3, 4, 5].map(i => (
@@ -82,7 +72,6 @@ export default function BoutiqueProductDetail({ product }: ProductDetailProps) {
                             ))}
                             <span className="text-xs text-gray-400 ml-2 font-medium">4.0 (Premium Selection)</span>
                         </div>
-
                         {/* Price */}
                         <div className="mt-6">
                             {showPrice ? (
@@ -98,14 +87,12 @@ export default function BoutiqueProductDetail({ product }: ProductDetailProps) {
                                 </span>
                             )}
                         </div>
-
                         {/* Description */}
                         {product.description && (
                             <p className="mt-6 text-gray-500 leading-relaxed text-sm">
                                 {product.description}
                             </p>
                         )}
-
                         {/* Stock */}
                         <div className="mt-6 flex items-center gap-3">
                             <div className={`w-2.5 h-2.5 rounded-full ${inStock ? 'bg-green-400' : 'bg-red-400'}`} />
@@ -117,7 +104,6 @@ export default function BoutiqueProductDetail({ product }: ProductDetailProps) {
                                     : 'Out of Stock'}
                             </span>
                         </div>
-
                         {/* Quantity + Actions */}
                         <div className="mt-8 space-y-4">
                             {showPrice && !isQuoteMode && (
@@ -138,7 +124,6 @@ export default function BoutiqueProductDetail({ product }: ProductDetailProps) {
                                             </button>
                                         </div>
                                     </div>
-
                                     <div className="flex gap-3">
                                         <button onClick={handleAdd} disabled={!inStock}
                                             className={`flex-1 py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition shadow-lg ${inCart
@@ -150,7 +135,6 @@ export default function BoutiqueProductDetail({ product }: ProductDetailProps) {
                                             <ShoppingBag size={18} />
                                             {inCart ? '✓ Added to Cart' : 'Add to Cart'}
                                         </button>
-
                                         <button onClick={() => toggleWishlist(product.id)}
                                             className={`p-4 rounded-2xl border transition ${inWishlist
                                                     ? 'bg-pink-50 border-pink-200 text-pink-500'
@@ -162,7 +146,6 @@ export default function BoutiqueProductDetail({ product }: ProductDetailProps) {
                                 </>
                             )}
                         </div>
-
                         {/* Trust badges */}
                         <div className="mt-10 grid grid-cols-3 gap-4">
                             {[

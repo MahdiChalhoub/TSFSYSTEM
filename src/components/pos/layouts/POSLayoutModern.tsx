@@ -1,5 +1,4 @@
 'use client';
-
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { POSLayoutProps } from '@/types/pos-layout';
 import { ProductGrid } from '@/components/pos/ProductGrid';
@@ -8,14 +7,13 @@ import { ReceiptModal } from '@/components/pos/ReceiptModal';
 import {
     Search, ShoppingCart, Plus, Minus, Trash2, X, Layout,
     ChevronDown, Maximize, Minimize, Eye, EyeOff, Package, Tag,
-    CreditCard, Banknote, Wallet, MapPin, Star, Calculator, GripHorizontal, ArrowLeft, ArrowRight
+    CreditCard, Banknote, Wallet, MapPin, Star, Calculator, GripHorizontal, ArrowLeft, ArrowRight,
+    History, RefreshCw, Wifi, WifiOff
 } from 'lucide-react';
 import clsx from 'clsx';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import { History, RefreshCw, Wifi, WifiOff , Star} from 'lucide-react';
 import { Numpad as POSNumpad, NumpadMode } from '@/components/pos/Numpad';
-
 const formatNumber = (num: number | string) => {
     const val = Number(num) || 0;
     // Manual formatting for hydration stability across SSR/CSR
@@ -23,9 +21,7 @@ const formatNumber = (num: number | string) => {
     parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
     return parts[1] === '00' ? parts[0] : parts.join('.');
 };
-
 const DEFAULT_PAYMENT_METHODS = ['CASH', 'CARD', 'WALLET', 'WAVE', 'OM', 'MULTI', 'DELIVERY'];
-
 export function POSLayoutModern(props: POSLayoutProps) {
     const {
         cart, clients, selectedClient, selectedClientId, categories,
@@ -44,9 +40,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
         onSetOverrideOpen, onSetReceiptOpen, onOpenLayoutSelector,
         onSetStoreChangeInWallet, onSetPointsRedeemed
     } = props;
-
     const paymentMethods = (props as any).paymentMethods || DEFAULT_PAYMENT_METHODS;
-
     const receivedNum = Number(cashReceived) || 0;
     const changeDue = receivedNum > totalAmount ? receivedNum - totalAmount : 0;
     const [leftExpanded, setLeftExpanded] = useState(false);
@@ -54,11 +48,9 @@ export function POSLayoutModern(props: POSLayoutProps) {
     const [numpadMode, setNumpadMode] = useState<NumpadMode>('qty');
     const [selectedCartIdx, setSelectedCartIdx] = useState<number | null>(null);
     const [pendingAction, setPendingAction] = useState<{ label: string, execute: () => void } | null>(null);
-
     const handleProtectedQuantity = useCallback((productId: number, delta: number) => {
         const item = cart.find(i => i.productId === productId);
         const currentQty = item?.quantity || 0;
-
         // Only require override for full deletion or if clearing multiple items
         if (delta < 0 && (currentQty + delta <= 0)) {
             setPendingAction({
@@ -70,7 +62,6 @@ export function POSLayoutModern(props: POSLayoutProps) {
             onUpdateQuantity(productId, delta);
         }
     }, [cart, onUpdateQuantity, onSetOverrideOpen]);
-
     const handleProtectedDiscount = useCallback((val: number) => {
         setPendingAction({
             label: `Apply ${val}% Discount`,
@@ -78,11 +69,9 @@ export function POSLayoutModern(props: POSLayoutProps) {
         });
         onSetOverrideOpen(true);
     }, [onSetDiscount, onSetOverrideOpen]);
-
     const handleProtectedPrice = useCallback((productId: number, newPrice: number) => {
         const item = cart.find(i => i.productId === productId);
         const currentPrice = Number(item?.price || 0);
-
         if (newPrice < currentPrice) {
             setPendingAction({
                 label: `Decrease Price to ${currency}${newPrice.toFixed(2)}`,
@@ -93,12 +82,10 @@ export function POSLayoutModern(props: POSLayoutProps) {
             onUpdatePrice(productId, newPrice);
         }
     }, [cart, currency, onUpdatePrice, onSetOverrideOpen]);
-
     // Draggable Floating Logic
     const [numpadPos, setNumpadPos] = useState({ x: 20, y: 150 });
     const [isDragging, setIsDragging] = useState(false);
     const dragOffset = useRef({ x: 0, y: 0 });
-
     const startDragging = (e: React.MouseEvent) => {
         setIsDragging(true);
         dragOffset.current = {
@@ -106,7 +93,6 @@ export function POSLayoutModern(props: POSLayoutProps) {
             y: e.clientY - numpadPos.y
         };
     };
-
     useEffect(() => {
         const handleMove = (e: MouseEvent) => {
             if (!isDragging) return;
@@ -119,7 +105,6 @@ export function POSLayoutModern(props: POSLayoutProps) {
             });
         };
         const stopDragging = () => setIsDragging(false);
-
         if (isDragging) {
             window.addEventListener('mousemove', handleMove);
             window.addEventListener('mouseup', stopDragging);
@@ -129,25 +114,20 @@ export function POSLayoutModern(props: POSLayoutProps) {
             window.removeEventListener('mouseup', stopDragging);
         };
     }, [isDragging]);
-
     const filteredCategories = categories.filter(cat => {
         const parentId = (cat as any).parent || (cat as any).parentId || (cat as any).parent_id || null;
         return parentId === currentParentId;
     });
-
     const currentParentName = currentParentId ? categories.find(c => c.id === currentParentId)?.name : null;
-
     const filteredClients = clients.filter(c =>
         c.name.toLowerCase().includes(clientSearchQuery.toLowerCase()) ||
         c.phone.includes(clientSearchQuery)
     );
-
     return (
         <div className={clsx(
             "flex flex-col overflow-hidden select-none h-full",
             isFullscreen ? "fixed inset-0 z-[1000] h-screen w-screen bg-[#f4f6f8]" : "absolute inset-0 bg-[#f4f6f8]"
         )}>
-
             {/* ═══════════ HEADER ═══════════ */}
             <header className="h-[48px] bg-white border-b border-gray-200/80 flex items-center justify-between px-4 shrink-0 z-50">
                 <div className="flex items-center gap-3">
@@ -203,7 +183,6 @@ export function POSLayoutModern(props: POSLayoutProps) {
                             SYNC
                         </button>
                     </div>
-
                     <span className="bg-gray-100 px-2 py-0.5 rounded font-semibold">{formatNumber(uniqueItems)} items</span>
                     <span className="bg-gray-100 px-2 py-0.5 rounded font-semibold">{formatNumber(totalPieces)} pcs</span>
                     <button onClick={onToggleFullscreen} className="h-7 px-2 bg-gray-100 text-gray-600 rounded-md text-[11px] font-semibold hover:bg-gray-200 transition-all flex items-center gap-1">
@@ -221,13 +200,10 @@ export function POSLayoutModern(props: POSLayoutProps) {
                     </Link>
                 </div>
             </header>
-
             {/* ═══════════ MAIN SPLIT ═══════════ */}
             <div className="flex-1 flex overflow-hidden">
-
                 {/* ════ LEFT COLUMN (62%) ════ */}
                 <aside className="w-[62%] flex flex-col bg-white border-r border-gray-200/80 shrink-0 overflow-hidden">
-
                     {/* Client Selector & Search */}
                     <div className="px-3 py-2 border-b border-gray-100 bg-gray-50/50 shrink-0">
                         <div className="flex gap-2">
@@ -278,7 +254,6 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={10} />
                             </div>
                         </div>
-
                         <div className="flex items-center gap-3 mt-2">
                             <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-black shadow-lg shadow-indigo-100 shrink-0">
                                 {selectedClient?.name?.charAt(0) || 'C'}
@@ -293,7 +268,6 @@ export function POSLayoutModern(props: POSLayoutProps) {
                             </div>
                         </div>
                     </div>
-
                     {/* Search + Calculator Button + Category Pills */}
                     <div className="px-3 py-2 border-b border-gray-100 space-y-1.5 shrink-0">
                         <div className="flex items-center gap-2">
@@ -394,7 +368,6 @@ export function POSLayoutModern(props: POSLayoutProps) {
                             )}
                         </div>
                     </div>
-
                     {/* Toggle View Mode */}
                     <div className="px-3 py-1 border-b border-gray-50 flex items-center justify-between shrink-0 bg-gray-50/50">
                         <span className="text-[10px] font-semibold text-gray-500 flex items-center gap-1">
@@ -409,7 +382,6 @@ export function POSLayoutModern(props: POSLayoutProps) {
                             {leftExpanded ? 'Categories' : 'Products'}
                         </button>
                     </div>
-
                     {/* Main Area (Products or Categories) */}
                     <div className="flex-1 relative bg-gray-50/10 overflow-hidden">
                         <div className="absolute inset-0 overflow-y-auto custom-scrollbar p-3">
@@ -440,7 +412,6 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                             <span className="text-[12px] font-black uppercase tracking-wider">All Products</span>
                                         </button>
                                     )}
-
                                     {filteredCategories.map(cat => {
                                         const hasChildren = categories.some(c => ((c as any).parent || (c as any).parentId || (c as any).parent_id) === cat.id);
                                         return (
@@ -479,7 +450,6 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 </div>
                             )}
                         </div>
-
                         {/* Speed Calc Floating Overlay */}
                         {showNumpad && (
                             <div
@@ -539,7 +509,6 @@ export function POSLayoutModern(props: POSLayoutProps) {
                         )}
                     </div>
                 </aside>
-
                 {/* ════ RIGHT COLUMN: CART (full height) ════ */}
                 <main className="flex-1 flex flex-col bg-[#fafbfc] overflow-hidden">
                     <div className="px-3 py-1.5 border-b border-gray-200/80 bg-white flex items-center justify-between shrink-0">
@@ -552,7 +521,6 @@ export function POSLayoutModern(props: POSLayoutProps) {
                             <button onClick={onClearCart} className="text-[10px] text-gray-400 hover:text-rose-500 font-medium transition-colors">Clear</button>
                         )}
                     </div>
-
                     <div className="flex-1 overflow-y-auto custom-scrollbar">
                         {cart.length === 0 ? (
                             <div className="flex flex-col items-center justify-center h-full text-gray-300 gap-2">
@@ -621,7 +589,6 @@ export function POSLayoutModern(props: POSLayoutProps) {
                             </div>
                         )}
                     </div>
-
                     <div className="border-t border-gray-200 bg-white px-3 py-2 shrink-0 space-y-2">
                         <div className="flex items-center gap-4 justify-between">
                             <div className="flex items-center gap-4">
@@ -664,7 +631,6 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 <span className="text-xl font-black tabular-nums text-gray-900 leading-none">{currency}{totalAmount.toFixed(2)}</span>
                             </div>
                         </div>
-
                         <div className="grid grid-cols-4 gap-1">
                             {paymentMethods.map((m: any) => {
                                 const key = typeof m === 'string' ? m : m.key;
@@ -681,7 +647,6 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 );
                             })}
                         </div>
-
                         {/* ── Wallet & Loyalty Quick-Pay ── */}
                         {selectedClient && selectedClientId > 1 && (
                             <div className="flex items-center gap-2 flex-wrap">
@@ -723,7 +688,6 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 )}
                             </div>
                         )}
-
                         <div className="flex items-center gap-2 pt-1 border-t border-gray-50 mt-1">
                             <div className="flex-1">
                                 <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 block">Received</label>
@@ -752,7 +716,6 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 <span className="text-[14px] font-black leading-none">{currency}{formatNumber(changeDue > 0 ? changeDue : totalAmount)}</span>
                             </button>
                         </div>
-
                         {/* ── Change Management ── */}
                         {changeDue > 0 && (
                             <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">
@@ -782,7 +745,6 @@ export function POSLayoutModern(props: POSLayoutProps) {
                     </div>
                 </main>
             </div>
-
             {/* ═══════════ MODALS ═══════════ */}
             <ManagerOverride
                 isOpen={isOverrideOpen}
@@ -795,7 +757,6 @@ export function POSLayoutModern(props: POSLayoutProps) {
                 }}
                 actionLabel={pendingAction?.label || "Protected Action"}
             />
-
             <ReceiptModal
                 isOpen={isReceiptOpen}
                 onClose={() => onSetReceiptOpen(false)}

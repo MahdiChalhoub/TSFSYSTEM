@@ -1,6 +1,4 @@
 'use client'
-import { Star } from 'lucide-react'
-
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
@@ -11,7 +9,6 @@ import {
 import { useAuth } from '../../engine/hooks/useAuth'
 import { useWishlist } from '../../engine/hooks/useWishlist'
 import { useStorefrontPath } from '../../engine/hooks/useStorefrontPath'
-
 interface DashboardData {
     total_orders: number
     active_orders: number
@@ -26,22 +23,18 @@ interface DashboardData {
     tickets_enabled: boolean
     loyalty_enabled: boolean
 }
-
 export default function MidnightDashboardPage() {
     const { path, slug } = useStorefrontPath()
     const { user, isAuthenticated } = useAuth()
     const { wishlistCount } = useWishlist()
     const [dashboard, setDashboard] = useState<DashboardData | null>(null)
     const [loading, setLoading] = useState(true)
-
     useEffect(() => {
         if (!isAuthenticated) return
         const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://backend:8000'
-
         // In a real scenario, useAuth or a dedicated hook would provide the token
         // For now, mirroring the extraction logic from the original page
         const token = localStorage.getItem('portal_token')
-
         fetch(`${djangoUrl}/api/client-portal/dashboard/`, {
             headers: { 'Authorization': `Token ${token}` },
         })
@@ -70,7 +63,6 @@ export default function MidnightDashboardPage() {
                 setLoading(false)
             })
     }, [isAuthenticated])
-
     if (!isAuthenticated) {
         return (
             <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
@@ -93,13 +85,11 @@ export default function MidnightDashboardPage() {
             </div>
         )
     }
-
     return (
         <div className="min-h-screen bg-slate-950 p-6 lg:p-12 relative overflow-hidden">
             {/* Ambient Background */}
             <div className="fixed top-[-10%] right-[-10%] w-[60%] h-[60%] bg-emerald-500/5 blur-[150px] rounded-full pointer-events-none z-0" />
             <div className="fixed bottom-[-10%] left-[-10%] w-[60%] h-[60%] bg-blue-500/5 blur-[150px] rounded-full pointer-events-none z-0" />
-
             <div className="max-w-6xl mx-auto relative z-10 space-y-10">
                 {/* Header Section */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
@@ -110,7 +100,6 @@ export default function MidnightDashboardPage() {
                         </div>
                         <h1 className="text-5xl font-black text-white italic tracking-tighter">Welcome, <span className="text-emerald-500">{user?.name}</span></h1>
                     </div>
-
                     <div className="flex items-center gap-3">
                         {dashboard?.loyalty_tier && (
                             <div className="px-6 py-2.5 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full text-black text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-orange-500/20">
@@ -122,7 +111,6 @@ export default function MidnightDashboardPage() {
                         </Link>
                     </div>
                 </div>
-
                 {/* Performance HUD */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                     <HudItem
@@ -153,7 +141,6 @@ export default function MidnightDashboardPage() {
                         color="purple"
                     />
                 </div>
-
                 {/* Operations Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <OperationCard
@@ -199,7 +186,6 @@ export default function MidnightDashboardPage() {
                         color="slate"
                     />
                 </div>
-
                 {/* Identity Tag */}
                 {dashboard?.barcode && (
                     <div className="p-8 bg-slate-900/40 border border-white/5 rounded-[2.5rem] flex flex-col md:flex-row items-center justify-between gap-6 group hover:border-emerald-500/30 transition-all duration-500">
@@ -221,7 +207,6 @@ export default function MidnightDashboardPage() {
         </div>
     )
 }
-
 function HudItem({ label, value, icon, meta, color = 'blue' }: any) {
     const colors: any = {
         blue: 'hover:border-blue-500/30',
@@ -242,7 +227,6 @@ function HudItem({ label, value, icon, meta, color = 'blue' }: any) {
         </div>
     )
 }
-
 function OperationCard({ title, description, path, icon, color }: any) {
     const colors: any = {
         blue: 'text-blue-400 bg-blue-500/10 border-blue-500/30',

@@ -1,6 +1,4 @@
 'use client'
-import { ShieldCheck } from 'lucide-react'
-
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { getLedgerEntries, getLedgerUsers } from '@/app/actions/finance/ledger'
 import { getFiscalYears } from '@/app/actions/finance/fiscal-year'
@@ -20,14 +18,12 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-
 const STATUS_OPTIONS = [
     { value: 'ALL', label: 'All Status' },
     { value: 'DRAFT', label: 'Draft' },
     { value: 'POSTED', label: 'Posted' },
     { value: 'REVERSED', label: 'Reversed' },
 ]
-
 export default function GeneralLedgerPage() {
     const { fmt } = useCurrency()
     const [entries, setEntries] = useState<any[]>([])
@@ -37,7 +33,6 @@ export default function GeneralLedgerPage() {
         columns: ['id', 'transactionDate', 'reference', 'description', 'amount', 'balance', 'status', 'actions'],
         pageSize: 25, sortKey: 'transactionDate', sortDir: 'desc'
     })
-
     // Filters
     const [status, setStatus] = useState('ALL')
     const [fiscalYear, setFiscalYear] = useState('ALL')
@@ -51,7 +46,6 @@ export default function GeneralLedgerPage() {
     const [search, setSearch] = useState('')
     const [showFilters, setShowFilters] = useState(false)
     const [users, setUsers] = useState<any[]>([])
-
     const loadEntries = useCallback(async () => {
         setLoading(true)
         try {
@@ -74,16 +68,13 @@ export default function GeneralLedgerPage() {
             setLoading(false)
         }
     }, [status, fiscalYear, dateFrom, dateTo, entryType, verified, locked, user, autoSource, search])
-
     useEffect(() => {
         getFiscalYears().then(setFiscalYears).catch(() => { })
         getLedgerUsers().then(setUsers).catch(() => { })
     }, [])
-
     useEffect(() => {
         loadEntries()
     }, [loadEntries])
-
     const activeFilterCount = [
         status !== 'ALL',
         fiscalYear !== 'ALL',
@@ -96,7 +87,6 @@ export default function GeneralLedgerPage() {
         autoSource !== 'ALL',
         search
     ].filter(Boolean).length
-
     const columns: ColumnDef<any>[] = useMemo(() => [
         {
             key: 'id',
@@ -141,7 +131,6 @@ export default function GeneralLedgerPage() {
             )
         }
     ], [])
-
     const expandable: any = useMemo(() => ({
         getDetails: (e: any) => e.lines || [],
         columns: [
@@ -172,7 +161,6 @@ export default function GeneralLedgerPage() {
         headerTextColor: 'text-stone-500',
         borderColor: 'border-stone-100'
     }), [fmt])
-
     return (
         <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
             {/* Standard Header */}
@@ -206,7 +194,6 @@ export default function GeneralLedgerPage() {
                     </Button>
                 </div>
             </header>
-
             <Tabs value={entryType} onValueChange={setEntryType} className="space-y-6">
                 <div className="flex justify-between items-center">
                     <TabsList className="bg-stone-100/50 p-1.5 rounded-2xl">
@@ -215,7 +202,6 @@ export default function GeneralLedgerPage() {
                         <TabsTrigger value="AUTO" className="rounded-xl font-bold text-xs px-6 py-2.5 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm">Auto Ledger</TabsTrigger>
                     </TabsList>
                 </div>
-
                 {/* Enhanced Filter Bar */}
                 <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden">
                     <CardContent className="p-4 space-y-4">
@@ -246,7 +232,6 @@ export default function GeneralLedgerPage() {
                                 {activeFilterCount > 1 && <Badge className="bg-indigo-600 text-white h-4 w-4 p-0 flex items-center justify-center text-[8px]">{activeFilterCount}</Badge>}
                             </Button>
                         </div>
-
                         {showFilters && (
                             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 rounded-2xl bg-stone-50 border border-stone-100 animate-in slide-in-from-top-2">
                                 <div className="space-y-2">
@@ -337,7 +322,6 @@ export default function GeneralLedgerPage() {
                         )}
                     </CardContent>
                 </Card>
-
                 <TypicalListView
                     title="Financial Transaction Log"
                     data={entries}

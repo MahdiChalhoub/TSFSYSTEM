@@ -3,13 +3,11 @@ import { ChartOfAccountsViewer } from './viewer'
 import { cookies } from 'next/headers'
 import { BookOpen, ShieldCheck } from 'lucide-react'
 import { Badge } from "@/components/ui/badge"
-
 export default async function ChartOfAccountsPage() {
     const cookieStore = await cookies()
     const scope = (cookieStore.get('tsf_view_scope')?.value as 'OFFICIAL' | 'INTERNAL') || 'INTERNAL'
     let accounts: any = []
     try { accounts = await getChartOfAccounts(true, scope) } catch { /* empty fallback */ }
-
     return (
         <div className="p-6 space-y-6">
             <header className="flex justify-between items-end mb-10">

@@ -1,6 +1,4 @@
 'use client'
-import { Activity, ShieldCheck } from 'lucide-react'
-
 import { useState, useEffect, useCallback } from 'react'
 import { erpFetch } from '@/lib/erp-api'
 import {
@@ -10,12 +8,10 @@ import {
 } from 'lucide-react'
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-
 type Employee = { id: number; first_name: string; last_name: string; department?: { name: string }; position?: string; employment_type?: string; status?: string; first_name_ar?: string; last_name_ar?: string }
 type Department = { id: number; name: string; employee_count?: number }
 type Attendance = { id: number; employee?: { first_name: string; last_name: string }; employee_name?: string; check_in?: string; check_out?: string; status: string; date?: string }
 type Leave = { id: number; employee?: { first_name: string; last_name: string }; employee_name?: string; leave_type?: string; start_date: string; end_date: string; status: string; reason?: string }
-
 export default function HROverviewPage() {
     const [employees, setEmployees] = useState<Employee[]>([])
     const [departments, setDepartments] = useState<Department[]>([])
@@ -24,7 +20,6 @@ export default function HROverviewPage() {
     const [tab, setTab] = useState<'attendance' | 'leaves' | 'employees'>('leaves')
     const [loading, setLoading] = useState(true)
     const [toast, setToast] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null)
-
     const load = useCallback(async () => {
         setLoading(true)
         const [emp, dept, att, lv] = await Promise.allSettled([
@@ -39,9 +34,7 @@ export default function HROverviewPage() {
         setLeaves(lv.status === 'fulfilled' ? (Array.isArray(lv.value) ? lv.value : lv.value?.results ?? []) : [])
         setLoading(false)
     }, [])
-
     useEffect(() => { load() }, [load])
-
     async function handleLeave(id: number, action: 'approve' | 'reject') {
         try {
             await erpFetch(`hr/leaves/${id}/${action}/`, { method: 'POST' })
@@ -49,16 +42,13 @@ export default function HROverviewPage() {
             load()
         } catch { showToast('Action failed', 'err') }
     }
-
     function showToast(msg: string, type: 'ok' | 'err') {
         setToast({ msg, type })
         setTimeout(() => setToast(null), 3500)
     }
-
     const pending = leaves.filter(l => l.status === 'PENDING')
     const presentToday = attendance.filter(a => a.status === 'PRESENT' || a.check_in).length
     const activeEmp = employees.filter(e => !e.status || e.status === 'ACTIVE')
-
     const STATUS_BADGE: Record<string, string> = {
         PENDING: 'bg-amber-100 text-amber-700 border-amber-200',
         APPROVED: 'bg-emerald-100 text-emerald-700 border-emerald-200',
@@ -67,7 +57,6 @@ export default function HROverviewPage() {
         ABSENT: 'bg-rose-100 text-rose-700 border-rose-200',
         LATE: 'bg-amber-100 text-amber-700 border-amber-200',
     }
-
     return (
         <div className="p-8 space-y-10 animate-in fade-in duration-500 max-w-[1600px] mx-auto">
             {toast && (
@@ -76,7 +65,6 @@ export default function HROverviewPage() {
                     {toast.msg}
                 </div>
             )}
-
             {/* Header */}
             <header className="flex flex-col md:flex-row justify-between items-center gap-6">
                 <div>
@@ -97,7 +85,6 @@ export default function HROverviewPage() {
                     </button>
                 </div>
             </header>
-
             {/* KPI Grid */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <Card className="rounded-[2rem] border-0 shadow-sm bg-gradient-to-br from-slate-50 to-white overflow-hidden group hover:shadow-md transition-all">
@@ -115,7 +102,6 @@ export default function HROverviewPage() {
                         <h2 className="text-4xl font-black text-gray-900 tracking-tighter">{employees.length}</h2>
                     </CardContent>
                 </Card>
-
                 <Card className="rounded-[2rem] border-0 shadow-sm bg-gradient-to-br from-emerald-600 to-emerald-700 overflow-hidden group hover:shadow-xl transition-all text-white">
                     <CardContent className="p-7">
                         <div className="flex justify-between items-start mb-6">
@@ -128,7 +114,6 @@ export default function HROverviewPage() {
                         <h2 className="text-4xl font-black text-white tracking-tighter">{activeEmp.length} <span className="text-xs text-emerald-300 font-medium">STAFF</span></h2>
                     </CardContent>
                 </Card>
-
                 <Card className="rounded-[2rem] border-0 shadow-sm bg-gradient-to-br from-slate-50 to-white overflow-hidden group hover:shadow-md transition-all">
                     <CardContent className="p-7">
                         <div className="flex justify-between items-start mb-6">
@@ -144,7 +129,6 @@ export default function HROverviewPage() {
                         <h2 className="text-4xl font-black text-gray-900 tracking-tighter">{presentToday}</h2>
                     </CardContent>
                 </Card>
-
                 <Card className={`rounded-[2rem] border-0 shadow-sm bg-gradient-to-br transition-all overflow-hidden group hover:shadow-md ${pending.length > 0 ? 'from-amber-50 to-white border border-amber-100' : 'from-slate-50 to-white'}`}>
                     <CardContent className="p-7">
                         <div className="flex justify-between items-start mb-6">
@@ -158,7 +142,6 @@ export default function HROverviewPage() {
                     </CardContent>
                 </Card>
             </div>
-
             {/* Departments Section */}
             {departments.length > 0 && (
                 <div className="flex gap-2 flex-wrap pb-2">
@@ -175,7 +158,6 @@ export default function HROverviewPage() {
                     ))}
                 </div>
             )}
-
             {/* Workbench Section */}
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
@@ -193,7 +175,6 @@ export default function HROverviewPage() {
                         ))}
                     </div>
                 </div>
-
                 <div className="grid grid-cols-1 gap-4">
                     {loading ? (
                         Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-24 bg-white/50 border border-slate-100 rounded-[2rem] animate-pulse" />)

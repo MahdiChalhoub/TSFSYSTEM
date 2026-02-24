@@ -1,17 +1,14 @@
 'use client'
-
 import { useState } from 'react'
 import { ChevronRight, ChevronDown, CheckCircle2, LayoutGrid, Columns, Undo2, Library, Zap, FileText, ShieldCheck } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { importChartOfAccountsTemplate } from '@/app/actions/finance/coa-templates'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-
 export default function CoaTemplatesLibrary({ templates }: { templates: Record<string, any> }) {
     const [selectedTemplates, setSelectedTemplates] = useState<string[]>([])
     const [isPending, setIsPending] = useState(false)
     const router = useRouter()
-
     const toggleTemplate = (key: string) => {
         if (selectedTemplates.includes(key)) {
             setSelectedTemplates(selectedTemplates.filter(k => k !== key))
@@ -20,13 +17,10 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
             setSelectedTemplates([...selectedTemplates, key])
         }
     }
-
     const [importTarget, setImportTarget] = useState<{ key: string; step: 'confirm' | 'reset' } | null>(null)
-
     const handleImport = async (key: string) => {
         setImportTarget({ key, step: 'confirm' })
     }
-
     const handleConfirmImport = async (reset: boolean) => {
         if (!importTarget) return
         const key = importTarget.key
@@ -42,7 +36,6 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
             setIsPending(false)
         }
     }
-
     return (
         <div className="min-h-screen bg-stone-50 pb-20">
             {/* Header */}
@@ -57,7 +50,6 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                             <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Compare and select your operational layout</p>
                         </div>
                     </div>
-
                     <div className="flex items-center gap-4">
                         <div className="bg-stone-100 p-1 rounded-lg flex gap-1">
                             <button className="p-2 bg-white shadow-sm rounded-md text-stone-900">
@@ -70,7 +62,6 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                     </div>
                 </div>
             </div>
-
             {/* Financial Logic Guide */}
             <div className="max-w-[1600px] mx-auto px-8 py-6">
                 <div className="bg-emerald-900 rounded-3xl p-6 text-white flex flex-wrap items-center gap-8 shadow-lg">
@@ -81,7 +72,6 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                             <p className="text-[10px] text-emerald-300 uppercase tracking-widest">How your reports are calculated</p>
                         </div>
                     </div>
-
                     <div className="flex gap-6">
                         <div className="space-y-1">
                             <span className="text-[10px] font-bold text-emerald-400 uppercase">Balance Sheet [BS]</span>
@@ -93,7 +83,6 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                                 <span className="p-1 bg-emerald-800 rounded">Equity</span>
                             </div>
                         </div>
-
                         <div className="space-y-1">
                             <span className="text-[10px] font-bold text-amber-400 uppercase">Profit & Loss [P&L]</span>
                             <div className="flex items-center gap-2 text-xs font-medium">
@@ -105,7 +94,6 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                             </div>
                         </div>
                     </div>
-
                     <div className="ml-auto flex items-center gap-4 text-[10px] text-emerald-300 font-bold uppercase tracking-widest bg-emerald-950/50 px-4 py-2 rounded-full">
                         <span className="flex items-center gap-1"><CheckCircle2 size={12} /> Auto-Rollup Logic</span>
                         <span className="opacity-30">|</span>
@@ -113,7 +101,6 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                     </div>
                 </div>
             </div>
-
             <div className="max-w-[1600px] mx-auto p-8 pt-0">
                 {/* Selection Bar */}
                 <div className="flex gap-4 mb-8 overflow-x-auto pb-4 no-scrollbar">
@@ -131,7 +118,6 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                         </button>
                     ))}
                 </div>
-
                 {selectedTemplates.length === 0 ? (
                     <div className="h-[60vh] flex flex-col items-center justify-center text-stone-300">
                         <Library size={64} className="mb-4 opacity-20" />
@@ -172,7 +158,6 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
                     </div>
                 )}
             </div>
-
             <ConfirmDialog
                 open={importTarget?.step === 'confirm'}
                 onOpenChange={(open) => { if (!open) setImportTarget(null) }}
@@ -197,11 +182,9 @@ export default function CoaTemplatesLibrary({ templates }: { templates: Record<s
         </div>
     )
 }
-
 function TemplateComparisonNode({ item, level = 0 }: Record<string, any>) {
     const [open, setOpen] = useState(level < 1) // Open top level by default
     const hasChildren = item.children && item.children.length > 0
-
     return (
         <div className="flex flex-col">
             <button
@@ -220,7 +203,6 @@ function TemplateComparisonNode({ item, level = 0 }: Record<string, any>) {
                 <span className={`text-xs text-left flex-1 truncate ${level === 0 ? 'font-bold text-stone-900' : 'font-medium text-stone-600'}`}>
                     {item.name}
                 </span>
-
                 {/* Report Mapping Badge */}
                 {item.type && (
                     <div className="flex items-center gap-1.5 mr-2">
@@ -229,7 +211,6 @@ function TemplateComparisonNode({ item, level = 0 }: Record<string, any>) {
                         ) : (
                             <span className="text-[8px] font-black bg-amber-100 text-amber-700 px-1 rounded" title="Goes to Profit & Loss">[P&L]</span>
                         )}
-
                         <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase ${item.type === 'ASSET' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
                             item.type === 'LIABILITY' ? 'bg-red-50 text-red-600 border border-red-100' :
                                 item.type === 'EQUITY' ? 'bg-stone-100 text-stone-600' :

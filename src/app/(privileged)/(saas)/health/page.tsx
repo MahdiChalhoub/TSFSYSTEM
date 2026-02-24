@@ -1,11 +1,9 @@
 'use client'
-
 import { useEffect, useState, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Activity, Server, Database, Clock, CheckCircle2, AlertTriangle, Zap, BarChart3, RefreshCw, TrendingUp, TrendingDown, Minus, Shield } from "lucide-react"
 import { erpFetch } from '@/lib/erp-api'
-
 interface LatencyData {
     avg_ms: number
     p50_ms: number
@@ -14,21 +12,18 @@ interface LatencyData {
     max_ms: number
     min_ms: number
 }
-
 interface TrafficData {
     total_requests: number
     tracked_window: number
     requests_last_5min: number
     status_breakdown: Record<string, number>
 }
-
 interface SlowEndpoint {
     endpoint: string
     p95_ms: number
     avg_ms: number
     count: number
 }
-
 interface HealthData {
     status: string
     service: string
@@ -38,7 +33,6 @@ interface HealthData {
     slow_endpoints: SlowEndpoint[]
     uptime_seconds: number
 }
-
 function formatUptime(seconds: number): string {
     const days = Math.floor(seconds / 86400)
     const hours = Math.floor((seconds % 86400) / 3600)
@@ -47,7 +41,6 @@ function formatUptime(seconds: number): string {
     if (hours > 0) return `${hours}h ${mins}m`
     return `${mins}m`
 }
-
 function LatencyBadge({ ms, label }: { ms: number; label: string }) {
     const color = ms < 100 ? 'text-emerald-600' : ms < 500 ? 'text-yellow-600' : 'text-red-600'
     const bg = ms < 100 ? 'bg-emerald-50 border-emerald-200/60' : ms < 500 ? 'bg-yellow-50 border-yellow-200/60' : 'bg-red-50 border-red-200/60'
@@ -58,19 +51,16 @@ function LatencyBadge({ ms, label }: { ms: number; label: string }) {
         </div>
     )
 }
-
 function StatusDot({ ok }: { ok: boolean }) {
     return (
         <span className={`inline-block w-2 h-2 rounded-full ${ok ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]' : 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.5)]'}`} />
     )
 }
-
 export default function HealthPage() {
     const [health, setHealth] = useState<HealthData | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
-
     const fetchHealth = useCallback(async () => {
         try {
             const data = await erpFetch('health/')
@@ -83,13 +73,11 @@ export default function HealthPage() {
             setLoading(false)
         }
     }, [])
-
     useEffect(() => {
         fetchHealth()
         const interval = setInterval(fetchHealth, 30000)
         return () => clearInterval(interval)
     }, [fetchHealth])
-
     if (loading && !health) {
         return (
             <div className="flex items-center justify-center h-[60vh]">
@@ -97,11 +85,9 @@ export default function HealthPage() {
             </div>
         )
     }
-
     const isOnline = health?.status === 'online'
     const latency = health?.latency
     const traffic = health?.traffic
-
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* Header */}
@@ -122,14 +108,12 @@ export default function HealthPage() {
                     </button>
                 </div>
             </div>
-
             {error && (
                 <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm font-medium flex items-center gap-3">
                     <AlertTriangle size={18} />
                     {error}
                 </div>
             )}
-
             {/* Top Status Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Card className="bg-white border-gray-100 rounded-[2rem] shadow-xl overflow-hidden">
@@ -145,7 +129,6 @@ export default function HealthPage() {
                         <p className="text-xs text-gray-500 mt-1">{health?.service || 'Unknown'}</p>
                     </CardContent>
                 </Card>
-
                 <Card className="bg-white border-gray-100 rounded-[2rem] shadow-xl overflow-hidden">
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between mb-3">
@@ -159,7 +142,6 @@ export default function HealthPage() {
                         <p className="text-xs text-gray-500 mt-1">{health?.database || 'PostgreSQL'}</p>
                     </CardContent>
                 </Card>
-
                 <Card className="bg-white border-gray-100 rounded-[2rem] shadow-xl overflow-hidden">
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between mb-3">
@@ -170,7 +152,6 @@ export default function HealthPage() {
                         <p className="text-xs text-gray-500 mt-1">Total: {traffic?.total_requests?.toLocaleString() || 0}</p>
                     </CardContent>
                 </Card>
-
                 <Card className="bg-white border-gray-100 rounded-[2rem] shadow-xl overflow-hidden">
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between mb-3">
@@ -184,7 +165,6 @@ export default function HealthPage() {
                     </CardContent>
                 </Card>
             </div>
-
             {/* Latency Metrics */}
             {latency && (
                 <Card className="bg-white border-gray-100 rounded-[2rem] shadow-xl overflow-hidden">
@@ -207,7 +187,6 @@ export default function HealthPage() {
                     </CardContent>
                 </Card>
             )}
-
             {/* Status Code Breakdown + Slow Endpoints */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Status Code Breakdown */}
@@ -241,7 +220,6 @@ export default function HealthPage() {
                         </CardContent>
                     </Card>
                 )}
-
                 {/* Slow Endpoints */}
                 {health?.slow_endpoints && health.slow_endpoints.length > 0 && (
                     <Card className="bg-white border-gray-100 rounded-[2rem] shadow-xl overflow-hidden">
@@ -270,7 +248,6 @@ export default function HealthPage() {
                     </Card>
                 )}
             </div>
-
             {/* AES Encryption Status */}
             <Card className="bg-white border-gray-100 rounded-[2rem] shadow-xl overflow-hidden border-l-4 border-l-cyan-500">
                 <CardContent className="pt-6">

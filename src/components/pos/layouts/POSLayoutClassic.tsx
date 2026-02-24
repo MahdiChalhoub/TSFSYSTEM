@@ -13,7 +13,6 @@ import {
 import clsx from 'clsx';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import { History, Calculator, GripHorizontal } from 'lucide-react';
 import { useRef, useState, useEffect } from 'react';
 
 const formatNumber = (num: number | string) => {

@@ -1,18 +1,15 @@
 'use client'
-
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Package, Truck, CheckCircle2, Clock, XCircle, Star, RotateCcw, ChevronRight } from 'lucide-react'
 import { useAuth } from '../../engine/hooks/useAuth'
 import { useStorefrontPath } from '../../engine/hooks/useStorefrontPath'
-
 interface Order {
     id: string; order_number: string; status: string; payment_status: string
     total_amount: string; currency: string; placed_at: string | null
     estimated_delivery: string | null; delivery_rating: number | null
     line_count: number; created_at: string
 }
-
 const STATUS_MAP: Record<string, { label: string; icon: any; color: string; bg: string }> = {
     CART: { label: 'Staging', icon: Package, color: 'text-slate-400', bg: 'bg-slate-500/10' },
     PLACED: { label: 'Placed', icon: Clock, color: 'text-blue-400', bg: 'bg-blue-500/10' },
@@ -23,13 +20,11 @@ const STATUS_MAP: Record<string, { label: string; icon: any; color: string; bg: 
     CANCELLED: { label: 'Voided', icon: XCircle, color: 'text-rose-400', bg: 'bg-rose-500/10' },
     RETURNED: { label: 'Reversed', icon: RotateCcw, color: 'text-amber-400', bg: 'bg-amber-500/10' },
 }
-
 export default function MidnightOrdersPage() {
     const { path } = useStorefrontPath()
     const { isAuthenticated } = useAuth()
     const [orders, setOrders] = useState<Order[]>([])
     const [loading, setLoading] = useState(true)
-
     useEffect(() => {
         if (!isAuthenticated) return
         const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://backend:8000'
@@ -49,12 +44,10 @@ export default function MidnightOrdersPage() {
                 setLoading(false)
             })
     }, [isAuthenticated])
-
     return (
         <div className="min-h-screen bg-slate-950 p-6 lg:p-12 relative overflow-hidden">
             <div className="fixed top-[-10%] right-[-10%] w-[60%] h-[60%] bg-blue-500/5 blur-[150px] rounded-full pointer-events-none z-0" />
             <div className="fixed bottom-[-10%] left-[-10%] w-[60%] h-[60%] bg-emerald-500/5 blur-[150px] rounded-full pointer-events-none z-0" />
-
             <div className="max-w-4xl mx-auto relative z-10 space-y-12">
                 <div className="space-y-4">
                     <Link href={path('/account')}
@@ -64,7 +57,6 @@ export default function MidnightOrdersPage() {
                     <h1 className="text-5xl font-black text-white italic tracking-tighter">Order <span className="text-emerald-500">History</span></h1>
                     <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">Tracking your architectural commerce stream</p>
                 </div>
-
                 {loading ? (
                     <div className="space-y-4">
                         {[1, 2, 3].map(i => <div key={i} className="h-28 bg-slate-900/40 border border-white/5 rounded-[2rem] animate-pulse" />)}

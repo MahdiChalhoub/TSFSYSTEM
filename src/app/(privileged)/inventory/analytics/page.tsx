@@ -1,6 +1,4 @@
 'use client'
-import { Activity } from 'lucide-react'
-
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import {
     Search, Filter, Package, AlertTriangle, TrendingUp, ShoppingCart,
@@ -15,12 +13,10 @@ import {
 import {
     createOperationalRequest, addRequestLine
 } from '@/app/actions/inventory/operational-requests'
-
 // ─── TYPES ────────────────────────────────────────────────────────
 interface Warehouse { id: number; name: string; code?: string }
 interface Category { id: number; name: string }
 interface Brand { id: number; name: string }
-
 // ─── HELPERS ──────────────────────────────────────────────────────
 function healthColor(score: number) {
     if (score >= 80) return 'from-emerald-500 to-green-400'
@@ -28,14 +24,12 @@ function healthColor(score: number) {
     if (score >= 40) return 'from-orange-500 to-amber-500'
     return 'from-red-500 to-rose-400'
 }
-
 function healthBg(score: number) {
     if (score >= 80) return 'bg-emerald-50 text-emerald-700 ring-emerald-200'
     if (score >= 60) return 'bg-yellow-50 text-yellow-700 ring-yellow-200'
     if (score >= 40) return 'bg-orange-50 text-orange-700 ring-orange-200'
     return 'bg-red-50 text-red-700 ring-red-200'
 }
-
 function statusBadge(status: string | null) {
     if (!status) return { label: 'Available', cls: 'bg-slate-100 text-slate-600 ring-slate-200', icon: CheckCircle2 }
     const map: Record<string, { label: string; cls: string; icon: Record<string, any> }> = {
@@ -47,7 +41,6 @@ function statusBadge(status: string | null) {
     }
     return map[status] || { label: status, cls: 'bg-gray-100 text-gray-600 ring-gray-200', icon: Box }
 }
-
 function orderTypeBadge(type: string | null) {
     if (!type) return null
     const map: Record<string, { label: string; cls: string; icon: Record<string, any> }> = {
@@ -57,14 +50,12 @@ function orderTypeBadge(type: string | null) {
     }
     return map[type] || { label: type, cls: 'bg-gray-50 text-gray-600', icon: FileText }
 }
-
 // ─── MAIN PAGE ────────────────────────────────────────────────────
 export default function ProductAnalyticsPage() {
     // Data
     const [products, setProducts] = useState<ProductAnalytics[]>([])
     const [total, setTotal] = useState(0)
     const [loading, setLoading] = useState(true)
-
     // Filters
     const [search, setSearch] = useState('')
     const [selectedCategory, setSelectedCategory] = useState('')
@@ -74,25 +65,20 @@ export default function ProductAnalyticsPage() {
     const [hideCompleted, setHideCompleted] = useState(true)
     const [page, setPage] = useState(0)
     const PAGE_SIZE = 50
-
     // Reference data
     const [warehouses, setWarehouses] = useState<Warehouse[]>([])
     const [categories, setCategories] = useState<Category[]>([])
     const [brands, setBrands] = useState<Brand[]>([])
-
     // Selection
     const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
-
     // Sort
     const [sortField, setSortField] = useState<string>('name')
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
-
     // Request dialog
     const [showRequestDialog, setShowRequestDialog] = useState(false)
     const [requestType, setRequestType] = useState<'purchase_request' | 'transfer_request'>('purchase_request')
     const [requestProductIds, setRequestProductIds] = useState<number[]>([])
     const [requestLoading, setRequestLoading] = useState(false)
-
     // ── Load reference data ──
     useEffect(() => {
         Promise.all([getWarehouses(), getCategories(), getBrands()])
@@ -102,7 +88,6 @@ export default function ProductAnalyticsPage() {
                 setBrands(Array.isArray(br) ? br : br?.results || [])
             })
     }, [])
-
     // ── Load analytics ──
     const loadData = useCallback(async () => {
         setLoading(true)
@@ -126,16 +111,13 @@ export default function ProductAnalyticsPage() {
             setLoading(false)
         }
     }, [search, selectedCategory, selectedBrand, selectedWarehouse, selectedStatus, hideCompleted, page])
-
     useEffect(() => { loadData() }, [loadData])
-
     // Debounced search
     const [searchDebounced, setSearchDebounced] = useState('')
     useEffect(() => {
         const t = setTimeout(() => setSearch(searchDebounced), 300)
         return () => clearTimeout(t)
     }, [searchDebounced])
-
     // ── KPI calculations ──
     const kpis = useMemo(() => {
         const lowStock = products.filter(p => p.total_stock < p.min_stock_level).length
@@ -147,7 +129,6 @@ export default function ProductAnalyticsPage() {
             : 0
         return { total, lowStock, requested, pending, failed, avgHealth }
     }, [products, total])
-
     // ── Sort ──
     const sorted = useMemo(() => {
         return [...products].sort((a, b) => {
@@ -162,7 +143,6 @@ export default function ProductAnalyticsPage() {
             return 0
         })
     }, [products, sortField, sortDir])
-
     const toggleSort = (field: string) => {
         if (sortField === field) {
             setSortDir(d => d === 'asc' ? 'desc' : 'asc')
@@ -171,7 +151,6 @@ export default function ProductAnalyticsPage() {
             setSortDir('asc')
         }
     }
-
     // ── Selection helpers ──
     const toggleSelect = (id: number) => {
         setSelectedIds(prev => {
@@ -187,14 +166,12 @@ export default function ProductAnalyticsPage() {
             setSelectedIds(new Set(products.map(p => p.id)))
         }
     }
-
     // ── Request creation ──
     const openRequest = (type: 'purchase_request' | 'transfer_request', ids: number[]) => {
         setRequestType(type)
         setRequestProductIds(ids)
         setShowRequestDialog(true)
     }
-
     const handleCreateRequest = async () => {
         setRequestLoading(true)
         try {
@@ -221,10 +198,8 @@ export default function ProductAnalyticsPage() {
             setRequestLoading(false)
         }
     }
-
     // ── Pagination ──
     const totalPages = Math.ceil(total / PAGE_SIZE)
-
     return (
         <div className="space-y-8">
             {/* ── Header ── */}
@@ -250,7 +225,6 @@ export default function ProductAnalyticsPage() {
                     </button>
                 </div>
             </div>
-
             {/* ── KPI Cards ── */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 {[
@@ -272,7 +246,6 @@ export default function ProductAnalyticsPage() {
                     </div>
                 ))}
             </div>
-
             {/* ── Filters ── */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                 <div className="flex items-center gap-2 mb-4">
@@ -291,7 +264,6 @@ export default function ProductAnalyticsPage() {
                             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all outline-none"
                         />
                     </div>
-
                     {/* Category */}
                     <select
                         value={selectedCategory}
@@ -301,7 +273,6 @@ export default function ProductAnalyticsPage() {
                         <option value="">All Categories</option>
                         {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
-
                     {/* Brand */}
                     <select
                         value={selectedBrand}
@@ -311,7 +282,6 @@ export default function ProductAnalyticsPage() {
                         <option value="">All Brands</option>
                         {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                     </select>
-
                     {/* Status */}
                     <select
                         value={selectedStatus}
@@ -324,7 +294,6 @@ export default function ProductAnalyticsPage() {
                         <option value="ORDER_CREATED">Order Created</option>
                         <option value="FAILED">Failed</option>
                     </select>
-
                     {/* Hide completed toggle */}
                     <button
                         onClick={() => { setHideCompleted(!hideCompleted); setPage(0) }}
@@ -338,7 +307,6 @@ export default function ProductAnalyticsPage() {
                     </button>
                 </div>
             </div>
-
             {/* ── Batch Actions ── */}
             {selectedIds.size > 0 && (
                 <div className="bg-violet-50 border border-violet-200 rounded-2xl p-4 flex items-center justify-between animate-in slide-in-from-top-2">
@@ -367,7 +335,6 @@ export default function ProductAnalyticsPage() {
                     </div>
                 </div>
             )}
-
             {/* ── Table ── */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
@@ -444,7 +411,6 @@ export default function ProductAnalyticsPage() {
                                                 className="rounded border-gray-300 text-violet-600 focus:ring-violet-500"
                                             />
                                         </td>
-
                                         {/* Product */}
                                         <td className="p-4">
                                             <div className="flex flex-col">
@@ -464,7 +430,6 @@ export default function ProductAnalyticsPage() {
                                                 </div>
                                             </div>
                                         </td>
-
                                         {/* Stock */}
                                         <td className="p-4">
                                             <div className="flex flex-col">
@@ -482,7 +447,6 @@ export default function ProductAnalyticsPage() {
                                                 </span>
                                             </div>
                                         </td>
-
                                         {/* Daily Sales */}
                                         <td className="p-4">
                                             <div className="flex flex-col">
@@ -490,7 +454,6 @@ export default function ProductAnalyticsPage() {
                                                 <span className="text-xs text-gray-400 tabular-nums">{p.avg_monthly_sales} / 30d</span>
                                             </div>
                                         </td>
-
                                         {/* Request Status */}
                                         <td className="p-4">
                                             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold ring-1 ${sb.cls}`}>
@@ -505,7 +468,6 @@ export default function ProductAnalyticsPage() {
                                                 </div>
                                             )}
                                         </td>
-
                                         {/* Order */}
                                         <td className="p-4">
                                             {ob ? (
@@ -522,7 +484,6 @@ export default function ProductAnalyticsPage() {
                                                 <span className="text-xs text-gray-300">—</span>
                                             )}
                                         </td>
-
                                         {/* Health */}
                                         <td className="p-4">
                                             <div className="flex items-center gap-2">
@@ -537,7 +498,6 @@ export default function ProductAnalyticsPage() {
                                                 </span>
                                             </div>
                                         </td>
-
                                         {/* Actions */}
                                         <td className="p-4">
                                             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -563,7 +523,6 @@ export default function ProductAnalyticsPage() {
                         </tbody>
                     </table>
                 </div>
-
                 {/* ── Pagination ── */}
                 {totalPages > 1 && (
                     <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/50">
@@ -589,7 +548,6 @@ export default function ProductAnalyticsPage() {
                     </div>
                 )}
             </div>
-
             {/* ── Request Dialog ── */}
             {showRequestDialog && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
@@ -604,7 +562,6 @@ export default function ProductAnalyticsPage() {
                         <p className="text-sm text-gray-500 mb-6">
                             This will create an operational request for <strong>{requestProductIds.length}</strong> product{requestProductIds.length > 1 ? 's' : ''}.
                         </p>
-
                         <div className="bg-gray-50 rounded-xl p-4 mb-6">
                             <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Products</div>
                             <div className="space-y-1 max-h-40 overflow-y-auto">
@@ -619,7 +576,6 @@ export default function ProductAnalyticsPage() {
                                 })}
                             </div>
                         </div>
-
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setShowRequestDialog(false)}

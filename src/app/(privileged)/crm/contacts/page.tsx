@@ -4,9 +4,7 @@ import ContactManager from "./manager";
 import { Users, ShieldCheck, CreditCard, Building2, TrendingUp, ArrowLeft, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-
 export const dynamic = 'force-dynamic';
-
 async function getContacts() {
     try {
         const data = await erpFetch('contacts/');
@@ -34,7 +32,6 @@ async function getContacts() {
         return [];
     }
 }
-
 async function getSites() {
     try {
         return await erpFetch('sites/');
@@ -42,13 +39,11 @@ async function getSites() {
         return [];
     }
 }
-
 export default async function ContactsPage() {
     const [contacts, sites] = await Promise.all([
         getContacts(),
         getSites()
     ]);
-
     return (
         <div className="p-8 space-y-10 animate-in fade-in duration-500 max-w-[1600px] mx-auto">
             {/* Header */}
@@ -71,7 +66,6 @@ export default async function ContactsPage() {
                     </Button>
                 </div>
             </header>
-
             {/* KPI Section */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 <Card className="rounded-3xl border-0 shadow-sm bg-gradient-to-br from-indigo-50 to-indigo-100/50 overflow-hidden">
@@ -87,7 +81,6 @@ export default async function ContactsPage() {
                         </div>
                     </CardContent>
                 </Card>
-
                 <Card className="rounded-3xl border-0 shadow-sm bg-gradient-to-br from-gray-50 to-gray-100/50 overflow-hidden">
                     <CardContent className="pt-6 pb-5 px-6">
                         <div className="flex items-center gap-5">
@@ -101,7 +94,6 @@ export default async function ContactsPage() {
                         </div>
                     </CardContent>
                 </Card>
-
                 <Card className="rounded-3xl border-0 shadow-sm bg-gradient-to-br from-indigo-900 to-indigo-800 text-white overflow-hidden">
                     <CardContent className="pt-6 pb-5 px-6">
                         <div className="flex items-center gap-5">
@@ -116,7 +108,6 @@ export default async function ContactsPage() {
                     </CardContent>
                 </Card>
             </div>
-
             {/* Feature Info Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className="group p-8 bg-white rounded-[2rem] border border-gray-100 hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500">
@@ -128,7 +119,6 @@ export default async function ContactsPage() {
                         Distinguish between a contact's <b>Home Site</b> and their <b>Transaction Site</b> for perfect multi-branch analytics.
                     </p>
                 </div>
-
                 <div className="group p-8 bg-white rounded-[2rem] border border-gray-100 hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500">
                     <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 mb-6 group-hover:scale-110 transition-transform">
                         <CreditCard size={24} />
@@ -138,7 +128,6 @@ export default async function ContactsPage() {
                         Every contact has a direct 1:1 link to the General Ledger. Balances are calculated live from validated journal entries.
                     </p>
                 </div>
-
                 <div className="group p-8 bg-white rounded-[2rem] border border-gray-100 hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500">
                     <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 mb-6 group-hover:scale-110 transition-transform">
                         <ShieldCheck size={24} />
@@ -149,7 +138,6 @@ export default async function ContactsPage() {
                     </p>
                 </div>
             </div>
-
             <ContactManager
                 contacts={contacts}
                 sites={sites}

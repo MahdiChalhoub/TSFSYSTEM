@@ -1,6 +1,4 @@
 'use client'
-import { Activity } from 'lucide-react'
-
 import { useCurrency } from '@/lib/utils/currency'
 import { useState, useEffect, useMemo } from "react"
 import type { DeliveryOrder } from '@/types/erp'
@@ -16,7 +14,6 @@ import {
 } from "lucide-react"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
 import { useListViewSettings } from '@/hooks/useListViewSettings'
-
 const STATUS_CONFIG: Record<string, { label: string; bg: string; icon: any; color: string }> = {
     PENDING: { label: 'Pending', bg: 'bg-stone-50', icon: Clock, color: 'text-stone-500 border-stone-100' },
     PREPARING: { label: 'Preparing', bg: 'bg-blue-50', icon: Package, color: 'text-blue-600 border-blue-100' },
@@ -25,7 +22,6 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; icon: any; colo
     FAILED: { label: 'Failed', bg: 'bg-rose-50', icon: XCircle, color: 'text-rose-600 border-rose-100' },
     CANCELLED: { label: 'Cancelled', bg: 'bg-stone-100', icon: Ban, color: 'text-stone-400 border-stone-200' },
 }
-
 export default function DeliveryOrdersPage() {
     const { fmt } = useCurrency()
     const [deliveries, setDeliveries] = useState<DeliveryOrder[]>([])
@@ -36,9 +32,7 @@ export default function DeliveryOrdersPage() {
         columns: ['id', 'status', 'order_ref', 'recipient_name', 'zone_name', 'driver_name', 'tracking_code', 'delivery_fee', 'actions'],
         pageSize: 15, sortKey: 'id', sortDir: 'desc'
     })
-
     useEffect(() => { loadData() }, [])
-
     async function loadData() {
         setLoading(true)
         try {
@@ -51,7 +45,6 @@ export default function DeliveryOrdersPage() {
             setLoading(false)
         }
     }
-
     async function doAction(id: number, action: string, body?: Record<string, any>) {
         setActionLoading(id)
         try {
@@ -65,12 +58,10 @@ export default function DeliveryOrdersPage() {
             setActionLoading(null)
         }
     }
-
     const filteredDeliveries = useMemo(() => {
         if (!statusFilter) return deliveries
         return deliveries.filter(d => d.status === statusFilter)
     }, [deliveries, statusFilter])
-
     const columns: ColumnDef<any>[] = useMemo(() => [
         {
             key: 'id',
@@ -182,14 +173,12 @@ export default function DeliveryOrdersPage() {
             }
         }
     ], [fmt, actionLoading])
-
     const stats = useMemo(() => ({
         pending: deliveries.filter(d => ['PENDING', 'PREPARING'].includes(d.status ?? '')).length,
         inTransit: deliveries.filter(d => d.status === 'IN_TRANSIT').length,
         delivered: deliveries.filter(d => d.status === 'DELIVERED').length,
         totalFees: deliveries.reduce((s, d) => s + parseFloat(String(d.delivery_fee || 0)), 0)
     }), [deliveries])
-
     if (loading && deliveries.length === 0) {
         return (
             <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
@@ -199,7 +188,6 @@ export default function DeliveryOrdersPage() {
             </div>
         )
     }
-
     return (
         <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
             <header className="flex justify-between items-center">
@@ -222,7 +210,6 @@ export default function DeliveryOrdersPage() {
                     </div>
                 </div>
             </header>
-
             {/* Tactical KPIs */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden group">
@@ -274,7 +261,6 @@ export default function DeliveryOrdersPage() {
                     </CardContent>
                 </Card>
             </div>
-
             <TypicalListView
                 title="Logistics Manifest Stream"
                 data={filteredDeliveries}
@@ -317,7 +303,6 @@ export default function DeliveryOrdersPage() {
                     </div>
                 }
             />
-
             {/* Logistics Timeline */}
             <Card className="rounded-[2.5rem] border-0 shadow-sm bg-white overflow-hidden mt-8">
                 <CardHeader className="p-8 border-b border-stone-50 flex flex-row items-center justify-between">

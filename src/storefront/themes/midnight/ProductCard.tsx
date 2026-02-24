@@ -1,5 +1,4 @@
 'use client'
-
 import { useState } from 'react'
 import Link from 'next/link'
 import { ShoppingBag, ShoppingCart, Star, Heart, ArrowRight, X, FileQuestion, Search } from 'lucide-react'
@@ -8,14 +7,12 @@ import { useConfig } from '../../engine/hooks/useConfig'
 import { useWishlist } from '../../engine/hooks/useWishlist'
 import { useStorefrontPath } from '../../engine/hooks/useStorefrontPath'
 import type { ProductCardProps } from '../../engine/types'
-
 export default function MidnightProductCard({ product }: ProductCardProps) {
     const { addToCart } = useCart()
     const { showPrice, isQuoteMode, slug } = useConfig()
     const { isInWishlist, toggleWishlist } = useWishlist()
     const { path } = useStorefrontPath()
     const [added, setAdded] = useState(false)
-
     const handleQuickAdd = (e: React.MouseEvent) => {
         e.preventDefault()
         e.stopPropagation()
@@ -30,7 +27,6 @@ export default function MidnightProductCard({ product }: ProductCardProps) {
         setAdded(true)
         setTimeout(() => setAdded(false), 1500)
     }
-
     return (
         <Link
             href={path(`/product/${product.id}`)}
@@ -63,7 +59,6 @@ export default function MidnightProductCard({ product }: ProductCardProps) {
                     </div>
                 </div>
             </div>
-
             <div className="p-8 space-y-4">
                 <div className="space-y-1">
                     <div className="flex justify-between items-start">
@@ -75,7 +70,6 @@ export default function MidnightProductCard({ product }: ProductCardProps) {
                     </div>
                     <p className="text-[10px] text-slate-500 font-mono tracking-widest">{product.sku}</p>
                 </div>
-
                 <div className="flex items-center justify-between pt-2">
                     {showPrice ? (
                         <div className="text-2xl font-black text-white">
@@ -87,7 +81,6 @@ export default function MidnightProductCard({ product }: ProductCardProps) {
                             <FileQuestion size={14} /> Request Quote
                         </div>
                     )}
-
                     {isQuoteMode ? (
                         <span className="px-6 py-2 bg-teal-500/10 text-teal-400 border border-teal-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest">
                             Get Quote

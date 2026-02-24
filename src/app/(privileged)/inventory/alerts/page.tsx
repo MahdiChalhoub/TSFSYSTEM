@@ -2,9 +2,7 @@ import { erpFetch } from "@/lib/erp-api";
 import { BarChart3, RefreshCw, Activity } from "lucide-react";
 import { AlertsClient } from "./AlertsClient";
 import Link from "next/link";
-
 export const dynamic = 'force-dynamic';
-
 async function getAlerts() {
     try {
         return await erpFetch('stock-alerts/');
@@ -13,7 +11,6 @@ async function getAlerts() {
         return [];
     }
 }
-
 async function getDashboard() {
     try {
         return await erpFetch('stock-alerts/dashboard/');
@@ -21,13 +18,11 @@ async function getDashboard() {
         return null;
     }
 }
-
 export default async function StockAlertsPage() {
     const [alerts, dashboard] = await Promise.all([
         getAlerts(),
         getDashboard(),
     ]);
-
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             <header className="flex justify-between items-center border-b pb-6">
@@ -51,7 +46,6 @@ export default async function StockAlertsPage() {
                     </Link>
                 </div>
             </header>
-
             {/* Premium KPI Bar */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
                 {[
@@ -67,7 +61,6 @@ export default async function StockAlertsPage() {
                     </div>
                 ))}
             </div>
-
             <AlertsClient initialAlerts={alerts} />
         </div>
     );

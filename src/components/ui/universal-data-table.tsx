@@ -1,5 +1,4 @@
 'use client';
-import { Star } from 'lucide-react'
 
 import React, { useState, useEffect, useMemo } from 'react';
 import {
@@ -17,6 +16,8 @@ import {
     Save,
     Trash,
     Star
+    Star,
+    Star,
 } from 'lucide-react';
 import { getSavedViews, createSavedView, updateSavedView, deleteSavedView, UDLESavedView } from "@/app/actions/udle";
 import {
