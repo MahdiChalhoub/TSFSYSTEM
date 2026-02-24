@@ -62,6 +62,9 @@ export interface SyncLogEntry {
 let dbPromise: Promise<IDBPDatabase> | null = null;
 
 function getDB(): Promise<IDBPDatabase> {
+    if (typeof window === 'undefined') {
+        throw new Error('IndexedDB is not available during server-side rendering');
+    }
     if (!dbPromise) {
         dbPromise = openDB(DB_NAME, DB_VERSION, {
             upgrade(db) {

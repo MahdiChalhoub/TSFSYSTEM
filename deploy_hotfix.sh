@@ -2,7 +2,7 @@
 set -e
 
 # Version Configuration
-AGENT_VERSION="2.9.1-AG-$(date +'%y%m%d.%H%M')"
+AGENT_VERSION="2.9.2-AG-$(date +'%y%m%d.%H%M')"
 echo "🚀 Preparing deployment for version: $AGENT_VERSION"
 
 # Update version in branding

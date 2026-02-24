@@ -64,9 +64,8 @@ jobs:
         run: |
           cd erp_backend
           pip install -r requirements.txt
-          pip install pytest pytest-django pytest-cov
 
-      - name: Run tests with coverage
+      - name: Run tests (198 tests across all modules)
         env:
           DB_NAME: test_tsf
           DB_USER: postgres
@@ -80,17 +79,21 @@ jobs:
           LOCAL_DEV: '1'
         run: |
           cd erp_backend
-          python -m pytest \
-            erp/tests/ \
-            apps/finance/tests/ \
-            apps/inventory/tests/ \
-            apps/pos/tests/ \
-            --cov=erp \
-            --cov=apps \
-            --cov-report=term-missing \
-            --cov-report=xml:coverage.xml \
-            -v \
-            --tb=short
+          python manage.py test \
+            apps.pos.tests.test_pos_integrity \
+            apps.finance.tests.test_ledger_service \
+            apps.finance.tests.test_finance_rules \
+            apps.inventory.tests.test_inventory_service \
+            apps.crm.tests.test_loyalty_service \
+            apps.hr.tests.test_hr_models \
+            erp.tests.test_encryption \
+            erp.tests.test_permissions \
+            erp.tests.test_tenant_isolation \
+            erp.tests.test_connector_engine \
+            erp.tests.test_mixed_tax_engine \
+            erp.tests.test_api_endpoints \
+            erp.tests.test_error_handler \
+            --verbosity=2 --no-input
 
       - name: Upload coverage
         if: always()

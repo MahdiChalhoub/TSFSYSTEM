@@ -14,7 +14,8 @@ export function SiteSwitcher({ sites }: { sites: Record<string, any>[] }) {
         getCurrentSiteId().then(id => setCurrentId(id));
     }, []);
 
-    const selectedSite = sites.find(s => s.id === currentId) || sites[0];
+    const sitesList = Array.isArray(sites) ? sites : [];
+    const selectedSite = sitesList.find(s => s.id === currentId) || sitesList[0];
 
     const handleSwitch = (id: number) => {
         startTransition(async () => {
@@ -52,7 +53,7 @@ export function SiteSwitcher({ sites }: { sites: Record<string, any>[] }) {
                             <h4 className="text-xs font-black text-gray-500 uppercase tracking-widest">Select Branch</h4>
                         </div>
                         <div className="p-2 max-h-80 overflow-y-auto">
-                            {sites.map(site => (
+                            {sitesList.map(site => (
                                 <button
                                     key={site.id}
                                     onClick={() => handleSwitch(site.id)}

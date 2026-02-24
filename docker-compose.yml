@@ -14,6 +14,12 @@ services:
       - "5432:5432"
     networks:
       - tsf_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   redis:
     image: redis:7-alpine
@@ -23,6 +29,11 @@ services:
       - "6379:6379"
     networks:
       - tsf_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     deploy:
       resources:
         limits:
@@ -32,12 +43,9 @@ services:
     build:
       context: ./erp_backend
       dockerfile: Dockerfile.backend
-    container_name: tsf_backend
     restart: unless-stopped
     volumes:
       - ./erp_backend:/app
-    ports:
-      - "8000:8000"
     environment:
       - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-tsfdb}
       - DB_NAME=${DB_NAME:-tsfdb}
@@ -47,15 +55,23 @@ services:
       - DB_PORT=5432
       - DJANGO_DEBUG=${DJANGO_DEBUG:-False}
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
-      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}
+      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend,tsf_backend}
       - TOKEN_TTL_HOURS=24
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - tsf_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     deploy:
       resources:
         limits:
@@ -67,7 +83,6 @@ services:
     build:
       context: ./erp_backend
       dockerfile: Dockerfile.backend
-    container_name: tsf_celery
     restart: unless-stopped
     command: celery -A core worker -l info --concurrency=2
     volumes:
@@ -84,8 +99,10 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - tsf_network
     deploy:
@@ -97,7 +114,6 @@ services:
     build:
       context: ./erp_backend
       dockerfile: Dockerfile.backend
-    container_name: tsf_celery_beat
     restart: unless-stopped
     command: celery -A core beat -l info
     volumes:
@@ -114,8 +130,10 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - tsf_network
     deploy:
@@ -127,7 +145,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.frontend
-    container_name: tsf_frontend
     restart: unless-stopped
     environment:
       - NEXT_PUBLIC_API_URL=/api
@@ -162,7 +179,6 @@ services:
     networks:
       - tsf_network
 
-  # Optional: Auto-renew SSL certificates
   certbot:
     image: certbot/certbot
     container_name: tsf_certbot

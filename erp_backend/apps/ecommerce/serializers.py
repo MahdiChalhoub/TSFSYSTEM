@@ -26,12 +26,12 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = [
             'id', 'order_number', 'contact', 'contact_name',
-            'status', 'subtotal', 'tax_total', 'delivery_fee',
-            'total', 'payment_method', 'delivery_address',
+            'status', 'subtotal', 'tax_amount', 'delivery_fee',
+            'total_amount', 'payment_method', 'delivery_address',
             'notes', 'placed_at', 'created_at', 'updated_at',
             'lines',
         ]
-        read_only_fields = ('order_number', 'subtotal', 'tax_total', 'total')
+        read_only_fields = ('order_number', 'subtotal', 'tax_amount', 'total_amount')
 
     def get_contact_name(self, obj):
         return str(obj.contact) if obj.contact else ''
