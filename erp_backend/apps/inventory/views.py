@@ -19,41 +19,65 @@ Audit Fixes Applied (v1.3.2-b022):
 from datetime import timedelta
 
 from django.db import transaction
-from django.db.models import Q, Sum, Count, Subquery, OuterRef, DecimalField
+from django.db.models import Count, DecimalField, Q, Sum
 from django.db.models.functions import Coalesce
 from django.utils import timezone
-from rest_framework import viewsets, status, permissions
-from rest_framework.response import Response
+from rest_framework import permissions, status
 from rest_framework.decorators import action
+from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 
-from erp.views import TenantModelViewSet
-from erp.middleware import get_current_tenant_id
-from erp.models import Organization, Site
-from erp.serializers import SiteSerializer
-
 from apps.inventory.models import (
-    Product, Unit, Warehouse, Inventory, InventoryMovement,
-    Brand, Category, Parfum, ProductGroup,
-    StockAdjustmentOrder, StockAdjustmentLine,
-    StockTransferOrder, StockTransferLine,
-    OperationalRequest, OperationalRequestLine,
-    ComboComponent, ProductSerial, SerialLog,
+    Brand,
+    Category,
+    ComboComponent,
+    Inventory,
+    InventoryMovement,
+    OperationalRequest,
+    OperationalRequestLine,
+    Parfum,
+    Product,
+    ProductGroup,
+    ProductSerial,
+    SerialLog,
+    StockAdjustmentLine,
+    StockAdjustmentOrder,
+    StockTransferLine,
+    StockTransferOrder,
+    Unit,
+    Warehouse,
 )
 from apps.inventory.serializers import (
-    ProductSerializer, ProductCreateSerializer, UnitSerializer,
-    WarehouseSerializer, InventorySerializer, InventoryMovementSerializer,
-    BrandSerializer, BrandDetailSerializer, CategorySerializer,
-    ParfumSerializer, ProductGroupSerializer,
-    StockAdjustmentOrderSerializer, StockAdjustmentLineSerializer,
-    StockTransferOrderSerializer, StockTransferLineSerializer,
-    OperationalRequestSerializer, OperationalRequestLineSerializer,
-    ProductAnalyticsSerializer, ComboComponentSerializer,
-    ProductSerialSerializer, SerialLogSerializer, StorefrontProductSerializer,
-    StorefrontCategorySerializer, StorefrontBrandSerializer,
+    BrandDetailSerializer,
+    BrandSerializer,
+    CategorySerializer,
+    ComboComponentSerializer,
+    InventoryMovementSerializer,
+    InventorySerializer,
+    OperationalRequestLineSerializer,
+    OperationalRequestSerializer,
+    ParfumSerializer,
+    ProductCreateSerializer,
+    ProductGroupSerializer,
+    ProductSerializer,
+    ProductSerialSerializer,
+    SerialLogSerializer,
+    StockAdjustmentLineSerializer,
+    StockAdjustmentOrderSerializer,
+    StockTransferLineSerializer,
+    StockTransferOrderSerializer,
+    StorefrontBrandSerializer,
+    StorefrontCategorySerializer,
+    StorefrontProductSerializer,
+    UnitSerializer,
+    WarehouseSerializer,
 )
 from apps.inventory.services import InventoryService
 from erp.lifecycle_mixin import LifecycleViewSetMixin
+from erp.middleware import get_current_tenant_id
+from erp.models import Organization, Site
+from erp.serializers import SiteSerializer
+from erp.views import TenantModelViewSet
 
 
 # =============================================================================
@@ -75,10 +99,8 @@ def _get_org_or_400():
 # UNIT
 # =============================================================================
 
-from erp.mixins import (
-    AuditLogMixin, ConnectorAwareMixin, TenantFilterMixin, 
-    PriceChangeWorkflowMixin, UDLEViewSetMixin
-)
+from erp.mixins import UDLEViewSetMixin
+
 
 class UnitViewSet(UDLEViewSetMixin, TenantModelViewSet):
     queryset = Unit.objects.all()
@@ -565,10 +587,10 @@ class ProductViewSet(UDLEViewSetMixin, TenantModelViewSet):
             health = 100
             if total_stock < p.min_stock_level: health -= 30
             if total_stock == 0: health -= 40
-            
+
             # Request lifecycle
             req_info = request_map.get(p.id)
-            
+
             results.append({
                 'id': p.id,
                 'sku': p.sku,
@@ -608,7 +630,7 @@ class ProductViewSet(UDLEViewSetMixin, TenantModelViewSet):
         product = self.get_object()
         organization = product.organization
         thirty_days_ago = timezone.now() - timedelta(days=30)
-        
+
         # 1. Stock Breakdown
         stock_summary = Inventory.objects.filter(product=product).aggregate(
             total=Coalesce(Sum('quantity'), 0, output_field=DecimalField())
@@ -616,7 +638,7 @@ class ProductViewSet(UDLEViewSetMixin, TenantModelViewSet):
         stock_by_loc = list(Inventory.objects.filter(product=product).values(
             'warehouse__id', 'warehouse__name'
         ).annotate(qty=Sum('quantity')))
-        
+
         # 2. Sales Velocity
         sales_data = InventoryMovement.objects.filter(
             product=product, type='OUT', created_at__gte=thirty_days_ago
@@ -626,31 +648,30 @@ class ProductViewSet(UDLEViewSetMixin, TenantModelViewSet):
         )
         total_sales_30d = float(sales_data['total_qty'])
         avg_daily_sales = total_sales_30d / 30.0
-        
+
         # 3. Best Purchasing Insight
         from apps.pos.sourcing_models import ProductSupplier
         best_supplier = ProductSupplier.objects.filter(
             product=product
         ).select_related('supplier').order_by('last_purchased_price').first()
-        
+
         sourcing_info = {
             'best_supplier': best_supplier.supplier.name if best_supplier else None,
             'best_price': float(best_supplier.last_purchased_price) if best_supplier else None,
             'last_purchased': best_supplier.last_purchased_date if best_supplier else None,
         }
-        
+
         # 4. Financial Score (Margin vs Velocity)
         margin = 0
         if product.cost_price_ht > 0:
             margin = ((product.selling_price_ht - product.cost_price_ht) / product.cost_price_ht) * 100
-        
+
         financial_score = 50
         if margin > 30: financial_score += 20
         if avg_daily_sales > 10: financial_score += 20
         if margin < 10 and avg_daily_sales < 1: financial_score -= 30
-        
+
         # 5. Waste Alert (Expiry)
-        from erp.models import StockBatch
         expiry_risk = []
         batches = Inventory.objects.filter(product=product, quantity__gt=0).select_related('batch')
         for inv in batches:
@@ -659,11 +680,11 @@ class ProductViewSet(UDLEViewSetMixin, TenantModelViewSet):
                 # Days of stock = Stock / Daily Sales
                 effective_sales = max(0.01, avg_daily_sales)
                 days_of_stock = float(inv.quantity) / effective_sales
-                
+
                 if days_of_stock > days_until_expiry:
                     waste_qty = float(inv.quantity) - (effective_sales * max(0, days_until_expiry))
                     expiry_risk.append({
-                        'batch': inv.batch.batch_code,
+                        'batch': inv.batch.batch_number,
                         'expiry': inv.batch.expiry_date,
                         'waste_risk_qty': round(waste_qty, 2),
                         'days_until_expiry': days_until_expiry,
@@ -687,7 +708,7 @@ class ProductViewSet(UDLEViewSetMixin, TenantModelViewSet):
             'financials': {
                 'score': min(100, max(0, financial_score)),
                 'margin_pct': float(margin),
-                'adjustment_score': 100, 
+                'adjustment_score': 100,
             },
             'expiry_risk': expiry_risk,
             'status': product.status
@@ -767,17 +788,17 @@ class WarehouseViewSet(TenantModelViewSet):
     def create(self, request, *args, **kwargs):
         data = request.data.copy() if hasattr(request.data, 'copy') else dict(request.data)
         code = data.get('code', '').strip()
-        
+
         if not code:
             user = request.user
             header_tenant_id = get_current_tenant_id()
             org_id = getattr(user, 'organization_id', None)
             if user.is_staff or user.is_superuser:
                 org_id = header_tenant_id or org_id
-                
+
             if org_id:
-                from erp.models import Organization
                 from apps.finance.models import TransactionSequence
+                from erp.models import Organization
                 try:
                     org = Organization.objects.get(id=org_id)
                     data['code'] = TransactionSequence.next_value(org, 'WAREHOUSE')
@@ -788,8 +809,8 @@ class WarehouseViewSet(TenantModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
-        from rest_framework.response import Response
         from rest_framework import status
+        from rest_framework.response import Response
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_create(self, serializer):
@@ -810,7 +831,7 @@ class WarehouseViewSet(TenantModelViewSet):
         site_id = serializer.validated_data.get('site')
         if isinstance(site_id, models.Model):
             site_id = site_id.id
-            
+
         if not site_id:
             site = Site.objects.filter(organization_id=organization_id).first()
             if not site:
@@ -845,7 +866,7 @@ class InventoryViewSet(TenantModelViewSet):
             is_consignment=True,
             quantity__gt=0
         ).select_related('product', 'warehouse', 'supplier')
-        
+
         data = [{
             'id': inv.id,
             'product_name': inv.product.name,
@@ -855,7 +876,7 @@ class InventoryViewSet(TenantModelViewSet):
             'supplier_name': inv.supplier.name if inv.supplier else 'Unknown',
             'consignment_cost': inv.consignment_cost,
         } for inv in stock]
-        
+
         return Response(data)
 
     # --- H4: cross-tenant validation ---
@@ -935,7 +956,6 @@ class InventoryViewSet(TenantModelViewSet):
             )
 
             # Also compute totals
-            from decimal import Decimal
             total_qty = sum(p['quantity'] for p in products)
             total_value = sum(p['total_value'] for p in products)
 
@@ -947,10 +967,11 @@ class InventoryViewSet(TenantModelViewSet):
                 },
                 'products': products,
             })
-        except Exception as e:
+        except Exception:
             # Fallback: use simple cost-price based valuation
-            from apps.inventory.models import Inventory, Product
-            from django.db.models import F, Sum
+            from django.db.models import F
+
+            from apps.inventory.models import Inventory
             inventories = Inventory.objects.filter(
                 organization=organization,
                 quantity__gt=0,
@@ -1023,7 +1044,7 @@ class InventoryViewSet(TenantModelViewSet):
         } for a in qs[:100]]
 
         # Summary stats
-        from django.db.models import Sum, Count
+        from django.db.models import Count, Sum
         stats = ExpiryAlert.objects.filter(
             organization=organization, is_acknowledged=False
         ).aggregate(
@@ -1084,8 +1105,9 @@ class InventoryViewSet(TenantModelViewSet):
         organization, err = _get_org_or_400()
         if err: return err
 
-        from apps.inventory.models import Inventory
         from django.db.models import Sum
+
+        from apps.inventory.models import Inventory
 
         products = Product.objects.filter(
             organization=organization, is_active=True
@@ -1363,7 +1385,7 @@ class BrandViewSet(TenantModelViewSet):
             organization=organization,
             products__is_active=True
         ).distinct()
-        
+
         serializer = StorefrontBrandSerializer(brands, many=True)
         return Response(serializer.data)
 
@@ -1410,7 +1432,7 @@ class CategoryViewSet(TenantModelViewSet):
 
         # Brands linked to this category, annotated with product count IN THIS CATEGORY
         brands = Brand.objects.filter(
-            categories=category, 
+            categories=category,
             organization=organization
         ).annotate(
             cat_product_count=Count('products', filter=Q(products__category=category))
@@ -1425,13 +1447,12 @@ class CategoryViewSet(TenantModelViewSet):
         ).values('id', 'name', 'cat_product_count')
 
         # Products in this category
-        from apps.inventory.serializers import ProductSerializer
         products = Product.objects.filter(
             category=category,
             organization=organization,
             is_active=True
         ).select_related('brand', 'parfum', 'unit', 'size_unit')
-        
+
         product_data = []
         for p in products:
             product_data.append({
@@ -1468,7 +1489,7 @@ class CategoryViewSet(TenantModelViewSet):
             organization=organization,
             products_count__gt=0
         )
-        
+
         serializer = StorefrontCategorySerializer(categories, many=True)
         return Response(serializer.data)
 
@@ -1815,7 +1836,7 @@ class StockAdjustmentOrderViewSet(LifecycleViewSetMixin, TenantModelViewSet):
             return Response({'error': 'Order must be CONFIRMED before posting'}, status=400)
         if order.is_posted:
             return Response({'error': 'Order already posted'}, status=400)
-            
+
         try:
             InventoryService.process_adjustment_order(
                 organization=order.organization,
@@ -1913,7 +1934,7 @@ class StockTransferOrderViewSet(LifecycleViewSetMixin, TenantModelViewSet):
             return Response({'error': 'Order must be CONFIRMED before posting'}, status=400)
         if order.is_posted:
             return Response({'error': 'Order already posted'}, status=400)
-            
+
         try:
             InventoryService.process_transfer_order(
                 organization=order.organization,

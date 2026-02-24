@@ -2,10 +2,10 @@
 # AuditLogMixin - Automatic audit logging for CRUD operations
 # ConnectorAwareMixin - Routes requests through Connector Engine
 
-from django.utils import timezone
-from rest_framework.response import Response
-from rest_framework import status
 import json
+
+from rest_framework import status
+from rest_framework.response import Response
 
 
 class AuditLogMixin:
@@ -18,12 +18,12 @@ class AuditLogMixin:
     """
     audit_model_name = None  # Override in subclass, e.g., 'Product', 'ChartOfAccount'
     audit_exclude_fields = ['password', 'token', 'secret']  # Fields to exclude from logs
-    
+
     def _serialize_instance(self, instance):
         """Safely serialize instance data for logging."""
         if instance is None:
             return None
-        
+
         data = {}
         for field in instance._meta.fields:
             field_name = field.name
@@ -43,44 +43,50 @@ class AuditLogMixin:
                     except (TypeError, ValueError):
                         data[field_name] = str(value)
         return data
-    
+
     def _get_org_id(self):
         """Get organization ID from middleware context."""
         from .middleware import get_current_tenant_id
         return get_current_tenant_id()
-    
+
     def _log_action(self, action, instance, old_data=None):
         """Create audit log entry."""
+        from django.db import transaction as db_transaction
+
         from .models_audit import AuditLog
-        
+
         org_id = self._get_org_id()
         user = self.request.user if self.request.user.is_authenticated else None
-        
+
         new_data = self._serialize_instance(instance) if action != 'DELETE' else None
-        
+
         try:
-            AuditLog.objects.create(
-                organization_id=org_id,
-                actor=user,
-                action=action,
-                table_name=self.audit_model_name or instance.__class__.__name__,
-                record_id=str(instance.pk) if instance else '',
-                new_value=new_data,
-                old_value=old_data,
-                ip_address=self.request.META.get('REMOTE_ADDR'),
-                user_agent=self.request.META.get('HTTP_USER_AGENT', '')[:500],
-            )
+            # Use a savepoint so that if the auditlog table doesn't exist
+            # (managed=False, not created in tests), the error is contained
+            # and doesn't poison the outer transaction.
+            with db_transaction.atomic():
+                AuditLog.objects.create(
+                    organization_id=org_id,
+                    actor=user,
+                    action=action,
+                    table_name=self.audit_model_name or instance.__class__.__name__,
+                    record_id=str(instance.pk) if instance else '',
+                    new_value=new_data,
+                    old_value=old_data,
+                    ip_address=self.request.META.get('REMOTE_ADDR'),
+                    user_agent=self.request.META.get('HTTP_USER_AGENT', '')[:500],
+                )
         except Exception as e:
             # Don't fail the request if audit logging fails
             import logging
             logging.getLogger('erp').warning(f"[AUDIT] Failed to log action: {e}")
-    
+
     def perform_create(self, serializer):
         """Override to log CREATE actions."""
         instance = serializer.save()
         self._log_action('CREATE', instance)
         return instance
-    
+
     def perform_update(self, serializer):
         """Override to log UPDATE actions with before/after data."""
         instance = self.get_object()
@@ -88,7 +94,7 @@ class AuditLogMixin:
         updated_instance = serializer.save()
         self._log_action('UPDATE', updated_instance, old_data=old_data)
         return updated_instance
-    
+
     def perform_destroy(self, instance):
         """Override to log DELETE actions."""
         old_data = self._serialize_instance(instance)
@@ -107,27 +113,27 @@ class ConnectorAwareMixin:
     """
     connector_module = None  # Override in subclass: 'inventory', 'finance', 'pos', etc.
     connector_bypass_actions = ['list', 'retrieve']  # Actions that don't need module check
-    
+
     def _check_module_enabled(self):
         """Returns True if module is enabled for this tenant."""
         if not self.connector_module:
             return True
-            
+
         from .module_manager import ModuleManager
         org_id = getattr(self.request, 'org_id', None)
-        
+
         if not org_id:
             # No org context (SaaS admin) - always enabled
             return True
-            
+
         return ModuleManager.is_enabled(self.connector_module, org_id)
-    
+
     def _buffer_request(self, action_name):
         """Buffer the request if module is not enabled."""
         from .connector_engine import connector_engine
-        
+
         org_id = getattr(self.request, 'org_id', None)
-        
+
         # Prepare request data
         request_data = {
             'method': self.request.method,
@@ -136,47 +142,47 @@ class ConnectorAwareMixin:
             'query_params': dict(self.request.query_params),
             'user_id': self.request.user.id if self.request.user.is_authenticated else None,
         }
-        
+
         result = connector_engine.buffer_request(
             module=self.connector_module,
             action=action_name,
             data=request_data,
             organization_id=org_id
         )
-        
+
         return Response({
             'status': 'buffered',
             'message': f'Module {self.connector_module} is not enabled. Request has been buffered.',
             'buffer_id': result.get('buffer_id') if isinstance(result, dict) else None,
         }, status=status.HTTP_202_ACCEPTED)
-    
+
     def initial(self, request, *args, **kwargs):
         """Check module status before processing request."""
         super().initial(request, *args, **kwargs)
-        
+
         # Skip check for bypass actions
         if self.action in self.connector_bypass_actions:
             return
-        
+
         # Check if module is enabled
         if not self._check_module_enabled():
             # Store flag to buffer later
             self._should_buffer = True
         else:
             self._should_buffer = False
-    
+
     def create(self, request, *args, **kwargs):
         """Override create to handle buffering."""
         if getattr(self, '_should_buffer', False):
             return self._buffer_request('create')
         return super().create(request, *args, **kwargs)
-    
+
     def update(self, request, *args, **kwargs):
         """Override update to handle buffering."""
         if getattr(self, '_should_buffer', False):
             return self._buffer_request('update')
         return super().update(request, *args, **kwargs)
-    
+
     def destroy(self, request, *args, **kwargs):
         """Override destroy to handle buffering."""
         if getattr(self, '_should_buffer', False):
@@ -192,16 +198,16 @@ class TenantFilterMixin:
         class ProductViewSet(TenantFilterMixin, viewsets.ModelViewSet):
             queryset = Product.objects.all()
     """
-    
+
     def get_queryset(self):
         """Filter queryset by organization from request."""
         qs = super().get_queryset()
         org_id = getattr(self.request, 'org_id', None)
-        
+
         if org_id and hasattr(qs.model, 'organization_id'):
             return qs.filter(organization_id=org_id)
         return qs
-    
+
     def perform_create(self, serializer):
         """Automatically set organization on create."""
         org_id = getattr(self.request, 'org_id', None)
@@ -231,9 +237,9 @@ class PriceChangeWorkflowMixin:
     - Returns 202 Accepted with approval_request_id
     - Change is NOT applied until approved
     """
-    price_fields = ['cost_price', 'cost_price_ht', 'cost_price_ttc', 
+    price_fields = ['cost_price', 'cost_price_ht', 'cost_price_ttc',
                     'selling_price_ht', 'selling_price_ttc']
-    
+
     def check_price_change_workflow(self, instance, new_data, request):
         """
         Check if price change requires approval.
@@ -247,38 +253,38 @@ class PriceChangeWorkflowMixin:
             Tuple of (requires_hold: bool, approval_id: UUID or None)
         """
         from decimal import Decimal, InvalidOperation
-        
+
         # Detect if any price field is changing
         price_changes = {}
         for field in self.price_fields:
             old_val = getattr(instance, field, None)
             new_val = new_data.get(field)
-            
+
             # Skip if not being updated
             if new_val is None:
                 continue
-                
+
             # Convert to Decimal for comparison
             try:
                 old_decimal = Decimal(str(old_val)) if old_val else Decimal('0')
                 new_decimal = Decimal(str(new_val)) if new_val else Decimal('0')
             except (TypeError, ValueError, InvalidOperation):
                 continue
-                
+
             if old_decimal != new_decimal:
                 price_changes[field] = {
                     'old': float(old_decimal),
                     'new': float(new_decimal)
                 }
-        
+
         if not price_changes:
             return False, None  # No price changes
-        
+
         # Check workflow
         from .services_audit import WorkflowService
-        
+
         org = getattr(instance, 'organization', None)
-        
+
         result = WorkflowService.check_workflow(
             event_type='product.price_change',
             actor=request.user,
@@ -292,35 +298,36 @@ class PriceChangeWorkflowMixin:
             target_table='Product',
             target_id=str(instance.id)
         )
-        
+
         return result.requires_hold, result.request_id
-    
+
     def perform_update_with_workflow(self, serializer):
         """
         Perform update with workflow check for price changes.
         Call this from perform_update if you want workflow protection.
         """
         instance = self.get_object()
-        
+
         # Check for price change workflow
         requires_hold, approval_id = self.check_price_change_workflow(
             instance,
             serializer.validated_data,
             self.request
         )
-        
+
         if requires_hold:
             # Return 202 - change requires approval
             raise PriceChangeApprovalRequired(approval_id)
-        
+
         # Proceed with update
         return serializer.save()
 
 
-from rest_framework.decorators import action
 from django.db import models as dj_models
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.decorators import action
+from rest_framework.filters import OrderingFilter, SearchFilter
+
 
 class UDLEViewSetMixin:
     """
@@ -331,10 +338,10 @@ class UDLEViewSetMixin:
     3. Customization hooks for column visibility and defaults.
     """
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    
+
     # Override in subclass if needed
     udle_exclude_fields = ['password', 'secret', 'token']
-    
+
     @action(detail=False, methods=['get'], url_path='schema-meta')
     def schema_meta(self, request):
         """
@@ -342,16 +349,16 @@ class UDLEViewSetMixin:
         """
         model = self.get_queryset().model
         meta = model._meta
-        
+
         fields_info = []
         for field in meta.get_fields():
             # Skip reverse relations and explicitly excluded fields
             if field.one_to_many or field.many_to_many or field.name in self.udle_exclude_fields:
                 continue
-                
+
             field_type = "string"
             choices = None
-            
+
             if isinstance(field, dj_models.IntegerField) or isinstance(field, dj_models.AutoField):
                 field_type = "number"
             elif isinstance(field, dj_models.DecimalField) or isinstance(field, dj_models.FloatField):
@@ -364,7 +371,7 @@ class UDLEViewSetMixin:
                 field_type = "date"
             elif isinstance(field, dj_models.ForeignKey):
                 field_type = "relation"
-            
+
             if hasattr(field, 'choices') and field.choices:
                 choices = [{"value": c[0], "label": str(c[1])} for c in field.choices]
                 field_type = "select"

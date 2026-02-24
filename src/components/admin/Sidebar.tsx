@@ -444,6 +444,7 @@ export const MENU_ITEMS = [
             { title: 'Sites & Branches', path: '/settings/sites', visibility: 'saas' },
             { title: 'Roles & Permissions', path: '/settings/roles' },
             { title: 'Security Settings', path: '/settings/security', icon: Shield },
+            { title: 'Custom Domains', path: '/settings/domains', icon: Globe },
             { title: 'Notifications', path: '/settings/notifications', icon: Bell },
             { title: 'Billing & Subscription', path: '/subscription', icon: CreditCard },
         ]

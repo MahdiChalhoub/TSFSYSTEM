@@ -85,6 +85,7 @@ const defaultNav = [
             { title: "General", url: "/settings" },
             { title: "POS Payment Methods", url: "/settings/pos-settings" },
             { title: "Security", url: "/settings/security" },
+            { title: "Custom Domains", url: "/settings/domains" },
         ]
     },
 ]
