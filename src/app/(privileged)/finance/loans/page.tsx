@@ -13,8 +13,6 @@ import { useCurrency } from '@/lib/utils/currency'
 import {
     HandCoins, Plus, Search, CheckCircle2, FileText, Timer,
     Calendar, DollarSign, ArrowRight, RefreshCw, Users, ShieldCheck
-    ShieldCheck,
-    ShieldCheck,
 } from "lucide-react"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
 import { useListViewSettings } from '@/hooks/useListViewSettings'

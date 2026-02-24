@@ -16,8 +16,6 @@ import {
     Save,
     Trash,
     Star
-    Star,
-    Star,
 } from 'lucide-react';
 import { getSavedViews, createSavedView, updateSavedView, deleteSavedView, UDLESavedView } from "@/app/actions/udle";
 import {
