@@ -176,7 +176,7 @@ class ClientPortalConfig(TenantModel):
         if not config:
             try:
                 config = cls.objects.create(organization=organization)
-            except:
+            except Exception:
                 # Fallback in case of race condition
                 config = cls.objects.filter(organization=organization).first()
         return config

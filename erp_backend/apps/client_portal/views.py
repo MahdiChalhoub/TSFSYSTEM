@@ -917,7 +917,7 @@ class QuoteRequestViewSet(TenantModelViewSet):
             if self.request.user.is_authenticated:
                 try:
                     contact = self.request.user.client_access.contact
-                except:
+                except Exception:
                     pass
 
             serializer.save(organization=org, contact=contact)

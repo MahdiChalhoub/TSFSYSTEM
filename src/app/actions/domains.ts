@@ -47,7 +47,9 @@ export async function addCustomDomain(domain: string, domainType: 'SHOP' | 'PLAT
         if (data?.id) {
             return { success: true, data }
         }
-        return { success: false, error: data?.domain?.[0] || data?.detail || 'Failed to add domain' }
+        // Extract first validation error from DRF response
+        const firstError = data?.domain?.[0] || data?.organization?.[0] || data?.non_field_errors?.[0] || data?.detail || (typeof data === 'string' ? data : JSON.stringify(data))
+        return { success: false, error: firstError || 'Failed to add domain' }
     } catch (err: any) {
         return { success: false, error: err.message || 'Network error' }
     }

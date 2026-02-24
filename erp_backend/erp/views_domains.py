@@ -46,7 +46,7 @@ class CustomDomainSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at', 'verified_at', 'ssl_provisioned_at',
         ]
         read_only_fields = [
-            'id', 'is_verified', 'verification_token', 'ssl_status',
+            'id', 'organization', 'is_verified', 'verification_token', 'ssl_status',
             'is_active', 'created_at', 'updated_at', 'verified_at', 'ssl_provisioned_at',
         ]
 
