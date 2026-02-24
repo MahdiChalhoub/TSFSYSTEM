@@ -112,8 +112,9 @@ export default async function middleware(req: NextRequest) {
     const isPortalRoute = url.pathname.startsWith('/tenant') || url.pathname.startsWith('/supplier-portal');
     const isStorefrontAlias = url.pathname === '/store' || url.pathname === '/home';
 
-    // Additional Storefront sub-routes that should be public on tenant subdomains.
-    // These paths arrive BEFORE the tenant rewrite, so they need to be whitelisted.
+    // Storefront sub-routes that should be public.
+    // On tenant subdomains, these arrive BEFORE the tenant rewrite.
+    // /shop/* routes are the customer-facing storefront (including /shop/login).
     const isStorefrontSubRoute =
         url.pathname.startsWith('/product') ||
         url.pathname.startsWith('/categories') ||
@@ -122,6 +123,7 @@ export default async function middleware(req: NextRequest) {
         url.pathname.startsWith('/search') ||
         url.pathname.startsWith('/account') ||
         url.pathname.startsWith('/quote') ||
+        url.pathname.startsWith('/shop') ||
         url.pathname.startsWith('/login') ||
         url.pathname.startsWith('/register');
 
@@ -130,14 +132,10 @@ export default async function middleware(req: NextRequest) {
 
     if (!hasAuthToken && !isPublicRoute && !url.pathname.startsWith('/saas/login')) {
         const loginUrl = url.clone();
-        // On tenant subdomains, admin/ERP routes should redirect to the ROOT domain
-        // login page (tsf.ci/login), NOT the storefront login (tenant/slug/login).
-        // The storefront /login is for customers; the ERP /login is for employees.
-        if (isOnTenantSubdomain) {
-            loginUrl.hostname = rootDomain;
-        } else {
-            loginUrl.hostname = hostname;
-        }
+        // On tenant subdomains, redirect to /login on the SAME subdomain.
+        // /login is the employee/admin ERP login for this workspace.
+        // (Customer login is at /shop/login — a separate storefront route.)
+        loginUrl.hostname = hostname;
         loginUrl.pathname = '/login';
         loginUrl.port = "";
         loginUrl.searchParams.set('error', 'session_expired');
@@ -280,13 +278,14 @@ export default async function middleware(req: NextRequest) {
         return NextResponse.redirect(blockedUrl);
     }
 
-    // These are the tenant ERP/admin routes that should NOT be rewritten
-    // to /tenant/[slug]/... — they pass through to the admin panel directly.
-    // Note: /login and /register are storefront routes on tenant subdomains,
-    // so they ARE rewritten. The ERP login lives on the root domain only.
+    // Tenant ERP/admin routes that pass through directly (NOT rewritten to storefront).
+    // /login and /register are now EMPLOYEE routes on tenant subdomains.
+    // Customer/storefront login is at /shop/login.
     const isTenantAdminRoute =
         url.pathname.startsWith('/dashboard') ||
         url.pathname.startsWith('/admin') ||
+        url.pathname.startsWith('/login') ||
+        url.pathname.startsWith('/register') ||
         url.pathname.startsWith('/storage') ||
         url.pathname.startsWith('/inventory') ||
         url.pathname.startsWith('/finance') ||
@@ -311,18 +310,31 @@ export default async function middleware(req: NextRequest) {
         return NextResponse.next();
     }
 
+    // ─── STOREFRONT ROUTES ─────────────────────────────────────────────
     // Everything else on the tenant subdomain is a storefront route.
     // Rewrite it to /tenant/[slug]/... internally.
-    // Examples:
-    //   /              →  /tenant/tsf-global
-    //   /register      →  /tenant/tsf-global/register
-    //   /login         →  /tenant/tsf-global/login    (storefront login)
-    //   /account       →  /tenant/tsf-global/account
-    //   /product/123   →  /tenant/tsf-global/product/123
-    //   /cart           →  /tenant/tsf-global/cart
-    const storefrontPath = url.pathname === '/' || url.pathname === '/store' || url.pathname === '/home'
+    //
+    // Route mapping:
+    //   /                    →  /tenant/tsf-global           (storefront home)
+    //   /shop                →  /tenant/tsf-global           (storefront home alias)
+    //   /shop/login          →  /tenant/tsf-global/login     (customer login)
+    //   /shop/register       →  /tenant/tsf-global/register  (customer register)
+    //   /shop/account        →  /tenant/tsf-global/account   (customer account)
+    //   /product/123         →  /tenant/tsf-global/product/123
+    //   /categories          →  /tenant/tsf-global/categories
+    //   /cart                →  /tenant/tsf-global/cart
+    //   /account             →  /tenant/tsf-global/account
+    //
+    // /shop/* prefix strips the /shop part before rewriting:
+    let storefrontInternalPath = url.pathname;
+    if (url.pathname.startsWith('/shop')) {
+        // Strip /shop prefix: /shop/login → /login, /shop → /
+        storefrontInternalPath = url.pathname.replace(/^\/shop/, '') || '/';
+    }
+
+    const storefrontPath = storefrontInternalPath === '/' || storefrontInternalPath === '/store' || storefrontInternalPath === '/home'
         ? `/tenant/${currentHost}`
-        : `/tenant/${currentHost}${url.pathname}`;
+        : `/tenant/${currentHost}${storefrontInternalPath}`;
 
     return NextResponse.rewrite(
         new URL(`${storefrontPath}${searchParams.length > 0 ? '?' + searchParams : ''}`, req.url)
