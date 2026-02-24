@@ -1,6 +1,4 @@
 'use client'
-import { Activity, ShieldCheck } from 'lucide-react'
-
 import { useState, useEffect } from 'react'
 import { erpFetch } from '@/lib/erp-api'
 import {
@@ -10,7 +8,6 @@ import {
     ChevronRight, Target, ShieldCheck
 } from 'lucide-react'
 import { Badge } from "@/components/ui/badge"
-
 type Stats = {
     total_orders?: number
     monthly_orders?: number
@@ -30,7 +27,6 @@ type RecentOrder = {
     total_amount: number;
     created_at: string
 }
-
 const STATUS_MAP: Record<string, { label: string; color: string; bg: string; text: string }> = {
     PLACED: { label: 'Placed', color: 'amber', bg: 'bg-amber-50', text: 'text-amber-600' },
     CONFIRMED: { label: 'Confirmed', color: 'blue', bg: 'bg-blue-50', text: 'text-blue-600' },
@@ -39,14 +35,11 @@ const STATUS_MAP: Record<string, { label: string; color: string; bg: string; tex
     DELIVERED: { label: 'Delivered', color: 'emerald', bg: 'bg-emerald-50', text: 'text-emerald-600' },
     CANCELLED: { label: 'Cancelled', color: 'rose', bg: 'bg-rose-50', text: 'text-rose-600' },
 }
-
 export default function EcommerceDashboardPage() {
     const [stats, setStats] = useState<Stats | null>(null)
     const [recent, setRecent] = useState<RecentOrder[]>([])
     const [loading, setLoading] = useState(true)
-
     useEffect(() => { load() }, [])
-
     async function load() {
         setLoading(true)
         try {
@@ -59,11 +52,9 @@ export default function EcommerceDashboardPage() {
         } catch { }
         setLoading(false)
     }
-
     const totalRevenue = recent.reduce((s, o) => s + Number(o.total_amount || 0), 0)
     const deliveredCount = recent.filter(o => o.status === 'DELIVERED').length
     const pendingCount = recent.filter(o => ['PLACED', 'CONFIRMED', 'PROCESSING'].includes(o.status)).length
-
     if (loading && recent.length === 0) {
         return (
             <div className="p-8 space-y-8 max-w-7xl mx-auto animate-pulse">
@@ -75,7 +66,6 @@ export default function EcommerceDashboardPage() {
             </div>
         )
     }
-
     return (
         <div className="p-8 space-y-8 max-w-7xl mx-auto animate-in fade-in duration-700">
             {/* Header: Ecommerce Intelligence Console */}
@@ -105,7 +95,6 @@ export default function EcommerceDashboardPage() {
                     </button>
                 </div>
             </header>
-
             {/* Premium KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="bg-white p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
@@ -123,7 +112,6 @@ export default function EcommerceDashboardPage() {
                         <Target size={12} className="text-indigo-400" /> Velocity: Stable
                     </div>
                 </div>
-
                 <div className="bg-white p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                     <div className="flex justify-between items-start mb-4">
                         <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
@@ -139,7 +127,6 @@ export default function EcommerceDashboardPage() {
                         <ShieldCheck size={12} className="text-emerald-400" /> Verified Settlement
                     </div>
                 </div>
-
                 <div className="bg-indigo-900 p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-white">
                     <div className="flex justify-between items-start mb-4">
                         <div className="w-12 h-12 rounded-2xl bg-indigo-800/50 text-indigo-100 flex items-center justify-center">
@@ -155,7 +142,6 @@ export default function EcommerceDashboardPage() {
                         <Clock size={12} className="text-indigo-400" /> Avg Lead: 2.4 Days
                     </div>
                 </div>
-
                 <div className="bg-white p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                     <div className="flex justify-between items-start mb-4">
                         <div className="w-12 h-12 rounded-2xl bg-blue-50 text-indigo-600 flex items-center justify-center">
@@ -172,7 +158,6 @@ export default function EcommerceDashboardPage() {
                     </div>
                 </div>
             </div>
-
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Status Funnel: Intelligence Mode */}
                 <div className="lg:col-span-1 bg-white p-8 rounded-[2.5rem] shadow-sm flex flex-col gap-6">
@@ -180,7 +165,6 @@ export default function EcommerceDashboardPage() {
                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Logistics Pipeline</p>
                         <h3 className="text-xl font-black text-gray-900 uppercase italic">Conversion <span className="text-indigo-600">Funnel</span></h3>
                     </div>
-
                     <div className="space-y-4">
                         {Object.entries(STATUS_MAP).map(([key, { label, color, bg, text }]) => {
                             const count = recent.filter(o => o.status === key).length
@@ -202,7 +186,6 @@ export default function EcommerceDashboardPage() {
                         })}
                     </div>
                 </div>
-
                 {/* Recent Intelligence Stream */}
                 <div className="lg:col-span-2 bg-white rounded-[2.5rem] shadow-sm overflow-hidden border-2 border-slate-50">
                     <div className="px-8 py-7 border-b border-gray-50 flex items-center justify-between">
@@ -214,7 +197,6 @@ export default function EcommerceDashboardPage() {
                             Full Registry
                         </button>
                     </div>
-
                     <div className="divide-y divide-gray-50 overflow-y-auto max-h-[400px] custom-scrollbar">
                         {recent.map(o => {
                             const s = STATUS_MAP[o.status] || { label: o.status, color: 'gray', bg: 'bg-gray-50', text: 'text-gray-400' }

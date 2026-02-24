@@ -1,11 +1,9 @@
 'use client'
-
 import { ShoppingCart, Star, Plus, ShieldCheck, Truck, Package } from 'lucide-react'
 import type { Product } from '../../engine/types'
 import { useCart } from '../../engine/hooks/useCart'
 import { useConfig } from '../../engine/hooks/useConfig'
 import Link from 'next/link'
-
 export default function EmporiumProductCard({
     product,
     layout = 'grid'
@@ -15,11 +13,9 @@ export default function EmporiumProductCard({
 }) {
     const { slug, orgName } = useConfig()
     const { addToCart } = useCart()
-
     const price = typeof product.selling_price_ttc === 'number'
         ? product.selling_price_ttc
         : parseFloat(product.selling_price_ttc as any) || 0
-
     const handleAddToCart = (e: React.MouseEvent) => {
         e.preventDefault()
         e.stopPropagation()
@@ -32,11 +28,9 @@ export default function EmporiumProductCard({
             tax_rate: product.tax_rate || 0,
         })
     }
-
     // Simulated Rating for Marketplace Vibe
     const rating = 4.5
     const reviews = Math.floor(Math.random() * 500) + 50
-
     if (layout === 'compact') {
         return (
             <div className="group bg-white rounded-2xl border border-slate-200 p-4 flex gap-6 hover:shadow-xl hover:shadow-slate-200/50 hover:border-yellow-400/50 transition-all">
@@ -84,7 +78,6 @@ export default function EmporiumProductCard({
             </div>
         )
     }
-
     return (
         <div className="group bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-2xl hover:shadow-slate-200/50 hover:border-yellow-400/50 transition-all flex flex-col">
             <div className="aspect-square bg-slate-50 relative overflow-hidden flex items-center justify-center border-b border-slate-100">
@@ -105,7 +98,6 @@ export default function EmporiumProductCard({
                     <ShoppingCart size={18} />
                 </button>
             </div>
-
             <div className="p-4 flex-1 flex flex-col">
                 <div className="flex-1 space-y-2">
                     <div className="flex items-center justify-between">
@@ -121,7 +113,6 @@ export default function EmporiumProductCard({
                         </h3>
                     </Link>
                 </div>
-
                 <div className="mt-4 space-y-1">
                     <div className="flex items-baseline gap-1">
                         <span className="text-xl font-black text-slate-900">${price.toFixed(2)}</span>

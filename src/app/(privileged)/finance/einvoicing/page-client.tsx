@@ -1,11 +1,9 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { getInvoices } from '@/app/actions/finance/invoices'
 import { submitEInvoice, getEInvoiceStatus, getEInvoiceQR } from '@/app/actions/finance/einvoice'
 import { FileCheck, Send, QrCode, RefreshCw, CheckCircle, XCircle, Clock, Search, ChevronRight, Shield, Zap, Activity, ShieldCheck } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-
 type Invoice = {
     id: string | number
     invoice_number: string
@@ -18,7 +16,6 @@ type Invoice = {
     fne_reference?: string
     invoice_hash?: string
 }
-
 type EInvoiceDetail = {
     invoice_id: string
     fne_status: string
@@ -27,7 +24,6 @@ type EInvoiceDetail = {
     fne_error: string
     invoice_hash: string
 }
-
 export default function EInvoicingPage() {
     const [invoices, setInvoices] = useState<Invoice[]>([])
     const [selected, setSelected] = useState<Invoice | null>(null)
@@ -37,11 +33,9 @@ export default function EInvoicingPage() {
     const [submitting, setSubmitting] = useState(false)
     const [search, setSearch] = useState('')
     const [toast, setToast] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null)
-
     useEffect(() => {
         loadInvoices()
     }, [])
-
     async function loadInvoices() {
         setLoading(true)
         try {
@@ -51,7 +45,6 @@ export default function EInvoicingPage() {
             setLoading(false)
         }
     }
-
     async function openDetail(inv: Invoice) {
         setSelected(inv)
         setQr(null)
@@ -62,7 +55,6 @@ export default function EInvoicingPage() {
             setDetail(null)
         }
     }
-
     async function handleSubmit() {
         if (!selected) return
         setSubmitting(true)
@@ -78,7 +70,6 @@ export default function EInvoicingPage() {
             setSubmitting(false)
         }
     }
-
     async function handleQR() {
         if (!selected) return
         try {
@@ -88,12 +79,10 @@ export default function EInvoicingPage() {
             showToast('QR code not available for this invoice', 'err')
         }
     }
-
     function showToast(msg: string, type: 'ok' | 'err') {
         setToast({ msg, type })
         setTimeout(() => setToast(null), 4000)
     }
-
     const statusBadge = (s?: string) => {
         if (!s) return <span className="px-2 py-0.5 rounded-full text-xs bg-gray-800 text-gray-400">—</span>
         const map: Record<string, string> = {
@@ -108,12 +97,10 @@ export default function EInvoicingPage() {
             </span>
         )
     }
-
     const filtered = invoices.filter(i =>
         (i.invoice_number || '').toLowerCase().includes(search.toLowerCase()) ||
         (i.contact_name || '').toLowerCase().includes(search.toLowerCase())
     )
-
     return (
         <div className="min-h-screen bg-[#070D1B] text-gray-100 p-6 flex flex-col gap-6">
             {/* Toast */}
@@ -123,7 +110,6 @@ export default function EInvoicingPage() {
                     {toast.msg}
                 </div>
             )}
-
             {/* Header: Regulatory Intelligence Mode */}
             <header className="flex justify-between items-end">
                 <div>
@@ -151,7 +137,6 @@ export default function EInvoicingPage() {
                     </button>
                 </div>
             </header>
-
             {/* Compliance badges */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
@@ -172,7 +157,6 @@ export default function EInvoicingPage() {
                     </div>
                 ))}
             </div>
-
             <div className="flex gap-6 flex-1 min-h-0">
                 {/* Invoice list: Registry Mode */}
                 <div className="w-1/2 flex flex-col gap-4">
@@ -217,7 +201,6 @@ export default function EInvoicingPage() {
                         ))}
                     </div>
                 </div>
-
                 {/* Detail panel: Audit Mode */}
                 <div className="w-1/2 bg-[#0F1729]/50 backdrop-blur-xl rounded-[2.5rem] border border-gray-800/50 p-8 flex flex-col gap-6 shadow-2xl relative overflow-hidden">
                     {!selected ? (
@@ -241,7 +224,6 @@ export default function EInvoicingPage() {
                                     <span className="text-3xl font-black text-white tracking-tighter">${Number(selected.total_amount || 0).toLocaleString()}</span>
                                 </div>
                             </div>
-
                             {detail && (
                                 <div className="bg-[#070D1B] rounded-xl p-4 border border-gray-800 flex flex-col gap-3">
                                     <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider">E-Invoice Status</div>
@@ -269,14 +251,12 @@ export default function EInvoicingPage() {
                                     )}
                                 </div>
                             )}
-
                             {qr && (
                                 <div className="bg-[#070D1B] rounded-xl p-4 border border-gray-800">
                                     <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">QR Code Data</div>
                                     <div className="font-mono text-xs text-emerald-400 break-all bg-gray-900 rounded-lg p-2">{qr}</div>
                                 </div>
                             )}
-
                             <div className="flex gap-4 mt-auto">
                                 <button
                                     onClick={handleSubmit}

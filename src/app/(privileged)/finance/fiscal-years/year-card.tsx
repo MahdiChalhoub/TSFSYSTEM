@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useTransition } from 'react'
 import type { FiscalPeriod } from '@/types/erp'
 import { deleteFiscalYear, updatePeriodStatus, closeFiscalYear, hardLockFiscalYear, transferBalancesToNextYear } from '@/app/actions/finance/fiscal-year'
@@ -7,13 +6,10 @@ import { Trash2, Lock, Edit2, PlayCircle, Clock, ShieldCheck, Forward } from 'lu
 import PeriodEditor from './period-editor'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-
 export default function FiscalYearCard({ year, nextYear }: { year: Record<string, any>, nextYear?: Record<string, any> }) {
     const [isPending, startTransition] = useTransition()
     const [editingPeriod, setEditingPeriod] = useState<FiscalPeriod | null>(null)
-
     const [pendingAction, setPendingAction] = useState<{ type: string; title: string; description: string; variant: 'danger' | 'warning' | 'info' } | null>(null)
-
     const actionHandlers: Record<string, () => void> = {
         rollForward: () => {
             startTransition(async () => {
@@ -45,7 +41,6 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
             })
         },
     }
-
     const handleRollForward = () => {
         if (!nextYear) return
         setPendingAction({
@@ -55,7 +50,6 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
             variant: 'warning',
         })
     }
-
     const handleDelete = () => {
         setPendingAction({
             type: 'delete',
@@ -64,7 +58,6 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
             variant: 'danger',
         })
     }
-
     const handleCloseYear = () => {
         setPendingAction({
             type: 'close',
@@ -73,7 +66,6 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
             variant: 'warning',
         })
     }
-
     const handleHardLock = () => {
         setPendingAction({
             type: 'hardLock',
@@ -82,14 +74,12 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
             variant: 'danger',
         })
     }
-
     const handleConfirmAction = () => {
         if (pendingAction) {
             actionHandlers[pendingAction.type]?.()
             setPendingAction(null)
         }
     }
-
     const handleChangeStatus = (periodId: number, status: 'OPEN' | 'CLOSED' | 'FUTURE') => {
         startTransition(async () => {
             try {
@@ -99,7 +89,6 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
             }
         })
     }
-
     return (
         <div className={`
             bg-white border rounded-lg p-5 shadow-sm transition-all hover:shadow-md
@@ -121,7 +110,6 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
                         </p>
                     </div>
                 </div>
-
                 <div className="flex items-center gap-2">
                     {year.status === 'OPEN' && (
                         <button
@@ -132,7 +120,6 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
                             Soft Close
                         </button>
                     )}
-
                     {year.status === 'CLOSED' && nextYear && (
                         <button
                             onClick={handleRollForward}
@@ -142,7 +129,6 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
                             <Forward size={14} /> Roll Forward
                         </button>
                     )}
-
                     {year.status === 'CLOSED' && !year.isHardLocked && (
                         <button
                             onClick={handleHardLock}
@@ -152,13 +138,11 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
                             <Lock size={12} /> Hard Lock
                         </button>
                     )}
-
                     {year.isHardLocked && (
                         <div className="bg-red-100 text-red-700 px-3 py-1 text-[10px] font-extrabold uppercase rounded flex items-center gap-1 border border-red-200">
                             <ShieldCheck size={12} /> IMMUTABLE
                         </div>
                     )}
-
                     <button
                         onClick={handleDelete}
                         disabled={isPending || year.isHardLocked}
@@ -169,7 +153,6 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
                     </button>
                 </div>
             </div>
-
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7 gap-3">
                 {[...(year.periods || [])].sort((a: Record<string, any>, b: Record<string, any>) => (a.start_date || '').localeCompare(b.start_date || '')).map((p: Record<string, any>, idx: number) => {
                     const periodStatus = p.status || (p.is_closed ? 'CLOSED' : 'OPEN')
@@ -190,7 +173,6 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
                             <div className="font-semibold text-xs truncate">
                                 {p.start_date ? new Date(p.start_date).toLocaleDateString('en', { month: 'short' }) : ''}
                             </div>
-
                             <div className="flex justify-center items-center gap-1 mt-2">
                                 <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${periodStatus === 'OPEN' ? 'bg-green-100 text-green-700' :
                                     periodStatus === 'CLOSED' ? 'bg-stone-200 text-stone-600' :
@@ -199,11 +181,9 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
                                     {periodStatus}
                                 </span>
                             </div>
-
                             {/* Hover Actions */}
                             {!year.isHardLocked && (
                                 <div className="absolute inset-0 bg-white/95 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 rounded-lg z-10 p-2 text-stone-600">
-
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => handleChangeStatus(p.id, 'OPEN')}
@@ -227,7 +207,6 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
                                             <Clock size={14} />
                                         </button>
                                     </div>
-
                                     <button
                                         onClick={() => setEditingPeriod(p)}
                                         className="text-[9px] font-bold uppercase hover:underline mt-1"
@@ -240,11 +219,9 @@ export default function FiscalYearCard({ year, nextYear }: { year: Record<string
                     )
                 })}
             </div>
-
             {editingPeriod && (
                 <PeriodEditor period={editingPeriod} onClose={() => setEditingPeriod(null)} />
             )}
-
             <ConfirmDialog
                 open={pendingAction !== null}
                 onOpenChange={(open) => { if (!open) setPendingAction(null) }}

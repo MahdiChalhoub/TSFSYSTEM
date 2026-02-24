@@ -1,6 +1,4 @@
 'use client'
-import { ShieldCheck } from 'lucide-react'
-
 import { useState, useEffect, useTransition, useMemo } from "react"
 import { useParams, useRouter } from "next/navigation"
 import {
@@ -19,7 +17,6 @@ import {
 } from "lucide-react"
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-
 // ─── Types ───────────────────────────────────────────────────────
 interface Line {
     id: number
@@ -36,7 +33,6 @@ interface Line {
     is_verified: boolean
     is_adjusted: boolean
 }
-
 interface Session {
     id: number
     reference: string | null
@@ -51,13 +47,11 @@ interface Session {
     needs_adjustment_count: number
     adjustment_order: number | null
 }
-
 // ─── Page ────────────────────────────────────────────────────────
 export default function VerifyPage() {
     const params = useParams()
     const sessionId = Number(params.id)
     const router = useRouter()
-
     const [session, setSession] = useState<Session | null>(null)
     const [lines, setLines] = useState<Line[]>([])
     const [loading, setLoading] = useState(true)
@@ -65,7 +59,6 @@ export default function VerifyPage() {
     const [search, setSearch] = useState("")
     const [showFilter, setShowFilter] = useState<"all" | "diff" | "match" | "verified">("all")
     const [selected, setSelected] = useState<Set<number>>(new Set())
-
     const reload = () => {
         startTransition(async () => {
             const [sess, lns] = await Promise.all([
@@ -78,7 +71,6 @@ export default function VerifyPage() {
         })
     }
     useEffect(() => { reload() }, [sessionId])
-
     // ─── Filter ───
     const filtered = useMemo(() => {
         let list = lines
@@ -91,14 +83,12 @@ export default function VerifyPage() {
         if (showFilter === "verified") list = list.filter(l => l.is_verified)
         return list
     }, [lines, search, showFilter])
-
     // ─── Stats ───
     const totalLines = lines.length
     const verifiedCount = lines.filter(l => l.is_verified).length
     const diffCount = lines.filter(l => l.needs_adjustment).length
     const adjustedCount = lines.filter(l => l.is_adjusted).length
     const matchCount = lines.filter(l => !l.needs_adjustment && l.physical_qty_person1 !== null).length
-
     // ─── Actions ───
     const handleVerifyLine = (lineId: number) => {
         startTransition(async () => {
@@ -112,7 +102,6 @@ export default function VerifyPage() {
             reload()
         })
     }
-
     const handleBatchVerify = () => {
         startTransition(async () => {
             for (const id of selected) {
@@ -122,9 +111,7 @@ export default function VerifyPage() {
             reload()
         })
     }
-
     const [pendingAction, setPendingAction] = useState<{ type: string; title: string; description: string; variant: 'danger' | 'warning' | 'info' } | null>(null)
-
     const handleVerifyAll = () => {
         setPendingAction({
             type: 'verifyAll',
@@ -133,7 +120,6 @@ export default function VerifyPage() {
             variant: 'warning',
         })
     }
-
     const handleCreateAdjustment = () => {
         setPendingAction({
             type: 'createAdjustment',
@@ -142,7 +128,6 @@ export default function VerifyPage() {
             variant: 'warning',
         })
     }
-
     const handleConfirmAction = () => {
         if (!pendingAction) return
         if (pendingAction.type === 'verifyAll') {
@@ -161,7 +146,6 @@ export default function VerifyPage() {
         }
         setPendingAction(null)
     }
-
     const toggleSelect = (id: number) => {
         setSelected(prev => {
             const next = new Set(prev)
@@ -170,7 +154,6 @@ export default function VerifyPage() {
             return next
         })
     }
-
     const toggleSelectAll = () => {
         if (selected.size === filtered.length) {
             setSelected(new Set())
@@ -178,13 +161,10 @@ export default function VerifyPage() {
             setSelected(new Set(filtered.map(l => l.id)))
         }
     }
-
     if (loading) {
         return <div className="flex items-center justify-center py-24"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>
     }
-
     const isReadOnly = session?.status === 'ADJUSTED'
-
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -215,7 +195,6 @@ export default function VerifyPage() {
                     )}
                 </div>
             </div>
-
             {/* KPI Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <Card>
@@ -243,7 +222,6 @@ export default function VerifyPage() {
                     </CardContent>
                 </Card>
             </div>
-
             {/* Filters */}
             <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1">
@@ -263,7 +241,6 @@ export default function VerifyPage() {
                     </Button>
                 )}
             </div>
-
             {/* Lines Table */}
             <Card>
                 <CardContent className="p-0">
@@ -352,7 +329,6 @@ export default function VerifyPage() {
                     </Table>
                 </CardContent>
             </Card>
-
             <ConfirmDialog
                 open={pendingAction !== null}
                 onOpenChange={(open) => { if (!open) setPendingAction(null) }}

@@ -1,5 +1,4 @@
 'use client';
-
 import { useState } from 'react';
 import type { Employee } from '@/types/erp';
 import { TypicalListView, type ColumnDef } from '@/components/common/TypicalListView';
@@ -14,9 +13,7 @@ import { linkGLAccount } from '@/app/actions/people';
 import { useAdmin } from '@/context/AdminContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-
 type Personnel = Record<string, any>;
-
 const ALL_COLUMNS: ColumnDef<Personnel>[] = [
     { key: 'identity', label: 'Human Identity', sortable: true, alwaysVisible: true },
     { key: 'id', label: 'Record ID', sortable: true },
@@ -24,7 +21,6 @@ const ALL_COLUMNS: ColumnDef<Personnel>[] = [
     { key: 'attribution', label: 'Node Attribution' },
     { key: 'ledger', label: 'Ledger Alignment', align: 'right' },
 ];
-
 export default function HumanCapitalRegistry({
     employees,
     sites,
@@ -41,13 +37,11 @@ export default function HumanCapitalRegistry({
         sortKey: 'identity',
         sortDir: 'asc',
     });
-
     const [search, setSearch] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [scopeEmployee, setScopeEmployee] = useState<any | null>(null);
     const [linkingGL, setLinkingGL] = useState<string | null>(null);
     const { scopeAccess } = useAdmin();
-
     async function handleLinkGL(emp: Personnel, empType: 'EMPLOYEE' | 'PARTNER' | 'BOTH') {
         setLinkingGL(emp.id);
         const result = await linkGLAccount(emp.id, empType);
@@ -60,12 +54,10 @@ export default function HumanCapitalRegistry({
         }
         setLinkingGL(null);
     }
-
     const filtered = employees.filter(e =>
         `${e.firstName} ${e.lastName}`.toLowerCase().includes(search.toLowerCase()) ||
         e.employeeId.toLowerCase().includes(search.toLowerCase())
     );
-
     const columns: ColumnDef<Personnel>[] = ALL_COLUMNS.map(c => {
         const renderers: Record<string, (r: Personnel) => React.ReactNode> = {
             identity: r => (
@@ -136,7 +128,6 @@ export default function HumanCapitalRegistry({
         };
         return { ...c, render: renderers[c.key] };
     });
-
     return (
         <div className="space-y-6">
             <TypicalListView<Personnel>
@@ -194,7 +185,6 @@ export default function HumanCapitalRegistry({
                     search={{ placeholder: 'Search Human Identity or Record ID...', value: search, onChange: setSearch }}
                 />
             </TypicalListView>
-
             {isModalOpen && (
                 <EmployeeModal
                     sites={sites}
@@ -202,7 +192,6 @@ export default function HumanCapitalRegistry({
                     onClose={() => setIsModalOpen(false)}
                 />
             )}
-
             {scopeEmployee && (
                 <ScopePasswordModal
                     employee={scopeEmployee}

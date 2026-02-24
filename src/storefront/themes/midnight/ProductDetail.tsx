@@ -1,6 +1,4 @@
 'use client'
-import { Star } from 'lucide-react'
-
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -14,7 +12,6 @@ import { useConfig } from '../../engine/hooks/useConfig'
 import { useWishlist } from '../../engine/hooks/useWishlist'
 import { useAuth } from '../../engine/hooks/useAuth'
 import type { ProductDetailProps, ProductVariant } from '../../engine/types'
-
 export default function MidnightProductDetail({ product }: ProductDetailProps) {
     const router = useRouter()
     const { path } = useStorefrontPath()
@@ -27,16 +24,13 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
     const [showReviewForm, setShowReviewForm] = useState(false)
     const [submitting, setSubmitting] = useState(false)
     const [newReview, setNewReview] = useState({ rating: 5, title: '', content: '' })
-
     const fetchReviews = useCallback(() => {
         fetch(`/api/client_portal/reviews/?product=${product.id}`)
             .then(res => res.json())
             .then(data => { setReviews(Array.isArray(data) ? data : (data.results || [])); setReviewLoading(false) })
             .catch(() => setReviewLoading(false))
     }, [product.id])
-
     useEffect(() => { fetchReviews() }, [fetchReviews])
-
     const handleReviewSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!isAuthenticated) return
@@ -51,7 +45,6 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
         } catch (err) { console.error('[Review] Submission failed:', err) }
         finally { setSubmitting(false) }
     }
-
     // Variant Logic
     const options = useMemo(() => {
         if (product.options?.length) return product.options
@@ -65,18 +58,15 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
         })
         return Object.entries(optMap).map(([name, set]) => ({ id: name, name, values: Array.from(set) }))
     }, [product.options, product.variants])
-
     const [selections, setSelections] = useState<Record<string, string>>(() => {
         const initial: Record<string, string> = {}
         options.forEach(opt => { if (opt.values.length) initial[opt.name] = opt.values[0] })
         return initial
     })
-
     const activeVariant = useMemo(() => {
         if (!product.variants?.length) return null
         return product.variants.find(v => Object.entries(selections).every(([name, val]) => v.option_values[name] === val))
     }, [product.variants, selections])
-
     const currentPrice = activeVariant?.price ?? product.selling_price_ttc
     const currentPriceHT = activeVariant?.selling_price_ht ?? product.selling_price_ht
     const currentImage = activeVariant?.image_url ?? product.image_url
@@ -84,7 +74,6 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
     const currentStock = activeVariant?.stock_quantity ?? product.stock_quantity
     const [quantity, setQuantity] = useState(1)
     const [added, setAdded] = useState(false)
-
     const handleAddToCart = () => {
         addToCart({
             product_id: product.id, variant_id: activeVariant?.id,
@@ -95,14 +84,12 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
         setAdded(true)
         setTimeout(() => setAdded(false), 2000)
     }
-
     return (
         <div className="min-h-screen bg-slate-950 py-8">
             <div className="max-w-5xl mx-auto px-4">
                 <button onClick={() => router.back()} className="flex items-center gap-2 text-sm text-slate-400 hover:text-white mb-8 transition-colors">
                     <ArrowLeft size={16} /> Back
                 </button>
-
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                     {/* Product Image */}
                     <div className="bg-slate-900/40 border border-white/5 rounded-[2.5rem] overflow-hidden aspect-square">
@@ -114,7 +101,6 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
                             </div>
                         )}
                     </div>
-
                     {/* Product Info */}
                     <div className="space-y-6">
                         {product.category_name && (
@@ -133,7 +119,6 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
                         </div>
                         <p className="text-[10px] text-slate-600 font-mono tracking-widest uppercase">SKU: {currentSKU}</p>
                         {product.description && <p className="text-slate-400 leading-relaxed text-sm">{product.description}</p>}
-
                         {/* Variant Options */}
                         {options.length > 0 && (
                             <div className="space-y-6 pt-2">
@@ -156,7 +141,6 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
                                 ))}
                             </div>
                         )}
-
                         {/* Pricing */}
                         {showPrice ? (
                             <div className="space-y-1 pt-4">
@@ -172,7 +156,6 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
                                 <FileQuestion size={20} /> Price on Request
                             </div>
                         )}
-
                         {/* Stock */}
                         {currentStock !== undefined && (
                             <div className={`flex items-center gap-2 text-xs font-bold ${Number(currentStock) > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
@@ -182,7 +165,6 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
                                 }
                             </div>
                         )}
-
                         {/* Add to Cart */}
                         {!isQuoteMode && (
                             <div className="space-y-4 pt-4">
@@ -219,7 +201,6 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
                                 </div>
                             </div>
                         )}
-
                         {/* Quote Mode CTA */}
                         {isQuoteMode && (
                             <Link href={path('/quote')}
@@ -229,7 +210,6 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
                         )}
                     </div>
                 </div>
-
                 {/* Reviews Section */}
                 <div className="mt-24 pt-24 border-t border-white/5">
                     <div className="flex items-center justify-between mb-12">
@@ -244,7 +224,6 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
                             </button>
                         )}
                     </div>
-
                     {showReviewForm && (
                         <div className="mb-12 animate-in fade-in slide-in-from-top-4 duration-500">
                             <form onSubmit={handleReviewSubmit} className="bg-slate-900/60 border border-emerald-500/20 p-8 rounded-[2.5rem] space-y-6">
@@ -279,7 +258,6 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
                             </form>
                         </div>
                     )}
-
                     {reviewLoading ? (
                         <div className="flex justify-center py-12">
                             <Loader2 className="animate-spin text-emerald-500" size={32} />

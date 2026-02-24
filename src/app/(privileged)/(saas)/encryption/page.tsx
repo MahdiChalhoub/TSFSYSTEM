@@ -1,7 +1,5 @@
 'use client'
-import { ShieldCheck } from 'lucide-react'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-
 import { useEffect, useState, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -11,7 +9,6 @@ import {
     ShieldCheck, ShieldOff, Eye, EyeOff, Info
 } from "lucide-react"
 import { getOrganizations, getEncryptionStatus, activateEncryption, deactivateEncryption, rotateEncryptionKey } from './actions'
-
 interface EncryptionStatus {
     organization: string
     encryption_enabled: boolean
@@ -19,13 +16,11 @@ interface EncryptionStatus {
     addon_entitled: boolean
     plan: string | null
 }
-
 interface OrgItem {
     id: string
     name: string
     slug: string
 }
-
 function StatusPulse({ active }: { active: boolean }) {
     return (
         <span className="relative flex h-3 w-3">
@@ -34,7 +29,6 @@ function StatusPulse({ active }: { active: boolean }) {
         </span>
     )
 }
-
 export default function EncryptionPage() {
     const [status, setStatus] = useState<EncryptionStatus | null>(null)
     const [orgs, setOrgs] = useState<OrgItem[]>([])
@@ -46,7 +40,6 @@ export default function EncryptionPage() {
     const [showDemo, setShowDemo] = useState(false)
     const [demoData, setDemoData] = useState<{ original: string; encrypted: string; masked: string } | null>(null)
     const [showRotateConfirm, setShowRotateConfirm] = useState(false)
-
     // Load organizations
     const fetchOrgs = useCallback(async () => {
         try {
@@ -59,7 +52,6 @@ export default function EncryptionPage() {
             console.error('Failed to load orgs:', e)
         }
     }, [selectedOrgId])
-
     // Load encryption status
     const fetchStatus = useCallback(async () => {
         try {
@@ -73,12 +65,10 @@ export default function EncryptionPage() {
             setLoading(false)
         }
     }, [])
-
     useEffect(() => {
         fetchOrgs()
         fetchStatus()
     }, [fetchOrgs, fetchStatus])
-
     const handleActivate = async () => {
         setActionLoading('activate')
         setError(null)
@@ -97,7 +87,6 @@ export default function EncryptionPage() {
             setActionLoading(null)
         }
     }
-
     const handleDeactivate = async () => {
         setActionLoading('deactivate')
         setError(null)
@@ -116,7 +105,6 @@ export default function EncryptionPage() {
             setActionLoading(null)
         }
     }
-
     const handleRotateKey = async () => {
         setActionLoading('rotate')
         setError(null)
@@ -135,7 +123,6 @@ export default function EncryptionPage() {
             setActionLoading(null)
         }
     }
-
     const toggleDemo = () => {
         if (!showDemo) {
             // Show demo encryption
@@ -146,7 +133,6 @@ export default function EncryptionPage() {
         }
         setShowDemo(!showDemo)
     }
-
     if (loading) {
         return (
             <div className="flex items-center justify-center h-[60vh]">
@@ -157,10 +143,8 @@ export default function EncryptionPage() {
             </div>
         )
     }
-
     const isActive = status?.encryption_enabled || false
     const hasKey = status?.has_key || false
-
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* Header */}
@@ -181,7 +165,6 @@ export default function EncryptionPage() {
                     <RefreshCw size={16} />
                 </button>
             </div>
-
             {/* Alerts */}
             {error && (
                 <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm font-medium flex items-center gap-3 animate-in slide-in-from-top duration-300">
@@ -197,7 +180,6 @@ export default function EncryptionPage() {
                     <button onClick={() => setSuccess(null)} className="ml-auto text-emerald-400 hover:text-emerald-600">✕</button>
                 </div>
             )}
-
             {/* Main Status Card */}
             <Card className={`bg-white border-gray-100 rounded-[2rem] shadow-xl overflow-hidden border-l-4 ${isActive ? 'border-l-emerald-500' : 'border-l-gray-300'}`}>
                 <div className={`absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl opacity-5 ${isActive ? 'bg-emerald-500' : 'bg-gray-400'}`} />
@@ -237,7 +219,6 @@ export default function EncryptionPage() {
                     </div>
                 </CardContent>
             </Card>
-
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Card className="bg-white border-gray-100 rounded-[2rem] shadow-xl overflow-hidden">
@@ -252,7 +233,6 @@ export default function EncryptionPage() {
                         <p className="text-xs text-gray-500 mt-1">AES-256-GCM · Authenticated</p>
                     </CardContent>
                 </Card>
-
                 <Card className="bg-white border-gray-100 rounded-[2rem] shadow-xl overflow-hidden">
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between mb-3">
@@ -265,7 +245,6 @@ export default function EncryptionPage() {
                         <p className="text-xs text-gray-500 mt-1">256-bit · Per-organization</p>
                     </CardContent>
                 </Card>
-
                 <Card className="bg-white border-gray-100 rounded-[2rem] shadow-xl overflow-hidden">
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between mb-3">
@@ -278,7 +257,6 @@ export default function EncryptionPage() {
                         <p className="text-xs text-gray-500 mt-1">{status?.plan || 'No plan'}</p>
                     </CardContent>
                 </Card>
-
                 <Card className="bg-white border-gray-100 rounded-[2rem] shadow-xl overflow-hidden">
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between mb-3">
@@ -290,7 +268,6 @@ export default function EncryptionPage() {
                     </CardContent>
                 </Card>
             </div>
-
             {/* Actions Panel */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Controls */}
@@ -318,7 +295,6 @@ export default function EncryptionPage() {
                                 </select>
                             </div>
                         )}
-
                         {/* Action Buttons */}
                         <div className="space-y-3 pt-2">
                             {!isActive ? (
@@ -348,7 +324,6 @@ export default function EncryptionPage() {
                                     Deactivate Encryption
                                 </button>
                             )}
-
                             {isActive && hasKey && (
                                 <button
                                     onClick={() => setShowRotateConfirm(true)}
@@ -366,7 +341,6 @@ export default function EncryptionPage() {
                         </div>
                     </CardContent>
                 </Card>
-
                 {/* How It Works */}
                 <Card className="bg-white border-gray-100 rounded-[2rem] shadow-xl overflow-hidden">
                     <CardHeader className="pb-4">
@@ -396,7 +370,6 @@ export default function EncryptionPage() {
                                 </div>
                             ))}
                         </div>
-
                         {/* Demo Toggle */}
                         <button
                             onClick={toggleDemo}
@@ -408,7 +381,6 @@ export default function EncryptionPage() {
                     </CardContent>
                 </Card>
             </div>
-
             {/* Demo Panel */}
             {showDemo && demoData && (
                 <Card className="bg-white border-gray-100 rounded-[2rem] shadow-xl overflow-hidden border-l-4 border-l-cyan-500 animate-in slide-in-from-top duration-300">
@@ -442,7 +414,6 @@ export default function EncryptionPage() {
                     </CardContent>
                 </Card>
             )}
-
             <ConfirmDialog
                 open={showRotateConfirm}
                 onOpenChange={(open) => { if (!open) setShowRotateConfirm(false) }}
@@ -455,7 +426,6 @@ export default function EncryptionPage() {
                 confirmText="Rotate Key"
                 variant="warning"
             />
-
             {/* Security Footer */}
             <div className="flex items-center gap-3 py-4 px-5 rounded-xl bg-gray-50 border border-gray-200/60">
                 <Shield className="text-gray-400" size={16} />

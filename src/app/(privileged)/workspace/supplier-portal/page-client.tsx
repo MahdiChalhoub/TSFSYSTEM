@@ -1,14 +1,10 @@
 'use client'
-
 import { Badge } from '@/components/ui/badge'
-
 import { useState, useEffect } from 'react'
 import { getSupplierProformas, getPriceChangeRequests, approvePriceRequest } from '@/app/actions/portal'
 import { Truck, FileText, Tag, RefreshCw, CheckCircle, XCircle, Clock, DollarSign, TrendingUp, Package, Activity} from 'lucide-react'
-
 type Proforma = { id: number; proforma_number?: string; supplier?: { id: number; name: string }; supplier_name?: string; status: string; total_amount: number; created_at?: string }
 type PriceRequest = { id: number; supplier?: { id: number; name: string }; supplier_name?: string; product?: { name: string; sku?: string }; product_name?: string; current_price: number; requested_price: number; status: string; reason?: string }
-
 const STATUS_BADGE: Record<string, string> = {
     PENDING: 'bg-amber-900/40 text-amber-400 border-amber-700',
     APPROVED: 'bg-emerald-900/40 text-emerald-400 border-emerald-700',
@@ -17,16 +13,13 @@ const STATUS_BADGE: Record<string, string> = {
     SENT: 'bg-blue-900/40 text-blue-400 border-blue-800',
     ACCEPTED: 'bg-emerald-900/40 text-emerald-400 border-emerald-700',
 }
-
 export default function SupplierPortalAdminPage() {
     const [tab, setTab] = useState<'proformas' | 'pricing'>('pricing')
     const [proformas, setProformas] = useState<Proforma[]>([])
     const [priceReqs, setPriceReqs] = useState<PriceRequest[]>([])
     const [loading, setLoading] = useState(true)
     const [toast, setToast] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null)
-
     useEffect(() => { load() }, [])
-
     async function load() {
         setLoading(true)
         const [p, r] = await Promise.all([getSupplierProformas(), getPriceChangeRequests()])
@@ -34,7 +27,6 @@ export default function SupplierPortalAdminPage() {
         setPriceReqs(r)
         setLoading(false)
     }
-
     async function handleApprove(id: number) {
         try {
             await approvePriceRequest(id)
@@ -42,15 +34,12 @@ export default function SupplierPortalAdminPage() {
             load()
         } catch { showToast('Failed', 'err') }
     }
-
     function showToast(msg: string, type: 'ok' | 'err') {
         setToast({ msg, type })
         setTimeout(() => setToast(null), 3500)
     }
-
     const pendingPrice = priceReqs.filter(r => r.status === 'PENDING')
     const totalProformaValue = proformas.reduce((s, p) => s + Number(p.total_amount || 0), 0)
-
     return (
         <div className="min-h-screen bg-[#070D1B] text-gray-100 p-6 flex flex-col gap-6">
             {toast && (
@@ -59,7 +48,6 @@ export default function SupplierPortalAdminPage() {
                     {toast.msg}
                 </div>
             )}
-
             {/* Header: Global Sourcing Intelligence */}
             <header className="flex justify-between items-end">
                 <div>
@@ -87,7 +75,6 @@ export default function SupplierPortalAdminPage() {
                     </button>
                 </div>
             </header>
-
             {/* Premium KPI Node Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
@@ -102,7 +89,6 @@ export default function SupplierPortalAdminPage() {
                     <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Exposure Value</p>
                     <h2 className="text-3xl font-black text-gray-900">${totalProformaValue.toFixed(2)}</h2>
                 </div>
-
                 <div className="bg-amber-900 p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-white">
                     <div className="flex justify-between items-start mb-4">
                         <div className="w-12 h-12 rounded-2xl bg-amber-800/50 text-amber-100 flex items-center justify-center">
@@ -115,7 +101,6 @@ export default function SupplierPortalAdminPage() {
                     <p className="text-[11px] font-black text-amber-300 uppercase tracking-widest leading-none mb-1">Price Adjustments</p>
                     <h2 className="text-3xl font-black text-white">{pendingPrice.length} <span className="text-xs text-amber-200">REQUESTS</span></h2>
                 </div>
-
                 <div className="bg-white p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                     <div className="flex justify-between items-start mb-4">
                         <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
@@ -129,7 +114,6 @@ export default function SupplierPortalAdminPage() {
                     <h2 className="text-3xl font-black text-gray-900">{proformas.length}</h2>
                 </div>
             </div>
-
             {/* Tabs */}
             <div className="flex gap-1 bg-[#0F1729] rounded-2xl border border-gray-800 p-1.5 w-fit">
                 {([['pricing', 'Price Change Requests', Tag], ['proformas', 'Proformas', FileText]] as const).map(([key, label, Icon]) => (
@@ -140,11 +124,9 @@ export default function SupplierPortalAdminPage() {
                     </button>
                 ))}
             </div>
-
             {/* Tab content */}
             <div className="flex flex-col gap-2">
                 {loading ? Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-14 bg-gray-800/50 rounded-xl animate-pulse" />) :
-
                     tab === 'pricing' ? (
                         priceReqs.length === 0 ? <div className="text-sm text-gray-500 py-8 text-center">No price change requests.</div> :
                             priceReqs.map(r => {

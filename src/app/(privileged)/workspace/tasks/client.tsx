@@ -1,8 +1,6 @@
 'use client';
-
 import { useState, useTransition } from 'react';
 import { Plus, Search, Filter, Play, CheckCircle2, XCircle, MessageSquare, ChevronDown, ChevronRight, Clock, AlertTriangle, ArrowUpDown, Calendar, Star } from 'lucide-react';
-
 interface Task {
     id: number;
     title: string;
@@ -20,20 +18,17 @@ interface Task {
     related_object_label?: string;
     created_at: string;
 }
-
 interface Props {
     tasks: Task[];
     categories: { id: number; name: string; color: string }[];
     users: { id: number; email: string; username: string }[];
 }
-
 const PRIORITY_COLORS: Record<string, string> = {
     URGENT: 'bg-red-100 text-red-700 border-red-200',
     HIGH: 'bg-orange-100 text-orange-700 border-orange-200',
     MEDIUM: 'bg-sky-100 text-sky-700 border-sky-200',
     LOW: 'bg-gray-100 text-gray-600 border-gray-200',
 };
-
 const STATUS_COLORS: Record<string, string> = {
     PENDING: 'bg-amber-50 text-amber-700',
     IN_PROGRESS: 'bg-sky-50 text-sky-700',
@@ -42,7 +37,6 @@ const STATUS_COLORS: Record<string, string> = {
     CANCELLED: 'bg-gray-50 text-gray-500',
     OVERDUE: 'bg-red-50 text-red-700',
 };
-
 const STATUS_ICONS: Record<string, any> = {
     PENDING: Clock,
     IN_PROGRESS: Play,
@@ -50,7 +44,6 @@ const STATUS_ICONS: Record<string, any> = {
     CANCELLED: XCircle,
     OVERDUE: AlertTriangle,
 };
-
 export default function TasksClient({ tasks: initialTasks, categories, users }: Props) {
     const [tasks, setTasks] = useState(initialTasks);
     const [search, setSearch] = useState('');
@@ -58,7 +51,6 @@ export default function TasksClient({ tasks: initialTasks, categories, users }: 
     const [filterPriority, setFilterPriority] = useState('ALL');
     const [showCreate, setShowCreate] = useState(false);
     const [isPending, startTransition] = useTransition();
-
     // Form state
     const [newTitle, setNewTitle] = useState('');
     const [newDescription, setNewDescription] = useState('');
@@ -67,14 +59,12 @@ export default function TasksClient({ tasks: initialTasks, categories, users }: 
     const [newAssignee, setNewAssignee] = useState('');
     const [newDueDate, setNewDueDate] = useState('');
     const [newPoints, setNewPoints] = useState('1');
-
     const filtered = tasks.filter(t => {
         if (search && !t.title.toLowerCase().includes(search.toLowerCase())) return false;
         if (filterStatus !== 'ALL' && t.status !== filterStatus) return false;
         if (filterPriority !== 'ALL' && t.priority !== filterPriority) return false;
         return true;
     });
-
     async function handleCreate() {
         if (!newTitle.trim()) return;
         const { createTask } = await import('@/app/actions/workspace');
@@ -87,7 +77,6 @@ export default function TasksClient({ tasks: initialTasks, categories, users }: 
         if (newCategory) data.category = parseInt(newCategory);
         if (newAssignee) data.assigned_to = parseInt(newAssignee);
         if (newDueDate) data.due_date = new Date(newDueDate).toISOString();
-
         const result = await createTask(data);
         if (result?.id) {
             setTasks(prev => [result, ...prev]);
@@ -95,7 +84,6 @@ export default function TasksClient({ tasks: initialTasks, categories, users }: 
             setNewTitle(''); setNewDescription(''); setNewPriority('MEDIUM'); setNewCategory(''); setNewAssignee(''); setNewDueDate(''); setNewPoints('1');
         }
     }
-
     async function handleAction(taskId: number, action: 'start' | 'complete' | 'cancel') {
         const mod = await import('@/app/actions/workspace');
         const fn = action === 'start' ? mod.startTask : action === 'complete' ? mod.completeTask : mod.cancelTask;
@@ -105,7 +93,6 @@ export default function TasksClient({ tasks: initialTasks, categories, users }: 
             status: action === 'start' ? 'IN_PROGRESS' : action === 'complete' ? 'COMPLETED' : 'CANCELLED'
         } : t));
     }
-
     return (
         <div className="space-y-6">
             {/* Toolbar */}
@@ -140,7 +127,6 @@ export default function TasksClient({ tasks: initialTasks, categories, users }: 
                     <Plus size={16} /> New Task
                 </button>
             </div>
-
             {/* Create Task Form */}
             {showCreate && (
                 <div className="bg-white p-8 rounded-3xl shadow-2xl shadow-indigo-100 border border-indigo-50 space-y-4 animate-in slide-in-from-top duration-300">
@@ -181,7 +167,6 @@ export default function TasksClient({ tasks: initialTasks, categories, users }: 
                     </div>
                 </div>
             )}
-
             {/* Tasks List */}
             <div className="space-y-3">
                 {filtered.length === 0 ? (
@@ -199,7 +184,6 @@ export default function TasksClient({ tasks: initialTasks, categories, users }: 
                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${STATUS_COLORS[task.status] || 'bg-gray-50'}`}>
                                 <StatusIcon size={18} />
                             </div>
-
                             {/* Main Content */}
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
@@ -226,17 +210,14 @@ export default function TasksClient({ tasks: initialTasks, categories, users }: 
                                     )}
                                 </div>
                             </div>
-
                             {/* Points */}
                             <div className="flex items-center gap-1 text-amber-500 bg-amber-50 px-3 py-1.5 rounded-xl shrink-0">
                                 <Star size={14} /> <span className="text-sm font-bold">{task.points}</span>
                             </div>
-
                             {/* Priority Badge */}
                             <span className={`text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-xl border shrink-0 ${PRIORITY_COLORS[task.priority] || ''}`}>
                                 {task.priority}
                             </span>
-
                             {/* Actions */}
                             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                                 {task.status === 'PENDING' && (
@@ -262,12 +243,10 @@ export default function TasksClient({ tasks: initialTasks, categories, users }: 
                     );
                 })}
             </div>
-
             <p className="text-center text-xs text-gray-300 font-medium">{filtered.length} of {tasks.length} tasks</p>
         </div>
     );
 }
-
 function ClipboardList(props: any) {
     return <svg xmlns="http://www.w3.org/2000/svg" width={props.size || 24} height={props.size || 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}><rect width="8" height="4" x="8" y="2" rx="1" ry="1" /><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /><path d="M12 11h4" /><path d="M12 16h4" /><path d="M8 11h.01" /><path d="M8 16h.01" /></svg>;
 }

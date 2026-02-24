@@ -1,5 +1,4 @@
 'use client'
-
 import { useEffect, useState } from "react"
 import { SaasOrganization, BusinessType, Currency, SaasModule } from "@/types/erp"
 import { useRouter } from "next/navigation"
@@ -15,7 +14,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { PLATFORM_CONFIG, useDynamicBranding } from "@/lib/saas_config"
-
 export default function OrganizationsPage() {
     const [orgs, setOrgs] = useState<SaasOrganization[]>([])
     const [businessTypes, setBusinessTypes] = useState<BusinessType[]>([])
@@ -25,19 +23,16 @@ export default function OrganizationsPage() {
     const [pendingDeleteOrg, setPendingDeleteOrg] = useState<SaasOrganization | null>(null)
     const branding = useDynamicBranding();
     const router = useRouter();
-
     // ─── Filters ─────────────────────────────────────────────
     const [search, setSearch] = useState('')
     const [filterPlan, setFilterPlan] = useState('all')
     const [filterType, setFilterType] = useState('all')
     const [filterCountry, setFilterCountry] = useState('all')
     const [filterStatus, setFilterStatus] = useState('all')
-
     // Derive unique filter options from data
     const uniquePlans = [...new Set(orgs.map(o => o.current_plan_name || 'Free Tier'))].sort()
     const uniqueTypes = [...new Set(orgs.map(o => o.business_type_name || '').filter(Boolean))].sort()
     const uniqueCountries = [...new Set(orgs.map(o => o.country || '').filter(Boolean))].sort()
-
     // Apply filters
     const filteredOrgs = orgs.filter(o => {
         if (search && !o.name.toLowerCase().includes(search.toLowerCase()) && !o.slug.toLowerCase().includes(search.toLowerCase())) return false
@@ -49,12 +44,10 @@ export default function OrganizationsPage() {
         return true
     })
     const hasFilters = search || filterPlan !== 'all' || filterType !== 'all' || filterCountry !== 'all' || filterStatus !== 'all'
-
     useEffect(() => {
         setMounted(true)
         loadData()
     }, [])
-
     async function loadData() {
         try {
             const [data, btData, cData] = await Promise.all([
@@ -76,7 +69,6 @@ export default function OrganizationsPage() {
             setLoading(false)
         }
     }
-
     async function handleToggle(id: string, currentActive: boolean, slug: string) {
         if (slug === 'saas') {
             return toast.error("Cannot modify the master SaaS organization.")
@@ -94,7 +86,6 @@ export default function OrganizationsPage() {
             toast.error(msg || "Failed to update status")
         }
     }
-
     async function handleDelete(org: Record<string, any>) {
         if (org.slug === 'saas') {
             return toast.error("Cannot delete the master SaaS organization.")
@@ -112,7 +103,6 @@ export default function OrganizationsPage() {
             toast.error(msg || "Failed to delete organization.")
         }
     }
-
     // Parse error messages from backend JSON responses
     function tryParseError(e: Record<string, any>): string {
         try {
@@ -123,11 +113,9 @@ export default function OrganizationsPage() {
         } catch { }
         return e?.message || "Unknown error"
     }
-
     const [newOrg, setNewOrg] = useState({ name: '', slug: '', business_email: '', phone: '', country: '', business_type: '', base_currency: '' })
     const [isCreating, setIsCreating] = useState(false)
     const [open, setOpen] = useState(false)
-
     async function handleCreate() {
         if (!newOrg.name || !newOrg.slug) return toast.error("Business name and URL slug are required")
         if (!/^[a-z0-9-]+$/.test(newOrg.slug)) return toast.error("Slug must contain only lowercase letters, numbers, and hyphens")
@@ -149,12 +137,10 @@ export default function OrganizationsPage() {
             setIsCreating(false)
         }
     }
-
     const [selectedOrg, setSelectedOrg] = useState<SaasOrganization | null>(null)
     const [orgModules, setOrgModules] = useState<SaasModule[]>([])
     const [loadingModules, setLoadingModules] = useState(false)
     const [modulesOpen, setModulesOpen] = useState(false)
-
     async function handleOpenModules(org: Record<string, any>) {
         setSelectedOrg(org)
         setModulesOpen(true)
@@ -173,7 +159,6 @@ export default function OrganizationsPage() {
             setLoadingModules(false)
         }
     }
-
     async function handleModuleToggle(moduleCode: string, currentStatus: string) {
         const action = currentStatus === 'INSTALLED' ? 'disable' : 'enable'
         try {
@@ -189,7 +174,6 @@ export default function OrganizationsPage() {
             toast.error((e instanceof Error ? e.message : String(e)) || "Failed to toggle module")
         }
     }
-
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 md:gap-4">
@@ -235,7 +219,6 @@ export default function OrganizationsPage() {
                                     <span className="text-gray-600 font-mono text-xs shrink-0">{branding.suffix}</span>
                                 </div>
                             </div>
-
                             {/* Optional Fields */}
                             <div className="border-t border-gray-100 pt-4">
                                 <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-4">Optional Details</p>
@@ -294,7 +277,6 @@ export default function OrganizationsPage() {
                                     </div>
                                 </div>
                             </div>
-
                             <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
                                 <div className="flex gap-3">
                                     <Zap className="text-emerald-600 shrink-0" size={18} />
@@ -316,7 +298,6 @@ export default function OrganizationsPage() {
                     </DialogContent>
                 </Dialog>
             </div>
-
             {/* ─── Filter Bar ────────────────────────────────────────── */}
             <div className="flex flex-wrap items-center gap-3 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
                 <div className="relative flex-1 min-w-[200px]">
@@ -353,7 +334,6 @@ export default function OrganizationsPage() {
                 )}
                 <span className="text-[10px] text-gray-400 font-bold">{filteredOrgs.length} of {orgs.length}</span>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {loading ? (
                     <div className="col-span-full py-20 text-center text-gray-500 font-medium">Loading platform data...</div>
@@ -363,7 +343,6 @@ export default function OrganizationsPage() {
                     </div>
                 ) : filteredOrgs.map((org) => {
                     const isSaasOrg = org.slug === 'saas'
-
                     return (
                         <Card key={org.id}
                             className="bg-white border-gray-100 hover:border-emerald-500/30 transition-all rounded-3xl overflow-hidden group shadow-xl hover:shadow-2xl cursor-pointer"
@@ -408,7 +387,6 @@ export default function OrganizationsPage() {
                                         <div className="text-lg font-bold text-gray-900">{org.module_count ?? 0}</div>
                                     </div>
                                 </div>
-
                                 {org.business_email && (
                                     <div className="text-xs text-gray-400 flex items-center gap-2 px-1">
                                         <Mail size={12} /> {org.business_email}
@@ -419,7 +397,6 @@ export default function OrganizationsPage() {
                                         <Users size={12} /> <span className="font-semibold text-gray-500">{org.client_name}</span>
                                     </div>
                                 )}
-
                                 <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                                     {/* Suspend / Activate */}
                                     <Button
@@ -436,7 +413,6 @@ export default function OrganizationsPage() {
                                         <Power size={16} className="mr-2" />
                                         {org.is_active ? 'Suspend' : 'Activate'}
                                     </Button>
-
                                     {/* Features / Modules */}
                                     <Button
                                         variant="outline"
@@ -445,7 +421,6 @@ export default function OrganizationsPage() {
                                     >
                                         <Settings2 size={18} />
                                     </Button>
-
                                     {/* Delete */}
                                     <Button
                                         variant="ghost"
@@ -464,7 +439,6 @@ export default function OrganizationsPage() {
                     )
                 })}
             </div>
-
             {/* Feature Activation Dialog */}
             <Dialog open={modulesOpen} onOpenChange={setModulesOpen}>
                 <DialogContent className="bg-white border-gray-100 text-gray-900 rounded-[2rem] max-w-2xl overflow-hidden p-0 shadow-2xl">
@@ -476,7 +450,6 @@ export default function OrganizationsPage() {
                             Managing modules for <span className="text-emerald-600 font-bold">{selectedOrg?.name}</span>
                         </CardDescription>
                     </div>
-
                     <div className="p-8 max-h-[60vh] overflow-y-auto space-y-4">
                         {loadingModules ? (
                             <div className="py-12 text-center text-gray-500 italic font-medium">Scanning organizational entitlements...</div>
@@ -514,7 +487,6 @@ export default function OrganizationsPage() {
                                         )}
                                     </div>
                                 </div>
-
                                 {/* Feature Flags UI */}
                                 {m.status === 'INSTALLED' && m.available_features?.length > 0 && (
                                     <div className="mt-4 pt-4 border-t border-gray-100 pl-2">
@@ -530,7 +502,6 @@ export default function OrganizationsPage() {
                                                             const newFeatures = e.target.checked
                                                                 ? [...(m.active_features || []), f.code]
                                                                 : (m.active_features || []).filter((c: string) => c !== f.code)
-
                                                             try {
                                                                 await updateOrgModuleFeatures(selectedOrg.id, m.code, newFeatures)
                                                                 toast.success("Feature updated")
@@ -552,7 +523,6 @@ export default function OrganizationsPage() {
                             </div>
                         ))}
                     </div>
-
                     <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-end">
                         <Button variant="ghost" className="text-gray-500 hover:text-gray-900 rounded-xl px-8 font-bold" onClick={() => setModulesOpen(false)}>
                             Close
@@ -560,7 +530,6 @@ export default function OrganizationsPage() {
                     </div>
                 </DialogContent>
             </Dialog>
-
             <ConfirmDialog
                 open={pendingDeleteOrg !== null}
                 onOpenChange={(open) => { if (!open) setPendingDeleteOrg(null) }}

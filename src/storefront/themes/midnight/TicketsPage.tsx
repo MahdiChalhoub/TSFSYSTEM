@@ -1,6 +1,4 @@
 'use client'
-import { Star } from 'lucide-react'
-
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '../../engine/hooks/useAuth'
@@ -9,12 +7,10 @@ import {
     ArrowLeft, MessageSquare, Plus, AlertCircle, CheckCircle2,
     Clock, Loader2, Send, Star, X, Shield, ChevronRight, Zap
 } from 'lucide-react'
-
 interface Ticket {
     id: string; ticket_number: string; ticket_type: string; status: string; priority: string
     subject: string; description: string; satisfaction_rating: number | null; created_at: string
 }
-
 const STATUS_COLORS: Record<string, string> = {
     OPEN: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
     IN_PROGRESS: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
@@ -22,7 +18,6 @@ const STATUS_COLORS: Record<string, string> = {
     RESOLVED: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
     CLOSED: 'text-slate-400 bg-slate-500/10 border-slate-500/20',
 }
-
 const TICKET_TYPES = [
     { value: 'GENERAL', label: 'General Inquiry' },
     { value: 'ORDER_ISSUE', label: 'Order Issue' },
@@ -32,7 +27,6 @@ const TICKET_TYPES = [
     { value: 'COMPLAINT', label: 'Complaint' },
     { value: 'SUGGESTION', label: 'Suggestion' },
 ]
-
 export default function MidnightTicketsPage() {
     const { path, slug } = useStorefrontPath()
     const { isAuthenticated } = useAuth()
@@ -44,7 +38,6 @@ export default function MidnightTicketsPage() {
     const [type, setType] = useState('GENERAL')
     const [subject, setSubject] = useState('')
     const [description, setDescription] = useState('')
-
     const fetchTickets = () => {
         const token = localStorage.getItem('portal_token')
         if (!token) return
@@ -60,9 +53,7 @@ export default function MidnightTicketsPage() {
                 setLoading(false)
             })
     }
-
     useEffect(() => { if (isAuthenticated) fetchTickets() }, [isAuthenticated])
-
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault(); setCreating(true); setError('')
         const token = localStorage.getItem('portal_token')
@@ -77,7 +68,6 @@ export default function MidnightTicketsPage() {
             setShowCreate(false); setSubject(''); setDescription(''); fetchTickets()
         } catch (err: any) { setError(err.message) } finally { setCreating(false) }
     }
-
     if (!isAuthenticated) {
         return (
             <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
@@ -89,11 +79,9 @@ export default function MidnightTicketsPage() {
             </div>
         )
     }
-
     return (
         <div className="min-h-screen bg-slate-950 p-6 lg:p-12 relative overflow-hidden">
             <div className="fixed bottom-[-10%] left-[-10%] w-[60%] h-[60%] bg-purple-500/5 blur-[150px] rounded-full pointer-events-none z-0" />
-
             <div className="max-w-5xl mx-auto relative z-10 space-y-10">
                 <div className="flex items-start justify-between flex-wrap gap-6">
                     <div className="space-y-4">
@@ -107,7 +95,6 @@ export default function MidnightTicketsPage() {
                         <Plus size={16} /> New Thread
                     </button>
                 </div>
-
                 {showCreate && (
                     <div className="p-10 bg-slate-900/60 border border-purple-500/20 rounded-[3rem] space-y-8 animate-in fade-in duration-300 relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-6 text-purple-500/5"><Zap size={120} /></div>
@@ -132,7 +119,6 @@ export default function MidnightTicketsPage() {
                         </form>
                     </div>
                 )}
-
                 {loading ? (
                     <div className="space-y-4">{[1, 2, 3].map(i => <div key={i} className="h-28 bg-slate-900/40 rounded-[2.5rem] animate-pulse" />)}</div>
                 ) : tickets.length === 0 ? (

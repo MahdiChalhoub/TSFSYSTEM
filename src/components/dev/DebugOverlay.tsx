@@ -1,11 +1,9 @@
 'use client';
-
 import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAdmin } from '@/context/AdminContext';
 import { useDev } from '@/context/DevContext';
 import { Info, Bug, ShieldCheck, Database, Settings, X, ChevronRight, Activity, Terminal, ArrowDownCircle, ArrowUpCircle } from 'lucide-react';
-
 export default function DebugOverlay() {
     const [isOpen, setIsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'logic' | 'ledger' | 'flow'>('logic');
@@ -14,7 +12,6 @@ export default function DebugOverlay() {
     const [mounted, setMounted] = useState(false);
     const [settings, setSettings] = useState<Record<string, unknown> | null>(null);
     const [recentLedger, setRecentLedger] = useState<Record<string, unknown>[]>([]);
-
     // Only show in development
     useEffect(() => {
         setMounted(true);
@@ -25,12 +22,10 @@ export default function DebugOverlay() {
                     /*
                     const { getFinancialSettings } = await import('@/app/actions/finance/settings');
                     const { getLedgerEntries } = await import('@/app/actions/finance/ledger');
-
                     const [s, l] = await Promise.all([
                         getFinancialSettings(),
                         getLedgerEntries(viewScope === 'OFFICIAL' ? 'OFFICIAL' : 'INTERNAL')
                     ]);
-
                     setSettings(s);
                     setRecentLedger(l.slice(0, 5)); // Only last 5
                     */
@@ -41,16 +36,13 @@ export default function DebugOverlay() {
             fetchData();
         }
     }, [viewScope, isOpen]); // Refetch when opened or scope changes
-
     if (!mounted || process.env.NODE_ENV === 'production') return null;
-
     const getPageLogic = () => {
         const settingsInfo = settings ? [
             `Company Basis: ${settings.pricingCostBasis}`,
             `Works in TTC: ${settings.worksInTTC ? 'YES' : 'NO'}`,
             `VAT Recov: ${settings.declareTVA ? 'YES' : 'NO'}`
         ] : ['Loading settings...'];
-
         if (pathname === '/admin') {
             return {
                 title: 'Global Analytics Hub',
@@ -134,9 +126,7 @@ export default function DebugOverlay() {
             writeDetails: ['Log navigation event']
         };
     };
-
     const logic = getPageLogic();
-
     return (
         <div className="fixed bottom-6 right-6 z-[9999] font-sans">
             {!isOpen ? (
@@ -160,7 +150,6 @@ export default function DebugOverlay() {
                                 <X size={20} />
                             </button>
                         </div>
-
                         <div className="flex gap-4">
                             <div className="flex-1 flex items-center gap-3 bg-white/10 p-3 rounded-2xl backdrop-blur-md">
                                 <div className={`p-2 rounded-lg ${viewScope === 'OFFICIAL' ? 'bg-amber-500' : 'bg-emerald-500'}`}>
@@ -181,7 +170,6 @@ export default function DebugOverlay() {
                                 </div>
                             </div>
                         </div>
-
                         {/* Tab Switcher */}
                         <div className="flex gap-1 mt-6 bg-black/10 p-1 rounded-xl">
                             <button
@@ -204,7 +192,6 @@ export default function DebugOverlay() {
                             </button>
                         </div>
                     </div>
-
                     {/* Content */}
                     <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
                         <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar flex-1">
@@ -219,7 +206,6 @@ export default function DebugOverlay() {
                                             {logic.description}
                                         </p>
                                     </div>
-
                                     <div className="space-y-3">
                                         <div className="flex items-center gap-2">
                                             <Settings size={14} className="text-gray-400" />
@@ -234,7 +220,6 @@ export default function DebugOverlay() {
                                             ))}
                                         </div>
                                     </div>
-
                                     <div className="pt-4 border-t border-gray-100">
                                         <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100">
                                             <div className="flex items-center gap-2 mb-2">
@@ -258,7 +243,6 @@ export default function DebugOverlay() {
                             )}
                         </div>
                     </div>
-
                     {/* Footer */}
                     <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center shrink-0 text-[10px] font-bold text-gray-400 font-mono">
                         <span>P: {pathname}</span>
@@ -271,10 +255,8 @@ export default function DebugOverlay() {
         </div>
     );
 }
-
 function InspectorTab({ readDetails, writeDetails }: { readDetails: string[], writeDetails: string[] }) {
     const { lastOperation } = useDev();
-
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -287,7 +269,6 @@ function InspectorTab({ readDetails, writeDetails }: { readDetails: string[], wr
                     <span className="text-[9px] font-bold text-gray-400 uppercase">Interactive</span>
                 </div>
             </div>
-
             <div className="space-y-4">
                 {/* READ Section */}
                 <div className="bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden">
@@ -308,7 +289,6 @@ function InspectorTab({ readDetails, writeDetails }: { readDetails: string[], wr
                         </div>
                     </div>
                 </div>
-
                 {/* WRITE Section */}
                 <div className="bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden">
                     <div className="p-3 bg-white border-b border-gray-100 flex items-center gap-2">
@@ -328,7 +308,6 @@ function InspectorTab({ readDetails, writeDetails }: { readDetails: string[], wr
                         </div>
                     </div>
                 </div>
-
                 {/* LAST RESULT */}
                 {lastOperation && (
                     <div className={`rounded-2xl border p-4 animate-in fade-in slide-in-from-top-2 duration-500 ${lastOperation.status === 'SUCCESS' ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100'}`}>
@@ -344,7 +323,6 @@ function InspectorTab({ readDetails, writeDetails }: { readDetails: string[], wr
         </div>
     );
 }
-
 function LedgerTab({ recentLedger }: { recentLedger: Record<string, any>[] }) {
     return (
         <div className="space-y-6">
@@ -355,7 +333,6 @@ function LedgerTab({ recentLedger }: { recentLedger: Record<string, any>[] }) {
                 </div>
                 <span className="text-[9px] font-bold text-gray-400 uppercase">Live from DB</span>
             </div>
-
             <div className="space-y-4">
                 {recentLedger.length === 0 ? (
                     <div className="p-8 text-center text-gray-400 text-xs font-medium">

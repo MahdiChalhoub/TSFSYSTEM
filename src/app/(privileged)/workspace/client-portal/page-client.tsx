@@ -1,15 +1,11 @@
 'use client'
-
 import { Badge } from '@/components/ui/badge'
-
 import { useState, useEffect } from 'react'
 import { getClientWallets, getClientTickets, getQuoteRequests, getClientAccess, updateClientTicket } from '@/app/actions/portal'
 import { Monitor, Wallet, Ticket, FileQuestion, Users, RefreshCw, CheckCircle, XCircle, Clock, ChevronRight, DollarSign, MessageSquare, Globe, Activity} from 'lucide-react'
-
 type ClientWallet = { id: number; client?: { name: string }; client_name?: string; balance: number; currency?: string }
 type Ticket = { id: number; subject: string; status: string; priority?: string; client?: { name: string }; client_name?: string; created_at?: string }
 type QuoteRequest = { id: number; client?: { name: string }; client_name?: string; status: string; total_items?: number; created_at?: string; notes?: string }
-
 const TICKET_STATUS: Record<string, string> = {
     OPEN: 'bg-blue-900/40 text-blue-400 border-blue-700',
     IN_PROGRESS: 'bg-amber-900/40 text-amber-400 border-amber-700',
@@ -21,7 +17,6 @@ const PRIORITY: Record<string, string> = {
     MEDIUM: 'text-amber-400',
     LOW: 'text-gray-400',
 }
-
 export default function ClientPortalAdminPage() {
     const [tab, setTab] = useState<'wallets' | 'tickets' | 'quotes'>('wallets')
     const [wallets, setWallets] = useState<ClientWallet[]>([])
@@ -29,9 +24,7 @@ export default function ClientPortalAdminPage() {
     const [quotes, setQuotes] = useState<QuoteRequest[]>([])
     const [loading, setLoading] = useState(true)
     const [toast, setToast] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null)
-
     useEffect(() => { load() }, [])
-
     async function load() {
         setLoading(true)
         const [w, t, q] = await Promise.all([getClientWallets(), getClientTickets(), getQuoteRequests()])
@@ -40,7 +33,6 @@ export default function ClientPortalAdminPage() {
         setQuotes(q)
         setLoading(false)
     }
-
     async function resolveTicket(id: number) {
         try {
             await updateClientTicket(id, { status: 'RESOLVED' })
@@ -48,15 +40,12 @@ export default function ClientPortalAdminPage() {
             load()
         } catch { showToast('Failed', 'err') }
     }
-
     function showToast(msg: string, type: 'ok' | 'err') {
         setToast({ msg, type })
         setTimeout(() => setToast(null), 3500)
     }
-
     const totalBalance = wallets.reduce((s, w) => s + Number(w.balance || 0), 0)
     const openTickets = tickets.filter(t => t.status === 'OPEN' || t.status === 'IN_PROGRESS')
-
     return (
         <div className="min-h-screen bg-[#070D1B] text-gray-100 p-6 flex flex-col gap-6">
             {toast && (
@@ -65,7 +54,6 @@ export default function ClientPortalAdminPage() {
                     {toast.msg}
                 </div>
             )}
-
             {/* Header: Global Client Intelligence */}
             <header className="flex justify-between items-end">
                 <div>
@@ -93,7 +81,6 @@ export default function ClientPortalAdminPage() {
                     </button>
                 </div>
             </header>
-
             {/* Premium KPI Node Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
@@ -108,7 +95,6 @@ export default function ClientPortalAdminPage() {
                     <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Portfolio Balance</p>
                     <h2 className="text-3xl font-black text-gray-900">${totalBalance.toFixed(2)}</h2>
                 </div>
-
                 <div className="bg-blue-600 p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-white">
                     <div className="flex justify-between items-start mb-4">
                         <div className="w-12 h-12 rounded-2xl bg-blue-500/50 text-blue-100 flex items-center justify-center">
@@ -121,7 +107,6 @@ export default function ClientPortalAdminPage() {
                     <p className="text-[11px] font-black text-blue-100 uppercase tracking-widest leading-none mb-1">Support Tickets</p>
                     <h2 className="text-3xl font-black text-white">{openTickets.length} <span className="text-xs text-blue-200">OPEN</span></h2>
                 </div>
-
                 <div className="bg-white p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                     <div className="flex justify-between items-start mb-4">
                         <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
@@ -135,7 +120,6 @@ export default function ClientPortalAdminPage() {
                     <h2 className="text-3xl font-black text-gray-900">{quotes.length}</h2>
                 </div>
             </div>
-
             {/* Tabs */}
             <div className="flex gap-1 bg-[#0F1729] rounded-2xl border border-gray-800 p-1.5 w-fit">
                 {([['wallets', 'Client Wallets', Wallet], ['tickets', 'Support Tickets', MessageSquare], ['quotes', 'Quote Requests', FileQuestion]] as const).map(([key, label, Icon]) => (
@@ -146,11 +130,9 @@ export default function ClientPortalAdminPage() {
                     </button>
                 ))}
             </div>
-
             {/* Tab content */}
             <div className="flex flex-col gap-2">
                 {loading ? Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-14 bg-gray-800/50 rounded-xl animate-pulse" />) :
-
                     tab === 'wallets' ? (
                         wallets.length === 0 ? <div className="text-sm text-gray-500 py-8 text-center">No client wallets yet.</div> :
                             wallets.map(w => (

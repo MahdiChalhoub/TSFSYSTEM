@@ -1,5 +1,4 @@
 'use client'
-
 import { useEffect, useState } from "react"
 import { SaasOrganization, SaasPlan } from "@/types/erp"
 import { getOrganizations } from "@/app/(privileged)/(saas)/organizations/actions"
@@ -10,14 +9,12 @@ import { Badge } from "@/components/ui/badge"
 import { Loader2, CheckCircle2, AlertTriangle, CreditCard, ShieldCheck } from "lucide-react"
 import { toast } from "sonner"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
-
 export default function SubscriptionPage() {
     const [org, setOrg] = useState<SaasOrganization | null>(null)
     const [loading, setLoading] = useState(true)
     const [plans, setPlans] = useState<SaasPlan[]>([])
     const [upgradeOpen, setUpgradeOpen] = useState(false)
     const [upgrading, setUpgrading] = useState(false)
-
     useEffect(() => {
         async function load() {
             try {
@@ -37,7 +34,6 @@ export default function SubscriptionPage() {
         }
         load()
     }, [])
-
     async function handleUpgrade(planId: string) {
         setUpgrading(true)
         try {
@@ -53,21 +49,17 @@ export default function SubscriptionPage() {
             setUpgrading(false)
         }
     }
-
     if (loading) return <div className="p-12 flex justify-center"><Loader2 className="animate-spin text-emerald-500" /></div>
-
     if (!org) return (
         <div className="p-12 text-center">
             <h2 className="text-xl font-bold text-gray-800">No Organization Found</h2>
             <p className="text-gray-500">You do not appear to be managing any active organization instance.</p>
         </div>
     )
-
     const plan = org.current_plan_details || (org.current_plan ? { name: "Legacy Plan" } : null)
     const expiryDate = org.plan_expiry_at ? new Date(org.plan_expiry_at) : null
     const isExpired = expiryDate ? new Date() > expiryDate : false
     const daysLeft = expiryDate ? Math.ceil((expiryDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0
-
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex justify-between items-start">
@@ -79,7 +71,6 @@ export default function SubscriptionPage() {
                     {org.name}
                 </Badge>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Current Plan Card */}
                 <Card className="md:col-span-2 border-emerald-100 bg-emerald-50/50 shadow-lg shadow-emerald-900/5">
@@ -124,7 +115,6 @@ export default function SubscriptionPage() {
                                 )}
                             </div>
                         </div>
-
                         <div className="flex gap-4">
                             <Dialog open={upgradeOpen} onOpenChange={setUpgradeOpen}>
                                 <DialogTrigger asChild>
@@ -168,7 +158,6 @@ export default function SubscriptionPage() {
                         </div>
                     </CardContent>
                 </Card>
-
                 {/* Usage Card */}
                 <Card>
                     <CardHeader>
@@ -197,7 +186,6 @@ export default function SubscriptionPage() {
                     </CardContent>
                 </Card>
             </div>
-
             {/* Payment History Placeholder */}
             <Card>
                 <CardHeader>

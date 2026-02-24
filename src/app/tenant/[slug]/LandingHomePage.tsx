@@ -1,7 +1,6 @@
 'use client'
 import { Building2, ArrowRight, ShieldCheck, Zap, Globe } from "lucide-react"
 import { Button } from "@/components/ui/button"
-
 export function LandingHomePage({ org }: { org: any }) {
     return (
         <div className="min-h-screen bg-white">
@@ -25,7 +24,6 @@ export function LandingHomePage({ org }: { org: any }) {
                     </Button>
                 </div>
             </section>
-
             {/* Features Grid */}
             <section id="services" className="py-24 bg-gray-50/50 border-t border-gray-100">
                 <div className="max-w-7xl mx-auto px-6">
@@ -54,7 +52,6 @@ export function LandingHomePage({ org }: { org: any }) {
                     </div>
                 </div>
             </section>
-
             {/* Footer */}
             <footer className="border-t border-gray-100 py-12 text-center text-gray-500 font-medium">
                 <p>&copy; {new Date().getFullYear()} {org.name}. All rights reserved.</p>
@@ -62,5 +59,4 @@ export function LandingHomePage({ org }: { org: any }) {
         </div>
     )
 }
-
 import { Badge } from "@/components/ui/badge"

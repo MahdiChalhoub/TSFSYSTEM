@@ -1,8 +1,5 @@
 'use client'
-import { Star } from 'lucide-react'
-
 import { useCurrency } from '@/lib/utils/currency'
-
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { getContactSummary } from "@/app/actions/crm/contacts"
@@ -19,7 +16,6 @@ import {
     TrendingUp, Clock, CheckCircle2, AlertCircle,
     Tag, Star, BarChart3, Percent, Hash
 , UserCircle } from "lucide-react"
-
 const STATUS_COLORS: Record<string, string> = {
     DRAFT: 'bg-gray-100 text-gray-700',
     PENDING: 'bg-yellow-100 text-yellow-700',
@@ -29,7 +25,6 @@ const STATUS_COLORS: Record<string, string> = {
     CANCELLED: 'bg-red-100 text-red-700',
     POSTED: 'bg-emerald-100 text-emerald-700',
 }
-
 export default function ContactDetailPage() {
     const { fmt } = useCurrency()
     const params = useParams()
@@ -37,11 +32,9 @@ export default function ContactDetailPage() {
     const [data, setData] = useState<ContactSummaryData | null>(null)
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState<'orders' | 'payments' | 'journal' | 'analytics' | 'pricing'>('orders')
-
     useEffect(() => {
         if (params.id) loadData()
     }, [params.id])
-
     async function loadData() {
         try {
             const result = await getContactSummary(Number(params.id))
@@ -52,7 +45,6 @@ export default function ContactDetailPage() {
             setLoading(false)
         }
     }
-
     if (loading) {
         return (
             <div className="p-6 space-y-6">
@@ -64,7 +56,6 @@ export default function ContactDetailPage() {
             </div>
         )
     }
-
     if (!data?.contact) {
         return (
             <div className="p-6 text-center py-20">
@@ -76,10 +67,8 @@ export default function ContactDetailPage() {
             </div>
         )
     }
-
     const { contact, orders, payments, balance, journal_entries, analytics, pricing_rules } = data
     const isCustomer = contact.type === 'CUSTOMER'
-
     return (
         <div className="p-6 space-y-6 max-w-[1400px] mx-auto">
             {/* Header */}
@@ -125,7 +114,6 @@ export default function ContactDetailPage() {
                     </div>
                 </div>
             </header>
-
             {/* Contact Info + Balance */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Contact Info */}
@@ -170,7 +158,6 @@ export default function ContactDetailPage() {
                         )}
                     </CardContent>
                 </Card>
-
                 {/* Balance */}
                 <Card className={`border-l-4 ${balance.current_balance > 0 ? 'border-l-red-500' : 'border-l-emerald-500'}`}>
                     <CardContent className="py-4">
@@ -187,7 +174,6 @@ export default function ContactDetailPage() {
                         )}
                     </CardContent>
                 </Card>
-
                 {/* Stats */}
                 <Card>
                     <CardContent className="py-4 grid grid-cols-2 gap-4">
@@ -212,7 +198,6 @@ export default function ContactDetailPage() {
                     </CardContent>
                 </Card>
             </div>
-
             {/* Tabs */}
             <div className="flex border-b">
                 {[
@@ -235,7 +220,6 @@ export default function ContactDetailPage() {
                     </button>
                 ))}
             </div>
-
             {/* Tab Content */}
             <Card>
                 <CardContent className="p-0">
@@ -288,7 +272,6 @@ export default function ContactDetailPage() {
                             </Table>
                         )
                     )}
-
                     {activeTab === 'payments' && (
                         payments.recent.length === 0 ? (
                             <div className="text-center py-12 text-gray-400">
@@ -334,7 +317,6 @@ export default function ContactDetailPage() {
                             </Table>
                         )
                     )}
-
                     {activeTab === 'journal' && (
                         journal_entries.length === 0 ? (
                             <div className="text-center py-12 text-gray-400">
@@ -376,7 +358,6 @@ export default function ContactDetailPage() {
                             </Table>
                         )
                     )}
-
                     {/* Analytics Tab */}
                     {activeTab === 'analytics' && (
                         <div className="p-6 space-y-6">
@@ -394,7 +375,6 @@ export default function ContactDetailPage() {
                                     <p className="text-2xl font-bold text-purple-900">{fmt(analytics?.total_revenue || 0)}</p>
                                 </div>
                             </div>
-
                             <div>
                                 <h3 className="text-sm font-semibold text-gray-500 uppercase mb-3">Top Products</h3>
                                 {(analytics?.top_products || []).length === 0 ? (
@@ -414,7 +394,6 @@ export default function ContactDetailPage() {
                             </div>
                         </div>
                     )}
-
                     {/* Pricing Rules Tab */}
                     {activeTab === 'pricing' && (
                         <div className="p-6">

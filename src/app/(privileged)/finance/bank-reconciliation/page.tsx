@@ -1,6 +1,4 @@
 'use client'
-import { ShieldCheck } from 'lucide-react'
-
 import { useCurrency } from '@/lib/utils/currency'
 import { useState, useEffect, useMemo } from "react"
 import type { FinancialAccount } from '@/types/erp'
@@ -19,7 +17,6 @@ import {
 } from "lucide-react"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
 import { useListViewSettings } from '@/hooks/useListViewSettings'
-
 export default function BankReconciliationPage() {
     const { fmt } = useCurrency()
     const [accounts, setAccounts] = useState<FinancialAccount[]>([])
@@ -33,9 +30,7 @@ export default function BankReconciliationPage() {
         pageSize: 25, sortKey: 'name', sortDir: 'asc'
     })
     const [endDate, setEndDate] = useState('')
-
     useEffect(() => { loadAccounts() }, [])
-
     async function loadAccounts() {
         setLoading(true)
         try {
@@ -47,7 +42,6 @@ export default function BankReconciliationPage() {
             setLoading(false)
         }
     }
-
     async function drillIn(accountId: string) {
         setLoading(true)
         setSelectedAccountId(accountId)
@@ -60,13 +54,11 @@ export default function BankReconciliationPage() {
             setLoading(false)
         }
     }
-
     function goBack() {
         setSelectedAccountId(null)
         setDetail(null)
         setSearch('')
     }
-
     const accountColumns: ColumnDef<any>[] = useMemo(() => [
         {
             key: 'code',
@@ -110,7 +102,6 @@ export default function BankReconciliationPage() {
             )
         }
     ], [fmt])
-
     const entryColumns: ColumnDef<any>[] = useMemo(() => [
         {
             key: 'date',
@@ -147,7 +138,6 @@ export default function BankReconciliationPage() {
             render: (e) => <span className="font-black text-gray-900 font-mono text-xs">{fmt(e.running_balance)}</span>
         }
     ], [fmt])
-
     if (loading && !detail && accounts.length === 0) {
         return (
             <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
@@ -157,7 +147,6 @@ export default function BankReconciliationPage() {
             </div>
         )
     }
-
     // Detail View
     if (selectedAccountId && detail) {
         return (
@@ -183,7 +172,6 @@ export default function BankReconciliationPage() {
                         <ShieldCheck size={12} /> Live Reconciliation Active
                     </Badge>
                 </header>
-
                 {/* Summary Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden group">
@@ -235,7 +223,6 @@ export default function BankReconciliationPage() {
                         </CardContent>
                     </Card>
                 </div>
-
                 {/* Filter Controls */}
                 <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden">
                     <CardContent className="p-4 flex items-center gap-4 flex-wrap">
@@ -259,7 +246,6 @@ export default function BankReconciliationPage() {
                         </div>
                     </CardContent>
                 </Card>
-
                 <TypicalListView
                     title="Audit Settlement Log"
                     data={detail.entries || []}
@@ -279,10 +265,8 @@ export default function BankReconciliationPage() {
             </div>
         )
     }
-
     // Account List View
     const totalBalance = accounts.reduce((sum, a) => sum + (a.book_balance || 0), 0)
-
     return (
         <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
             <header className="flex justify-between items-center">
@@ -300,7 +284,6 @@ export default function BankReconciliationPage() {
                     <span className="text-[10px] font-black uppercase text-emerald-700 tracking-widest">Direct Bank Feed Active</span>
                 </div>
             </header>
-
             {/* Aggregate Exposure */}
             <Card className="rounded-[2.5rem] border-0 shadow-xl bg-gradient-to-br from-blue-900 to-indigo-900 text-white overflow-hidden relative group">
                 <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-125 transition-transform">
@@ -316,7 +299,6 @@ export default function BankReconciliationPage() {
                     </div>
                 </CardContent>
             </Card>
-
             <TypicalListView
                 title="Monetary Channels"
                 data={accounts}

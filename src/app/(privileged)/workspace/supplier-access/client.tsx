@@ -1,6 +1,4 @@
 'use client';
-import { ShieldCheck } from 'lucide-react'
-
 import { useState } from 'react';
 import {
     ShieldCheck, ShieldOff, Pause, Plus, Search,
@@ -10,7 +8,6 @@ import {
     createPortalAccess, activatePortalAccess, suspendPortalAccess,
     revokePortalAccess, setPortalPermissions,
 } from '@/app/actions/supplier-portal';
-
 const ALL_PERMISSIONS = [
     { code: 'VIEW_OWN_ORDERS', label: 'View Orders', icon: ClipboardList },
     { code: 'VIEW_OWN_STOCK', label: 'View Stock', icon: Package },
@@ -19,11 +16,9 @@ const ALL_PERMISSIONS = [
     { code: 'REQUEST_PRICE_CHANGE', label: 'Price Changes', icon: BarChart3 },
     { code: 'VIEW_PRODUCT_PERFORMANCE', label: 'Product Analytics', icon: Eye },
 ];
-
 const STATUS_COLORS: Record<string, string> = {
     ACTIVE: '#22c55e', SUSPENDED: '#f59e0b', REVOKED: '#ef4444', PENDING: '#64748b',
 };
-
 export default function SupplierAccessClient({ accesses: init, suppliers }: any) {
     const [accesses, setAccesses] = useState<any[]>(init);
     const [search, setSearch] = useState('');
@@ -31,12 +26,10 @@ export default function SupplierAccessClient({ accesses: init, suppliers }: any)
     const [editPerms, setEditPerms] = useState<number | null>(null);
     const [editPermsValues, setEditPermsValues] = useState<string[]>([]);
     const [newAccess, setNewAccess] = useState({ contact: '', user: '' });
-
     const filtered = accesses.filter((a: any) =>
         (a.contact_name || '').toLowerCase().includes(search.toLowerCase()) ||
         (a.user_email || '').toLowerCase().includes(search.toLowerCase())
     );
-
     async function handleCreate() {
         if (!newAccess.contact) return;
         try {
@@ -46,7 +39,6 @@ export default function SupplierAccessClient({ accesses: init, suppliers }: any)
             setNewAccess({ contact: '', user: '' });
         } catch (e) { console.error(e); }
     }
-
     async function handleActivate(id: number) {
         await activatePortalAccess(id);
         setAccesses(prev => prev.map(a => a.id === id ? { ...a, status: 'ACTIVE' } : a));
@@ -59,18 +51,15 @@ export default function SupplierAccessClient({ accesses: init, suppliers }: any)
         await revokePortalAccess(id);
         setAccesses(prev => prev.map(a => a.id === id ? { ...a, status: 'REVOKED' } : a));
     }
-
     async function handleSavePerms(id: number) {
         await setPortalPermissions(id, editPermsValues);
         setAccesses(prev => prev.map(a => a.id === id ? { ...a, permissions: editPermsValues } : a));
         setEditPerms(null);
     }
-
     const cardStyle: React.CSSProperties = {
         background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
         borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)',
     };
-
     return (
         <div>
             {/* Toolbar */}
@@ -94,7 +83,6 @@ export default function SupplierAccessClient({ accesses: init, suppliers }: any)
                     <Plus size={16} /> Grant Access
                 </button>
             </div>
-
             {/* Create Form */}
             {showCreate && (
                 <div style={{ ...cardStyle, padding: '1.25rem', marginBottom: '1.5rem' }}>
@@ -123,7 +111,6 @@ export default function SupplierAccessClient({ accesses: init, suppliers }: any)
                     </div>
                 </div>
             )}
-
             {/* Access List */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {filtered.map((a: any) => (
@@ -163,7 +150,6 @@ export default function SupplierAccessClient({ accesses: init, suppliers }: any)
                                 </button>
                             </div>
                         </div>
-
                         {/* Permissions */}
                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
                             {(a.permissions || []).map((p: string) => {
@@ -179,7 +165,6 @@ export default function SupplierAccessClient({ accesses: init, suppliers }: any)
                                 );
                             })}
                         </div>
-
                         {/* Permission Editor */}
                         {editPerms === a.id && (
                             <div style={{ marginTop: 12, padding: 12, background: '#0f172a', borderRadius: 8 }}>

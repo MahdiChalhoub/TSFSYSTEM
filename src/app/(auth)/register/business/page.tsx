@@ -1,5 +1,4 @@
 "use client"
-
 import { useState, useActionState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { registerBusinessAction, getPublicConfig } from "@/app/actions/onboarding";
@@ -12,7 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, AlertCircle, Building2, ShieldCheck, Sparkles, ArrowRight, CheckCircle2, Globe, Rocket } from "lucide-react";
 import { PLATFORM_CONFIG, useDynamicBranding } from "@/lib/saas_config";
 import { PasswordStrength } from "@/components/ui/password-strength";
-
 const slugify = (text: string) => {
     return text
         .toString()
@@ -22,7 +20,6 @@ const slugify = (text: string) => {
         .replace(/[^\w\-]+/g, '')
         .replace(/\-\-+/g, '-');
 };
-
 function BusinessRegisterContent() {
     const searchParams = useSearchParams();
     const [state, action, isPending] = useActionState(registerBusinessAction, null);
@@ -30,7 +27,6 @@ function BusinessRegisterContent() {
     const [businessName, setBusinessName] = useState("");
     const [slug, setSlug] = useState("");
     const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
-
     // Multi-Step State
     const [step, setStep] = useState(1);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -40,7 +36,6 @@ function BusinessRegisterContent() {
     const [adminPassword, setAdminPassword] = useState("");
     const [stepErrors, setStepErrors] = useState<string[]>([]);
     const branding = useDynamicBranding();
-
     useEffect(() => {
         getPublicConfig().then(setConfig).catch(() => { });
         const initialSlug = searchParams.get('slug');
@@ -48,13 +43,11 @@ function BusinessRegisterContent() {
         if (initialSlug) { setSlug(initialSlug); setSlugManuallyEdited(true); }
         if (initialName) { setBusinessName(initialName); }
     }, [searchParams]);
-
     const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const name = e.target.value;
         setBusinessName(name);
         if (!slugManuallyEdited) setSlug(slugify(name));
     };
-
     const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -63,7 +56,6 @@ function BusinessRegisterContent() {
             reader.readAsDataURL(file);
         }
     };
-
     if (state?.success && state?.login_url) {
         window.location.href = state.login_url;
         return (
@@ -78,20 +70,16 @@ function BusinessRegisterContent() {
             </div>
         );
     }
-
     const steps = [
         { id: 1, name: "Admin Setup", icon: ShieldCheck },
         { id: 2, name: "Business Identity", icon: Building2 },
         { id: 3, name: "Location & Contact", icon: Globe },
     ];
-
     return (
         <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center p-6 py-20 relative overflow-hidden">
             {/* Ambient Background Elements */}
             <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-amber-500/5 blur-[160px] rounded-full" />
             <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-500/5 blur-[160px] rounded-full" />
-
-
             <div className="text-center mb-12 space-y-4 relative z-10 w-full max-w-lg">
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-amber-500/5 border border-amber-500/10 rounded-full text-[10px] font-black uppercase tracking-[0.3em] text-amber-400 mb-4 backdrop-blur-xl">
                     <Sparkles size={14} className="animate-pulse" />
@@ -101,7 +89,6 @@ function BusinessRegisterContent() {
                     Initialize <span className="text-transparent bg-clip-text bg-gradient-to-br from-amber-400 to-emerald-400 not-italic">{PLATFORM_CONFIG.name.split(' ')[0]}</span>
                 </h1>
             </div>
-
             {/* Tactical Stepper Ribbon */}
             <div className="w-full max-w-4xl px-12 mb-12 relative z-10">
                 <div className="flex items-center justify-between relative">
@@ -110,7 +97,6 @@ function BusinessRegisterContent() {
                         className="absolute top-1/2 left-0 h-[2px] bg-cyan-500 -translate-y-1/2 z-0 transition-all duration-500"
                         style={{ width: `${((step - 1) / (steps.length - 1)) * 100}%` }}
                     />
-
                     {steps.map((s) => (
                         <div key={s.id} className="relative z-10 flex flex-col items-center gap-3">
                             <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-500 ${step >= s.id ? 'bg-cyan-500 border-cyan-400 text-white shadow-[0_0_20px_rgba(6,182,212,0.4)]' : 'bg-slate-900 border-slate-700 text-slate-500'
@@ -125,10 +111,8 @@ function BusinessRegisterContent() {
                     ))}
                 </div>
             </div>
-
             <Card className="w-full max-w-4xl bg-[#0f172a]/80 border-white/5 backdrop-blur-[40px] rounded-[3rem] overflow-hidden shadow-2xl relative z-10">
                 <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
-
                 <CardContent className="p-10 md:p-16">
                     <form action={action} className="space-y-12">
                         {/* Error Reporting */}
@@ -143,7 +127,6 @@ function BusinessRegisterContent() {
                                 </div>
                             </div>
                         )}
-
                         {/* STEP 01: Admin Authorization */}
                         <div className={step === 1 ? "space-y-8 animate-in fade-in slide-in-from-right-4 duration-500" : "hidden"}>
                             <div className="flex items-center gap-3 mb-8">
@@ -152,7 +135,6 @@ function BusinessRegisterContent() {
                                 </div>
                                 <h3 className="text-2xl font-black text-white italic tracking-tight uppercase">Admin Account</h3>
                             </div>
-
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="space-y-2 text-left">
                                     <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Admin First Name</Label>
@@ -180,14 +162,12 @@ function BusinessRegisterContent() {
                                     <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white focus:ring-2 focus:ring-cyan-500/20" />
                                 </div>
                             </div>
-
                             {stepErrors.length > 0 && (
                                 <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-xs font-bold animate-in zoom-in-95">
                                     <div className="flex items-center gap-2 mb-1"><AlertCircle size={14} /> Please fix the following:</div>
                                     <ul className="list-disc list-inside space-y-0.5">{stepErrors.map((e, i) => <li key={i}>{e}</li>)}</ul>
                                 </div>
                             )}
-
                             <div className="pt-8">
                                 <Button type="button" onClick={() => {
                                     const form = document.querySelector('form');
@@ -210,7 +190,6 @@ function BusinessRegisterContent() {
                                 </Button>
                             </div>
                         </div>
-
                         {/* STEP 02: Business Identity */}
                         <div className={step === 2 ? "space-y-8 animate-in fade-in slide-in-from-right-4 duration-500" : "hidden"}>
                             <div className="flex items-center gap-3 mb-8">
@@ -219,7 +198,6 @@ function BusinessRegisterContent() {
                                 </div>
                                 <h3 className="text-2xl font-black text-white italic tracking-tight uppercase">Business Details</h3>
                             </div>
-
                             <div className="space-y-8">
                                 <div className="space-y-2 text-left">
                                     <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Business Name</Label>
@@ -232,7 +210,6 @@ function BusinessRegisterContent() {
                                         className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-bold focus:ring-2 focus:ring-amber-500/20"
                                     />
                                 </div>
-
                                 <div className="space-y-2 text-left">
                                     <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Workspace URL (Slug)</Label>
                                     <div className="flex items-center gap-2 group">
@@ -248,7 +225,6 @@ function BusinessRegisterContent() {
                                         <div className="bg-slate-900 border border-white/10 h-14 rounded-xl flex items-center px-4 font-mono text-[10px] text-slate-500">{branding.suffix}</div>
                                     </div>
                                 </div>
-
                                 <div className="grid grid-cols-2 gap-8">
                                     <div className="space-y-2 text-left">
                                         <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Business Type</Label>
@@ -278,7 +254,6 @@ function BusinessRegisterContent() {
                                     </div>
                                 </div>
                             </div>
-
                             <div className="pt-8 flex gap-4">
                                 <Button type="button" onClick={() => setStep(1)} variant="outline" className="h-16 flex-1 rounded-2xl border-white/10 text-slate-400 hover:bg-white/5">Back</Button>
                                 <Button
@@ -297,7 +272,6 @@ function BusinessRegisterContent() {
                                 </Button>
                             </div>
                         </div>
-
                         {/* STEP 03: Location & Infrastructure */}
                         <div className={step === 3 ? "space-y-8 animate-in fade-in slide-in-from-right-4 duration-500" : "hidden"}>
                             <div className="flex items-center gap-3 mb-8">
@@ -306,7 +280,6 @@ function BusinessRegisterContent() {
                                 </div>
                                 <h3 className="text-2xl font-black text-white italic tracking-tight uppercase">Location & Contact</h3>
                             </div>
-
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                                 {/* Left Side: Media & Core Info */}
                                 <div className="space-y-8">
@@ -326,12 +299,10 @@ function BusinessRegisterContent() {
                                             </div>
                                         </div>
                                     </div>
-
                                     <div className="space-y-2 text-left">
                                         <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Official Website (Optional)</Label>
                                         <Input name="website" placeholder="https://..." className="bg-slate-900/50 border-white/10 h-14 rounded-xl text-white font-medium focus:ring-2 focus:ring-emerald-500/20" />
                                     </div>
-
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2 text-left">
                                             <Label className="text-[10px] uppercase tracking-widest font-black text-slate-500 ml-1">Business Email</Label>
@@ -343,7 +314,6 @@ function BusinessRegisterContent() {
                                         </div>
                                     </div>
                                 </div>
-
                                 {/* Right Side: Location Info */}
                                 <div className="space-y-8">
                                     <div className="space-y-2 text-left">
@@ -372,7 +342,6 @@ function BusinessRegisterContent() {
                                     </div>
                                 </div>
                             </div>
-
                             <div className="pt-8 flex gap-4">
                                 <Button type="button" onClick={() => setStep(2)} variant="outline" className="h-16 flex-1 rounded-2xl border-white/10 text-slate-400 hover:bg-white/5">Back</Button>
                                 <Button type="submit" disabled={isPending} className="h-20 flex-[3] bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xl rounded-2xl shadow-emerald-500/20 shadow-2xl transition-all active:scale-[0.98] group">
@@ -386,7 +355,6 @@ function BusinessRegisterContent() {
                         </div>
                     </form>
                 </CardContent>
-
                 <CardFooter className="bg-black/20 py-8 justify-center border-t border-white/5">
                     <div className="grid grid-cols-4 gap-4 text-center text-[8px] font-black uppercase tracking-[0.4em] text-slate-500">
                         <div className="flex items-center gap-1.5"><ShieldCheck size={12} className="text-cyan-500" /> Authorized access</div>
@@ -399,7 +367,6 @@ function BusinessRegisterContent() {
         </div>
     );
 }
-
 export default function BusinessRegisterPage() {
     return (
         <Suspense fallback={

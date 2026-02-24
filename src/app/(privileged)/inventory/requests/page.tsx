@@ -1,6 +1,4 @@
 'use client'
-import { Activity } from 'lucide-react'
-
 import { useState, useEffect, useTransition, useMemo } from "react"
 import type { OperationalRequest, Warehouse, Product } from '@/types/erp'
 import {
@@ -24,20 +22,17 @@ import {
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
 import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { TypicalFilter } from "@/components/common/TypicalFilter"
-
 const TYPE_CONFIG: Record<string, { label: string; icon: any; color: string; bg: string }> = {
     STOCK_ADJUSTMENT: { label: 'Adjustment Request', icon: ArrowDownUp, color: 'text-indigo-600', bg: 'bg-indigo-50 border-indigo-100' },
     STOCK_TRANSFER: { label: 'Logistics Request', icon: ArrowLeftRight, color: 'text-indigo-600', bg: 'bg-indigo-50 border-indigo-100' },
     PURCHASE_ORDER: { label: 'Procurement Request', icon: ShoppingCart, color: 'text-indigo-600', bg: 'bg-indigo-50 border-indigo-100' },
 }
-
 const STATUS_CONFIG: Record<string, { label: string; color: string; variant: any }> = {
     PENDING: { label: 'Awaiting Review', color: 'text-amber-600', variant: 'warning' },
     APPROVED: { label: 'Approved Request', color: 'text-emerald-600', variant: 'success' },
     REJECTED: { label: 'Request Rejected', color: 'text-rose-600', variant: 'danger' },
     CONVERTED: { label: 'Promoted to Strategy', color: 'text-indigo-600', variant: 'info' },
 }
-
 export default function OperationalRequestsPage() {
     const settings = useListViewSettings('inv_requests', {
         columns: ['reference', 'date', 'priority', 'items'],
@@ -58,9 +53,7 @@ export default function OperationalRequestsPage() {
     const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set())
     const [rejectDialog, setRejectDialog] = useState<number | null>(null)
     const [convertDialog, setConvertDialog] = useState<OperationalRequest | null>(null)
-
     useEffect(() => { loadData() }, [])
-
     async function loadData() {
         setLoading(true)
         try {
@@ -78,7 +71,6 @@ export default function OperationalRequestsPage() {
             setLoading(false)
         }
     }
-
     const filtered = useMemo(() => {
         let list = requests
         if (activeTab !== "ALL") list = list.filter(r => r.status === activeTab)
@@ -92,7 +84,6 @@ export default function OperationalRequestsPage() {
         }
         return list
     }, [requests, activeTab, searchQuery])
-
     const columns: ColumnDef<OperationalRequest>[] = [
         {
             key: 'reference',
@@ -143,13 +134,11 @@ export default function OperationalRequestsPage() {
             )
         }
     ]
-
     const detailColumns: ColumnDef<any>[] = [
         { key: 'product_name', label: 'Product', render: d => <div className="flex items-center gap-2 font-bold text-gray-700 text-xs">{d.product_name}</div> },
         { key: 'quantity', label: 'Requested Qty', align: 'right', render: d => <span className="font-mono font-black text-rose-500 text-xs">{d.quantity}</span> },
         { key: 'warehouse_name', label: 'Destination Terminal', render: d => <Badge variant="outline" className="bg-white text-gray-400 border-gray-100 text-[9px] font-black uppercase leading-none">{d.warehouse_name || 'Generic'}</Badge> },
     ]
-
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             <header className="flex justify-between items-start">
@@ -167,7 +156,6 @@ export default function OperationalRequestsPage() {
                         Central queue for logistics, procurement, and adjustment requests. Approved requests are promoted to the Strategy layer for team governance.
                     </p>
                 </div>
-
                 <div className="bg-indigo-50 px-4 py-3 rounded-2xl border border-indigo-100 flex items-center gap-3">
                     <Activity size={20} className="text-indigo-600 animate-pulse" />
                     <div className="text-right">
@@ -176,7 +164,6 @@ export default function OperationalRequestsPage() {
                     </div>
                 </div>
             </header>
-
             <TypicalListView<OperationalRequest, any>
                 title="Requests Manifest"
                 addLabel="INITIATE REQUEST"
@@ -253,7 +240,6 @@ export default function OperationalRequestsPage() {
                     onChange={(k, v) => setActiveTab(String(v))}
                 />
             </TypicalListView>
-
             {/* ─── Create Request Dialog ──────────────────────────── */}
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogContent className="sm:max-w-lg rounded-[2.5rem] border-0">
@@ -308,7 +294,6 @@ export default function OperationalRequestsPage() {
                     </form>
                 </DialogContent>
             </Dialog>
-
             {/* ─── Add Line Dialog ────────────────────────────────── */}
             <Dialog open={lineDialogOpen} onOpenChange={setLineDialogOpen}>
                 <DialogContent className="sm:max-w-md rounded-[2.5rem] border-0">
@@ -363,7 +348,6 @@ export default function OperationalRequestsPage() {
                     </form>
                 </DialogContent>
             </Dialog >
-
             {/* ─── Convert Dialog ─────────────────────────────────── */}
             < Dialog open={!!convertDialog} onOpenChange={() => setConvertDialog(null)}>
                 <DialogContent className="sm:max-w-md rounded-[2.5rem] border-0">
@@ -378,7 +362,6 @@ export default function OperationalRequestsPage() {
                         startTransition(async () => {
                             try {
                                 const data: Record<string, any> = {}
-
                                 if (convertDialog.request_type === 'STOCK_TRANSFER') {
                                     const fromWh = fd.get("from_warehouse")
                                     const toWh = fd.get("to_warehouse")
@@ -388,7 +371,6 @@ export default function OperationalRequestsPage() {
                                     const wh = fd.get("target_warehouse")
                                     if (wh) data.warehouse = Number(wh)
                                 }
-
                                 await convertRequest(convertDialog.id, data)
                                 toast.success("Promoted to Strategy Layer!")
                                 setConvertDialog(null)

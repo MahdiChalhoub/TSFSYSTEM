@@ -1,5 +1,4 @@
 "use client"
-
 import { useState, useActionState, useEffect } from "react";
 import { registerUserAction, getPublicConfig } from "@/app/actions/onboarding";
 import { PublicConfig } from "@/types/erp";
@@ -11,20 +10,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, AlertCircle, CheckCircle2, UserPlus, ShieldCheck, Sparkles, ArrowRight } from "lucide-react";
 import { PLATFORM_CONFIG } from "@/lib/saas_config";
 import { PasswordStrength } from "@/components/ui/password-strength";
-
 export default function UserRegisterPage() {
     const [state, action, isPending] = useActionState(registerUserAction, null);
     const [config, setConfig] = useState<PublicConfig>({ tenant: { roles: [] } });
     const [passwordValue, setPasswordValue] = useState('');
-
     useEffect(() => {
         getPublicConfig().then(setConfig).catch(() => { });
     }, []);
-
     const tenantName = config.tenant?.name || PLATFORM_CONFIG.name;
     const roles = config.tenant?.roles || [];
     const tenantLogo = config.tenant?.logo;
-
     if (state?.success) {
         return (
             <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 relative overflow-hidden">
@@ -54,14 +49,11 @@ export default function UserRegisterPage() {
             </div>
         );
     }
-
     return (
         <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center p-6 py-20 relative overflow-hidden">
             {/* Ambient Background Elements */}
             <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-cyan-500/5 blur-[160px] rounded-full" />
             <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-500/5 blur-[160px] rounded-full" />
-
-
             <div className="text-center mb-12 space-y-3 relative z-10">
                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-cyan-500/5 border border-cyan-500/10 rounded-full text-[10px] font-black uppercase tracking-widest text-cyan-400 mb-2 backdrop-blur-md">
                     <Sparkles size={12} className="animate-pulse" />
@@ -74,10 +66,8 @@ export default function UserRegisterPage() {
                     Create your employee profile to join the team.
                 </p>
             </div>
-
             <Card className="w-full max-w-lg bg-[#0f172a]/60 border-white/5 backdrop-blur-[40px] rounded-[2.5rem] overflow-hidden shadow-2xl relative z-10 transition-all duration-500">
                 <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
-
                 <CardHeader className="pt-10 px-10">
                     <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
@@ -89,7 +79,6 @@ export default function UserRegisterPage() {
                         </div>
                     </div>
                 </CardHeader>
-
                 <CardContent className="p-10">
                     <form action={action} className="space-y-6">
                         {(state?.error as any)?.root && (
@@ -98,7 +87,6 @@ export default function UserRegisterPage() {
                                 {(state?.error as any).root}
                             </div>
                         )}
-
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="first_name" className="text-[10px] uppercase tracking-widest font-black text-slate-500">First Name</Label>
@@ -109,13 +97,11 @@ export default function UserRegisterPage() {
                                 <Input id="last_name" name="last_name" required className="bg-slate-900/50 border-white/5 h-14 rounded-xl text-white font-bold" />
                             </div>
                         </div>
-
                         <div className="space-y-2">
                             <Label htmlFor="email" className="text-[10px] uppercase tracking-widest font-black text-slate-500">Email</Label>
                             <Input id="email" name="email" type="email" required className="bg-slate-900/50 border-white/5 h-14 rounded-xl text-white font-medium" />
                             {(state as any)?.error?.email && <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest">{(state as any).error.email}</p>}
                         </div>
-
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="username" className="text-[10px] uppercase tracking-widest font-black text-slate-500">Username</Label>
@@ -128,7 +114,6 @@ export default function UserRegisterPage() {
                                 <PasswordStrength password={passwordValue} />
                             </div>
                         </div>
-
                         <div className="space-y-2">
                             <Label htmlFor="role" className="text-[10px] uppercase tracking-widest font-black text-slate-500">Role</Label>
                             <Select name="role_id" required>
@@ -149,7 +134,6 @@ export default function UserRegisterPage() {
                             </Select>
                             {(state as any)?.error?.role_id && <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest">{(state as any).error.role_id}</p>}
                         </div>
-
                         <div className="grid grid-cols-2 gap-4 pt-2">
                             <div className="space-y-2">
                                 <Label htmlFor="phone" className="text-[10px] uppercase tracking-widest font-black text-slate-500">Phone</Label>
@@ -160,7 +144,6 @@ export default function UserRegisterPage() {
                                 <Input id="dob" name="date_of_birth" type="date" className="bg-slate-900/50 border-white/5 h-14 rounded-xl text-white font-medium" />
                             </div>
                         </div>
-
                         <Button type="submit" className="w-full h-16 bg-cyan-600 hover:bg-cyan-500 text-white font-black rounded-2xl shadow-lg shadow-cyan-900/20 transition-all active:scale-[0.98]" disabled={isPending}>
                             {isPending ? <Loader2 className="animate-spin" /> : (
                                 <div className="flex items-center gap-2">
@@ -168,14 +151,12 @@ export default function UserRegisterPage() {
                                 </div>
                             )}
                         </Button>
-
                         <div className="text-center pt-4 border-t border-white/5">
                             <span className="text-[10px] text-slate-500 uppercase font-bold">Already registered? </span>
                             <a href="/login" className="text-[10px] text-cyan-400 hover:text-white uppercase font-black tracking-widest transition-colors">Log In</a>
                         </div>
                     </form>
                 </CardContent>
-
                 <CardFooter className="bg-black/20 py-4 justify-center">
                     <div className="text-[9px] font-black text-slate-600 uppercase tracking-[0.3em] flex items-center gap-2">
                         <ShieldCheck size={12} className="text-cyan-500/50" />

@@ -1,10 +1,8 @@
 'use client';
-
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { ShoppingBag, ArrowRight, Star, Search, FileQuestion, ShoppingCart, X, Heart } from 'lucide-react';
 import { usePortal } from '@/context/PortalContext';
-
 interface Product {
     id: string;
     name: string;
@@ -15,28 +13,23 @@ interface Product {
     stock_quantity?: number;
     tax_rate?: number;
 }
-
 interface StorefrontCatalogProps {
     products: Product[];
     slug: string;
 }
-
 export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
     const { config, addToCart, toggleWishlist, isInWishlist } = usePortal();
     const [search, setSearch] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
-
     const storeMode = config?.store_mode || 'HYBRID';
     const showPrice = storeMode !== 'CATALOG_QUOTE';
-
     // Unique categories
     const categories = useMemo(() => {
         const cats = new Set<string>();
         products.forEach(p => { if (p.category_name) cats.add(p.category_name); });
         return Array.from(cats).sort();
     }, [products]);
-
     // Filtered products
     const filtered = useMemo(() => {
         return products.filter(p => {
@@ -45,7 +38,6 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
             return matchSearch && matchCat;
         });
     }, [products, search, selectedCategory]);
-
     const handleQuickAdd = (p: Product, e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
@@ -60,7 +52,6 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
         setAddedIds(prev => new Set(prev).add(p.id));
         setTimeout(() => setAddedIds(prev => { const next = new Set(prev); next.delete(p.id); return next; }), 1500);
     };
-
     if (!products || products.length === 0) {
         return (
             <div className="p-12 text-center bg-white/5 rounded-[3rem] border border-white/10 backdrop-blur-xl">
@@ -70,7 +61,6 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
             </div>
         );
     }
-
     return (
         <div className="space-y-8">
             {/* Header + Search */}
@@ -82,7 +72,6 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
                         <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Live Inventory</span>
                     </div>
                 </div>
-
                 {/* Search Bar */}
                 <div className="relative">
                     <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
@@ -100,7 +89,6 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
                         </button>
                     )}
                 </div>
-
                 {/* Category Pills */}
                 {categories.length > 1 && (
                     <div className="flex flex-wrap gap-2">
@@ -128,7 +116,6 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
                     </div>
                 )}
             </div>
-
             {/* Results Count */}
             {(search || selectedCategory) && (
                 <p className="text-xs text-slate-500 px-1">
@@ -137,7 +124,6 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
                     {selectedCategory && <> in <span className="text-emerald-400">{selectedCategory}</span></>}
                 </p>
             )}
-
             {/* Product Grid */}
             {filtered.length === 0 ? (
                 <div className="py-16 text-center space-y-3">
@@ -184,7 +170,6 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
                                     </div>
                                 </div>
                             </div>
-
                             <div className="p-8 space-y-4">
                                 <div className="space-y-1">
                                     <div className="flex justify-between items-start">
@@ -196,7 +181,6 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
                                     </div>
                                     <p className="text-[10px] text-slate-500 font-mono tracking-widest">{p.sku}</p>
                                 </div>
-
                                 <div className="flex items-center justify-between pt-2">
                                     {showPrice ? (
                                         <div className="text-2xl font-black text-white">
@@ -208,7 +192,6 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
                                             <FileQuestion size={14} /> Request Quote
                                         </div>
                                     )}
-
                                     {/* Quick Action */}
                                     {storeMode === 'CATALOG_QUOTE' ? (
                                         <span className="px-6 py-2 bg-teal-500/10 text-teal-400 border border-teal-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest">
@@ -232,7 +215,6 @@ export function StorefrontCatalog({ products, slug }: StorefrontCatalogProps) {
                     ))}
                 </div>
             )}
-
             {filtered.length > 0 && filtered.length < products.length && (
                 <button
                     onClick={() => { setSearch(''); setSelectedCategory(null); }}

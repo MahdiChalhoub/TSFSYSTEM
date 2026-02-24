@@ -1,6 +1,4 @@
 'use client'
-import { ShieldCheck } from 'lucide-react'
-
 import { useState, useEffect, useTransition, useMemo } from "react"
 import type { Voucher, FinancialAccount, FinancialEvent, LifecycleHistoryEntry } from '@/types/erp'
 import {
@@ -25,16 +23,13 @@ import {
 import { TypicalListView, ColumnDef, LifecycleConfig } from "@/components/common/TypicalListView"
 import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { useCurrency } from "@/lib/utils/currency"
-
 // Sort logic handled by TypicalListView
-
 const LIFECYCLE_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ElementType }> = {
     OPEN: { label: 'Open', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', icon: Clock },
     LOCKED: { label: 'Locked', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', icon: Lock },
     VERIFIED: { label: 'Verified', color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200', icon: ShieldCheck },
     CONFIRMED: { label: 'Confirmed', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', icon: CheckCircle2 },
 }
-
 export default function VouchersPage() {
     const { fmt } = useCurrency()
     const [vouchers, setVouchers] = useState<Voucher[]>([])
@@ -56,9 +51,7 @@ export default function VouchersPage() {
         pageSize: 25, sortKey: 'date', sortDir: 'desc'
     })
     const [isPending, startTransition] = useTransition()
-
     useEffect(() => { loadData() }, [])
-
     async function loadData() {
         try {
             const [v, accs, evts] = await Promise.all([
@@ -76,12 +69,10 @@ export default function VouchersPage() {
             setLoading(false)
         }
     }
-
     // ─── Create / Edit Handler ────────────────────────────────────
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
         const fd = new FormData(e.currentTarget)
-
         startTransition(async () => {
             try {
                 if (editVoucher) {
@@ -115,7 +106,6 @@ export default function VouchersPage() {
             }
         })
     }
-
     // ─── Lifecycle Handlers ───────────────────────────────────────
     async function handleLock(id: number) {
         startTransition(async () => {
@@ -159,18 +149,15 @@ export default function VouchersPage() {
             setHistoryDialog(Array.isArray(history) ? history : [])
         } catch { toast.error("Failed to load history") }
     }
-
     function openEdit(v: Voucher) { setEditVoucher(v); setVoucherType(v.voucher_type); setDialogOpen(true) }
     function openCreate() { setEditVoucher(null); setVoucherType('TRANSFER'); setDialogOpen(true) }
     function closeDialog() { setDialogOpen(false); setEditVoucher(null) }
-
     // ─── TypicalListView Configuration ──────────────────────────
     const typeConfig: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
         TRANSFER: { icon: ArrowRightLeft, color: "text-blue-700", bg: "bg-blue-50 border-blue-200" },
         RECEIPT: { icon: ArrowDownLeft, color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
         PAYMENT: { icon: ArrowUpRight, color: "text-rose-700", bg: "bg-rose-50 border-rose-200" },
     }
-
     const columns: ColumnDef<any>[] = useMemo(() => [
         {
             key: 'date',
@@ -216,7 +203,6 @@ export default function VouchersPage() {
             )
         }
     ], [fmt])
-
     const lifecycle: LifecycleConfig<Voucher> = {
         getStatus: (v: Voucher) => {
             const cfg = LIFECYCLE_CONFIG[v.lifecycle_status] || LIFECYCLE_CONFIG.OPEN
@@ -228,7 +214,6 @@ export default function VouchersPage() {
             )
         }
     }
-
     // ─── Filtering ──────────────────────
     const filteredVouchers = useMemo(() => {
         return vouchers
@@ -239,9 +224,7 @@ export default function VouchersPage() {
                 (v.description || "").toLowerCase().includes(searchQuery.toLowerCase())
             )
     }, [vouchers, activeTab, searchQuery])
-
     const activeType = editVoucher ? editVoucher.voucher_type : voucherType
-
     const actions: ActionsConfig<Voucher> = {
         onEdit: (v) => v.lifecycle_status === 'OPEN' ? openEdit(v) : undefined,
         onDelete: (v) => v.lifecycle_status === 'OPEN' ? setDeleteConfirm(v.id) : undefined,
@@ -250,7 +233,6 @@ export default function VouchersPage() {
             const isLocked = v.lifecycle_status === 'LOCKED'
             const isVerified = v.lifecycle_status === 'VERIFIED'
             const isConfirmed = v.lifecycle_status === 'CONFIRMED'
-
             return (
                 <div className="flex items-center gap-1">
                     {isOpen && !v.is_posted && (
@@ -291,7 +273,6 @@ export default function VouchersPage() {
             )
         }
     }
-
     if (loading) {
         return (
             <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto p-6">
@@ -306,7 +287,6 @@ export default function VouchersPage() {
             </div>
         )
     }
-
     return (
         <div className="p-6 space-y-6 max-w-[1400px] mx-auto">
             {/* Header */}
@@ -331,7 +311,6 @@ export default function VouchersPage() {
                     <Plus size={18} /> New Voucher
                 </Button>
             </header>
-
             {/* ─── Create / Edit Dialog ────────────────────────────── */}
             <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) closeDialog(); else setDialogOpen(true) }}>
                 <DialogContent className="sm:max-w-lg">
@@ -343,7 +322,6 @@ export default function VouchersPage() {
                             {editVoucher ? "Modify the voucher details below. Only OPEN vouchers can be edited." : "Select the voucher type and fill in the details below."}
                         </DialogDescription>
                     </DialogHeader>
-
                     {/* Type Selector — only for new vouchers */}
                     {!editVoucher && (
                         <div className="flex gap-2 pt-2">
@@ -367,7 +345,6 @@ export default function VouchersPage() {
                             })}
                         </div>
                     )}
-
                     {/* Locked type badge for editing */}
                     {editVoucher && (
                         <div className="pt-2">
@@ -376,7 +353,6 @@ export default function VouchersPage() {
                             </Badge>
                         </div>
                     )}
-
                     <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4 pt-2">
                         <div className="space-y-1.5">
                             <label className="text-xs font-bold text-stone-500 uppercase">Amount *</label>
@@ -390,7 +366,6 @@ export default function VouchersPage() {
                             <label className="text-xs font-bold text-stone-500 uppercase">Description</label>
                             <Input name="description" placeholder="Optional description..." className="rounded-xl" defaultValue={editVoucher?.description || ""} />
                         </div>
-
                         {(activeType === "TRANSFER" || activeType === "PAYMENT") && (
                             <div className="col-span-2 space-y-1.5">
                                 <label className="text-xs font-bold text-stone-500 uppercase">Source Account *</label>
@@ -422,7 +397,6 @@ export default function VouchersPage() {
                                 </select>
                             </div>
                         )}
-
                         <div className="col-span-2 flex justify-end gap-2 pt-3 border-t">
                             <Button type="button" variant="outline" onClick={closeDialog} className="rounded-xl">Cancel</Button>
                             <Button type="submit" disabled={isPending} className="rounded-xl gap-2 bg-amber-600 hover:bg-amber-700 text-white border-0">
@@ -432,7 +406,6 @@ export default function VouchersPage() {
                     </form>
                 </DialogContent>
             </Dialog>
-
             {/* ─── Delete Confirmation Dialog ───────────────────────── */}
             <Dialog open={deleteConfirm !== null} onOpenChange={(open) => { if (!open) setDeleteConfirm(null) }}>
                 <DialogContent className="sm:max-w-sm">
@@ -448,7 +421,6 @@ export default function VouchersPage() {
                     </div>
                 </DialogContent>
             </Dialog>
-
             {/* ─── Unlock Comment Dialog ────────────────────────────── */}
             <Dialog open={commentDialog !== null} onOpenChange={(open) => { if (!open) setCommentDialog(null) }}>
                 <DialogContent className="sm:max-w-sm">
@@ -467,7 +439,6 @@ export default function VouchersPage() {
                     </form>
                 </DialogContent>
             </Dialog>
-
             {/* ─── History Dialog ───────────────────────────────────── */}
             <Dialog open={historyDialog !== null} onOpenChange={(open) => { if (!open) setHistoryDialog(null) }}>
                 <DialogContent className="sm:max-w-md">
@@ -494,7 +465,6 @@ export default function VouchersPage() {
                     </div>
                 </DialogContent>
             </Dialog>
-
             {/* Dashboard Statistics */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
@@ -511,7 +481,6 @@ export default function VouchersPage() {
                         <h2 className="text-3xl font-black text-gray-900 mt-1">{vouchers.length}</h2>
                     </CardContent>
                 </Card>
-
                 <Card className="rounded-[2rem] border-0 shadow-sm bg-blue-600 overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-white">
                     <CardContent className="p-7">
                         <div className="flex justify-between items-start mb-4">
@@ -526,7 +495,6 @@ export default function VouchersPage() {
                         <h2 className="text-3xl font-black text-white mt-1">{vouchers.filter(v => v.lifecycle_status === "OPEN").length}</h2>
                     </CardContent>
                 </Card>
-
                 <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                     <CardContent className="p-7">
                         <div className="flex justify-between items-start mb-4">
@@ -541,7 +509,6 @@ export default function VouchersPage() {
                         <h2 className="text-3xl font-black text-amber-600 mt-1">{vouchers.filter(v => v.lifecycle_status === "LOCKED").length}</h2>
                     </CardContent>
                 </Card>
-
                 <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                     <CardContent className="p-7">
                         <div className="flex justify-between items-start mb-4">
@@ -557,7 +524,6 @@ export default function VouchersPage() {
                     </CardContent>
                 </Card>
             </div>
-
             <TypicalListView
                 title="Voucher Entries"
                 data={filteredVouchers}

@@ -1,6 +1,4 @@
 'use client'
-import { Activity, ShieldCheck } from 'lucide-react'
-
 import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -17,14 +15,11 @@ import {
 } from 'recharts'
 import { Badge } from "@/components/ui/badge"
 import { useCurrency } from "@/lib/utils/currency"
-
 export default function AdvancedIntelligenceDashboard() {
     const { fmt } = useCurrency()
     const [data, setData] = useState<any>(null)
     const [loading, setLoading] = useState(true)
-
     useEffect(() => { loadAll() }, [])
-
     async function loadAll() {
         setLoading(true)
         try {
@@ -38,7 +33,6 @@ export default function AdvancedIntelligenceDashboard() {
                 erpFetch('inventory/inventory-movements/').catch(() => []),
                 erpFetch('settings/global_financial/').catch(() => null),
             ])
-
             setData({
                 salesSummary: sales,
                 lowStock: Array.isArray(stock) ? stock : stock?.results || [],
@@ -53,7 +47,6 @@ export default function AdvancedIntelligenceDashboard() {
             setLoading(false)
         }
     }
-
     const {
         revenueLiquidity,
         economicExposure,
@@ -63,17 +56,14 @@ export default function AdvancedIntelligenceDashboard() {
         recentMovements
     } = useMemo(() => {
         if (!data) return { revenueLiquidity: 0, economicExposure: 0, chartData: [], terminalPerformance: [], topSellers: [], recentMovements: [] }
-
         // 1. Calculate Liquidity vs Exposure
         const liquidity = data.accounts
             .filter((a: any) => a.type === 'ASSET' && (a.name.toLowerCase().includes('cash') || a.name.toLowerCase().includes('bank')))
             .reduce((s: number, a: any) => s + Math.abs(parseFloat(a.balance || 0)), 0)
-
         const exposure = data.accounts
             .filter((a: any) => a.type === 'LIABILITY')
             .reduce((s: number, a: any) => s + Math.abs(parseFloat(a.balance || 0)), 0) +
             data.employees.reduce((s: number, e: any) => s + parseFloat(e.salary || 0), 0)
-
         // 2. Real Chart Data (Derived from daily_sales)
         // Expected format from pos/pos/daily-summary: { daily_sales: [{ date: '2023-10-01', total: 1500, count: 5 }, ...] }
         let realChart: any[] = []
@@ -91,7 +81,6 @@ export default function AdvancedIntelligenceDashboard() {
                 { name: 'No Data', liquidity: 0, exposure: 0 }
             ]
         }
-
         // 3. Terminal Performance (Real Heatmap Data)
         const totalMovements = data.movements.length || 1 // prevent div by zero
         const terminals = Array.from(new Set(data.movements.map((m: any) => m.warehouse_name || 'Global Terminal')))
@@ -104,13 +93,11 @@ export default function AdvancedIntelligenceDashboard() {
         if (terminals.length === 0) {
             terminals.push({ name: 'System Core Node', count: 0, value: 0 })
         }
-
         // 4. Top Sellers
         const sellers = Object.entries(data.salesSummary?.user_stats || {})
             .map(([name, stats]: [string, any]) => ({ name, revenue: stats.total || 0, count: stats.count || 0 }))
             .sort((a, b) => b.revenue - a.revenue)
             .slice(0, 5)
-
         return {
             revenueLiquidity: liquidity,
             economicExposure: exposure,
@@ -120,7 +107,6 @@ export default function AdvancedIntelligenceDashboard() {
             recentMovements: data.movements.slice(0, 5)
         }
     }, [data])
-
     if (loading || !data) {
         return (
             <div className="p-8 space-y-8 max-w-7xl mx-auto">
@@ -138,7 +124,6 @@ export default function AdvancedIntelligenceDashboard() {
             </div>
         )
     }
-
     return (
         <div className="p-8 space-y-8 max-w-7xl mx-auto animate-in fade-in duration-700">
             {/* Header: Intelligence Console Mode */}
@@ -168,7 +153,6 @@ export default function AdvancedIntelligenceDashboard() {
                     </button>
                 </div>
             </header>
-
             {/* High-Fidelity KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <Card className="rounded-[2.5rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
@@ -188,7 +172,6 @@ export default function AdvancedIntelligenceDashboard() {
                         </div>
                     </CardContent>
                 </Card>
-
                 <Card className="rounded-[2.5rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                     <CardContent className="p-7">
                         <div className="flex justify-between items-start mb-4">
@@ -206,7 +189,6 @@ export default function AdvancedIntelligenceDashboard() {
                         </div>
                     </CardContent>
                 </Card>
-
                 <Card className="rounded-[2.5rem] border-0 shadow-sm bg-indigo-900 overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-white">
                     <CardContent className="p-7">
                         <div className="flex justify-between items-start mb-4">
@@ -224,7 +206,6 @@ export default function AdvancedIntelligenceDashboard() {
                         </div>
                     </CardContent>
                 </Card>
-
                 <Card className="rounded-[2.5rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                     <CardContent className="p-7">
                         <div className="flex justify-between items-start mb-4">
@@ -243,7 +224,6 @@ export default function AdvancedIntelligenceDashboard() {
                     </CardContent>
                 </Card>
             </div>
-
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Advanced Area Chart */}
                 <Card className="lg:col-span-2 rounded-[2.5rem] border-0 shadow-sm bg-white overflow-hidden">
@@ -288,7 +268,6 @@ export default function AdvancedIntelligenceDashboard() {
                         </ResponsiveContainer>
                     </CardContent>
                 </Card>
-
                 {/* Terminal Performance Heatmap */}
                 <Card className="rounded-[2.5rem] border-0 shadow-sm bg-white overflow-hidden">
                     <CardHeader className="px-8 pt-8">
@@ -322,7 +301,6 @@ export default function AdvancedIntelligenceDashboard() {
                     </CardContent>
                 </Card>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Pareto: Top Sellers */}
                 <Card className="rounded-[2.5rem] border-0 shadow-sm bg-white overflow-hidden">
@@ -359,7 +337,6 @@ export default function AdvancedIntelligenceDashboard() {
                         ))}
                     </CardContent>
                 </Card>
-
                 {/* Intelligence Stream */}
                 <Card className="rounded-[2.5rem] border-0 shadow-sm border-2 border-indigo-100 bg-white overflow-hidden">
                     <CardHeader className="p-8 pb-0">
@@ -401,5 +378,4 @@ export default function AdvancedIntelligenceDashboard() {
         </div>
     )
 }
-
 const resolutionRate = 84.2; // Derived or hardcoded for pulse

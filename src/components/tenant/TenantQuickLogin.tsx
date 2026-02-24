@@ -1,14 +1,10 @@
 'use client'
-
 import { useActionState } from "react"
 import { loginAction } from "@/app/actions/auth"
 import { ArrowRight, Loader2, AlertCircle, Lock, ShieldCheck } from "lucide-react"
-
 const initialState: Record<string, any> = { error: {} }
-
 export function TenantQuickLogin({ slug, suffix }: { slug: string; suffix: string }) {
     const [state, action, isPending] = useActionState(loginAction, initialState)
-
     return (
         <div className="p-10 bg-slate-900/40 backdrop-blur-3xl border border-white/5 rounded-[3rem] space-y-8 shadow-2xl relative overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -21,7 +17,6 @@ export function TenantQuickLogin({ slug, suffix }: { slug: string; suffix: strin
                     <Lock size={20} />
                 </div>
             </div>
-
             <form action={action} className="space-y-4 pt-2 relative">
                 {/* Error Display */}
                 {(state?.error as any)?.root && (
@@ -30,9 +25,7 @@ export function TenantQuickLogin({ slug, suffix }: { slug: string; suffix: strin
                         {(state?.error as any).root[0]}
                     </div>
                 )}
-
                 <input type="hidden" name="slug" value={slug} />
-
                 {/* 2FA Step */}
                 {state?.two_factor_required ? (
                     <div className="space-y-4 animate-in slide-in-from-right-4 duration-500">
@@ -40,7 +33,6 @@ export function TenantQuickLogin({ slug, suffix }: { slug: string; suffix: strin
                             <ShieldCheck size={18} className="shrink-0" />
                             {(state as any).message || "Enter your verification code"}
                         </div>
-
                         <input
                             name="otp_token"
                             type="text"
@@ -49,10 +41,8 @@ export function TenantQuickLogin({ slug, suffix }: { slug: string; suffix: strin
                             autoFocus
                             className="w-full bg-slate-950/50 border border-white/5 p-5 rounded-2xl text-white text-center text-2xl font-mono tracking-[0.3em] outline-none focus:border-emerald-500 transition-all focus:ring-4 focus:ring-emerald-500/5 placeholder:text-slate-700"
                         />
-
                         {/* Server-side 2FA challenge — no passwords in DOM */}
                         <input type="hidden" name="challenge_id" defaultValue={(state as any).challenge_id} />
-
                         <button
                             type="submit"
                             disabled={isPending}
@@ -64,7 +54,6 @@ export function TenantQuickLogin({ slug, suffix }: { slug: string; suffix: strin
                                 <>Sign In <ShieldCheck size={20} /></>
                             )}
                         </button>
-
                         <div className="flex justify-center">
                             <button
                                 type="button"

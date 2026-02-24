@@ -1,8 +1,6 @@
 'use client';
-
 import { useState } from 'react';
 import { Trophy, Award, TrendingUp, Target, Star, BarChart3, Medal, ChevronUp, ChevronDown } from 'lucide-react';
-
 interface EmployeeScore {
     id: number;
     employee: number;
@@ -22,25 +20,20 @@ interface EmployeeScore {
     completion_rate: number;
     on_time_rate: number;
 }
-
 interface Props {
     leaderboard: EmployeeScore[];
     myPerformance: EmployeeScore[];
     kpiConfig: any;
 }
-
 const TIER_STYLES: Record<string, { bg: string; text: string; icon: string }> = {
     PLATINUM: { bg: 'bg-gradient-to-r from-purple-500 to-pink-500', text: 'text-white', icon: '💎' },
     GOLD: { bg: 'bg-gradient-to-r from-amber-400 to-yellow-500', text: 'text-white', icon: '🥇' },
     SILVER: { bg: 'bg-gradient-to-r from-gray-300 to-gray-400', text: 'text-gray-800', icon: '🥈' },
     BRONZE: { bg: 'bg-gradient-to-r from-amber-600 to-orange-700', text: 'text-white', icon: '🥉' },
 };
-
 export default function PerformanceClient({ leaderboard, myPerformance, kpiConfig }: Props) {
     const [tab, setTab] = useState<'leaderboard' | 'my'>('leaderboard');
-
     const latest = myPerformance[0];
-
     return (
         <div className="space-y-6">
             {/* My Score Summary */}
@@ -82,7 +75,6 @@ export default function PerformanceClient({ leaderboard, myPerformance, kpiConfi
                     </div>
                 </div>
             )}
-
             {/* Tab Switch */}
             <div className="flex gap-2 bg-white p-1.5 rounded-2xl shadow-lg shadow-gray-100 border border-gray-50 w-fit">
                 <button onClick={() => setTab('leaderboard')}
@@ -94,7 +86,6 @@ export default function PerformanceClient({ leaderboard, myPerformance, kpiConfi
                     📊 My History
                 </button>
             </div>
-
             {/* Content */}
             {tab === 'leaderboard' ? (
                 <div className="bg-white rounded-3xl border border-gray-50 overflow-hidden shadow-lg shadow-gray-100">
@@ -175,7 +166,6 @@ export default function PerformanceClient({ leaderboard, myPerformance, kpiConfi
                     </div>
                 </div>
             )}
-
             {/* KPI Weights */}
             {kpiConfig && (
                 <div className="bg-white rounded-3xl border border-gray-50 p-6 shadow-lg shadow-gray-100">

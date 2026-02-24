@@ -1,5 +1,4 @@
 'use client'
-
 import { useState, useEffect, useMemo } from 'react'
 import { erpFetch } from '@/lib/erp-api'
 import { Percent, Plus, Star, Trash2, RefreshCw, CheckCircle, XCircle, Edit2, Save, X, Info, TrendingUp, LayoutGrid } from 'lucide-react'
@@ -11,7 +10,6 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
-
 type TaxGroup = {
     id: number
     name: string
@@ -20,12 +18,9 @@ type TaxGroup = {
     is_default: boolean
     tax_type?: string
 }
-
 type FormState = { name: string; rate: string; description: string; tax_type: string }
-
 const EMPTY_FORM: FormState = { name: '', rate: '', description: '', tax_type: 'STANDARD' }
 const TAX_TYPES = ['STANDARD', 'REDUCED', 'ZERO', 'EXEMPT', 'REVERSE_CHARGE']
-
 export default function TaxGroupsPage() {
     const [groups, setGroups] = useState<TaxGroup[]>([])
     const [loading, setLoading] = useState(true)
@@ -39,9 +34,7 @@ export default function TaxGroupsPage() {
         columns: ['name', 'rate', 'description', 'actions'],
         pageSize: 25, sortKey: 'name', sortDir: 'asc'
     })
-
     useEffect(() => { load() }, [])
-
     async function load() {
         setLoading(true)
         try {
@@ -54,27 +47,23 @@ export default function TaxGroupsPage() {
             setLoading(false)
         }
     }
-
     function startEdit(tg: TaxGroup) {
         setEditing(tg)
         setForm({ name: tg.name, rate: String(tg.rate), description: tg.description || '', tax_type: tg.tax_type || 'STANDARD' })
         setShowForm(true)
         window.scrollTo({ top: 0, behavior: 'smooth' })
     }
-
     function startCreate() {
         setEditing(null)
         setForm(EMPTY_FORM)
         setShowForm(true)
         window.scrollTo({ top: 0, behavior: 'smooth' })
     }
-
     function cancelForm() {
         setShowForm(false)
         setEditing(null)
         setForm(EMPTY_FORM)
     }
-
     async function handleSave() {
         if (!form.name || !form.rate) return
         setSaving(true)
@@ -95,7 +84,6 @@ export default function TaxGroupsPage() {
             setSaving(false)
         }
     }
-
     async function handleSetDefault(id: number) {
         setSettingDefault(id)
         try {
@@ -108,7 +96,6 @@ export default function TaxGroupsPage() {
             setSettingDefault(null)
         }
     }
-
     async function handleDelete(id: number) {
         setDeleting(id)
         try {
@@ -121,14 +108,12 @@ export default function TaxGroupsPage() {
             setDeleting(null)
         }
     }
-
     const stats = useMemo(() => {
         const total = groups.length
         const avg = total ? (groups.reduce((s, g) => s + Number(g.rate || 0), 0) / total) : 0
         const def = groups.find(g => g.is_default)?.name || 'None'
         return { total, avg, def }
     }, [groups])
-
     const columns: ColumnDef<TaxGroup>[] = useMemo(() => [
         {
             key: 'name',
@@ -204,7 +189,6 @@ export default function TaxGroupsPage() {
             )
         }
     ], [settingDefault, deleting])
-
     if (loading && groups.length === 0) {
         return (
             <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
@@ -217,7 +201,6 @@ export default function TaxGroupsPage() {
             </div>
         )
     }
-
     return (
         <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500 min-h-screen pb-24">
             {/* Standard Header */}
@@ -240,7 +223,6 @@ export default function TaxGroupsPage() {
                     </Button>
                 </div>
             </header>
-
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden group">
@@ -280,7 +262,6 @@ export default function TaxGroupsPage() {
                     </CardContent>
                 </Card>
             </div>
-
             {/* Create/Edit Form */}
             {showForm && (
                 <div className="animate-in slide-in-from-top-4 duration-500">
@@ -327,7 +308,6 @@ export default function TaxGroupsPage() {
                     </Card>
                 </div>
             )}
-
             <TypicalListView
                 title="Taxation Authority Matrix"
                 data={groups}

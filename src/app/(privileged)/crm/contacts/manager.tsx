@@ -1,5 +1,4 @@
 'use client';
-
 import { useState, useCallback } from 'react';
 import { TypicalListView, type ColumnDef } from '@/components/common/TypicalListView';
 import { TypicalFilter } from '@/components/common/TypicalFilter';
@@ -10,9 +9,7 @@ import { Search, Plus, User, Briefcase, Building2, CreditCard, ChevronRight, Pho
 import ContactModal from './form';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-
 type Contact = Record<string, any>;
-
 const ALL_COLUMNS: ColumnDef<Contact>[] = [
     { key: 'name', label: 'Entity Identity', sortable: true, alwaysVisible: true },
     { key: 'type', label: 'Classification', sortable: true },
@@ -20,7 +17,6 @@ const ALL_COLUMNS: ColumnDef<Contact>[] = [
     { key: 'site', label: 'Home Node' },
     { key: 'balance', label: 'Ledger Balance', align: 'right', sortable: true },
 ];
-
 export default function RelationshipMasterList({
     contacts,
     sites
@@ -35,13 +31,11 @@ export default function RelationshipMasterList({
         sortKey: 'name',
         sortDir: 'asc',
     });
-
     const [search, setSearch] = useState('');
     const [typeFilter, setTypeFilter] = useState('ALL');
     const [siteFilter, setSiteFilter] = useState('ALL');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalType, setModalType] = useState<'CUSTOMER' | 'SUPPLIER'>('CUSTOMER');
-
     const filtered = contacts.filter(c => {
         const matchesSearch = c.name.toLowerCase().includes(search.toLowerCase()) ||
             c.email?.toLowerCase().includes(search.toLowerCase());
@@ -49,7 +43,6 @@ export default function RelationshipMasterList({
         const matchesSite = siteFilter === 'ALL' || c.homeSiteId?.toString() === siteFilter;
         return matchesSearch && matchesType && matchesSite;
     });
-
     const columns: ColumnDef<Contact>[] = ALL_COLUMNS.map(c => {
         const renderers: Record<string, (r: Contact) => React.ReactNode> = {
             name: r => (
@@ -111,7 +104,6 @@ export default function RelationshipMasterList({
         };
         return { ...c, render: renderers[c.key] };
     });
-
     return (
         <div className="space-y-6">
             <TypicalListView<Contact>
@@ -175,7 +167,6 @@ export default function RelationshipMasterList({
                     onChange={(k, v) => k === 'type' ? setTypeFilter(String(v)) : setSiteFilter(String(v))}
                 />
             </TypicalListView>
-
             {isModalOpen && (
                 <ContactModal
                     sites={sites}

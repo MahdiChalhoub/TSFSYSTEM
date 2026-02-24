@@ -1,13 +1,10 @@
 'use client'
-import { Activity } from 'lucide-react'
-
 /**
  * MCP Settings - Full Configuration Panel
  * =========================================
  * Comprehensive AI integration settings: rate limits, security, data retention,
  * provider defaults, and system diagnostics.
  */
-
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -28,7 +25,6 @@ import {
     Bell, Gauge, HardDrive, Brain, Activity, Globe
 } from 'lucide-react'
 import { toast } from 'sonner'
-
 interface SettingsState {
     // Rate Limiting
     max_requests_per_minute: number
@@ -54,7 +50,6 @@ interface SettingsState {
     alert_on_quota: boolean
     quota_threshold: number
 }
-
 const defaultSettings: SettingsState = {
     max_requests_per_minute: 60,
     max_tokens_per_request: 8192,
@@ -75,18 +70,15 @@ const defaultSettings: SettingsState = {
     alert_on_quota: true,
     quota_threshold: 80
 }
-
 export default function MCPSettingsPage() {
     const [settings, setSettings] = useState<SettingsState>(defaultSettings)
     const [saving, setSaving] = useState(false)
     const [hasChanges, setHasChanges] = useState(false)
     const [showAdvanced, setShowAdvanced] = useState(false)
-
     function updateSetting<K extends keyof SettingsState>(key: K, value: SettingsState[K]) {
         setSettings(prev => ({ ...prev, [key]: value }))
         setHasChanges(true)
     }
-
     async function handleSave() {
         setSaving(true)
         try {
@@ -100,13 +92,11 @@ export default function MCPSettingsPage() {
             setSaving(false)
         }
     }
-
     function handleReset() {
         setSettings(defaultSettings)
         setHasChanges(true)
         toast.info('Settings reset to defaults')
     }
-
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             {/* Header */}
@@ -151,7 +141,6 @@ export default function MCPSettingsPage() {
                     </Button>
                 </div>
             </div>
-
             {/* Unsaved Changes Banner */}
             {hasChanges && (
                 <div className="flex items-center gap-3 p-4 rounded-2xl bg-amber-50 border border-amber-200 animate-in slide-in-from-top duration-300">
@@ -159,7 +148,6 @@ export default function MCPSettingsPage() {
                     <span className="text-sm font-medium text-amber-700">You have unsaved changes</span>
                 </div>
             )}
-
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Rate Limiting */}
                 <Card className="rounded-3xl shadow-xl border-gray-100 overflow-hidden">
@@ -215,7 +203,6 @@ export default function MCPSettingsPage() {
                         </div>
                     </CardContent>
                 </Card>
-
                 {/* Timeouts & Performance */}
                 <Card className="rounded-3xl shadow-xl border-gray-100 overflow-hidden">
                     <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100">
@@ -286,7 +273,6 @@ export default function MCPSettingsPage() {
                                 </div>
                             </div>
                         </div>
-
                         {/* Performance Indicator */}
                         <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-100">
                             <div className="flex items-center gap-3">
@@ -298,7 +284,6 @@ export default function MCPSettingsPage() {
                         </div>
                     </CardContent>
                 </Card>
-
                 {/* Security */}
                 <Card className="rounded-3xl shadow-xl border-gray-100 overflow-hidden">
                     <CardHeader className="bg-gradient-to-r from-red-50 to-rose-50 border-b border-red-100">
@@ -338,7 +323,6 @@ export default function MCPSettingsPage() {
                                 color="blue"
                             />
                         </div>
-
                         <div className="space-y-2">
                             <Label className="text-sm font-bold text-gray-700">IP Whitelist</Label>
                             <Input
@@ -351,7 +335,6 @@ export default function MCPSettingsPage() {
                         </div>
                     </CardContent>
                 </Card>
-
                 {/* Data Retention & Notifications */}
                 <Card className="rounded-3xl shadow-xl border-gray-100 overflow-hidden">
                     <CardHeader className="bg-gradient-to-r from-purple-50 to-violet-50 border-b border-purple-100">
@@ -393,7 +376,6 @@ export default function MCPSettingsPage() {
                                 />
                             </div>
                         </div>
-
                         <div className="space-y-3">
                             <ToggleCard
                                 icon={<HardDrive size={16} />}
@@ -420,7 +402,6 @@ export default function MCPSettingsPage() {
                                 color="amber"
                             />
                         </div>
-
                         {settings.alert_on_quota && (
                             <div className="space-y-2 animate-in slide-in-from-top duration-200">
                                 <Label className="text-sm font-bold text-gray-700">Quota Threshold (%)</Label>
@@ -437,7 +418,6 @@ export default function MCPSettingsPage() {
                     </CardContent>
                 </Card>
             </div>
-
             {/* System Info Footer */}
             <Card className="rounded-3xl shadow-lg border-gray-100">
                 <CardContent className="p-6">
@@ -463,7 +443,6 @@ export default function MCPSettingsPage() {
         </div>
     )
 }
-
 /* ── Toggle Card Component ─────────────────────────────────────────────────── */
 function ToggleCard({
     icon, title, description, enabled, onChange, color

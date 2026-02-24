@@ -1,6 +1,4 @@
 'use client'
-import { Activity } from 'lucide-react'
-
 import { useCurrency } from '@/lib/utils/currency'
 import { useState, useEffect, useMemo } from "react"
 import type { SalesOrder } from '@/types/erp'
@@ -19,7 +17,6 @@ import {
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
 import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { Card, CardContent } from "@/components/ui/card"
-
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
     DRAFT: { label: 'Draft', color: 'bg-stone-100 text-stone-600' },
     PENDING: { label: 'Pending', color: 'bg-amber-50 text-amber-700 border-amber-100' },
@@ -27,13 +24,11 @@ const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
     INVOICED: { label: 'Invoiced', color: 'bg-blue-50 text-blue-700 border-blue-100' },
     CANCELLED: { label: 'Cancelled', color: 'bg-rose-50 text-rose-700 border-rose-100' },
 }
-
 const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
     SALE: { label: 'Sale', color: 'text-indigo-600' },
     PURCHASE: { label: 'Purchase', color: 'text-emerald-600' },
     RETURN: { label: 'Return', color: 'text-rose-600' },
 }
-
 export default function OrderHistoryPage() {
     const { fmt } = useCurrency()
     const [orders, setOrders] = useState<SalesOrder[]>([])
@@ -43,9 +38,7 @@ export default function OrderHistoryPage() {
         columns: ['ref_code', 'created_at', 'type', 'contact_name', 'status', 'total_amount', 'actions'],
         pageSize: 25, sortKey: 'created_at', sortDir: 'desc'
     })
-
     useEffect(() => { loadOrders() }, [])
-
     async function loadOrders() {
         setLoading(true)
         try {
@@ -58,17 +51,14 @@ export default function OrderHistoryPage() {
             setLoading(false)
         }
     }
-
     async function downloadInvoice(orderId: number, ref: string) {
         toast.loading(`Synchronizing invoice engine for #${ref}...`)
         try {
             const { erpFetch } = await import("@/lib/erp-api")
             const blob = await erpFetch(`pos/${orderId}/invoice-pdf/`)
-
             if (!(blob instanceof Blob)) {
                 throw new Error("Invalid sequence response")
             }
-
             const url = window.URL.createObjectURL(blob)
             const a = document.createElement('a')
             a.href = url
@@ -77,7 +67,6 @@ export default function OrderHistoryPage() {
             a.click()
             window.URL.revokeObjectURL(url)
             document.body.removeChild(a)
-
             toast.dismiss()
             toast.success("Document dispatched successfully")
         } catch (e) {
@@ -86,7 +75,6 @@ export default function OrderHistoryPage() {
             console.error(e)
         }
     }
-
     const columns: ColumnDef<any>[] = useMemo(() => [
         {
             key: 'ref_code',
@@ -189,7 +177,6 @@ export default function OrderHistoryPage() {
             )
         }
     ], [fmt])
-
     const filteredOrders = useMemo(() => {
         return orders.filter(o =>
             !searchQuery ||
@@ -198,13 +185,11 @@ export default function OrderHistoryPage() {
             (o.contact_name || "").toLowerCase().includes(searchQuery.toLowerCase())
         )
     }, [orders, searchQuery])
-
     const stats = useMemo(() => {
         const vol = filteredOrders.reduce((acc, o) => acc + parseFloat(String(o.total_amount || 0)), 0)
         const exposure = filteredOrders.filter(o => o.status !== 'CANCELLED').reduce((acc, o) => acc + parseFloat(String(o.total_amount || 0)), 0)
         return { volume: vol, exposure, count: filteredOrders.length }
     }, [filteredOrders])
-
     return (
         <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
             <header className="flex justify-between items-end mb-10">
@@ -235,7 +220,6 @@ export default function OrderHistoryPage() {
                     </Button>
                 </div>
             </header>
-
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
@@ -252,7 +236,6 @@ export default function OrderHistoryPage() {
                         <h2 className="text-3xl font-black text-gray-900 mt-1">{fmt(stats.volume)}</h2>
                     </CardContent>
                 </Card>
-
                 <Card className="rounded-[2rem] border-0 shadow-sm bg-stone-900 overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-white">
                     <CardContent className="p-7">
                         <div className="flex justify-between items-start mb-4">
@@ -267,7 +250,6 @@ export default function OrderHistoryPage() {
                         <h2 className="text-3xl font-black text-white mt-1">{fmt(stats.exposure)}</h2>
                     </CardContent>
                 </Card>
-
                 <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                     <CardContent className="p-7">
                         <div className="flex justify-between items-start mb-4">
@@ -283,7 +265,6 @@ export default function OrderHistoryPage() {
                     </CardContent>
                 </Card>
             </div>
-
             <TypicalListView
                 title="Operational Transaction Stream"
                 data={filteredOrders}

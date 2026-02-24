@@ -1,5 +1,4 @@
 'use client'
-
 import { useEffect, useState, useRef } from "react"
 import { SaasModule, SaasBackup } from "@/types/erp"
 import { useRouter } from "next/navigation"
@@ -32,7 +31,6 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover"
-
 export default function SaaSModulesPage() {
     const router = useRouter()
     const [modules, setModules] = useState<SaasModule[]>([])
@@ -44,15 +42,12 @@ export default function SaaSModulesPage() {
     const [pendingUninstall, setPendingUninstall] = useState<string | null>(null)
     const [pendingDelete, setPendingDelete] = useState<string | null>(null)
     const [pendingRollback, setPendingRollback] = useState<{ code: string; version: string } | null>(null)
-
     useEffect(() => {
         loadModules()
     }, [])
-
     async function loadModules() {
         setLoading(true)
         try {
-
             const data = await getSaaSModules()
             setModules(data)
             setLastSynced(new Date().toLocaleTimeString())
@@ -63,7 +58,6 @@ export default function SaaSModulesPage() {
             setLoading(false)
         }
     }
-
     async function handleInstall() {
         setSyncing(true)
         try {
@@ -77,7 +71,6 @@ export default function SaaSModulesPage() {
             setSyncing(false)
         }
     }
-
     async function handleSync() {
         setSyncing(true)
         try {
@@ -91,7 +84,6 @@ export default function SaaSModulesPage() {
             setSyncing(false)
         }
     }
-
     async function handleGlobalInstall(code: string) {
         setProcessing(code)
         try {
@@ -105,7 +97,6 @@ export default function SaaSModulesPage() {
             setProcessing(null)
         }
     }
-
     async function handleGlobalUninstall(code: string) {
         setProcessing(code)
         try {
@@ -119,7 +110,6 @@ export default function SaaSModulesPage() {
             setProcessing(null)
         }
     }
-
     async function handleDelete(code: string) {
         setProcessing(code)
         try {
@@ -133,14 +123,11 @@ export default function SaaSModulesPage() {
             setProcessing(null)
         }
     }
-
     async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0]
         if (!file) return;
-
         const formData = new FormData()
         formData.append('file', file)
-
         setSyncing(true)
         try {
             const res = await uploadModule(formData)
@@ -154,7 +141,6 @@ export default function SaaSModulesPage() {
             if (fileInputRef.current) fileInputRef.current.value = ''
         }
     }
-
     async function handleRollback(code: string, version: string) {
         setProcessing(code)
         try {
@@ -168,7 +154,6 @@ export default function SaaSModulesPage() {
             setProcessing(null)
         }
     }
-
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             <input
@@ -178,7 +163,6 @@ export default function SaaSModulesPage() {
                 accept=".zip"
                 onChange={handleFileUpload}
             />
-
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 md:gap-4">
                 <div>
                     <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">Global Registry</h2>
@@ -204,7 +188,6 @@ export default function SaaSModulesPage() {
                     </Button>
                 </div>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {loading ? (
                     <div className="col-span-full py-20 text-center text-gray-500 font-medium italic">Scanning core modules...</div>
@@ -234,7 +217,6 @@ export default function SaaSModulesPage() {
                             'Automated Lifecycle Orchestration'
                         ]
                     } : null;
-
                     return (
                         <Card key={m.code} className="bg-white border-gray-100 hover:border-emerald-500/30 transition-all rounded-[2.5rem] overflow-hidden group shadow-xl hover:shadow-2xl flex flex-col">
                             <CardHeader className="pb-4 relative">
@@ -302,13 +284,11 @@ export default function SaaSModulesPage() {
                                 <p className="text-sm text-gray-500 leading-relaxed font-medium">
                                     {m.description || "No description provided for this module."}
                                 </p>
-
                                 <div className="space-y-6 pt-6 border-t border-gray-100">
                                     <div className="flex justify-between items-center bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-inner">
                                         <span className="text-[10px] text-gray-400 uppercase font-black tracking-widest leading-none">Global Coverage</span>
                                         <span className="text-emerald-600 font-mono font-bold leading-none">{m.total_installs} Tenants</span>
                                     </div>
-
                                     {m.dependencies && m.dependencies.length > 0 && (
                                         <div className="flex flex-wrap gap-2">
                                             {m.dependencies.map((dep: string) => (
@@ -318,7 +298,6 @@ export default function SaaSModulesPage() {
                                             ))}
                                         </div>
                                     )}
-
                                     <div className="grid grid-cols-2 gap-3">
                                         <Button
                                             onClick={() => handleGlobalInstall(m.code)}
@@ -337,7 +316,6 @@ export default function SaaSModulesPage() {
                                             <XCircle size={16} />
                                             Revoke
                                         </Button>
-
                                         {/* Rollback & History Dialog */}
                                         <Dialog>
                                             <DialogTrigger asChild>
@@ -360,7 +338,6 @@ export default function SaaSModulesPage() {
                                                 <BackupList moduleCode={m.code} onRollback={(v) => setPendingRollback({ code: m.code, version: v })} currentVersion={m.version} />
                                             </DialogContent>
                                         </Dialog>
-
                                         <Button
                                             onClick={() => setPendingDelete(m.code)}
                                             disabled={processing === m.code || m.is_core}
@@ -377,7 +354,6 @@ export default function SaaSModulesPage() {
                     );
                 })}
             </div>
-
             <div className="p-8 bg-emerald-500/5 rounded-[3rem] border border-emerald-500/10 flex gap-6 items-center shadow-2xl">
                 <div className="w-16 h-16 rounded-[2rem] bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0 shadow-lg">
                     <Info size={32} />
@@ -390,7 +366,6 @@ export default function SaaSModulesPage() {
                     </p>
                 </div>
             </div>
-
             <ConfirmDialog
                 open={pendingUninstall !== null}
                 onOpenChange={(open) => { if (!open) setPendingUninstall(null) }}
@@ -403,7 +378,6 @@ export default function SaaSModulesPage() {
                 confirmText="Revoke"
                 variant="danger"
             />
-
             <ConfirmDialog
                 open={pendingDelete !== null}
                 onOpenChange={(open) => { if (!open) setPendingDelete(null) }}
@@ -416,7 +390,6 @@ export default function SaaSModulesPage() {
                 confirmText="Delete from System"
                 variant="danger"
             />
-
             <ConfirmDialog
                 open={pendingRollback !== null}
                 onOpenChange={(open) => { if (!open) setPendingRollback(null) }}
@@ -431,24 +404,18 @@ export default function SaaSModulesPage() {
             />
         </div>
     )
-
-
 }
-
 function BackupList({ moduleCode, onRollback, currentVersion }: { moduleCode: string, onRollback: (v: string) => void, currentVersion: string }) {
     const [backups, setBackups] = useState<SaasBackup[]>([])
     const [loading, setLoading] = useState(true)
-
     useEffect(() => {
         getModuleBackups(moduleCode).then((data: Record<string, any>[]) => {
             setBackups(data)
             setLoading(false)
         }).catch(() => setLoading(false))
     }, [moduleCode])
-
     if (loading) return <div className="text-center py-8 text-gray-500 text-sm">Loading history...</div>
     if (backups.length === 0) return <div className="text-center py-8 text-gray-500 text-sm">No backup checkpoints found.</div>
-
     return (
         <div className="max-h-[300px] mt-2 overflow-y-auto pr-2 custom-scrollbar">
             <div className="space-y-2">

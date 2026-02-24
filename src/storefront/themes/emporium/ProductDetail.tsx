@@ -1,6 +1,4 @@
 'use client'
-import { Star, ShieldCheck } from 'lucide-react'
-
 import { useParams } from 'next/navigation'
 import {
     ShoppingCart,
@@ -20,18 +18,14 @@ import { useCart } from '../../engine/hooks/useCart'
 import { useConfig } from '../../engine/hooks/useConfig'
 import type { Product } from '../../engine/types'
 import Link from 'next/link'
-
 export default function EmporiumProductDetail({ product }: { product: Product }) {
     const { slug } = useParams<{ slug: string }>()
     const { addToCart } = useCart()
     const { orgName } = useConfig()
-
     if (!product) return null
-
     const price = typeof product.selling_price_ttc === 'number'
         ? product.selling_price_ttc
         : parseFloat(product.selling_price_ttc as any) || 0
-
     return (
         <div className="min-h-screen bg-slate-50 pb-20">
             {/* Breadcrumbs */}
@@ -42,10 +36,8 @@ export default function EmporiumProductDetail({ product }: { product: Product })
                 <ChevronRight size={12} />
                 <span className="text-slate-900 truncate max-w-[200px]">{product.name}</span>
             </div>
-
             <main className="max-w-7xl mx-auto px-4 lg:px-6">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
-
                     {/* Visuals - Left 7 columns */}
                     <div className="lg:col-span-7 space-y-4">
                         <div className="bg-white rounded-[2rem] border border-slate-200 overflow-hidden aspect-square flex items-center justify-center relative group shadow-sm">
@@ -66,7 +58,6 @@ export default function EmporiumProductDetail({ product }: { product: Product })
                                 </button>
                             </div>
                         </div>
-
                         {/* Secondary Highlights */}
                         <div className="grid grid-cols-3 gap-4">
                             <div className="bg-white p-4 rounded-3xl border border-slate-100 flex items-center gap-4">
@@ -98,7 +89,6 @@ export default function EmporiumProductDetail({ product }: { product: Product })
                             </div>
                         </div>
                     </div>
-
                     {/* Purchase Box - Right 5 columns */}
                     <div className="lg:col-span-5 space-y-6">
                         <div className="bg-white rounded-[2rem] border border-slate-200 p-8 shadow-sm space-y-6">
@@ -109,14 +99,11 @@ export default function EmporiumProductDetail({ product }: { product: Product })
                                     Premium quality product distributed by {orgName}. Optimized for logistics and guaranteed performance in {product.category_name || 'general'} environments.
                                 </p>
                             </div>
-
                             <div className="h-px bg-slate-100" />
-
                             <div className="flex items-baseline gap-2">
                                 <span className="text-5xl font-black text-slate-900 leading-none">${price.toFixed(2)}</span>
                                 <span className="text-sm text-slate-400 font-bold uppercase tracking-widest leading-none">Incl. Global Taxes</span>
                             </div>
-
                             <div className="space-y-3">
                                 <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
                                     <div className="flex items-center gap-3">
@@ -135,7 +122,6 @@ export default function EmporiumProductDetail({ product }: { product: Product })
                                     </div>
                                 </div>
                             </div>
-
                             <div className="flex gap-4">
                                 <button
                                     onClick={() => addToCart({
@@ -154,7 +140,6 @@ export default function EmporiumProductDetail({ product }: { product: Product })
                                     BUY IT NOW
                                 </button>
                             </div>
-
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                                     <ShieldCheck size={14} className="text-emerald-500" /> Secure Transaction
@@ -164,7 +149,6 @@ export default function EmporiumProductDetail({ product }: { product: Product })
                                 </div>
                             </div>
                         </div>
-
                         {/* Store Badge */}
                         <div className="bg-white border border-slate-200 rounded-[2rem] p-6 flex items-center justify-between">
                             <div className="flex items-center gap-4">

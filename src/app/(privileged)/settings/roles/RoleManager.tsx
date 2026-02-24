@@ -1,6 +1,4 @@
 'use client';
-import { ShieldCheck } from 'lucide-react'
-
 import React, { useState, useMemo } from 'react';
 import {
     Plus, Shield, Trash2, Edit2, Save, X,
@@ -26,21 +24,18 @@ import {
     DialogDescription
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-
 interface Permission {
     id: number;
     code: string;
     name: string;
     description: string;
 }
-
 interface Role {
     id: number;
     name: string;
     description: string;
     permissions: number[];
 }
-
 export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Role[], allPermissions: Permission[] }) {
     const [roles, setRoles] = useState<Role[]>(initialRoles);
     const [selectedRole, setSelectedRole] = useState<Role | null>(initialRoles[0] || null);
@@ -49,7 +44,6 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
     const [newRole, setNewRole] = useState({ name: '', description: '' });
     const [loading, setLoading] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
-
     // Group permissions by module
     const groupedPermissions = useMemo(() => {
         const groups: Record<string, Permission[]> = {};
@@ -60,15 +54,12 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
         });
         return groups;
     }, [allPermissions]);
-
     const handleTogglePermission = async (permId: number) => {
         if (!selectedRole) return;
-
         const isAssigned = selectedRole.permissions.includes(permId);
         const newPerms = isAssigned
             ? selectedRole.permissions.filter(id => id !== permId)
             : [...selectedRole.permissions, permId];
-
         try {
             const updated = await updateRole(selectedRole.id, { permissions: newPerms });
             setSelectedRole(updated);
@@ -78,7 +69,6 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
             toast.error("Failed to update permission");
         }
     };
-
     const handleCreateRole = async () => {
         if (!newRole.name) return;
         setLoading(true);
@@ -95,7 +85,6 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
             setLoading(false);
         }
     };
-
     const handleDeleteRole = async () => {
         if (deleteTarget === null) return;
         try {
@@ -108,7 +97,6 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
         }
         setDeleteTarget(null);
     };
-
     return (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-[calc(100vh-280px)] min-h-[600px]">
             {/* Roles Selection Panel */}
@@ -125,7 +113,6 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
                             <Plus size={18} />
                         </Button>
                     </div>
-
                     <div className="relative mb-4 px-2">
                         <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
                         <Input
@@ -135,7 +122,6 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
                             onChange={e => setSearchQuery(e.target.value)}
                         />
                     </div>
-
                     <ScrollArea className="flex-1">
                         <div className="space-y-1 px-2">
                             {roles.filter(r => r.name.toLowerCase().includes(searchQuery.toLowerCase())).map(role => (
@@ -180,7 +166,6 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
                     </ScrollArea>
                 </div>
             </div>
-
             {/* Permission Matrix Panel */}
             <div className="lg:col-span-8 h-full">
                 {selectedRole ? (
@@ -200,7 +185,6 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
                                 <span className="text-[10px] font-black uppercase text-gray-400 tracking-tighter">Authorized Scope</span>
                             </div>
                         </div>
-
                         <ScrollArea className="flex-1 p-6">
                             <div className="space-y-8">
                                 {Object.entries(groupedPermissions).map(([module, perms]) => (
@@ -256,7 +240,6 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
                     </div>
                 )}
             </div>
-
             {/* Create Role Modal */}
             <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
                 <DialogContent className="max-w-md bg-white rounded-[2rem] p-8 border-none shadow-2xl">
@@ -264,7 +247,6 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
                         <DialogTitle className="text-2xl font-black text-gray-900 uppercase tracking-tighter">New Policy Role</DialogTitle>
                         <DialogDescription className="text-xs font-bold uppercase text-gray-400 tracking-widest">Define a new set of access rules</DialogDescription>
                     </DialogHeader>
-
                     <div className="space-y-6 pt-4">
                         <div className="space-y-2">
                             <Label className="text-[10px] font-black uppercase text-gray-400 px-1 tracking-widest">Role Name</Label>
@@ -275,7 +257,6 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
                                 className="h-14 rounded-2xl border-gray-100 bg-gray-50 focus:bg-white focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 transition-all font-bold"
                             />
                         </div>
-
                         <div className="space-y-2">
                             <Label className="text-[10px] font-black uppercase text-gray-400 px-1 tracking-widest">Description</Label>
                             <Input
@@ -285,7 +266,6 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
                                 className="h-14 rounded-2xl border-gray-100 bg-gray-50 focus:bg-white focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium"
                             />
                         </div>
-
                         <div className="flex gap-3 pt-2">
                             <Button
                                 variant="outline"
@@ -305,7 +285,6 @@ export function RoleManager({ initialRoles, allPermissions }: { initialRoles: Ro
                     </div>
                 </DialogContent>
             </Dialog>
-
             <ConfirmDialog
                 open={deleteTarget !== null}
                 onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}

@@ -1,6 +1,4 @@
 'use client'
-import { Activity } from 'lucide-react'
-
 import { useCurrency } from '@/lib/utils/currency'
 import { safeDateSort } from '@/lib/utils/safe-date'
 import { useState, useEffect, useMemo } from "react"
@@ -17,7 +15,6 @@ import {
 } from "lucide-react"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
 import { useListViewSettings } from '@/hooks/useListViewSettings'
-
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
     PENDING: { label: 'Pending Approval', color: 'bg-amber-50 text-amber-700 border-amber-100' },
     CONFIRMED: { label: 'Confirmed', color: 'bg-blue-50 text-blue-700 border-blue-100' },
@@ -25,7 +22,6 @@ const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
     CANCELLED: { label: 'Cancelled', color: 'bg-rose-50 text-rose-700 border-rose-100' },
     DRAFT: { label: 'Draft', color: 'bg-stone-50 text-stone-500 border-stone-100' },
 }
-
 export default function PurchaseDashboardPage() {
     const { fmt } = useCurrency()
     const [orders, setOrders] = useState<PurchaseOrder[]>([])
@@ -35,9 +31,7 @@ export default function PurchaseDashboardPage() {
         columns: ['ref_code', 'created_at', 'supplier_name', 'status', 'payment_method', 'total_amount'],
         pageSize: 15, sortKey: 'created_at', sortDir: 'desc'
     })
-
     useEffect(() => { loadOrders() }, [])
-
     async function loadOrders() {
         setLoading(true)
         try {
@@ -50,19 +44,16 @@ export default function PurchaseDashboardPage() {
             setLoading(false)
         }
     }
-
     const filteredOrders = useMemo(() => {
         if (!statusFilter) return orders
         return orders.filter(o => o.status === statusFilter)
     }, [orders, statusFilter])
-
     const stats = useMemo(() => {
         const total = orders.reduce((s, o) => s + parseFloat(String(o.total_amount || 0)), 0)
         const completed = orders.filter(o => o.status === 'COMPLETED').reduce((s, o) => s + parseFloat(String(o.total_amount || 0)), 0)
         const pending = orders.filter(o => ['PENDING', 'CONFIRMED'].includes(o.status ?? '')).reduce((s, o) => s + parseFloat(String(o.total_amount || 0)), 0)
         return { total, completed, pending, count: orders.length }
     }, [orders])
-
     const columns: ColumnDef<any>[] = useMemo(() => [
         {
             key: 'ref_code',
@@ -120,7 +111,6 @@ export default function PurchaseDashboardPage() {
             )
         }
     ], [fmt])
-
     if (loading && orders.length === 0) {
         return (
             <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
@@ -130,7 +120,6 @@ export default function PurchaseDashboardPage() {
             </div>
         )
     }
-
     return (
         <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
             <header className="flex justify-between items-center">
@@ -152,7 +141,6 @@ export default function PurchaseDashboardPage() {
                     </Button>
                 </div>
             </header>
-
             {/* Premium Analytics Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <Card className="rounded-[2rem] border-0 shadow-sm bg-gradient-to-br from-indigo-600 to-blue-700 text-white overflow-hidden relative group">
@@ -214,7 +202,6 @@ export default function PurchaseDashboardPage() {
                     </CardContent>
                 </Card>
             </div>
-
             <TypicalListView
                 title="Procurement Lifecycle Stream"
                 data={filteredOrders}

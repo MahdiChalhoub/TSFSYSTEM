@@ -1,6 +1,4 @@
 'use client'
-import { ShieldCheck } from 'lucide-react'
-
 import { useEffect, useState, useRef } from "react"
 import { SaasUpdateStatus, SaasUpdateHistoryEntry } from "@/types/erp"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -28,7 +26,6 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 import { format } from "date-fns"
-
 // ─── Terminal Component ──────────────────────────────────────────
 function TerminalLog({ logs, visible }: { logs: string[], visible: boolean }) {
     if (!visible) return null
@@ -53,7 +50,6 @@ function TerminalLog({ logs, visible }: { logs: string[], visible: boolean }) {
         </div>
     )
 }
-
 export default function SystemUpdatesPage() {
     const [status, setStatus] = useState<SaasUpdateStatus | null>(null)
     const [history, setHistory] = useState<SaasUpdateHistoryEntry[]>([])
@@ -63,11 +59,9 @@ export default function SystemUpdatesPage() {
     const [logs, setLogs] = useState<string[]>([])
     const [pendingUpdate, setPendingUpdate] = useState<{ id: number; version: string } | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
-
     useEffect(() => {
         loadData()
     }, [])
-
     async function loadData() {
         setLoading(true)
         try {
@@ -83,14 +77,11 @@ export default function SystemUpdatesPage() {
             setLoading(false)
         }
     }
-
     async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0]
         if (!file) return;
-
         const formData = new FormData()
         formData.append('file', file)
-
         setSyncing(true)
         setLogs(["INIT: Uploading kernel sequence...", "CHECK: Validating checksums..."])
         try {
@@ -107,7 +98,6 @@ export default function SystemUpdatesPage() {
             if (fileInputRef.current) fileInputRef.current.value = ''
         }
     }
-
     async function handleApply(id: number, version: string) {
         setApplying(id)
         setLogs([`START: Initiating upgrade to v${version}...`, "PREPARE: Snapshotting current filesystem...", "KERNEL: Entering atomic swap mode..."])
@@ -124,13 +114,11 @@ export default function SystemUpdatesPage() {
             setApplying(null)
         }
     }
-
     return (
         <div className="relative space-y-6 animate-in fade-in duration-500">
             {/* Background Glow */}
             <div className="absolute -top-24 -right-24 w-96 h-96 bg-indigo-500/5 blur-[120px] rounded-full pointer-events-none" />
             <div className="absolute top-1/2 -left-24 w-64 h-64 bg-emerald-500/5 blur-[100px] rounded-full pointer-events-none" />
-
             <input
                 type="file"
                 ref={fileInputRef}
@@ -138,7 +126,6 @@ export default function SystemUpdatesPage() {
                 accept=".zip"
                 onChange={handleFileUpload}
             />
-
             {/* Header Section */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 sm:gap-4">
                 <div className="w-full sm:w-auto">
@@ -169,9 +156,7 @@ export default function SystemUpdatesPage() {
                     </Button>
                 </div>
             </div>
-
             <TerminalLog logs={logs} visible={logs.length > 0} />
-
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
                 {/* Current Status Card */}
                 <Card className="lg:col-span-1 bg-white/70 backdrop-blur-xl border-white/40 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-indigo-100/50">
@@ -202,7 +187,6 @@ export default function SystemUpdatesPage() {
                                 <span className="text-indigo-600 font-black text-[10px] bg-indigo-50 px-2 py-0.5 rounded-full">{status?.environment || "PRODUCTION"}</span>
                             </div>
                         </div>
-
                         <div className="p-5 bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl text-white shadow-xl shadow-slate-200">
                             <div className="flex items-center gap-2 mb-2">
                                 <ShieldCheck className="text-emerald-400" size={16} />
@@ -214,7 +198,6 @@ export default function SystemUpdatesPage() {
                         </div>
                     </CardContent>
                 </Card>
-
                 {/* Update History & List */}
                 <Card className="lg:col-span-2 bg-white/70 backdrop-blur-xl border-white/40 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-indigo-100/50 flex flex-col">
                     <CardHeader className="p-8 pb-4">
@@ -287,7 +270,6 @@ export default function SystemUpdatesPage() {
                                                 </Button>
                                             )}
                                         </div>
-
                                         <div className="mt-6 flex flex-wrap items-center gap-6 text-[9px] font-black tracking-[0.1em] text-gray-400 border-t border-gray-50 pt-4">
                                             <span className="flex items-center gap-2">STAGED: {update.created_at ? format(new Date(update.created_at), 'PPP') : '---'}</span>
                                             {update.is_applied && update.applied_at && (
@@ -302,12 +284,10 @@ export default function SystemUpdatesPage() {
                     </CardContent>
                 </Card>
             </div>
-
             {/* Warning Section */}
             <div className="group p-8 md:p-10 bg-red-600 rounded-[3rem] border border-red-500 flex flex-col md:flex-row gap-8 items-center shadow-2xl shadow-red-200 relative overflow-hidden transition-all hover:scale-[1.01]">
                 {/* Visual warning flare */}
                 <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-[60px] rounded-full translate-x-1/2 -translate-y-1/2 group-hover:scale-150 transition-transform duration-700" />
-
                 <div className="w-20 h-20 rounded-[2rem] bg-white/20 flex items-center justify-center text-white shrink-0 shadow-xl backdrop-blur-md border border-white/30">
                     <ShieldAlert size={36} className="animate-pulse" />
                 </div>
@@ -319,7 +299,6 @@ export default function SystemUpdatesPage() {
                     </p>
                 </div>
             </div>
-
             <ConfirmDialog
                 open={pendingUpdate !== null}
                 onOpenChange={(open) => { if (!open) setPendingUpdate(null) }}

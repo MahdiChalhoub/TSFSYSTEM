@@ -1,6 +1,4 @@
 'use client'
-import { ShieldCheck } from 'lucide-react'
-
 import { useCurrency } from '@/lib/utils/currency'
 import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent } from "@/components/ui/card"
@@ -18,13 +16,11 @@ import { getContactStatement } from "@/app/actions/finance/bank-reconciliation"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
 import { useListViewSettings } from '@/hooks/useListViewSettings'
 import { Input } from "@/components/ui/input"
-
 const TAB_CONFIG: Record<string, { label: string; icon: any; color: string }> = {
     orders: { label: 'Orders', icon: ShoppingCart, color: 'text-blue-600' },
     payments: { label: 'Payments', icon: CreditCard, color: 'text-purple-600' },
     journal: { label: 'Journal', icon: BookOpen, color: 'text-stone-600' },
 }
-
 export default function StatementsPage() {
     const { fmt } = useCurrency()
     const [contacts, setContacts] = useState<any[]>([])
@@ -37,9 +33,7 @@ export default function StatementsPage() {
         columns: ['name', 'type', 'phone', 'actions'],
         pageSize: 25, sortKey: 'name', sortDir: 'asc'
     })
-
     useEffect(() => { loadContacts() }, [])
-
     async function loadContacts() {
         setLoading(true)
         try {
@@ -53,7 +47,6 @@ export default function StatementsPage() {
             setLoading(false)
         }
     }
-
     async function viewStatement(contact: any) {
         setLoading(true)
         setSelectedContact(contact)
@@ -66,7 +59,6 @@ export default function StatementsPage() {
             setLoading(false)
         }
     }
-
     const filteredContacts = useMemo(() => {
         if (!search) return contacts
         const s = search.toLowerCase()
@@ -76,7 +68,6 @@ export default function StatementsPage() {
             (c.email || "").toLowerCase().includes(s)
         )
     }, [contacts, search])
-
     const contactColumns: ColumnDef<any>[] = useMemo(() => [
         {
             key: 'name',
@@ -121,7 +112,6 @@ export default function StatementsPage() {
             )
         }
     ], [])
-
     const orderColumns: ColumnDef<any>[] = useMemo(() => [
         {
             key: 'date',
@@ -151,7 +141,6 @@ export default function StatementsPage() {
             render: (o) => <span className="font-black text-gray-900 text-xs">{fmt(o.total || 0)}</span>
         }
     ], [fmt])
-
     const paymentColumns: ColumnDef<any>[] = useMemo(() => [
         {
             key: 'date',
@@ -176,7 +165,6 @@ export default function StatementsPage() {
             render: (p) => <span className="font-black text-emerald-600 text-xs">{fmt(p.amount || 0)}</span>
         }
     ], [fmt])
-
     const journalColumns: ColumnDef<any>[] = useMemo(() => [
         {
             key: 'date',
@@ -212,7 +200,6 @@ export default function StatementsPage() {
             render: (j) => <span className="font-black text-rose-600 font-mono text-xs">{j.credit > 0 ? fmt(j.credit) : ''}</span>
         }
     ], [fmt])
-
     if (loading && !detail && contacts.length === 0) {
         return (
             <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
@@ -221,7 +208,6 @@ export default function StatementsPage() {
             </div>
         )
     }
-
     // Detail View
     if (selectedContact && detail) {
         const balance = Number(detail.balance?.amount || 0)
@@ -254,7 +240,6 @@ export default function StatementsPage() {
                         <ShieldCheck size={12} /> Statement Guard Active
                     </Badge>
                 </header>
-
                 {/* KPI Summary Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden group">
@@ -306,7 +291,6 @@ export default function StatementsPage() {
                         </CardContent>
                     </Card>
                 </div>
-
                 {/* Sub-Navigation Tabs */}
                 <div className="flex items-center gap-2 bg-stone-100 p-1.5 rounded-2xl w-fit border border-stone-200 shadow-inner">
                     {(['orders', 'payments', 'journal'] as const).map(tab => {
@@ -324,7 +308,6 @@ export default function StatementsPage() {
                         )
                     })}
                 </div>
-
                 {/* Tab Content Tables */}
                 <TypicalListView
                     title={TAB_CONFIG[activeTab].label}
@@ -344,7 +327,6 @@ export default function StatementsPage() {
             </div>
         )
     }
-
     // Contact List View
     return (
         <div className="p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in duration-500">
@@ -373,7 +355,6 @@ export default function StatementsPage() {
                     </Button>
                 </div>
             </header>
-
             <TypicalListView
                 title="Entity Roster"
                 data={filteredContacts}

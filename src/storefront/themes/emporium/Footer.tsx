@@ -1,13 +1,10 @@
 'use client'
-
 import { Mail, Phone, MapPin, Globe, CreditCard, ShieldCheck } from 'lucide-react'
 import { useConfig } from '../../engine/hooks/useConfig'
 import Link from 'next/link'
-
 export default function EmporiumFooter() {
     const { orgName, slug } = useConfig()
     const year = new Date().getFullYear()
-
     return (
         <footer className="bg-white border-t border-slate-200 mt-20">
             {/* Value Bar */}
@@ -36,7 +33,6 @@ export default function EmporiumFooter() {
                     </div>
                 </div>
             </div>
-
             {/* Main Links */}
             <div className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-2 lg:grid-cols-4 gap-12">
                 <div className="space-y-6 col-span-2 lg:col-span-1">
@@ -50,7 +46,6 @@ export default function EmporiumFooter() {
                         <div className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-yellow-400 transition-colors cursor-pointer" />
                     </div>
                 </div>
-
                 <div className="space-y-6">
                     <h5 className="font-black text-slate-900 uppercase tracking-widest text-xs">Platform</h5>
                     <nav className="flex flex-col gap-3">
@@ -60,7 +55,6 @@ export default function EmporiumFooter() {
                         <Link href={`/tenant/${slug}/register`} className="text-sm font-bold text-slate-500 hover:text-slate-900 transition-colors text-amber-600">Flash Sales</Link>
                     </nav>
                 </div>
-
                 <div className="space-y-6">
                     <h5 className="font-black text-slate-900 uppercase tracking-widest text-xs">Customer Service</h5>
                     <nav className="flex flex-col gap-3">
@@ -70,7 +64,6 @@ export default function EmporiumFooter() {
                         <Link href="#" className="text-sm font-bold text-slate-500 hover:text-slate-900 transition-colors">Privacy Policy</Link>
                     </nav>
                 </div>
-
                 <div className="space-y-6">
                     <h5 className="font-black text-slate-900 uppercase tracking-widest text-xs">Contact Us</h5>
                     <div className="flex flex-col gap-4">
@@ -89,7 +82,6 @@ export default function EmporiumFooter() {
                     </div>
                 </div>
             </div>
-
             {/* Copyright Bar */}
             <div className="border-t border-slate-100 py-6 px-6">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">

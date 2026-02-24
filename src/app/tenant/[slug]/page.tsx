@@ -12,7 +12,6 @@ import Link from "next/link"
 import { ThemedHomePage } from "./ThemedHomePage"
 import { LandingHomePage } from "./LandingHomePage"
 import { BlogHomePage } from "./BlogHomePage"
-
 export default async function TenantWelcomePage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params
     const org = await getOrganizationBySlug(slug)
@@ -20,11 +19,9 @@ export default async function TenantWelcomePage({ params }: { params: Promise<{ 
     const storefrontConfig = await getStorefrontConfig(slug)
     const categories = await getPublicCategories(slug)
     const brands = await getPublicBrands(slug)
-
     if (!org) {
         return notFound()
     }
-
     if ((org as any).error === "ACCOUNT_SUSPENDED") {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center p-6">
@@ -43,16 +40,12 @@ export default async function TenantWelcomePage({ params }: { params: Promise<{ 
             </div>
         )
     }
-
     const homePageType = storefrontConfig?.storefront_type || 'PRODUCT_STORE'
-
     if (homePageType === 'LANDING_PAGE' || homePageType === 'PORTFOLIO') {
         return <LandingHomePage org={org} />
     }
-
     if (homePageType === 'CATALOGUE' || homePageType === 'SUBSCRIPTION') {
         return <BlogHomePage org={org} />
     }
-
     return <ThemedHomePage products={products} categories={categories} brands={brands} />
 }

@@ -1,6 +1,4 @@
 'use client'
-import { Activity, ShieldCheck } from 'lucide-react'
-
 import { useEffect, useState } from "react"
 import { SaasOrganization, SaasUsageData, SaasBillingData, SaasAddonData, SaasPlan, SaasModule, SaasUser, SaasSite } from "@/types/erp"
 import { useParams, useRouter } from "next/navigation"
@@ -18,7 +16,6 @@ import {
     UserCog, Eye, EyeOff, Check, Building2, Power, UserCircle, Mail,
     Puzzle, ShoppingCart, XCircle, ShieldCheck, ShieldOff
 } from "lucide-react"
-
 // ─── Usage Meter ─────────────────────────────────────────────────────────────
 function UsageMeter({ label, icon: Icon, current, limit, percent, unit = '' }: {
     label: string; icon: Record<string, any>; current: number; limit: number; percent: number; unit?: string
@@ -27,7 +24,6 @@ function UsageMeter({ label, icon: Icon, current, limit, percent, unit = '' }: {
     const isDanger = percent >= 95
     const barColor = isDanger ? 'bg-red-500' : isWarning ? 'bg-amber-500' : 'bg-emerald-500'
     const bgColor = isDanger ? 'bg-red-50 border-red-100' : isWarning ? 'bg-amber-50 border-amber-100' : 'bg-white border-gray-100'
-
     return (
         <div className={`p-5 rounded-2xl border transition-all ${bgColor}`}>
             <div className="flex items-center justify-between mb-3">
@@ -50,7 +46,6 @@ function UsageMeter({ label, icon: Icon, current, limit, percent, unit = '' }: {
         </div>
     )
 }
-
 // ─── Module Card ─────────────────────────────────────────────────────────────
 function ModuleCard({ module, onToggle, toggling, onFeatureToggle }: {
     module: Record<string, any>; onToggle: (code: string, status: string) => void; toggling: string | null
@@ -58,7 +53,6 @@ function ModuleCard({ module, onToggle, toggling, onFeatureToggle }: {
 }) {
     const isInstalled = module.status === 'INSTALLED'
     const isCore = module.is_core
-
     return (
         <div className={`p-5 rounded-2xl border transition-all group ${isInstalled
             ? 'bg-white border-emerald-100 hover:border-emerald-300 shadow-sm'
@@ -106,7 +100,6 @@ function ModuleCard({ module, onToggle, toggling, onFeatureToggle }: {
                     )}
                 </div>
             </div>
-
             {/* Feature flags */}
             {isInstalled && module.available_features?.length > 0 && (
                 <div className="mt-4 pt-3 border-t border-gray-100">
@@ -136,13 +129,11 @@ function ModuleCard({ module, onToggle, toggling, onFeatureToggle }: {
         </div>
     )
 }
-
 // ─── Main Page ───────────────────────────────────────────────────────────────
 export default function OrganizationDetailPage() {
     const params = useParams()
     const router = useRouter()
     const orgId = params.id as string
-
     const [org, setOrg] = useState<SaasOrganization | null>(null)
     const [usage, setUsage] = useState<SaasUsageData | null>(null)
     const [billing, setBilling] = useState<SaasBillingData>({ history: [], balance: { total_paid: '0.00', total_credits: '0.00', net_balance: '0.00' }, client: null })
@@ -157,27 +148,22 @@ export default function OrganizationDetailPage() {
     const [toggling, setToggling] = useState<string | null>(null)
     const [encryptionStatus, setEncryptionStatus] = useState<Record<string, any> | null>(null)
     const [togglingEncryption, setTogglingEncryption] = useState(false)
-
     // User creation dialog
     const [showCreateUser, setShowCreateUser] = useState(false)
     const [newUser, setNewUser] = useState({ username: '', email: '', password: '', first_name: '', last_name: '', is_superuser: false })
     const [creating, setCreating] = useState(false)
-
     // Reset password dialog
     const [resetTarget, setResetTarget] = useState<Record<string, unknown> | null>(null)
     const [newPassword, setNewPassword] = useState('')
     const [showPass, setShowPass] = useState(false)
     const [resetting, setResetting] = useState(false)
-
     // Site creation dialog
     const [showCreateSite, setShowCreateSite] = useState(false)
     const [newSite, setNewSite] = useState({ name: '', code: '', address: '', city: '', phone: '', vat_number: '' })
     const [creatingSite, setCreatingSite] = useState(false)
-
     // Plan switch confirmation dialog
     const [planSwitchTarget, setPlanSwitchTarget] = useState<SaasPlan | null>(null)
     const [switching, setSwitching] = useState(false)
-
     // Client assignment
     const [showClientDialog, setShowClientDialog] = useState(false)
     const [allClients, setAllClients] = useState<Record<string, unknown>[]>([])
@@ -185,7 +171,6 @@ export default function OrganizationDetailPage() {
     const [showNewClient, setShowNewClient] = useState(false)
     const [newClient, setNewClient] = useState({ first_name: '', last_name: '', email: '', phone: '', company_name: '' })
     const [savingClient, setSavingClient] = useState(false)
-
     useEffect(() => {
         async function load() {
             try {
@@ -205,7 +190,6 @@ export default function OrganizationDetailPage() {
                 setUsers(Array.isArray(usersData) ? usersData : [])
                 setSites(Array.isArray(sitesData) ? sitesData : [])
                 setAddons(addonsData || { purchased: [], available: [] })
-
                 // Load encryption status
                 getOrgEncryptionStatus(orgId).then(s => setEncryptionStatus(s)).catch(() => { })
             } catch {
@@ -216,7 +200,6 @@ export default function OrganizationDetailPage() {
         }
         load()
     }, [orgId])
-
     async function handleToggle(code: string, currentStatus: string) {
         setToggling(code)
         try {
@@ -229,7 +212,6 @@ export default function OrganizationDetailPage() {
         } catch { toast.error("Failed to toggle module") }
         finally { setToggling(null) }
     }
-
     async function handleFeatureToggle(moduleCode: string, featureCode: string, enabled: boolean) {
         const mod = modules.find(m => m.code === moduleCode)
         if (!mod) return
@@ -242,7 +224,6 @@ export default function OrganizationDetailPage() {
             toast.success(`Feature ${featureCode} ${enabled ? 'enabled' : 'disabled'}`)
         } catch { toast.error("Failed to update feature") }
     }
-
     async function handleCreateUser() {
         if (!newUser.username || !newUser.password) return toast.error("Username and password required")
         setCreating(true)
@@ -265,7 +246,6 @@ export default function OrganizationDetailPage() {
             toast.error(msg)
         } finally { setCreating(false) }
     }
-
     async function handleResetPassword() {
         if (!newPassword || newPassword.length < 6) return toast.error("Password must be at least 6 characters")
         setResetting(true)
@@ -286,7 +266,6 @@ export default function OrganizationDetailPage() {
             toast.error(msg)
         } finally { setResetting(false) }
     }
-
     async function handleCreateSite() {
         if (!newSite.name) return toast.error("Site name is required")
         setCreatingSite(true)
@@ -309,7 +288,6 @@ export default function OrganizationDetailPage() {
             toast.error(msg)
         } finally { setCreatingSite(false) }
     }
-
     async function handleToggleSite(siteId: string) {
         try {
             const result = await toggleOrgSite(orgId, siteId)
@@ -318,7 +296,6 @@ export default function OrganizationDetailPage() {
             setSites(Array.isArray(sitesData) ? sitesData : [])
         } catch { toast.error("Failed to toggle site") }
     }
-
     if (loading) return (
         <div className="flex items-center justify-center min-h-[60vh]">
             <div className="text-center space-y-4">
@@ -327,14 +304,12 @@ export default function OrganizationDetailPage() {
             </div>
         </div>
     )
-
     if (!org) return (
         <div className="p-12 text-center">
             <h2 className="text-xl font-bold text-gray-800">Organization Not Found</h2>
             <Button variant="ghost" onClick={() => router.push('/organizations')} className="mt-4">← Back to Organizations</Button>
         </div>
     )
-
     const tabs = [
         { key: 'overview', label: 'Overview', icon: Activity },
         { key: 'modules', label: 'Modules', icon: Layers },
@@ -344,11 +319,9 @@ export default function OrganizationDetailPage() {
         { key: 'usage', label: 'Usage', icon: TrendingUp },
         { key: 'billing', label: 'Billing', icon: CreditCard },
     ]
-
     const coreModules = modules.filter(m => m.is_core)
     const businessModules = modules.filter(m => !m.is_core)
     const activeModules = modules.filter(m => m.status === 'INSTALLED').length
-
     return (
         <div className="space-y-6 animate-in fade-in duration-500 max-w-6xl mx-auto py-6 px-4">
             {/* Header */}
@@ -371,7 +344,6 @@ export default function OrganizationDetailPage() {
                     {usage?.plan?.name || 'Free Tier'}
                 </Badge>
             </div>
-
             {/* Tab Bar */}
             <div className="flex gap-1 p-1 bg-gray-100 rounded-2xl w-fit">
                 {tabs.map(t => (
@@ -383,7 +355,6 @@ export default function OrganizationDetailPage() {
                     </button>
                 ))}
             </div>
-
             {/* ─── Overview Tab ─────────────────────────────────────────── */}
             {activeTab === 'overview' && (
                 <div className="space-y-6">
@@ -413,7 +384,6 @@ export default function OrganizationDetailPage() {
                             })}
                         </div>
                     )}
-
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <Card className="lg:col-span-2 border-gray-100 shadow-sm">
                             <CardHeader className="pb-2">
@@ -433,7 +403,6 @@ export default function OrganizationDetailPage() {
                                 )}
                             </CardContent>
                         </Card>
-
                         <div className="space-y-6">
                             <Card className="border-emerald-100 bg-emerald-50/30 shadow-sm">
                                 <CardHeader><CardTitle className="text-lg font-bold text-emerald-900">Current Plan</CardTitle></CardHeader>
@@ -456,7 +425,6 @@ export default function OrganizationDetailPage() {
                                     </Button>
                                 </CardContent>
                             </Card>
-
                             <Card className="border-gray-100 shadow-sm">
                                 <CardHeader className="pb-2"><CardTitle className="text-lg font-bold">Modules</CardTitle></CardHeader>
                                 <CardContent>
@@ -470,7 +438,6 @@ export default function OrganizationDetailPage() {
                                     </Button>
                                 </CardContent>
                             </Card>
-
                             {/* Client / Account Owner Card */}
                             <Card className="border-gray-100 shadow-sm">
                                 <CardHeader className="pb-2">
@@ -515,7 +482,6 @@ export default function OrganizationDetailPage() {
                                     )}
                                 </CardContent>
                             </Card>
-
                             {/* Encryption Card */}
                             <Card className={`border-gray-100 shadow-sm ${encryptionStatus?.encryption_enabled ? 'border-emerald-200 bg-emerald-50/20' : ''}`}>
                                 <CardHeader className="pb-2">
@@ -561,7 +527,6 @@ export default function OrganizationDetailPage() {
                     </div>
                 </div>
             )}
-
             {/* ─── Modules Tab ──────────────────────────────────────────── */}
             {activeTab === 'modules' && (
                 <div className="space-y-8">
@@ -585,7 +550,6 @@ export default function OrganizationDetailPage() {
                     </div>
                 </div>
             )}
-
             {/* ─── Users Tab ────────────────────────────────────────────── */}
             {activeTab === 'users' && (
                 <div className="space-y-6">
@@ -598,7 +562,6 @@ export default function OrganizationDetailPage() {
                             <Plus size={16} className="mr-2" /> Create User
                         </Button>
                     </div>
-
                     {users.length === 0 ? (
                         <Card className="border-gray-100 shadow-sm">
                             <CardContent className="py-12 text-center text-gray-400 italic">No users found for this organization.</CardContent>
@@ -645,7 +608,6 @@ export default function OrganizationDetailPage() {
                     )}
                 </div>
             )}
-
             {/* ─── Sites Tab ────────────────────────────────────────────── */}
             {activeTab === 'sites' && (
                 <div className="space-y-6">
@@ -658,7 +620,6 @@ export default function OrganizationDetailPage() {
                             <Plus size={16} className="mr-2" /> Add Site
                         </Button>
                     </div>
-
                     {sites.length === 0 ? (
                         <Card className="border-gray-100 shadow-sm">
                             <CardContent className="py-12 text-center text-gray-400 italic">No sites found. Create the first site for this organization.</CardContent>
@@ -716,7 +677,6 @@ export default function OrganizationDetailPage() {
                     )}
                 </div>
             )}
-
             {/* ─── Usage Tab ────────────────────────────────────────────── */}
             {activeTab === 'usage' && (
                 <div className="space-y-6">
@@ -751,7 +711,6 @@ export default function OrganizationDetailPage() {
                     </Card>
                 </div>
             )}
-
             {/* ─── Billing Tab ──────────────────────────────────────────── */}
             {activeTab === 'billing' && (
                 <div className="space-y-6">
@@ -785,7 +744,6 @@ export default function OrganizationDetailPage() {
                                 </div>
                             </CardContent>
                         </Card>
-
                         {/* Client Account / Balance Card */}
                         <Card className="border-gray-100 shadow-sm">
                             <CardHeader>
@@ -811,7 +769,6 @@ export default function OrganizationDetailPage() {
                                         <p className="text-xs text-amber-500 mt-1">Assign from the Overview tab</p>
                                     </div>
                                 )}
-
                                 {/* Balance Summary */}
                                 <div className="grid grid-cols-3 gap-2">
                                     <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100 text-center">
@@ -827,7 +784,6 @@ export default function OrganizationDetailPage() {
                                         <p className="text-lg font-black text-gray-900">${billing.balance.net_balance}</p>
                                     </div>
                                 </div>
-
                                 {/* CRM Profile Link */}
                                 {billing.client && (
                                     <Button
@@ -841,7 +797,6 @@ export default function OrganizationDetailPage() {
                             </CardContent>
                         </Card>
                     </div>
-
                     {/* Available Plans */}
                     {usage?.available_plans?.length > 0 && (
                         <Card className="border-gray-100 shadow-sm">
@@ -859,7 +814,6 @@ export default function OrganizationDetailPage() {
                                         const isCustom = parseFloat(p.monthly_price) < 0
                                         const isFree = parseFloat(p.monthly_price) === 0
                                         const limits = p.limits || {}
-
                                         return (
                                             <div key={p.id} className={`p-5 rounded-2xl border-2 transition-all flex flex-col ${isCurrent
                                                 ? 'border-emerald-300 bg-emerald-50/50 shadow-md'
@@ -875,7 +829,6 @@ export default function OrganizationDetailPage() {
                                                         {p.trial_days > 0 && <Badge className="bg-amber-50 text-amber-600 text-[9px]">{p.trial_days}d Trial</Badge>}
                                                     </div>
                                                 </div>
-
                                                 {/* Price */}
                                                 <div className="mb-3">
                                                     {isCustom ? (
@@ -889,10 +842,8 @@ export default function OrganizationDetailPage() {
                                                         </>
                                                     )}
                                                 </div>
-
                                                 {/* Description */}
                                                 {p.description && <p className="text-[11px] text-gray-400 mb-3 line-clamp-2">{p.description}</p>}
-
                                                 {/* Modules */}
                                                 {p.modules?.length > 0 && (
                                                     <div className="flex flex-wrap gap-1 mb-3">
@@ -904,7 +855,6 @@ export default function OrganizationDetailPage() {
                                                         )}
                                                     </div>
                                                 )}
-
                                                 {/* Limits */}
                                                 {Object.keys(limits).length > 0 && (
                                                     <div className="grid grid-cols-2 gap-1 mb-3 text-[10px] text-gray-400">
@@ -912,9 +862,7 @@ export default function OrganizationDetailPage() {
                                                         {limits.max_sites != null && <span>🏢 {limits.max_sites < 0 ? '∞' : limits.max_sites} sites</span>}
                                                     </div>
                                                 )}
-
                                                 <div className="flex-1" />
-
                                                 {/* Switch Plan Button */}
                                                 {!isCurrent && (
                                                     <Button size="sm"
@@ -935,7 +883,6 @@ export default function OrganizationDetailPage() {
                             </CardContent>
                         </Card>
                     )}
-
                     <Card className="border-gray-100 shadow-sm">
                         <CardHeader>
                             <div className="flex justify-between items-center">
@@ -985,7 +932,6 @@ export default function OrganizationDetailPage() {
                     </Card>
                 </div>
             )}
-
             {/* ─── Add-ons Tab ────────────────────────────────────────── */}
             {activeTab === 'addons' && (
                 <div className="space-y-6">
@@ -1050,7 +996,6 @@ export default function OrganizationDetailPage() {
                             )}
                         </CardContent>
                     </Card>
-
                     {/* Cancelled / Expired History */}
                     {addons.purchased?.filter((p: Record<string, any>) => p.status !== 'active').length > 0 && (
                         <Card className="border-gray-100 shadow-sm">
@@ -1076,7 +1021,6 @@ export default function OrganizationDetailPage() {
                             </CardContent>
                         </Card>
                     )}
-
                     {/* Available Add-ons for Purchase */}
                     <Card className="border-gray-100 shadow-sm">
                         <CardHeader>
@@ -1146,7 +1090,6 @@ export default function OrganizationDetailPage() {
                     </Card>
                 </div>
             )}
-
             {/* ─── Create User Dialog ───────────────────────────────────── */}
             <Dialog open={showCreateUser} onOpenChange={setShowCreateUser}>
                 <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
@@ -1196,7 +1139,6 @@ export default function OrganizationDetailPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-
             {/* ─── Reset Password Dialog ────────────────────────────────── */}
             <Dialog open={!!resetTarget} onOpenChange={(o) => { if (!o) setResetTarget(null) }}>
                 <DialogContent className="sm:max-w-sm" aria-describedby={undefined}>
@@ -1226,7 +1168,6 @@ export default function OrganizationDetailPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-
             {/* ─── Create Site Dialog ───────────────────────────────────── */}
             <Dialog open={showCreateSite} onOpenChange={setShowCreateSite}>
                 <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
@@ -1272,7 +1213,6 @@ export default function OrganizationDetailPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-
             {/* ─── Plan Switch Confirmation Dialog ─────────────────────── */}
             <Dialog open={!!planSwitchTarget} onOpenChange={(open) => !open && setPlanSwitchTarget(null)}>
                 <DialogContent className="rounded-2xl max-w-md">
@@ -1298,7 +1238,6 @@ export default function OrganizationDetailPage() {
                                         <span className="font-black text-gray-900">{planSwitchTarget.name}</span>
                                     </div>
                                 </div>
-
                                 <div className="flex items-center justify-between p-4 rounded-xl border-2 border-dashed" style={{
                                     borderColor: isUpgrade ? '#10b981' : isDowngrade ? '#f59e0b' : '#9ca3af',
                                     background: isUpgrade ? '#ecfdf5' : isDowngrade ? '#fffbeb' : '#f9fafb'
@@ -1315,14 +1254,12 @@ export default function OrganizationDetailPage() {
                                         </p>
                                     </div>
                                 </div>
-
                                 {isUpgrade && (
                                     <p className="text-[11px] text-gray-400">A <strong>Purchase Invoice</strong> of ${diff.toFixed(2)}/mo will be generated for the price difference.</p>
                                 )}
                                 {isDowngrade && (
                                     <p className="text-[11px] text-gray-400">A <strong>Credit Note</strong> of ${diff.toFixed(2)}/mo will be issued, plus a new <strong>Purchase Invoice</strong> for ${targetPrice.toFixed(2)}/mo.</p>
                                 )}
-
                                 {planSwitchTarget.modules?.length > 0 && (
                                     <div>
                                         <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Modules in new plan:</p>
@@ -1370,14 +1307,12 @@ export default function OrganizationDetailPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-
             {/* ─── Client Assignment Dialog ────────────────────────────── */}
             <Dialog open={showClientDialog} onOpenChange={(open) => { if (!open) { setShowClientDialog(false); setShowNewClient(false) } }}>
                 <DialogContent className="rounded-2xl max-w-md">
                     <DialogHeader>
                         <DialogTitle className="font-black text-lg">Assign Account Owner</DialogTitle>
                     </DialogHeader>
-
                     {!showNewClient ? (
                         <div className="space-y-4">
                             <Input

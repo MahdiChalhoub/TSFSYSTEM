@@ -1,6 +1,4 @@
 'use client';
-import { ShieldCheck } from 'lucide-react'
-
 import { useState } from 'react';
 import {
     ShieldCheck, ShieldOff, Pause, Plus, Search, QrCode,
@@ -10,7 +8,6 @@ import {
     createClientAccess, activateClientAccess, suspendClientAccess,
     revokeClientAccess, setClientPermissions, generateClientBarcode,
 } from '@/app/actions/client-portal';
-
 const ALL_PERMISSIONS = [
     { code: 'VIEW_ORDER_HISTORY', label: 'Order History', icon: Eye },
     { code: 'PLACE_ORDERS', label: 'Place Orders', icon: ShoppingCart },
@@ -19,11 +16,9 @@ const ALL_PERMISSIONS = [
     { code: 'SUBMIT_TICKETS', label: 'Submit Tickets', icon: TicketCheck },
     { code: 'VIEW_CATALOG', label: 'Browse Catalog', icon: Grid2X2 },
 ];
-
 const STATUS_COLORS: Record<string, string> = {
     ACTIVE: '#22c55e', SUSPENDED: '#f59e0b', REVOKED: '#ef4444', PENDING: '#64748b',
 };
-
 export default function ClientAccessClient({ accesses: init, customers }: any) {
     const [accesses, setAccesses] = useState<any[]>(init);
     const [search, setSearch] = useState('');
@@ -31,13 +26,11 @@ export default function ClientAccessClient({ accesses: init, customers }: any) {
     const [editPerms, setEditPerms] = useState<number | null>(null);
     const [editPermsValues, setEditPermsValues] = useState<string[]>([]);
     const [newAccess, setNewAccess] = useState({ contact: '', user: '' });
-
     const filtered = accesses.filter((a: any) =>
         (a.contact_name || '').toLowerCase().includes(search.toLowerCase()) ||
         (a.user_email || '').toLowerCase().includes(search.toLowerCase()) ||
         (a.barcode || '').toLowerCase().includes(search.toLowerCase())
     );
-
     async function handleCreate() {
         if (!newAccess.contact) return;
         try {
@@ -47,7 +40,6 @@ export default function ClientAccessClient({ accesses: init, customers }: any) {
             setNewAccess({ contact: '', user: '' });
         } catch (e) { console.error(e); }
     }
-
     async function handleActivate(id: number) {
         const result = await activateClientAccess(id);
         setAccesses(prev => prev.map(a => a.id === id ? { ...a, status: 'ACTIVE', barcode: result.barcode } : a));
@@ -69,12 +61,10 @@ export default function ClientAccessClient({ accesses: init, customers }: any) {
         setAccesses(prev => prev.map(a => a.id === id ? { ...a, permissions: editPermsValues } : a));
         setEditPerms(null);
     }
-
     const cardStyle: React.CSSProperties = {
         background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
         borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)',
     };
-
     return (
         <div>
             <div style={{ display: 'flex', gap: 12, marginBottom: '1.5rem', alignItems: 'center' }}>
@@ -94,7 +84,6 @@ export default function ClientAccessClient({ accesses: init, customers }: any) {
                     <Plus size={16} /> Grant Access
                 </button>
             </div>
-
             {showCreate && (
                 <div style={{ ...cardStyle, padding: '1.25rem', marginBottom: '1.5rem' }}>
                     <h3 style={{ fontWeight: 600, marginBottom: '1rem' }}>Grant New Client Access</h3>
@@ -114,7 +103,6 @@ export default function ClientAccessClient({ accesses: init, customers }: any) {
                     </div>
                 </div>
             )}
-
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {filtered.map((a: any) => (
                     <div key={a.id} style={{ ...cardStyle, padding: '1rem' }}>
@@ -160,7 +148,6 @@ export default function ClientAccessClient({ accesses: init, customers }: any) {
                                 </button>
                             </div>
                         </div>
-
                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
                             {(a.permissions || []).map((p: string) => {
                                 const pm = ALL_PERMISSIONS.find(x => x.code === p);
@@ -175,7 +162,6 @@ export default function ClientAccessClient({ accesses: init, customers }: any) {
                                 );
                             })}
                         </div>
-
                         {editPerms === a.id && (
                             <div style={{ marginTop: 12, padding: 12, background: '#0f172a', borderRadius: 8 }}>
                                 <div style={{ fontWeight: 600, marginBottom: 8, fontSize: '0.85rem' }}>Edit Permissions</div>
