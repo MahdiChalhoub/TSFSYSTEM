@@ -2,7 +2,7 @@
 **Audit Date:** 2026-02-24  
 **Audit Type:** Read-Only — No modifications made  
 **Auditor:** Antigravity AI  
-**System Version:** Next.js 15+ Frontend / Django 5+ Backend  
+**System Version:** Next.js 16 Frontend / Django 5+ Backend  
 
 ---
 
@@ -44,9 +44,9 @@ The TSFSYSTEM is a **well-architected multi-tenant SaaS ERP** platform built on 
 | Layer | Files | Lines (Est.) |
 |-------|-------|-------------|
 | Backend Python (erp + apps) | ~200+ | ~25,000+ |
-| Frontend TypeScript/TSX | ~700+ | ~40,000+ |
+| Frontend TypeScript/TSX | ~679 | ~107,000+ |
 | Config/Infrastructure | ~30 | ~2,000 |
-| **Total** | **~930+** | **~67,000+** |
+| **Total** | **~910+** | **~132,000+** |
 
 ---
 
@@ -69,9 +69,9 @@ The system follows a **Connector Module Pattern** — a hybrid approach where:
 │  ├── middleware.ts (auth guard)    ├── erp/      │
 │  ├── kernel/ (permissions)        │   ├── middleware.py (tenant isolation) │
 │  ├── app/(privileged)/            │   ├── connector_engine.py             │
-│  ├── app/(auth)/                  │   ├── models.py (798 lines)           │
+│  ├── app/(auth)/                  │   ├── models.py (800 lines)           │
 │  ├── storefront/                  │   ├── permissions.py                  │
-│  └── components/                  │   └── views.py (1,245 lines)          │
+│  └── components/                  │   └── views.py (1,244 lines)          │
 │                                   │                                       │
 │                                   ├── apps/                               │
 │                                   │   ├── inventory/ (22 files)           │
@@ -88,7 +88,7 @@ The system follows a **Connector Module Pattern** — a hybrid approach where:
 │                                   │   ├── client_portal/ (20 files)       │
 │                                   │   └── packages/ (10 files)            │
 │                                   │                                       │
-│                                    └── PostgreSQL + Redis + Celery        │
+│                                    └── PostgreSQL 16 + Redis + Celery     │
 └──────────────────────────────────────────────────┘
 ```
 

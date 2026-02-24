@@ -84,17 +84,25 @@ Each module declares its identity, routes, permissions, and dependencies:
 | `dependencies` | Module codes | What must be enabled first |
 | `backendApp` | Django app path | Maps to backend |
 
-### Registered Modules
+### Registered Modules (15 Installed Apps)
 
-| Module | Dependencies | Backend App |
-|--------|-------------|-------------|
-| finance | — | `apps.finance` |
-| inventory | — | `apps.inventory` |
-| products | inventory | `apps.inventory` |
-| crm | — | `apps.crm` |
-| hr | — | `apps.hr` |
-| purchases | inventory, finance | `apps.purchases` |
-| sales | inventory, finance | `apps.sales` |
+| Module | Dependencies | Backend App | Models |
+|--------|-------------|-------------|--------|
+| finance | — | `apps.finance` | 27 |
+| inventory | — | `apps.inventory` | 27 |
+| pos | inventory, finance | `apps.pos` | 20 |
+| crm | — | `apps.crm` | 1 (+3 pricing) |
+| hr | — | `apps.hr` | 5 |
+| workspace | hr | `apps.workspace` | 17 |
+| client_portal | crm, pos | `apps.client_portal` | 11 |
+| supplier_portal | crm, pos | `apps.supplier_portal` | 6 |
+| mcp | — | `apps.mcp` | 7 |
+| storage | — | `apps.storage` | 3 |
+| ecommerce | inventory | `apps.ecommerce` | 3 |
+| migration | — | `apps.migration` | 2 |
+| packages | — | `apps.packages` | 1 |
+| core | — | `apps.core` | 1 |
+| erp (kernel) | — | `erp` | 31 |
 
 ## Permissions (`src/kernel/permissions.ts`)
 

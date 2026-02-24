@@ -6,12 +6,12 @@ Cross-module imports are gated with try/except to prevent crashes
 when dependent modules are removed. Side-effects (journal entries,
 stock adjustments) are dispatched via ConnectorEngine events.
 """
+import logging
+from decimal import Decimal
+
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
-from django.core.exceptions import ValidationError
-from decimal import Decimal
-import uuid
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -32,18 +32,18 @@ def _safe_import(module_path, names):
 class POSService:
     @staticmethod
     def checkout(organization, user, warehouse, payment_account_id, items, scope='OFFICIAL',
-                 contact_id=None, payment_method='CASH', points_redeemed=0, 
+                 contact_id=None, payment_method='CASH', points_redeemed=0,
                  store_change_in_wallet=False, cash_received=0):
         from apps.pos.models import Order, OrderLine
         from erp.services import ConfigurationService
-        
+
         # Gated cross-module imports
         (Product,) = _safe_import('apps.inventory.models', ['Product'])
         (InventoryService,) = _safe_import('apps.inventory.services', ['InventoryService'])
         (LedgerService, SequenceService, ForensicAuditService) = _safe_import(
             'apps.finance.services', ['LedgerService', 'SequenceService', 'ForensicAuditService']
         )
-        
+
         if not Product or not InventoryService:
             raise ValidationError("Inventory module is required for POS checkout.")
         if not LedgerService or not SequenceService:
@@ -55,15 +55,15 @@ class POSService:
             total_amount = Decimal('0')
             total_tax = Decimal('0')
             total_cogs = Decimal('0')
-            
+
             # 1. Dual-Mode Gapless Sequencing
             # Separate sequence for each scope (e.g. SALE_OFFICIAL, SALE_INTERNAL)
             sequence_type = f"SALE_{scope.upper()}"
             invoice_num = SequenceService.get_next_number(organization, sequence_type)
-            
+
             # 2. Cryptographic Chaining Context (Scope-Isolated)
             last_order = Order.objects.filter(
-                organization=organization, 
+                organization=organization,
                 scope=scope
             ).order_by('-created_at', '-id').first()
             prev_hash = last_order.receipt_hash if last_order else "GENESIS"
@@ -80,19 +80,19 @@ class POSService:
                 payment_method=payment_method,
                 contact_id=contact_id
             )
-            
+
             for item in items:
                 # 3. Atomic Serializability: Lock Product
                 product = Product.objects.select_for_update().get(id=item['product_id'], organization=organization)
                 qty = Decimal(str(item['quantity']))
                 price = Decimal(str(item['unit_price']))
-                
+
                 # 4. Forensic Price Audit: Check for Overrides
                 is_override = False
                 base_price = product.selling_price_ttc or Decimal('0.00')
                 if price < base_price * Decimal('0.95'): # 5% threshold for "anomaly"
                     is_override = True
-                
+
                 # 4.1 Margin Guard: Prevent loss-making sales
                 margin_threshold = ConfigurationService.get_setting(organization, 'margin_guard_threshold', 1.0)
                 cost_price = product.cost_price or Decimal('0.00')
@@ -101,7 +101,7 @@ class POSService:
                         f"MARGIN ALERT: Sale blocked for '{product.name}'. Price {price} is below "
                         f"minimum margin threshold (Cost: {cost_price} x {margin_threshold})."
                     )
-                
+
                 amc = InventoryService.reduce_stock(
                     organization=organization,
                     product=product,
@@ -111,16 +111,16 @@ class POSService:
                     serials=item.get('serials'),
                     user=user
                 )
-                
+
                 tax_rate = Decimal(str(product.tva_rate))
                 item_total = qty * price
                 item_tax = item_total * tax_rate
                 item_cogs = qty * amc
-                
+
                 total_amount += (item_total + item_tax)
                 total_tax += item_tax
                 total_cogs += item_cogs
-                
+
                 OrderLine.objects.create(
                     organization=organization,
                     order=order,
@@ -133,7 +133,7 @@ class POSService:
                     effective_cost=amc,
                     price_override_detected=is_override
                 )
-                
+
                 if is_override and ForensicAuditService:
                     ForensicAuditService.log_mutation(
                         organization=organization,
@@ -148,10 +148,10 @@ class POSService:
                             "qty": str(qty)
                         }
                     )
-            
+
             order.total_amount = total_amount
             order.tax_amount = total_tax
-            
+
             # Loyalty & Wallet CRM update
             (Contact,) = _safe_import('apps.crm.models', ['Contact'])
             contact = None
@@ -164,26 +164,26 @@ class POSService:
                         contact.loyalty_points -= pts_to_redeem
                         # Optional: discount the total_amount by a conversion rate, if not already discounted by frontend
                         # Assuming frontend already discounted it.
-                    
+
                     # 2. Earn Points (e.g. 1 point per $10 spent)
                     earned_points = int(total_amount / Decimal('10.0'))
                     contact.loyalty_points += Decimal(str(earned_points))
-                    
+
                     # 3. Store Change in Wallet
                     cash_received_dec = Decimal(str(cash_received))
                     change_due = max(Decimal('0'), cash_received_dec - total_amount)
-                    
+
                     wallet_added = Decimal('0')
                     if store_change_in_wallet and change_due > 0 and payment_method in ['CASH']:
                         contact.wallet_balance += change_due
                         wallet_added = change_due
-                        
+
                     contact.save()
-            
+
             # 5. Cryptographic Seal
             order.receipt_hash = order.calculate_hash()
             order.save(force_audit_bypass=True)
-            
+
             # 6. Finance Chain Link
             rules = ConfigurationService.get_posting_rules(organization)
             rev_acc = rules.get('sales', {}).get('revenue')
@@ -193,7 +193,7 @@ class POSService:
 
             if not all([rev_acc, inv_acc, cogs_acc]):
                 raise ValidationError("Missing sales posting rules mapping.")
-            
+
             (FinancialAccount,) = _safe_import('apps.finance.models', ['FinancialAccount'])
             actual_payment_acc_id = payment_account_id
             if FinancialAccount:
@@ -206,7 +206,7 @@ class POSService:
                 {"account_id": cogs_acc, "debit": total_cogs, "credit": Decimal('0')},
                 {"account_id": inv_acc, "debit": Decimal('0'), "credit": total_cogs},
             ]
-            
+
             if contact and wallet_added > 0:
                 # Wallet Liability Account
                 wallet_liability_acc = rules.get('sales', {}).get('receivable') # Usually advances are liabilities, fallback to AR
@@ -226,7 +226,7 @@ class POSService:
                 user=user,
                 lines=lines
             )
-            
+
             return order
 
 
@@ -244,14 +244,14 @@ class PurchaseService:
 
     @staticmethod
     def receive_po(organization, order_id, warehouse_id, receptions=None, is_tax_recoverable=True, scope='OFFICIAL', user=None):
-        from apps.pos.models import Order, OrderLine
+        from apps.pos.models import Order
         from erp.services import ConfigurationService
-        
+
         # Gated cross-module imports
         (Warehouse,) = _safe_import('apps.inventory.models', ['Warehouse'])
         (InventoryService,) = _safe_import('apps.inventory.services', ['InventoryService'])
         (LedgerService,) = _safe_import('apps.finance.services', ['LedgerService'])
-        
+
         if not Warehouse or not InventoryService:
             raise ValidationError("Inventory module is required for PO reception.")
         if not LedgerService:
@@ -260,12 +260,12 @@ class PurchaseService:
         with transaction.atomic():
             order = Order.objects.select_for_update().get(id=order_id, organization=organization, type='PURCHASE')
             warehouse = Warehouse.objects.get(id=warehouse_id, organization=organization)
-            
+
             if order.status not in ['AUTHORIZED', 'PARTIAL_RECEIVED']:
                 raise ValidationError(f"Order status {order.status} is not eligible for reception.")
 
             total_received_value = Decimal('0')
-            
+
             # Map of line_id -> received_quantity
             reception_map = {}
             if receptions:
@@ -279,7 +279,7 @@ class PurchaseService:
             for line in order.lines.all():
                 qty_to_receive = reception_map.get(line.id, Decimal('0'))
                 if qty_to_receive <= 0: continue
-                
+
                 if line.qty_received + qty_to_receive > line.quantity:
                     raise ValidationError(f"Cannot receive more than ordered for product {line.product.name}")
 
@@ -293,10 +293,10 @@ class PurchaseService:
                     reference=f"PO-REC-{order.id}",
                     scope=scope
                 )
-                
+
                 line.qty_received += qty_to_receive
                 line.save()
-                
+
                 total_received_value += (qty_to_receive * line.unit_price)
 
                 # ── Sourcing Intelligence Update ───────────────────────
@@ -344,7 +344,7 @@ class PurchaseService:
                         {"account_id": susp_acc, "debit": Decimal('0'), "credit": total_received_value, "description": "Accrued Reception Liaison"},
                     ]
                 )
-            
+
             return order
 
     @staticmethod
@@ -352,13 +352,13 @@ class PurchaseService:
         from apps.pos.models import Order, OrderLine
         (Product,) = _safe_import('apps.inventory.models', ['Product'])
         (Contact,) = _safe_import('apps.crm.models', ['Contact'])
-        
+
         if not Product: raise ValidationError("Inventory module required.")
         if not Contact: raise ValidationError("CRM module required.")
 
         with transaction.atomic():
             supplier = Contact.objects.get(id=supplier_id, organization=organization)
-            
+
             order = Order.objects.create(
                 organization=organization,
                 type='PURCHASE',
@@ -378,10 +378,10 @@ class PurchaseService:
                 product = Product.objects.get(id=line['productId'], organization=organization)
                 qty = Decimal(str(line['quantity']))
                 price = Decimal(str(line['unitPrice']))
-                
+
                 line_total = qty * price
                 total_amount += line_total
-                
+
                 OrderLine.objects.create(
                     organization=organization,
                     order=order,
@@ -390,24 +390,24 @@ class PurchaseService:
                     unit_price=price,
                     total=line_total
                 )
-            
+
             order.total_amount = total_amount
             order.save()
             return order
 
     @staticmethod
     def quick_purchase(organization, supplier_id, warehouse_id, site_id, scope, invoice_price_type, vat_recoverable, lines, notes=None, ref_code=None, user=None, **kwargs):
+        from apps.inventory.advanced_models import ProductBatch
+        from apps.inventory.models import InventoryMovement
         from apps.pos.models import Order, OrderLine
         from erp.services import ConfigurationService
-        from erp.models import StockBatch
-        from apps.inventory.models import InventoryMovement
-        
+
         # Gated cross-module imports
         (Product, Inventory) = _safe_import('apps.inventory.models', ['Product', 'Inventory'])
         (Contact,) = _safe_import('apps.crm.models', ['Contact'])
         (ChartOfAccount, FinancialAccount) = _safe_import('apps.finance.models', ['ChartOfAccount', 'FinancialAccount'])
         (LedgerService,) = _safe_import('apps.finance.services', ['LedgerService'])
-        
+
         if not Product or not Inventory:
             raise ValidationError("Inventory module is required for purchases.")
         if not Contact:
@@ -419,20 +419,20 @@ class PurchaseService:
             settings = ConfigurationService.get_global_settings(organization)
             pricing_cost_basis = settings.get('pricingCostBasis', 'AUTO')
             company_type = settings.get('companyType', 'REGULAR')
-            
+
             if company_type in ['MIXED', 'REGULAR', 'MICRO']:
                 vat_recoverable = False
-            
+
             supplier = Contact.objects.get(id=supplier_id, organization=organization)
             global_airsi_rate = Decimal(str(settings.get('airsi_tax_percentage', 0))) / 100
-            
+
             apply_airsi = False
             airsi_rate = Decimal('0')
-            
+
             if global_airsi_rate > 0:
                 if supplier.is_airsi_subject:
                     apply_airsi = True
-                    airsi_rate = supplier.airsi_tax_rate if supplier.airsi_tax_rate is not None else global_airsi_rate
+                    airsi_rate = supplier.airsi_tax_rate if supplier.airsi_tax_rate else global_airsi_rate
 
             discount_amount = Decimal(str(kwargs.get('discountAmount', 0)))
             extra_fees = kwargs.get('extraFees', [])
@@ -461,14 +461,14 @@ class PurchaseService:
             total_amount_ht = Decimal('0')
             total_tax = Decimal('0')
             total_airsi = Decimal('0')
-            
+
             for line in lines:
                 product = Product.objects.get(id=line['productId'], organization=organization)
                 qty = Decimal(str(line['quantity']))
                 unit_cost_ht = Decimal(str(line['unitCostHT']))
                 unit_cost_ttc = Decimal(str(line['unitCostTTC']))
                 tax_rate = Decimal(str(line['taxRate']))
-                
+
                 if unit_cost_ht > 0 and unit_cost_ttc == 0:
                     unit_cost_ttc = (unit_cost_ht * (Decimal('1') + tax_rate)).quantize(Decimal('0.01'))
                 elif unit_cost_ttc > 0 and unit_cost_ht == 0:
@@ -477,15 +477,15 @@ class PurchaseService:
                 line_total_ht = qty * unit_cost_ht
                 line_tax = line_total_ht * tax_rate
                 line_total_ttc = line_total_ht + line_tax
-                
+
                 line_airsi = Decimal('0')
                 if apply_airsi:
                     line_airsi = (line_total_ht * airsi_rate).quantize(Decimal('0.01'))
-                
+
                 total_amount_ht += line_total_ht
                 total_tax += line_tax
                 total_airsi += line_airsi
-                
+
                 base_effective_cost = Decimal('0')
                 if pricing_cost_basis == 'FORCE_HT':
                     base_effective_cost = unit_cost_ht
@@ -493,10 +493,10 @@ class PurchaseService:
                     base_effective_cost = unit_cost_ttc
                 else:
                     base_effective_cost = unit_cost_ht if vat_recoverable else unit_cost_ttc
-                
+
                 airsi_capitalized = True
                 if company_type == 'REAL': airsi_capitalized = False
-                
+
                 final_effective_cost = base_effective_cost
                 if apply_airsi and airsi_capitalized and qty > 0:
                     final_effective_cost += (line_airsi / qty).quantize(Decimal('0.01'))
@@ -515,25 +515,24 @@ class PurchaseService:
                     tax_rate=tax_rate,
                     total=line_total_ttc
                 )
-                
-                batch = StockBatch.objects.create(
+
+                batch = ProductBatch.objects.create(
                     organization=organization,
                     product=product,
-                    batch_code=f"PUR-{order.id}-{product.id}",
+                    batch_number=f"PUR-{order.id}-{product.id}",
                     cost_price=final_effective_cost,
                     expiry_date=line.get('expiryDate')
                 )
-                
+
                 inv, _ = Inventory.objects.get_or_create(
                     organization=organization,
                     warehouse_id=warehouse_id,
                     product=product,
-                    batch=batch,
-                    defaults={'quantity': Decimal('0')}
+                    defaults={'quantity': Decimal('0'), 'batch_number': batch.batch_number}
                 )
                 inv.quantity += qty
                 inv.save()
-                
+
                 InventoryMovement.objects.create(
                     organization=organization,
                     product=product,
@@ -552,11 +551,11 @@ class PurchaseService:
                         raise ValidationError(f"Product {product.name} requires {int(qty)} serials.")
                     for sn in current_serials:
                         InventoryService.register_serial_entry(
-                            organization, product, warehouse_id, sn, 
-                            f"PUR-{order.id}", cost_price=final_effective_cost, 
+                            organization, product, warehouse_id, sn,
+                            f"PUR-{order.id}", cost_price=final_effective_cost,
                             user_name=user.username if user else None
                         )
-                
+
                 product.cost_price = final_effective_cost
                 product.cost_price_ht = unit_cost_ht
                 product.cost_price_ttc = unit_cost_ttc
@@ -586,35 +585,35 @@ class PurchaseService:
             order.total_amount = total_amount_ht + total_tax + total_airsi + total_extra_fees - discount_amount
             order.tax_amount = total_tax
             order.airsi_amount = total_airsi
-            order.save()
-            
+            order.save(force_audit_bypass=True)
+
             rules = ConfigurationService.get_posting_rules(organization)
-            
+
             ap_account_id = supplier.linked_account_id or rules['purchases']['payable']
             stock_account_id = rules['purchases']['inventory']
             tax_account_id = rules['purchases']['tax']
             airsi_account_id = rules['purchases'].get('airsi')
             discount_earned_account_id = rules['purchases'].get('discount_earned') # e.g. 7xxx
-            
+
             if not ap_account_id or not stock_account_id:
                 raise ValidationError("Finance mapping missing: Accounts Payable or Inventory account not configured.")
-                
+
             inventory_debit_amount = total_amount_ht
             if not vat_recoverable: inventory_debit_amount += total_tax
-            
+
             airsi_ledger_treatment = 'CAPITALIZE'
             if company_type == 'REAL': airsi_ledger_treatment = 'RECOVER'
             elif company_type == 'MICRO': airsi_ledger_treatment = 'EXPENSE'
-            
+
             if apply_airsi:
                 if airsi_ledger_treatment == 'CAPITALIZE':
                     inventory_debit_amount += total_airsi
-            
+
             posting_lines = [
                 {"account_id": ap_account_id, "debit": Decimal('0'), "credit": order.total_amount, "description": f"Payable to {supplier.name}"},
                 {"account_id": stock_account_id, "debit": inventory_debit_amount, "credit": Decimal('0'), "description": "Inventory Value"}
             ]
-            
+
             # Handling Extra Fees in Ledger
             for fee in extra_fees:
                 fee_acc = fee.get('accountId') or rules['purchases'].get('delivery_fees') or stock_account_id
@@ -642,7 +641,7 @@ class PurchaseService:
                     "credit": Decimal('0'),
                     "description": "VAT Recoverable"
                 })
-                
+
             if apply_airsi and airsi_ledger_treatment != 'CAPITALIZE':
                  target_acc = airsi_account_id or tax_account_id
                  posting_lines.append({
@@ -651,7 +650,7 @@ class PurchaseService:
                     "credit": Decimal('0'),
                     "description": f"AIRSI ({airsi_ledger_treatment})"
                 })
-                
+
             LedgerService.create_journal_entry(
                 organization=organization,
                 transaction_date=timezone.now(),
@@ -668,7 +667,7 @@ class PurchaseService:
             if initial_payment and Decimal(str(initial_payment.get('amount', 0))) > 0:
                 pay_amount = Decimal(str(initial_payment['amount']))
                 pay_account_id = initial_payment['accountId']
-                
+
                 # Check if pay_account_id is a FinancialAccount, get its Ledger ID
                 if FinancialAccount:
                     fin_acc = FinancialAccount.objects.filter(id=pay_account_id, organization=organization).first()
@@ -676,9 +675,9 @@ class PurchaseService:
 
                 pay_lines = [
                     {"account_id": ap_account_id, "debit": pay_amount, "credit": Decimal('0'), "description": f"Payment for Purchase #{order.id}"},
-                    {"account_id": pay_account_id, "debit": Decimal('0'), "credit": pay_amount, "description": f"Cash/Bank Payment"}
+                    {"account_id": pay_account_id, "debit": Decimal('0'), "credit": pay_amount, "description": "Cash/Bank Payment"}
                 ]
-                
+
                 LedgerService.create_journal_entry(
                     organization=organization,
                     transaction_date=timezone.now(),
@@ -689,15 +688,15 @@ class PurchaseService:
                     site_id=site_id,
                     lines=pay_lines
                 )
-            
+
             return order
 
 
     @staticmethod
     def invoice_po(organization, order_id, invoice_number, invoice_date=None, user=None):
-        from apps.pos.models import Order, OrderLine
+        from apps.pos.models import Order
         from erp.services import ConfigurationService
-        
+
         # Gated cross-module import
         (LedgerService,) = _safe_import('apps.finance.services', ['LedgerService'])
         if not LedgerService:
@@ -705,7 +704,7 @@ class PurchaseService:
 
         with transaction.atomic():
             order = Order.objects.select_for_update().get(id=order_id, organization=organization, type='PURCHASE')
-            
+
             # Check if there is anything received but not invoiced
             total_invoiced_value = Decimal('0')
             for line in order.lines.all():
@@ -752,7 +751,7 @@ class PurchaseService:
 
             # Update Order Status
             all_invoiced = all(line.qty_invoiced >= line.quantity for line in order.lines.all())
-            order.status = 'INVOICED' if all_invoiced else 'PARTIAL_RECEIVED' 
+            order.status = 'INVOICED' if all_invoiced else 'PARTIAL_RECEIVED'
             order.notes = f"{order.notes or ''}\nInvoice ref: {invoice_number} | Value: {total_invoiced_value}".strip()
             order.save()
             return order

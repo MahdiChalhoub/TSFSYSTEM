@@ -1,6 +1,6 @@
 # 🏆 Road to 5 Stars — The Ultimate ERP Platform
 **Goal:** Elevate every audit category to ⭐⭐⭐⭐⭐  
-**Current State:** 67K+ lines, 15 modules, solid foundation  
+**Current State:** 132K+ lines, 15 modules, solid foundation  
 **Target State:** Enterprise-grade, auditor-certified, investor-ready  
 
 ---
@@ -476,6 +476,8 @@ def get_chart_of_accounts(self, request):
 ## 🟡 PHASE 5: DevOps Excellence (Days 10-20)
 **Impact:** DevOps ⭐⭐⭐½ → ⭐⭐⭐⭐⭐
 
+> **Note:** The system currently runs on bare-metal systemd services (Gunicorn + Next.js + Nginx + PostgreSQL 16). The Docker configurations below are aspirational — implementing them would improve reproducibility and portability.
+
 ### 5.1 CI/CD Pipeline (GitHub Actions)
 ```yaml
 # .github/workflows/ci.yml
@@ -492,7 +494,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:15-alpine
+        image: postgres:16-alpine
         env:
           POSTGRES_DB: test_db
           POSTGRES_USER: postgres

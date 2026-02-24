@@ -7,24 +7,37 @@ The Dajingo ERP platform uses a 4-layer modular architecture: **Engine → Kerne
 
 ```
 erp/                              ← KERNEL (infrastructure only)
-├── models.py       (356 lines)    Organization, User, Site, TenantModel + re-exports
+├── models.py       (800 lines)    Organization, User, Site, TenantModel + re-exports
 ├── services.py     (260 lines)    ProvisioningService, ConfigurationService + re-exports
 ├── serializers/    (75 lines)     Kernel serializers + re-exports
-├── views.py        (516 lines)    TenantModelViewSet, Dashboard, Settings + re-exports
-├── urls.py                        Auth/SaaS routes + include() for 5 modules
-├── connector_engine.py            Module-to-module runtime broker
+├── views.py        (1,244 lines)  TenantModelViewSet, Dashboard, Settings + re-exports
+├── urls.py                        Auth/SaaS routes + include() for modules
+├── connector_engine.py (1,129 lines) Module-to-module runtime broker
 ├── connector_models.py            Connector data models
 └── middleware.py                   Tenant context middleware
 
 apps/                             ← MODULES (business logic)
-├── finance/                       12 models, 12 serializers, 7 services, 9 ViewSets
-├── inventory/                     9 models, 11 serializers, 1 service, 8 ViewSets
-├── pos/                           2 models, 2 serializers, 2 services, 2 ViewSets
-├── crm/                           1 model, 1 serializer, 1 ViewSet
-└── hr/                            1 model, 1 serializer, 1 ViewSet
+├── finance/       (27 models)     Accounts, Journals, Invoices, Payments, Loans, Assets, Tax
+├── inventory/     (27 models)     Products, Units, Warehouses, Stock, Movements, Alerts, Counting
+├── pos/           (20 models)     Orders, PurchaseOrders, Returns, Quotations, Consignment, Delivery, Discounts, Sourcing
+├── crm/           (1 model)       Contacts + Pricing (3 pricing models via pricing_models.py)
+├── hr/            (5 models)      Employee, Department, Shift, Attendance, Leave
+├── workspace/     (17 models)     Tasks, Checklists, Questionnaires, KPI, Scores
+├── client_portal/ (11 models)     Portal config, access, orders, tickets, wallet
+├── supplier_portal/ (6 models)    Portal auth, proformas, price requests, notifications
+├── mcp/           (7 models)      AI providers, tools, conversations, usage
+├── storage/       (3 models)      StorageProvider, StoredFile
+├── ecommerce/     (3 models)      Storefront config
+├── migration/     (2 models)      Data migration tasks
+├── packages/      (1 model)       Module packages
+└── core/          (1 model)       System settings
+
+Total: 162 business models + 7 Django contrib models = 169 total
 
 src/engine/                       ← FRONTEND ENGINE (zero-logic infra)
+src/kernel/                       ← FRONTEND KERNEL (auth, tenant, modules)
 src/modules/                      ← FRONTEND MODULES (isolated UI components)
+src/storefront/                   ← STOREFRONT THEME ENGINE
 ```
 
 ## Database Tables
@@ -55,20 +68,35 @@ src/modules/                      ← FRONTEND MODULES (isolated UI components)
 
 ## Module ViewSets (apps/X/views.py)
 
-### Finance (apps/finance/views.py)
-FinancialAccountViewSet, ChartOfAccountViewSet, FiscalYearViewSet, FiscalPeriodViewSet, JournalEntryViewSet, BarcodeSettingsViewSet, LoanViewSet, FinancialEventViewSet, TransactionSequenceViewSet
+### Finance (apps/finance/views.py — 1,860 lines)
+FinancialAccountViewSet, ChartOfAccountViewSet, FiscalYearViewSet, FiscalPeriodViewSet, JournalEntryViewSet, BarcodeSettingsViewSet, LoanViewSet, FinancialEventViewSet, TransactionSequenceViewSet, InvoiceViewSet, PaymentViewSet, VoucherViewSet, AssetViewSet, FinancialReportViewSet
 
-### Inventory (apps/inventory/views.py)
-ProductViewSet, UnitViewSet, WarehouseViewSet, InventoryViewSet, BrandViewSet, CategoryViewSet, ParfumViewSet, ProductGroupViewSet
+### Inventory (apps/inventory/views.py — 2,209 lines)
+ProductViewSet, UnitViewSet, WarehouseViewSet, InventoryViewSet, BrandViewSet, CategoryViewSet, ParfumViewSet, ProductGroupViewSet, InventoryMovementViewSet, StockAdjustmentOrderViewSet, StockTransferOrderViewSet, StockAlertViewSet, ExpiryAlertViewSet, StockCountViewSet, WarehouseLocationViewSet, ComboProductViewSet, OperationalRequestViewSet, DataQualityViewSet
 
-### POS (apps/pos/views.py)
-POSViewSet, PurchaseViewSet
+### POS (apps/pos/views.py — 1,181 lines)
+POSViewSet, PurchaseOrderViewSet, ReturnsViewSet, QuotationViewSet, ConsignmentViewSet, DeliveryViewSet, DiscountViewSet, SourcingViewSet
 
-### CRM (apps/crm/views.py)
-ContactViewSet
+### CRM (apps/crm/)
+ContactViewSet, PriceGroupViewSet, ClientPriceRuleViewSet
 
-### HR (apps/hr/views.py)
-EmployeeViewSet
+### HR (apps/hr/)
+EmployeeViewSet, DepartmentViewSet, ShiftViewSet, AttendanceViewSet, LeaveViewSet
+
+### Workspace (apps/workspace/)
+TaskViewSet, TaskCategoryViewSet, TaskTemplateViewSet, AutoTaskRuleViewSet, TaskCommentViewSet, EmployeeRequestViewSet, ChecklistTemplateViewSet, ChecklistInstanceViewSet, QuestionnaireViewSet, QuestionnaireResponseViewSet, KPIConfigViewSet, EmployeeScoreViewSet
+
+### Client Portal (apps/client_portal/)
+ClientPortalLoginView, StorefrontPublicConfigView, ClientMyOrdersViewSet, ClientMyWalletViewSet, ClientMyTicketsViewSet
+
+### Supplier Portal (apps/supplier_portal/)
+SupplierPortalLoginView, SupplierMyOrdersViewSet, SupplierProformaViewSet, SupplierPriceRequestViewSet
+
+### MCP (apps/mcp/)
+MCPProviderViewSet, MCPToolViewSet, MCPChatViewSet, MCPConversationViewSet, MCPUsageViewSet, MCPSettingsViewSet
+
+### Storage (apps/storage/)
+StorageProviderViewSet, StoredFileViewSet
 
 ## ConnectorEngine (Inter-Module Communication)
 The ConnectorEngine routes requests between modules using URL-based dispatch (`django.urls.resolve()`). It:

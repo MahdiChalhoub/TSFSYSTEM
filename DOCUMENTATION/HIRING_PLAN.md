@@ -12,10 +12,10 @@
 
 | Layer | Stack | Lines of Code |
 |-------|-------|---------------|
-| Frontend | Next.js 15, TypeScript, Server Actions | ~45,000 |
+| Frontend | Next.js 16, TypeScript, Server Actions | ~107,000 |
 | Backend | Django 5, DRF, Multi-Tenant | ~25,000 |
-| Database | PostgreSQL, Multi-Org Isolation | 81 models |
-| Infra |  VPS (Linux), Gunicorn, Nginx | Single Linux server | 
+| Database | PostgreSQL 16, Multi-Org Isolation | 169 models |
+| Infra | VPS (Linux), Gunicorn, Nginx, systemd | Single Linux server |
 
 **Key conventions**: Server Actions pattern, `erpFetch` API layer, `AuditLogMixin`, `TenantFilterMixin`, modular architecture (Engine → Kernel → Core → Modules).
 

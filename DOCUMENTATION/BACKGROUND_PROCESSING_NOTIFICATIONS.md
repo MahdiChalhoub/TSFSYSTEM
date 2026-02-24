@@ -1,5 +1,7 @@
 # Phase 2 — Background Processing & Notification Engine
 
+> **Runtime Status (2026-02-24):** The Celery code (`core/celery.py`, `erp/tasks.py`) exists and is functional, but **Redis and the Celery worker are NOT currently running** on the production server. Background tasks will not execute until Redis is installed and the Celery worker is started.
+
 ## 2.1 Celery Integration
 
 ### Goal

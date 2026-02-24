@@ -1,7 +1,9 @@
-# 🏗️ TSF ERP: MASTER AGENT HUB
+# 🏗️ Dajingo ERP (TSFSYSTEM): MASTER AGENT HUB
 
 This file is the **Single Source of Truth** for all AI agents.
 > **Current Status**: ✅ COMMERCIAL INTEGRITY MODULE DEPLOYED [Antigravity @ 2026-02-23T18:50]
+
+> **Platform Names**: The official product name is **Dajingo ERP**. The codebase is named **TSFSYSTEM**. The domain is **tsf.ci**. All documentation should use "Dajingo ERP" when referring to the product, "TSFSYSTEM" when referring to the codebase, and "TSF" as the short abbreviation.
 
 ---
 

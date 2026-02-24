@@ -122,14 +122,24 @@ class TenantMiddleware:
         request.organization_id = tenant_id
 
         # ─── 5. PROCESS REQUEST ───
-        response = self.get_response(request)
+        try:
+            response = self.get_response(request)
+        finally:
+            # ─── 6. CLEANUP ───
+            # Always clear tenant context, even if the view throws an exception
+            set_current_tenant_id(None)
 
-        # ─── 6. CLEANUP ───
-        set_current_tenant_id(None)
         return response
 
     def _resolve_user_from_token(self, request):
-        """Manually resolve user from DRF Token auth header."""
+        """Manually resolve user from DRF Token auth header or existing session."""
+        # Check if user is already authenticated (e.g., via force_authenticate in tests,
+        # or session-based auth from SessionMiddleware)
+        if hasattr(request, 'user') and hasattr(request.user, 'is_authenticated'):
+            if request.user.is_authenticated:
+                return request.user
+
+        # Fall back to Token-based auth
         auth_header = request.headers.get('Authorization', '')
         if not auth_header.startswith('Token '):
             return None
