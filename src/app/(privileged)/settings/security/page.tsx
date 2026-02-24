@@ -1,4 +1,3 @@
-import { Badge } from '@/components/ui/badge'
 import React from 'react';
 import { Shield, Key, Lock, Fingerprint } from 'lucide-react';
 import { TwoFactorSettings } from './TwoFactorSettings';
