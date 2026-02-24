@@ -323,7 +323,8 @@ export const getUser = cache(async function getUser() {
  */
 export async function getNotifications() {
     const { erpFetch } = await import("@/lib/erp-api")
-    return erpFetch('notifications/')
+    const result = await erpFetch('notifications/')
+    return Array.isArray(result) ? result : (result?.results || [])
 }
 
 export async function markNotificationAsRead(id: number) {
@@ -375,7 +376,8 @@ export async function confirmPasswordResetAction(data: Record<string, any>) {
  */
 export async function getPendingUsers() {
     const { erpFetch } = await import("@/lib/erp-api")
-    return erpFetch('users/?registration_status=PENDING')
+    const result = await erpFetch('users/?registration_status=PENDING')
+    return Array.isArray(result) ? result : (result?.results || [])
 }
 
 export async function approveUserAction(id: number) {

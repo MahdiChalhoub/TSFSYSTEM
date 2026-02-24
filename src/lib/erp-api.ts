@@ -240,7 +240,18 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
             return await response.blob();
         }
 
-        return await response.json();
+        const data = await response.json();
+
+        // [PAGINATION AUTO-UNWRAP]
+        // Industry-standard DRF responses with 'results' key are unwrapped by default.
+        // This ensures compatibility with components that do .map()/.filter() on list data
+        // without explicitly checking for the pagination wrapper.
+        if (data && typeof data === 'object' && !Array.isArray(data) &&
+            'results' in data && 'count' in data && Array.isArray(data.results)) {
+            return data.results;
+        }
+
+        return data;
     } catch (error: unknown) {
         // Suppress noisy logs for expected auth redirection flows
         const isAuthError =
