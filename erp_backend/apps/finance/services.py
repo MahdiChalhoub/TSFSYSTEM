@@ -118,51 +118,6 @@ class LedgerService:
             parent=parent
         )
 
-    @staticmethod
-    def post_journal_entry(entry):
-        from apps.finance.models import JournalEntry
-        if entry.status == 'POSTED' and entry.posted_at: return
-        with transaction.atomic():
-            lines = entry.lines.select_related('account').all()
-            for line in lines:
-                net = line.debit - line.credit
-                if entry.scope == 'OFFICIAL' or entry.scope == 'INTERNAL':
-                    line.account.__class__.objects.filter(id=line.account_id).update(
-                        balance=F('balance') + net,
-                        balance_official=F('balance_official') + net if entry.scope == 'OFFICIAL' else F('balance_official')
-                    )
-                else:
-                    line.account.__class__.objects.filter(id=line.account_id).update(
-                        balance=F('balance') + net
-                    )
-
-            # Quantum Audit: Secure the cryptographic chain
-            # 1. Fetch the hash of the last POSTED entry in this organization
-            last_entry = JournalEntry.objects.filter(
-                organization=entry.organization,
-                status='POSTED'
-            ).exclude(id=entry.id).order_by('-posted_at', '-id').first()
-            
-            entry.previous_hash = last_entry.entry_hash if last_entry else "GENESIS"
-            
-            # 2. Transition status (required for hash calculation context)
-            entry.status = 'POSTED'
-            entry.posted_at = timezone.now()
-            
-            # 3. Calculate and seal the entry's unique SHA-256 signature
-            entry.entry_hash = entry.calculate_hash()
-            
-            # 4. Save with immutability bypass (since we are THE posting service)
-            entry.save(force_audit_bypass=True)
-
-            ForensicAuditService.log_mutation(
-                organization=entry.organization,
-                user=entry.posted_by,
-                model_name="JournalEntry",
-                object_id=entry.id,
-                change_type="POST",
-                payload={"reference": entry.reference, "hash": entry.entry_hash}
-            )
 
     @staticmethod
     def apply_coa_template(organization, template_key, reset=False):
@@ -243,7 +198,7 @@ class LedgerService:
 
     @staticmethod
     def migrate_coa(organization, mappings, description):
-        from apps.finance.models import ChartOfAccount, JournalEntry, JournalEntryLine, FiscalYear, FiscalPeriod
+        from apps.finance.models import ChartOfAccount
         from erp.services import ConfigurationService
 
         with transaction.atomic():
@@ -280,12 +235,12 @@ class LedgerService:
 
                 if abs(bal_internal_diff) > Decimal('0.0001'):
                     if bal_internal_diff > 0:
-                        internal_only_lines.append({"account_id": src_acc.id, "debit": 0, "credit": bal_internal_diff, "description": f"Internal Migration (Out)"})
-                        internal_only_lines.append({"account_id": tgt_acc.id, "debit": bal_internal_diff, "credit": 0, "description": f"Internal Migration (In)"})
+                        internal_only_lines.append({"account_id": src_acc.id, "debit": 0, "credit": bal_internal_diff, "description": "Internal Migration (Out)"})
+                        internal_only_lines.append({"account_id": tgt_acc.id, "debit": bal_internal_diff, "credit": 0, "description": "Internal Migration (In)"})
                     else:
                         abs_val = abs(bal_internal_diff)
-                        internal_only_lines.append({"account_id": src_acc.id, "debit": abs_val, "credit": 0, "description": f"Internal Migration (Out)"})
-                        internal_only_lines.append({"account_id": tgt_acc.id, "debit": 0, "credit": abs_val, "description": f"Internal Migration (In)"})
+                        internal_only_lines.append({"account_id": src_acc.id, "debit": abs_val, "credit": 0, "description": "Internal Migration (Out)"})
+                        internal_only_lines.append({"account_id": tgt_acc.id, "debit": 0, "credit": abs_val, "description": "Internal Migration (In)"})
                 
                 src_acc.is_active = False
                 src_acc.save()
@@ -438,7 +393,7 @@ class LedgerService:
         if entry.status == 'POSTED' and entry.posted_at: return 
         
         from django.db.models import Sum
-        from apps.finance.models import ChartOfAccount
+        from apps.finance.models import ChartOfAccount, JournalEntry
         
         with transaction.atomic():
             # Final integrity check: Double-Entry Proof
@@ -474,17 +429,33 @@ class LedgerService:
                     acc.balance_official += net
                 acc.save()
 
+            # ── Quantum Audit: Cryptographic Hash Chain ──────────────
+            # 1. Fetch the hash of the last POSTED entry in this organization
+            last_entry = JournalEntry.objects.filter(
+                organization=entry.organization,
+                status='POSTED'
+            ).exclude(id=entry.id).order_by('-posted_at', '-id').first()
+            
+            entry.previous_hash = last_entry.entry_hash if last_entry else "GENESIS"
+
+            # 2. Transition status
             entry.status = 'POSTED'
             entry.posted_at = timezone.now()
             entry.posted_by = user
-            entry.save()
+
+            # 3. Calculate and seal the entry's unique SHA-256 signature
+            entry.entry_hash = entry.calculate_hash()
+            
+            # 4. Save with immutability bypass (we are THE posting service)
+            entry.save(force_audit_bypass=True)
 
             ForensicAuditService.log_mutation(
                 organization=entry.organization,
                 user=user,
                 model_name="JournalEntry",
                 object_id=entry.id,
-                change_type="POST"
+                change_type="POST",
+                payload={"reference": entry.reference, "hash": entry.entry_hash}
             )
 
     @staticmethod
@@ -575,7 +546,7 @@ class LedgerService:
                 reference=reversal_ref,
                 fiscal_year=fp.fiscal_year,
                 fiscal_period=fp,
-                status='POSTED',
+                status='DRAFT',  # Create as DRAFT; post_journal_entry will transition to POSTED
                 scope=original.scope,
                 site=original.site,
                 created_by=user
@@ -593,7 +564,7 @@ class LedgerService:
             
             LedgerService.post_journal_entry(reversal, user=user)
             original.is_locked = True
-            original.save()
+            original.save(force_audit_bypass=True)
 
             ForensicAuditService.log_mutation(
                 organization=organization,
@@ -645,14 +616,36 @@ class LedgerService:
     def recalculate_balances(organization):
         from apps.finance.models import ChartOfAccount, JournalEntry
         with transaction.atomic():
-            ChartOfAccount.objects.filter(organization=organization).update(balance=Decimal('0'), balance_official=Decimal('0'))
-            entries = JournalEntry.objects.filter(organization=organization, status='POSTED').order_by('posted_at')
+            # 1. Zero out all account balances
+            ChartOfAccount.objects.filter(organization=organization).update(
+                balance=Decimal('0'), balance_official=Decimal('0')
+            )
+            
+            # 2. Fetch all posted entries in chronological order
+            entries = JournalEntry.objects.filter(
+                organization=organization, status='POSTED'
+            ).order_by('posted_at')
+            
+            # 3. Reset each entry to DRAFT so post_journal_entry can reprocess it
             for entry in entries:
-                old_posted_at = entry.posted_at
+                original_posted_at = entry.posted_at
+                original_posted_by = entry.posted_by
+                
+                # Temporarily reset to allow re-posting
+                entry.status = 'DRAFT'
                 entry.posted_at = None
-                LedgerService.post_journal_entry(entry)
-                entry.posted_at = old_posted_at
-                entry.save()
+                entry.entry_hash = None
+                entry.previous_hash = None
+                entry.save(force_audit_bypass=True)
+                
+                # Re-post (this recomputes balances + hash chain)
+                LedgerService.post_journal_entry(entry, user=original_posted_by)
+                
+                # Restore original timestamp for audit accuracy
+                entry.refresh_from_db()
+                entry.posted_at = original_posted_at
+                entry.save(force_audit_bypass=True)
+                
         return True
 
     @staticmethod
@@ -699,7 +692,6 @@ class SequenceService:
     @staticmethod
     def get_next_number(organization, type):
         from apps.finance.models import TransactionSequence
-        from django.db.models import F
         with transaction.atomic():
             # Determine intelligent prefix based on key
             prefix = type[:3].upper() + '-'
@@ -912,7 +904,7 @@ class LoanService:
 
     @staticmethod
     def process_repayment(organization, loan_id, amount, account_id, reference=None, user=None, scope='OFFICIAL'):
-        from apps.finance.models import Loan, LoanInstallment, FinancialEvent
+        from apps.finance.models import Loan, LoanInstallment
         with transaction.atomic():
             # Professional Audit: Lock the loan record to prevent concurrent repayment race conditions
             loan = Loan.objects.select_for_update().get(id=loan_id, organization=organization)
@@ -1183,7 +1175,6 @@ class AuditVerificationService:
         Quantum Audit: Mathematically verifies the entire ledger chain for an organization.
         """
         from apps.finance.models import JournalEntry
-        from apps.finance.cryptography import LedgerCryptography
         
         entries = JournalEntry.objects.filter(
             organization=organization,
@@ -1442,7 +1433,7 @@ class AssetService:
 class VoucherService:
     @staticmethod
     def create_voucher(organization, data, user=None, scope='OFFICIAL'):
-        from apps.finance.models import Voucher, FinancialAccount
+        from apps.finance.models import Voucher
         with transaction.atomic():
             voucher_type = data['voucher_type']
             amount = Decimal(str(data['amount']))
@@ -1544,8 +1535,8 @@ class ProfitDistributionService:
         allocations = { "RESERVE": 10, "REINVESTMENT": 20, "DISTRIBUTABLE": 70 }
         percentages must sum to 100.
         """
-        from apps.finance.models import FiscalYear, ChartOfAccount
-        from django.db.models import Sum, F
+        from apps.finance.models import FiscalYear
+        from django.db.models import Sum
 
         fy = FiscalYear.objects.get(id=fiscal_year_id, organization=organization)
         if not fy.is_closed:

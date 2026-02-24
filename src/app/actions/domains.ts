@@ -88,3 +88,27 @@ export async function setPrimaryDomain(id: string) {
         return { status: 'error', message: err.message || 'Failed to set primary' }
     }
 }
+
+/**
+ * Trigger a CNAME check for a verified domain.
+ */
+export async function checkDomainCname(id: string) {
+    try {
+        const data = await erpFetch(`domains/${id}/check-cname/`, { method: 'POST' })
+        return data
+    } catch (err: any) {
+        return { status: 'error', message: err.message || 'CNAME check failed' }
+    }
+}
+
+/**
+ * Trigger SSL provisioning for a verified domain.
+ */
+export async function requestDomainSsl(id: string) {
+    try {
+        const data = await erpFetch(`domains/${id}/provision-ssl/`, { method: 'POST' })
+        return data
+    } catch (err: any) {
+        return { status: 'error', message: err.message || 'SSL provisioning failed' }
+    }
+}

@@ -8,7 +8,6 @@ from django.db import transaction
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from decimal import Decimal
-from datetime import timedelta
 import logging
 
 logger = logging.getLogger(__name__)
@@ -81,7 +80,8 @@ class ValuationService:
     @staticmethod
     def record_stock_out(
         organization, product, warehouse, quantity,
-        reference=None, valuation_method='WEIGHTED_AVG'
+        reference=None, valuation_method='WEIGHTED_AVG',
+        allow_negative=False
     ):
         """
         Record a stock-out movement.
@@ -89,6 +89,8 @@ class ValuationService:
         - FIFO: use oldest batch cost
         - LIFO: use newest batch cost
         - WEIGHTED_AVG: use current average cost
+        
+        If allow_negative is True, the insufficient stock check is skipped.
         """
         from apps.inventory.advanced_models import StockValuationEntry
 
@@ -101,7 +103,7 @@ class ValuationService:
                 warehouse=warehouse,
             ).order_by('-movement_date', '-created_at').first()
 
-            if not last_entry or last_entry.running_quantity < quantity:
+            if not allow_negative and (not last_entry or last_entry.running_quantity < quantity):
                 raise ValidationError(
                     f"Insufficient stock: have {last_entry.running_quantity if last_entry else 0}, need {quantity}"
                 )
@@ -219,7 +221,6 @@ class ValuationService:
         Returns total quantity, total value, and average cost per product.
         """
         from apps.inventory.advanced_models import StockValuationEntry
-        from django.db.models import Max, Subquery, OuterRef
 
         # Get latest valuation entry per product/warehouse
         filters = {'organization': organization}

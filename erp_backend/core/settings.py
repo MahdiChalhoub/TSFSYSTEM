@@ -302,6 +302,19 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'erp.tasks.send_daily_digest',
         'schedule': crontab(minute=0, hour=8),       # Daily 08:00
     },
+    # ── Custom Domain Tasks ──────────────────────────────────────────
+    'verify-pending-domains': {
+        'task': 'erp.tasks_domains.verify_pending_domains',
+        'schedule': crontab(minute='*/5'),            # Every 5 minutes
+    },
+    'monitor-domain-health': {
+        'task': 'erp.tasks_domains.monitor_domain_health',
+        'schedule': crontab(minute=0),                # Every hour
+    },
+    'warm-domain-cache': {
+        'task': 'erp.tasks_domains.warm_domain_cache',
+        'schedule': crontab(minute=0, hour='*/4'),    # Every 4 hours
+    },
 }
 
 # ── Email Configuration (for notifications) ──────────────────

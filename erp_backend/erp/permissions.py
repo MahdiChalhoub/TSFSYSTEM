@@ -25,7 +25,7 @@ class IsSuperAdmin(permissions.BasePermission):
     Used for Connector configuration and system-level operations.
     """
     def has_permission(self, request, view):
-        return request.user.is_superuser or request.user.is_staff
+        return request.user.is_superuser
 
 
 class HasPermission(permissions.BasePermission):
@@ -60,7 +60,14 @@ class HasPermission(permissions.BasePermission):
     @staticmethod
     def user_has_permission(user, permission_code):
         """Check if a user has a specific permission."""
-        if not user or not user.role:
+        if not user:
+            return False
+        
+        # Superusers bypass all permission checks
+        if user.is_superuser:
+            return True
+        
+        if not user.role:
             return False
         
         # Check if the role has this permission
