@@ -5,13 +5,13 @@ import {
     getPublicCategories,
     getPublicBrands
 } from "./actions"
-import { notFound } from "next/navigation"
 import { ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { ThemedHomePage } from "./ThemedHomePage"
 import { LandingHomePage } from "./LandingHomePage"
 import { BlogHomePage } from "./BlogHomePage"
+import { OrgNotFoundPage } from "./OrgNotFoundPage"
 export default async function TenantWelcomePage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params
     const org = await getOrganizationBySlug(slug)
@@ -20,7 +20,7 @@ export default async function TenantWelcomePage({ params }: { params: Promise<{ 
     const categories = await getPublicCategories(slug)
     const brands = await getPublicBrands(slug)
     if (!org) {
-        return notFound()
+        return <OrgNotFoundPage slug={slug} />
     }
     if ((org as any).error === "ACCOUNT_SUSPENDED") {
         return (
