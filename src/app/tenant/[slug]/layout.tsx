@@ -1,7 +1,8 @@
 import { PortalProvider } from '@/context/PortalContext'
 import { ThemeLayout } from './ThemeLayout'
 import { Metadata } from 'next'
-import { getStorefrontConfig } from './actions'
+import { getStorefrontConfig, getOrganizationBySlug } from './actions'
+import { OrgNotFoundPage } from './OrgNotFoundPage'
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
     const { slug } = await params
@@ -28,6 +29,13 @@ export default async function TenantLayout({
     params: Promise<{ slug: string }>
 }) {
     const { slug } = await params
+
+    // Validate that this organization actually exists before rendering any child route
+    const org = await getOrganizationBySlug(slug)
+    if (!org) {
+        return <OrgNotFoundPage slug={slug} />
+    }
+
     const config = await getStorefrontConfig(slug)
 
     return (
@@ -38,3 +46,4 @@ export default async function TenantLayout({
         </PortalProvider>
     )
 }
+
