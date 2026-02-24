@@ -5,7 +5,8 @@ import { erpFetch } from "@/lib/erp-api"
 
 export async function getOrganizations() {
     try {
-        return await erpFetch('organizations/')
+        const result = await erpFetch('organizations/')
+        return Array.isArray(result) ? result : (result?.results || [])
     } catch (error: unknown) {
         if ((error instanceof Error ? error.message : String(error)) && (
             (error instanceof Error ? error.message : String(error)).includes('Authentication credentials') ||

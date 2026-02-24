@@ -11,7 +11,8 @@ export function TenantSwitcher({ organizations, forcedSlug, user }: { organizati
 
     // Helper to get current subdomain/slug
     const currentSlug = forcedSlug || (typeof window !== 'undefined' ? window.location.hostname.split('.')[0] : '');
-    const activeOrg = organizations.find(o => o.slug === currentSlug);
+    const orgList = Array.isArray(organizations) ? organizations : [];
+    const activeOrg = orgList.find(o => o.slug === currentSlug);
     const branding = useDynamicBranding();
 
     // Only show Master Panel to authorized SaaS Staff (Superusers)
@@ -30,7 +31,7 @@ export function TenantSwitcher({ organizations, forcedSlug, user }: { organizati
     };
 
     // Locked mode: Single Org and No Master Access
-    const isLocked = organizations.length <= 1 && !showMasterPanel;
+    const isLocked = orgList.length <= 1 && !showMasterPanel;
 
     return (
         <div className="relative">
@@ -76,10 +77,10 @@ export function TenantSwitcher({ organizations, forcedSlug, user }: { organizati
                             )}
                         </div>
                         <div className="p-2 max-h-80 overflow-y-auto">
-                            {organizations.filter(o => o.slug !== 'saas').length === 0 && (
+                            {orgList.filter(o => o.slug !== 'saas').length === 0 && (
                                 <div className="p-6 text-center text-gray-400 text-sm italic font-medium">No organizations found</div>
                             )}
-                            {organizations.filter(o => o.slug !== 'saas').map(org => (
+                            {orgList.filter(o => o.slug !== 'saas').map(org => (
                                 <button
                                     key={org.id}
                                     onClick={() => handleSwitch(org.slug)}

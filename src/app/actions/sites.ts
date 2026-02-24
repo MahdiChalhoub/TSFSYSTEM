@@ -14,10 +14,11 @@ export type SiteState = {
 export async function getSites() {
     try {
         const result = await erpFetch('sites/')
-        return result.map((site: Record<string, any>) => ({
+        const sites = Array.isArray(result) ? result : (result?.results || [])
+        return sites.map((site: Record<string, any>) => ({
             ...site,
             _count: {
-                warehouses: 0, // Django doesn't provide this by default, but we can add it later if needed
+                warehouses: 0,
                 users: 0
             }
         }))

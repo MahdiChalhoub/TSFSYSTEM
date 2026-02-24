@@ -16,7 +16,7 @@ All business-domain ViewSets live in their canonical module locations:
 Backward-compatible re-exports are provided at the bottom of this file.
 """
 from django.db import transaction
-from django.db.models import Q, Sum, F
+from django.db.models import Q, Sum, F, Avg
 from rest_framework import viewsets, status, serializers, permissions
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, action, permission_classes
@@ -902,6 +902,81 @@ class EntityGraphViewSet(viewsets.ViewSet):
 
 class DashboardViewSet(viewsets.ViewSet):
     """Dashboard Aggregation ViewSet"""
+
+    @action(detail=False, methods=['get'])
+    def realtime_kpis(self, request):
+        """High-level business performance metrics (WOW factor API)."""
+        organization_id = get_current_tenant_id()
+        if not organization_id:
+            return Response({"error": "Tenant context required"}, status=403)
+            
+        org = Organization.objects.get(id=organization_id)
+        now = timezone.now()
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        yesterday_start = today_start - timezone.timedelta(days=1)
+        month_start = today_start.replace(day=1)
+
+        # 1. Sales Velocity (Quantity in last 24h)
+        today_qty = OrderLine.objects.filter(
+            order__organization=org, order__created_at__gte=today_start, order__status='COMPLETED'
+        ).aggregate(qty=Sum('quantity'))['qty'] or 0
+        
+        yesterday_qty = OrderLine.objects.filter(
+            order__organization=org, order__created_at__gte=yesterday_start, 
+            order__created_at__lt=today_start, order__status='COMPLETED'
+        ).aggregate(qty=Sum('quantity'))['qty'] or 0
+        
+        velocity_change = 0
+        if yesterday_qty > 0:
+            velocity_change = round(((today_qty - yesterday_qty) / yesterday_qty) * 100, 1)
+
+        # 2. Inventory Health (% of active products with positive stock vs low stock)
+        total_products = Product.objects.filter(organization=org, is_active=True).count()
+        low_stock_threshold = 10 # Hardcoded for now, should be per-site/product
+        low_stock_count = Product.objects.filter(
+            organization=org, is_active=True, inventory__quantity__lt=low_stock_threshold
+        ).distinct().count()
+        
+        out_of_stock_count = Product.objects.filter(
+            organization=org, is_active=True, inventory__quantity__lte=0
+        ).distinct().count()
+
+        # 3. Customer Engagement
+        new_customers_month = Contact.objects.filter(
+            organization=org, type='CUSTOMER', created_at__gte=month_start
+        ).count()
+
+        # 4. Financial Health (Live AR/AP)
+        ar_total = FinancialAccount.objects.filter(
+            organization=org, type='RECEIVABLE'
+        ).aggregate(s=Sum('balance'))['s'] or 0
+        
+        ap_total = FinancialAccount.objects.filter(
+            organization=org, type='PAYABLE'
+        ).aggregate(s=Sum('balance'))['s'] or 0
+
+        return Response({
+            "salesVelocity": {
+                "today": float(today_qty),
+                "yesterday": float(yesterday_qty),
+                "trend": velocity_change
+            },
+            "inventoryHealth": {
+                "lowStockCount": low_stock_count,
+                "outOfStockCount": out_of_stock_count,
+                "healthScore": round((1 - (low_stock_count / total_products)) * 100, 1) if total_products > 0 else 0
+            },
+            "engagement": {
+                "newCustomersThisMonth": new_customers_month,
+                "customerLTV": Contact.objects.filter(organization=org, type='CUSTOMER').aggregate(avg=Avg('lifetime_value'))['avg'] or 0
+            },
+            "financialRunway": {
+                "ar": float(ar_total),
+                "ap": float(ap_total),
+                "netPosition": float(ar_total - ap_total)
+            },
+            "lastUpdated": now.isoformat()
+        })
     
     @action(detail=False, methods=['get'])
     def admin_stats(self, request):
@@ -1075,13 +1150,17 @@ class DashboardViewSet(viewsets.ViewSet):
                 "isMapped": False
             }
         
+        # 4. AR / AP (Added in Realtime KPIs)
+        ar_total = FinancialAccount.objects.filter(organization=organization, type='RECEIVABLE').aggregate(s=Sum('balance'))['s'] if organization else 0
+        ap_total = FinancialAccount.objects.filter(organization=organization, type='PAYABLE').aggregate(s=Sum('balance'))['s'] if organization else 0
+
         return Response({
             "totalCash": float(total_cash),
             "monthlyIncome": float(monthly_income),
             "monthlyExpense": float(monthly_expense),
             "netProfit": float(monthly_income - monthly_expense),
-            "totalAR": 0,
-            "totalAP": 0,
+            "totalAR": float(ar_total or 0),
+            "totalAP": float(ap_total or 0),
             "trends": trends,
             "recentEntries": [],
             "inventoryStatus": inv_status

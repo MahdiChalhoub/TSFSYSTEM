@@ -30,7 +30,8 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: { si
                     {currentSlug !== 'saas' && (
                         <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gray-100/50 rounded-xl border border-gray-200/50">
                             {(() => {
-                                const activeOrg = organizations.find((o: Record<string, any>) => o.slug === currentSlug);
+                                const orgList = Array.isArray(organizations) ? organizations : [];
+                                const activeOrg = orgList.find((o: Record<string, any>) => o.slug === currentSlug);
                                 return (
                                     <>
                                         {activeOrg?.currency_code && (

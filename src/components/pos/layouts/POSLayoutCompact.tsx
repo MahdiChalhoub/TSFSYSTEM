@@ -8,7 +8,7 @@ import { ReceiptModal } from '@/components/pos/ReceiptModal';
 import {
     Search, ShoppingCart, Plus, X, Minus, Trash2, User, ChevronDown,
     Layout, Maximize, Minimize, FileText, Settings, Wallet, Save,
-    Book, File, ArrowLeft, CreditCard, Banknote, Zap
+    Book, File, ArrowLeft, CreditCard, Banknote, Zap, Calculator
 } from 'lucide-react';
 import clsx from 'clsx';
 import { toast } from 'sonner';

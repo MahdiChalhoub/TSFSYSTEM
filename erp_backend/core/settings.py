@@ -60,6 +60,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
+    'django_filters',
+    'drf_spectacular',
     
     # Local
     'erp',
@@ -88,13 +90,25 @@ MIDDLEWARE = [
     'erp.middleware.TenantMiddleware',
 ]
 
-# CORS — restrict to known origins
-CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL', 'False').lower() in ('true', '1')
+# CORS — HARD FALSE, never allow all origins regardless of env
+CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'https://tsf.ci,https://pos.tsf.ci,https://saas.tsf.ci').split(',')
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r'^https://.*\.tsf\.ci$',  # Any subdomain of tsf.ci
 ]
 CORS_ALLOW_CREDENTIALS = True
+
+# ─── Production Security Settings ──────────────────────────────────────────
+if not DEBUG:
+    SECURE_HSTS_SECONDS = 31536000           # 1 year HSTS
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    SECURE_SSL_REDIRECT = False              # Nginx handles SSL, not Django
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -104,6 +118,15 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    # Pagination — prevent unbounded queries
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 100,
+    # Search, Filter, Ordering
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
     # Rate Limiting (Throttling)
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.AnonRateThrottle',
@@ -115,7 +138,25 @@ REST_FRAMEWORK = {
         'login': '5/minute',       # Login attempts (custom)
         'register': '3/minute',    # Registration attempts
         'tenant_resolve': '30/minute',  # Tenant resolution
-    }
+    },
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'EXCEPTION_HANDLER': 'erp.exception_handler.tsf_exception_handler',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'TSF Enterprise Suite API',
+    'DESCRIPTION': 'Multi-tenant SaaS ERP Platform — Finance, Inventory, POS, CRM, HR',
+    'VERSION': '2.9.2',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'CONTACT': {'name': 'TSF Engineering', 'url': 'https://tsf.ci'},
+    'SCHEMA_PATH_PREFIX': '/api/',
+    'COMPONENT_SPLIT_REQUEST': True,
+    # Gracefully handle serializer introspection errors
+    'ENUM_NAME_OVERRIDES': {},
+    'PREPROCESSING_HOOKS': [],
+    'POSTPROCESSING_HOOKS': [
+        'drf_spectacular.hooks.postprocess_schema_enums',
+    ],
 }
 
 # Token expiration (hours) — tokens older than this are auto-rejected
@@ -158,13 +199,54 @@ DATABASES = {
         'PASSWORD': os.getenv('DB_PASSWORD'),
         'HOST': os.getenv('DB_HOST', 'db'),
         'PORT': os.getenv('DB_PORT', '5432'),
+        'CONN_MAX_AGE': 600,           # Keep connections alive 10 min
+        'CONN_HEALTH_CHECKS': True,    # Verify connection before reuse
+        'OPTIONS': {
+            'connect_timeout': 10,
+        },
+    }
+}
+
+# ─── Redis Cache Layer ─────────────────────────────────────────────────
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': os.getenv('CELERY_BROKER_URL', 'redis://redis:6379/0'),
+        'TIMEOUT': 300,  # 5 min default TTL
+        'KEY_PREFIX': 'tsf',
+        'OPTIONS': {
+            'db': 2,  # Separate DB from Celery (0) and results (1)
+        },
     }
 }
 
 # SaaS Integration Settings
 X_TENANT_HEADER = 'HTTP_X_TENANT_ID'
 
-# Logging — capture full tracebacks even with DEBUG=False
+# Logging — structured JSON in production, human-readable in dev
+import json as _json
+import logging as _logging
+
+
+class _JSONFormatter(_logging.Formatter):
+    """Production-grade structured JSON log formatter."""
+    def format(self, record):
+        log_data = {
+            'ts': self.formatTime(record, '%Y-%m-%dT%H:%M:%S'),
+            'level': record.levelname,
+            'logger': record.name,
+            'msg': record.getMessage(),
+            'module': record.module,
+            'func': record.funcName,
+            'line': record.lineno,
+        }
+        if hasattr(record, 'tenant_id'):
+            log_data['tenant_id'] = record.tenant_id
+        if record.exc_info:
+            log_data['exception'] = self.formatException(record.exc_info)
+        return _json.dumps(log_data)
+
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -173,11 +255,14 @@ LOGGING = {
             'format': '[{asctime}] {levelname} {name}: {message}',
             'style': '{',
         },
+        'json': {
+            '()': _JSONFormatter,
+        },
     },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
+            'formatter': 'json' if not DEBUG else 'verbose',
         },
     },
     'loggers': {
@@ -353,3 +438,17 @@ if 'runserver' in sys.argv or 'test' in sys.argv or 'migrate' in sys.argv or os.
             def __contains__(self, item): return True
             def __getitem__(self, item): return None
         MIGRATION_MODULES = DisableMigrations()
+
+# ── Test Mode Overrides ───────────────────────────────────────────
+if 'test' in sys.argv:
+    # Use in-memory cache (no Redis dependency in CI/tests)
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        }
+    }
+    # Faster password hashing for tests
+    PASSWORD_HASHERS = [
+        'django.contrib.auth.hashers.MD5PasswordHasher',
+    ]
+

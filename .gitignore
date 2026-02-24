@@ -85,3 +85,17 @@ erp_backend/check_tables.py
 erp_backend/clear_migrations.py
 erp_backend/list_applied_migrations.py
 erp_backend/list_all_migrations.py
+
+# Debug output files (root junk)
+*_output.txt
+*_logs.txt
+*_logs_long.txt
+*_schema.txt
+*_cols.txt
+*_err*.txt
+*_check*.txt
+*.diff
+django_*.txt
+server_*.txt
+frontend_*.log
+deploy.log

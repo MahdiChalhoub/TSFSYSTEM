@@ -8,7 +8,7 @@ import { ManagerOverride } from '@/components/pos/ManagerOverride';
 import { ReceiptModal } from '@/components/pos/ReceiptModal';
 import {
     Search, ShoppingCart, Plus, X, Minus, Trash2, User, ChevronDown, Layout,
-    Maximize, Minimize, FileText, Settings, Wallet, Save, Book, File, ArrowLeft, RefreshCw, Wifi, WifiOff, MapPin
+    Maximize, Minimize, FileText, Settings, Wallet, Save, Book, File, ArrowLeft, RefreshCw, Wifi, WifiOff, MapPin, Calculator
 } from 'lucide-react';
 import clsx from 'clsx';
 import { toast } from 'sonner';
