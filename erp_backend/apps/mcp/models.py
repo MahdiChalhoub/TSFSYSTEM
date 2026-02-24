@@ -12,8 +12,12 @@ from django.utils import timezone
 from datetime import timedelta
 import json
 
+from erp.models import TenantManager
+
 
 class MCPProvider(models.Model):
+    objects = TenantManager()
+    original_objects = models.Manager()
     """
     AI Provider configuration (OpenAI, Anthropic, Google, Azure, etc.)
     Each organization can configure multiple providers.
@@ -66,6 +70,8 @@ class MCPProvider(models.Model):
 
 
 class MCPTool(models.Model):
+    objects = TenantManager()
+    original_objects = models.Manager()
     """
     Tools exposed to AI via MCP protocol.
     Maps AI tool calls to internal API endpoints.
@@ -133,6 +139,8 @@ class MCPTool(models.Model):
 
 
 class MCPConnection(models.Model):
+    objects = TenantManager()
+    original_objects = models.Manager()
     """
     Active MCP server connection per organization.
     Manages the MCP server instance state.
@@ -183,6 +191,8 @@ class MCPConnection(models.Model):
 
 
 class MCPConversation(models.Model):
+    objects = TenantManager()
+    original_objects = models.Manager()
     """
     AI conversation session.
     Groups messages into logical conversations.
@@ -277,6 +287,8 @@ class MCPMessage(models.Model):
 
 
 class MCPUsageLog(models.Model):
+    objects = TenantManager()
+    original_objects = models.Manager()
     """
     Detailed usage tracking for billing and monitoring.
     """
@@ -336,6 +348,8 @@ class MCPUsageLog(models.Model):
 
 
 class MCPRateLimit(models.Model):
+    objects = TenantManager()
+    original_objects = models.Manager()
     """
     Rate limiting configuration per organization/user.
     """

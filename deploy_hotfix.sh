@@ -8,9 +8,21 @@ echo "🚀 Preparing deployment for version: $AGENT_VERSION"
 # Update version in branding
 sed -i "s/version: \".*\"/version: \"$AGENT_VERSION\"/" src/lib/branding.ts
 
-echo "📡 Syncing Codebase (Full Project Master)..."
-# Sync the entire project root to remote /root/TSFSYSTEM/
-# This includes .dockerignore, package.json, src/, erp_backend/, etc.
+echo "📥 Step 1: Pulling remote changes to local (preserves remote-only edits)..."
+rsync -avz -e "ssh -i ~/.ssh/id_deploy" \
+    --exclude 'node_modules' \
+    --exclude '.next' \
+    --exclude '.git' \
+    --exclude 'venv' \
+    --exclude '__pycache__' \
+    --exclude '.env' \
+    --exclude 'db_data' \
+    --exclude 'postgres_data' \
+    --exclude 'deploy_hotfix.sh' \
+    --update \
+    root@91.99.186.183:/root/TSFSYSTEM/ /root/.gemini/antigravity/scratch/TSFSYSTEM/
+
+echo "📤 Step 2: Pushing local changes to remote..."
 rsync -avz -e "ssh -i ~/.ssh/id_deploy" \
     --exclude 'node_modules' \
     --exclude '.next' \

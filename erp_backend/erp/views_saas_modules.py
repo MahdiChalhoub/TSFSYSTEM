@@ -1145,7 +1145,7 @@ class OrgModuleViewSet(viewsets.ViewSet):
                 if plan_features:
                     om.active_features = plan_features
                     om.save(update_fields=['active_features'])
-            except: continue
+            except Exception: continue
 
         for mod_code in (old_plan_modules - new_plan_modules):
             OrganizationModule.objects.filter(organization=org, module_name=mod_code, is_enabled=True).update(is_enabled=False)

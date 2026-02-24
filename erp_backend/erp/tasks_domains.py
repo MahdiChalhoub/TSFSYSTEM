@@ -12,6 +12,7 @@ Tasks:
   5. warm_domain_cache        — Pre-warm Redis cache for fast resolution
 """
 import logging
+import os
 import subprocess
 import socket
 from datetime import timedelta
@@ -47,7 +48,7 @@ RATE_LIMIT_MAX = 30     # Max 30 requests per minute per IP
 
 # Our server's expected CNAME target or IP addresses
 EXPECTED_CNAME_TARGETS = ['saas.tsf.ci', 'tsf.ci']
-EXPECTED_IP_ADDRESSES = ['91.99.186.183']
+EXPECTED_IP_ADDRESSES = os.environ.get('EXPECTED_IP_ADDRESSES', '91.99.186.183').split(',')
 
 
 # ─── REDIS CACHE HELPERS ──────────────────────────────────────────────────

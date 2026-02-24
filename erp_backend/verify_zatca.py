@@ -350,7 +350,7 @@ def main():
         from apps.finance.invoice_models import Invoice, InvoiceLine
         InvoiceLine.objects.filter(invoice__invoice_number='INV-ZATCA-001').delete()
         Invoice.objects.filter(invoice_number='INV-ZATCA-001').delete()
-    except:
+    except Exception:
         pass
 
 
