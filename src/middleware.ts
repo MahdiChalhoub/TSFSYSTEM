@@ -1,6 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
 import { MODULE_ROUTES } from "@/lib/module-routes";
 
+// ─── Custom Domain Resolution Cache ─────────────────────────────────────
+// In-memory cache to avoid calling the backend API on every request.
+// TTL: 60 seconds. Cache key: hostname. Cache miss: fetch from backend.
+const domainCache = new Map<string, { slug: string; domain_type: string; expires: number } | null>();
+const DOMAIN_CACHE_TTL = 60_000; // 60 seconds
+
+async function resolveCustomDomainCached(hostname: string): Promise<{ slug: string; domain_type: string } | null> {
+    const now = Date.now();
+    const cached = domainCache.get(hostname);
+    if (cached !== undefined && cached !== null && cached.expires > now) {
+        return cached;
+    }
+    // Cache miss for null (not found) — also cache negatives to prevent hammering
+    if (cached === null && domainCache.has(hostname)) {
+        // Check if the null entry has expired by checking a separate TTL tracker
+        // For simplicity, we just re-query after cache is cleared below
+    }
+
+    try {
+        const djangoUrl = process.env.DJANGO_URL || 'http://backend:8000';
+        const res = await fetch(`${djangoUrl}/api/domains/resolve/?domain=${encodeURIComponent(hostname)}`, {
+            signal: AbortSignal.timeout(3000), // 3s timeout — don't block requests
+        });
+        if (res.ok) {
+            const data = await res.json();
+            const entry = { slug: data.slug, domain_type: data.domain_type, expires: now + DOMAIN_CACHE_TTL };
+            domainCache.set(hostname, entry);
+            return entry;
+        }
+        // Not found — cache negative result for 60s too
+        domainCache.set(hostname, null);
+        setTimeout(() => domainCache.delete(hostname), DOMAIN_CACHE_TTL);
+        return null;
+    } catch {
+        // Network error — don't cache, let it retry
+        return null;
+    }
+}
+
 export default async function middleware(req: NextRequest) {
     const url = req.nextUrl;
 
@@ -142,6 +181,45 @@ export default async function middleware(req: NextRequest) {
         return NextResponse.redirect(loginUrl);
     }
 
+    // ─── CUSTOM DOMAIN DETECTION ─────────────────────────────────────────
+    // If the hostname doesn't match any known pattern (not tsf.ci, not localhost,
+    // not IP, not Vercel), it might be a custom domain (e.g., shop.acme.com).
+    // Resolve it via the backend API.
+    const isPlatformHostname = isOnRootOrSaaS || hostname.endsWith(`.${rootDomain}`);
+    if (!isPlatformHostname) {
+        const resolved = await resolveCustomDomainCached(hostname);
+        if (resolved) {
+            const { slug, domain_type } = resolved;
+
+            if (domain_type === 'SHOP') {
+                // SHOP domain → serve storefront
+                // shop.acme.com/              → /tenant/acme-slug
+                // shop.acme.com/login         → /tenant/acme-slug/login (customer login)
+                // shop.acme.com/product/123   → /tenant/acme-slug/product/123
+                const storefrontPath = url.pathname === '/' || url.pathname === '/store' || url.pathname === '/home'
+                    ? `/tenant/${slug}`
+                    : `/tenant/${slug}${url.pathname}`;
+                return NextResponse.rewrite(
+                    new URL(`${storefrontPath}${searchParams.length > 0 ? '?' + searchParams : ''}`, req.url)
+                );
+            }
+
+            if (domain_type === 'PLATFORM') {
+                // PLATFORM domain → serve admin panel
+                // platform.acme.com/login      → admin login (pass through)
+                // platform.acme.com/dashboard   → admin dashboard (pass through)
+                // platform.acme.com/finance     → finance module (pass through)
+                // Set the tenant context via header so the admin layout picks it up
+                const response = NextResponse.next();
+                response.headers.set('X-Custom-Domain-Slug', slug);
+                return response;
+            }
+        }
+        // Custom domain not found → show a branded "domain not configured" page
+        // For now, redirect to the root platform
+        return NextResponse.redirect(new URL(`https://${rootDomain}`, req.url));
+    }
+
     // ROOT / SAAS PLATFORM LOGIC
     if (isOnRootOrSaaS) {
 
@@ -174,7 +252,6 @@ export default async function middleware(req: NextRequest) {
         }
 
         // Special case: /saas is the Master Panel on root/IP
-        // No longer needs rewrite to /admin since /saas is top-level
         if (url.pathname.startsWith('/saas') && !url.pathname.startsWith('/saas/login')) {
             return NextResponse.next();
         }
@@ -219,37 +296,22 @@ export default async function middleware(req: NextRequest) {
         return NextResponse.rewrite(new URL(`/landing${path === "/" ? "" : path}`, req.url));
     }
 
-    // TENANT SUBDOMAIN (e.g. pos.tsf.ci)
-    // Robust detection: use the same part-splitting logic as in erp-api.ts
+    // ─── TENANT SUBDOMAIN (e.g. tsf-global.tsf.ci) ──────────────────────
     const parts = hostname.split('.');
     let currentHost = "";
 
     if (parts.length > 2) {
-        // e.g. org.tsf.ci or org.tsf.localhost
         currentHost = parts[0];
     } else {
-        // Fallback or development (localhost)
         currentHost = hostname.replace(`.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost'}`, "");
     }
 
-    // Check for reserved subdomains just in case
+    // Check for reserved subdomains
     if (currentHost === 'app' || currentHost === 'www') {
         return NextResponse.rewrite(new URL(`/landing${path === "/" ? "" : path}`, req.url));
     }
 
-    // ─── TENANT SUBDOMAIN STOREFRONT REWRITES ─────────────────────────────
-    // On tenant subdomains (e.g. tsf-global.tsf.ci), rewrite storefront
-    // routes so users see clean URLs:
-    //   tsf-global.tsf.ci/register  →  internally /tenant/tsf-global/register
-    //   tsf-global.tsf.ci/account   →  internally /tenant/tsf-global/account
-    //
-    // ERP admin routes (sales, finance, inventory, etc.) still pass through
-    // directly since those belong to the authenticated admin panel.
-
     // ─── SECURITY: SaaS-Only Routes ─────────────────────────────────────
-    // These routes are EXCLUSIVELY for the SaaS master panel (saas.tsf.ci).
-    // They must NEVER be accessible from tenant subdomains, even if the
-    // user is authenticated. These control global platform infrastructure.
     const isSaaSOnlyRoute =
         url.pathname.startsWith('/organizations') ||
         url.pathname.startsWith('/modules') ||
@@ -278,8 +340,8 @@ export default async function middleware(req: NextRequest) {
         return NextResponse.redirect(blockedUrl);
     }
 
-    // Tenant ERP/admin routes that pass through directly (NOT rewritten to storefront).
-    // /login and /register are now EMPLOYEE routes on tenant subdomains.
+    // Tenant ERP/admin routes that pass through directly.
+    // /login and /register are EMPLOYEE routes on tenant subdomains.
     // Customer/storefront login is at /shop/login.
     const isTenantAdminRoute =
         url.pathname.startsWith('/dashboard') ||
@@ -300,35 +362,18 @@ export default async function middleware(req: NextRequest) {
         url.pathname.startsWith('/users') ||
         url.pathname.startsWith('/supplier-portal');
 
-    // If it's already a /tenant/... path, let it through (prevent double rewrite)
     if (url.pathname.startsWith('/tenant')) {
         return NextResponse.next();
     }
 
-    // If it's a tenant-allowed ERP admin route, let it through
     if (isTenantAdminRoute) {
         return NextResponse.next();
     }
 
     // ─── STOREFRONT ROUTES ─────────────────────────────────────────────
-    // Everything else on the tenant subdomain is a storefront route.
-    // Rewrite it to /tenant/[slug]/... internally.
-    //
-    // Route mapping:
-    //   /                    →  /tenant/tsf-global           (storefront home)
-    //   /shop                →  /tenant/tsf-global           (storefront home alias)
-    //   /shop/login          →  /tenant/tsf-global/login     (customer login)
-    //   /shop/register       →  /tenant/tsf-global/register  (customer register)
-    //   /shop/account        →  /tenant/tsf-global/account   (customer account)
-    //   /product/123         →  /tenant/tsf-global/product/123
-    //   /categories          →  /tenant/tsf-global/categories
-    //   /cart                →  /tenant/tsf-global/cart
-    //   /account             →  /tenant/tsf-global/account
-    //
     // /shop/* prefix strips the /shop part before rewriting:
     let storefrontInternalPath = url.pathname;
     if (url.pathname.startsWith('/shop')) {
-        // Strip /shop prefix: /shop/login → /login, /shop → /
         storefrontInternalPath = url.pathname.replace(/^\/shop/, '') || '/';
     }
 
