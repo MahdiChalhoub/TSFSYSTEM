@@ -315,7 +315,8 @@ class InventoryService:
             from apps.inventory.valuation_service import ValuationService
             ValuationService.record_stock_out(
                 organization=organization, product=product, warehouse=warehouse,
-                quantity=qty_to_reduce, reference=reference
+                quantity=qty_to_reduce, reference=reference,
+                allow_negative=allow_negative
             )
 
             # Serial Tracking Integration
@@ -717,7 +718,7 @@ class InventoryService:
         from erp.services import ConfigurationService
         from apps.inventory.models import Product, Inventory, InventoryMovement
         from datetime import timedelta
-        from django.db.models import Sum, Q
+        from django.db.models import Sum
         from django.utils import timezone
         import math
 

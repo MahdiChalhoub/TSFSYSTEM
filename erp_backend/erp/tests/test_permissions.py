@@ -129,8 +129,16 @@ class TestIsSuperAdmin(PermissionTestBase):
         request.user = self.superuser
         self.assertTrue(perm.has_permission(request, None))
 
-    def test_regular_user_is_not_super_admin(self):
+    def test_staff_user_is_not_super_admin(self):
+        """is_staff alone does NOT grant IsSuperAdmin access."""
         perm = IsSuperAdmin()
         request = MagicMock()
-        request.user = self.admin_user
+        request.user = self.admin_user  # is_staff=True but not is_superuser
+        self.assertFalse(perm.has_permission(request, None))
+
+    def test_regular_user_is_not_super_admin(self):
+        """Non-staff, non-superuser is not super admin."""
+        perm = IsSuperAdmin()
+        request = MagicMock()
+        request.user = self.cashier_user  # is_staff=False
         self.assertFalse(perm.has_permission(request, None))
