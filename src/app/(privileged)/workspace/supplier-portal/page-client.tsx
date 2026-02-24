@@ -1,8 +1,10 @@
 'use client'
 
+import { Badge } from '@/components/ui/badge'
+
 import { useState, useEffect } from 'react'
 import { getSupplierProformas, getPriceChangeRequests, approvePriceRequest } from '@/app/actions/portal'
-import { Truck, FileText, Tag, RefreshCw, CheckCircle, XCircle, Clock, DollarSign, TrendingUp, Package } from 'lucide-react'
+import { Truck, FileText, Tag, RefreshCw, CheckCircle, XCircle, Clock, DollarSign, TrendingUp, Package, Activity} from 'lucide-react'
 
 type Proforma = { id: number; proforma_number?: string; supplier?: { id: number; name: string }; supplier_name?: string; status: string; total_amount: number; created_at?: string }
 type PriceRequest = { id: number; supplier?: { id: number; name: string }; supplier_name?: string; product?: { name: string; sku?: string }; product_name?: string; current_price: number; requested_price: number; status: string; reason?: string }

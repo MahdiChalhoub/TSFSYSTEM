@@ -1,4 +1,5 @@
 'use client'
+import { ShieldCheck } from 'lucide-react'
 
 import { useState, useEffect, useTransition, useMemo } from "react"
 import type { Voucher, FinancialAccount, FinancialEvent, LifecycleHistoryEntry } from '@/types/erp'

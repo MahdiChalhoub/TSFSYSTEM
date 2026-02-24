@@ -1,4 +1,5 @@
 'use client'
+import { Star } from 'lucide-react'
 
 import { useEffect, useState, useCallback } from 'react'
 import {

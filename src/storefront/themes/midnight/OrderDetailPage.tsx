@@ -1,41 +1,22 @@
 'use client'
+import { Star } from 'lucide-react'
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import {
     ArrowLeft, Package, Truck, CheckCircle2, Clock, XCircle, RotateCcw,
-    Star, CreditCard, MapPin, Loader2, Hash, CalendarDays, FileText, ChevronRight
+    Star, CreditCard, MapPin, Loader2, Hash, CalendarDays, FileText, ChevronRight, TrendingUp
 } from 'lucide-react'
 import { useAuth } from '../../engine/hooks/useAuth'
+import { useStorefrontPath } from '../../engine/hooks/useStorefrontPath'
 
-interface OrderLine {
-    id: string
-    product_name: string
-    product_sku: string
-    quantity: number
-    unit_price: string
-    total_price: string
-    image_url?: string
-}
-
+interface OrderLine { id: string; product_name: string; product_sku: string; quantity: number; unit_price: string; total_price: string; image_url?: string }
 interface OrderDetail {
-    id: string
-    order_number: string
-    status: string
-    payment_status: string
-    payment_method: string
-    total_amount: string
-    subtotal: string
-    tax_amount: string
-    discount_amount: string
-    currency: string
-    placed_at: string | null
-    estimated_delivery: string | null
-    delivery_rating: number | null
-    delivery_address: string | null
-    notes: string | null
-    lines: OrderLine[]
+    id: string; order_number: string; status: string; payment_status: string; payment_method: string
+    total_amount: string; subtotal: string; tax_amount: string; discount_amount: string; currency: string
+    placed_at: string | null; estimated_delivery: string | null; delivery_rating: number | null
+    delivery_address: string | null; notes: string | null; lines: OrderLine[]
 }
 
 const STATUS_MAP: Record<string, { label: string; icon: any; color: string; bg: string }> = {
@@ -57,7 +38,8 @@ const PAYMENT_STATUS_MAP: Record<string, { label: string; color: string }> = {
 }
 
 export default function MidnightOrderDetailPage() {
-    const { slug, id } = useParams<{ slug: string; id: string }>()
+    const { id } = useParams<{ slug: string; id: string }>()
+    const { path } = useStorefrontPath()
     const { isAuthenticated } = useAuth()
     const [order, setOrder] = useState<OrderDetail | null>(null)
     const [loading, setLoading] = useState(true)
@@ -66,7 +48,6 @@ export default function MidnightOrderDetailPage() {
         if (!isAuthenticated) return
         const djangoUrl = process.env.NEXT_PUBLIC_DJANGO_URL || 'http://backend:8000'
         const token = localStorage.getItem('portal_token')
-
         fetch(`${djangoUrl}/api/client-portal/my-orders/${id}/`, {
             headers: { 'Authorization': `Token ${token}` },
         })
@@ -92,7 +73,7 @@ export default function MidnightOrderDetailPage() {
                     </div>
                     <h1 className="text-3xl font-black text-white italic tracking-tighter">Null Data Stream</h1>
                     <p className="text-slate-500 text-sm">The requested order object does not exist in the active ledger.</p>
-                    <Link href={`/tenant/${slug}/account/orders`}
+                    <Link href={path('/account/orders')}
                         className="inline-flex items-center gap-2 text-emerald-400 font-black uppercase tracking-widest text-[10px] hover:text-emerald-300 transition-colors">
                         <ArrowLeft size={16} /> Return to History
                     </Link>
@@ -111,17 +92,14 @@ export default function MidnightOrderDetailPage() {
             <div className="fixed bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-blue-500/5 blur-[150px] rounded-full pointer-events-none z-0" />
 
             <div className="max-w-5xl mx-auto relative z-10 space-y-10">
-                {/* Header */}
                 <div className="space-y-4">
-                    <Link href={`/tenant/${slug}/account/orders`}
+                    <Link href={path('/account/orders')}
                         className="inline-flex items-center gap-2 text-slate-500 hover:text-white text-[10px] font-black uppercase tracking-[0.3em] transition-all group">
                         <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Transaction History
                     </Link>
                     <div className="flex items-center justify-between flex-wrap gap-6">
                         <div className="space-y-1">
-                            <h1 className="text-5xl font-black text-white italic tracking-tighter uppercase">
-                                {order.order_number}
-                            </h1>
+                            <h1 className="text-5xl font-black text-white italic tracking-tighter uppercase">{order.order_number}</h1>
                             <p className="text-slate-500 text-xs font-bold uppercase tracking-[0.2em]">
                                 {order.placed_at ? `Initialized ${new Date(order.placed_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}` : 'Draft Instance'}
                             </p>
@@ -133,14 +111,12 @@ export default function MidnightOrderDetailPage() {
                     </div>
                 </div>
 
-                {/* Dashboard Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <SummaryCard label="Settlement Status" value={ps.label} meta={order.payment_method || 'Internal Credit'} icon={<CreditCard size={18} />} color={ps.color} />
                     <SummaryCard label="ETA Forecast" value={order.estimated_delivery ? new Date(order.estimated_delivery).toLocaleDateString() : 'N/A'} meta="Estimated Arrival" icon={<CalendarDays size={18} />} />
                     <SummaryCard label="Review Score" value={order.delivery_rating ? `${order.delivery_rating}.0` : 'Pending'} meta="Delivery Rating" icon={<Star size={18} />} color={order.delivery_rating ? 'text-amber-400' : 'text-slate-600'} />
                 </div>
 
-                {/* Tracking Progress */}
                 {order.status !== 'CART' && order.status !== 'CANCELLED' && (
                     <div className="p-10 bg-slate-900/40 border border-white/5 rounded-[3.5rem] relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-8 text-white/5 group-hover:text-emerald-500/10 transition-colors">
@@ -158,7 +134,6 @@ export default function MidnightOrderDetailPage() {
                                         return `${(idx / (steps.length - 1)) * 80}%`
                                     })()
                                 }} />
-
                             {['PLACED', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED'].map((step, i) => {
                                 const steps = ['PLACED', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED']
                                 const currentIdx = steps.indexOf(order.status)
@@ -166,16 +141,12 @@ export default function MidnightOrderDetailPage() {
                                 const isCurrent = i === currentIdx
                                 const stepIcons = [Clock, CheckCircle2, Package, Truck, CheckCircle2]
                                 const StepIcon = stepIcons[i]
-
                                 return (
                                     <div key={step} className="flex flex-col items-center relative z-10" style={{ width: '20%' }}>
                                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border transition-all duration-500
-                                            ${isCurrent
-                                                ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.2)] scale-110 rotate-12'
-                                                : isCompleted
-                                                    ? 'bg-emerald-500 border-emerald-500 text-white'
-                                                    : 'bg-slate-950 border-white/5 text-slate-700'
-                                            }`}>
+                                            ${isCurrent ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.2)] scale-110 rotate-12'
+                                                : isCompleted ? 'bg-emerald-500 border-emerald-500 text-white'
+                                                    : 'bg-slate-950 border-white/5 text-slate-700'}`}>
                                             <StepIcon size={20} />
                                         </div>
                                         <span className={`mt-4 text-[9px] font-black uppercase tracking-widest text-center transition-colors
@@ -189,15 +160,12 @@ export default function MidnightOrderDetailPage() {
                     </div>
                 )}
 
-                {/* Content Split */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                    {/* Left: Items */}
                     <div className="lg:col-span-2 space-y-6">
                         <div className="flex items-center gap-4">
                             <h2 className="text-2xl font-black text-white italic tracking-tight uppercase">Segment Assets</h2>
                             <div className="px-3 py-1 bg-white/5 rounded-full text-[10px] font-black text-slate-500 uppercase tracking-widest">{order.lines?.length || 0} Entities</div>
                         </div>
-
                         <div className="space-y-4">
                             {order.lines?.map(line => (
                                 <div key={line.id} className="p-6 bg-slate-900/40 border border-white/5 rounded-[2.5rem] flex items-center gap-6 group hover:border-white/10 transition-all">
@@ -205,9 +173,7 @@ export default function MidnightOrderDetailPage() {
                                         {line.image_url ? (
                                             <img src={line.image_url} alt={line.product_name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                                         ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-slate-800">
-                                                <Package size={28} />
-                                            </div>
+                                            <div className="w-full h-full flex items-center justify-center text-slate-800"><Package size={28} /></div>
                                         )}
                                     </div>
                                     <div className="flex-1 min-w-0">
@@ -223,13 +189,9 @@ export default function MidnightOrderDetailPage() {
                         </div>
                     </div>
 
-                    {/* Right: Summary */}
                     <div className="space-y-6">
                         <div className="p-8 bg-slate-900/60 border border-emerald-500/10 rounded-[3rem] space-y-8 shadow-2xl relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-4 text-emerald-500/5">
-                                <CreditCard size={80} />
-                            </div>
-
+                            <div className="absolute top-0 right-0 p-4 text-emerald-500/5"><CreditCard size={80} /></div>
                             <div className="space-y-6">
                                 <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Financial Summary</h3>
                                 <div className="space-y-4">
@@ -253,7 +215,6 @@ export default function MidnightOrderDetailPage() {
                                     </div>
                                 </div>
                             </div>
-
                             {order.delivery_address && (
                                 <div className="space-y-3 pt-6 border-t border-white/5">
                                     <div className="flex items-center gap-2 text-slate-500 text-[10px] font-black uppercase tracking-widest">
@@ -262,7 +223,6 @@ export default function MidnightOrderDetailPage() {
                                     <p className="text-slate-400 text-xs leading-relaxed font-bold uppercase tracking-tight italic">{order.delivery_address}</p>
                                 </div>
                             )}
-
                             {order.notes && (
                                 <div className="p-4 bg-white/5 rounded-2xl border border-white/5 space-y-2">
                                     <div className="flex items-center gap-2 text-slate-600 text-[9px] font-black uppercase tracking-widest">
@@ -272,7 +232,6 @@ export default function MidnightOrderDetailPage() {
                                 </div>
                             )}
                         </div>
-
                         <div className="p-8 bg-blue-600 hover:bg-emerald-600 rounded-[2.5rem] text-center transition-all cursor-pointer group shadow-xl">
                             <p className="text-white font-black uppercase tracking-[0.4em] text-[10px] flex items-center justify-center gap-2">
                                 Download Artifact <FileText size={14} className="group-hover:rotate-12 transition-transform" />

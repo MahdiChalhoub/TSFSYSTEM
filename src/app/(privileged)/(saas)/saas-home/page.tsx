@@ -1,4 +1,5 @@
 ﻿import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Activity, ShieldCheck } from 'lucide-react'
 import {
     Activity,
     Plus,

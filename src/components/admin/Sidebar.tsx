@@ -44,7 +44,8 @@ import {
     Trophy,
     Eye,
     FileCheck,
-    Percent
+    Percent,
+    Star
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
@@ -90,7 +91,8 @@ const ICON_MAP: Record<string, any> = {
     Wallet,
     Globe,
     ListChecks,
-    Trophy
+    Trophy,
+    Star
 };
 
 function getIcon(name: string) {

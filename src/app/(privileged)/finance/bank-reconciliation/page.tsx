@@ -1,4 +1,5 @@
 'use client'
+import { ShieldCheck } from 'lucide-react'
 
 import { useCurrency } from '@/lib/utils/currency'
 import { useState, useEffect, useMemo } from "react"

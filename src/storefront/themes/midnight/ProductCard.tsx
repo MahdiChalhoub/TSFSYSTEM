@@ -6,12 +6,14 @@ import { ShoppingBag, ShoppingCart, Star, Heart, ArrowRight, X, FileQuestion, Se
 import { useCart } from '../../engine/hooks/useCart'
 import { useConfig } from '../../engine/hooks/useConfig'
 import { useWishlist } from '../../engine/hooks/useWishlist'
+import { useStorefrontPath } from '../../engine/hooks/useStorefrontPath'
 import type { ProductCardProps } from '../../engine/types'
 
 export default function MidnightProductCard({ product }: ProductCardProps) {
     const { addToCart } = useCart()
     const { showPrice, isQuoteMode, slug } = useConfig()
     const { isInWishlist, toggleWishlist } = useWishlist()
+    const { path } = useStorefrontPath()
     const [added, setAdded] = useState(false)
 
     const handleQuickAdd = (e: React.MouseEvent) => {
@@ -31,7 +33,7 @@ export default function MidnightProductCard({ product }: ProductCardProps) {
 
     return (
         <Link
-            href={`/tenant/${slug}/product/${product.id}`}
+            href={path(`/product/${product.id}`)}
             className="group relative bg-slate-900/40 backdrop-blur-3xl border border-white/5 rounded-[2.5rem] overflow-hidden hover:border-emerald-500/50 transition-all duration-500 hover:shadow-2xl hover:shadow-emerald-500/10"
         >
             <div className="aspect-[4/3] bg-slate-950 overflow-hidden relative">

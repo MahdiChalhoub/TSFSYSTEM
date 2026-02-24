@@ -13,7 +13,7 @@ import {
 import clsx from 'clsx';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import { History, RefreshCw, Wifi, WifiOff } from 'lucide-react';
+import { History, RefreshCw, Wifi, WifiOff , Star} from 'lucide-react';
 import { Numpad as POSNumpad, NumpadMode } from '@/components/pos/Numpad';
 
 const formatNumber = (num: number | string) => {

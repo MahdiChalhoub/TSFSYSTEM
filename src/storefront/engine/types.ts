@@ -237,8 +237,8 @@ export interface UseCartReturn {
     cartCount: number
     cartTotal: number
     addToCart: (item: CartItem) => void
-    removeFromCart: (productId: string) => void
-    updateQuantity: (productId: string, quantity: number) => void
+    removeFromCart: (productId: string, variantId?: string) => void
+    updateQuantity: (productId: string, quantity: number, variantId?: string) => void
     clearCart: () => void
 }
 

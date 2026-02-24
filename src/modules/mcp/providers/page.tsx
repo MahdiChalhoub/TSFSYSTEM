@@ -1,4 +1,5 @@
 'use client'
+import { Star } from 'lucide-react'
 
 /**
  * MCP AI Providers - Configuration Page

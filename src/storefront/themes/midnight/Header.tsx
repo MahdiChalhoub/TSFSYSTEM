@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useParams, usePathname } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import {
     ShoppingCart, Search, Menu, X, LogOut, Heart, Bell,
     LayoutDashboard, Store, FileQuestion, User
@@ -11,10 +11,11 @@ import { useAuth } from '../../engine/hooks/useAuth'
 import { useCart } from '../../engine/hooks/useCart'
 import { useConfig } from '../../engine/hooks/useConfig'
 import { useWishlist } from '../../engine/hooks/useWishlist'
+import { useStorefrontPath } from '../../engine/hooks/useStorefrontPath'
 import { usePortal } from '@/context/PortalContext'
 
 export default function MidnightHeader() {
-    const { slug } = useParams<{ slug: string }>()
+    const { path, slug } = useStorefrontPath()
     const pathname = usePathname()
     const { user, isAuthenticated, logout } = useAuth()
     const { cartCount } = useCart()
@@ -26,7 +27,6 @@ export default function MidnightHeader() {
     const storeName = config?.storefront_title || orgName || ''
 
     // Don't show on the main storefront page
-    // (In Next.js, pathname might be / or /tenant/[slug] depending on middle-ware and environment)
     const isMainPage = pathname === `/tenant/${slug}` || pathname === '/'
     if (isMainPage) return null
 
@@ -34,7 +34,7 @@ export default function MidnightHeader() {
         <header className="sticky top-0 z-40 bg-slate-950/80 backdrop-blur-xl border-b border-white/5">
             <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
                 {/* Logo */}
-                <Link href={`/tenant/${slug}`}
+                <Link href={path('/')}
                     className="flex items-center gap-3 text-white hover:text-emerald-400 transition-colors">
                     {orgLogo ? (
                         <img src={orgLogo} alt={storeName} className="w-9 h-9 rounded-xl object-cover border border-white/10" />
@@ -48,15 +48,15 @@ export default function MidnightHeader() {
 
                 {/* Desktop Nav */}
                 <nav className="hidden md:flex items-center gap-6">
-                    <Link href={`/tenant/${slug}`} className="text-sm text-slate-400 hover:text-white font-medium transition-colors">Products</Link>
-                    <Link href={`/tenant/${slug}/categories`} className="text-sm text-slate-400 hover:text-white font-medium transition-colors">Categories</Link>
+                    <Link href={path('/')} className="text-sm text-slate-400 hover:text-white font-medium transition-colors">Products</Link>
+                    <Link href={path('/categories')} className="text-sm text-slate-400 hover:text-white font-medium transition-colors">Categories</Link>
                     {storeMode === 'CATALOG_QUOTE' && (
-                        <Link href={`/tenant/${slug}/quote`} className="text-sm text-slate-400 hover:text-white font-medium transition-colors flex items-center gap-1.5">
+                        <Link href={path('/quote')} className="text-sm text-slate-400 hover:text-white font-medium transition-colors flex items-center gap-1.5">
                             <FileQuestion size={14} />Quote
                         </Link>
                     )}
                     {isAuthenticated && (
-                        <Link href={`/tenant/${slug}/dashboard`} className="text-sm text-slate-400 hover:text-white font-medium transition-colors flex items-center gap-1.5">
+                        <Link href={path('/account')} className="text-sm text-slate-400 hover:text-white font-medium transition-colors flex items-center gap-1.5">
                             <LayoutDashboard size={14} />Dashboard
                         </Link>
                     )}
@@ -64,18 +64,18 @@ export default function MidnightHeader() {
 
                 {/* Right Items */}
                 <div className="flex items-center gap-2">
-                    <Link href={`/tenant/${slug}/search`} className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
+                    <Link href={path('/search')} className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
                         <Search size={20} />
                     </Link>
                     {isAuthenticated && (
                         <>
-                            <Link href={`/tenant/${slug}/account/wishlist`} className="relative w-10 h-10 flex items-center justify-center text-slate-400 hover:text-rose-400 transition-colors">
+                            <Link href={path('/account/wishlist')} className="relative w-10 h-10 flex items-center justify-center text-slate-400 hover:text-rose-400 transition-colors">
                                 <Heart size={20} />
                                 {wishlistCount > 0 && (
                                     <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-rose-500 text-[10px] font-black text-white rounded-full flex items-center justify-center px-1">{wishlistCount}</span>
                                 )}
                             </Link>
-                            <Link href={`/tenant/${slug}/account/notifications`} className="relative w-10 h-10 flex items-center justify-center text-slate-400 hover:text-cyan-400 transition-colors">
+                            <Link href={path('/account/notifications')} className="relative w-10 h-10 flex items-center justify-center text-slate-400 hover:text-cyan-400 transition-colors">
                                 <Bell size={20} />
                             </Link>
                         </>
@@ -92,12 +92,12 @@ export default function MidnightHeader() {
                         </button>
                     )}
                     {isAuthenticated ? (
-                        <Link href={`/tenant/${slug}/account`}
+                        <Link href={path('/account')}
                             className="w-9 h-9 bg-emerald-500/20 border border-emerald-500/30 rounded-lg flex items-center justify-center text-emerald-400 text-xs font-black hover:bg-emerald-500/30 transition-all">
                             {user?.name?.charAt(0).toUpperCase() || 'U'}
                         </Link>
                     ) : (
-                        <Link href={`/tenant/${slug}/login`}
+                        <Link href={path('/login')}
                             className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-500 transition-all">
                             Sign In
                         </Link>
@@ -112,9 +112,9 @@ export default function MidnightHeader() {
             {/* Mobile Menu */}
             {menuOpen && (
                 <div className="md:hidden border-t border-white/5 bg-slate-950/95 backdrop-blur-xl p-4 space-y-1">
-                    <Link href={`/tenant/${slug}`} onClick={() => setMenuOpen(false)} className="block px-4 py-3 text-white font-medium rounded-xl hover:bg-white/5 transition-all">Products</Link>
-                    <Link href={`/tenant/${slug}/categories`} onClick={() => setMenuOpen(false)} className="block px-4 py-3 text-white font-medium rounded-xl hover:bg-white/5 transition-all">Categories</Link>
-                    <Link href={`/tenant/${slug}/search`} onClick={() => setMenuOpen(false)} className="block px-4 py-3 text-white font-medium rounded-xl hover:bg-white/5 transition-all">Search</Link>
+                    <Link href={path('/')} onClick={() => setMenuOpen(false)} className="block px-4 py-3 text-white font-medium rounded-xl hover:bg-white/5 transition-all">Products</Link>
+                    <Link href={path('/categories')} onClick={() => setMenuOpen(false)} className="block px-4 py-3 text-white font-medium rounded-xl hover:bg-white/5 transition-all">Categories</Link>
+                    <Link href={path('/search')} onClick={() => setMenuOpen(false)} className="block px-4 py-3 text-white font-medium rounded-xl hover:bg-white/5 transition-all">Search</Link>
                     {storeMode !== 'CATALOG_QUOTE' && (
                         <button
                             onClick={() => { setCartOpen(true); setMenuOpen(false); }}
@@ -126,9 +126,9 @@ export default function MidnightHeader() {
                     {isAuthenticated && (
                         <>
                             <div className="border-t border-white/5 my-2" />
-                            <Link href={`/tenant/${slug}/account`} onClick={() => setMenuOpen(false)} className="block px-4 py-3 text-white font-medium rounded-xl hover:bg-white/5 transition-all">My Account</Link>
-                            <Link href={`/tenant/${slug}/account/orders`} onClick={() => setMenuOpen(false)} className="block px-4 py-3 text-white font-medium rounded-xl hover:bg-white/5 transition-all">Orders</Link>
-                            <Link href={`/tenant/${slug}/account/wallet`} onClick={() => setMenuOpen(false)} className="block px-4 py-3 text-white font-medium rounded-xl hover:bg-white/5 transition-all">Wallet & Loyalty</Link>
+                            <Link href={path('/account')} onClick={() => setMenuOpen(false)} className="block px-4 py-3 text-white font-medium rounded-xl hover:bg-white/5 transition-all">My Account</Link>
+                            <Link href={path('/account/orders')} onClick={() => setMenuOpen(false)} className="block px-4 py-3 text-white font-medium rounded-xl hover:bg-white/5 transition-all">Orders</Link>
+                            <Link href={path('/account/wallet')} onClick={() => setMenuOpen(false)} className="block px-4 py-3 text-white font-medium rounded-xl hover:bg-white/5 transition-all">Wallet & Loyalty</Link>
                             <div className="border-t border-white/5 my-2" />
                             <button onClick={() => { logout(); setMenuOpen(false) }}
                                 className="w-full text-left px-4 py-3 text-red-400 font-medium rounded-xl hover:bg-red-500/10 transition-all flex items-center gap-2">

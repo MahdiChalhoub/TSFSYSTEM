@@ -1,4 +1,5 @@
 'use client'
+import { Activity, ShieldCheck } from 'lucide-react'
 
 import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"

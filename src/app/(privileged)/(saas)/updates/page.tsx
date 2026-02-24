@@ -1,4 +1,5 @@
 'use client'
+import { ShieldCheck } from 'lucide-react'
 
 import { useEffect, useState, useRef } from "react"
 import { SaasUpdateStatus, SaasUpdateHistoryEntry } from "@/types/erp"

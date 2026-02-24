@@ -1,4 +1,5 @@
 'use client'
+import { ShieldCheck } from 'lucide-react'
 
 import { useState, useEffect, useMemo } from "react"
 import { getLoans } from "@/app/actions/finance/loans"

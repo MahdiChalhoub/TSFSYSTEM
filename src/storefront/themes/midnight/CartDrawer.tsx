@@ -1,12 +1,13 @@
 'use client'
 
-import { useParams, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { X, Minus, Plus, ShoppingBag, ArrowRight, Package, Trash2 } from 'lucide-react'
 import { usePortal } from '@/context/PortalContext'
+import { useStorefrontPath } from '../../engine/hooks/useStorefrontPath'
 
 export default function MidnightCartDrawer() {
-    const { slug } = useParams<{ slug: string }>()
+    const { path } = useStorefrontPath()
     const router = useRouter()
     const {
         cart, cartTotal, isCartOpen, setCartOpen,
@@ -129,7 +130,7 @@ export default function MidnightCartDrawer() {
                             <button
                                 onClick={() => {
                                     setCartOpen(false)
-                                    router.push(`/tenant/${slug}/checkout`)
+                                    router.push(path('/checkout'))
                                 }}
                                 className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] transition-all shadow-xl shadow-emerald-900/20 flex items-center justify-center gap-2 group"
                             >
@@ -137,7 +138,7 @@ export default function MidnightCartDrawer() {
                                 <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                             </button>
                             <Link
-                                href={`/tenant/${slug}/cart`}
+                                href={path('/cart')}
                                 onClick={() => setCartOpen(false)}
                                 className="block w-full py-4 border border-white/5 hover:bg-white/5 text-slate-400 hover:text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] text-center transition-all"
                             >

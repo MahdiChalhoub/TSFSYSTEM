@@ -1,4 +1,5 @@
 'use client'
+import { Activity, ShieldCheck } from 'lucide-react'
 
 import { useCurrency } from '@/lib/utils/currency'
 import { useState, useEffect, useMemo } from "react"
@@ -13,8 +14,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
     Tag, Plus, Percent, DollarSign, Package, Layers, Calendar,
     History, Edit2, Trash2, X, Check, Power, AlertCircle, ShoppingCart,
-    Tags, RefreshCw, Zap, TrendingUp, Activity
-} from "lucide-react"
+    Tags, RefreshCw, Zap, TrendingUp, Activity, ShieldCheck} from "lucide-react"
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
 import { useListViewSettings } from '@/hooks/useListViewSettings'
 

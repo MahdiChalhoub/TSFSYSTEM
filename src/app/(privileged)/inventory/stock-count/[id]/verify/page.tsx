@@ -1,4 +1,5 @@
 'use client'
+import { ShieldCheck } from 'lucide-react'
 
 import { useState, useEffect, useTransition, useMemo } from "react"
 import { useParams, useRouter } from "next/navigation"

@@ -1,17 +1,17 @@
 'use client'
 
-import { useParams, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, ArrowLeft, Package } from 'lucide-react'
 import { useCart } from '../../engine/hooks/useCart'
+import { useStorefrontPath } from '../../engine/hooks/useStorefrontPath'
 import { useConfig } from '../../engine/hooks/useConfig'
 
 export default function MidnightCartPage() {
-    const { slug } = useParams<{ slug: string }>()
+    const { path } = useStorefrontPath()
     const router = useRouter()
     const { cart, cartTotal, cartCount, removeFromCart, updateQuantity, clearCart } = useCart()
     const { config } = useConfig()
-
     const formatPrice = (n: number) => `$${n.toFixed(2)}`
 
     if (cart.length === 0) {
@@ -22,7 +22,7 @@ export default function MidnightCartPage() {
                 </div>
                 <h2 className="text-2xl font-black text-white mb-2">Your cart is empty</h2>
                 <p className="text-sm text-slate-500 mb-8">Browse our collection and add items to your cart</p>
-                <Link href={`/tenant/${slug}`}
+                <Link href={path('/')}
                     className="px-8 py-3 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-900/30">
                     Browse Products
                 </Link>
@@ -62,13 +62,11 @@ export default function MidnightCartPage() {
                                     </div>
                                 )}
                             </div>
-
                             {/* Details */}
                             <div className="flex-1 min-w-0">
                                 <h3 className="text-sm font-bold text-white truncate">{item.product_name}</h3>
                                 <p className="text-xs text-slate-500 mt-1">{formatPrice(item.unit_price)} each</p>
                             </div>
-
                             {/* Quantity */}
                             <div className="flex items-center bg-white/5 border border-white/10 rounded-xl">
                                 <button onClick={() => updateQuantity(item.product_id, Math.max(1, item.quantity - 1), item.variant_id)}
@@ -81,12 +79,10 @@ export default function MidnightCartPage() {
                                     <Plus size={12} />
                                 </button>
                             </div>
-
                             {/* Line Total */}
                             <div className="text-right shrink-0">
                                 <p className="text-sm font-black text-white">{formatPrice(item.unit_price * item.quantity)}</p>
                             </div>
-
                             {/* Remove */}
                             <button onClick={() => removeFromCart(item.product_id, item.variant_id)}
                                 className="w-9 h-9 flex items-center justify-center text-red-400/50 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all">
@@ -113,7 +109,7 @@ export default function MidnightCartPage() {
                         <span className="text-emerald-500 mr-1">$</span>{cartTotal.toFixed(2)}
                     </span>
                 </div>
-                <Link href={`/tenant/${slug}/checkout`}
+                <Link href={path('/checkout')}
                     className="block w-full py-4 bg-emerald-600 text-white rounded-2xl font-bold text-sm uppercase tracking-wider text-center hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-900/30 mt-4">
                     Proceed to Checkout <ArrowRight size={16} className="inline ml-2" />
                 </Link>

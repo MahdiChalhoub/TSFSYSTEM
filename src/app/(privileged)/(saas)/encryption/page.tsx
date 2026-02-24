@@ -1,4 +1,5 @@
 'use client'
+import { ShieldCheck } from 'lucide-react'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 import { useEffect, useState, useCallback } from 'react'

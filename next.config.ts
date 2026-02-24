@@ -57,7 +57,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' data: https://fonts.gstatic.com https://fonts.googleapis.com",
               "img-src 'self' data: blob: https:",
-              "connect-src 'self' https://*.tsf.ci https://tsf.ci https://cloudflareinsights.com https://static.cloudflareinsights.com https://api.stripe.com https://js.stripe.com",
+              "connect-src 'self' https://*.tsf.ci https://tsf.ci https://cloudflareinsights.com https://static.cloudflareinsights.com https://api.stripe.com",
               "frame-src 'self' https://js.stripe.com",
               "frame-ancestors 'self'",
             ].join('; '),

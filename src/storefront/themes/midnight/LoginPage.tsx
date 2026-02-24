@@ -1,14 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { LogIn, Mail, Lock, Loader2, Eye, EyeOff, UserPlus, Store } from 'lucide-react'
+import { LogIn, Mail, Lock, Loader2, Eye, EyeOff, UserPlus, Store, Shield } from 'lucide-react'
 import { useAuth } from '../../engine/hooks/useAuth'
 import { useConfig } from '../../engine/hooks/useConfig'
+import { useStorefrontPath } from '../../engine/hooks/useStorefrontPath'
 
 export default function MidnightLoginPage() {
-    const { slug } = useParams<{ slug: string }>()
+    const { path, slug } = useStorefrontPath()
     const router = useRouter()
     const { login, isAuthenticated } = useAuth()
     const { orgName, orgLogo } = useConfig()
@@ -21,7 +22,7 @@ export default function MidnightLoginPage() {
     const [error, setError] = useState('')
 
     if (isAuthenticated) {
-        router.push(`/tenant/${slug}/dashboard`)
+        router.push(path('/account'))
         return null
     }
 
@@ -32,7 +33,7 @@ export default function MidnightLoginPage() {
 
         const result = await login(email, password)
         if (result.success) {
-            router.push(`/tenant/${slug}/dashboard`)
+            router.push(path('/account'))
         } else {
             setError(result.error || 'Login failed')
         }
@@ -119,7 +120,7 @@ export default function MidnightLoginPage() {
                     </form>
 
                     <div className="flex flex-col items-center gap-4 pt-4 border-t border-white/5">
-                        <Link href={`/tenant/${slug}/register`} className="text-xs text-emerald-400 font-black uppercase tracking-widest hover:text-emerald-300 transition-colors flex items-center gap-2">
+                        <Link href={path('/register')} className="text-xs text-emerald-400 font-black uppercase tracking-widest hover:text-emerald-300 transition-colors flex items-center gap-2">
                             <UserPlus size={14} /> Initialize New Identity
                         </Link>
                         <div className="flex items-center gap-2 px-4 py-1.5 bg-white/5 rounded-full border border-white/10">
@@ -130,7 +131,7 @@ export default function MidnightLoginPage() {
                 </div>
 
                 <div className="text-center mt-10">
-                    <Link href={`/tenant/${slug}`} className="text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-white transition-colors">
+                    <Link href={path('/')} className="text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-white transition-colors">
                         ← Terminate & Return to Node
                     </Link>
                 </div>
