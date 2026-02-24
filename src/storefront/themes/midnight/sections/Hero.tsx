@@ -4,10 +4,12 @@ import React from 'react'
 import { Sparkles, Store, Package, Grid3x3 } from 'lucide-react'
 import type { SectionProps } from '../../../engine/types'
 import { useConfig } from '../../../engine/hooks/useConfig'
+import { useStorefrontPath } from '../../../engine/hooks/useStorefrontPath'
 import Link from 'next/link'
 
 export default function MidnightHero({ settings, products, categories }: SectionProps) {
     const { slug, orgName, orgLogo, config } = useConfig()
+    const { path } = useStorefrontPath()
 
     // Default settings with overrides from shopify-like config
     const title = settings.title || orgName || slug
@@ -39,7 +41,7 @@ export default function MidnightHero({ settings, products, categories }: Section
                         </p>
 
                         <div className="flex flex-wrap items-center gap-4">
-                            <Link href={`/tenant/${slug}/search`} className="px-8 py-4 bg-emerald-600 text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-emerald-500 transition-all shadow-xl shadow-emerald-900/20 active:scale-[0.98]">
+                            <Link href={path('/search')} className="px-8 py-4 bg-emerald-600 text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-emerald-500 transition-all shadow-xl shadow-emerald-900/20 active:scale-[0.98]">
                                 {ctaText}
                             </Link>
 

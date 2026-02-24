@@ -1,4 +1,5 @@
 'use client'
+import { Activity } from 'lucide-react'
 
 /**
  * Connector Admin Panel - Dashboard & Overview

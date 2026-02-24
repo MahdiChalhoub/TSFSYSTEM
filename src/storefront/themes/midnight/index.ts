@@ -13,6 +13,12 @@ import RegisterPage from './RegisterPage'
 import DashboardPage from './DashboardPage'
 import OrdersPage from './OrdersPage'
 import OrderDetailPage from './OrderDetailPage'
+import WishlistPage from './WishlistPage'
+import WalletPage from './WalletPage'
+import ProfilePage from './ProfilePage'
+import TicketsPage from './TicketsPage'
+import NotificationsPage from './NotificationsPage'
+import QuotePage from './QuotePage'
 import SearchPage from './SearchPage'
 import CategoriesPage from './CategoriesPage'
 
@@ -48,6 +54,12 @@ const components = {
     DashboardPage,
     OrdersPage,
     OrderDetailPage,
+    WishlistPage,
+    WalletPage,
+    ProfilePage,
+    TicketsPage,
+    NotificationsPage,
+    QuotePage,
     SearchPage,
     CategoriesPage,
 }

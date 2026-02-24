@@ -1,16 +1,18 @@
 'use client'
+import { Star } from 'lucide-react'
 
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '../../engine/hooks/useAuth'
+import { useStorefrontPath } from '../../engine/hooks/useStorefrontPath'
 import {
     ArrowLeft, MessageSquare, Plus, AlertCircle, CheckCircle2,
     Clock, Loader2, Send, Star, X, Shield, ChevronRight, Zap
 } from 'lucide-react'
 
 interface Ticket {
-    id: string; ticket_number: string; ticket_type: string; status: string; priority: string; subject: string; description: string; satisfaction_rating: number | null; created_at: string
+    id: string; ticket_number: string; ticket_type: string; status: string; priority: string
+    subject: string; description: string; satisfaction_rating: number | null; created_at: string
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -32,7 +34,7 @@ const TICKET_TYPES = [
 ]
 
 export default function MidnightTicketsPage() {
-    const { slug } = useParams<{ slug: string }>()
+    const { path, slug } = useStorefrontPath()
     const { isAuthenticated } = useAuth()
     const [tickets, setTickets] = useState<Ticket[]>([])
     const [loading, setLoading] = useState(true)
@@ -82,7 +84,7 @@ export default function MidnightTicketsPage() {
                 <div className="text-center space-y-8">
                     <div className="w-24 h-24 bg-purple-500/10 border border-purple-500/20 rounded-[2rem] flex items-center justify-center mx-auto text-purple-400 rotate-12"><Shield size={48} /></div>
                     <h1 className="text-3xl font-black text-white italic">Session Required</h1>
-                    <Link href={`/tenant/${slug}/login`} className="inline-block px-10 py-4 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest">Authorize</Link>
+                    <Link href={path('/login')} className="inline-block px-10 py-4 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest">Authorize</Link>
                 </div>
             </div>
         )
@@ -95,7 +97,7 @@ export default function MidnightTicketsPage() {
             <div className="max-w-5xl mx-auto relative z-10 space-y-10">
                 <div className="flex items-start justify-between flex-wrap gap-6">
                     <div className="space-y-4">
-                        <Link href={`/tenant/${slug}/account`} className="inline-flex items-center gap-2 text-slate-500 hover:text-white text-[10px] font-black uppercase tracking-[0.3em] transition-all group">
+                        <Link href={path('/account')} className="inline-flex items-center gap-2 text-slate-500 hover:text-white text-[10px] font-black uppercase tracking-[0.3em] transition-all group">
                             <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Dashboard
                         </Link>
                         <h1 className="text-5xl font-black text-white italic tracking-tighter">Support <span className="text-purple-400">Node</span></h1>
@@ -106,7 +108,6 @@ export default function MidnightTicketsPage() {
                     </button>
                 </div>
 
-                {/* Create Modal */}
                 {showCreate && (
                     <div className="p-10 bg-slate-900/60 border border-purple-500/20 rounded-[3rem] space-y-8 animate-in fade-in duration-300 relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-6 text-purple-500/5"><Zap size={120} /></div>
@@ -132,7 +133,6 @@ export default function MidnightTicketsPage() {
                     </div>
                 )}
 
-                {/* Tickets List */}
                 {loading ? (
                     <div className="space-y-4">{[1, 2, 3].map(i => <div key={i} className="h-28 bg-slate-900/40 rounded-[2.5rem] animate-pulse" />)}</div>
                 ) : tickets.length === 0 ? (

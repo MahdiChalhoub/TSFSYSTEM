@@ -1,4 +1,5 @@
 'use client'
+import { Activity } from 'lucide-react'
 
 /**
  * MCP Settings - Full Configuration Panel

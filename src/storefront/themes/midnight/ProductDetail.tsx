@@ -1,11 +1,15 @@
-import { useEffect, useState, useMemo } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+'use client'
+import { Star } from 'lucide-react'
+
+import { useEffect, useState, useMemo, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
     ArrowLeft, ShoppingCart, FileQuestion, Loader2, CheckCircle2,
     Package, Star, Minus, Plus, Tag, Layers, AlertCircle, Heart
 } from 'lucide-react'
 import { useCart } from '../../engine/hooks/useCart'
+import { useStorefrontPath } from '../../engine/hooks/useStorefrontPath'
 import { useConfig } from '../../engine/hooks/useConfig'
 import { useWishlist } from '../../engine/hooks/useWishlist'
 import { useAuth } from '../../engine/hooks/useAuth'
@@ -13,12 +17,11 @@ import type { ProductDetailProps, ProductVariant } from '../../engine/types'
 
 export default function MidnightProductDetail({ product }: ProductDetailProps) {
     const router = useRouter()
-    const { slug } = useParams<{ slug: string }>()
+    const { path } = useStorefrontPath()
     const { addToCart } = useCart()
     const { showPrice, isQuoteMode } = useConfig()
     const { isInWishlist, toggleWishlist } = useWishlist()
-    const { isAuthenticated, user } = useAuth()
-
+    const { isAuthenticated } = useAuth()
     const [reviews, setReviews] = useState<any[]>([])
     const [reviewLoading, setReviewLoading] = useState(true)
     const [showReviewForm, setShowReviewForm] = useState(false)
@@ -28,53 +31,31 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
     const fetchReviews = useCallback(() => {
         fetch(`/api/client_portal/reviews/?product=${product.id}`)
             .then(res => res.json())
-            .then(data => {
-                setReviews(Array.isArray(data) ? data : (data.results || []))
-                setReviewLoading(false)
-            })
+            .then(data => { setReviews(Array.isArray(data) ? data : (data.results || [])); setReviewLoading(false) })
             .catch(() => setReviewLoading(false))
     }, [product.id])
 
-    useEffect(() => {
-        fetchReviews()
-    }, [fetchReviews])
+    useEffect(() => { fetchReviews() }, [fetchReviews])
 
     const handleReviewSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!isAuthenticated) return
         setSubmitting(true)
-
         try {
             const res = await fetch('/api/client_portal/reviews/', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Token ${localStorage.getItem('portal_token')}`
-                },
-                body: JSON.stringify({
-                    product: product.id,
-                    ...newReview
-                })
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Token ${localStorage.getItem('portal_token')}` },
+                body: JSON.stringify({ product: product.id, ...newReview }),
             })
-
-            if (res.ok) {
-                setShowReviewForm(false)
-                setNewReview({ rating: 5, title: '', content: '' })
-                fetchReviews()
-            }
-        } catch (err) {
-            console.error('[Review] Submission failed:', err)
-        } finally {
-            setSubmitting(false)
-        }
+            if (res.ok) { setShowReviewForm(false); setNewReview({ rating: 5, title: '', content: '' }); fetchReviews() }
+        } catch (err) { console.error('[Review] Submission failed:', err) }
+        finally { setSubmitting(false) }
     }
 
-    // ── Variant Logic ────────────────────────────────────────────────────────
-
+    // Variant Logic
     const options = useMemo(() => {
         if (product.options?.length) return product.options
         if (!product.variants?.length) return []
-
         const optMap: Record<string, Set<string>> = {}
         product.variants.forEach(v => {
             Object.entries(v.option_values).forEach(([name, val]) => {
@@ -82,26 +63,18 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
                 optMap[name].add(val)
             })
         })
-        return Object.entries(optMap).map(([name, set]) => ({
-            id: name,
-            name,
-            values: Array.from(set)
-        }))
+        return Object.entries(optMap).map(([name, set]) => ({ id: name, name, values: Array.from(set) }))
     }, [product.options, product.variants])
 
     const [selections, setSelections] = useState<Record<string, string>>(() => {
         const initial: Record<string, string> = {}
-        options.forEach(opt => {
-            if (opt.values.length) initial[opt.name] = opt.values[0]
-        })
+        options.forEach(opt => { if (opt.values.length) initial[opt.name] = opt.values[0] })
         return initial
     })
 
     const activeVariant = useMemo(() => {
         if (!product.variants?.length) return null
-        return product.variants.find(v => {
-            return Object.entries(selections).every(([name, val]) => v.option_values[name] === val)
-        })
+        return product.variants.find(v => Object.entries(selections).every(([name, val]) => v.option_values[name] === val))
     }, [product.variants, selections])
 
     const currentPrice = activeVariant?.price ?? product.selling_price_ttc
@@ -109,18 +82,14 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
     const currentImage = activeVariant?.image_url ?? product.image_url
     const currentSKU = activeVariant?.sku ?? product.sku
     const currentStock = activeVariant?.stock_quantity ?? product.stock_quantity
-
     const [quantity, setQuantity] = useState(1)
     const [added, setAdded] = useState(false)
 
     const handleAddToCart = () => {
         addToCart({
-            product_id: product.id,
-            variant_id: activeVariant?.id,
+            product_id: product.id, variant_id: activeVariant?.id,
             product_name: product.name + (activeVariant ? ` - ${activeVariant.name}` : ''),
-            unit_price: currentPrice,
-            quantity,
-            image_url: currentImage,
+            unit_price: currentPrice, quantity, image_url: currentImage,
             tax_rate: (product as any).tax_rate || 0,
         })
         setAdded(true)
@@ -130,12 +99,12 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
     return (
         <div className="min-h-screen bg-slate-950 py-8">
             <div className="max-w-5xl mx-auto px-4">
-                <button onClick={() => router.back()}
-                    className="flex items-center gap-2 text-sm text-slate-400 hover:text-white mb-8 transition-colors">
+                <button onClick={() => router.back()} className="flex items-center gap-2 text-sm text-slate-400 hover:text-white mb-8 transition-colors">
                     <ArrowLeft size={16} /> Back
                 </button>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    {/* Product Image */}
                     <div className="bg-slate-900/40 border border-white/5 rounded-[2.5rem] overflow-hidden aspect-square">
                         {currentImage ? (
                             <img src={currentImage} alt={product.name} className="w-full h-full object-cover" />
@@ -146,32 +115,26 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
                         )}
                     </div>
 
+                    {/* Product Info */}
                     <div className="space-y-6">
                         {product.category_name && (
                             <span className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 text-emerald-400 rounded-full text-[10px] font-black uppercase tracking-wider border border-emerald-500/20">
                                 <Tag size={10} /> {product.category_name}
                             </span>
                         )}
-
                         <h1 className="text-4xl font-black text-white tracking-tight">{product.name}</h1>
-
                         <div className="flex items-center gap-3">
                             <div className="flex items-center gap-1 text-emerald-400">
                                 {[1, 2, 3, 4, 5].map(i => (
-                                    <Star key={i} size={14} fill={i <= (product as any).rating || 5 ? "currentColor" : "none"} />
+                                    <Star key={i} size={14} fill={i <= ((product as any).rating || 5) ? "currentColor" : "none"} />
                                 ))}
                             </div>
                             <span className="text-xs text-slate-500">{reviews.length} Reviews</span>
                         </div>
+                        <p className="text-[10px] text-slate-600 font-mono tracking-widest uppercase">SKU: {currentSKU}</p>
+                        {product.description && <p className="text-slate-400 leading-relaxed text-sm">{product.description}</p>}
 
-                        <p className="text-[10px] text-slate-600 font-mono tracking-widest uppercase">
-                            SKU: {currentSKU}
-                        </p>
-
-                        {product.description && (
-                            <p className="text-slate-400 leading-relaxed text-sm">{product.description}</p>
-                        )}
-
+                        {/* Variant Options */}
                         {options.length > 0 && (
                             <div className="space-y-6 pt-2">
                                 {options.map(opt => (
@@ -179,9 +142,7 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
                                         <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{opt.name}</p>
                                         <div className="flex flex-wrap gap-2">
                                             {opt.values.map(val => (
-                                                <button
-                                                    key={val}
-                                                    onClick={() => setSelections(prev => ({ ...prev, [opt.name]: val }))}
+                                                <button key={val} onClick={() => setSelections(prev => ({ ...prev, [opt.name]: val }))}
                                                     className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all
                                                         ${selections[opt.name] === val
                                                             ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
@@ -196,6 +157,7 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
                             </div>
                         )}
 
+                        {/* Pricing */}
                         {showPrice ? (
                             <div className="space-y-1 pt-4">
                                 <div className="text-4xl font-black text-white">
@@ -211,17 +173,17 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
                             </div>
                         )}
 
+                        {/* Stock */}
                         {currentStock !== undefined && (
-                            <div className={`flex items-center gap-2 text-xs font-bold
-                                ${Number(currentStock) > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                                {Number(currentStock) > 0 ? (
-                                    <><CheckCircle2 size={14} /> {Math.round(Number(currentStock))} in stock</>
-                                ) : (
-                                    <><AlertCircle size={14} /> Out of stock</>
-                                )}
+                            <div className={`flex items-center gap-2 text-xs font-bold ${Number(currentStock) > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                {Number(currentStock) > 0
+                                    ? <><CheckCircle2 size={14} /> {Math.round(Number(currentStock))} in stock</>
+                                    : <><AlertCircle size={14} /> Out of stock</>
+                                }
                             </div>
                         )}
 
+                        {/* Add to Cart */}
                         {!isQuoteMode && (
                             <div className="space-y-4 pt-4">
                                 <div className="flex items-center gap-4">
@@ -238,20 +200,15 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
                                         </button>
                                     </div>
                                 </div>
-
                                 <div className="flex gap-3">
-                                    <button
-                                        onClick={handleAddToCart}
+                                    <button onClick={handleAddToCart}
                                         disabled={currentStock !== undefined && Number(currentStock) <= 0}
                                         className={`flex-1 py-4 rounded-2xl font-bold text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2
-                                            ${added
-                                                ? 'bg-emerald-500 text-white'
-                                                : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/30'
-                                            } disabled:opacity-40 disabled:cursor-not-allowed`}>
+                                            ${added ? 'bg-emerald-500 text-white' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/30'}
+                                            disabled:opacity-40 disabled:cursor-not-allowed`}>
                                         {added ? <><CheckCircle2 size={18} /> Added to Cart</> : <><ShoppingCart size={18} /> Add to Cart</>}
                                     </button>
-                                    <button
-                                        onClick={() => toggleWishlist(product.id)}
+                                    <button onClick={() => toggleWishlist(product.id)}
                                         className={`w-14 h-14 rounded-2xl border flex items-center justify-center transition-all
                                             ${isInWishlist(product.id)
                                                 ? 'bg-rose-500/20 text-rose-400 border-rose-500/30'
@@ -263,8 +220,9 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
                             </div>
                         )}
 
+                        {/* Quote Mode CTA */}
                         {isQuoteMode && (
-                            <Link href={`/tenant/${slug}/quote`}
+                            <Link href={path('/quote')}
                                 className="block w-full py-4 bg-teal-500/10 text-teal-400 border border-teal-500/20 rounded-2xl font-bold text-sm uppercase tracking-wider text-center hover:bg-teal-500/20 transition-all">
                                 <FileQuestion size={18} className="inline mr-2" /> Request a Quote
                             </Link>
@@ -280,8 +238,7 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
                             <p className="text-xs text-slate-500 mt-2 font-bold uppercase tracking-widest">Verified Experiences</p>
                         </div>
                         {isAuthenticated && (
-                            <button
-                                onClick={() => setShowReviewForm(!showReviewForm)}
+                            <button onClick={() => setShowReviewForm(!showReviewForm)}
                                 className="px-6 py-3 bg-white/5 border border-white/10 rounded-xl text-xs font-black text-white uppercase tracking-widest hover:bg-white/10 transition-all">
                                 {showReviewForm ? 'Cancel' : 'Write a Review'}
                             </button>
@@ -296,47 +253,25 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
                                         <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Rate this product</p>
                                         <div className="flex gap-2">
                                             {[1, 2, 3, 4, 5].map(star => (
-                                                <button
-                                                    key={star}
-                                                    type="button"
-                                                    onClick={() => setNewReview(prev => ({ ...prev, rating: star }))}
-                                                    className="transition-transform hover:scale-110">
-                                                    <Star
-                                                        size={32}
-                                                        className={star <= newReview.rating ? 'text-emerald-500' : 'text-slate-700'}
-                                                        fill={star <= newReview.rating ? 'currentColor' : 'none'}
-                                                    />
+                                                <button key={star} type="button" onClick={() => setNewReview(prev => ({ ...prev, rating: star }))} className="transition-transform hover:scale-110">
+                                                    <Star size={32} className={star <= newReview.rating ? 'text-emerald-500' : 'text-slate-700'} fill={star <= newReview.rating ? 'currentColor' : 'none'} />
                                                 </button>
                                             ))}
                                         </div>
+                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Review Headline</p>
+                                        <input required type="text" placeholder="Example: Absolutely amazing!" value={newReview.title}
+                                            onChange={e => setNewReview(prev => ({ ...prev, title: e.target.value }))}
+                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500/50" />
                                     </div>
                                     <div className="space-y-4">
-                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Review Headline</p>
-                                        <input
-                                            required
-                                            type="text"
-                                            placeholder="Example: Absolutely amazing!"
-                                            value={newReview.title}
-                                            onChange={e => setNewReview(prev => ({ ...prev, title: e.target.value }))}
-                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500/50"
-                                        />
+                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Detailed Feedback</p>
+                                        <textarea required rows={4} placeholder="What did you like or dislike?" value={newReview.content}
+                                            onChange={e => setNewReview(prev => ({ ...prev, content: e.target.value }))}
+                                            className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-4 text-white text-sm focus:outline-none focus:border-emerald-500/50 resize-none" />
                                     </div>
                                 </div>
-                                <div className="space-y-4">
-                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Detailed Feedback</p>
-                                    <textarea
-                                        required
-                                        rows={4}
-                                        placeholder="What did you like or dislike? How was the quality?"
-                                        value={newReview.content}
-                                        onChange={e => setNewReview(prev => ({ ...prev, content: e.target.value }))}
-                                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-4 text-white text-sm focus:outline-none focus:border-emerald-500/50 resize-none"
-                                    />
-                                </div>
                                 <div className="flex justify-end">
-                                    <button
-                                        disabled={submitting}
-                                        type="submit"
+                                    <button disabled={submitting} type="submit"
                                         className="px-8 py-4 bg-emerald-500 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-emerald-400 disabled:opacity-50 transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20">
                                         {submitting ? <Loader2 size={16} className="animate-spin" /> : 'Publish Review'}
                                     </button>
@@ -374,9 +309,7 @@ export default function MidnightProductDetail({ product }: ProductDetailProps) {
                                         )}
                                     </div>
                                     {review.title && <h3 className="font-bold text-white uppercase tracking-tight">{review.title}</h3>}
-                                    <p className="text-sm text-slate-400 leading-relaxed font-medium line-clamp-3">
-                                        {review.content}
-                                    </p>
+                                    <p className="text-sm text-slate-400 leading-relaxed font-medium line-clamp-3">{review.content}</p>
                                     <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest pt-2">
                                         {new Date(review.created_at).toLocaleDateString()}
                                     </p>

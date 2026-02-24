@@ -103,13 +103,18 @@ export default async function middleware(req: NextRequest) {
     const isPortalRoute = url.pathname.startsWith('/tenant') || url.pathname.startsWith('/supplier-portal');
     const isStorefrontAlias = url.pathname === '/store' || url.pathname === '/home';
 
-    // Additional Storefront sub-routes that should be public
+    // Additional Storefront sub-routes that should be public on tenant subdomains.
+    // These paths arrive BEFORE the tenant rewrite, so they need to be whitelisted.
     const isStorefrontSubRoute =
         url.pathname.startsWith('/product') ||
         url.pathname.startsWith('/categories') ||
         url.pathname.startsWith('/cart') ||
         url.pathname.startsWith('/checkout') ||
-        url.pathname.startsWith('/search');
+        url.pathname.startsWith('/search') ||
+        url.pathname.startsWith('/account') ||
+        url.pathname.startsWith('/quote') ||
+        url.pathname.startsWith('/login') ||
+        url.pathname.startsWith('/register');
 
     const isPublicRoute = url.pathname === '/' || url.pathname.startsWith('/landing') || isAuthRoute || isPortalRoute || isStorefrontAlias || isStorefrontSubRoute;
     const hasAuthToken = req.cookies.get('auth_token')?.value && req.cookies.get('auth_token')?.value !== '';
@@ -215,18 +220,67 @@ export default async function middleware(req: NextRequest) {
         return NextResponse.rewrite(new URL(`/landing${path === "/" ? "" : path}`, req.url));
     }
 
-    // On tenant subdomains, rewrite storefront routes to the tenant page.
-    // "/", "/store", "/home" all map to the storefront.
-    // All other routes (sales, dashboard, finance, etc.) pass through to the
-    // regular app routes — the tenant context is established via cookies/headers.
-    if (url.pathname === '/' || url.pathname === '/store' || url.pathname === '/home') {
-        return NextResponse.rewrite(
-            new URL(`/tenant/${currentHost}${searchParams.length > 0 ? '?' + searchParams : ''}`, req.url)
-        );
+    // ─── TENANT SUBDOMAIN STOREFRONT REWRITES ─────────────────────────────
+    // On tenant subdomains (e.g. tsf-global.tsf.ci), rewrite storefront
+    // routes so users see clean URLs:
+    //   tsf-global.tsf.ci/register  →  internally /tenant/tsf-global/register
+    //   tsf-global.tsf.ci/account   →  internally /tenant/tsf-global/account
+    //
+    // ERP admin routes (sales, finance, inventory, etc.) still pass through
+    // directly since those belong to the authenticated admin panel.
+
+    // These are the ERP/admin routes that should NOT be rewritten to /tenant/[slug]/...
+    // They work on their own within the admin panel route group.
+    // Note: /login and /register are storefront routes on tenant subdomains,
+    // so they ARE rewritten. The ERP login lives on the root domain only.
+    const isAdminRoute =
+        url.pathname.startsWith('/dashboard') ||
+        url.pathname.startsWith('/admin') ||
+        url.pathname.startsWith('/organizations') ||
+        url.pathname.startsWith('/modules') ||
+        url.pathname.startsWith('/storage') ||
+        url.pathname.startsWith('/inventory') ||
+        url.pathname.startsWith('/finance') ||
+        url.pathname.startsWith('/sales') ||
+        url.pathname.startsWith('/purchases') ||
+        url.pathname.startsWith('/crm') ||
+        url.pathname.startsWith('/hr') ||
+        url.pathname.startsWith('/products') ||
+        url.pathname.startsWith('/ecommerce') ||
+        url.pathname.startsWith('/migration') ||
+        url.pathname.startsWith('/settings') ||
+        url.pathname.startsWith('/workspace') ||
+        url.pathname.startsWith('/users') ||
+        url.pathname.startsWith('/saas') ||
+        url.pathname.startsWith('/supplier-portal') ||
+        url.pathname.startsWith('/tsf-system-kernel-7788');
+
+    // If it's already a /tenant/... path, let it through (prevent double rewrite)
+    if (url.pathname.startsWith('/tenant')) {
+        return NextResponse.next();
     }
 
-    // Let all app routes work normally on tenant subdomains
-    return NextResponse.next();
+    // If it's an ERP admin route, let it through on the tenant subdomain
+    if (isAdminRoute) {
+        return NextResponse.next();
+    }
+
+    // Everything else on the tenant subdomain is a storefront route.
+    // Rewrite it to /tenant/[slug]/... internally.
+    // Examples:
+    //   /              →  /tenant/tsf-global
+    //   /register      →  /tenant/tsf-global/register
+    //   /login         →  /tenant/tsf-global/login    (storefront login)
+    //   /account       →  /tenant/tsf-global/account
+    //   /product/123   →  /tenant/tsf-global/product/123
+    //   /cart           →  /tenant/tsf-global/cart
+    const storefrontPath = url.pathname === '/' || url.pathname === '/store' || url.pathname === '/home'
+        ? `/tenant/${currentHost}`
+        : `/tenant/${currentHost}${url.pathname}`;
+
+    return NextResponse.rewrite(
+        new URL(`${storefrontPath}${searchParams.length > 0 ? '?' + searchParams : ''}`, req.url)
+    );
 }
 
 export const config = {

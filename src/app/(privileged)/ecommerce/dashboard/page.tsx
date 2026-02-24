@@ -1,4 +1,5 @@
 'use client'
+import { Activity, ShieldCheck } from 'lucide-react'
 
 import { useState, useEffect } from 'react'
 import { erpFetch } from '@/lib/erp-api'

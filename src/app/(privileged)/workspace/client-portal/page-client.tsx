@@ -1,8 +1,10 @@
 'use client'
 
+import { Badge } from '@/components/ui/badge'
+
 import { useState, useEffect } from 'react'
 import { getClientWallets, getClientTickets, getQuoteRequests, getClientAccess, updateClientTicket } from '@/app/actions/portal'
-import { Monitor, Wallet, Ticket, FileQuestion, Users, RefreshCw, CheckCircle, XCircle, Clock, ChevronRight, DollarSign, MessageSquare, Globe } from 'lucide-react'
+import { Monitor, Wallet, Ticket, FileQuestion, Users, RefreshCw, CheckCircle, XCircle, Clock, ChevronRight, DollarSign, MessageSquare, Globe, Activity} from 'lucide-react'
 
 type ClientWallet = { id: number; client?: { name: string }; client_name?: string; balance: number; currency?: string }
 type Ticket = { id: number; subject: string; status: string; priority?: string; client?: { name: string }; client_name?: string; created_at?: string }

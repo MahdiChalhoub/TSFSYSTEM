@@ -1,4 +1,5 @@
 'use client'
+import { Activity } from 'lucide-react'
 
 import { useState, useEffect, useTransition, useMemo } from "react"
 import type { OperationalRequest, Warehouse, Product } from '@/types/erp'

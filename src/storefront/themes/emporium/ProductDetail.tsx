@@ -1,4 +1,5 @@
 'use client'
+import { Star, ShieldCheck } from 'lucide-react'
 
 import { useParams } from 'next/navigation'
 import {

@@ -1,4 +1,5 @@
 'use client'
+import { Star } from 'lucide-react'
 
 import { useCurrency } from '@/lib/utils/currency'
 

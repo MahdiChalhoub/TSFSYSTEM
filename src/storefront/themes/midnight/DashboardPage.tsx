@@ -1,7 +1,7 @@
 'use client'
+import { Star } from 'lucide-react'
 
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import {
     ShoppingBag, Wallet, TicketCheck, ArrowLeft, Package, Clock,
@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../engine/hooks/useAuth'
 import { useWishlist } from '../../engine/hooks/useWishlist'
+import { useStorefrontPath } from '../../engine/hooks/useStorefrontPath'
 
 interface DashboardData {
     total_orders: number
@@ -27,7 +28,7 @@ interface DashboardData {
 }
 
 export default function MidnightDashboardPage() {
-    const { slug } = useParams<{ slug: string }>()
+    const { path, slug } = useStorefrontPath()
     const { user, isAuthenticated } = useAuth()
     const { wishlistCount } = useWishlist()
     const [dashboard, setDashboard] = useState<DashboardData | null>(null)
@@ -84,7 +85,7 @@ export default function MidnightDashboardPage() {
                             Please authenticate to proceed.
                         </p>
                     </div>
-                    <Link href={`/tenant/${slug}/login`}
+                    <Link href={path('/login')}
                         className="inline-flex items-center gap-3 px-10 py-4 bg-emerald-600 text-white rounded-2xl font-black transition-all shadow-xl shadow-emerald-900/40 hover:scale-105 uppercase tracking-widest text-xs">
                         Authorize Now <ExternalLink size={16} />
                     </Link>
@@ -116,7 +117,7 @@ export default function MidnightDashboardPage() {
                                 <Star size={14} fill="currentColor" /> {dashboard.loyalty_tier} Status
                             </div>
                         )}
-                        <Link href={`/tenant/${slug}/account/profile`} className="w-12 h-12 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all">
+                        <Link href={path('/account/profile')} className="w-12 h-12 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all">
                             <Settings size={20} />
                         </Link>
                     </div>
@@ -158,42 +159,42 @@ export default function MidnightDashboardPage() {
                     <OperationCard
                         title="Order History"
                         description="Track and manage your commerce ledger"
-                        path={`/tenant/${slug}/account/orders`}
+                        path={path('/account/orders')}
                         icon={<Package size={24} />}
                         color="blue"
                     />
                     <OperationCard
                         title="Wishlist"
                         description={`${wishlistCount} saved items in collection`}
-                        path={`/tenant/${slug}/account/wishlist`}
+                        path={path('/account/wishlist')}
                         icon={<Heart size={24} />}
                         color="rose"
                     />
                     <OperationCard
                         title="Wallet & Loyalty"
                         description="Manage credits and redemption rules"
-                        path={`/tenant/${slug}/account/wallet`}
+                        path={path('/account/wallet')}
                         icon={<Wallet size={24} />}
                         color="amber"
                     />
                     <OperationCard
                         title="Communication"
                         description="View alerts and system messages"
-                        path={`/tenant/${slug}/account/notifications`}
+                        path={path('/account/notifications')}
                         icon={<Bell size={24} />}
                         color="cyan"
                     />
                     <OperationCard
                         title="Support Node"
                         description={`${dashboard?.open_tickets || 0} active support threads`}
-                        path={`/tenant/${slug}/account/tickets`}
+                        path={path('/account/tickets')}
                         icon={<TicketCheck size={24} />}
                         color="purple"
                     />
                     <OperationCard
                         title="Profile Control"
                         description="Update identity and security parameters"
-                        path={`/tenant/${slug}/account/profile`}
+                        path={path('/account/profile')}
                         icon={<User size={24} />}
                         color="slate"
                     />

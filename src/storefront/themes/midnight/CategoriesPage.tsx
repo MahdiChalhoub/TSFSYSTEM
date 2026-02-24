@@ -1,14 +1,13 @@
 'use client'
 
-import { useState } from 'react'
-import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { Grid3x3, ArrowRight, Package } from 'lucide-react'
 import { useStore } from '../../engine/hooks/useStore'
+import { useStorefrontPath } from '../../engine/hooks/useStorefrontPath'
 
 export default function MidnightCategoriesPage() {
-    const { slug } = useParams<{ slug: string }>()
-    const { categories, products, getProductsByCategory } = useStore()
+    const { path } = useStorefrontPath()
+    const { categories, getProductsByCategory } = useStore()
 
     if (categories.length === 0) {
         return (
@@ -23,18 +22,13 @@ export default function MidnightCategoriesPage() {
     return (
         <div className="max-w-6xl mx-auto px-4 py-8">
             <h1 className="text-3xl font-black text-white tracking-tight mb-8">Categories</h1>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {categories.map(cat => {
                     const catProducts = getProductsByCategory(cat.id)
                     const previewImage = catProducts.find(p => p.image_url)?.image_url
-
                     return (
-                        <Link
-                            key={cat.id}
-                            href={`/tenant/${slug}?category=${cat.name}`}
-                            className="group bg-slate-900/40 border border-white/5 rounded-2xl overflow-hidden hover:border-emerald-500/30 transition-all duration-300"
-                        >
+                        <Link key={cat.id} href={path(`/?category=${cat.name}`)}
+                            className="group bg-slate-900/40 border border-white/5 rounded-2xl overflow-hidden hover:border-emerald-500/30 transition-all duration-300">
                             <div className="aspect-[16/9] bg-slate-950 overflow-hidden relative">
                                 {previewImage ? (
                                     <img src={previewImage} alt={cat.name}

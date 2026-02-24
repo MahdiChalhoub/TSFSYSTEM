@@ -1,4 +1,5 @@
 'use client'
+import { ShieldCheck } from 'lucide-react'
 
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { getLedgerEntries, getLedgerUsers } from '@/app/actions/finance/ledger'
