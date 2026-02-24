@@ -16,14 +16,16 @@ class DashboardAPITests(APITestCase):
     def setUp(self):
         self.org = Organization.objects.create(name="Dashboard Org", slug="dash")
         self.site = Site.objects.create(organization=self.org, name="Main", code="MN")
-        self.admin = User.objects.create_superuser(
+        self.admin = User.objects.create_user(
             username="dashadmin", password="password123", 
             email="admin@dash.com", organization=self.org
         )
-        self.client.force_authenticate(user=self.admin)
+        from rest_framework.authtoken.models import Token
+        self.token = Token.objects.create(user=self.admin)
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
         
-        # Add tenant header
-        self.client.defaults['HTTP_X_TENANT_SLUG'] = 'dash'
+        # Add tenant header (Middleware expects X-Tenant-Id as UUID)
+        self.client.defaults['HTTP_X_TENANT_ID'] = str(self.org.id)
 
     def test_realtime_kpis_smoke(self):
         """realtime_kpis should return 200 and expected structure."""
