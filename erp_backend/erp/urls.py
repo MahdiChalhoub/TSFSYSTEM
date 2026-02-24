@@ -22,6 +22,7 @@ from .views_kernel import KernelViewSet
 from .views_packages import PackageViewSet
 from .views_encryption import EncryptionViewSet
 from .views_udle import UDLESavedViewViewSet
+from .views_domains import CustomDomainViewSet, resolve_custom_domain
 from .list_preferences_views import (
     user_list_preference as list_pref_user_view,
     org_list_default as list_pref_org_view,
@@ -53,6 +54,7 @@ router.register(r'saas/plans', SaaSPlansViewSet, basename='saas-plans')
 router.register(r'saas/clients', SaaSClientViewSet, basename='saas-clients')
 router.register(r'kernel', KernelViewSet, basename='kernel')
 router.register(r'packages', PackageViewSet, basename='packages')
+router.register(r'domains', CustomDomainViewSet, basename='domains')
 
 urlpatterns = [
     path('health/', health_check),
@@ -70,6 +72,7 @@ urlpatterns = [
     path('auth/2fa/disable/', disable_2fa_view, name='disable-2fa'),
     path('sales/import-csv/', import_sales_csv_view, name='import-sales-csv'),
     path('saas/pricing/', PublicPricingView.as_view(), name='public_pricing'),
+    path('domains/resolve/', resolve_custom_domain, name='domain_resolve'),
     
     # Module Management (Tenant Side)
     path('modules/', ModuleListView.as_view(), name='module_list'),

@@ -795,3 +795,6 @@ class UDLESavedView(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.model_name}) for {self.user}"
+
+# Import domain models so Django discovers them for migrations
+from .models_domains import CustomDomain  # noqa: E402, F401
