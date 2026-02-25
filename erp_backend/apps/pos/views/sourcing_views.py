@@ -1,7 +1,7 @@
 from .base import (
     Response, action, viewsets
 )
-from apps.pos.sourcing_models import ProductSupplier, SupplierPriceHistory
+from apps.pos.models import ProductSupplier, SupplierPriceHistory
 from apps.pos.serializers import (
     ProductSupplierSerializer, SupplierPriceHistorySerializer
 )

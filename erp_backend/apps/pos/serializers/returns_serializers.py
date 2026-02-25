@@ -1,5 +1,5 @@
 from .base import serializers
-from apps.pos.returns_models import SalesReturn, SalesReturnLine, CreditNote, PurchaseReturn, PurchaseReturnLine
+from apps.pos.models import SalesReturn, SalesReturnLine, CreditNote, PurchaseReturn, PurchaseReturnLine
 
 class SalesReturnLineSerializer(serializers.ModelSerializer):
     product_name = serializers.ReadOnlyField(source='product.name')

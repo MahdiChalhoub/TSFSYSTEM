@@ -1,5 +1,5 @@
 from .base import serializers
-from apps.pos.purchase_order_models import PurchaseOrder, PurchaseOrderLine
+from apps.pos.models import PurchaseOrder, PurchaseOrderLine
 
 class PurchaseOrderLineSerializer(serializers.ModelSerializer):
     product_name = serializers.ReadOnlyField(source='product.name')

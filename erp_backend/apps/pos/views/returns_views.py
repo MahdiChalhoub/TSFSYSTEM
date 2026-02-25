@@ -2,7 +2,7 @@ from .base import (
     Response, action, get_current_tenant_id,
     Organization, TenantModelViewSet
 )
-from apps.pos.returns_models import SalesReturn, CreditNote, PurchaseReturn
+from apps.pos.models import SalesReturn, CreditNote, PurchaseReturn
 from apps.pos.services import ReturnsService
 from apps.pos.serializers import (
     SalesReturnSerializer, CreditNoteSerializer, PurchaseReturnSerializer

@@ -17,6 +17,11 @@ from .inventory_views import (
     StockAlertViewSet,
     StockTransferOrderViewSet,
 )
+from .counting_views import InventorySessionViewSet, InventorySessionLineViewSet, SyncViewSet
+from .location_views import (
+    WarehouseZoneViewSet, WarehouseAisleViewSet, WarehouseRackViewSet,
+    WarehouseShelfViewSet, WarehouseBinViewSet, ProductLocationViewSet
+)
 
 __all__ = [
     'BrandViewSet',
@@ -34,4 +39,7 @@ __all__ = [
     'StockAdjustmentOrderViewSet',
     'StockAlertViewSet',
     'StockTransferOrderViewSet',
+    'InventorySessionViewSet', 'InventorySessionLineViewSet', 'SyncViewSet',
+    'WarehouseZoneViewSet', 'WarehouseAisleViewSet', 'WarehouseRackViewSet',
+    'WarehouseShelfViewSet', 'WarehouseBinViewSet', 'ProductLocationViewSet'
 ]

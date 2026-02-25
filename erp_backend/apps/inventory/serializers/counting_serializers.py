@@ -4,7 +4,7 @@ Stock Count Serializers
 Serializers for InventorySession and InventorySessionLine.
 """
 from rest_framework import serializers
-from .counting_models import InventorySession, InventorySessionLine
+from apps.inventory.models import InventorySession, InventorySessionLine
 
 
 class InventorySessionLineSerializer(serializers.ModelSerializer):

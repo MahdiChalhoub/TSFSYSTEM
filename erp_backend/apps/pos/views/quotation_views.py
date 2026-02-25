@@ -2,7 +2,7 @@ from .base import (
     Response, action, transaction, Decimal,
     TenantModelViewSet, Product
 )
-from apps.pos.quotation_models import Quotation, QuotationLine
+from apps.pos.models import Quotation, QuotationLine
 from apps.pos.serializers import (
     QuotationSerializer, QuotationLineSerializer
 )

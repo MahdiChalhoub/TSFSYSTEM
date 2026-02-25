@@ -41,7 +41,7 @@ class ReturnsService:
             user: User processing the return
         """
         from apps.pos.models import Order, OrderLine
-        from apps.pos.returns_models import SalesReturn, SalesReturnLine
+        from apps.pos.models import SalesReturn, SalesReturnLine
 
         with transaction.atomic():
             order = Order.objects.get(
@@ -104,7 +104,7 @@ class ReturnsService:
         2. Create a CreditNote
         3. Post reversing GL entry
         """
-        from apps.pos.returns_models import SalesReturn, CreditNote
+        from apps.pos.models import SalesReturn, CreditNote
         from erp.services import ConfigurationService
 
         (InventoryService,) = _safe_import('apps.inventory.services', ['InventoryService'])
@@ -229,7 +229,7 @@ class ReturnsService:
     @staticmethod
     def cancel_sales_return(organization, return_id):
         """Cancel a pending sales return."""
-        from apps.pos.returns_models import SalesReturn
+        from apps.pos.models import SalesReturn
 
         with transaction.atomic():
             sales_return = SalesReturn.objects.select_for_update().get(
@@ -256,7 +256,7 @@ class ReturnsService:
             reason: Return reason
         """
         from apps.pos.models import Order, OrderLine
-        from apps.pos.returns_models import PurchaseReturn, PurchaseReturnLine
+        from apps.pos.models import PurchaseReturn, PurchaseReturnLine
 
         with transaction.atomic():
             order = Order.objects.get(
@@ -316,7 +316,7 @@ class ReturnsService:
         1. Remove items from inventory
         2. Post reversing GL entry (Dr. AP → Cr. Inventory + Cr. VAT Input)
         """
-        from apps.pos.returns_models import PurchaseReturn
+        from apps.pos.models import PurchaseReturn
         from erp.services import ConfigurationService
 
         (InventoryService,) = _safe_import('apps.inventory.services', ['InventoryService'])

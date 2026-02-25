@@ -5,11 +5,11 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from erp.views import TenantModelViewSet
 
-from .location_models import (
+from apps.inventory.models import (
     WarehouseZone, WarehouseAisle, WarehouseRack,
     WarehouseShelf, WarehouseBin, ProductLocation
 )
-from .location_serializers import (
+from apps.inventory.serializers import (
     WarehouseZoneSerializer, WarehouseAisleSerializer, WarehouseRackSerializer,
     WarehouseShelfSerializer, WarehouseBinSerializer, ProductLocationSerializer
 )

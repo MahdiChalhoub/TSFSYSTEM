@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 class SerialService:
     @staticmethod
     def register_serial_exit(organization, product, warehouse, serial_number, reference, user_name=None):
-        from apps.inventory.advanced_models import ProductSerial, SerialLog
+        from apps.inventory.models import ProductSerial, SerialLog
         serial = ProductSerial.objects.filter(
             organization=organization,
             product=product,
@@ -29,7 +29,7 @@ class SerialService:
 
     @staticmethod
     def register_serial_entry(organization, product, warehouse, serial_number, reference, cost_price=Decimal('0'), user_name=None):
-        from apps.inventory.advanced_models import ProductSerial, SerialLog
+        from apps.inventory.models import ProductSerial, SerialLog
         serial, created = ProductSerial.objects.get_or_create(
             organization=organization,
             product=product,
