@@ -31,5 +31,6 @@ urlpatterns = [
     path('health/', health_check),
 ]
 
-# Serve static files in all environments (nginx proxies to this)
+# Serve static and media files in all environments (nginx proxies to this)
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
