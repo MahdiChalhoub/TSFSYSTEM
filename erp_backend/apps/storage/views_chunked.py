@@ -40,12 +40,19 @@ def chunked_upload_init(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    org_id = request.headers.get('X-Tenant-Id') or \
-             getattr(request, 'organization', None) or \
+    org_id = getattr(request, 'organization_id', None) or \
+             request.headers.get('X-Tenant-Id') or \
              getattr(request.user, 'organization_id', None)
     
     from erp.models import Organization
-    org = Organization.objects.filter(id=org_id).first() if org_id else None
+    import uuid
+    org = None
+    if org_id:
+        try:
+            uuid.UUID(str(org_id))
+            org = Organization.objects.filter(id=org_id).first()
+        except (ValueError, AttributeError):
+            org = Organization.objects.filter(slug__iexact=org_id).first()
 
     session = UploadSession(
         filename=filename,
@@ -225,12 +232,19 @@ def chunked_upload_complete(request, session_id):
 
 def _finalize_file_upload(session, checksum, request):
     """Move assembled file to cloud storage and create StoredFile record."""
-    org_id = request.headers.get('X-Tenant-Id') or \
-             getattr(request, 'organization', None) or \
+    org_id = getattr(request, 'organization_id', None) or \
+             request.headers.get('X-Tenant-Id') or \
              getattr(request.user, 'organization_id', None)
     
     from erp.models import Organization
-    org = Organization.objects.filter(id=org_id).first() if org_id else None
+    import uuid
+    org = None
+    if org_id:
+        try:
+            uuid.UUID(str(org_id))
+            org = Organization.objects.filter(id=org_id).first()
+        except (ValueError, AttributeError):
+            org = Organization.objects.filter(slug__iexact=org_id).first()
     provider = StorageProvider.get_for_organization(org)
 
     # Create a file-like wrapper for the assembled temp file
