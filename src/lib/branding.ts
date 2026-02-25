@@ -4,7 +4,7 @@ export const PLATFORM_CONFIG = {
     federation_name: "TSF Platform",
     domain: "tsf.ci",
     suffix: ".tsf.ci",
-    version: "2.9.2-AG-260224.2340",
+    version: "2.9.2-AG-260225.0129",
     support_email: "support@tsf.ci"
 };
 
