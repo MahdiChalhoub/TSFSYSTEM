@@ -17,7 +17,6 @@ rsync -avz -e "ssh -i ~/.ssh/id_deploy" \
     --exclude '.venv' \
     --exclude '**/venv' \
     --exclude '**/.venv' \
-    --exclude '**/erp_backend' \
     --exclude '**/__pycache__' \
     --exclude '.env' \
     --exclude 'db_data' \
@@ -35,7 +34,6 @@ rsync -avz -e "ssh -i ~/.ssh/id_deploy" \
     --exclude '.venv' \
     --exclude '**/venv' \
     --exclude '**/.venv' \
-    --exclude '**/erp_backend' \
     --exclude '**/__pycache__' \
     --exclude '.env' \
     --exclude 'db_data' \
