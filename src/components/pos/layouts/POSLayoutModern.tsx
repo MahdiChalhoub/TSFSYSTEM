@@ -576,9 +576,8 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                         className={clsx(
                                             "px-2.5 py-1.5 group transition-colors duration-300 flex items-center gap-1.5 cursor-pointer",
                                             selectedCartIdx === idx ? "bg-amber-50 ring-1 ring-amber-200"
-                                                : highlightedItemId === item.productId ? "bg-emerald-400 text-white"
-                                                    : lastAddedItemId === item.productId ? "bg-emerald-500/20"
-                                                        : "hover:bg-white"
+                                                : highlightedItemId === item.productId ? "bg-emerald-100"
+                                                    : "hover:bg-white"
                                         )}
                                     >
                                         <span className="text-[10px] text-gray-300 font-mono w-4 shrink-0 text-center">{idx + 1}</span>
