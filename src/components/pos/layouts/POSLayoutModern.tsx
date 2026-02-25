@@ -572,6 +572,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 {cart.map((item: any, idx: number) => (
                                     <div
                                         key={item.productId}
+                                        onClick={() => { setSelectedCartIdx(idx); setNumpadMode('qty'); setShowNumpad(true); }}
                                         className={clsx(
                                             "px-2.5 py-1.5 group transition-colors duration-300 flex items-center gap-1.5 cursor-pointer",
                                             selectedCartIdx === idx ? "bg-amber-50 ring-1 ring-amber-200"
@@ -589,7 +590,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                             </div>
                                         </div>
                                         <span
-                                            onClick={() => { setSelectedCartIdx(idx); setNumpadMode('price'); setShowNumpad(true); }}
+                                            onClick={(e) => { e.stopPropagation(); setSelectedCartIdx(idx); setNumpadMode('price'); setShowNumpad(true); }}
                                             className="text-[12px] font-black text-gray-400 shrink-0 hover:text-emerald-600 transition-colors"
                                         >
                                             {currency}{Number(item.price).toFixed(2)}
@@ -602,7 +603,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                                 <Minus size={12} />
                                             </button>
                                             <span
-                                                onClick={() => { setSelectedCartIdx(idx); setNumpadMode('qty'); setShowNumpad(true); }}
+                                                onClick={(e) => { e.stopPropagation(); setSelectedCartIdx(idx); setNumpadMode('qty'); setShowNumpad(true); }}
                                                 className="w-7 text-center text-[13px] font-black tabular-nums text-gray-900 hover:text-emerald-600 transition-colors"
                                             >
                                                 {item.quantity}
