@@ -731,7 +731,9 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 className={clsx(
                                     "flex-1 rounded-xl flex flex-col items-center justify-center transition-all relative overflow-hidden",
                                     cart.length > 0 && !isProcessing
-                                        ? "bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-200/50 hover:shadow-2xl hover:shadow-emerald-300/60 hover:scale-[1.02] active:scale-[0.98]"
+                                        ? changeDue > 0
+                                            ? "bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-xl shadow-amber-200/50 hover:shadow-2xl hover:shadow-amber-300/60 hover:scale-[1.02] active:scale-[0.98]"
+                                            : "bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-200/50 hover:shadow-2xl hover:shadow-emerald-300/60 hover:scale-[1.02] active:scale-[0.98]"
                                         : "bg-gray-200 text-gray-400"
                                 )}
                             >
@@ -742,32 +744,21 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 <span className="text-xl font-black leading-none relative z-10 tabular-nums">{currency}{formatNumber(changeDue > 0 ? changeDue : totalAmount)}</span>
                             </button>
                         </div>
-                        {/* ── Change Management ── */}
-                        {changeDue > 0 && (
-                            <div className="flex items-center justify-between bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/60 rounded-xl px-3 py-2">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-7 h-7 rounded-lg bg-emerald-500 flex items-center justify-center">
-                                        <Banknote size={14} className="text-white" />
-                                    </div>
-                                    <div>
-                                        <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest block">Change Due</span>
-                                        <span className="text-base font-black text-emerald-800 tabular-nums">{currency}{formatNumber(changeDue)}</span>
-                                    </div>
-                                </div>
-                                {selectedClientId > 1 && onSetStoreChangeInWallet && (
-                                    <button
-                                        onClick={() => onSetStoreChangeInWallet(!storeChangeInWallet)}
-                                        className={clsx(
-                                            "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all",
-                                            storeChangeInWallet
-                                                ? "bg-blue-500 border-blue-500 text-white shadow-md shadow-blue-100"
-                                                : "bg-white border-gray-200 text-gray-500 hover:border-blue-300"
-                                        )}
-                                    >
-                                        <Wallet size={12} />
-                                        {storeChangeInWallet ? '✓ Store in Wallet' : 'Store in Wallet'}
-                                    </button>
-                                )}
+                        {/* ── Change Options (wallet / rounding) ── */}
+                        {changeDue > 0 && selectedClientId > 1 && onSetStoreChangeInWallet && (
+                            <div className="flex items-center gap-1.5">
+                                <button
+                                    onClick={() => onSetStoreChangeInWallet(!storeChangeInWallet)}
+                                    className={clsx(
+                                        "flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold border-2 transition-all",
+                                        storeChangeInWallet
+                                            ? "bg-blue-500 border-blue-500 text-white shadow-md shadow-blue-100"
+                                            : "bg-white border-gray-200 text-gray-500 hover:border-blue-300 hover:bg-blue-50"
+                                    )}
+                                >
+                                    <Wallet size={14} />
+                                    {storeChangeInWallet ? '✓ Add to Wallet' : 'Add to Wallet'}
+                                </button>
                             </div>
                         )}
                     </div>
