@@ -14,7 +14,11 @@ rsync -avz -e "ssh -i ~/.ssh/id_deploy" \
     --exclude '.next' \
     --exclude '.git' \
     --exclude 'venv' \
-    --exclude '__pycache__' \
+    --exclude '.venv' \
+    --exclude '**/venv' \
+    --exclude '**/.venv' \
+    --exclude '**/erp_backend' \
+    --exclude '**/__pycache__' \
     --exclude '.env' \
     --exclude 'db_data' \
     --exclude 'postgres_data' \
@@ -28,18 +32,22 @@ rsync -avz -e "ssh -i ~/.ssh/id_deploy" \
     --exclude '.next' \
     --exclude '.git' \
     --exclude 'venv' \
-    --exclude '__pycache__' \
+    --exclude '.venv' \
+    --exclude '**/venv' \
+    --exclude '**/.venv' \
+    --exclude '**/erp_backend' \
+    --exclude '**/__pycache__' \
     --exclude '.env' \
     --exclude 'db_data' \
     --exclude 'postgres_data' \
     /root/.gemini/antigravity/scratch/TSFSYSTEM/ root@91.99.186.183:/root/TSFSYSTEM/
 
 echo "📊 Applying Database Migrations..."
-ssh -i ~/.ssh/id_deploy root@91.99.186.183 "docker exec tsf_backend python manage.py makemigrations"
-ssh -i ~/.ssh/id_deploy root@91.99.186.183 "docker exec tsf_backend python manage.py migrate"
+ssh -i ~/.ssh/id_deploy root@91.99.186.183 "docker exec tsfsystem-backend-1 python manage.py makemigrations"
+ssh -i ~/.ssh/id_deploy root@91.99.186.183 "docker exec tsfsystem-backend-1 python manage.py migrate"
 
 echo "🔄 Restarting Backend Service..."
-ssh -i ~/.ssh/id_deploy root@91.99.186.183 "docker restart tsf_backend"
+ssh -i ~/.ssh/id_deploy root@91.99.186.183 "docker restart tsfsystem-backend-1"
 
 echo "🏗️  Rebuilding Frontend Image (Clean Production Build)..."
 # Rebuilding image is safer than exec build as it clears .next and starts fresh

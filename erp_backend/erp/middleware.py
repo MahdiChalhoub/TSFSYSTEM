@@ -39,30 +39,36 @@ class TenantMiddleware:
     def __call__(self, request):
         path = request.path
 
-        # ─── 1. PUBLIC PATHS: No tenant isolation needed ───
-        if _is_public_path(path):
-            set_current_tenant_id(None)
-            request.organization_id = None
-            request.organization = None
-            response = self.get_response(request)
-            set_current_tenant_id(None)
-            return response
-
-        # ─── 2. RESOLVE USER FROM TOKEN ───
+        # ─── 1. RESOLVE USER FROM TOKEN ───
         # DRF token auth runs AFTER middleware, so we resolve manually here.
         user = self._resolve_user_from_token(request)
 
-        # ─── 3. DETERMINE TENANT ID ───
+        # ─── 2. DETERMINE TENANT ID ───
         # Priority: X-Tenant-Id header → user.organization_id → None
         header_tenant_id = request.headers.get('X-Tenant-Id')
         tenant_id = None
+
+        # ─── 3. PUBLIC PATHS HANDLING ───
+        if _is_public_path(path):
+            # For public paths, we don't ENFORCE isolation, but we DO establish context
+            # if the header is provided (important for login/register).
+            if header_tenant_id:
+                # Basic validation: does it exist?
+                from erp.models import Organization
+                if Organization.objects.filter(id=header_tenant_id, is_active=True).exists():
+                    tenant_id = header_tenant_id
+            
+            set_current_tenant_id(tenant_id)
+            request.organization_id = tenant_id
+            response = self.get_response(request)
+            set_current_tenant_id(None) # Cleanup
+            return response
 
         if header_tenant_id:
             # ─── STRICT ISOLATION CHECK ───
             # Header claims a specific tenant. Verify the user is authorized.
             if not user:
                 # Anonymous access with a tenant header = suspicious.
-                # Deny immediately to prevent probing.
                 logger.warning(
                     f"[ISOLATION] Unauthenticated request with X-Tenant-Id={header_tenant_id} "
                     f"from {request.META.get('REMOTE_ADDR')} — BLOCKED"
@@ -74,15 +80,16 @@ class TenantMiddleware:
                 )
 
             if user.is_superuser:
-                # Superusers can access any tenant (SaaS admin panel)
+                # Superusers can access any tenant for management, but we log it.
+                # In Strict Mode, they should only be able to do this if they 
+                # come from the 'saas' management context.
                 tenant_id = header_tenant_id
+                logger.info(f"[ISOLATION] Superuser {user.username} accessing tenant {tenant_id}")
             elif str(user.organization_id) == str(header_tenant_id):
                 # User matches the requested tenant — allowed
                 tenant_id = header_tenant_id
             else:
                 # ─── CROSS-TENANT VIOLATION ───
-                # User is trying to access a different organization.
-                # Log this as a security event and deny.
                 logger.error(
                     f"[ISOLATION VIOLATION] User {user.id} ({user.username}) "
                     f"org={user.organization_id} attempted access to tenant={header_tenant_id} "
@@ -97,36 +104,26 @@ class TenantMiddleware:
                     status=403
                 )
         elif user and user.organization_id:
-            # No header — fallback to user's own organization (normal case)
+            # No header — fallback to user's own organization
             tenant_id = str(user.organization_id)
-        # else: No header, no user → tenant_id stays None (SaaS root / unauthenticated)
-
-        # ─── 4. VALIDATE TENANT EXISTS ───
+        
+        # ... rest of validation ...
         request.organization = None
         if tenant_id:
             from erp.models import Organization
             org = Organization.objects.filter(id=tenant_id, is_active=True).first()
             if not org:
-                logger.warning(
-                    f"[ISOLATION] Tenant {tenant_id} not found or inactive — "
-                    f"user={getattr(user, 'id', 'anon')} path={path}"
-                )
+                # Fail if context was requested but not found
                 from django.http import JsonResponse
-                return JsonResponse(
-                    {"error": "Organization not found or inactive."},
-                    status=404
-                )
+                return JsonResponse({"error": "Organization not found or inactive."}, status=404)
             request.organization = org
 
         set_current_tenant_id(tenant_id)
         request.organization_id = tenant_id
 
-        # ─── 5. PROCESS REQUEST ───
         try:
             response = self.get_response(request)
         finally:
-            # ─── 6. CLEANUP ───
-            # Always clear tenant context, even if the view throws an exception
             set_current_tenant_id(None)
 
         return response

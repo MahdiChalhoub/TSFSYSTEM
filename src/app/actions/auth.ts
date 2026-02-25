@@ -119,11 +119,8 @@ export async function loginAction(prevState: any, formData: FormData) {
             const token = responseData.token
             const scopeAccess = responseData.scope_access || 'internal'
             const hStore = await import('next/headers');
-            const hList = await hStore.headers();
-            const isSecure = hList.get('x-forwarded-proto') === 'https';
-            const host2 = hList.get('host') || '';
-            const isLocal = host2.includes('localhost');
-            const cookieDomain = isLocal ? undefined : `.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'tsf.ci'}`;
+            const hListInner = await hStore.headers();
+            const isSecure = hListInner.get('x-forwarded-proto') === 'https';
 
             const cookieStore = await cookies()
             cookieStore.set('auth_token', token, {
@@ -132,7 +129,7 @@ export async function loginAction(prevState: any, formData: FormData) {
                 sameSite: 'lax',
                 path: '/',
                 maxAge: 60 * 60 * 24 * 7,
-                ...(cookieDomain && { domain: cookieDomain }),
+                // [STRICT ISOLATION] Host-only cookies prevent session leakage between tenants.
             })
             cookieStore.set('scope_access', scopeAccess, {
                 httpOnly: true,
@@ -140,7 +137,6 @@ export async function loginAction(prevState: any, formData: FormData) {
                 sameSite: 'lax',
                 path: '/',
                 maxAge: 60 * 60 * 24 * 7,
-                ...(cookieDomain && { domain: cookieDomain }),
             })
         } catch (error: unknown) {
             let message = 'Verification failed'
@@ -205,10 +201,6 @@ export async function loginAction(prevState: any, formData: FormData) {
         const isSecure = hList.get('x-forwarded-proto') === 'https';
         const host = hList.get('host') || '';
 
-        // Shared cookie domain: .tsf.ci allows auth across all subdomains
-        const isLocalhost = host.includes('localhost');
-        const cookieDomain = isLocalhost ? undefined : `.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'tsf.ci'}`;
-
         const cookieStore = await cookies()
         cookieStore.set('auth_token', token, {
             httpOnly: true,
@@ -216,7 +208,7 @@ export async function loginAction(prevState: any, formData: FormData) {
             sameSite: 'lax',
             path: '/',
             maxAge: 60 * 60 * 24 * 7,
-            ...(cookieDomain && { domain: cookieDomain }),
+            // [STRICT ISOLATION] Host-only cookies prevent session leakage between tenants.
         })
         cookieStore.set('scope_access', scopeAccess, {
             httpOnly: true,
@@ -224,7 +216,6 @@ export async function loginAction(prevState: any, formData: FormData) {
             sameSite: 'lax',
             path: '/',
             maxAge: 60 * 60 * 24 * 7,
-            ...(cookieDomain && { domain: cookieDomain }),
         })
 
     } catch (error: unknown) {
@@ -269,22 +260,9 @@ export async function logoutAction() {
         }
     }
 
-    // Standard delete()
+    // Standard deletion - host-only cookies are deleted by default without domain param
     cookieStore.delete('auth_token')
     cookieStore.delete('scope_access')
-
-    // EXTENDED CLEAR: For wildcard domain cookies, we must explicitly set them to expire
-    // with the same domain they were created with.
-    const headerStore = await import('next/headers');
-    const hList = await headerStore.headers();
-    const host = hList.get('host') || '';
-    const isLocal = host.includes('localhost');
-    const cookieDomain = isLocal ? undefined : `.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'tsf.ci'}`;
-
-    if (cookieDomain) {
-        cookieStore.set('auth_token', '', { domain: cookieDomain, path: '/', maxAge: 0 })
-        cookieStore.set('scope_access', '', { domain: cookieDomain, path: '/', maxAge: 0 })
-    }
 
     redirect('/')
 }

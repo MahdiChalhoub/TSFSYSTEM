@@ -28,8 +28,8 @@ export async function createBrand(prevState: BrandState, formData: FormData): Pr
             body: JSON.stringify({
                 name,
                 short_name: shortName,
-                categories: categoryIds,
-                countries: countryIds
+                category_ids: categoryIds,
+                country_ids: countryIds
             })
         });
 
@@ -53,8 +53,8 @@ export async function updateBrand(id: number, prevState: BrandState, formData: F
             body: JSON.stringify({
                 name,
                 short_name: shortName,
-                categories: categoryIds,
-                countries: countryIds
+                category_ids: categoryIds,
+                country_ids: countryIds
             })
         });
         revalidatePath('/inventory/brands');

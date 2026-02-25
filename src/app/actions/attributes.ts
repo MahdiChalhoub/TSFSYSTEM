@@ -35,7 +35,7 @@ export async function createAttribute(prevState: AttributeState, formData: FormD
             body: JSON.stringify({
                 name,
                 short_name: shortName || null,
-                categories: categoryIds
+                category_ids: categoryIds
             })
         });
 
@@ -57,7 +57,7 @@ export async function updateAttribute(id: number, prevState: AttributeState, for
             body: JSON.stringify({
                 name,
                 short_name: shortName || null,
-                categories: categoryIds // Same issue as above
+                category_ids: categoryIds
             })
         });
         revalidatePath('/inventory/attributes');
