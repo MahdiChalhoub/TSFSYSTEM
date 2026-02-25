@@ -208,15 +208,12 @@ DATABASES = {
 }
 
 # ─── Redis Cache Layer ─────────────────────────────────────────────────
+# ─── Cache Layer ──────────────────────────────────────────────────────
+# Force LocMemCache for local dev to avoid "Connection Refused" if Redis is down
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-        'LOCATION': os.getenv('CELERY_BROKER_URL', 'redis://redis:6379/0'),
-        'TIMEOUT': 300,  # 5 min default TTL
-        'KEY_PREFIX': 'tsf',
-        'OPTIONS': {
-            'db': 2,  # Separate DB from Celery (0) and results (1)
-        },
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
     }
 }
 

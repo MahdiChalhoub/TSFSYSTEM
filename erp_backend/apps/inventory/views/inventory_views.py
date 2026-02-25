@@ -140,9 +140,9 @@ class InventoryViewSet(TenantModelViewSet):
 
         warehouse_id = request.query_params.get('warehouse_id')
         try:
-            from apps.inventory.valuation_service import ValuationService
-            products = ValuationService.get_stock_valuation_summary(
-                organization, warehouse_id=warehouse_id
+            products = InventoryService.get_stock_valuation_summary(
+                organization=organization,
+                warehouse_id=request.query_params.get('warehouse_id')
             )
 
             total_qty = sum(p['quantity'] for p in products)
@@ -256,10 +256,9 @@ class InventoryViewSet(TenantModelViewSet):
         organization, err = _get_org_or_400()
         if err: return err
 
-        from apps.inventory.valuation_service import ValuationService
-        new_alerts = ValuationService.check_expiry_alerts(organization)
+        alerts = InventoryService.check_expiry_alerts(organization)
         return Response({
-            'new_alerts_created': len(new_alerts),
+            'new_alerts_created': len(alerts),
         })
 
     @action(detail=True, methods=['post'], url_path='acknowledge-expiry/(?P<alert_id>[^/.]+)')
