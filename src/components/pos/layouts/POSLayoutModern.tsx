@@ -51,7 +51,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
     const [pendingAction, setPendingAction] = useState<{ label: string, execute: () => void } | null>(null);
     // ── Multi-Payment State ──
     const [isMultiPayMode, setIsMultiPayMode] = useState(false);
-    const [paymentLegs, setPaymentLegs] = useState < Array<{ method: string, amount: number }>([]);
+    const [paymentLegs, setPaymentLegs] = useState<Array<{ method: string, amount: number }>>([]);
     const [multiPaySelectedMethod, setMultiPaySelectedMethod] = useState<string | null>(null);
     const multiPayTotal = paymentLegs.reduce((sum, leg) => sum + leg.amount, 0);
     const multiPayRemaining = totalAmount - multiPayTotal;
