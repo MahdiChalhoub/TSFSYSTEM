@@ -2,7 +2,7 @@
 CRM Pricing Serializers — Price Groups and Client Price Rules
 """
 from rest_framework import serializers
-from .pricing_models import PriceGroup, PriceGroupMember, ClientPriceRule
+from apps.crm.models import PriceGroup, PriceGroupMember, ClientPriceRule
 
 
 class PriceGroupSerializer(serializers.ModelSerializer):
@@ -29,7 +29,7 @@ class PriceGroupMemberSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_contact_name(self, obj):
-        from .models import Contact
+        from apps.crm.models import Contact
         try:
             contact = Contact.objects.get(id=obj.contact_id)
             return contact.name
@@ -50,7 +50,7 @@ class ClientPriceRuleSerializer(serializers.ModelSerializer):
     def get_contact_name(self, obj):
         if not obj.contact_id:
             return None
-        from .models import Contact
+        from apps.crm.models import Contact
         try:
             return Contact.objects.get(id=obj.contact_id).name
         except Contact.DoesNotExist:
