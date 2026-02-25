@@ -247,9 +247,10 @@ export default function POSPage() {
         let newCart: any[];
 
         if (existingIndex !== -1) {
-            const item = { ...cart[existingIndex], quantity: (cart[existingIndex] as any).quantity + 1 };
-            const filtered = cart.filter((_: any, i: number) => i !== existingIndex);
-            newCart = [item, ...filtered];
+            // Update in-place — don't reorder to top
+            newCart = cart.map((item: any, i: number) =>
+                i === existingIndex ? { ...item, quantity: item.quantity + 1 } : item
+            );
             toast.info(`Updated piece: ${product.name}`, { duration: 1000, icon: '⚡' });
         } else {
             newCart = [{
@@ -267,7 +268,7 @@ export default function POSPage() {
         }
         updateActiveSession({ cart: newCart });
         setHighlightedItemId(product.id);
-        setLastAddedItemId(product.id);
+        setLastAddedItemId(null);
         setTimeout(() => setHighlightedItemId(null), 500);
     }, [cart, updateActiveSession]);
 
