@@ -7,7 +7,7 @@ import { ReceiptModal } from '@/components/pos/ReceiptModal';
 import {
     Search, ShoppingCart, Plus, Minus, Trash2, X, Layout,
     ChevronDown, Maximize, Minimize, Eye, EyeOff, Package, Tag,
-    CreditCard, Banknote, Wallet, MapPin, Star, Calculator, GripHorizontal, ArrowLeft, ArrowRight,
+    CreditCard, Banknote, Wallet, MapPin, Star, Calculator, GripHorizontal, ArrowLeft, ArrowRight, Check,
     History, RefreshCw, Wifi, WifiOff, Smartphone, Landmark
 } from 'lucide-react';
 import clsx from 'clsx';
