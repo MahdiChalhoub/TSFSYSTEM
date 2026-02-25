@@ -490,48 +490,129 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                     <div className="flex items-center gap-1.5">
                                         <GripHorizontal size={14} className="text-amber-400 group-hover/handle:text-amber-600 transition-colors" />
                                         <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest">
-                                            {selectedCartIdx !== null ? `Editing Item #${selectedCartIdx + 1}` : 'Speed Calc'}
+                                            {isMultiPayMode ? 'Multi Pay' : selectedCartIdx !== null ? `Editing Item #${selectedCartIdx + 1}` : 'Speed Calc'}
                                         </span>
                                     </div>
                                     <button onClick={() => setShowNumpad(false)} className="w-6 h-6 flex items-center justify-center rounded-full bg-amber-100 text-amber-600 hover:bg-amber-600 hover:text-white transition-all">
                                         <X size={12} />
                                     </button>
                                 </div>
-                                <POSNumpad
-                                    mode={numpadMode}
-                                    onModeChange={setNumpadMode}
-                                    onValueConfirm={(val, mode) => {
-                                        // Multi-payment: add a leg
-                                        if (isMultiPayMode && multiPaySelectedMethod) {
-                                            const amount = Math.min(val, Math.max(0, multiPayRemaining));
-                                            if (amount > 0) {
-                                                setPaymentLegs(prev => [...prev, { method: multiPaySelectedMethod, amount }]);
-                                            }
-                                            setMultiPaySelectedMethod(null);
-                                            setShowNumpad(false);
-                                            return;
-                                        }
-                                        const idx = selectedCartIdx ?? 0;
-                                        if (cart.length > idx) {
-                                            const target = cart[idx];
-                                            if (mode === 'qty') {
-                                                const delta = val - target.quantity;
-                                                handleProtectedQuantity(target.productId, delta);
-                                            } else if (mode === 'price') {
-                                                handleProtectedPrice(target.productId, val);
+                                {isMultiPayMode ? (
+                                    /* ── Multi-Pay Numpad ── */
+                                    <div className="flex flex-col gap-2">
+                                        {/* Display */}
+                                        <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
+                                            <span className={clsx(
+                                                "text-[9px] font-black uppercase tracking-widest",
+                                                multiPaySelectedMethod ? "text-emerald-600" : "text-gray-300"
+                                            )}>
+                                                {multiPaySelectedMethod || 'Select ↓'}
+                                            </span>
+                                            <span className="flex-1 text-right text-xl font-black tabular-nums tracking-tighter text-gray-900">
+                                                {mpBuffer || '0'}
+                                            </span>
+                                        </div>
+
+                                        {/* Payment Method Selectors (replaces QTY/DISC/PRICE) */}
+                                        <div className="flex gap-1 flex-wrap">
+                                            {paymentMethods.filter((m: any) => {
+                                                const k = typeof m === 'string' ? m : m.key;
+                                                return !k.includes('MULTI');
+                                            }).map((m: any) => {
+                                                const k = typeof m === 'string' ? m : m.key;
+                                                const lbl = typeof m === 'string' ? m : (m.label || m.key);
+                                                const MIcon = getMethodIcon(k);
+                                                const isSelected = multiPaySelectedMethod === k;
+                                                return (
+                                                    <button
+                                                        key={k}
+                                                        onClick={() => setMultiPaySelectedMethod(k)}
+                                                        className={clsx(
+                                                            "flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all border",
+                                                            isSelected
+                                                                ? "bg-emerald-500 border-emerald-500 text-white shadow-md"
+                                                                : "bg-gray-50 border-gray-100 text-gray-500 hover:bg-emerald-50 hover:text-emerald-600"
+                                                        )}
+                                                    >
+                                                        <MIcon size={11} />
+                                                        {lbl}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+
+                                        {/* Number Pad */}
+                                        <div className="grid grid-cols-3 gap-1.5">
+                                            {['7', '8', '9', '4', '5', '6', '1', '2', '3', '.', '0'].map(d => (
+                                                <button
+                                                    key={d}
+                                                    onClick={() => setMpBuffer(prev => {
+                                                        if (d === '.' && prev.includes('.')) return prev;
+                                                        return prev + d;
+                                                    })}
+                                                    className="h-12 bg-white border border-gray-100 rounded-xl font-black text-lg text-gray-700 hover:bg-gray-50 active:scale-95 transition-all shadow-sm"
+                                                >
+                                                    {d}
+                                                </button>
+                                            ))}
+                                            <button
+                                                onClick={() => setMpBuffer(prev => prev.slice(0, -1))}
+                                                className="h-12 bg-white border border-gray-100 rounded-xl font-black text-gray-400 hover:bg-rose-50 hover:text-rose-500 active:scale-95 transition-all shadow-sm flex items-center justify-center"
+                                            >
+                                                <X size={18} />
+                                            </button>
+                                        </div>
+
+                                        {/* Confirm */}
+                                        <button
+                                            onClick={() => {
+                                                if (!multiPaySelectedMethod) { toast.error('Select a payment method first'); return; }
+                                                const val = parseFloat(mpBuffer);
+                                                if (isNaN(val) || val <= 0) { toast.error('Enter an amount'); return; }
+                                                const amount = Math.min(val, Math.max(0, multiPayRemaining));
+                                                if (amount > 0) {
+                                                    setPaymentLegs(prev => [...prev, { method: multiPaySelectedMethod, amount }]);
+                                                }
+                                                setMpBuffer('');
+                                            }}
+                                            disabled={!multiPaySelectedMethod || !mpBuffer}
+                                            className={clsx(
+                                                "w-full py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                                                multiPaySelectedMethod && mpBuffer
+                                                    ? "bg-emerald-600 text-white shadow-lg hover:opacity-90 active:scale-[0.98]"
+                                                    : "bg-gray-100 text-gray-300 cursor-not-allowed"
+                                            )}
+                                        >
+                                            + Add {multiPaySelectedMethod || 'Payment'}
+                                        </button>
+                                    </div>
+                                ) : (
+                                    /* ── Normal Cart Numpad ── */
+                                    <POSNumpad
+                                        mode={numpadMode}
+                                        onModeChange={setNumpadMode}
+                                        onValueConfirm={(val, mode) => {
+                                            const idx = selectedCartIdx ?? 0;
+                                            if (cart.length > idx) {
+                                                const target = cart[idx];
+                                                if (mode === 'qty') {
+                                                    const delta = val - target.quantity;
+                                                    handleProtectedQuantity(target.productId, delta);
+                                                } else if (mode === 'price') {
+                                                    handleProtectedPrice(target.productId, val);
+                                                } else if (mode === 'disc') {
+                                                    handleProtectedDiscount(val);
+                                                }
+                                                setShowNumpad(false);
                                             } else if (mode === 'disc') {
                                                 handleProtectedDiscount(val);
+                                                setShowNumpad(false);
+                                            } else {
+                                                toast.error("Add an item first");
                                             }
-                                            setShowNumpad(false);
-                                        } else if (mode === 'disc') {
-                                            // Global discount if no item selected or mode is disc
-                                            handleProtectedDiscount(val);
-                                            setShowNumpad(false);
-                                        } else {
-                                            toast.error("Add an item first");
-                                        }
-                                    }}
-                                />
+                                        }}
+                                    />
+                                )}
                             </div>
                         )}
                     </div>
@@ -561,7 +642,11 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 onClick={() => {
                                     if (key.includes('MULTI')) {
                                         setIsMultiPayMode(prev => !prev);
-                                        if (!isMultiPayMode) setPaymentLegs([]);
+                                        if (!isMultiPayMode) {
+                                            setPaymentLegs([]);
+                                            setShowNumpad(true);
+                                            setMpBuffer('');
+                                        }
                                     }
                                     onSetPaymentMethod(key);
                                 }}
@@ -677,68 +762,6 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 </div>
                             </div>
 
-                            {/* ── Embedded Numpad ── */}
-                            <div className="px-3 py-2 bg-white flex-1 flex flex-col gap-1.5 shrink-0">
-                                {/* Display */}
-                                <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2 border border-gray-100">
-                                    <span className={clsx(
-                                        "text-[8px] font-black uppercase tracking-widest",
-                                        multiPaySelectedMethod ? "text-emerald-600" : "text-gray-300"
-                                    )}>
-                                        {multiPaySelectedMethod || 'Select'}
-                                    </span>
-                                    <span className="flex-1 text-right text-lg font-black tabular-nums tracking-tighter text-gray-900">
-                                        {mpBuffer || (multiPayRemaining > 0 ? formatNumber(multiPayRemaining) : '0')}
-                                    </span>
-                                </div>
-
-                                {/* Number Grid */}
-                                <div className="grid grid-cols-3 gap-1">
-                                    {['7', '8', '9', '4', '5', '6', '1', '2', '3', '.', '0'].map(d => (
-                                        <button
-                                            key={d}
-                                            onClick={() => {
-                                                setMpBuffer(prev => {
-                                                    if (d === '.' && prev.includes('.')) return prev;
-                                                    return prev + d;
-                                                });
-                                            }}
-                                            className="h-10 bg-white border border-gray-100 rounded-lg font-black text-base text-gray-700 hover:bg-gray-50 active:scale-95 transition-all"
-                                        >
-                                            {d}
-                                        </button>
-                                    ))}
-                                    <button
-                                        onClick={() => setMpBuffer(prev => prev.slice(0, -1))}
-                                        className="h-10 bg-white border border-gray-100 rounded-lg font-black text-gray-400 hover:bg-rose-50 hover:text-rose-500 active:scale-95 transition-all flex items-center justify-center"
-                                    >
-                                        <X size={14} />
-                                    </button>
-                                </div>
-
-                                {/* Confirm Add */}
-                                <button
-                                    onClick={() => {
-                                        if (!multiPaySelectedMethod) { toast.error('Select a payment method first'); return; }
-                                        const val = parseFloat(mpBuffer);
-                                        if (isNaN(val) || val <= 0) { toast.error('Enter an amount'); return; }
-                                        const amount = Math.min(val, Math.max(0, multiPayRemaining));
-                                        if (amount > 0) {
-                                            setPaymentLegs(prev => [...prev, { method: multiPaySelectedMethod, amount }]);
-                                        }
-                                        setMpBuffer('');
-                                    }}
-                                    disabled={!multiPaySelectedMethod || (!mpBuffer && multiPayRemaining <= 0)}
-                                    className={clsx(
-                                        "w-full py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
-                                        multiPaySelectedMethod && (mpBuffer || multiPayRemaining > 0)
-                                            ? "bg-emerald-500 text-white shadow-lg hover:bg-emerald-600 active:scale-[0.98]"
-                                            : "bg-gray-100 text-gray-300 cursor-not-allowed"
-                                    )}
-                                >
-                                    + Add {multiPaySelectedMethod || 'Payment'}
-                                </button>
-                            </div>
 
                             {/* ── Special Actions (Reward / Wallet) ── */}
                             <div className="px-3 py-2 border-t border-gray-100 bg-white shrink-0 flex gap-1.5">
