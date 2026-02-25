@@ -8,7 +8,7 @@ import {
     Search, ShoppingCart, Plus, Minus, Trash2, X, Layout,
     ChevronDown, Maximize, Minimize, Eye, EyeOff, Package, Tag,
     CreditCard, Banknote, Wallet, MapPin, Star, Calculator, GripHorizontal, ArrowLeft, ArrowRight,
-    History, RefreshCw, Wifi, WifiOff
+    History, RefreshCw, Wifi, WifiOff, Smartphone, Landmark
 } from 'lucide-react';
 import clsx from 'clsx';
 import { toast } from 'sonner';
@@ -202,8 +202,8 @@ export function POSLayoutModern(props: POSLayoutProps) {
             </header>
             {/* ═══════════ MAIN SPLIT ═══════════ */}
             <div className="flex-1 flex overflow-hidden">
-                {/* ════ LEFT COLUMN (62%) ════ */}
-                <aside className="w-[62%] flex flex-col bg-white border-r border-gray-200/80 shrink-0 overflow-hidden">
+                {/* ════ LEFT COLUMN (58%) ════ */}
+                <aside className="w-[58%] flex flex-col bg-white border-r border-gray-200/80 shrink-0 overflow-hidden">
                     {/* Client Selector & Search */}
                     <div className="px-3 py-2 border-b border-gray-100 bg-gray-50/50 shrink-0">
                         <div className="flex gap-2">
@@ -509,6 +509,46 @@ export function POSLayoutModern(props: POSLayoutProps) {
                         )}
                     </div>
                 </aside>
+
+                {/* ════ VERTICAL PAYMENT COLUMN (72px) ════ */}
+                <div className="w-[72px] bg-white border-r border-gray-200/80 flex flex-col items-center py-4 gap-4 shrink-0 overflow-y-auto no-scrollbar shadow-[inset_-1px_0_0_0_rgba(0,0,0,0.05)]">
+                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-tighter mb-1">Pay</span>
+                    {paymentMethods.map((m: any) => {
+                        const key = typeof m === 'string' ? m : m.key;
+                        const label = typeof m === 'string' ? m : (m.label || m.key);
+
+                        // Icon mapping
+                        let Icon = Banknote;
+                        if (key.includes('CARD')) Icon = CreditCard;
+                        if (key.includes('WALLET')) Icon = Wallet;
+                        if (key.includes('WAVE') || key.includes('OM')) Icon = Smartphone;
+                        if (key.includes('MULTI')) Icon = Calculator;
+                        if (key.includes('DELIVERY')) Icon = MapPin;
+                        if (key.includes('BANK')) Icon = Landmark;
+
+                        const isActive = paymentMethod === key;
+
+                        return (
+                            <button
+                                key={key}
+                                onClick={() => onSetPaymentMethod(key)}
+                                className={clsx(
+                                    "group flex flex-col items-center justify-center p-2 rounded-xl transition-all w-14 h-14 border-2 relative",
+                                    isActive
+                                        ? "bg-emerald-50 border-emerald-500 text-emerald-600 shadow-lg shadow-emerald-50 scale-105"
+                                        : "bg-white border-transparent text-gray-400 hover:bg-gray-50 hover:text-gray-600"
+                                )}
+                            >
+                                <Icon size={20} className={clsx("transition-transform", isActive ? "scale-110" : "group-hover:scale-110")} />
+                                <span className="text-[8px] font-black mt-1 uppercase truncate w-full text-center tracking-tighter">{label}</span>
+                                {isActive && (
+                                    <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-6 bg-emerald-500 rounded-full" />
+                                )}
+                            </button>
+                        );
+                    })}
+                </div>
+
                 {/* ════ RIGHT COLUMN: CART (full height) ════ */}
                 <main className="flex-1 flex flex-col bg-[#fafbfc] overflow-hidden">
                     <div className="px-3 py-1.5 border-b border-gray-200/80 bg-white flex items-center justify-between shrink-0">
@@ -631,138 +671,124 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 <span className="text-xl font-black tabular-nums text-gray-900 leading-none">{currency}{totalAmount.toFixed(2)}</span>
                             </div>
                         </div>
-                        <div className="grid grid-cols-4 gap-1">
-                            {paymentMethods.map((m: any) => {
-                                const key = typeof m === 'string' ? m : m.key;
-                                const label = typeof m === 'string' ? m : (m.label || m.key);
-                                return (
-                                    <button
-                                        key={key}
-                                        onClick={() => onSetPaymentMethod(key)}
-                                        className={clsx(
-                                            "py-1 rounded text-[9px] font-bold border transition-all",
-                                            paymentMethod === key ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-gray-50 border-gray-100 text-gray-400"
-                                        )}
-                                    >{label}</button>
-                                );
-                            })}
-                        </div>
-                        {/* ── Wallet & Loyalty Quick-Pay ── */}
-                        {selectedClient && selectedClientId > 1 && (
-                            <div className="flex items-center gap-2 flex-wrap">
-                                {(selectedClient as any).balance > 0 && (
-                                    <button
-                                        onClick={() => {
-                                            onSetPaymentMethod('WALLET');
-                                            const bal = (selectedClient as any).balance;
-                                            onSetCashReceived(String(Math.min(bal, totalAmount)));
-                                            toast.success(`Wallet: ${currency}${bal.toFixed(2)} applied`);
-                                        }}
-                                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-100 text-blue-700 text-[10px] font-bold hover:bg-blue-100 transition-all"
-                                    >
-                                        <Wallet size={12} />
-                                        <span>Balance: {currency}{((selectedClient as any).balance || 0).toFixed(2)}</span>
-                                        <span className="bg-blue-200 text-blue-800 px-1.5 py-0.5 rounded text-[9px] font-black">USE</span>
-                                    </button>
-                                )}
-                                {(selectedClient as any).loyalty > 0 && (
-                                    <button
-                                        onClick={() => {
-                                            const pts = (selectedClient as any).loyalty;
-                                            if (onSetPointsRedeemed) onSetPointsRedeemed(pts);
-                                            toast.success(`${pts} loyalty points will be redeemed`);
-                                        }}
-                                        className={clsx(
-                                            "flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-bold transition-all",
-                                            pointsRedeemed > 0
-                                                ? "bg-amber-100 border-amber-300 text-amber-800"
-                                                : "bg-amber-50 border-amber-100 text-amber-700 hover:bg-amber-100"
-                                        )}
-                                    >
-                                        <Star size={12} />
-                                        <span>{(selectedClient as any).loyalty} pts</span>
-                                        <span className="bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded text-[9px] font-black">
-                                            {pointsRedeemed > 0 ? '✓' : 'REDEEM'}
-                                        </span>
-                                    </button>
-                                )}
-                            </div>
-                        )}
-                        <div className="flex items-center gap-2 pt-1 border-t border-gray-50 mt-1">
-                            <div className="flex-1">
-                                <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 block">Received</label>
-                                <input
-                                    type="text"
-                                    value={cashReceived ? cashReceived.replace(/\B(?=(\d{3})+(?!\d))/g, " ") : ''}
-                                    onChange={(e) => {
-                                        const raw = e.target.value.replace(/\s+/g, '').replace(',', '.');
-                                        if (raw === '' || /^\d*\.?\d*$/.test(raw)) {
-                                            onSetCashReceived(raw);
-                                        }
-                                    }}
-                                    placeholder={totalAmount.toFixed(2)}
-                                    className="w-full px-2 py-2 text-right bg-gray-50 border border-gray-100 rounded-lg text-sm font-bold outline-none focus:border-emerald-500 transition-all font-mono"
-                                />
-                            </div>
-                            <button
-                                onClick={onCharge}
-                                disabled={cart.length === 0 || isProcessing}
-                                className={clsx(
-                                    "flex-1 py-2 rounded-xl h-[48px] flex flex-col items-center justify-center transition-all shadow-lg shadow-emerald-100",
-                                    cart.length > 0 && !isProcessing ? "bg-emerald-500 text-white hover:bg-emerald-600" : "bg-gray-200 text-gray-400"
-                                )}
-                            >
-                                <span className="text-[12px] font-black uppercase tracking-widest">{changeDue > 0 ? "Change" : "Charge"}</span>
-                                <span className="text-[14px] font-black leading-none">{currency}{formatNumber(changeDue > 0 ? changeDue : totalAmount)}</span>
-                            </button>
-                        </div>
-                        {/* ── Change Management ── */}
-                        {changeDue > 0 && (
-                            <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">
-                                <div className="flex items-center gap-2">
-                                    <Banknote size={16} className="text-emerald-600" />
-                                    <div>
-                                        <span className="text-[10px] font-black text-emerald-700 uppercase">Change Due</span>
-                                        <span className="text-sm font-black text-emerald-800 ml-2 tabular-nums">{currency}{formatNumber(changeDue)}</span>
-                                    </div>
-                                </div>
-                                {selectedClientId > 1 && onSetStoreChangeInWallet && (
-                                    <button
-                                        onClick={() => onSetStoreChangeInWallet(!storeChangeInWallet)}
-                                        className={clsx(
-                                            "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all",
-                                            storeChangeInWallet
-                                                ? "bg-blue-500 border-blue-500 text-white"
-                                                : "bg-white border-gray-200 text-gray-500 hover:border-blue-300"
-                                        )}
-                                    >
-                                        <Wallet size={12} />
-                                        {storeChangeInWallet ? '✓ Store in Wallet' : 'Store in Wallet'}
-                                    </button>
-                                )}
-                            </div>
-                        )}
                     </div>
-                </main>
+                    {/* ── Wallet & Loyalty Quick-Pay ── */}
+                    {selectedClient && selectedClientId > 1 && (
+                        <div className="flex items-center gap-2 flex-wrap">
+                            {(selectedClient as any).balance > 0 && (
+                                <button
+                                    onClick={() => {
+                                        onSetPaymentMethod('WALLET');
+                                        const bal = (selectedClient as any).balance;
+                                        onSetCashReceived(String(Math.min(bal, totalAmount)));
+                                        toast.success(`Wallet: ${currency}${bal.toFixed(2)} applied`);
+                                    }}
+                                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-100 text-blue-700 text-[10px] font-bold hover:bg-blue-100 transition-all"
+                                >
+                                    <Wallet size={12} />
+                                    <span>Balance: {currency}{((selectedClient as any).balance || 0).toFixed(2)}</span>
+                                    <span className="bg-blue-200 text-blue-800 px-1.5 py-0.5 rounded text-[9px] font-black">USE</span>
+                                </button>
+                            )}
+                            {(selectedClient as any).loyalty > 0 && (
+                                <button
+                                    onClick={() => {
+                                        const pts = (selectedClient as any).loyalty;
+                                        if (onSetPointsRedeemed) onSetPointsRedeemed(pts);
+                                        toast.success(`${pts} loyalty points will be redeemed`);
+                                    }}
+                                    className={clsx(
+                                        "flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-bold transition-all",
+                                        pointsRedeemed > 0
+                                            ? "bg-amber-100 border-amber-300 text-amber-800"
+                                            : "bg-amber-50 border-amber-100 text-amber-700 hover:bg-amber-100"
+                                    )}
+                                >
+                                    <Star size={12} />
+                                    <span>{(selectedClient as any).loyalty} pts</span>
+                                    <span className="bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded text-[9px] font-black">
+                                        {pointsRedeemed > 0 ? '✓' : 'REDEEM'}
+                                    </span>
+                                </button>
+                            )}
+                        </div>
+                    )}
+                    <div className="flex items-center gap-2 pt-1 border-t border-gray-50 mt-1">
+                        <div className="flex-1">
+                            <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 block">Received</label>
+                            <input
+                                type="text"
+                                value={cashReceived ? cashReceived.replace(/\B(?=(\d{3})+(?!\d))/g, " ") : ''}
+                                onChange={(e) => {
+                                    const raw = e.target.value.replace(/\s+/g, '').replace(',', '.');
+                                    if (raw === '' || /^\d*\.?\d*$/.test(raw)) {
+                                        onSetCashReceived(raw);
+                                    }
+                                }}
+                                placeholder={totalAmount.toFixed(2)}
+                                className="w-full px-2 py-2 text-right bg-gray-50 border border-gray-100 rounded-lg text-sm font-bold outline-none focus:border-emerald-500 transition-all font-mono"
+                            />
+                        </div>
+                        <button
+                            onClick={onCharge}
+                            disabled={cart.length === 0 || isProcessing}
+                            className={clsx(
+                                "flex-1 py-2 rounded-xl h-[48px] flex flex-col items-center justify-center transition-all shadow-lg shadow-emerald-100",
+                                cart.length > 0 && !isProcessing ? "bg-emerald-500 text-white hover:bg-emerald-600" : "bg-gray-200 text-gray-400"
+                            )}
+                        >
+                            <span className="text-[12px] font-black uppercase tracking-widest">{changeDue > 0 ? "Change" : "Charge"}</span>
+                            <span className="text-[14px] font-black leading-none">{currency}{formatNumber(changeDue > 0 ? changeDue : totalAmount)}</span>
+                        </button>
+                    </div>
+                    {/* ── Change Management ── */}
+                    {changeDue > 0 && (
+                        <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">
+                            <div className="flex items-center gap-2">
+                                <Banknote size={16} className="text-emerald-600" />
+                                <div>
+                                    <span className="text-[10px] font-black text-emerald-700 uppercase">Change Due</span>
+                                    <span className="text-sm font-black text-emerald-800 ml-2 tabular-nums">{currency}{formatNumber(changeDue)}</span>
+                                </div>
+                            </div>
+                            {selectedClientId > 1 && onSetStoreChangeInWallet && (
+                                <button
+                                    onClick={() => onSetStoreChangeInWallet(!storeChangeInWallet)}
+                                    className={clsx(
+                                        "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all",
+                                        storeChangeInWallet
+                                            ? "bg-blue-500 border-blue-500 text-white"
+                                            : "bg-white border-gray-200 text-gray-500 hover:border-blue-300"
+                                    )}
+                                >
+                                    <Wallet size={12} />
+                                    {storeChangeInWallet ? '✓ Store in Wallet' : 'Store in Wallet'}
+                                </button>
+                            )}
+                        </div>
+                    )}
             </div>
-            {/* ═══════════ MODALS ═══════════ */}
-            <ManagerOverride
-                isOpen={isOverrideOpen}
-                onClose={() => onSetOverrideOpen(false)}
-                onSuccess={() => {
-                    if (pendingAction) {
-                        pendingAction.execute();
-                        setPendingAction(null);
-                    }
-                }}
-                actionLabel={pendingAction?.label || "Protected Action"}
+        </main>
+            </div >
+        {/* ═══════════ MODALS ═══════════ */ }
+        < ManagerOverride
+    isOpen = { isOverrideOpen }
+    onClose = {() => onSetOverrideOpen(false)
+}
+onSuccess = {() => {
+    if (pendingAction) {
+        pendingAction.execute();
+        setPendingAction(null);
+    }
+}}
+actionLabel = { pendingAction?.label || "Protected Action"}
             />
-            <ReceiptModal
-                isOpen={isReceiptOpen}
-                onClose={() => onSetReceiptOpen(false)}
-                orderId={lastOrder?.id || null}
-                refCode={lastOrder?.ref || null}
+    < ReceiptModal
+isOpen = { isReceiptOpen }
+onClose = {() => onSetReceiptOpen(false)}
+orderId = { lastOrder?.id || null}
+refCode = { lastOrder?.ref || null}
             />
-        </div>
+        </div >
     );
 }
