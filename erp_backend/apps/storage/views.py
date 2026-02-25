@@ -101,12 +101,20 @@ class StoredFileViewSet(viewsets.ModelViewSet):
     def download(self, request, uuid=None):
         """Generate a presigned download URL for a file."""
         stored_file = self.get_object()
-        org_id = request.headers.get('X-Tenant-Id') or \
-                 getattr(request, 'organization', None) or \
-                 getattr(request.user, 'organization_id', None)
+        org = getattr(request, 'organization', None)
+        if not org:
+            org_id = request.headers.get('X-Tenant-Id') or \
+                     getattr(request.user, 'organization_id', None)
+            
+            from erp.models import Organization
+            import uuid
+            if org_id:
+                try:
+                    uuid.UUID(str(org_id))
+                    org = Organization.objects.filter(id=org_id).first()
+                except (ValueError, AttributeError):
+                    org = Organization.objects.filter(slug__iexact=org_id).first()
         
-        from erp.models import Organization
-        org = Organization.objects.filter(id=org_id).first() if org_id else None
         provider = StorageProvider.get_for_organization(org)
 
         try:
@@ -139,21 +147,21 @@ class StorageProviderViewSet(viewsets.GenericViewSet):
         from erp.models import Organization
         from erp.middleware import get_current_tenant_id
         
-        org_id = get_current_tenant_id()
-        if not org_id:
-            org_id = request.headers.get('X-Tenant-Id') or \
-                     getattr(request, 'organization', None) or \
-                     getattr(request.user, 'organization_id', None)
+        org = getattr(request, 'organization', None)
+        if not org:
+            org_id = get_current_tenant_id()
+            if not org_id:
+                org_id = request.headers.get('X-Tenant-Id') or \
+                         getattr(request.user, 'organization_id', None)
+            
+            import uuid
+            if org_id:
+                try:
+                    uuid.UUID(str(org_id))
+                    org = Organization.objects.filter(id=org_id).first()
+                except (ValueError, AttributeError):
+                    org = Organization.objects.filter(slug__iexact=org_id).first()
         
-        if not org_id:
-            return None
-            
-        # Resolve org object if it's an ID
-        if isinstance(org_id, (int, str)):
-            org = Organization.objects.filter(id=org_id).first()
-        else:
-            org = org_id
-            
         if not org:
             return None
             
