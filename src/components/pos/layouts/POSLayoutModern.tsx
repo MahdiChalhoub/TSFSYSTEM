@@ -498,50 +498,45 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                     </button>
                                 </div>
                                 {isMultiPayMode ? (
-                                    /* ── Multi-Pay Numpad ── */
+                                    /* ── Multi-Pay Numpad (matches Speed Calc style) ── */
                                     <div className="flex flex-col gap-2">
-                                        {/* Display */}
+                                        {/* Display — identical to original numpad */}
                                         <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
-                                            <span className={clsx(
-                                                "text-[9px] font-black uppercase tracking-widest",
-                                                multiPaySelectedMethod ? "text-emerald-600" : "text-gray-300"
-                                            )}>
-                                                {multiPaySelectedMethod || 'Select ↓'}
+                                            <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">
+                                                {multiPaySelectedMethod || 'Method'}
                                             </span>
                                             <span className="flex-1 text-right text-xl font-black tabular-nums tracking-tighter text-gray-900">
                                                 {mpBuffer || '0'}
                                             </span>
                                         </div>
 
-                                        {/* Payment Method Selectors (replaces QTY/DISC/PRICE) */}
-                                        <div className="flex gap-1 flex-wrap">
+                                        {/* Payment Method Selectors — same grid as QTY/DISC/PRICE */}
+                                        <div className="grid grid-cols-3 gap-1.5">
                                             {paymentMethods.filter((m: any) => {
                                                 const k = typeof m === 'string' ? m : m.key;
                                                 return !k.includes('MULTI');
                                             }).map((m: any) => {
                                                 const k = typeof m === 'string' ? m : m.key;
                                                 const lbl = typeof m === 'string' ? m : (m.label || m.key);
-                                                const MIcon = getMethodIcon(k);
                                                 const isSelected = multiPaySelectedMethod === k;
                                                 return (
                                                     <button
                                                         key={k}
                                                         onClick={() => setMultiPaySelectedMethod(k)}
                                                         className={clsx(
-                                                            "flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all border",
+                                                            "py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all",
                                                             isSelected
-                                                                ? "bg-emerald-500 border-emerald-500 text-white shadow-md"
-                                                                : "bg-gray-50 border-gray-100 text-gray-500 hover:bg-emerald-50 hover:text-emerald-600"
+                                                                ? "bg-emerald-600 text-white"
+                                                                : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                                                         )}
                                                     >
-                                                        <MIcon size={11} />
                                                         {lbl}
                                                     </button>
                                                 );
                                             })}
                                         </div>
 
-                                        {/* Number Pad */}
+                                        {/* Number Pad — identical to original numpad */}
                                         <div className="grid grid-cols-3 gap-1.5">
                                             {['7', '8', '9', '4', '5', '6', '1', '2', '3', '.', '0'].map(d => (
                                                 <button
@@ -563,7 +558,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                             </button>
                                         </div>
 
-                                        {/* Confirm */}
+                                        {/* Confirm — identical style to original "Confirm Price" */}
                                         <button
                                             onClick={() => {
                                                 if (!multiPaySelectedMethod) { toast.error('Select a payment method first'); return; }
@@ -583,7 +578,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                                     : "bg-gray-100 text-gray-300 cursor-not-allowed"
                                             )}
                                         >
-                                            + Add {multiPaySelectedMethod || 'Payment'}
+                                            Confirm {multiPaySelectedMethod || 'Payment'}
                                         </button>
                                     </div>
                                 ) : (
