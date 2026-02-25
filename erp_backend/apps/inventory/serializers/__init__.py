@@ -24,6 +24,13 @@ from .serial_serializers import (
 from .alert_serializers import (
     StockAlertSerializer
 )
+from .counting_serializers import (
+    InventorySessionSerializer, InventorySessionDetailSerializer, InventorySessionLineSerializer
+)
+from .location_serializers import (
+    WarehouseZoneSerializer, WarehouseAisleSerializer, WarehouseRackSerializer,
+    WarehouseShelfSerializer, WarehouseBinSerializer, ProductLocationSerializer
+)
 
 __all__ = [
     'UnitSerializer', 'CategorySerializer', 'CategorySimpleSerializer', 'StorefrontCategorySerializer',
@@ -37,5 +44,8 @@ __all__ = [
     'StockTransferLineSerializer', 'StockTransferOrderSerializer',
     'OperationalRequestLineSerializer', 'OperationalRequestSerializer',
     'ProductSerialSerializer', 'SerialLogSerializer',
-    'StockAlertSerializer'
+    'StockAlertSerializer',
+    'InventorySessionSerializer', 'InventorySessionDetailSerializer', 'InventorySessionLineSerializer',
+    'WarehouseZoneSerializer', 'WarehouseAisleSerializer', 'WarehouseRackSerializer',
+    'WarehouseShelfSerializer', 'WarehouseBinSerializer', 'ProductLocationSerializer'
 ]

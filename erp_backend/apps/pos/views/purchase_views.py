@@ -3,7 +3,7 @@ from .base import (
     Organization, PDFService, HttpResponse
 )
 from apps.pos.models import Order
-from apps.pos.purchase_order_models import PurchaseOrder, PurchaseOrderLine
+from apps.pos.models import PurchaseOrder, PurchaseOrderLine
 from apps.pos.services import PurchaseService
 from apps.pos.serializers import (
     OrderSerializer, PurchaseOrderSerializer, PurchaseOrderLineSerializer

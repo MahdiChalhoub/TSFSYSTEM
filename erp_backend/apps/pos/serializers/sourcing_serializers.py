@@ -1,5 +1,5 @@
 from .base import serializers
-from apps.pos.sourcing_models import ProductSupplier, SupplierPriceHistory
+from apps.pos.models import ProductSupplier, SupplierPriceHistory
 
 class ProductSupplierSerializer(serializers.ModelSerializer):
     supplier_name = serializers.ReadOnlyField(source='supplier.name')

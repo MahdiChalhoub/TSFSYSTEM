@@ -202,7 +202,7 @@ class InventoryViewSet(TenantModelViewSet):
         organization, err = _get_org_or_400()
         if err: return err
 
-        from apps.inventory.advanced_models import ExpiryAlert
+        from apps.inventory.models import ExpiryAlert
         severity = request.query_params.get('severity')
         show_acknowledged = request.query_params.get('acknowledged', 'false').lower() == 'true'
 
@@ -266,7 +266,7 @@ class InventoryViewSet(TenantModelViewSet):
     def acknowledge_expiry(self, request, pk=None, alert_id=None):
         organization, err = _get_org_or_400()
         if err: return err
-        from apps.inventory.advanced_models import ExpiryAlert
+        from apps.inventory.models import ExpiryAlert
         try:
             alert = ExpiryAlert.objects.get(id=alert_id, organization=organization)
             alert.is_acknowledged = True
@@ -811,7 +811,7 @@ class SerialLogViewSet(TenantModelViewSet):
     serializer_class = SerialLogSerializer
 
 
-from apps.inventory.alert_models import StockAlert, StockAlertService
+from apps.inventory.models import StockAlert, StockAlertService
 from apps.inventory.serializers import StockAlertSerializer
 
 

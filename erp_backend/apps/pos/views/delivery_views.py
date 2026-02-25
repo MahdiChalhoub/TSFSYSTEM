@@ -1,7 +1,7 @@
 from .base import (
     Response, action, timezone, TenantModelViewSet
 )
-from apps.pos.delivery_models import DeliveryZone, DeliveryOrder
+from apps.pos.models import DeliveryZone, DeliveryOrder
 from apps.pos.serializers import DeliveryZoneSerializer, DeliveryOrderSerializer
 
 class DeliveryZoneViewSet(TenantModelViewSet):

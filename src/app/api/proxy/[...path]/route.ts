@@ -44,14 +44,43 @@ async function proxyRequest(req: NextRequest, pathParts: string[]) {
     const searchParams = req.nextUrl.searchParams.toString();
     const targetUrl = `${DJANGO_URL}/api/${apiPath}${searchParams ? `?${searchParams}` : ''}`;
 
-    // Extract tenant context from headers (injected by middleware or previous logic)
-    const tenantId = req.headers.get('x-tenant-id');
-    const tenantSlug = req.headers.get('x-tenant-slug');
-
+    // ─── AUTH & TENANT INJECTION ───
     const headers = new Headers(req.headers);
     headers.set('Host', new URL(DJANGO_URL).host);
 
-    // Inject tenant info for Django isolation
+    // 1. Manually resolve auth token from cookies if Authorization is missing
+    const authToken = req.cookies.get('auth_token')?.value;
+    if (authToken && !headers.has('Authorization')) {
+        headers.set('Authorization', `Token ${authToken}`);
+    }
+
+    // 2. Extract tenant context from headers (injected by middleware or browser)
+    let tenantId = req.headers.get('x-tenant-id');
+    let tenantSlug = req.headers.get('x-tenant-slug');
+
+    // 3. If missing (common for client-side fetches), try to resolve from host
+    if (!tenantId) {
+        const host = req.headers.get('host') || '';
+        const hostname = host.split(':')[0].toLowerCase();
+        const rootDomain = (process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'tsf.ci').toLowerCase();
+
+        const isSaas = hostname === rootDomain ||
+            hostname === `www.${rootDomain}` ||
+            hostname === `saas.${rootDomain}` ||
+            hostname.includes('vercel.app');
+
+        if (!isSaas) {
+            // It's a tenant subdomain (e.g. acme.tsf.ci)
+            const parts = hostname.split('.');
+            if (parts.length > 2 || (parts.length === 2 && hostname.endsWith(`.${rootDomain}`))) {
+                tenantSlug = parts[0];
+                // Note: We only have the slug here. Our backend TenantMiddleware 
+                // now supports slugs in X-Tenant-Id, so we can pass it there!
+                tenantId = tenantSlug;
+            }
+        }
+    }
+
     if (tenantId) headers.set('X-Tenant-Id', tenantId);
     if (tenantSlug) headers.set('X-Tenant-Slug', tenantSlug);
 

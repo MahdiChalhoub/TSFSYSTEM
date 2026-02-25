@@ -1,5 +1,5 @@
 from .base import serializers
-from apps.pos.delivery_models import DeliveryZone, DeliveryOrder
+from apps.pos.models import DeliveryZone, DeliveryOrder
 
 class DeliveryZoneSerializer(serializers.ModelSerializer):
     organization = serializers.PrimaryKeyRelatedField(read_only=True)

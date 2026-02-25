@@ -2,7 +2,7 @@
 Warehouse Location Serializers
 """
 from rest_framework import serializers
-from .location_models import (
+from apps.inventory.models import (
     WarehouseZone, WarehouseAisle, WarehouseRack,
     WarehouseShelf, WarehouseBin, ProductLocation
 )

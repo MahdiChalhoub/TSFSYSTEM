@@ -1,7 +1,7 @@
 from .base import (
     Response, action, TenantModelViewSet
 )
-from apps.pos.discount_models import DiscountRule, DiscountUsageLog
+from apps.pos.models import DiscountRule, DiscountUsageLog
 from apps.pos.serializers import DiscountRuleSerializer, DiscountUsageLogSerializer
 
 class DiscountRuleViewSet(TenantModelViewSet):

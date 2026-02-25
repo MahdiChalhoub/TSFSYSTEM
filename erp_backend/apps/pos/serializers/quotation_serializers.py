@@ -1,5 +1,5 @@
 from .base import serializers
-from apps.pos.quotation_models import Quotation, QuotationLine
+from apps.pos.models import Quotation, QuotationLine
 
 class QuotationLineSerializer(serializers.ModelSerializer):
     product_name = serializers.ReadOnlyField(source='product.name')

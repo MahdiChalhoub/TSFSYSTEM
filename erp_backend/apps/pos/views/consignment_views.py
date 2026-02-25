@@ -2,7 +2,7 @@ from .base import (
     Response, action, get_current_tenant_id,
     TenantModelViewSet, transaction
 )
-from apps.pos.consignment_models import ConsignmentSettlement, ConsignmentSettlementLine
+from apps.pos.models import ConsignmentSettlement, ConsignmentSettlementLine
 from apps.pos.models import OrderLine
 from apps.pos.serializers import (
     ConsignmentSettlementSerializer, ConsignmentSettlementLineSerializer

@@ -68,7 +68,7 @@ class PurchaseService:
                 total_received_value += (qty_to_receive * line.unit_price)
 
                 # ── Sourcing Intelligence Update ───────────────────────
-                from apps.pos.sourcing_models import ProductSupplier, SupplierPriceHistory
+                from apps.pos.models import ProductSupplier, SupplierPriceHistory
                 sourcing_link, _ = ProductSupplier.objects.get_or_create(
                     organization=organization,
                     product=line.product,
@@ -329,7 +329,7 @@ class PurchaseService:
                 if line.get('sellingPriceTTC'): product.selling_price_ttc = Decimal(str(line['sellingPriceTTC']))
                 product.save()
 
-                from apps.pos.sourcing_models import ProductSupplier, SupplierPriceHistory
+                from apps.pos.models import ProductSupplier, SupplierPriceHistory
                 sourcing_link, _ = ProductSupplier.objects.get_or_create(
                     organization=organization,
                     product=product,

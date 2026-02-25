@@ -13,9 +13,8 @@ from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .upload_session import UploadSession
-from .models import StorageProvider, StoredFile
-from . import backends
+from apps.storage.models import UploadSession, StorageProvider, StoredFile
+from .. import backends
 
 logger = logging.getLogger(__name__)
 

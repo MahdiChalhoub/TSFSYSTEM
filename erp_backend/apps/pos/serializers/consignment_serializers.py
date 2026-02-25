@@ -1,5 +1,5 @@
 from .base import serializers
-from apps.pos.consignment_models import ConsignmentSettlement, ConsignmentSettlementLine
+from apps.pos.models import ConsignmentSettlement, ConsignmentSettlementLine
 
 class ConsignmentSettlementLineSerializer(serializers.ModelSerializer):
     product_name = serializers.ReadOnlyField(source='order_line.product.name')

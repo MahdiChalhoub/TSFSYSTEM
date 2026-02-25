@@ -11,13 +11,13 @@ from django.utils import timezone
 from django.db.models import Q, Sum
 from decimal import Decimal
 
-from .counting_models import InventorySession, InventorySessionLine
-from .counting_serializers import (
+from apps.inventory.models import InventorySession, InventorySessionLine
+from apps.inventory.serializers import (
     InventorySessionSerializer,
     InventorySessionDetailSerializer,
     InventorySessionLineSerializer,
 )
-from .models import Product, Inventory, Warehouse, Category, StockAdjustmentOrder, StockAdjustmentLine
+from apps.inventory.models import Product, Inventory, Warehouse, Category, StockAdjustmentOrder, StockAdjustmentLine
 
 
 class InventorySessionViewSet(viewsets.ModelViewSet):

@@ -1,5 +1,5 @@
 from .base import serializers
-from apps.pos.discount_models import DiscountRule, DiscountUsageLog
+from apps.pos.models import DiscountRule, DiscountUsageLog
 
 class DiscountRuleSerializer(serializers.ModelSerializer):
     organization = serializers.PrimaryKeyRelatedField(read_only=True)
