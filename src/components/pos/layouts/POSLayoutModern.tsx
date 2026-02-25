@@ -386,7 +386,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                     <div className="flex-1 relative bg-gray-50/10 overflow-hidden">
                         <div className="absolute inset-0 overflow-y-auto custom-scrollbar p-3">
                             {leftExpanded ? (
-                                <ProductGrid searchQuery={searchQuery} categoryId={activeCategoryId} onAddToCart={onAddToCart} currency={currency} />
+                                <ProductGrid searchQuery={searchQuery} categoryId={activeCategoryId || currentParentId} onAddToCart={onAddToCart} currency={currency} />
                             ) : (
                                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                                     {/* Back Button / Navigation Context */}
@@ -575,9 +575,13 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                         onClick={() => { setSelectedCartIdx(idx); setNumpadMode('qty'); setShowNumpad(true); }}
                                         className={clsx(
                                             "px-2.5 py-1.5 group transition-colors duration-300 flex items-center gap-1.5 cursor-pointer",
-                                            selectedCartIdx === idx ? "bg-amber-50 ring-1 ring-amber-200"
-                                                : highlightedItemId === item.productId ? "bg-emerald-100"
-                                                    : "hover:bg-white"
+                                            selectedCartIdx === idx && highlightedItemId === item.productId
+                                                ? "bg-teal-100 ring-1 ring-teal-300"
+                                                : selectedCartIdx === idx
+                                                    ? "bg-amber-50 ring-1 ring-amber-200"
+                                                    : highlightedItemId === item.productId
+                                                        ? "bg-emerald-100 ring-1 ring-emerald-200"
+                                                        : "hover:bg-white"
                                         )}
                                     >
                                         <span className="text-[10px] text-gray-300 font-mono w-4 shrink-0 text-center">{idx + 1}</span>
@@ -629,46 +633,38 @@ export function POSLayoutModern(props: POSLayoutProps) {
                             </div>
                         )}
                     </div>
-                    <div className="border-t border-gray-200 bg-white px-3 py-2 shrink-0 space-y-2">
-                        <div className="flex items-center gap-4 justify-between">
-                            <div className="flex items-center gap-4">
-                                <div className="flex flex-col">
-                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Subtotal</span>
-                                    <span className="text-[11px] font-black text-gray-700 tabular-nums">{currency}{total.toFixed(2)}</span>
-                                </div>
-                                <div className="w-px h-6 bg-gray-100" />
-                                <div className="flex flex-col">
-                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Discount</span>
-                                    <div className="flex items-center gap-1 mt-0.5">
-                                        <div className="flex items-center bg-gray-100 rounded p-0.5 scale-90 origin-left">
-                                            <button
-                                                onClick={() => onSetDiscountType('fixed')}
-                                                className={clsx("px-2 py-0.5 rounded text-[10px] font-bold", discountType === 'fixed' ? "bg-white shadow text-gray-800" : "text-gray-400")}
-                                            >{currency}</button>
-                                            <button
-                                                onClick={() => onSetDiscountType('percentage')}
-                                                className={clsx("px-2 py-0.5 rounded text-[10px] font-bold", discountType === 'percentage' ? "bg-white shadow text-gray-800" : "text-gray-400")}
-                                            >%</button>
-                                        </div>
-                                        <input
-                                            type="number" min="0" step="0.01"
-                                            value={discount || ''}
-                                            onFocus={(e) => {
-                                                e.target.blur();
-                                                setNumpadMode('disc');
-                                                setShowNumpad(true);
-                                            }}
-                                            onChange={(e) => handleProtectedDiscount(Number(e.target.value) || 0)}
-                                            className="w-16 py-0.5 text-right bg-amber-50/50 border border-gray-200 rounded text-[11px] font-bold text-amber-600 outline-none cursor-pointer"
-                                            placeholder="0"
-                                            readOnly
-                                        />
+                    <div className="border-t-2 border-emerald-500/20 bg-gradient-to-b from-white to-gray-50/80 px-3 py-3 shrink-0 space-y-2.5">
+                        {/* ── Summary Row ── */}
+                        <div className="grid grid-cols-3 gap-2">
+                            <div className="bg-gray-50 rounded-xl p-2 text-center">
+                                <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest block">Subtotal</span>
+                                <span className="text-sm font-black text-gray-800 tabular-nums">{currency}{formatNumber(total)}</span>
+                            </div>
+                            <div
+                                onClick={() => { setNumpadMode('disc'); setShowNumpad(true); }}
+                                className="bg-amber-50/60 rounded-xl p-2 text-center cursor-pointer hover:bg-amber-50 transition-colors group"
+                            >
+                                <div className="flex items-center justify-center gap-1">
+                                    <span className="text-[8px] font-black text-amber-500 uppercase tracking-widest">Discount</span>
+                                    <div className="flex items-center bg-white/80 rounded px-1 py-px">
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); onSetDiscountType('fixed'); }}
+                                            className={clsx("px-1 text-[8px] font-bold rounded", discountType === 'fixed' ? "text-amber-700 bg-amber-100" : "text-gray-300")}
+                                        >{currency}</button>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); onSetDiscountType('percentage'); }}
+                                            className={clsx("px-1 text-[8px] font-bold rounded", discountType === 'percentage' ? "text-amber-700 bg-amber-100" : "text-gray-300")}
+                                        >%</button>
                                     </div>
                                 </div>
+                                <span className={clsx(
+                                    "text-sm font-black tabular-nums",
+                                    discount > 0 ? "text-amber-600" : "text-gray-300"
+                                )}>{discount > 0 ? `-${formatNumber(discountType === 'percentage' ? total * discount / 100 : discount)}` : '0'}</span>
                             </div>
-                            <div className="flex flex-col items-end">
-                                <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Total</span>
-                                <span className="text-xl font-black tabular-nums text-gray-900 leading-none">{currency}{totalAmount.toFixed(2)}</span>
+                            <div className="bg-emerald-50 rounded-xl p-2 text-center">
+                                <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest block">Total</span>
+                                <span className="text-lg font-black text-gray-900 tabular-nums leading-tight">{currency}{formatNumber(totalAmount)}</span>
                             </div>
                         </div>
                         {/* ── Wallet & Loyalty Quick-Pay ── */}
@@ -712,9 +708,10 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 )}
                             </div>
                         )}
-                        <div className="flex items-center gap-2 pt-1 border-t border-gray-50 mt-1">
-                            <div className="flex-1">
-                                <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 block">Received</label>
+                        {/* ── Received + Charge ── */}
+                        <div className="flex items-stretch gap-2">
+                            <div className="flex-1 relative">
+                                <span className="absolute left-2.5 top-1.5 text-[7px] font-black text-gray-400 uppercase tracking-widest">Received</span>
                                 <input
                                     type="text"
                                     value={cashReceived ? cashReceived.replace(/\B(?=(\d{3})+(?!\d))/g, " ") : ''}
@@ -724,39 +721,46 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                             onSetCashReceived(raw);
                                         }
                                     }}
-                                    placeholder={totalAmount.toFixed(2)}
-                                    className="w-full px-2 py-2 text-right bg-gray-50 border border-gray-100 rounded-lg text-sm font-bold outline-none focus:border-emerald-500 transition-all font-mono"
+                                    placeholder={formatNumber(totalAmount)}
+                                    className="w-full pt-5 pb-2 px-2.5 text-right bg-white border-2 border-gray-100 rounded-xl text-base font-black outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 transition-all font-mono tabular-nums"
                                 />
                             </div>
                             <button
                                 onClick={onCharge}
                                 disabled={cart.length === 0 || isProcessing}
                                 className={clsx(
-                                    "flex-1 py-2 rounded-xl h-[48px] flex flex-col items-center justify-center transition-all shadow-lg shadow-emerald-100",
-                                    cart.length > 0 && !isProcessing ? "bg-emerald-500 text-white hover:bg-emerald-600" : "bg-gray-200 text-gray-400"
+                                    "flex-1 rounded-xl flex flex-col items-center justify-center transition-all relative overflow-hidden",
+                                    cart.length > 0 && !isProcessing
+                                        ? "bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-200/50 hover:shadow-2xl hover:shadow-emerald-300/60 hover:scale-[1.02] active:scale-[0.98]"
+                                        : "bg-gray-200 text-gray-400"
                                 )}
                             >
-                                <span className="text-[12px] font-black uppercase tracking-widest">{changeDue > 0 ? "Change" : "Charge"}</span>
-                                <span className="text-[14px] font-black leading-none">{currency}{formatNumber(changeDue > 0 ? changeDue : totalAmount)}</span>
+                                {cart.length > 0 && !isProcessing && (
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent" />
+                                )}
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] relative z-10">{changeDue > 0 ? "Change" : "Charge"}</span>
+                                <span className="text-xl font-black leading-none relative z-10 tabular-nums">{currency}{formatNumber(changeDue > 0 ? changeDue : totalAmount)}</span>
                             </button>
                         </div>
                         {/* ── Change Management ── */}
                         {changeDue > 0 && (
-                            <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">
+                            <div className="flex items-center justify-between bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/60 rounded-xl px-3 py-2">
                                 <div className="flex items-center gap-2">
-                                    <Banknote size={16} className="text-emerald-600" />
+                                    <div className="w-7 h-7 rounded-lg bg-emerald-500 flex items-center justify-center">
+                                        <Banknote size={14} className="text-white" />
+                                    </div>
                                     <div>
-                                        <span className="text-[10px] font-black text-emerald-700 uppercase">Change Due</span>
-                                        <span className="text-sm font-black text-emerald-800 ml-2 tabular-nums">{currency}{formatNumber(changeDue)}</span>
+                                        <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest block">Change Due</span>
+                                        <span className="text-base font-black text-emerald-800 tabular-nums">{currency}{formatNumber(changeDue)}</span>
                                     </div>
                                 </div>
                                 {selectedClientId > 1 && onSetStoreChangeInWallet && (
                                     <button
                                         onClick={() => onSetStoreChangeInWallet(!storeChangeInWallet)}
                                         className={clsx(
-                                            "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all",
+                                            "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all",
                                             storeChangeInWallet
-                                                ? "bg-blue-500 border-blue-500 text-white"
+                                                ? "bg-blue-500 border-blue-500 text-white shadow-md shadow-blue-100"
                                                 : "bg-white border-gray-200 text-gray-500 hover:border-blue-300"
                                         )}
                                     >
