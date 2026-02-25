@@ -91,6 +91,7 @@ export interface POSLayoutProps {
     onSetIsOnline: (v: boolean) => void;
     onSetClientSearchQuery: (v: string) => void;
     onSetDeliveryZone: (v: string) => void;
+    onSetNotes: (v: string) => void;
 
     // Layout switching
     currentLayout: POSLayoutVariant;

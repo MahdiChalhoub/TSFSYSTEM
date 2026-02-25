@@ -347,6 +347,7 @@ export default function POSPage() {
     const [cashReceived, setCashReceived] = useState<string>('');
     const [storeChangeInWallet, setStoreChangeInWallet] = useState(false);
     const [pointsRedeemed, setPointsRedeemed] = useState(0);
+    const [notes, setNotes] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
 
     const total = cart.reduce((acc: number, item: any) => acc + (Number(item.price) * item.quantity), 0);
@@ -384,6 +385,7 @@ export default function POSPage() {
                 clientId: selectedClientId,
                 storeChangeInWallet,
                 pointsRedeemed,
+                notes,
                 cashReceived: parsedCash,
                 paymentAccountId: linkedAccountId
             });
@@ -394,6 +396,7 @@ export default function POSPage() {
                 setCashReceived('');
                 setStoreChangeInWallet(false);
                 setPointsRedeemed(0);
+                setNotes('');
                 setDiscount(0);
             }
         } catch (error) {
@@ -440,6 +443,7 @@ export default function POSPage() {
         onSetIsOnline: setIsOnline,
         onSetClientSearchQuery: setClientSearchQuery,
         onSetDeliveryZone: setDeliveryZone,
+        onSetNotes: setNotes,
 
         currentLayout,
         onOpenLayoutSelector: () => setIsLayoutSelectorOpen(true),
