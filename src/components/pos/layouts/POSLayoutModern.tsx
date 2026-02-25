@@ -735,7 +735,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                         ? deficit > 0
                                             ? "bg-gradient-to-br from-rose-500 to-red-600 text-white shadow-xl shadow-rose-200/50 hover:shadow-2xl hover:shadow-rose-300/60 hover:scale-[1.02] active:scale-[0.98]"
                                             : changeDue > 0
-                                                ? "bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-xl shadow-amber-200/50 hover:shadow-2xl hover:shadow-amber-300/60 hover:scale-[1.02] active:scale-[0.98]"
+                                                ? "bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-xl shadow-blue-200/50 hover:shadow-2xl hover:shadow-blue-300/60 hover:scale-[1.02] active:scale-[0.98]"
                                                 : "bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-200/50 hover:shadow-2xl hover:shadow-emerald-300/60 hover:scale-[1.02] active:scale-[0.98]"
                                         : "bg-gray-200 text-gray-400"
                                 )}
