@@ -4,11 +4,11 @@ import os
 import time
 
 BASE_URL = "https://tsf.ci/api"
-TOKEN = "72fe256019452748c839b59747de2a7adfdd49e3"
+TOKEN = "4e53382e43377e9b6721129948c944eff2b55e40"
 
 headers = {
     "Authorization": f"Token {TOKEN}",
-    "X-Tenant-Id": "58ceebcb-2f0a-499e-afb5-431263a48999"
+    "X-Tenant-Id": "SAAS"
 }
 
 def test_chunked_upload():
