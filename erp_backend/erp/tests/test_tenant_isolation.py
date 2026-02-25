@@ -234,3 +234,90 @@ class TestTenantContextCleanup(TenantIsolationTestBase):
 
         # Context should still be cleaned up
         self.assertIsNone(get_current_tenant_id())
+
+
+class TestStrictLoginIsolation(TenantIsolationTestBase):
+    """
+    Audit tests for the Strict Isolation implementation (2026-02-25).
+    Ensures login context is strictly scoped and SaaS god-mode is restricted.
+    """
+    from erp.serializers.auth import LoginSerializer
+    from rest_framework.exceptions import ValidationError
+
+    def test_public_path_establishes_context(self):
+        """Verify public paths establish tenant context if X-Tenant-Id is present."""
+        request = self.factory.get(
+            '/api/auth/login/',
+            HTTP_X_TENANT_ID=str(self.org_a.id)
+        )
+        # Check context INSIDE the request lifecycle via MagicMock side effect
+        def check_context(req):
+            self.assertEqual(get_current_tenant_id(), str(self.org_a.id))
+            self.assertEqual(req.organization_id, str(self.org_a.id))
+            return JsonResponse({'ok': True})
+        
+        self.middleware.get_response = check_context
+        self.middleware(request)
+
+    def test_cross_tenant_login_isolation(self):
+        """Verify that a user from Org Alpha cannot log in to Org Beta's context."""
+        from erp.serializers.auth import LoginSerializer
+        from rest_framework.exceptions import ValidationError
+        
+        set_current_tenant_id(str(self.org_b.id))
+        try:
+            serializer = LoginSerializer(data={
+                'username': 'user_a', # From Org A
+                'password': 'pass123'
+            })
+            with self.assertRaises(ValidationError) as cm:
+                serializer.is_valid(raise_exception=True)
+            self.assertIn('Unable to log in', str(cm.exception))
+        finally:
+            set_current_tenant_id(None)
+
+    def test_saas_admin_backdoor_prevention(self):
+        """Verify SaaS Superusers cannot login via tenant-scoped login pages."""
+        from erp.serializers.auth import LoginSerializer
+        from rest_framework.exceptions import ValidationError
+
+        set_current_tenant_id(str(self.org_a.id))
+        try:
+            serializer = LoginSerializer(data={
+                'username': 'superadmin',
+                'password': 'pass123'
+            })
+            with self.assertRaises(ValidationError) as cm:
+                serializer.is_valid(raise_exception=True)
+            self.assertIn('Unable to log in', str(cm.exception))
+        finally:
+            set_current_tenant_id(None)
+
+    def test_root_login_restriction(self):
+        """Verify normal tenant users cannot login to the SaaS Root Panel."""
+        from erp.serializers.auth import LoginSerializer
+        from rest_framework.exceptions import ValidationError
+
+        set_current_tenant_id(None)
+        serializer = LoginSerializer(data={
+            'username': 'user_a',
+            'password': 'pass123'
+        })
+        with self.assertRaises(ValidationError) as cm:
+            serializer.is_valid(raise_exception=True)
+        self.assertIn('Unable to log in', str(cm.exception))
+
+    def test_valid_tenant_login(self):
+        """Verify valid users can log in to their own authorized workspace."""
+        from erp.serializers.auth import LoginSerializer
+        
+        set_current_tenant_id(str(self.org_a.id))
+        try:
+            serializer = LoginSerializer(data={
+                'username': 'user_a',
+                'password': 'pass123'
+            })
+            self.assertTrue(serializer.is_valid(raise_exception=True))
+            self.assertEqual(serializer.validated_data['user'], self.user_a)
+        finally:
+            set_current_tenant_id(None)

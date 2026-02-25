@@ -1,3 +1,4 @@
+from erp.models import Organization
 from apps.inventory.models import (
     Brand,
     Category,

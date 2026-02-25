@@ -29,6 +29,7 @@ from apps.inventory.serializers import (
 from apps.inventory.services import InventoryService
 from .base import (
     F,
+    Organization,
     Q,
     Response,
     Sum,
