@@ -43,6 +43,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
     const paymentMethods = (props as any).paymentMethods || DEFAULT_PAYMENT_METHODS;
     const receivedNum = Number(cashReceived) || 0;
     const changeDue = receivedNum > totalAmount ? receivedNum - totalAmount : 0;
+    const deficit = receivedNum > 0 && receivedNum < totalAmount ? totalAmount - receivedNum : 0;
     const [leftExpanded, setLeftExpanded] = useState(false);
     const [showNumpad, setShowNumpad] = useState(false);
     const [numpadMode, setNumpadMode] = useState<NumpadMode>('qty');
@@ -731,17 +732,19 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 className={clsx(
                                     "flex-1 rounded-xl flex flex-col items-center justify-center transition-all relative overflow-hidden",
                                     cart.length > 0 && !isProcessing
-                                        ? changeDue > 0
-                                            ? "bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-xl shadow-amber-200/50 hover:shadow-2xl hover:shadow-amber-300/60 hover:scale-[1.02] active:scale-[0.98]"
-                                            : "bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-200/50 hover:shadow-2xl hover:shadow-emerald-300/60 hover:scale-[1.02] active:scale-[0.98]"
+                                        ? deficit > 0
+                                            ? "bg-gradient-to-br from-rose-500 to-red-600 text-white shadow-xl shadow-rose-200/50 hover:shadow-2xl hover:shadow-rose-300/60 hover:scale-[1.02] active:scale-[0.98]"
+                                            : changeDue > 0
+                                                ? "bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-xl shadow-amber-200/50 hover:shadow-2xl hover:shadow-amber-300/60 hover:scale-[1.02] active:scale-[0.98]"
+                                                : "bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-200/50 hover:shadow-2xl hover:shadow-emerald-300/60 hover:scale-[1.02] active:scale-[0.98]"
                                         : "bg-gray-200 text-gray-400"
                                 )}
                             >
                                 {cart.length > 0 && !isProcessing && (
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent" />
                                 )}
-                                <span className="text-[10px] font-black uppercase tracking-[0.2em] relative z-10">{changeDue > 0 ? "Change" : "Charge"}</span>
-                                <span className="text-xl font-black leading-none relative z-10 tabular-nums">{currency}{formatNumber(changeDue > 0 ? changeDue : totalAmount)}</span>
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] relative z-10">{deficit > 0 ? "Remaining" : changeDue > 0 ? "Change" : "Charge"}</span>
+                                <span className="text-xl font-black leading-none relative z-10 tabular-nums">{currency}{formatNumber(deficit > 0 ? deficit : changeDue > 0 ? changeDue : totalAmount)}</span>
                             </button>
                         </div>
                         {/* ── Change Options (wallet / rounding) ── */}
