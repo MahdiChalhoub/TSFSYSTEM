@@ -51,6 +51,7 @@ import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
 import { usePathname } from 'next/navigation';
 import { logoutAction } from "@/app/actions/auth";
+import { toast } from "sonner";
 import { PLATFORM_CONFIG } from '@/lib/saas_config';
 
 import { getSaaSModules, getDynamicSidebar } from "@/app/actions/saas/modules";
@@ -606,10 +607,14 @@ export function Sidebar({
                             <span className="text-sm font-medium">Sign Out</span>
                         </button>
                         <div
-                            title="Versioning Rule: [Standard]-AG-[YYMMDD.HHMM] (Antigravity Agent Build)"
-                            className="text-[9px] font-black text-gray-500 bg-gray-900/80 px-2 py-1 rounded border border-gray-800/50 select-none uppercase tracking-tighter whitespace-nowrap cursor-help transition-all hover:text-emerald-500 hover:border-emerald-500/30"
+                            onClick={() => {
+                                navigator.clipboard.writeText(PLATFORM_CONFIG.version);
+                                toast.success("Version copied to clipboard");
+                            }}
+                            title="Click to copy version — Role: Antigravity-Powered SaaS"
+                            className="text-[9px] font-black text-gray-400 bg-gray-900/80 px-2 py-1.5 rounded-lg border border-gray-800/50 select-none uppercase tracking-widest whitespace-nowrap cursor-pointer transition-all hover:text-emerald-400 hover:border-emerald-500/30 hover:bg-emerald-500/5 active:scale-95"
                         >
-                            Version {PLATFORM_CONFIG.version}
+                            V{PLATFORM_CONFIG.version}
                         </div>
                     </div>
                 </div>

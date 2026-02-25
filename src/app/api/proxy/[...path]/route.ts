@@ -45,7 +45,14 @@ async function proxyRequest(req: NextRequest, pathParts: string[]) {
     const targetUrl = `${DJANGO_URL}/api/${apiPath}${searchParams ? `?${searchParams}` : ''}`;
 
     // ─── AUTH & TENANT INJECTION ───
-    const headers = new Headers(req.headers);
+    const headers = new Headers();
+    // Copy select headers to avoid corruption of multipart boundaries
+    const headersToCopy = ['content-type', 'content-length', 'accept', 'authorization'];
+    headersToCopy.forEach(h => {
+        const val = req.headers.get(h);
+        if (val) headers.set(h, val);
+    });
+
     headers.set('Host', new URL(DJANGO_URL).host);
 
     // 1. Manually resolve auth token from cookies if Authorization is missing
@@ -54,11 +61,11 @@ async function proxyRequest(req: NextRequest, pathParts: string[]) {
         headers.set('Authorization', `Token ${authToken}`);
     }
 
-    // 2. Extract tenant context from headers (injected by middleware or browser)
+    // 2. Extract tenant context from headers (injected by browser)
     let tenantId = req.headers.get('x-tenant-id');
     let tenantSlug = req.headers.get('x-tenant-slug');
 
-    // 3. If missing (common for client-side fetches), try to resolve from host
+    // 3. If missing, resolve from host
     if (!tenantId) {
         const host = req.headers.get('host') || '';
         const hostname = host.split(':')[0].toLowerCase();
@@ -67,15 +74,13 @@ async function proxyRequest(req: NextRequest, pathParts: string[]) {
         const isSaas = hostname === rootDomain ||
             hostname === `www.${rootDomain}` ||
             hostname === `saas.${rootDomain}` ||
-            hostname.includes('vercel.app');
+            hostname.includes('vercel.app') ||
+            /^(\d{1,3}\.){3}\d{1,3}$/.test(hostname);
 
         if (!isSaas) {
-            // It's a tenant subdomain (e.g. acme.tsf.ci)
             const parts = hostname.split('.');
             if (parts.length > 2 || (parts.length === 2 && hostname.endsWith(`.${rootDomain}`))) {
                 tenantSlug = parts[0];
-                // Note: We only have the slug here. Our backend TenantMiddleware 
-                // now supports slugs in X-Tenant-Id, so we can pass it there!
                 tenantId = tenantSlug;
             }
         }
@@ -84,21 +89,25 @@ async function proxyRequest(req: NextRequest, pathParts: string[]) {
     if (tenantId) headers.set('X-Tenant-Id', tenantId);
     if (tenantSlug) headers.set('X-Tenant-Slug', tenantSlug);
 
+    console.log(`[ERP_PROXY] ${req.method} ${targetUrl} | Tenant: ${tenantSlug || 'None'} | Auth: ${headers.has('Authorization') ? 'Present' : 'Missing'}`);
+
     try {
         const response = await fetch(targetUrl, {
             method: req.method,
             headers: headers,
-            body: req.method !== 'GET' ? await req.blob() : undefined,
+            // Stream the body for efficiency (multipart friendly)
+            body: req.method !== 'GET' && req.method !== 'HEAD' ? req.body : undefined,
+            // @ts-ignore - duplex is required for streaming bodies in fetch
+            duplex: 'half',
         });
 
-        const data = await response.blob();
-
-        return new NextResponse(data, {
+        // Use streaming response for efficiency
+        return new NextResponse(response.body, {
             status: response.status,
             headers: response.headers,
         });
     } catch (error) {
         console.error('[ERP_PROXY] Forwarding failed:', error);
-        return NextResponse.json({ error: 'ERP_BACKEND_UNREACHABLE' }, { status: 502 });
+        return NextResponse.json({ error: 'ERP_BACKEND_UNREACHABLE', details: String(error) }, { status: 502 });
     }
 }
