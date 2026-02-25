@@ -7,8 +7,8 @@ from rest_framework.decorators import action
 from erp.views import TenantModelViewSet
 from erp.middleware import get_current_tenant_id
 
-from .pricing_models import PriceGroup, PriceGroupMember, ClientPriceRule
-from .pricing_serializers import (
+from apps.crm.models import PriceGroup, PriceGroupMember, ClientPriceRule
+from apps.crm.serializers import (
     PriceGroupSerializer, PriceGroupMemberSerializer, ClientPriceRuleSerializer
 )
 

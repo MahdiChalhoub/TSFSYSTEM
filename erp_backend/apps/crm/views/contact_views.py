@@ -212,8 +212,8 @@ class ContactViewSet(TenantModelViewSet):
     def _get_pricing_rules(self, contact, organization_id):
         """Get all pricing rules applicable to this contact."""
         try:
-            from apps.crm.pricing_models import ClientPriceRule, PriceGroupMember
-            from apps.crm.pricing_serializers import ClientPriceRuleSerializer
+            from apps.crm.models import ClientPriceRule, PriceGroupMember
+            from apps.crm.serializers import ClientPriceRuleSerializer
 
             # Direct rules
             direct = ClientPriceRule.objects.filter(

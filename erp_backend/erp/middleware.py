@@ -56,7 +56,7 @@ class TenantMiddleware:
             except (ValueError, AttributeError):
                 # Not a UUID -> Try resolving as Slug
                 from erp.models import Organization
-                org = Organization.objects.filter(slug=header_tenant_id, is_active=True).first()
+                org = Organization.objects.filter(slug__iexact=header_tenant_id, is_active=True).first()
                 if org:
                     header_tenant_id = str(org.id)
                 else:
