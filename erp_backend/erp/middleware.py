@@ -46,6 +46,23 @@ class TenantMiddleware:
         # ─── 2. DETERMINE TENANT ID ───
         # Priority: X-Tenant-Id header → user.organization_id → None
         header_tenant_id = request.headers.get('X-Tenant-Id')
+        
+        # ── Normalize Header: ID or Slug ──
+        if header_tenant_id:
+            import uuid
+            try:
+                # Validate UUID format
+                uuid.UUID(str(header_tenant_id))
+            except (ValueError, AttributeError):
+                # Not a UUID -> Try resolving as Slug
+                from erp.models import Organization
+                org = Organization.objects.filter(slug=header_tenant_id, is_active=True).first()
+                if org:
+                    header_tenant_id = str(org.id)
+                else:
+                    # Invalid slug/id -> Let it fail naturally in downstream checks
+                    pass
+
         tenant_id = None
 
         # ─── 3. PUBLIC PATHS HANDLING ───
@@ -53,7 +70,7 @@ class TenantMiddleware:
             # For public paths, we don't ENFORCE isolation, but we DO establish context
             # if the header is provided (important for login/register).
             if header_tenant_id:
-                # Basic validation: does it exist?
+                # Basic validation: does it exist? (Now guaranteed to be UUID if it matched org)
                 from erp.models import Organization
                 if Organization.objects.filter(id=header_tenant_id, is_active=True).exists():
                     tenant_id = header_tenant_id
@@ -107,16 +124,14 @@ class TenantMiddleware:
             # No header — fallback to user's own organization
             tenant_id = str(user.organization_id)
         
-        # ... rest of validation ...
         request.organization = None
         if tenant_id:
             from erp.models import Organization
-            org = Organization.objects.filter(id=tenant_id, is_active=True).first()
-            if not org:
+            request.organization = Organization.objects.filter(id=tenant_id, is_active=True).first()
+            if not request.organization:
                 # Fail if context was requested but not found
                 from django.http import JsonResponse
                 return JsonResponse({"error": "Organization not found or inactive."}, status=404)
-            request.organization = org
 
         set_current_tenant_id(tenant_id)
         request.organization_id = tenant_id
