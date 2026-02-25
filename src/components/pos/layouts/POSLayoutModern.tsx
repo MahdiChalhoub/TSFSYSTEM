@@ -38,7 +38,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
         onToggleFullscreen, onCycleSidebarMode, onCharge,
         onSync, onSetIsOnline, onSetClientSearchQuery, onSetDeliveryZone,
         onSetOverrideOpen, onSetReceiptOpen, onOpenLayoutSelector,
-        onSetStoreChangeInWallet, onSetPointsRedeemed
+        onSetStoreChangeInWallet, onSetPointsRedeemed, onSetNotes
     } = props;
     const paymentMethods = (props as any).paymentMethods || DEFAULT_PAYMENT_METHODS;
     const receivedNum = Number(cashReceived) || 0;
@@ -497,117 +497,30 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                         <X size={12} />
                                     </button>
                                 </div>
-                                {isMultiPayMode ? (
-                                    /* ── Multi-Pay Numpad (matches Speed Calc style) ── */
-                                    <div className="flex flex-col gap-2">
-                                        {/* Display — identical to original numpad */}
-                                        <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
-                                            <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">
-                                                {multiPaySelectedMethod || 'Method'}
-                                            </span>
-                                            <span className="flex-1 text-right text-xl font-black tabular-nums tracking-tighter text-gray-900">
-                                                {mpBuffer || '0'}
-                                            </span>
-                                        </div>
-
-                                        {/* Payment Method Selectors — same grid as QTY/DISC/PRICE */}
-                                        <div className="grid grid-cols-3 gap-1.5">
-                                            {paymentMethods.filter((m: any) => {
-                                                const k = typeof m === 'string' ? m : m.key;
-                                                return !k.includes('MULTI');
-                                            }).map((m: any) => {
-                                                const k = typeof m === 'string' ? m : m.key;
-                                                const lbl = typeof m === 'string' ? m : (m.label || m.key);
-                                                const isSelected = multiPaySelectedMethod === k;
-                                                return (
-                                                    <button
-                                                        key={k}
-                                                        onClick={() => setMultiPaySelectedMethod(k)}
-                                                        className={clsx(
-                                                            "py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all",
-                                                            isSelected
-                                                                ? "bg-emerald-600 text-white"
-                                                                : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                                                        )}
-                                                    >
-                                                        {lbl}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-
-                                        {/* Number Pad — identical to original numpad */}
-                                        <div className="grid grid-cols-3 gap-1.5">
-                                            {['7', '8', '9', '4', '5', '6', '1', '2', '3', '.', '0'].map(d => (
-                                                <button
-                                                    key={d}
-                                                    onClick={() => setMpBuffer(prev => {
-                                                        if (d === '.' && prev.includes('.')) return prev;
-                                                        return prev + d;
-                                                    })}
-                                                    className="h-12 bg-white border border-gray-100 rounded-xl font-black text-lg text-gray-700 hover:bg-gray-50 active:scale-95 transition-all shadow-sm"
-                                                >
-                                                    {d}
-                                                </button>
-                                            ))}
-                                            <button
-                                                onClick={() => setMpBuffer(prev => prev.slice(0, -1))}
-                                                className="h-12 bg-white border border-gray-100 rounded-xl font-black text-gray-400 hover:bg-rose-50 hover:text-rose-500 active:scale-95 transition-all shadow-sm flex items-center justify-center"
-                                            >
-                                                <X size={18} />
-                                            </button>
-                                        </div>
-
-                                        {/* Confirm — identical style to original "Confirm Price" */}
-                                        <button
-                                            onClick={() => {
-                                                if (!multiPaySelectedMethod) { toast.error('Select a payment method first'); return; }
-                                                const val = parseFloat(mpBuffer);
-                                                if (isNaN(val) || val <= 0) { toast.error('Enter an amount'); return; }
-                                                const amount = Math.min(val, Math.max(0, multiPayRemaining));
-                                                if (amount > 0) {
-                                                    setPaymentLegs(prev => [...prev, { method: multiPaySelectedMethod, amount }]);
-                                                }
-                                                setMpBuffer('');
-                                            }}
-                                            disabled={!multiPaySelectedMethod || !mpBuffer}
-                                            className={clsx(
-                                                "w-full py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                                                multiPaySelectedMethod && mpBuffer
-                                                    ? "bg-emerald-600 text-white shadow-lg hover:opacity-90 active:scale-[0.98]"
-                                                    : "bg-gray-100 text-gray-300 cursor-not-allowed"
-                                            )}
-                                        >
-                                            Confirm {multiPaySelectedMethod || 'Payment'}
-                                        </button>
-                                    </div>
-                                ) : (
-                                    /* ── Normal Cart Numpad ── */
-                                    <POSNumpad
-                                        mode={numpadMode}
-                                        onModeChange={setNumpadMode}
-                                        onValueConfirm={(val, mode) => {
-                                            const idx = selectedCartIdx ?? 0;
-                                            if (cart.length > idx) {
-                                                const target = cart[idx];
-                                                if (mode === 'qty') {
-                                                    const delta = val - target.quantity;
-                                                    handleProtectedQuantity(target.productId, delta);
-                                                } else if (mode === 'price') {
-                                                    handleProtectedPrice(target.productId, val);
-                                                } else if (mode === 'disc') {
-                                                    handleProtectedDiscount(val);
-                                                }
-                                                setShowNumpad(false);
+                                <POSNumpad
+                                    mode={numpadMode}
+                                    onModeChange={setNumpadMode}
+                                    onValueConfirm={(val, mode) => {
+                                        const idx = selectedCartIdx ?? 0;
+                                        if (cart.length > idx) {
+                                            const target = cart[idx];
+                                            if (mode === 'qty') {
+                                                const delta = val - target.quantity;
+                                                handleProtectedQuantity(target.productId, delta);
+                                            } else if (mode === 'price') {
+                                                handleProtectedPrice(target.productId, val);
                                             } else if (mode === 'disc') {
                                                 handleProtectedDiscount(val);
-                                                setShowNumpad(false);
-                                            } else {
-                                                toast.error("Add an item first");
                                             }
-                                        }}
-                                    />
-                                )}
+                                            setShowNumpad(false);
+                                        } else if (mode === 'disc') {
+                                            handleProtectedDiscount(val);
+                                            setShowNumpad(false);
+                                        } else {
+                                            toast.error("Add an item first");
+                                        }
+                                    }}
+                                />
                             </div>
                         )}
                     </div>
@@ -636,18 +549,19 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 key={key}
                                 onClick={() => {
                                     if (key.includes('MULTI')) {
-                                        setIsMultiPayMode(prev => !prev);
-                                        if (!isMultiPayMode) {
-                                            setPaymentLegs([]);
-                                            setShowNumpad(true);
-                                            setMpBuffer('');
-                                        }
+                                        setIsMultiPayMode(true);
+                                        setShowNumpad(false); // Hide floating numpad, we'll use integrated one
+                                        if (paymentLegs.length === 0) setMpBuffer('');
+                                    } else {
+                                        onSetPaymentMethod(key);
+                                        // If selecting a different method while in multi-pay, we might want to stay in multi-pay or exit.
+                                        // For simplicity, we exit multi-pay if they pick a standard method.
+                                        setIsMultiPayMode(false);
                                     }
-                                    onSetPaymentMethod(key);
                                 }}
                                 className={clsx(
                                     "group flex flex-col items-center justify-center p-2 rounded-xl transition-all w-14 h-14 border-2 relative",
-                                    isActive
+                                    isActive || (setIsMultiPayMode && key.includes('MULTI'))
                                         ? "bg-emerald-50 border-emerald-500 text-emerald-600 shadow-lg shadow-emerald-50 scale-105"
                                         : "bg-white border-transparent text-gray-400 hover:bg-gray-50 hover:text-gray-600"
                                 )}
@@ -666,176 +580,215 @@ export function POSLayoutModern(props: POSLayoutProps) {
                 <main className="flex-1 flex flex-col bg-[#fafbfc] overflow-hidden">
                     {isMultiPayMode ? (
                         /* Split Payment Panel with Embedded Numpad */
-                        <div className="flex flex-col h-full">
-                            {/* ── Header ── */}
-                            <div className="px-3 py-2 border-b border-gray-200/80 bg-white flex items-center justify-between shrink-0">
-                                <div className="flex items-center gap-2">
+                        <div className="flex flex-col h-full bg-[#f8fafc]">
+                            {/* ── STICKY HEADER ── */}
+                            <div className="px-4 py-3 bg-slate-900 border-b border-white/5 flex items-center justify-between shrink-0 shadow-lg">
+                                <div className="flex items-center gap-3">
                                     <button
-                                        onClick={() => { setIsMultiPayMode(false); setPaymentLegs([]); }}
-                                        className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                                        onClick={() => { setIsMultiPayMode(false); }}
+                                        className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all active:scale-90"
                                     >
-                                        <ArrowLeft size={14} className="text-gray-600" />
+                                        <ArrowLeft size={16} />
                                     </button>
-                                    <h2 className="text-sm font-black text-gray-900 uppercase tracking-wider">Split Payment</h2>
+                                    <div>
+                                        <h2 className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em] leading-none mb-1">Payment Hub</h2>
+                                        <p className="text-sm font-black text-white uppercase tracking-wider">Multi-Method</p>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <span className={clsx(
-                                        "text-[10px] font-black px-2 py-0.5 rounded-full",
-                                        multiPayRemaining <= 0 ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
-                                    )}>
-                                        {multiPayRemaining <= 0 ? '✓ Covered' : `${currency}${formatNumber(multiPayRemaining)} left`}
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* ── Total & Progress ── */}
-                            <div className="px-3 py-2 bg-white border-b border-gray-100">
-                                <div className="flex items-center justify-between mb-1.5">
-                                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Total</span>
-                                    <span className="text-base font-black text-gray-900 tabular-nums">{currency}{formatNumber(totalAmount)}</span>
-                                </div>
-                                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                                    <div
-                                        className={clsx(
-                                            "h-full rounded-full transition-all duration-500",
-                                            multiPayRemaining <= 0 ? "bg-emerald-500" : "bg-gradient-to-r from-amber-400 to-amber-500"
-                                        )}
-                                        style={{ width: `${Math.min(100, (multiPayTotal / totalAmount) * 100)}%` }}
-                                    />
+                                <div className="text-right">
+                                    <span className="text-[9px] font-black text-white/40 uppercase tracking-widest block mb-0.5">Total Sale</span>
+                                    <span className="text-lg font-black text-white tabular-nums tracking-tighter">{currency}{formatNumber(totalAmount)}</span>
                                 </div>
                             </div>
 
-                            {/* ── Payment Legs ── */}
-                            <div className="px-3 py-1.5 overflow-y-auto max-h-[120px] space-y-1 custom-scrollbar">
-                                {paymentLegs.map((leg, idx) => {
-                                    const LIcon = getMethodIcon(leg.method);
-                                    return (
-                                        <div key={idx} className="flex items-center gap-2 px-2 py-1.5 bg-white rounded-lg border border-gray-100 group">
-                                            <div className="w-6 h-6 rounded bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                                                <LIcon size={12} />
+                            {/* ── PROGRESS & LEGS ── */}
+                            <div className="flex-1 flex flex-col min-h-0">
+                                {/* Dashboard: Remaining & Progress */}
+                                <div className="px-4 py-4 bg-white border-b border-slate-100 shadow-sm relative overflow-hidden group">
+                                    <div className="flex items-end justify-between mb-3 relative z-10">
+                                        <div>
+                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Target</span>
+                                            <div className={clsx(
+                                                "px-3 py-1.5 rounded-xl font-black tabular-nums transition-all duration-300 flex items-center gap-2",
+                                                multiPayRemaining <= 0.01
+                                                    ? "bg-emerald-500 text-white shadow-lg shadow-emerald-200"
+                                                    : "bg-slate-100 text-slate-900"
+                                            )}>
+                                                <span className="text-xl tracking-tighter">{currency}{formatNumber(Math.max(0, multiPayRemaining))}</span>
+                                                {multiPayRemaining <= 0.01 && <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center"><Check size={12} strokeWidth={4} /></div>}
                                             </div>
-                                            <span className="text-[10px] font-bold text-gray-700 uppercase flex-1">{leg.method}</span>
-                                            <span className="text-xs font-black text-gray-900 tabular-nums">{currency}{formatNumber(leg.amount)}</span>
-                                            <button
-                                                onClick={() => setPaymentLegs(prev => prev.filter((_, i) => i !== idx))}
-                                                className="w-5 h-5 rounded bg-gray-50 hover:bg-rose-50 hover:text-rose-500 flex items-center justify-center text-gray-300 transition-all"
-                                            >
-                                                <Trash2 size={10} />
-                                            </button>
                                         </div>
-                                    );
-                                })}
+                                        <div className="text-right">
+                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Paid</span>
+                                            <span className="text-lg font-black text-slate-600 tabular-nums">{currency}{formatNumber(multiPayTotal)}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden relative">
+                                        <div
+                                            className={clsx(
+                                                "h-full rounded-full transition-all duration-700 ease-out relative",
+                                                multiPayRemaining <= 0.01 ? "bg-emerald-500" : "bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-500"
+                                            )}
+                                            style={{ width: `${Math.min(100, (multiPayTotal / totalAmount) * 100)}%` }}
+                                        >
+                                            <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                                        </div>
+                                    </div>
+
+                                    {multiPayRemaining < 0 && (
+                                        <p className="mt-2 text-[10px] font-black text-blue-600 uppercase flex items-center gap-1">
+                                            <RefreshCw size={10} /> {currency}{Math.abs(multiPayRemaining).toFixed(2)} Change / Carry Over
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Legs List */}
+                                <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 custom-scrollbar bg-slate-50/50">
+                                    {paymentLegs.length === 0 ? (
+                                        <div className="h-full flex flex-col items-center justify-center text-slate-300 opacity-60">
+                                            <Calculator size={48} strokeWidth={1} className="mb-2" />
+                                            <p className="text-[10px] font-black uppercase tracking-widest italic">Add a payment leg below</p>
+                                        </div>
+                                    ) : (
+                                        paymentLegs.map((leg, idx) => {
+                                            const LIcon = getMethodIcon(leg.method);
+                                            return (
+                                                <div key={idx} className="flex items-center gap-3 p-3 bg-white rounded-2xl border border-slate-200 shadow-sm animate-in slide-in-from-right-4 transition-all hover:border-indigo-300 hover:shadow-md group/leg">
+                                                    <div className="w-10 h-10 rounded-xl bg-slate-50 text-slate-500 flex items-center justify-center group-hover/leg:bg-indigo-50 group-hover/leg:text-indigo-600 transition-colors">
+                                                        <LIcon size={20} />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">{leg.method}</span>
+                                                        <span className="text-base font-black text-slate-900 tabular-nums">{currency}{formatNumber(leg.amount)}</span>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => setPaymentLegs(prev => prev.filter((_, i) => i !== idx))}
+                                                        className="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-500 flex items-center justify-center transition-all opacity-0 group-hover/leg:opacity-100"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
+                                            );
+                                        })
+                                    )}
+                                </div>
                             </div>
 
-                            {/* ── Payment Method Selector (replaces QTY/DISC/PRICE) ── */}
-                            <div className="px-3 py-1.5 border-t border-gray-100 bg-white shrink-0">
-                                <div className="flex gap-1 flex-wrap">
-                                    {paymentMethods.filter((m: any) => {
-                                        const k = typeof m === 'string' ? m : m.key;
-                                        return !k.includes('MULTI');
-                                    }).map((m: any) => {
+                            {/* ── INTEGRATED NUMPAD (Speed Calc Inspired) ── */}
+                            <div className="bg-slate-900 p-4 shrink-0 rounded-t-[32px] shadow-2xl border-t border-white/10 ring-1 ring-white/5">
+                                {/* Display */}
+                                <div className="flex items-center gap-3 bg-black/40 rounded-2xl px-5 py-4 mb-4 border border-white/10 ring-4 ring-black/20">
+                                    <div className="flex-1">
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 mb-1 block">
+                                            {multiPaySelectedMethod || 'Select Method'}
+                                        </span>
+                                        <div className="flex items-baseline gap-1">
+                                            <span className="text-3xl font-black text-white tabular-nums tracking-tighter">
+                                                {mpBuffer || '0'}
+                                            </span>
+                                            {mpBuffer && <span className="text-sm font-black text-white/30 uppercase tracking-widest">{currency}</span>}
+                                        </div>
+                                    </div>
+                                    {multiPayRemaining > 0 && !mpBuffer && (
+                                        <button
+                                            onClick={() => setMpBuffer(String(Math.max(0, multiPayRemaining).toFixed(2)))}
+                                            className="px-3 py-2 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500/40 transition-all"
+                                        >
+                                            Full Mix
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Method Grid */}
+                                <div className="grid grid-cols-2 gap-2 mb-4">
+                                    {paymentMethods.filter((m: any) => !((typeof m === 'string' ? m : m.key).includes('MULTI'))).map((m: any) => {
                                         const k = typeof m === 'string' ? m : m.key;
                                         const lbl = typeof m === 'string' ? m : (m.label || m.key);
                                         const MIcon = getMethodIcon(k);
-                                        const isSelected = multiPaySelectedMethod === k;
+                                        const isSel = multiPaySelectedMethod === k;
                                         return (
                                             <button
                                                 key={k}
                                                 onClick={() => setMultiPaySelectedMethod(k)}
                                                 className={clsx(
-                                                    "flex items-center gap-1 px-2 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all border",
-                                                    isSelected
-                                                        ? "bg-emerald-500 border-emerald-500 text-white shadow-md shadow-emerald-100 scale-105"
-                                                        : "bg-gray-50 border-gray-100 text-gray-500 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200"
+                                                    "flex items-center gap-2 px-3 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border shrink-0",
+                                                    isSel
+                                                        ? "bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-500/20 scale-105"
+                                                        : "bg-white/5 border-white/5 text-slate-400 hover:bg-white/10 hover:text-white"
                                                 )}
                                             >
-                                                <MIcon size={12} />
-                                                {lbl}
+                                                <MIcon size={14} />
+                                                <span className="truncate">{lbl}</span>
                                             </button>
                                         );
                                     })}
                                 </div>
-                            </div>
 
+                                {/* Digit Buttons + Action */}
+                                <div className="flex gap-4">
+                                    <div className="flex-1 grid grid-cols-3 gap-2">
+                                        {['7', '8', '9', '4', '5', '6', '1', '2', '3', '.', '0'].map(d => (
+                                            <button
+                                                key={d}
+                                                onClick={() => setMpBuffer(prev => (d === '.' && prev.includes('.')) ? prev : prev + d)}
+                                                className="h-12 bg-white/5 border border-white/5 rounded-xl font-black text-lg text-white hover:bg-white/10 active:scale-90 transition-all"
+                                            >
+                                                {d}
+                                            </button>
+                                        ))}
+                                        <button
+                                            onClick={() => setMpBuffer(prev => prev.slice(0, -1))}
+                                            className="h-12 bg-white/5 border border-white/5 rounded-xl text-slate-400 hover:bg-rose-500/20 hover:text-rose-500 active:scale-90 transition-all flex items-center justify-center"
+                                        >
+                                            <X size={20} />
+                                        </button>
+                                    </div>
 
-                            {/* ── Special Actions (Reward / Wallet) ── */}
-                            <div className="px-3 py-2 border-t border-gray-100 bg-white shrink-0 flex gap-1.5">
-                                {selectedClient && selectedClientId > 1 && (selectedClient as any).loyalty > 0 && (
-                                    <button
-                                        onClick={() => {
-                                            const pts = (selectedClient as any).loyalty;
-                                            const ptsValue = pts * 0.01; // 1 point = $0.01 — adjust as needed
-                                            const amount = Math.min(ptsValue, Math.max(0, multiPayRemaining));
-                                            if (amount > 0) {
-                                                setPaymentLegs(prev => [...prev, { method: 'REWARD', amount }]);
-                                                if (onSetPointsRedeemed) onSetPointsRedeemed(pts);
-                                                toast.success(`${pts} reward points applied`);
-                                            }
-                                        }}
-                                        className="flex-1 flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-[9px] font-bold hover:bg-amber-100 transition-all active:scale-95"
-                                    >
-                                        <Star size={12} />
-                                        Use Rewards
-                                    </button>
-                                )}
-                                {selectedClient && selectedClientId > 1 && (selectedClient as any).balance > 0 && (
-                                    <button
-                                        onClick={() => {
-                                            const bal = (selectedClient as any).balance;
-                                            const amount = Math.min(bal, Math.max(0, multiPayRemaining));
-                                            if (amount > 0) {
-                                                setPaymentLegs(prev => [...prev, { method: 'WALLET', amount }]);
-                                                toast.success(`${currency}${amount.toFixed(2)} from wallet`);
-                                            }
-                                        }}
-                                        className="flex-1 flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-[9px] font-bold hover:bg-blue-100 transition-all active:scale-95"
-                                    >
-                                        <Wallet size={12} />
-                                        Use Wallet
-                                    </button>
-                                )}
-                                <button
-                                    onClick={() => {
-                                        if (multiPayRemaining <= 0 && multiPayTotal > totalAmount) {
-                                            const extra = multiPayTotal - totalAmount;
-                                            if (onSetStoreChangeInWallet) onSetStoreChangeInWallet(true);
-                                            toast.success(`${currency}${extra.toFixed(2)} will be added to wallet`);
-                                        } else {
-                                            toast.info('No extra amount to store');
-                                        }
-                                    }}
-                                    className="flex-1 flex items-center justify-center gap-1 px-2 py-2 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 text-[9px] font-bold hover:bg-indigo-100 transition-all active:scale-95"
-                                >
-                                    <Wallet size={12} />
-                                    → Wallet
-                                </button>
-                            </div>
-
-                            {/* ── Charge Button ── */}
-                            <div className="px-3 py-2 border-t border-gray-200 bg-white shrink-0">
-                                <button
-                                    onClick={() => {
-                                        const legsNote = paymentLegs.map(l => `${l.method}:${l.amount.toFixed(2)}`).join(' | ');
-                                        onSetCashReceived(String(multiPayTotal));
-                                        if (paymentLegs.length > 0) onSetPaymentMethod(paymentLegs[0].method);
-                                        toast.info(`Multi-payment: ${legsNote}`);
-                                        setIsMultiPayMode(false);
-                                        setTimeout(() => onCharge(), 100);
-                                    }}
-                                    disabled={multiPayRemaining > 0.01 || paymentLegs.length === 0 || isProcessing}
-                                    className={clsx(
-                                        "w-full py-2.5 rounded-xl flex flex-col items-center justify-center transition-all relative overflow-hidden",
-                                        multiPayRemaining <= 0.01 && paymentLegs.length > 0 && !isProcessing
-                                            ? "bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-200/50 hover:scale-[1.02] active:scale-[0.98]"
-                                            : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                                    )}
-                                >
-                                    {multiPayRemaining <= 0.01 && paymentLegs.length > 0 && (
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent" />
-                                    )}
-                                    <span className="text-[9px] font-black uppercase tracking-[0.2em] relative z-10">Charge</span>
-                                    <span className="text-lg font-black leading-none relative z-10 tabular-nums">{currency}{formatNumber(totalAmount)}</span>
-                                </button>
+                                    {/* Action Stack */}
+                                    <div className="w-[100px] flex flex-col gap-2">
+                                        <button
+                                            onClick={() => {
+                                                if (!multiPaySelectedMethod) { toast.error('Select method'); return; }
+                                                const val = parseFloat(mpBuffer);
+                                                if (isNaN(val) || val <= 0) { toast.error('Enter amount'); return; }
+                                                setPaymentLegs(prev => [...prev, { method: multiPaySelectedMethod, amount: val }]);
+                                                setMpBuffer('');
+                                            }}
+                                            disabled={!multiPaySelectedMethod || !mpBuffer}
+                                            className={clsx(
+                                                "flex-1 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all",
+                                                multiPaySelectedMethod && mpBuffer
+                                                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/40 hover:scale-[1.02] active:scale-95"
+                                                    : "bg-white/5 text-slate-600 cursor-not-allowed"
+                                            )}
+                                        >
+                                            <Plus size={20} strokeWidth={3} />
+                                            <span className="text-[8px] font-black uppercase tracking-widest">Add Leg</span>
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                const legsNote = paymentLegs.map(l => `${l.method}:${l.amount.toFixed(2)}`).join(' | ');
+                                                if (onSetNotes) onSetNotes(legsNote);
+                                                onSetCashReceived(String(multiPayTotal));
+                                                if (paymentLegs.length > 0) onSetPaymentMethod(paymentLegs[0].method);
+                                                toast.success(`Processing Multi-Payment...`);
+                                                setIsMultiPayMode(false);
+                                                setTimeout(() => onCharge(), 200);
+                                            }}
+                                            disabled={multiPayRemaining > 0.01 || paymentLegs.length === 0 || isProcessing}
+                                            className={clsx(
+                                                "h-[120px] rounded-2xl flex flex-col items-center justify-center gap-1 transition-all overflow-hidden",
+                                                multiPayRemaining <= 0.01 && paymentLegs.length > 0 && !isProcessing
+                                                    ? "bg-emerald-500 text-white shadow-xl shadow-emerald-500/40 hover:scale-[1.02] active:scale-95 animate-pulse"
+                                                    : "bg-white/5 text-slate-600 cursor-not-allowed"
+                                            )}
+                                        >
+                                            <span className="text-[8px] font-black uppercase tracking-[0.2em] mb-1">Finalize</span>
+                                            <Check size={32} strokeWidth={4} />
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     ) : (
