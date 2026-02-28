@@ -43,12 +43,13 @@
 | Combo | `/inventory/combo/` | `lib/erp-fetch` | ✅ |
 | Countries | `/inventory/countries/` | Inline erpFetch | ✅ |
 | Expiry Alerts | `/inventory/expiry-alerts/` | `actions/inventory/expiry-alerts.ts` | ✅ |
-| Global | `/inventory/global/` | `actions/inventory/viewer.ts` | ✅ |
 | Labels | `/inventory/labels/` | Client-side fetch | ✅ |
+| Listview Settings | `/inventory/listview-settings/` | Client-side only (localStorage) | ✅ |
 | Locations | `/inventory/locations/` | `actions/inventory/locations.ts` | ✅ |
 | Low Stock | `/inventory/low-stock/` | `actions/inventory/low-stock.ts` | ✅ |
 | Maintenance | `/inventory/maintenance/` | Inline erpFetch | ✅ |
 | Movements | `/inventory/movements/` | `actions/inventory/movements.ts` | ✅ |
+| POS Settings | `/inventory/pos-settings/` | Client-side fetch | ✅ |
 | Requests | `/inventory/requests/` | `actions/inventory/operational-requests.ts` | ✅ |
 | Serials | `/inventory/serials/` | `SerialTracker` component | ✅ |
 | Stock Count | `/inventory/stock-count/` | `actions/inventory/stock-count.ts` | ✅ |
@@ -59,7 +60,7 @@
 
 ---
 
-## 3. Frontend Action Files (16 + 2 root-level)
+## 3. Frontend Action Files (20 + 2 root-level)
 
 ### Module Actions (`src/app/actions/inventory/`)
 | File | Functions |

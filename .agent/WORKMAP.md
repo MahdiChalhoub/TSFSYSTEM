@@ -22,23 +22,17 @@
 
 ## 🟠 HIGH
 
-### [OPEN] Finance Module Not Ready
-- **Discovered**: 2026-02-09
-- **Impact**: ConnectorEngine finance hooks silently fail, no ledger entries created for plan changes
-- **Files**: `erp_backend/apps/finance/`
-- **Notes**: Plan switch creates SubscriptionPayment records but can't push to finance ledger. CRM Contact balance stays at $0.00.
+### [DONE 2026-02-28] Finance Module Not Ready (v3.1.3-AG-260228.2259)
+- **Status**: The `_on_subscription_updated` event chain is correctly implemented in both Finance and CRM.
+- **Fix**: SaaSClient CRM sync was failing because of missing automation in the model and a balance reset bug. Added `save()` override to `SaaSClient` and fixed `sync_to_crm_contact()` to preserve balances.
 
-### [OPEN] CRM Contact Balance Not Synced
-- **Discovered**: 2026-02-09
-- **Impact**: CRM contacts show $0.00 balance even after subscription payments
-- **Files**: `erp_backend/erp/models.py` (sync_to_crm_contact), `apps/crm/models.py`
-- **Depends On**: Finance module integration
+### [DONE 2026-02-28] CRM Contact Balance Not Synced (v3.1.3-AG-260228.2259)
+- **Fix**: CRM handler now correctly receives updates without them being reset by the SaaSClient model sync.
 
-### [OPEN] Inventory Module — Page Audit & Fix
-- **Discovered**: 2026-02-22
-- **Impact**: 24 inventory pages exist but some may lack proper server actions or have broken components
-- **Files**: `src/app/(privileged)/inventory/`, `src/app/actions/inventory/`
-- **Notes**: MODULE_INVENTORY.md is outdated (lists 4 actions, 16 actually exist). Full audit needed.
+### [DONE 2026-02-28] Inventory Module — Page Audit & Fix (v3.1.3-AG-260228.2259)
+- **Audit**: Verified 25 inventory directories (24 in docs + pos-settings). 
+- **Actions**: Verified 20 action files (up from 16). 
+- **Docs**: Updated `DOCUMENTATION/MODULE_INVENTORY.md` with correct paths and counts.
 
 ### [DONE 2026-02-22] Inventory Documentation Outdated
 - **Discovered**: 2026-02-22

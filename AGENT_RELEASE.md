@@ -2,6 +2,7 @@
 
 | Date | Agent | Version | Changes |
 | :--- | :--- | :--- | :--- |
+| 2026-02-28 | Antigravity | 3.1.3-AG-260228.2259 | **Finance/CRM Sync Fix**: Resolved "silently failing" subscription updates by fixing `SaaSClient.sync_to_crm_contact()` (prevented balance resets) and adding automatic sync on `save()`. Backfilled existing Demo client. **Inventory Audit**: Verified all 25 inventory pages and 20 action files (up from 16). Updated `MODULE_INVENTORY.md` documentation. |
 | 2026-02-28 | Antigravity | 3.1.3-AG-260228.2236 | **Direct CRM Profile Link**: `billing` endpoint now resolves and returns `crm_contact_id` for the linked SaaS client. Frontend "View CRM Profile" button navigates directly to `/crm/contacts/{id}` instead of a search-based fallback. Added `SaasBillingClient` TypeScript interface with explicit `crm_contact_id` typing. Addresses WORKMAP `[OPEN] Direct CRM Profile Link`. |
 | 2026-02-28 | Antigravity | 3.1.2-AG-260228.0323 | **Chart of Accounts UI Fix**: Resolved issue where imported clients/suppliers (sub-accounts) were not visible in the Chart of Accounts hierarchy due to a snake_case to camelCase mapping mismatch. |
 | 2026-02-28 | Antigravity | 3.1.1-AG-260228.0142 | **Full-Stack Security Hardening**: HR module locked — Leave immutability, cross-tenant employee FK validation on Attendance/Leave. Ledger `clear_all` superuser-gated. TransactionSequence read-only. Complete ERP audit across Finance, CRM, HR, POS, Inventory. |
