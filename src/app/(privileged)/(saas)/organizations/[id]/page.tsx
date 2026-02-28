@@ -789,7 +789,13 @@ export default function OrganizationDetailPage() {
                                     <Button
                                         variant="outline"
                                         className="w-full border-indigo-200 text-indigo-600 hover:bg-indigo-50 rounded-xl font-bold"
-                                        onClick={() => router.push(`/crm/contacts?search=${encodeURIComponent(billing.client.email)}`)}
+                                        onClick={() => {
+                                            if (billing.client.crm_contact_id) {
+                                                router.push(`/crm/contacts/${billing.client.crm_contact_id}`)
+                                            } else {
+                                                router.push(`/crm/contacts?search=${encodeURIComponent(billing.client.email)}`)
+                                            }
+                                        }}
                                     >
                                         <Users size={14} className="mr-2" /> View CRM Profile
                                     </Button>

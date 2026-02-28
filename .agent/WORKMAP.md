@@ -56,11 +56,11 @@
 - **Files**: `src/app/(privileged)/(saas)/organizations/[id]/page.tsx`
 - **Notes**: The state refresh logic works but may have race conditions with large data loads
 
-### [OPEN] Direct CRM Profile Link
+### [DONE 2026-02-28] Direct CRM Profile Link (v3.1.3-AG-260228.2236)
 - **Discovered**: 2026-02-09
 - **Impact**: "View CRM Profile" button navigates to search instead of direct contact record
-- **Files**: `src/app/(privileged)/(saas)/organizations/[id]/page.tsx`
-- **Notes**: Needs CRM Contact ID stored on SaaSClient or Organization model
+- **Files**: `erp_backend/erp/views_saas_org_billing.py`, `src/app/(privileged)/(saas)/organizations/[id]/page.tsx`, `src/types/erp.ts`
+- **Fix**: billing endpoint now resolves `crm_contact_id` via CRM Contact lookup by email in the SaaS org. Frontend uses it to navigate directly to `/crm/contacts/{id}`.
 
 ### [OPEN] PWA Icon Missing
 - **Discovered**: 2026-02-09
