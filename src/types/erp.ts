@@ -975,10 +975,21 @@ export interface SaasUsageData {
     [key: string]: unknown
 }
 
+export interface SaasBillingClient {
+    id: string
+    full_name: string
+    email: string
+    phone?: string | null
+    company_name?: string | null
+    /** CRM Contact ID in the SaaS org — used to navigate directly to /crm/contacts/{id} */
+    crm_contact_id?: string | null
+    [key: string]: unknown
+}
+
 export interface SaasBillingData {
     history: Array<Record<string, unknown>>
     balance: { total_paid: string; total_credits: string; net_balance: string;[key: string]: unknown }
-    client: Record<string, unknown> | null
+    client: SaasBillingClient | null
     [key: string]: unknown
 }
 
