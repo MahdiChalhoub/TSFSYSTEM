@@ -10,9 +10,37 @@ import AttachmentManager from "@/components/common/AttachmentManager";
 
 export const dynamic = 'force-dynamic';
 
-async function getOrderDetails(id: string) {
+async function getOrderDetails(id: string, isLegacy: boolean) {
     try {
-        return await erpFetch(`purchase/${id}/`);
+        if (!isLegacy) {
+            // New Advanced Procurement Model
+            return await erpFetch(`purchase-orders/${id}/`);
+        } else {
+            // Legacy POS Order model
+            const order = await erpFetch(`purchase/${id}/`);
+            if (!order) return null;
+
+            // Map legacy to advanced structure
+            return {
+                ...order,
+                id: order.id,
+                ref_code: order.ref_code || order.invoice_number,
+                status: order.status,
+                contact_name: order.contact_name,
+                user_name: order.user_name,
+                site_name: order.site_name,
+                total_amount: order.total_amount,
+                lines: (order.lines || []).map((l: any) => ({
+                    id: l.id,
+                    product_name: l.product_name || `Product #${l.product_id}`,
+                    product_sku: l.product_sku || '',
+                    quantity: l.quantity,
+                    qty_received: l.quantity, // Legacy assumes full receipt
+                    unit_price: l.unit_price,
+                    total: l.subtotal || (parseFloat(l.quantity) * parseFloat(l.unit_price))
+                }))
+            };
+        }
     } catch (e) {
         console.error("Order Fetch Error:", e);
         return null;
@@ -28,9 +56,10 @@ async function getWarehouses() {
     }
 }
 
-export default async function PurchaseDetailPage({ params }: { params: { id: string } }) {
+export default async function PurchaseDetailPage({ params, searchParams }: { params: { id: string }, searchParams: { type?: string } }) {
     const { id } = await params;
-    const order = await getOrderDetails(id);
+    const isLegacy = searchParams?.type === 'legacy';
+    const order = await getOrderDetails(id, isLegacy);
     const warehouses = await getWarehouses();
 
     if (!order) {

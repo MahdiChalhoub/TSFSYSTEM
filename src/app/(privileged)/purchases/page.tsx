@@ -31,6 +31,30 @@ async function getPurchaseOrders(searchParams?: { status?: string, query?: strin
     }
 }
 
+async function getLegacyPurchases(searchParams?: { status?: string, query?: string }) {
+    try {
+        const query = new URLSearchParams()
+        query.append('type', 'PURCHASE')
+        if (searchParams?.status) query.append('status', searchParams.status)
+        if (searchParams?.query) query.append('query', searchParams.query)
+
+        // Fetch from the generic orders endpoint matching type='PURCHASE'
+        const data = await erpFetch(`orders/?${query.toString()}`);
+        const results = Array.isArray(data) ? data : (data.results || []);
+
+        // Normalize simple Orders to the PurchaseRegistry expected interface
+        return results.map((o: any) => ({
+            ...o,
+            po_number: o.invoice_number || o.ref_code || `PRCH-${o.id}`,
+            supplier_display: o.contact_name || 'Legacy Supplier',
+            is_legacy: true
+        }));
+    } catch (e) {
+        console.error("Failed to fetch legacy purchases:", e);
+        return [];
+    }
+}
+
 async function getPODashboard() {
     try {
         return await erpFetch(`purchase-orders/dashboard/`);
@@ -50,17 +74,25 @@ async function getOrgSettings() {
 }
 
 export default async function PurchaseRegistryPage({ searchParams }: { searchParams: { status?: string, query?: string } }) {
-    const [orders, dashboard, context] = await Promise.all([
+    const [advancedOrders, legacyOrders, dashboard, context] = await Promise.all([
         getPurchaseOrders(searchParams),
+        getLegacyPurchases(searchParams),
         getPODashboard(),
         getCommercialContext(),
     ]);
+
+    // Merge and Sort by creation date
+    const allOrders = [...(Array.isArray(advancedOrders) ? advancedOrders : advancedOrders?.results || []), ...legacyOrders]
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
     const { tradeSubTypesEnabled, currency } = context;
 
-    const rfqCount = dashboard?.by_status?.DRAFT || 0;
-    const pendingApproval = dashboard?.pending_approval || 0;
-    const awaitingReceipt = dashboard?.awaiting_receipt || 0;
-    const totalValue = dashboard?.total_value || 0;
+    const rfqCount = (dashboard?.by_status?.DRAFT || 0) + legacyOrders.filter(o => o.status === 'DRAFT').length;
+    const pendingApproval = (dashboard?.pending_approval || 0) + legacyOrders.filter(o => o.status === 'SUBMITTED').length;
+    const awaitingReceipt = (dashboard?.awaiting_receipt || 0) + legacyOrders.filter(o => ['ORDERED', 'PARTIALLY_RECEIVED'].includes(o.status)).length;
+
+    const legacyTotal = legacyOrders.reduce((acc, o) => acc + parseFloat(String(o.total_amount || 0)), 0);
+    const totalValue = (dashboard?.total_value || 0) + legacyTotal;
 
     return (
         <div className="p-6 space-y-6 max-w-[1400px] mx-auto animate-in fade-in duration-500">
@@ -135,7 +167,7 @@ export default async function PurchaseRegistryPage({ searchParams }: { searchPar
 
             {/* Registry */}
             <PurchasesRegistryClient
-                orders={orders}
+                orders={allOrders}
                 currency={currency}
                 tradeSubTypesEnabled={tradeSubTypesEnabled}
             />

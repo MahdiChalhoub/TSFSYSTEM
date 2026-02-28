@@ -13,11 +13,15 @@ from apps.pos.views import (
     ProductSupplierViewSet, SupplierPriceHistoryViewSet,
     PurchaseOrderViewSet, PurchaseOrderLineViewSet,
     PosTicketViewSet,
+    POSRegisterViewSet,
+    POSAuditEventViewSet, POSAuditRuleViewSet,
+    POSSettingsViewSet,
 )
 
 router = DefaultRouter()
 router.register(r'pos', POSViewSet, basename='pos')
 router.register(r'pos-tickets', PosTicketViewSet, basename='pos-tickets')
+router.register(r'pos-registers', POSRegisterViewSet, basename='pos-registers')
 router.register(r'purchase', PurchaseViewSet, basename='purchase')
 router.register(r'sales-returns', SalesReturnViewSet)
 router.register(r'credit-notes', CreditNoteViewSet)
@@ -32,6 +36,9 @@ router.register(r'sourcing', ProductSupplierViewSet, basename='sourcing')
 router.register(r'supplier-pricing', SupplierPriceHistoryViewSet, basename='supplier-pricing')
 router.register(r'purchase-orders', PurchaseOrderViewSet, basename='purchase-orders')
 router.register(r'po-lines', PurchaseOrderLineViewSet, basename='po-lines')
+router.register(r'pos-audit-events', POSAuditEventViewSet, basename='pos-audit-events')
+router.register(r'pos-audit-rules', POSAuditRuleViewSet, basename='pos-audit-rules')
+router.register(r'pos-settings', POSSettingsViewSet, basename='pos-settings')
 
 urlpatterns = [
     path('', include(router.urls)),

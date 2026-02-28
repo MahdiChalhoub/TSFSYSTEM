@@ -1,4 +1,4 @@
-import AddProductForm from './form';
+import ProductFormWrapper from './form-wrapper';
 import { PackagePlus } from 'lucide-react';
 import { erpFetch } from '@/lib/erp-api';
 import { getProductNamingRule } from '@/app/actions/settings';
@@ -71,6 +71,12 @@ export default async function NewProductPage(props: { searchParams: Promise<{ cl
         getFinancialSettings()
     ]);
 
+    console.log("SERVER FETCH RESULTS:");
+    console.log("Categories format:", Array.isArray(categories) ? `Array[${categories.length}]` : typeof categories);
+    console.log("Brands format:", Array.isArray(brands) ? `Array[${brands.length}]` : typeof brands);
+    console.log("Countries format:", Array.isArray(countries) ? `Array[${countries.length}]` : typeof countries);
+
+
     return (
         <div>
             <div className="mb-6">
@@ -86,7 +92,7 @@ export default async function NewProductPage(props: { searchParams: Promise<{ cl
                 </p>
             </div>
 
-            <AddProductForm
+            <ProductFormWrapper
                 categories={categories}
                 units={units}
                 brands={brands}

@@ -26,7 +26,7 @@ export async function erpFetch(
 
     const url = endpoint.startsWith('http')
         ? endpoint
-        : `${DJANGO_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`
+        : `${DJANGO_URL}/api/${endpoint.startsWith('/') ? endpoint.slice(1) : endpoint}`
 
     const headers: HeadersInit = {
         ...customHeaders,
@@ -36,14 +36,10 @@ export async function erpFetch(
     if (!skipAuth) {
         try {
             const cookieStore = await cookies()
-            const sessionId = cookieStore.get('sessionid')?.value
-            const csrfToken = cookieStore.get('csrftoken')?.value
+            const token = cookieStore.get('auth_token')?.value
 
-            if (sessionId) {
-                (headers as Record<string, string>)['Cookie'] = `sessionid=${sessionId}`
-            }
-            if (csrfToken) {
-                (headers as Record<string, string>)['X-CSRFToken'] = csrfToken
+            if (token) {
+                (headers as Record<string, string>)['Authorization'] = `Token ${token}`
             }
         } catch (e) {
             // Cookies not available (e.g., in static generation)

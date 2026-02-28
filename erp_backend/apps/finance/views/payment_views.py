@@ -131,11 +131,20 @@ class PaymentViewSet(TenantModelViewSet):
         return Response({'overdue_count': count, 'message': f'{count} invoices marked overdue'})
 
 
-class CustomerBalanceViewSet(TenantModelViewSet):
+from rest_framework import viewsets
+
+class CustomerBalanceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = CustomerBalance.objects.all()
     serializer_class = CustomerBalanceSerializer
 
+    def get_queryset(self):
+        org_id = get_current_tenant_id()
+        return super().get_queryset().filter(organization_id=org_id)
 
-class SupplierBalanceViewSet(TenantModelViewSet):
+class SupplierBalanceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = SupplierBalance.objects.all()
     serializer_class = SupplierBalanceSerializer
+
+    def get_queryset(self):
+        org_id = get_current_tenant_id()
+        return super().get_queryset().filter(organization_id=org_id)

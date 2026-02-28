@@ -6,9 +6,13 @@ logger = logging.getLogger(__name__)
 
 class ForensicAuditService:
     @staticmethod
-    def log_mutation(organization, user, model_name, object_id, change_type, payload=None):
+    def log_mutation(organization, user, model_name, object_id, change_type, payload=None, scope=None):
         from apps.finance.models import ForensicAuditLog
         try:
+            # Ensure scope is in payload for isolation
+            if scope and isinstance(payload, dict):
+                payload['_scope'] = scope
+
             ForensicAuditLog.objects.create(
                 organization=organization,
                 actor=user,

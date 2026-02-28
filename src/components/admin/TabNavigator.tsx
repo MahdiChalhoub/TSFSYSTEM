@@ -44,8 +44,8 @@ export function TabNavigator() {
     const hiddenTabs = openTabs.slice(visibleCount);
 
     return (
-        <div className="flex items-end px-6 bg-gray-50/80 border-b border-gray-200 shrink-0 relative h-[68px]">
-            <div ref={containerRef} className="flex-1 flex items-end gap-1.5 overflow-hidden h-full">
+        <div className="flex items-end px-3 bg-gray-50/80 border-b border-gray-200 shrink-0 relative h-[42px]">
+            <div ref={containerRef} className="flex-1 flex items-end gap-1 overflow-hidden h-full">
                 {visibleTabs.map(tab => (
                     <TabItem
                         key={tab.id}
@@ -62,13 +62,13 @@ export function TabNavigator() {
                     <button
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
                         className={clsx(
-                            "h-11 w-11 flex items-center justify-center rounded-xl bg-white border border-gray-200 text-gray-400 hover:text-emerald-600 hover:border-emerald-200 transition-all shadow-sm hover:shadow-md",
+                            "h-8 w-8 flex items-center justify-center rounded-lg bg-white border border-gray-200 text-gray-400 hover:text-emerald-600 hover:border-emerald-200 transition-all shadow-sm hover:shadow-md",
                             isMenuOpen && "border-emerald-500 text-emerald-600 ring-4 ring-emerald-500/5 bg-emerald-50/10"
                         )}
                     >
                         <span className="relative flex items-center justify-center">
-                            <MoreHorizontal size={20} />
-                            <span className="absolute -top-2.5 -right-2.5 w-5 h-5 bg-emerald-600 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                            <MoreHorizontal size={16} />
+                            <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-emerald-600 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-sm">
                                 {hiddenTabs.length}
                             </span>
                         </span>
@@ -136,14 +136,14 @@ const TabItem = React.memo(({ tab, isActive, onOpen, onClose }: Record<string, a
         <div
             onClick={() => onOpen(tab.title, tab.path)}
             className={clsx(
-                "group flex items-center gap-3 px-6 h-[52px] text-sm font-medium rounded-t-2xl cursor-pointer border-t border-x transition-all select-none min-w-[160px] max-w-[240px] justify-between relative",
+                "group flex items-center gap-2 px-3 h-[30px] text-xs font-medium rounded-t-lg cursor-pointer border-t border-x transition-all select-none min-w-[100px] max-w-[180px] justify-between relative",
                 isActive
-                    ? "bg-white border-gray-200 text-emerald-700 shadow-[0_-2px_6px_-2px_rgba(0,0,0,0.05)] z-10"
+                    ? "bg-white border-gray-200 text-emerald-700 shadow-sm z-10"
                     : "bg-gray-100/60 border-transparent text-gray-500 hover:bg-white/60 hover:text-gray-700"
             )}
         >
             {isActive && (
-                <div className="absolute top-0 left-6 right-6 h-0.5 bg-emerald-500 rounded-full" />
+                <div className="absolute top-0 left-2 right-2 h-0.5 bg-emerald-500 rounded-full" />
             )}
 
             <span className="truncate font-bold tracking-tight">{tab.title}</span>

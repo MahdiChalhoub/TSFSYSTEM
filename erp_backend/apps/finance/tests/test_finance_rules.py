@@ -154,7 +154,7 @@ class FinanceRulesTests(TestCase):
             organization=self.org,
             type='PURCHASE',
             scope='OFFICIAL',
-            status='COMPLETED'
+            status='DRAFT'
         )
         OrderLine.objects.create(
             organization=self.org,
@@ -162,12 +162,14 @@ class FinanceRulesTests(TestCase):
             product=prod,
             quantity=Decimal('10'),
             unit_price=Decimal('100.00'),
-            unit_cost_ht=Decimal('90.00'),
-            vat_amount=Decimal('10.00'),
-            total=Decimal('1000.00')
+            tax_rate=Decimal('0.10'),
+            subtotal=Decimal('1100.00')
         )
+        # Transition to completed after adding lines to bypass immutability validation
+        po.status = 'COMPLETED'
+        po.save()
         
         report = TaxService.get_declared_report(self.org, start_date, end_date)
         self.assertEqual(report['type'], 'STANDARD_RECLASSIFIED')
-        self.assertEqual(report['purchases_ht'], Decimal('900.00')) # 10 * 90
-        self.assertEqual(report['vat_recoverable'], Decimal('100.00')) # 10 * 10
+        self.assertEqual(report['purchases_ht'], Decimal('1000.00')) # 10 * 100
+        self.assertEqual(report['vat_recoverable'], Decimal('100.00')) # 10% of 1000

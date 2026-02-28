@@ -6,15 +6,18 @@ import { CompactClientHeader } from '@/components/pos/CompactClientHeader';
 import { Numpad as POSNumpad, NumpadMode } from '@/components/pos/Numpad';
 import { ManagerOverride } from '@/components/pos/ManagerOverride';
 import { ReceiptModal } from '@/components/pos/ReceiptModal';
+import { POSToolbar } from '@/components/pos/POSToolbar';
 import {
     Search, ShoppingCart, Plus, X, Minus, Trash2, User, ChevronDown, Layout,
     Maximize, Minimize, FileText, Settings, Wallet, Save, Book, File, ArrowLeft, RefreshCw, Wifi, WifiOff, MapPin, Calculator,
-    History, GripHorizontal
+    History, GripHorizontal, MessageSquare
 } from 'lucide-react';
 import clsx from 'clsx';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { useRef, useState, useEffect } from 'react';
+import { MultiPaymentHub } from '@/components/pos/MultiPaymentHub';
+
 
 const formatNumber = (num: number | string) => {
     const val = Number(num) || 0;
@@ -41,8 +44,22 @@ export function POSLayoutClassic(props: POSLayoutProps) {
         onUpdateQuantity, onClearCart, onCreateNewSession, onRemoveSession,
         onUpdateActiveSession, onToggleFullscreen, onCycleSidebarMode, onCharge,
         onSync, onSetIsOnline, onSetClientSearchQuery, onSetDeliveryZone,
-        onOpenLayoutSelector
+        onOpenLayoutSelector,
+        onSetNotes,
+        currentLayout, onSearchClients
     } = props;
+    const registerConfig = (props as any).registerConfig;
+    const onLockRegister = (props as any).onLockRegister || (() => { });
+    const paymentMethods = (props as any).paymentMethods || [
+        { key: 'CASH', label: 'CASH' },
+        { key: 'CARD', label: 'CARD' },
+        { key: 'WALLET', label: 'WALLET' },
+        { key: 'OM', label: 'OM' },
+        { key: 'WAVE', label: 'WAVE' },
+        { key: 'MULTI', label: 'MULTI' }
+    ];
+    const [isMultiPayMode, setIsMultiPayMode] = useState(false);
+
     const receivedNum = Number(cashReceived) || 0;
     const changeDue = receivedNum > totalAmount ? receivedNum - totalAmount : 0;
 
@@ -50,6 +67,7 @@ export function POSLayoutClassic(props: POSLayoutProps) {
     const [showNumpad, setShowNumpad] = useState(false);
     const [numpadMode, setNumpadMode] = useState<NumpadMode>('qty');
     const [selectedCartIdx, setSelectedCartIdx] = useState<number | null>(null);
+    const [openNoteId, setOpenNoteId] = useState<number | null>(null);
     const [numpadPos, setNumpadPos] = useState({ x: 400, y: 150 });
 
     // Safety check for window to avoid hydration errors
@@ -91,99 +109,44 @@ export function POSLayoutClassic(props: POSLayoutProps) {
         };
     }, [isDragging]);
 
-    const filteredClients = clients.filter(c =>
-        c.name.toLowerCase().includes(clientSearchQuery.toLowerCase()) ||
-        c.phone.includes(clientSearchQuery)
-    );
+    const filteredClients = clients;
 
     return (
         <div className={clsx(
             "flex flex-col bg-[#f0f2f5] overflow-hidden select-none h-full",
             isFullscreen ? "fixed inset-0 z-[1000] h-screen w-screen" : "absolute inset-0"
         )}>
-            {/* ═══════ HEADER — FULL FEATURE ═══════ */}
-            <header className="h-14 bg-white border-b border-gray-100 flex items-center justify-between px-5 shrink-0 z-50 shadow-sm">
-                <div className="flex items-center gap-5">
-                    <h1 className="text-xl font-black tracking-tighter text-gray-900 flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-100">
-                            <ShoppingCart size={18} className="text-white" />
-                        </div>
-                        Sales <span className="text-indigo-600">Terminal</span>
-                    </h1>
-
-                    {/* Session Tabs */}
-                    <div className="flex gap-1.5 ml-2 overflow-x-auto max-w-md no-scrollbar">
-                        {sessions.map(s => (
-                            <div key={s.id} className="flex shrink-0 group">
-                                <button
-                                    onClick={() => onSetActiveSessionId(s.id)}
-                                    className={clsx(
-                                        "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all",
-                                        activeSessionId === s.id
-                                            ? "bg-indigo-600 text-white shadow-lg shadow-indigo-100"
-                                            : "bg-gray-50 text-gray-400 hover:bg-gray-100"
-                                    )}
-                                >
-                                    <ShoppingCart size={10} className={activeSessionId === s.id ? "text-white" : "text-gray-300"} />
-                                    {s.name}
-                                </button>
-                                <button onClick={() => onRemoveSession(s.id)} className="ml-[-6px] p-0.5 text-gray-300 hover:text-rose-500 transition-all opacity-0 group-hover:opacity-100">
-                                    <X size={9} />
-                                </button>
-                            </div>
-                        ))}
-                        <button onClick={onCreateNewSession} className="w-7 h-7 flex items-center justify-center bg-gray-50 text-gray-400 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-all">
-                            <Plus size={13} />
-                        </button>
-                    </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                    <button onClick={onToggleFullscreen} className="bg-indigo-50 border border-indigo-100 text-indigo-600 h-9 px-3 rounded-xl font-bold shadow-sm hover:bg-indigo-600 hover:text-white transition-all flex items-center gap-1.5">
-                        {isFullscreen ? <Minimize size={14} /> : <Maximize size={14} />}
-                        <span className="text-[9px] uppercase tracking-widest font-black">{isFullscreen ? 'Exit' : 'Fullscreen'}</span>
-                    </button>
-                    <div className="h-5 w-px bg-gray-100 mx-0.5" />
-                    <button onClick={onOpenLayoutSelector} className="w-8 h-8 flex items-center justify-center bg-white border border-gray-100 rounded-lg text-gray-400 hover:text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50 transition-all shadow-sm" title="Switch Layout">
-                        <Layout size={15} />
-                    </button>
-                    <Link
-                        href="/sales/history"
-                        className="w-8 h-8 flex items-center justify-center bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200"
-                        title="View Order History Registry"
-                    >
-                        <History size={15} />
-                    </Link>
-                    <div className="flex bg-gray-50 border border-gray-100 p-0.5 rounded-lg gap-0.5">
-                        <button
-                            onClick={() => onSetIsOnline(!isOnline)}
-                            className={clsx(
-                                "h-7 px-2.5 rounded-md text-[9px] font-black flex items-center gap-1 transition-all",
-                                isOnline ? "bg-white text-emerald-600 shadow-sm border border-gray-100" : "text-rose-500"
-                            )}
-                        >
-                            {isOnline ? <Wifi size={10} /> : <WifiOff size={10} />}
-                            {isOnline ? 'ONLINE' : 'OFFLINE'}
-                        </button>
-                        <button
-                            onClick={onSync}
-                            className="h-7 px-2.5 rounded-md text-[9px] font-black text-gray-500 hover:bg-white hover:text-indigo-600 transition-all flex items-center gap-1"
-                        >
-                            <RefreshCw size={10} className={isProcessing ? "animate-spin" : ""} />
-                            SYNC
-                        </button>
-                    </div>
-
-                    {[Settings, Wallet, Save, Book, File].map((Icon, i) => (
-                        <button key={i} className="w-8 h-8 flex items-center justify-center bg-white border border-gray-100 rounded-lg text-gray-400 hover:text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50 transition-all shadow-sm">
-                            <Icon size={15} />
-                        </button>
-                    ))}
-                    <button className="w-8 h-8 flex items-center justify-center bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-all shadow-lg shadow-gray-200 ml-0.5">
-                        <ArrowLeft size={15} />
-                    </button>
-                </div>
-            </header>
+            {/* ═══════ SHARED TOOLBAR ═══════ */}
+            <POSToolbar
+                sessions={sessions}
+                activeSessionId={activeSessionId}
+                onSetActiveSessionId={onSetActiveSessionId}
+                onCreateNewSession={onCreateNewSession}
+                onRemoveSession={onRemoveSession}
+                registerConfig={registerConfig}
+                selectedClient={selectedClient}
+                clients={clients}
+                clientSearchQuery={clientSearchQuery}
+                onSetClientSearchQuery={onSetClientSearchQuery}
+                onSelectClient={(id: number) => { onUpdateActiveSession({ clientId: id }); }}
+                currency={currency}
+                deliveryZone={deliveryZone}
+                deliveryZones={deliveryZones}
+                onSetDeliveryZone={onSetDeliveryZone}
+                isOnline={isOnline}
+                isProcessing={isProcessing}
+                isFullscreen={isFullscreen}
+                totalPieces={totalPieces}
+                uniqueItems={uniqueItems}
+                currentLayout={currentLayout}
+                onSetIsOnline={onSetIsOnline}
+                onSync={onSync}
+                onToggleFullscreen={onToggleFullscreen}
+                onOpenLayoutSelector={onOpenLayoutSelector}
+                onLockRegister={onLockRegister}
+                onCloseRegister={(props as any).onCloseRegister}
+                onOpenReturn={(props as any).onOpenReturn}
+            />
 
             {/* ═══════ CLIENT INFO BAR ═══════ */}
             <CompactClientHeader
@@ -310,7 +273,7 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                             <span className="text-[9px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">{uniqueItems} lines</span>
                             <span className="text-[9px] font-black text-gray-600 bg-gray-50 px-2 py-0.5 rounded-md">{totalPieces} pcs</span>
                             {cart.length > 0 && (
-                                <button onClick={onClearCart} className="text-[8px] font-bold text-gray-400 hover:text-rose-500 uppercase tracking-widest ml-1 transition-colors">
+                                <button onClick={() => onClearCart(false)} className="text-[8px] font-bold text-gray-400 hover:text-rose-500 uppercase tracking-widest ml-1 transition-colors">
                                     Clear
                                 </button>
                             )}
@@ -326,7 +289,11 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                                     type="text"
                                     placeholder="Find customer..."
                                     value={clientSearchQuery}
-                                    onChange={(e) => onSetClientSearchQuery(e.target.value)}
+                                    onChange={(e) => {
+                                        const v = e.target.value;
+                                        onSetClientSearchQuery(v);
+                                        if (onSearchClients) onSearchClients(v);
+                                    }}
                                     className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-xs font-bold outline-none focus:bg-white focus:border-indigo-400 transition-all"
                                 />
                                 {clientSearchQuery && (
@@ -395,51 +362,107 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                             </div>
                         ) : (
                             <div className="divide-y divide-gray-50">
-                                {cart.map((item: any, idx: number) => (
-                                    <div
-                                        key={item.productId}
-                                        className={clsx(
-                                            "px-5 py-3 flex items-center gap-3 group transition-colors duration-300",
-                                            highlightedItemId === item.productId ? "bg-indigo-400 text-white"
-                                                : lastAddedItemId === item.productId ? "bg-indigo-500/20"
-                                                    : "hover:bg-gray-50/50"
-                                        )}
-                                    >
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-base font-black text-gray-900 truncate">{item.name}</p>
-                                            <div className="flex items-center gap-2 mt-1">
-                                                {item.barcode && <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">#{item.barcode}</span>}
-                                                <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1 rounded">Stock: {item.stock || 0}</span>
-                                            </div>
-                                            <p className="text-[11px] text-gray-500 font-bold mt-1 uppercase tracking-tight">
-                                                {currency}{Number(item.price).toFixed(2)} / unit
-                                            </p>
-                                        </div>
-                                        <div className="flex items-center gap-1">
-                                            <button onClick={(e) => { e.stopPropagation(); onUpdateQuantity(item.productId, -1); }} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-rose-100 hover:text-rose-600 flex items-center justify-center text-gray-400 transition-all active:scale-90">
-                                                <Minus size={12} />
-                                            </button>
-                                            <span
-                                                onClick={(e) => { e.stopPropagation(); setSelectedCartIdx(idx); setNumpadMode('qty'); setShowNumpad(true); }}
-                                                className="w-8 text-center text-sm font-black tabular-nums text-gray-900 cursor-pointer hover:text-indigo-600"
-                                            >
-                                                {item.quantity}
-                                            </span>
-                                            <button onClick={(e) => { e.stopPropagation(); onUpdateQuantity(item.productId, 1); }} className="w-7 h-7 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 flex items-center justify-center transition-all active:scale-90">
-                                                <Plus size={12} />
-                                            </button>
-                                        </div>
-                                        <span
-                                            onClick={(e) => { e.stopPropagation(); setSelectedCartIdx(idx); setNumpadMode('price'); setShowNumpad(true); }}
-                                            className="w-24 text-right text-base font-black tabular-nums text-gray-900 cursor-pointer hover:text-indigo-600"
+                                {cart.map((item: any, idx: number) => {
+                                    const stockQty = item.stock || 0;
+                                    const isOverselling = item.quantity > stockQty && stockQty >= 0;
+                                    const isLowStock = stockQty > 0 && stockQty <= 5 && !isOverselling;
+                                    return (
+                                        <div
+                                            key={item.productId}
+                                            className={clsx(
+                                                "px-5 py-3 group transition-colors duration-300",
+                                                highlightedItemId === item.productId ? "bg-indigo-400 text-white"
+                                                    : isOverselling ? "bg-rose-50 ring-1 ring-rose-200"
+                                                        : lastAddedItemId === item.productId ? "bg-indigo-500/20"
+                                                            : "hover:bg-gray-50/50"
+                                            )}
                                         >
-                                            {currency}{(Number(item.price) * item.quantity).toFixed(2)}
-                                        </span>
-                                        <button onClick={() => onUpdateQuantity(item.productId, -100)} className="opacity-0 group-hover:opacity-100 w-6 h-6 flex items-center justify-center text-gray-300 hover:text-rose-500 transition-all">
-                                            <Trash2 size={12} />
-                                        </button>
-                                    </div>
-                                ))}
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="text-base font-black text-gray-900 truncate">{item.name}</p>
+                                                        {/* Note icon — shows always if note exists, or on hover */}
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); setOpenNoteId(openNoteId === item.productId ? null : item.productId); }}
+                                                            className={clsx(
+                                                                "shrink-0 w-5 h-5 rounded flex items-center justify-center transition-all",
+                                                                item.note ? "opacity-100 text-amber-500" : "opacity-0 group-hover:opacity-100 text-gray-300 hover:text-amber-400"
+                                                            )}
+                                                            title="Add / edit note"
+                                                        >
+                                                            <MessageSquare size={11} fill={item.note ? "currentColor" : "none"} />
+                                                        </button>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        {item.barcode && <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">#{item.barcode}</span>}
+                                                        {isOverselling ? (
+                                                            <span className="text-[10px] font-black text-rose-600 bg-rose-100 px-1.5 py-0.5 rounded animate-pulse">⚠ OUT ({stockQty})</span>
+                                                        ) : isLowStock ? (
+                                                            <span className="text-[10px] font-black text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">LOW ({stockQty})</span>
+                                                        ) : (
+                                                            <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1 rounded">Stock: {stockQty}</span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-[11px] text-gray-500 font-bold mt-1 uppercase tracking-tight">
+                                                        {currency}{Number(item.price).toFixed(2)} / unit
+                                                    </p>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <button onClick={(e) => { e.stopPropagation(); onUpdateQuantity(item.productId, -1); }} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-rose-100 hover:text-rose-600 flex items-center justify-center text-gray-400 transition-all active:scale-90">
+                                                        <Minus size={12} />
+                                                    </button>
+                                                    <span
+                                                        onClick={(e) => { e.stopPropagation(); setSelectedCartIdx(idx); setNumpadMode('qty'); setShowNumpad(true); }}
+                                                        className={clsx("w-8 text-center text-sm font-black tabular-nums cursor-pointer hover:text-indigo-600", isOverselling ? "text-rose-600" : "text-gray-900")}
+                                                    >
+                                                        {item.quantity}
+                                                    </span>
+                                                    <button onClick={(e) => { e.stopPropagation(); onUpdateQuantity(item.productId, 1); }} className="w-7 h-7 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 flex items-center justify-center transition-all active:scale-90">
+                                                        <Plus size={12} />
+                                                    </button>
+                                                </div>
+                                                <span
+                                                    onClick={(e) => { e.stopPropagation(); setSelectedCartIdx(idx); setNumpadMode('price'); setShowNumpad(true); }}
+                                                    className={clsx("w-24 text-right text-base font-black tabular-nums cursor-pointer hover:text-indigo-600", isOverselling ? "text-rose-600" : "text-gray-900")}
+                                                >
+                                                    {currency}{(Number(item.price) * item.quantity).toFixed(2)}
+                                                </span>
+                                                <button onClick={() => onUpdateQuantity(item.productId, -100)} className="opacity-0 group-hover:opacity-100 w-6 h-6 flex items-center justify-center text-gray-300 hover:text-rose-500 transition-all">
+                                                    <Trash2 size={12} />
+                                                </button>
+                                            </div>
+                                            {/* Per-line note textarea — inline, collapses by default */}
+                                            {openNoteId === item.productId && (
+                                                <div className="mt-2 animate-in slide-in-from-top-1 duration-150">
+                                                    <textarea
+                                                        autoFocus
+                                                        defaultValue={item.note || ''}
+                                                        placeholder="Add a note (gift message, customization…)"
+                                                        rows={2}
+                                                        className="w-full text-xs text-gray-700 placeholder-gray-300 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-amber-300/40 resize-none font-medium"
+                                                        onBlur={(e) => { (props as any).onUpdateLineNote?.(item.productId, e.target.value); }}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter' && !e.shiftKey) {
+                                                                e.preventDefault();
+                                                                (props as any).onUpdateLineNote?.(item.productId, (e.target as HTMLTextAreaElement).value);
+                                                                setOpenNoteId(null);
+                                                            }
+                                                            if (e.key === 'Escape') setOpenNoteId(null);
+                                                        }}
+                                                    />
+                                                    <p className="text-[9px] text-amber-400 mt-0.5 ml-1">Enter to save · Esc to cancel</p>
+                                                </div>
+                                            )}
+                                            {/* Show saved note preview */}
+                                            {openNoteId !== item.productId && item.note && (
+                                                <p className="text-[10px] text-amber-600 bg-amber-50 rounded-lg px-2 py-1 mt-1 italic line-clamp-1">
+                                                    📝 {item.note}
+                                                </p>
+                                            )}
+                                        </div>
+
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
@@ -458,8 +481,8 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                                         onUpdateQuantity(target.productId, delta);
                                     } else if (mode === 'price' && props.onUpdatePrice) {
                                         props.onUpdatePrice(target.productId, val);
-                                    } else if (mode === 'disc' && onSetDiscount) {
-                                        onSetDiscount(val);
+                                    } else if (mode === 'disc' && props.onUpdateLineDiscount) {
+                                        props.onUpdateLineDiscount(target.productId, val);
                                     }
                                 } else if (mode === 'disc' && onSetDiscount) {
                                     onSetDiscount(val);
@@ -498,19 +521,42 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                                 </div>
                                 <div className="flex-1">
                                     <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 block">Method</label>
-                                    <select
-                                        value={paymentMethod}
-                                        onChange={(e) => onSetPaymentMethod(e.target.value)}
-                                        className="w-full px-2 py-2 bg-gray-50 border border-gray-100 rounded-lg text-xs font-bold outline-none appearance-none"
-                                    >
-                                        <option value="CASH">CASH</option>
-                                        <option value="CARD">CARD</option>
-                                        <option value="WALLET">WALLET</option>
-                                        <option value="OM">OM</option>
-                                        <option value="WAVE">WAVE</option>
-                                    </select>
+                                    <div className="flex gap-1">
+                                        <select
+                                            value={paymentMethod}
+                                            onChange={(e) => onSetPaymentMethod(e.target.value)}
+                                            className="flex-1 px-2 py-2 bg-gray-50 border border-gray-100 rounded-lg text-xs font-bold outline-none appearance-none"
+                                        >
+                                            {/* Only show methods linked to a financial account */}
+                                            {paymentMethods
+                                                .filter((m: any) => {
+                                                    const key = typeof m === 'string' ? m : m.key;
+                                                    return (typeof m === 'object' && m.accountId) || ['MULTI', 'DELIVERY', 'CREDIT'].includes(key);
+                                                })
+                                                .map((m: any) => {
+                                                    const key = typeof m === 'string' ? m : m.key;
+                                                    const label = typeof m === 'string' ? m : (m.label || key);
+                                                    return <option key={key} value={key}>{label}</option>;
+                                                })
+                                            }
+                                            {paymentMethods.filter((m: any) => {
+                                                const key = typeof m === 'string' ? m : m.key;
+                                                return (typeof m === 'object' && m.accountId) || ['MULTI', 'DELIVERY', 'CREDIT'].includes(key);
+                                            }).length === 0 && (
+                                                    <option value="" disabled>⚠️ No accounts linked — configure POS Settings</option>
+                                                )}
+                                        </select>
+                                        <button
+                                            onClick={() => setIsMultiPayMode(true)}
+                                            className="w-9 h-9 flex items-center justify-center bg-indigo-50 border border-indigo-100 text-indigo-600 rounded-lg hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
+                                            title="Multi-Payment Hub"
+                                        >
+                                            <Calculator size={14} />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
+
                             {(selectedClient?.loyalty || 0) > 0 && props.onSetPointsRedeemed && (
                                 <div className="flex items-center justify-between text-xs pt-1">
                                     <span className="font-medium text-emerald-600">Loyalty ({selectedClient?.loyalty} pts)</span>
@@ -616,18 +662,34 @@ export function POSLayoutClassic(props: POSLayoutProps) {
                 </div>
             )}
 
-            <ManagerOverride
-                isOpen={isOverrideOpen}
-                actionLabel="Authorize Change"
-                onClose={() => onSetOverrideOpen(false)}
-                onSuccess={() => toast.success("Action authorized")}
-            />
+
             <ReceiptModal
                 isOpen={isReceiptOpen}
                 onClose={() => onSetReceiptOpen(false)}
                 orderId={lastOrder?.id || null}
                 refCode={lastOrder?.ref || null}
             />
+            <MultiPaymentHub
+                isOpen={isMultiPayMode}
+                onClose={() => setIsMultiPayMode(false)}
+                totalAmount={totalAmount}
+                currency={currency}
+                paymentMethods={paymentMethods}
+                client={selectedClient}
+                isProcessing={isProcessing}
+                allowedAccounts={registerConfig?.allowedAccounts || []}
+                onConfirm={(legs: { method: string; amount: number }[]) => {
+                    const legsNote = legs.map(l => `${l.method}:${l.amount.toFixed(2)}`).join(' | ');
+                    if (onSetNotes) onSetNotes(legsNote);
+                    if (props.onSetPaymentLegs) props.onSetPaymentLegs(legs);
+                    const totalPaid = legs.reduce((sum, l) => sum + l.amount, 0);
+                    onSetCashReceived(String(totalPaid));
+                    if (legs.length > 0) onSetPaymentMethod(legs[0].method);
+                    setIsMultiPayMode(false);
+                    setTimeout(() => onCharge(), 300);
+                }}
+            />
         </div>
+
     );
 }

@@ -9,12 +9,32 @@ import { useOnlineStatus } from '@/lib/offline/hooks';
 import { Badge } from "@/components/ui/badge";
 const ITEMS_PER_LOAD = 50; // Load 50 products at a time
 const SEARCH_DEBOUNCE_MS = 300; // Wait 300ms after user stops typing
-export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '$', variant = 'default' }: {
+
+// Generate a unique, consistent color for each product based on its ID
+const AVATAR_COLORS = [
+    { bg: 'bg-rose-50', text: 'text-rose-600', hoverBg: 'bg-rose-600' },
+    { bg: 'bg-amber-50', text: 'text-amber-600', hoverBg: 'bg-amber-600' },
+    { bg: 'bg-emerald-50', text: 'text-emerald-600', hoverBg: 'bg-emerald-600' },
+    { bg: 'bg-cyan-50', text: 'text-cyan-600', hoverBg: 'bg-cyan-600' },
+    { bg: 'bg-blue-50', text: 'text-blue-600', hoverBg: 'bg-blue-600' },
+    { bg: 'bg-indigo-50', text: 'text-indigo-600', hoverBg: 'bg-indigo-600' },
+    { bg: 'bg-violet-50', text: 'text-violet-600', hoverBg: 'bg-violet-600' },
+    { bg: 'bg-fuchsia-50', text: 'text-fuchsia-600', hoverBg: 'bg-fuchsia-600' },
+    { bg: 'bg-pink-50', text: 'text-pink-600', hoverBg: 'bg-pink-600' },
+    { bg: 'bg-teal-50', text: 'text-teal-600', hoverBg: 'bg-teal-600' },
+    { bg: 'bg-lime-50', text: 'text-lime-600', hoverBg: 'bg-lime-600' },
+    { bg: 'bg-orange-50', text: 'text-orange-600', hoverBg: 'bg-orange-600' },
+];
+const getAvatarColor = (id: number) => AVATAR_COLORS[id % AVATAR_COLORS.length];
+export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '$', variant = 'default', onAutoAdd, onNotFound, onProductsLoaded }: {
     searchQuery: string,
     onAddToCart: (p: Record<string, any>) => void,
     categoryId?: number | null,
     currency?: string,
-    variant?: string
+    variant?: string,
+    onAutoAdd?: (p: Record<string, any>) => void,
+    onNotFound?: (query: string) => void,
+    onProductsLoaded?: (products: any[]) => void,
 }) {
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
@@ -75,6 +95,8 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
                 setProducts(mapped);
                 setOfflineMode(true);
                 setHasMore(false);
+                // Populate barcode index so offline scanning works
+                if (onProductsLoaded) onProductsLoaded(mapped);
                 return true;
             }
         } catch {
@@ -106,6 +128,8 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
                 setHasMore(data.length >= ITEMS_PER_LOAD);
                 setOfflineMode(false);
                 cacheToOffline(data);
+                // Populate the parent's barcode index (on first load and on every category/search load)
+                if (onProductsLoaded) onProductsLoaded(data);
             }
         } catch (err) {
             console.error('Load products error:', err);
@@ -118,15 +142,36 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
             setLoadingMore(false);
         }
     }, [hasMore, loadingMore, cacheToOffline, loadFromCache]);
+
+    // When search resolves: auto-add if 1 result, or notify if 0 results
+    const prevSearchRef = useRef('');
+    const autoAddedQueryRef = useRef('');
+    useEffect(() => {
+        if (!searchQuery || loading) return;
+        if (searchQuery !== prevSearchRef.current) return; // Only run after load for current query
+        if (searchQuery === autoAddedQueryRef.current) return; // Prevent infinite cart-add loop on re-renders
+
+        if (products.length === 1 && onAutoAdd) {
+            autoAddedQueryRef.current = searchQuery;
+            onAutoAdd(products[0] as any);
+        } else if (products.length === 0 && onNotFound) {
+            autoAddedQueryRef.current = searchQuery;
+            onNotFound(searchQuery);
+        }
+    }, [products, loading, searchQuery, onAutoAdd, onNotFound]);
     // Handle search and category changes with debounce
     useEffect(() => {
         if (searchQuery) {
             if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
             setLoading(true); // Immediate feedback
+            prevSearchRef.current = '';
             searchTimeoutRef.current = setTimeout(() => {
-                loadProducts(searchQuery, categoryId);
+                // When there's a search query, IGNORE categoryId → search ALL products
+                loadProducts(searchQuery, null);
+                prevSearchRef.current = searchQuery;
             }, SEARCH_DEBOUNCE_MS);
         } else {
+            prevSearchRef.current = '';
             loadProducts('', categoryId);
         }
         return () => {
@@ -238,9 +283,23 @@ export function ProductGrid({ searchQuery, onAddToCart, categoryId, currency = '
                         </div>
                         <div className="relative z-10">
                             <div className="flex justify-between items-start mb-2">
-                                <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-[10px] font-black group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
-                                    {product.name.substring(0, 2).toUpperCase()}
-                                </div>
+                                {(product as any).imageUrl ? (
+                                    <img
+                                        src={(product as any).imageUrl}
+                                        alt={product.name}
+                                        className="w-10 h-10 rounded-lg object-cover border border-gray-100 group-hover:ring-2 group-hover:ring-indigo-300 transition-all"
+                                        onError={(e) => { (e.target as HTMLImageElement).src = ''; (e.target as HTMLImageElement).style.display = 'none'; }}
+                                    />
+                                ) : (
+                                    (() => {
+                                        const c = getAvatarColor(product.id);
+                                        return (
+                                            <div className={`w-8 h-8 rounded-lg ${c.bg} ${c.text} flex items-center justify-center text-[10px] font-black group-hover:${c.hoverBg} group-hover:text-white transition-all duration-300`}>
+                                                {product.name.substring(0, 2).toUpperCase()}
+                                            </div>
+                                        );
+                                    })()
+                                )}
                                 {getVelocityBadge(product.id)}
                             </div>
                             <h3 className="font-bold text-gray-900 leading-tight line-clamp-2 text-[11px] tracking-tight mb-0.5 group-hover:text-indigo-600 transition-colors uppercase italic">{product.name}</h3>

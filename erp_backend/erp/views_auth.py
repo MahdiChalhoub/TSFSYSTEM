@@ -71,6 +71,10 @@ def login_view(request):
             # Handle race condition: if create fails, try get_or_create
             token, _ = Token.objects.get_or_create(user=user)
         
+        # Store scope access for this specific token to enable strict backend enforcement
+        from django.core.cache import cache
+        cache.set(f'token_scope:{token.key}', scope_access, timeout=60 * 60 * 24 * 7) # 1 week
+
         return Response({
             'token': token.key,
             'user': UserSerializer(user).data,
@@ -134,6 +138,10 @@ def _resolve_2fa_challenge(request, challenge_id):
     
     scope_access = challenge_data.get('scope_access', 'internal')
     
+    # Store scope access for this specific token
+    from django.core.cache import cache
+    cache.set(f'token_scope:{token.key}', scope_access, timeout=60 * 60 * 24 * 7) # 1 week
+
     return Response({
         'token': token.key,
         'user': UserSerializer(user).data,

@@ -45,7 +45,11 @@ import {
     Eye,
     FileCheck,
     Percent,
-    Star
+    Star,
+    History,
+    Landmark,
+    UserCheck,
+    Store
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import clsx from 'clsx';
@@ -93,7 +97,11 @@ const ICON_MAP: Record<string, any> = {
     Globe,
     ListChecks,
     Trophy,
-    Star
+    Star,
+    History,
+    Landmark,
+    UserCheck,
+    Store
 };
 
 function getIcon(name: string) {
@@ -104,10 +112,15 @@ function getIcon(name: string) {
 // Module → Feature Group → Page
 export const MENU_ITEMS = [
     {
-        title: 'Dashboard',
+        title: 'Overview',
         icon: LayoutDashboard,
-        path: '/dashboard',
-        module: 'core'
+        module: 'core',
+        children: [
+            { title: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+            { title: 'Setup Wizard', path: '/setup-wizard', icon: Sparkles },
+            { title: 'TaskBoard & Performance', path: '/workspace/tasks', icon: ClipboardList },
+            { title: 'Import (Migration)', path: '/migration', icon: Globe },
+        ]
     },
     {
         title: 'Commercial',
@@ -119,234 +132,170 @@ export const MENU_ITEMS = [
                 icon: ShoppingCart,
                 children: [
                     { title: 'POS Terminal', path: '/sales' },
+                    { title: 'POS Configuration', path: '/sales/pos-settings' },
+                    { title: 'Register Status', path: '/finance/cash-register' },
+                    { title: 'Sales Audit', path: '/sales/audit' },
                     { title: 'Order History', path: '/sales/history' },
                     { title: 'Daily Summary', path: '/sales/summary' },
                     { title: 'Sales Analytics', path: '/sales/analytics' },
-                    { title: 'Quotations', path: '/sales/quotations' },
-                    { title: 'Deliveries', path: '/sales/deliveries' },
-                    { title: 'Discount Rules', path: '/sales/discounts' },
-                    { title: 'Consignment', path: '/sales/consignment' },
-                    { title: 'Delivery Zones', path: '/sales/delivery-zones' },
-                    { title: 'Sales Returns', path: '/sales/returns' },
-                    { title: 'Credit Notes', path: '/sales/credit-notes' },
-                    { title: 'Consignment Settlements', path: '/sales/consignment-settlements' },
-                    { title: 'Import Sales', path: '/sales/import' },
                 ]
             },
+            {
+                title: 'Sales & Orders',
+                icon: ShoppingBag,
+                children: [
+                    { title: 'Quotations', path: '/sales/quotations' },
+                    { title: 'Deliveries', path: '/sales/deliveries' },
+                    { title: 'Sales Returns', path: '/sales/returns' },
+                    { title: 'Credit Notes', path: '/sales/credit-notes' },
+                    { title: 'Discount Rules', path: '/sales/discounts' },
+                    { title: 'Consignment', path: '/sales/consignment' },
+                ]
+            },
+            {
+                title: 'eCommerce',
+                icon: Globe,
+                children: [
+                    { title: 'Storefront Settings', path: '/ecommerce/settings', icon: Settings },
+                    { title: 'Theme Manager', path: '/ecommerce/themes', icon: Layers },
+                    { title: 'Online Orders', path: '/ecommerce/orders', icon: ShoppingCart },
+                    { title: 'Product Catalog', path: '/ecommerce/catalog', icon: Tag },
+                ]
+            },
+        ]
+    },
+    {
+        title: 'Supply Chain',
+        icon: Warehouse,
+        module: 'inventory',
+        children: [
             {
                 title: 'Purchasing',
                 icon: Wallet,
                 children: [
                     { title: 'Procurement Center', path: '/purchases' },
-                    { title: 'Purchase Dashboard', path: '/purchases/dashboard' },
-                    { title: 'New RFQ / Order', path: '/purchases/new-order' },
-                    { title: 'Quick Purchase', path: '/purchases/new' },
                     { title: 'Purchase Orders', path: '/purchases/purchase-orders' },
+                    { title: 'Receipt Orders', path: '/purchases/receipts' },
+                    { title: 'Purchase Invoices', path: '/purchases/invoices' },
                     { title: 'Purchase Returns', path: '/purchases/returns' },
                     { title: 'Supplier Sourcing', path: '/purchases/sourcing' },
                 ]
             },
-        ]
-    },
-    {
-        title: 'Inventory',
-        icon: Box,
-        module: 'inventory',
-        children: [
             {
-                title: 'Products',
+                title: 'Products & Catalog',
                 icon: Tag,
                 children: [
                     { title: 'Product Master', path: '/products' },
-                    { title: 'Product Groups', path: '/products?view=grouped' },
-                    { title: 'Product Analytics', path: '/inventory/analytics' },
+                    { title: 'Categories', path: '/inventory/categories' },
+                    { title: 'Brands & Units', path: '/inventory/units' },
                     { title: 'Combo & Bundles', path: '/inventory/combo' },
                     { title: 'Label Printing', path: '/inventory/labels' },
-                    { title: 'Serial Numbers', path: '/inventory/serials' },
-                    { title: 'Barcode Configuration', path: '/inventory/barcode' },
                 ]
             },
             {
-                title: 'Warehousing',
-                icon: Warehouse,
+                title: 'Warehousing & Stock',
+                icon: Box,
                 children: [
-                    { title: 'Warehouses & Zones', path: '/inventory/warehouses' },
-                    { title: 'Stock Count', path: '/inventory/stock-count' },
-                ]
-            },
-            {
-                title: 'Stock Operations',
-                icon: ClipboardList,
-                children: [
-                    { title: 'Operational Requests', path: '/inventory/requests' },
-                    { title: 'Transfer Orders', path: '/inventory/transfer-orders' },
-                    { title: 'Adjustment Orders', path: '/inventory/adjustment-orders' },
-                    { title: 'Quick Adjustments', path: '/inventory/adjustments' },
-                    { title: 'Stock Valuation', path: '/inventory/valuation' },
-                ]
-            },
-            {
-                title: 'Alerts & Monitoring',
-                icon: Bell,
-                children: [
+                    { title: 'Zones & Locations', path: '/inventory/warehouses' },
                     { title: 'Stock Movements', path: '/inventory/movements' },
-                    { title: 'Inventory Alerts', path: '/inventory/alerts' },
-                    { title: 'Low Stock Alerts', path: '/inventory/low-stock' },
-                    { title: 'Expiry Alerts', path: '/inventory/expiry-alerts' },
+                    { title: 'Stock Count', path: '/inventory/stock-count' },
+                    { title: 'Transfer Orders', path: '/inventory/transfer-orders' },
+                    { title: 'Operational Requests', path: '/inventory/requests' },
+                    { title: 'Adjustment Orders', path: '/inventory/adjustment-orders' },
+                    { title: 'Inventory Alerts', path: '/inventory/low-stock' },
                 ]
             },
             {
-                title: 'Catalog Setup',
-                icon: FolderTree,
-                children: [
-                    { title: 'Categories', path: '/inventory/categories' },
-                    { title: 'Categories Audit', path: '/inventory/categories/maintenance' },
-                    { title: 'Units & Packaging', path: '/inventory/units' },
-                    { title: 'Brands', path: '/inventory/brands' },
-                    { title: 'Countries', path: '/inventory/countries' },
-                    { title: 'Types Management', path: '/inventory/attributes' },
-                    { title: 'Price Groups', path: '/crm/pricing' },
-                ]
-            },
-            {
-                title: 'System Maintenance',
-                icon: Wrench,
-                children: [
-                    { title: 'Maintenance Dashboard', path: '/inventory/maintenance' },
-                    { title: 'Data Quality', path: '/inventory/maintenance/data-quality' },
-                ]
-            },
-        ]
-    },
-    {
-        title: 'Finance',
-        icon: FileText,
-        module: 'finance',
-        children: [
-            { title: 'Performance Dashboard', path: '/finance/dashboard', icon: BarChart3 },
-            {
-                title: 'Definitions',
-                icon: BookOpen,
-                children: [
-                    { title: 'Chart of Accounts', path: '/finance/chart-of-accounts' },
-                    { title: 'Accounts & Drawers', path: '/finance/accounts' },
-                    { title: 'Tax Groups', path: '/finance/tax-groups' },
-                    { title: 'Financial Events', path: '/finance/events' },
-                    { title: 'Pricing Engine', path: '/finance/pricing' },
-                ]
-            },
-            {
-                title: 'General Ledger',
-                icon: FileText,
-                children: [
-                    { title: 'Journal Entries', path: '/finance/ledger' },
-                    { title: 'Opening Balances', path: '/finance/ledger/opening' },
-                    { title: 'Audit Trail', path: '/finance/audit-trail' },
-                ]
-            },
-            {
-                title: 'Transactions',
-                icon: ClipboardList,
-                children: [
-                    { title: 'Invoices', path: '/finance/invoices' },
-                    { title: 'Payments & Receipts', path: '/finance/payments' },
-                    { title: 'Vouchers', path: '/finance/vouchers' },
-                    { title: 'Expenses', path: '/finance/expenses' },
-                    { title: 'Deferred Expenses', path: '/finance/deferred-expenses' },
-                    { title: 'Purchase Returns', path: '/finance/purchase-returns' },
-                    { title: 'Sales Returns', path: '/finance/sales-returns' },
-                    { title: 'Assets & Depreciation', path: '/finance/assets' },
-                    { title: 'Loan Contracts', path: '/finance/loans' },
-                    { title: 'Contact Balances', path: '/finance/balances' },
-                    { title: 'Payment Gateway', path: '/finance/gateway' },
-                ]
-            },
-            {
-                title: 'Fiscal & Closing',
-                icon: Calendar,
-                children: [
-                    { title: 'Fiscal Years', path: '/finance/fiscal-years' },
-                    { title: 'Bank Reconciliation', path: '/finance/bank-reconciliation' },
-                    { title: 'Profit Distribution', path: '/finance/profit-distribution' },
-                ]
-            },
-            {
-                title: 'Reports & Analytics',
-                icon: TrendingUp,
-                children: [
-                    { title: 'Account Statement', path: '/finance/reports/statement' },
-                    { title: 'Period Statements', path: '/finance/statements' },
-                    { title: 'Trial Balance', path: '/finance/reports/trial-balance' },
-                    { title: 'Profit & Loss', path: '/finance/reports/pnl' },
-                    { title: 'Balance Sheet', path: '/finance/reports/balance-sheet' },
-                    { title: 'Aging Report', path: '/finance/reports/aging' },
-                    { title: 'Cash Register', path: '/finance/cash-register' },
-                    { title: 'Tax Reports', path: '/finance/tax-reports' },
-                    { title: 'Budget Overview', path: '/finance/budget' },
-                    { title: 'Profit Centers', path: '/finance/profit-centers' },
-                    { title: 'Revenue Breakdown', path: '/finance/revenue' },
-                    { title: 'Report Builder', path: '/finance/reports/builder' },
-                ]
-            },
-            {
-                title: 'Settings',
-                icon: Settings,
-                children: [
-                    { title: 'General Settings', path: '/finance/settings' },
-                    { title: 'COA Templates', path: '/finance/chart-of-accounts/templates' },
-                    { title: 'Posting Rules', path: '/finance/settings/posting-rules' },
-                    { title: 'E-Invoicing Setup', path: '/finance/einvoicing' },
-                ]
-            },
-        ]
-    },
-    {
-        title: 'CRM',
-        icon: Users,
-        module: 'crm',
-        children: [
-            { title: 'Contact Center', path: '/crm/contacts' },
-            { title: 'Client Pricing', path: '/crm/pricing', icon: Tag },
-            { title: 'Supplier Performance', path: '/crm/supplier-performance' },
-            { title: 'Customer Insights', path: '/crm/insights' },
-            {
-                title: 'Supplier Gate',
+                title: 'Supplier Portal',
                 icon: Briefcase,
                 children: [
                     { title: 'Supplier Access', path: '/workspace/supplier-access' },
                     { title: 'Proforma Review', path: '/workspace/proformas' },
                     { title: 'Price Requests', path: '/workspace/price-requests' },
-                    { title: 'Supplier Portal Admin', path: '/workspace/supplier-portal' },
-                    { title: 'Gate Preview', path: '/crm/supplier-gate-preview', icon: Eye },
+                    { title: 'Portal Management', path: '/workspace/supplier-portal' },
                 ]
             },
             {
-                title: 'Client Gate',
-                icon: Users,
+                title: 'Audit & Maintenance',
+                icon: Wrench,
                 children: [
-                    { title: 'Portal Config', path: '/workspace/portal-config' },
-                    { title: 'Client Access', path: '/workspace/client-access' },
-                    { title: 'Client Orders', path: '/workspace/client-orders' },
-                    { title: 'Client Tickets', path: '/workspace/client-tickets' },
-                    { title: 'Client Portal Admin', path: '/workspace/client-portal' },
-                    { title: 'Quote Inbox', path: '/workspace/quote-inbox' },
-                    { title: 'Tender Inbox', path: '/workspace/tenders' },
-                    { title: 'Gate Preview', path: '/crm/client-gate-preview', icon: Eye },
+                    { title: 'Inventory Structure', path: '/inventory/maintenance' },
+                    { title: 'Data Quality Audit', path: '/inventory/maintenance/data-quality' },
+                    { title: 'POS Forensics & Audit', path: '/sales/audit' },
                 ]
             },
         ]
     },
     {
-        title: 'eCommerce',
-        icon: Globe,
-        module: 'ecommerce',
+        title: 'Performance',
+        icon: BarChart3,
+        module: 'finance',
         children: [
-            { title: 'Storefront Overview', path: '/ecommerce/dashboard', icon: BarChart3 },
-            { title: 'Storefront Settings', path: '/ecommerce/settings', icon: Settings },
-            { title: 'Theme Manager', path: '/ecommerce/themes', icon: Layers },
-            { title: 'Online Orders', path: '/ecommerce/orders', icon: ShoppingCart },
-            { title: 'Product Reviews', path: '/ecommerce/catalog/reviews', icon: Star },
-            { title: 'Product Catalog', path: '/ecommerce/catalog', icon: Tag },
+            {
+                title: 'Accounting',
+                icon: Landmark,
+                children: [
+                    { title: 'Chart of Accounts', path: '/finance/chart-of-accounts' },
+                    { title: 'Journal Entries', path: '/finance/ledger' },
+                    { title: 'Audit Trail', path: '/finance/audit-trail' },
+                    { title: 'Fiscal Years', path: '/finance/fiscal-years' },
+                    { title: 'Financial Settings', path: '/finance/settings' },
+                ]
+            },
+            {
+                title: 'A/R & A/P',
+                icon: FolderTree,
+                children: [
+                    { title: 'Invoices', path: '/finance/invoices' },
+                    { title: 'Payments & Receipts', path: '/finance/payments' },
+                    { title: 'Expenses', path: '/finance/expenses' },
+                    { title: 'Bank Reconciliation', path: '/finance/bank-reconciliation' },
+                ]
+            },
+            {
+                title: 'Financial Reports',
+                icon: TrendingUp,
+                children: [
+                    { title: 'Trial Balance', path: '/finance/reports/trial-balance' },
+                    { title: 'Profit & Loss', path: '/finance/reports/pnl' },
+                    { title: 'Balance Sheet', path: '/finance/reports/balance-sheet' },
+                    { title: 'Aging Report', path: '/finance/reports/aging' },
+                    { title: 'Budget Overview', path: '/finance/budget' },
+                    { title: 'Tax (VAT) Reports', path: '/finance/tax-reports' },
+                ]
+            },
+            {
+                title: 'Cash & Assets',
+                icon: DollarSign,
+                children: [
+                    { title: 'Cash Registers', path: '/finance/cash-register' },
+                    { title: 'Bank Drawing', path: '/finance/accounts' },
+                    { title: 'Assets & Depreciation', path: '/finance/assets' },
+                    { title: 'Loan Contracts', path: '/finance/loans' },
+                ]
+            },
+        ]
+    },
+    {
+        title: 'Relationships',
+        icon: Users,
+        module: 'crm',
+        children: [
+            { title: 'Contacts & Leads', path: '/crm/contacts', icon: UserCheck },
+            { title: 'Price Groups', path: '/crm/pricing', icon: Tag },
+            { title: 'Customer Insights', path: '/crm/insights', icon: BarChart3 },
+            {
+                title: 'Client Portal',
+                icon: Globe,
+                children: [
+                    { title: 'Portal Settings', path: '/workspace/portal-config' },
+                    { title: 'Client Access', path: '/workspace/client-access' },
+                    { title: 'Client Orders', path: '/workspace/client-orders' },
+                    { title: 'Client Tickets', path: '/workspace/client-tickets' },
+                    { title: 'Quote Inbox', path: '/workspace/quote-inbox' },
+                    { title: 'Tender Inbox', path: '/workspace/tenders' },
+                ]
+            },
         ]
     },
     {
@@ -354,40 +303,23 @@ export const MENU_ITEMS = [
         icon: ShieldCheck,
         module: 'hr',
         children: [
-            { title: 'HR Overview', path: '/hr/overview' },
-            { title: 'Employee Manager', path: '/hr/employees' },
+            { title: 'Employee Directory', path: '/hr/employees' },
             { title: 'Departments', path: '/hr/departments' },
-            { title: 'Shifts', path: '/hr/shifts' },
-            { title: 'Attendance', path: '/hr/attendance' },
-            { title: 'Leave Requests', path: '/hr/leaves' },
-            { title: 'Payroll Summary', path: '/hr/payroll' },
+            { title: 'Shifts & Attendance', path: '/hr/attendance' },
+            { title: 'Payroll & Salaries', path: '/hr/payroll' },
+            { title: 'Leave Management', path: '/hr/leaves' },
             { title: 'Pending Approvals', path: '/users/approvals' },
         ]
     },
     {
-        title: 'Workspace',
-        icon: ClipboardList,
-        module: 'workspace',
-        children: [
-            { title: 'TaskBoard', path: '/workspace/tasks', icon: ClipboardList },
-            { title: 'Checklists', path: '/workspace/checklists', icon: ListChecks },
-            { title: 'Performance', path: '/workspace/performance', icon: Trophy },
-        ]
-    },
-    {
-        title: 'Import from Third Party',
-        icon: Globe,
-        path: '/migration',
-    },
-    {
-        title: 'AI & Intelligence',
+        title: 'Intelligence',
         icon: Bot,
         module: 'mcp',
         children: [
             { title: 'AI Assistant', path: '/mcp/chat', icon: Bot },
-            { title: 'AI Tool Registry', path: '/mcp/tools', icon: Wrench },
-            { title: 'Conversations', path: '/mcp/conversations', icon: MessageSquare },
-            { title: 'Usage Stats', path: '/mcp/usage', icon: BarChart3 },
+            { title: 'Virtual Employees', path: '/mcp/agents', icon: Sparkles },
+            { title: 'Knowledge Base', path: '/mcp/conversations', icon: BookOpen },
+            { title: 'Tool Registry', path: '/mcp/tools', icon: Wrench },
         ]
     },
     {
@@ -395,14 +327,13 @@ export const MENU_ITEMS = [
         icon: ShieldCheck,
         visibility: 'saas',
         children: [
-            { title: 'SaaS Dashboard', path: '/dashboard', icon: Globe },
+            { title: 'Platform Dashboard', path: '/dashboard', icon: Globe },
             {
-                title: 'Organizations',
+                title: 'Organization Mgmt',
                 icon: Building2,
                 children: [
-                    { title: 'Organizations', path: '/organizations' },
-                    { title: 'Registrations', path: '/organizations/registrations' },
-                    { title: 'Instance Switcher', path: '/switcher' },
+                    { title: 'Organizations List', path: '/organizations' },
+                    { title: 'Domain Switcher', path: '/switcher' },
                     { title: 'Subscription Plans', path: '/subscription-plans' },
                 ]
             },
@@ -411,46 +342,38 @@ export const MENU_ITEMS = [
                 icon: Shield,
                 children: [
                     { title: 'Platform Health', path: '/health' },
-                    { title: 'Kernel Updates', path: '/updates' },
-                    { title: 'Global Registry', path: '/modules' },
-                    { title: 'Currencies', path: '/currencies' },
-                    {
-                        title: 'Connector',
-                        icon: ServerCog,
-                        children: [
-                            { title: 'Connector Control', path: '/connector' },
-                            { title: 'Connector Buffer', path: '/connector/buffer' },
-                            { title: 'Connector Logs', path: '/connector/logs' },
-                            { title: 'Connector Policies', path: '/connector/policies' },
-                        ]
-                    },
-                    { title: 'AES-256 Encryption', path: '/encryption' },
+                    { title: 'Kernel Console', path: '/updates' },
+                    { title: 'Module Registry', path: '/modules' },
+                    { title: 'Currency Matrix', path: '/currencies' },
+                    { title: 'Encryption Keyroom', path: '/encryption' },
                 ]
             },
         ]
     },
     {
-        title: 'System Settings',
+        title: 'Administration',
         icon: Settings,
         module: 'core',
         children: [
+            { title: 'System Settings', path: '/settings', icon: Settings },
             {
-                title: 'Cloud Storage',
+                title: 'Storage & Media',
                 icon: Cloud,
                 children: [
                     { title: 'File Browser', path: '/storage' },
-                    { title: 'Package Manager', path: '/storage/packages', icon: Package },
+                    { title: 'Package Manager', path: '/storage/packages' },
                 ]
             },
-            { title: 'Sites & Branches', path: '/settings/sites', visibility: 'saas' },
-            { title: 'Roles & Permissions', path: '/settings/roles' },
-            { title: 'Security Settings', path: '/settings/security', icon: Shield },
+            { title: 'Security & Roles', path: '/settings/roles', icon: Shield },
             { title: 'Custom Domains', path: '/settings/domains', icon: Globe },
-            { title: 'Notifications', path: '/settings/notifications', icon: Bell },
-            { title: 'Billing & Subscription', path: '/subscription', icon: CreditCard },
+            { title: 'Postings (Rules)', path: '/finance/settings/posting-rules', icon: ListChecks },
+            { title: 'System Audit Log', path: '/finance/events', icon: History },
+            { title: 'Subscription Info', path: '/subscription', icon: CreditCard },
         ]
     },
 ];
+
+
 
 export function Sidebar({
     isSaas = false,
@@ -463,10 +386,8 @@ export function Sidebar({
 }) {
     const { sidebarOpen, toggleSidebar, openTab, activeTab, viewScope, setViewScope, canToggleScope, scopeAccess } = useAdmin();
     // Initialize with ALL known modules to prevent "flash of SaaS sidebar" on first render.
-    // The useEffect below will correct this to the actual installed set from the backend.
-    // This ensures tenant users see their full menu immediately while data loads.
-    const ALL_KNOWN_MODULES = ['core', 'pos', 'finance', 'inventory', 'crm', 'hr', 'purchases', 'ecommerce'];
-    const [installedModules, setInstalledModules] = useState<Set<string>>(new Set(isSaas ? ['core'] : ALL_KNOWN_MODULES));
+    const ALL_KNOWN_MODULES = ['core', 'pos', 'finance', 'inventory', 'crm', 'hr', 'purchases', 'ecommerce', 'mcp'];
+    const [installedModules, setInstalledModules] = useState<Set<string>>(new Set(isSaas ? ['core', 'mcp'] : ALL_KNOWN_MODULES));
     const [dynamicItems, setDynamicItems] = useState<SidebarDynamicItem[]>([]);
 
     useEffect(() => {
@@ -510,11 +431,19 @@ export function Sidebar({
     // Merge hardcoded core with dynamic
     const allItems = [...MENU_ITEMS, ...dynamicItems];
 
-    const processedItems = allItems.filter(item => {
-        // 1. Filter by SaaS Panel visibility logic
-        if (!isSaas && item.visibility === 'saas') return false;
+    // Deduplicate by title to prevent "2 system settings" (one from backend, one from frontend)
+    const uniqueItemsMap = new Map<string, any>();
+    allItems.forEach((item: any) => {
+        // Normalize title for comparison
+        if (!item?.title) return;
+        const key = String(item.title).toLowerCase().trim();
+        if (!uniqueItemsMap.has(key)) {
+            uniqueItemsMap.set(key, item);
+        }
+    });
 
-        // 2. Filter by Installed Module
+    const processedItems = Array.from(uniqueItemsMap.values()).filter((item: any) => {
+        if (!isSaas && item.visibility === 'saas') return false;
         if (item.module && item.module !== 'core' && !installedModules.has(String(item.module))) {
             return false;
         }
@@ -524,8 +453,8 @@ export function Sidebar({
     // Pin SaaS Control to top if in SaaS context
     const filteredItems = isSaas
         ? [
-            ...processedItems.filter(i => i.title === 'SaaS Control'),
-            ...processedItems.filter(i => i.title !== 'SaaS Control')
+            ...processedItems.filter((i: any) => i.title === 'SaaS Control'),
+            ...processedItems.filter((i: any) => i.title !== 'SaaS Control')
         ]
         : processedItems;
 
@@ -543,79 +472,78 @@ export function Sidebar({
                 "fixed lg:relative inset-y-0 left-0 bg-[#0F172A] border-r border-gray-800 flex flex-col shrink-0 overflow-hidden h-full text-gray-300 shadow-2xl z-50 transition-all duration-300 transform",
                 sidebarOpen
                     ? "w-72 md:w-80 translate-x-0 opacity-100"
-                    : "-translate-x-full lg:translate-x-0 lg:w-0 lg:opacity-0 lg:pointer-events-none"
+                    : "w-0 -translate-x-full lg:translate-x-0 lg:w-20 opacity-0 lg:opacity-100"
             )}>
-                <div className="p-8 border-b border-gray-800/50 flex items-center gap-4 shrink-0">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-900/20 text-white font-bold text-xl">
-                        {PLATFORM_CONFIG.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                        <h1 className="text-xl font-bold text-white tracking-tight leading-none">{PLATFORM_CONFIG.name}</h1>
-                        <p className="text-xs text-emerald-400 font-medium mt-1.5">{isSaas ? 'Platform Admin' : 'Workspace Admin'}</p>
+                {/* Logo Section */}
+                <div className="h-11 flex items-center px-4 border-b border-gray-800/50 bg-[#0F172A]/50 backdrop-blur-md sticky top-0 z-10">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                            <Zap className="w-5 h-5 text-white" />
+                        </div>
+                        {sidebarOpen && (
+                            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+                                TSF CORE
+                            </span>
+                        )}
                     </div>
                 </div>
 
-                {/* View Scope Switcher — only visible for full-access users */}
-                {dualViewEnabled && canToggleScope && (
-                    <div className="mx-6 mt-6 shrink-0">
-                        <div className="p-1.5 bg-[#0B1120] rounded-2xl border border-gray-800 flex gap-1">
-                            <button
-                                onClick={() => setViewScope('OFFICIAL')}
-                                suppressHydrationWarning={true}
-                                className={clsx(
-                                    "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
-                                    viewScope === 'OFFICIAL'
-                                        ? "bg-emerald-600 text-white shadow-lg shadow-emerald-900/40"
-                                        : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
-                                )}
-                            >
-                                <Layers size={14} />
-                                Official
-                            </button>
+                {/* Scope Switcher (only for superusers or dual view enabled) */}
+                {sidebarOpen && (isSuperuser || dualViewEnabled) && canToggleScope && (
+                    <div className="px-4 py-3 border-b border-gray-800/30">
+                        <div className="flex bg-gray-900/50 p-1 rounded-xl border border-gray-800/50">
                             <button
                                 onClick={() => setViewScope('INTERNAL')}
-                                suppressHydrationWarning={true}
                                 className={clsx(
-                                    "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
+                                    "flex-1 flex items-center justify-center py-1.5 rounded-lg text-xs font-semibold transition-all duration-200",
                                     viewScope === 'INTERNAL'
-                                        ? "bg-gray-700 text-white shadow-lg"
-                                        : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
+                                        ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20"
+                                        : "text-gray-400 hover:text-gray-200"
                                 )}
                             >
-                                <BarChart3 size={14} />
+                                <Shield className="w-3.5 h-3.5 mr-1.5" />
                                 Internal
+                            </button>
+                            <button
+                                onClick={() => setViewScope('OFFICIAL')}
+                                className={clsx(
+                                    "flex-1 flex items-center justify-center py-1.5 rounded-lg text-xs font-semibold transition-all duration-200",
+                                    viewScope === 'OFFICIAL'
+                                        ? "bg-purple-600 text-white shadow-lg shadow-purple-600/20"
+                                        : "text-gray-400 hover:text-gray-200"
+                                )}
+                            >
+                                <Globe className="w-3.5 h-3.5 mr-1.5" />
+                                Official
                             </button>
                         </div>
                     </div>
                 )}
 
-                <div className="p-6 space-y-2 flex-1 overflow-y-auto custom-scrollbar">
-                    <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-6 px-3 mt-2">Main Menu</div>
+                {/* Navigation Items */}
+                <nav className="flex-1 overflow-y-auto overflow-x-hidden py-2 px-2.5 space-y-1 custom-scrollbar">
                     {filteredItems.map((item, idx) => (
-                        <MenuItem key={idx} item={item} openTab={openTab} activeTab={activeTab} installedModules={installedModules} />
+                        <MenuItem
+                            key={idx}
+                            item={item}
+                            openTab={openTab}
+                            activeTab={activeTab}
+                            installedModules={installedModules}
+                        />
                     ))}
-                </div>
+                </nav>
 
-                <div className="px-4 py-3 border-t border-gray-800/50 bg-[#0B1120] shrink-0">
-                    <div className="flex items-center justify-between gap-2">
-                        <button
-                            onClick={() => logoutAction()}
-                            suppressHydrationWarning={true}
-                            className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-gray-800/50 text-gray-400 hover:text-white transition-all group flex-1"
-                        >
-                            <LogOut size={18} className="group-hover:text-red-400 transition-colors" />
-                            <span className="text-sm font-medium">Sign Out</span>
-                        </button>
-                        <div
-                            onClick={() => {
-                                navigator.clipboard.writeText(PLATFORM_CONFIG.version);
-                                toast.success("Version copied to clipboard");
-                            }}
-                            title="Click to copy version — Role: Antigravity-Powered SaaS"
-                            className="text-[9px] font-black text-gray-400 bg-gray-900/80 px-2 py-1.5 rounded-lg border border-gray-800/50 select-none uppercase tracking-widest whitespace-nowrap cursor-pointer transition-all hover:text-emerald-400 hover:border-emerald-500/30 hover:bg-emerald-500/5 active:scale-95"
-                        >
-                            V{PLATFORM_CONFIG.version}
-                        </div>
+                {/* Footer Section */}
+                <div className="p-4 border-t border-gray-800/50 bg-[#0F172A]/80">
+                    <button
+                        onClick={toggleSidebar}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all duration-200 group"
+                    >
+                        <Settings className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" />
+                        {sidebarOpen && <span className="text-sm font-medium">Collapse Menu</span>}
+                    </button>
+                    <div className="text-[10px] text-gray-500 mt-2 text-center">
+                        V{PLATFORM_CONFIG.version}
                     </div>
                 </div>
             </aside>
@@ -673,11 +601,11 @@ function MenuItem({
             <div
                 onClick={handleClick}
                 className={clsx(
-                    "flex items-center gap-4 px-4 py-3 rounded-2xl cursor-pointer select-none transition-all duration-200 group relative overflow-hidden",
+                    "flex items-center gap-3 px-3 py-1.5 rounded-lg cursor-pointer select-none transition-all duration-200 group relative overflow-hidden",
                     isActive || isChildActive
                         ? "bg-emerald-600/10 text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.15)] ring-1 ring-emerald-500/20"
                         : "text-gray-400 hover:bg-gray-800/60 hover:text-white",
-                    level > 0 && "py-2.5 rounded-xl text-[13px]"
+                    level > 0 && "py-1.5 rounded-lg text-[12px]"
                 )}
             >
                 {/* Active Indicator Strip */}
@@ -686,7 +614,7 @@ function MenuItem({
                 )}
 
                 {Icon && (
-                    <Icon size={level === 0 ? 22 : 18} className={clsx(isActive || isChildActive ? "text-emerald-400" : "group-hover:text-white transition-colors")} />
+                    <Icon size={level === 0 ? 18 : 16} className={clsx(isActive || isChildActive ? "text-emerald-400" : "group-hover:text-white transition-colors")} />
                 )}
 
                 <span className={clsx("flex-1 truncate", level === 0 ? "font-medium" : "font-normal")}>

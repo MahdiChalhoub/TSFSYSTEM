@@ -16,7 +16,7 @@ interface Product {
 export default async function ComboPage() {
     let products: Product[] = []
     try {
-        const res = await erpFetch('/products/')
+        const res: any = await erpFetch('/products/')
         products = Array.isArray(res) ? res : res.results || []
     } catch { /* empty */ }
 
@@ -24,7 +24,7 @@ export default async function ComboPage() {
     const standardProducts = products.filter((p: Product) => p.product_type !== 'COMBO')
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-6 max-w-[1400px] mx-auto animate-in fade-in duration-500">
             <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-2xl bg-purple-600 flex items-center justify-center shadow-lg shadow-purple-200">
                     <Package size={28} className="text-white" />

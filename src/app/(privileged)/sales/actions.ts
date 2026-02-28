@@ -60,6 +60,20 @@ export async function clearProductsCache() {
     return { success: true };
 }
 
+export async function getPosSettings() {
+    try {
+        const data = await erpFetch('pos/pos-settings/', {
+            next: { revalidate: 0, tags: ['pos-settings'] }
+        });
+        return {
+            loyaltyPointValue: Number(data?.loyalty_point_value ?? 1),
+            loyaltyEarnRate: Number(data?.loyalty_earn_rate ?? 10),
+        };
+    } catch {
+        return { loyaltyPointValue: 1, loyaltyEarnRate: 10 };
+    }
+}
+
 export async function getCategories() {
     try {
         const data = await erpFetch('inventory/categories/with_counts/?limit=500', {
@@ -98,7 +112,9 @@ export async function processSale(data: {
     pointsRedeemed?: number,
     storeChangeInWallet?: boolean,
     cashReceived?: number,
-    userConfirmedDeclaration?: boolean // Added for high-value override
+    userConfirmedDeclaration?: boolean, // Added for high-value override
+    globalDiscount?: number,
+    paymentLegs?: Array<{ method: string; amount: number }>
 }) {
     try {
         const [context, financialSettings] = await Promise.all([
@@ -205,7 +221,8 @@ export async function processSale(data: {
                 items: data.cart.map(item => ({
                     product_id: item.productId,
                     quantity: item.quantity,
-                    unit_price: item.price
+                    unit_price: item.price,
+                    discount_rate: item.discountRate || 0
                 })),
                 warehouse_id: data.warehouseId || context.defaultWarehouseId,
                 payment_account_id: data.paymentAccountId,
@@ -216,7 +233,9 @@ export async function processSale(data: {
                 contact_id: data.clientId,
                 points_redeemed: data.pointsRedeemed || 0,
                 store_change_in_wallet: data.storeChangeInWallet || false,
-                cash_received: data.cashReceived || 0
+                cash_received: data.cashReceived || 0,
+                global_discount: data.globalDiscount || 0,
+                payment_legs: data.paymentLegs || []
             })
         });
 
@@ -231,5 +250,44 @@ export async function processSale(data: {
     } catch (e: unknown) {
         console.error("POS Checkout Error:", e);
         throw new Error((e instanceof Error ? e.message : String(e)) || "Checkout Failed");
+    }
+}
+
+export async function deleteOrder(id: number) {
+    try {
+        await erpFetch(`pos/orders/${id}/`, { method: 'DELETE' });
+        revalidatePath('/sales/history');
+        return { success: true };
+    } catch (e) {
+        console.error("Delete Order Error:", e);
+        return { success: false, error: String(e) };
+    }
+}
+
+export async function lockOrder(id: number, locked: boolean) {
+    try {
+        await erpFetch(`pos/orders/${id}/`, {
+            method: 'PATCH',
+            body: JSON.stringify({ is_locked: locked })
+        });
+        revalidatePath('/sales/history');
+        return { success: true };
+    } catch (e) {
+        console.error("Lock Order Error:", e);
+        return { success: false, error: String(e) };
+    }
+}
+
+export async function verifyOrder(id: number, verified: boolean) {
+    try {
+        await erpFetch(`pos/orders/${id}/`, {
+            method: 'PATCH',
+            body: JSON.stringify({ is_verified: verified })
+        });
+        revalidatePath('/sales/history');
+        return { success: true };
+    } catch (e) {
+        console.error("Verify Order Error:", e);
+        return { success: false, error: String(e) };
     }
 }

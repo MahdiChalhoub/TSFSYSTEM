@@ -10,6 +10,8 @@ from .delivery_serializers import DeliveryZoneSerializer, DeliveryOrderSerialize
 from .discount_serializers import DiscountRuleSerializer, DiscountUsageLogSerializer
 from .consignment_serializers import ConsignmentSettlementSerializer, ConsignmentSettlementLineSerializer
 from .sourcing_serializers import ProductSupplierSerializer, SupplierPriceHistorySerializer
+from .register_serializers import POSRegisterSerializer, RegisterSessionSerializer
+from .audit_serializers import POSAuditEventSerializer, POSAuditRuleSerializer
 
 __all__ = [
     'OrderSerializer', 'OrderLineSerializer', 'PosTicketSerializer',
@@ -22,4 +24,6 @@ __all__ = [
     'DiscountRuleSerializer', 'DiscountUsageLogSerializer',
     'ConsignmentSettlementSerializer', 'ConsignmentSettlementLineSerializer',
     'ProductSupplierSerializer', 'SupplierPriceHistorySerializer',
+    'POSAuditEventSerializer', 'POSAuditRuleSerializer',
+    'POSRegisterSerializer', 'RegisterSessionSerializer',
 ]

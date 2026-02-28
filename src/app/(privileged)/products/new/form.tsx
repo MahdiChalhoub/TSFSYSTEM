@@ -360,11 +360,11 @@ export default function AddProductForm({
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Cost Price ($)</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Cost Price {worksInTTC ? '(TTC)' : '(HT)'}</label>
                             <input name="costPrice" type="number" step="0.01" className="w-full input-field" defaultValue={initialData?.costPrice || "0.00"} />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Selling Price ($)</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Selling Price {worksInTTC ? '(TTC)' : '(HT)'}</label>
                             <input name="basePrice" type="number" step="0.01" className="w-full input-field font-bold text-green-700" defaultValue={initialData?.basePrice || "0.00"} />
                         </div>
                     </div>

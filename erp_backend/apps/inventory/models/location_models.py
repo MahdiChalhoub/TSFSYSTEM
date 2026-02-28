@@ -23,8 +23,8 @@ class WarehouseZone(TenantModel):
     )
 
     warehouse = models.ForeignKey(
-        'erp.Site', on_delete=models.CASCADE, related_name='zones',
-        help_text='Warehouse site this zone belongs to'
+        'inventory.Warehouse', on_delete=models.CASCADE, related_name='zones',
+        help_text='Warehouse this zone belongs to'
     )
     code = models.CharField(max_length=10, help_text='Short code, e.g. "A", "FR01"')
     name = models.CharField(max_length=100)

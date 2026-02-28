@@ -23,6 +23,10 @@ from apps.migration.serializers import (
 from apps.migration.services import MigrationService, MigrationRollbackService
 from apps.migration.parsers import SQLDumpParser
 
+from rest_framework import permissions
+from erp.permissions import IsOrgAdmin
+from django.db import transaction
+
 logger = logging.getLogger(__name__)
 
 # Directory where uploaded SQL files are stored
@@ -32,7 +36,13 @@ MIGRATION_UPLOAD_DIR = os.path.join(
 )
 
 
-class MigrationViewSet(viewsets.ModelViewSet):
+
+from .views_setup import MigrationSetupMixin
+from .views_execution import MigrationExecutionMixin
+from .views_review import MigrationReviewMixin
+
+class MigrationViewSet(MigrationSetupMixin, MigrationExecutionMixin, MigrationReviewMixin, viewsets.ModelViewSet):
+
     """
     API for managing data migrations from UltimatePOS.
 
@@ -45,13 +55,19 @@ class MigrationViewSet(viewsets.ModelViewSet):
     logs:    GET  /api/migration/jobs/{id}/logs/
     rollback: POST /api/migration/jobs/{id}/rollback/
     """
+
     serializer_class = MigrationJobSerializer
+
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
+    permission_classes = [permissions.IsAuthenticated, IsOrgAdmin]
+
     def get_queryset(self):
-        org_id = self.request.headers.get('X-Tenant-Id') or \
-                 getattr(self.request.user, 'organization_id', None)
+        org_id = getattr(self.request.user, 'organization_id', None)
+        if self.request.user.is_superuser:
+            org_id = self.request.headers.get('X-Tenant-Id') or org_id
         return MigrationJob.objects.filter(organization_id=org_id)
+
 
     def get_serializer_class(self):
         if self.action == 'upload':
@@ -64,251 +80,3 @@ class MigrationViewSet(viewsets.ModelViewSet):
             return MigrationJobDetailSerializer
         return MigrationJobSerializer
 
-    @action(detail=False, methods=['post'], url_path='upload')
-    def upload(self, request):
-        """Upload a SQL dump file and start a migration job."""
-        serializer = MigrationUploadSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        uploaded_file = serializer.validated_data['file']
-        name = serializer.validated_data.get('name', 'UltimatePOS Migration')
-
-        # Get tenant context from middleware
-        org = getattr(request, 'organization', None)
-        if not org:
-             return Response({'error': 'Organization context required.'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        org_id = org.id
-        org_slug = org.slug
-
-        # Get storage provider
-        from apps.storage.models import StorageProvider
-        provider = StorageProvider.get_for_organization(org)
-        
-        # Use the universal storage logic
-        from apps.storage.backends import upload_to_cloud
-        storage_key, bucket, checksum, file_size = upload_to_cloud(
-            provider=provider,
-            file_obj=uploaded_file,
-            category='MIGRATION',
-            original_filename=uploaded_file.name,
-            org_slug=org_slug,
-            linked_model='migration.MigrationJob',
-        )
-
-        # Create StoredFile record
-        stored_file = StoredFile.objects.create(
-            organization_id=org_id,
-            original_filename=uploaded_file.name,
-            storage_key=storage_key,
-            bucket=bucket,
-            checksum=checksum,
-            file_size=file_size,
-            category='MIGRATION',
-            uploaded_by=request.user if request.user.is_authenticated else None,
-            linked_model='migration.MigrationJob',
-        )
-
-        # Create migration job linked to stored_file
-        job = MigrationJob.objects.create(
-            organization_id=org_id,
-            name=name,
-            source_type='SQL_DUMP',
-            stored_file=stored_file,
-            created_by=request.user if request.user.is_authenticated else None,
-        )
-
-        # Update stored_file with job ID
-        stored_file.linked_id = job.id
-        stored_file.save()
-
-        # Trigger background analysis
-        from apps.migration.tasks import analyze_migration_task
-        analyze_migration_task.delay(job.id)
-
-        return Response(
-            MigrationJobSerializer(job).data,
-            status=status.HTTP_201_CREATED
-        )
-
-    @action(detail=False, methods=['post'], url_path='link')
-    def link(self, request):
-        """Create a migration job linked to an existing StoredFile."""
-        serializer = MigrationLinkSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        file_uuid = serializer.validated_data['file_uuid']
-        name = serializer.validated_data.get('name', 'UltimatePOS Migration')
-
-        from apps.storage.models import StoredFile
-        stored_file = StoredFile.objects.filter(uuid=file_uuid).first()
-        if not stored_file:
-            return Response({'error': 'StoredFile not found.'}, status=status.HTTP_404_NOT_FOUND)
-
-        # Get tenant context
-        org_id = request.headers.get('X-Tenant-Id') or \
-                 getattr(request.user, 'organization_id', None)
-
-        # Create migration job
-        job = MigrationJob.objects.create(
-            organization_id=org_id,
-            name=name,
-            source_type='SQL_DUMP',
-            stored_file=stored_file,
-            created_by=request.user if request.user.is_authenticated else None,
-        )
-
-        return Response(
-            MigrationJobSerializer(job).data,
-            status=status.HTTP_201_CREATED
-        )
-
-    @action(detail=False, methods=['post'], url_path='connect')
-    def connect(self, request):
-        """Create a migration job using direct DB connection."""
-        serializer = MigrationDirectDBSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        org_id = request.headers.get('X-Tenant-Id') or \
-                 getattr(request.user, 'organization_id', None)
-
-        job = MigrationJob.objects.create(
-            organization_id=org_id,
-            name=serializer.validated_data.get('name', 'UltimatePOS Migration'),
-            source_type='DIRECT_DB',
-            db_host=serializer.validated_data['db_host'],
-            db_port=serializer.validated_data.get('db_port', 3306),
-            db_name=serializer.validated_data['db_name'],
-            db_user=serializer.validated_data['db_user'],
-            db_password=serializer.validated_data['db_password'],
-            created_by=request.user if request.user.is_authenticated else None,
-        )
-
-        # Trigger background analysis
-        from apps.migration.tasks import analyze_migration_task
-        analyze_migration_task.delay(job.id)
-
-        return Response(
-            MigrationJobSerializer(job).data,
-            status=status.HTTP_201_CREATED
-        )
-
-    @action(detail=True, methods=['get'], url_path='businesses')
-    def businesses(self, request, pk=None):
-        """Get discovered businesses from metadata (analyzed in background)."""
-        job = self.get_object()
-
-        if job.discovered_data and 'businesses' in job.discovered_data:
-            return Response({'businesses': job.discovered_data['businesses']})
-        
-        if job.status == 'PARSING':
-            return Response({'status': 'analyzing', 'message': 'Still analyzing source file...'}, 
-                            status=status.HTTP_202_ACCEPTED)
-        
-        if job.status == 'FAILED' and job.error_log:
-             return Response({'status': 'failed', 'error': job.error_log}, 
-                             status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-
-        # Fallback: Trigger analysis if missing and not already running
-        from apps.migration.tasks import analyze_migration_task
-        analyze_migration_task.delay(job.id)
-        
-        return Response({'status': 'analyzing', 'message': 'Analysis started...'}, 
-                        status=status.HTTP_202_ACCEPTED)
-
-    @action(detail=True, methods=['get'], url_path='preview')
-    def preview(self, request, pk=None):
-        """Preview table counts from background analysis."""
-        job = self.get_object()
-        business_id = request.query_params.get('business_id') or job.source_business_id
-        
-        if not job.discovered_data:
-            return Response({'status': 'analyzing', 'message': 'Analysis in progress...'}, 
-                            status=status.HTTP_202_ACCEPTED)
-        
-        # If business_id is specified, find that business's counts
-        if business_id:
-            businesses = job.discovered_data.get('businesses', [])
-            for biz in businesses:
-                if str(biz['id']) == str(business_id):
-                    return Response({'tables': biz.get('counts', {})})
-        
-        # Fallback to global counts
-        return Response({'tables': job.discovered_data.get('global_counts', {})})
-
-    @action(detail=True, methods=['post'], url_path='start')
-    def start(self, request, pk=None):
-        """Start the migration in a background thread."""
-        job = self.get_object()
-
-        if job.status not in ('PENDING', 'FAILED'):
-            return Response(
-                {'error': f'Cannot start migration in status: {job.status}'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Accept business selection and sync mode
-        source_business_id = request.data.get('source_business_id')
-        source_business_name = request.data.get('source_business_name')
-        migration_mode = request.data.get('migration_mode', 'FULL')
-
-        if source_business_id:
-            job.source_business_id = int(source_business_id)
-        if source_business_name:
-            job.source_business_name = source_business_name
-        if migration_mode in ('FULL', 'SYNC'):
-            job.migration_mode = migration_mode
-        job.save()
-
-        org_id = request.headers.get('X-Tenant-Id') or \
-                 getattr(request.user, 'organization_id', None)
-
-        from apps.migration.tasks import run_migration_task
-        run_migration_task.delay(job.id, org_id)
-
-        return Response(MigrationJobSerializer(job).data)
-
-    @action(detail=True, methods=['get'], url_path='logs')
-    def logs(self, request, pk=None):
-        """Get migration mappings/logs for a job."""
-        job = self.get_object()
-        entity_type = request.query_params.get('entity_type')
-
-        mappings = MigrationMapping.objects.filter(job=job)
-        if entity_type:
-            mappings = mappings.filter(entity_type=entity_type.upper())
-
-        mappings = mappings.order_by('-created_at')[:200]
-
-        return Response({
-            'error_log': job.error_log,
-            'mappings': MigrationMappingSerializer(mappings, many=True).data
-        })
-
-    @action(detail=True, methods=['post'], url_path='rollback')
-    def rollback(self, request, pk=None):
-        """Rollback a migration — delete all imported data."""
-        job = self.get_object()
-
-        if job.status not in ('COMPLETED', 'FAILED'):
-            return Response(
-                {'error': f'Cannot rollback migration in status: {job.status}'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        deleted = MigrationRollbackService.rollback(job)
-        return Response({
-            'status': 'rolled_back',
-            'deleted_count': deleted,
-        })
-
-    def _get_job_file_path(self, job):
-        """Helper to get a local path for the migration file."""
-        if job.stored_file:
-            from apps.storage.backends import get_local_path
-            return get_local_path(
-                job.stored_file.storage_provider,
-                job.stored_file.storage_key,
-                job.stored_file.bucket
-            )
-        return job.file_path

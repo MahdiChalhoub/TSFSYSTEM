@@ -13,7 +13,17 @@ import {
     Search,
     Plus,
     Box,
-    Wallet
+    Wallet,
+    Truck,
+    Receipt,
+    UserCheck,
+    Shield,
+    History,
+    FileText,
+    BarChart3,
+    Landmark,
+    Store,
+    Bot
 } from "lucide-react"
 import { PLATFORM_CONFIG } from "@/lib/saas_config"
 
@@ -38,56 +48,107 @@ import Link from "next/link"
 
 const defaultNav = [
     {
-        title: "Dashboard",
-        url: "/dashboard",
+        title: "Overview",
+        url: "#",
         icon: LayoutDashboard,
-    },
-    {
-        title: "Inventory",
-        url: "/inventory",
-        icon: Package,
-    },
-    {
-        title: "Sales (POS)",
-        url: "/pos",
-        icon: ShoppingCart,
         items: [
-            { title: "Point of Sale", url: "/pos" },
-            { title: "History", url: "/sales/history" },
-            { title: "Returns", url: "/sales/returns" },
+            { title: "Dashboard", url: "/dashboard" },
+            { title: "Setup Wizard", url: "/setup-wizard" },
+            { title: "TaskBoard", url: "/workspace/tasks" },
+            { title: "Import Data", url: "/migration" },
         ]
     },
     {
-        title: "Purchases",
-        url: "/purchases",
-        icon: Wallet,
+        title: "Commercial",
+        url: "#",
+        icon: Store,
         items: [
-            { title: "Dashboard", url: "/purchases" },
-            { title: "Returns", url: "/purchases/returns" },
-            { title: "Sourcing", url: "/purchases/sourcing" },
+            { title: "Point of Sale", url: "/sales" },
+            { title: "Drivers", url: "/sales/drivers" },
+            { title: "User Management", url: "/users" },
+            { title: "Sales Console", url: "/sales/orders" },
+            { title: "Sales History", url: "/sales/history" },
+            { title: "Quotations", url: "/sales/quotations" },
+            { title: "Deliveries", url: "/sales/deliveries" },
+            { title: "Sales Returns", url: "/sales/returns" },
+            { title: "Credit Notes", url: "/sales/credit-notes" },
+            { title: "Discount Rules", url: "/sales/discounts" },
+            { title: "eCommerce Config", url: "/ecommerce/settings" },
+            { title: "Online Orders", url: "/ecommerce/orders" },
         ]
     },
     {
-        title: "HR & Employees",
-        url: "/hr",
+        title: "Supply Chain",
+        url: "#",
+        icon: Truck,
+        items: [
+            { title: "Procurement", url: "/purchases" },
+            { title: "Purchase Orders", url: "/purchases/purchase-orders" },
+            { title: "Purchase Returns", url: "/purchases/returns" },
+            { title: "Product Catalog", url: "/products" },
+            { title: "Categories", url: "/inventory/categories" },
+            { title: "Brands & Units", url: "/inventory/units" },
+            { title: "Warehouses", url: "/inventory/warehouses" },
+            { title: "Stock Movements", url: "/inventory/movements" },
+            { title: "Stock Counts", url: "/inventory/stock-count" },
+            { title: "Transfer Orders", url: "/inventory/transfer-orders" },
+            { title: "Low Stock Alerts", url: "/inventory/low-stock" },
+            { title: "Supplier Access", url: "/workspace/supplier-access" },
+            { title: "Supplier Portal", url: "/workspace/supplier-portal" },
+            { title: "Price Requests", url: "/workspace/price-requests" },
+        ]
+    },
+    {
+        title: "Performance",
+        url: "#",
+        icon: Landmark,
+        items: [
+            { title: "Chart of Accounts", url: "/finance/chart-of-accounts" },
+            { title: "General Ledger", url: "/finance/ledger" },
+            { title: "Fiscal Years", url: "/finance/fiscal-years" },
+            { title: "Invoices", url: "/finance/invoices" },
+            { title: "Payments", url: "/finance/payments" },
+            { title: "Expenses", url: "/finance/expenses" },
+            { title: "Bank Reconciliation", url: "/finance/bank-reconciliation" },
+            { title: "Tax (VAT) Reports", url: "/finance/tax-reports" },
+            { title: "Cash Registers", url: "/finance/cash-register" },
+            { title: "Bank Accounts", url: "/finance/accounts" },
+            { title: "Fixed Assets", url: "/finance/assets" },
+        ]
+    },
+    {
+        title: "Relationships",
+        url: "#",
         icon: Users,
+        items: [
+            { title: "Contacts & Leads", url: "/crm/contacts" },
+            { title: "Price Groups", url: "/crm/pricing" },
+            { title: "Portal Config", url: "/workspace/portal-config" },
+            { title: "Client Access", url: "/workspace/client-access" },
+            { title: "Quote Inbox", url: "/workspace/quote-inbox" },
+        ]
     },
     {
-        title: "Finance",
-        url: "/finance",
-        icon: Briefcase,
+        title: "Intelligence",
+        url: "#",
+        icon: Bot,
+        items: [
+            { title: "AI Assistant", url: "/mcp/chat" },
+            { title: "Virtual Employees", url: "/mcp/agents" },
+            { title: "Knowledge Base", url: "/mcp/conversations" },
+        ]
     },
     {
-        title: "Settings",
-        url: "/settings",
+        title: "SaaS Control",
+        url: "#",
         icon: Settings2,
         items: [
-            { title: "General", url: "/settings" },
-            { title: "POS Payment Methods", url: "/settings/pos-settings" },
-            { title: "Security", url: "/settings/security" },
+            { title: "Security & Roles", url: "/settings/roles" },
             { title: "Custom Domains", url: "/settings/domains" },
+            { title: "Audit Events", url: "/finance/events" },
+            { title: "Subscription", url: "/subscription" },
         ]
-    },
+    }
 ]
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
@@ -109,8 +170,12 @@ export function AppSidebar({ user, tenant, ...props }: AppSidebarProps) {
     // If on subdomain, /dashboard IS correct.
     // If we want explicit submodule links: /inventory, etc.
 
-    // We can pass `tenant.menu` later for dynamic access control
-    const navItems = defaultNav;
+    const navItems = defaultNav.filter(item => {
+        if (item.title === "SaaS Control") {
+            return user?.is_superuser === true || tenant?.is_saas_org === true || tenantSlug === "hq" || tenantSlug === "saas";
+        }
+        return true;
+    });
 
     return (
         <Sidebar variant="inset" {...props}>

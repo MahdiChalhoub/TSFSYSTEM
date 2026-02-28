@@ -18,7 +18,15 @@ class POSViewSet(viewsets.ViewSet):
             warehouse_id = request.data.get('warehouse_id')
             payment_account_id = request.data.get('payment_account_id')
             items = request.data.get('items')
-            scope = request.data.get('scope', 'OFFICIAL')
+            requested_scope = request.data.get('scope', 'OFFICIAL').upper()
+            
+            # --- STRICT SCOPE ENFORCEMENT ---
+            from erp.middleware import get_authorized_scope
+            authorized = get_authorized_scope() or 'official'
+            if authorized == 'official' and requested_scope == 'INTERNAL':
+                 return Response({"error": "Unauthorized: Your session is restricted to Official scope and cannot create Internal orders."}, status=403)
+            
+            scope = requested_scope
             user = request.user
             if user.is_anonymous:
                 from erp.models import User
@@ -26,7 +34,15 @@ class POSViewSet(viewsets.ViewSet):
             warehouse = Warehouse.objects.get(id=warehouse_id, organization=organization)
             order = POSService.checkout(
                 organization=organization, user=user, warehouse=warehouse,
-                payment_account_id=payment_account_id, items=items, scope=scope
+                payment_account_id=payment_account_id, items=items, scope=scope,
+                contact_id=request.data.get('contact_id'),
+                payment_method=request.data.get('payment_method', 'CASH'),
+                points_redeemed=request.data.get('points_redeemed', 0),
+                store_change_in_wallet=request.data.get('store_change_in_wallet', False),
+                cash_received=request.data.get('cash_received', 0),
+                notes=request.data.get('notes', ''),
+                global_discount=request.data.get('global_discount', 0),
+                payment_legs=request.data.get('payment_legs', [])
             )
             return Response({
                 "message": "Checkout successful",
@@ -61,15 +77,24 @@ class POSViewSet(viewsets.ViewSet):
             end = timezone.now()
             start = end - timedelta(days=days)
 
+        # Scope filtering with strict isolation
+        from erp.middleware import get_authorized_scope
+        authorized = get_authorized_scope() or 'official'
+        scope = (request.query_params.get('scope') or request.headers.get('X-Scope') or 'OFFICIAL').upper()
+        
+        if authorized == 'official' and scope == 'INTERNAL':
+            scope = 'OFFICIAL'
+        
         orders = Order.objects.filter(
             organization=organization,
+            scope=scope.upper(),
             created_at__gte=start,
             created_at__lte=end,
         )
 
         # Overall stats
         sales = orders.filter(type='SALE').aggregate(
-            count=Count('id'), total=Sum('total_amount'), tax=Sum('tax_amount'), discount=Sum('discount')
+            count=Count('id'), total=Sum('total_amount'), tax=Sum('tax_amount'), discount=Sum('discount_amount')
         )
         purchases = orders.filter(type='PURCHASE').aggregate(
             count=Count('id'), total=Sum('total_amount')
@@ -188,8 +213,17 @@ class POSViewSet(viewsets.ViewSet):
         end = timezone.now()
         start = end - timedelta(days=days)
 
+        # Scope filtering with strict isolation
+        from erp.middleware import get_authorized_scope
+        authorized = get_authorized_scope() or 'official'
+        scope = (request.query_params.get('scope') or request.headers.get('X-Scope') or 'OFFICIAL').upper()
+        
+        if authorized == 'official' and scope == 'INTERNAL':
+            scope = 'OFFICIAL'
+
         sales = Order.objects.filter(
             organization=organization, type='SALE',
+            scope=scope.upper(),
             created_at__gte=start, created_at__lte=end,
         )
 
@@ -306,9 +340,16 @@ class PosTicketViewSet(viewsets.ModelViewSet):
         """
         org_id = get_current_tenant_id()
         organization = Organization.objects.get(id=org_id)
-        tickets_data = request.data
+        
+        # Robust handling: supports direct [{}, {}] OR { "tickets": [{}, {}] }
+        data_in = request.data
+        if isinstance(data_in, dict) and 'tickets' in data_in:
+            tickets_data = data_in['tickets']
+        else:
+            tickets_data = data_in
+
         if not isinstance(tickets_data, list):
-            return Response({"error": "Expected a list of tickets"}, status=400)
+            return Response({"error": "Expected a list of tickets (directly or via 'tickets' key)"}, status=400)
 
         results = []
         for data in tickets_data:

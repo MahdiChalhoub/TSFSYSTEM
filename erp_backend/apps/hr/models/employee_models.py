@@ -22,7 +22,7 @@ class Employee(TenantModel):
     linked_account_id = models.IntegerField(null=True, blank=True, db_column='linked_account_id')
     dividends_account_id = models.IntegerField(null=True, blank=True, help_text='GL account for dividends payable (partners only)')
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, db_column='user_id')
-    home_site = models.ForeignKey('erp.Site', on_delete=models.SET_NULL, null=True, blank=True)
+    home_site = models.ForeignKey('inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True)
     address_line = models.TextField(null=True, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
     nationality = models.CharField(max_length=100, null=True, blank=True)

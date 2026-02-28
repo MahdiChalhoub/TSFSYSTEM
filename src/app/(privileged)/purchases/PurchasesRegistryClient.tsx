@@ -19,6 +19,7 @@ interface PurchaseOrder {
     total_amount: string | number
     expected_date: string
     created_at: string
+    is_legacy?: boolean
 }
 
 interface PurchasesRegistryClientProps {
@@ -67,7 +68,7 @@ export function PurchasesRegistryClient({ orders, currency, tradeSubTypesEnabled
             label: 'PO Number',
             sortable: true,
             render: (po) => (
-                <Link href={`/purchases/${po.id}`} className="flex flex-col group">
+                <Link href={`/purchases/${po.id}${po.is_legacy ? '?type=legacy' : ''}`} className="flex flex-col group">
                     <span className="font-bold text-gray-900 group-hover:text-emerald-600 transition-colors uppercase tracking-tight">
                         {po.po_number || `PO-${po.id}`}
                     </span>
@@ -165,9 +166,9 @@ export function PurchasesRegistryClient({ orders, currency, tradeSubTypesEnabled
             columns={columns}
             lifecycle={lifecycle}
             actions={{
-                onView: (po) => router.push(`/purchases/${po.id}`),
+                onView: (po) => router.push(`/purchases/${po.id}${po.is_legacy ? '?type=legacy' : ''}`),
                 extra: (po) => (
-                    <Link href={`/purchases/${po.id}`} className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all">
+                    <Link href={`/purchases/${po.id}${po.is_legacy ? '?type=legacy' : ''}`} className="p-1.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all">
                         <Clock size={16} />
                     </Link>
                 )

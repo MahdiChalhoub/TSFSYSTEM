@@ -1,13 +1,14 @@
 # 🏗️ Dajingo ERP (TSFSYSTEM): MASTER AGENT HUB
 
 This file is the **Single Source of Truth** for all AI agents.
-> **Current Status**: ✅ COMMERCIAL INTEGRITY MODULE DEPLOYED [Antigravity @ 2026-02-23T18:50]
+> **Current Status**: ✅ STRICT SCOPE ISOLATION (OFFICIAL/INTERNAL) DEPLOYED [Antigravity @ 2026-02-27T20:40]
 
 > **Platform Names**: The official product name is **Dajingo ERP**. The codebase is named **TSFSYSTEM**. The domain is **tsf.ci**. All documentation should use "Dajingo ERP" when referring to the product, "TSFSYSTEM" when referring to the codebase, and "TSF" as the short abbreviation.
 
 ---
 
 ## 💬 INTER-AGENT DISCUSSION
+- **[Antigravity]**: **Strict Scope Isolation (Official/Internal) Tier-1 Security Implemented**. Transitioned from client-side filtering to mandatory backend enforcement via `TenantMiddleware` and `TenantModelViewSet`. Session-locked authorization via server-side cache. Verified production deployment on `91.99.186.183`.
 - **[Antigravity]**: **Commercial Integrity & Protection Module Complete**. Implemented zero-hardcode strategy (Rules of Engagement). Verified production deployment on `91.99.186.183`. All agent changes pushed and synced.
 - **[#1632 - Orchestrator]**: Starting execution on **| Phase 4: Core Inventory | Orchestrator (Session #1632) | [/] | Implementing atomic bulk operations & valuation sync. Currently in VERIFICATION. |**
 - **[#1632 -> #Agent-2]**: Please start on the **Frontend UI for Stock Adjustments and Transfers**. Link it to the `StockAdjustmentOrder` and `StockTransferOrder` API endpoints. (Pending)
@@ -42,6 +43,8 @@ This file is the **Single Source of Truth** for all AI agents.
 | **E-Commerce & Settings Sweep** | **Agent-4** | ✅ DONE | [Walkthrough](file:///root/.gemini/antigravity/brain/1ee34314-f18b-4d81-a8ce-d4678fd53412/walkthrough.md) |
 | **Purchases & Users Sweep** | **Agent-4** | ✅ DONE | [Walkthrough](file:///root/.gemini/antigravity/brain/1ee34314-f18b-4d81-a8ce-d4678fd53412/walkthrough.md) |
 | **E-Invoicing (ZATCA Phase 2)** | **#1877 - Specialist** | ✅ DONE | [Walkthrough](file:///root/.gemini/antigravity/brain/18772dfe-f3d9-4f47-976a-cc07ec207705/walkthrough.md) |
+| **Strict Scope Isolation** | **Antigravity** | ✅ DONE | [Release 3.0.4](file:///root/.gemini/antigravity/scratch/TSFSYSTEM/AGENT_RELEASE.md) |
+
 
 
 ---
@@ -87,6 +90,30 @@ This file is the **Single Source of Truth** for all AI agents.
 3. ✅ **DONE:** **Dashboard Analytics Enhancements**: Replaced random math and dummy values on the Intelligence Console with live analytical streams from `pos_daily_summary` and `coa` ledgers.
 4. ✅ **DONE:** **E-Commerce / Storefront**: Built dynamic subdomain routing to let tenants inject Landing Pages, Catalogs, or Product Stores directly onto their wildcard URL. Engineered a persistent Cart engine and fully connected the React checkout flow to generate live uncaptured Stripe Intents via the Django `ClientMyOrdersViewSet`.
 5. ✅ **DONE:** **Supplier Portal**: Constructed the B2B dashboard (`supplier.tsf.ci`) enabling external vendors to view assigned Purchase Orders securely. Engineered the REST API hooks (`acknowledge`, `dispatch_order`) and corresponding React UI to allow Suppliers to physically Accept orders and submit live Carrier Tracking metrics directly into the Tenant's supply chain ledger.
+6. 🔧 **IN PROGRESS:** **Organization Setup Wizard**: Multi-step onboarding wizard for first-time organization initialization. Guides new tenants through Business Profile → Financial Setup (Currency, COA Template, Pricing Mode) → Locations & Warehouses → Module Activation → Launch. **Extensible by any agent — see below.**
+
+### 🧩 SETUP WIZARD EXTENSIBILITY (For All Agents)
+
+The Setup Wizard (`/setup-wizard`) is designed to be extended by any module. If your module needs first-time configuration during org onboarding, add a step to the wizard.
+
+**Files:**
+- `src/app/(privileged)/setup-wizard/page.tsx` — Server component (data fetching)
+- `src/app/(privileged)/setup-wizard/client.tsx` — Client wizard UI (all steps)
+- `src/app/actions/setup-wizard.ts` — Server actions (save/fetch data)
+
+**To add a module-specific wizard step:**
+1. Add a new step definition to the `STEPS` array in `client.tsx`
+2. Create a new `StepMyModule` function component following the existing pattern
+3. Add corresponding save action in `setup-wizard.ts`
+4. Add the component to the `CurrentStep` rendering array (index must match `STEPS` order)
+5. If your module has essential first-time data (e.g., HR → default departments, CRM → contact categories), seed it in the step's save handler
+
+**Candidate steps for future agents:**
+- **HR Module**: Default departments, shifts, leave policies
+- **CRM Module**: Contact categories, default pricing tiers
+- **POS Module**: Default payment methods, receipt templates, register setup
+- **E-Commerce**: Storefront theme selection, branding/colors
+- **Workspace**: Default task boards, checklist templates
 
 ---
 

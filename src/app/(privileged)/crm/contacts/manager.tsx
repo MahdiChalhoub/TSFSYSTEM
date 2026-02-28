@@ -1,5 +1,6 @@
 'use client';
 import { useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { TypicalListView, type ColumnDef } from '@/components/common/TypicalListView';
 import { TypicalFilter } from '@/components/common/TypicalFilter';
 import { useListViewSettings } from '@/hooks/useListViewSettings';
@@ -19,12 +20,15 @@ const ALL_COLUMNS: ColumnDef<Contact>[] = [
 ];
 export default function RelationshipMasterList({
     contacts,
-    sites
+    sites,
+    deliveryZones = []
 }: {
     contacts: Contact[],
-    sites: Record<string, any>[]
+    sites: Record<string, any>[],
+    deliveryZones?: Record<string, any>[]
 }) {
     const { fmt } = useCurrency();
+    const router = useRouter();
     const settings = useListViewSettings('crm_contacts_v3', {
         columns: ALL_COLUMNS.map(c => c.key),
         pageSize: 20,
@@ -105,7 +109,7 @@ export default function RelationshipMasterList({
         return { ...c, render: renderers[c.key] };
     });
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
             <TypicalListView<Contact>
                 title="Relationship Ledger"
                 data={filtered}
@@ -137,11 +141,17 @@ export default function RelationshipMasterList({
                     </div>
                 }
                 actions={{
-                    onEdit: (r) => toast.info(`Accessing secure profile for ${r.name}`),
+                    onView: (r) => router.push(`/crm/contacts/${r.id}`),
+                    onEdit: (r) => router.push(`/crm/contacts/${r.id}`),
                     extra: (r) => (
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50">
+                        <button
+                            type="button"
+                            className="p-1.5 text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                            onClick={(e) => { e.stopPropagation(); router.push(`/crm/contacts/${r.id}`); }}
+                            title="Open contact profile"
+                        >
                             <ExternalLink size={14} />
-                        </Button>
+                        </button>
                     )
                 }}
             >
@@ -171,7 +181,11 @@ export default function RelationshipMasterList({
                 <ContactModal
                     sites={sites}
                     type={modalType}
-                    onClose={() => setIsModalOpen(false)}
+                    onClose={() => {
+                        setIsModalOpen(false);
+                        router.refresh(); // reload contact list after creation
+                    }}
+                    deliveryZones={deliveryZones}
                 />
             )}
         </div>

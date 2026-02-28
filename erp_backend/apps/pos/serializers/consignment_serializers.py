@@ -10,7 +10,7 @@ class ConsignmentSettlementLineSerializer(serializers.ModelSerializer):
         model = ConsignmentSettlementLine
         fields = [
             'id', 'order_line', 'product_name', 'sku', 'order_ref',
-            'total_amount'
+            'payout_amount'
         ]
 
 

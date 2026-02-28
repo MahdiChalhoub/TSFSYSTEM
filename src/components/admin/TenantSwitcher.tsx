@@ -39,14 +39,14 @@ export function TenantSwitcher({ organizations, forcedSlug, user }: { organizati
                 onClick={() => !isLocked && setIsOpen(!isOpen)}
                 suppressHydrationWarning={true}
                 className={clsx(
-                    "flex items-center gap-3 px-4 py-2 rounded-2xl border transition-all group",
+                    "flex items-center gap-2 px-2 py-1 rounded-xl border transition-all group",
                     isLocked
                         ? "bg-transparent border-transparent cursor-default"
                         : "bg-emerald-500/10 border-emerald-500/20 hover:bg-emerald-500/20 cursor-pointer"
                 )}
             >
-                <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-900/20">
-                    <Building size={16} />
+                <div className="w-7 h-7 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-900/20">
+                    <Building size={14} />
                 </div>
                 <div className="text-left hidden lg:block">
                     <div className="text-[10px] font-black text-emerald-500 uppercase tracking-widest leading-none mb-0.5">

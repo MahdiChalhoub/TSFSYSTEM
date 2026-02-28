@@ -46,7 +46,7 @@ class ProvisioningService:
         
         Returns the created Organization instance.
         """
-        from .models import Organization, Site, Warehouse
+        from .models import Organization, Warehouse
         
         with transaction.atomic():
             # ── KERNEL OBJECTS (always created, no module dependency) ──
@@ -59,19 +59,21 @@ class ProvisioningService:
                 base_currency_id=base_currency_id
             )
             
-            # 2. Main Site
-            site = Site.objects.create(
+            # 2. Main Branch (replaces old Site model — now a BRANCH-type Warehouse)
+            branch = Warehouse.objects.create(
                 organization=org,
                 name="Main Branch",
-                code="MAIN"
+                code="MAIN",
+                location_type="BRANCH"
             )
 
-            # 3. Main Warehouse
+            # 3. Main Warehouse (child of the branch)
             Warehouse.objects.create(
                 organization=org,
-                site=site,
+                parent=branch,
                 name="Main Warehouse",
-                code="WH01"
+                code="WH01",
+                location_type="WAREHOUSE"
             )
 
             # 4. Auto-grant all installed modules to new org
@@ -105,7 +107,7 @@ class ProvisioningService:
             'org_slug': slug,
             'business_type_id': business_type_id,
             'base_currency_id': base_currency_id,
-            'site_id': str(site.id),
+            'site_id': str(branch.id),
         }
         
         try:
@@ -141,7 +143,7 @@ class ConfigurationService:
     def get_posting_rules(organization):
         """Read posting rules from Organization.settings JSON."""
         default_config = {
-            "sales": {"receivable": None, "revenue": None, "cogs": None, "inventory": None},
+            "sales": {"receivable": None, "revenue": None, "cogs": None, "inventory": None, "round_off": None, "discount": None},
             "purchases": {"payable": None, "inventory": None, "tax": None},
             "inventory": {"adjustment": None, "transfer": None},
             "automation": {"customerRoot": None, "supplierRoot": None, "payrollRoot": None},

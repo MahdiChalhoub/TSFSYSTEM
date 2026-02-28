@@ -9,7 +9,7 @@ from django.test import TestCase
 from rest_framework.test import APIClient
 from rest_framework import status
 
-from erp.models import Organization, User, Site
+from erp.models import Organization, User
 
 
 class APITestBase(TestCase):
@@ -17,11 +17,16 @@ class APITestBase(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.org = Organization.objects.create(name="API Test Org", slug="api-test")
-        cls.site = Site.objects.create(organization=cls.org, name="HQ", code="HQ")
+        import uuid
+        cls.org = Organization.objects.create(
+            name="API Test Org", 
+            slug=f"api-test-{uuid.uuid4().hex[:8]}"
+        )
         cls.user = User.objects.create_user(
-            username="api_user", password="test123",
-            email="api@test.com", organization=cls.org,
+            username=f"api_user_{uuid.uuid4().hex[:8]}", 
+            password="test123",
+            email=f"api_{uuid.uuid4().hex[:8]}@test.com", 
+            organization=cls.org,
         )
 
     def setUp(self):
@@ -90,7 +95,7 @@ class TestInventoryEndpoints(APITestBase):
             selling_price_ttc=Decimal("27.50"), tva_rate=Decimal("0.10"),
         )
         cls.wh = Warehouse.objects.create(
-            organization=cls.org, name="API Warehouse", site=cls.site,
+            organization=cls.org, name="API Warehouse",
         )
 
     def test_products_list_returns_200(self):
@@ -201,10 +206,16 @@ class TestTenantIsolationAPI(APITestBase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        cls.org2 = Organization.objects.create(name="Other Org", slug="other-org")
+        import uuid
+        cls.org2 = Organization.objects.create(
+            name="Other Org", 
+            slug=f"other-org-{uuid.uuid4().hex[:8]}"
+        )
         cls.user2 = User.objects.create_user(
-            username="user2", password="test123",
-            email="user2@test.com", organization=cls.org2,
+            username=f"user2_{uuid.uuid4().hex[:8]}", 
+            password="test123",
+            email=f"user2_{uuid.uuid4().hex[:8]}@test.com", 
+            organization=cls.org2,
         )
         from apps.inventory.models import Unit, Category, Product
         unit = Unit.objects.create(organization=cls.org2, name="Unit2", code="U2B")

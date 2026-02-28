@@ -29,6 +29,9 @@ export type AssetInput = {
     depreciation_expense_coa_id?: number
     accumulated_depreciation_coa_id?: number
     scope?: string
+    // Units of Production specific
+    total_production_capacity?: number
+    production_unit_name?: string // e.g., "Miles", "Pieces", "Hours"
 }
 
 export async function createAsset(data: AssetInput) {

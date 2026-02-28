@@ -32,6 +32,9 @@ class ReportViewSet(TenantModelViewSet):
         org_id = get_current_tenant_id()
         export_format = request.data.get('export_format')
         background = request.data.get('background', False)
+        
+        from erp.middleware import get_authorized_scope
+        auth_scope = get_authorized_scope() or 'official'
 
         # Background execution via Celery
         if background:
@@ -39,7 +42,8 @@ class ReportViewSet(TenantModelViewSet):
                 from erp.tasks import run_report_async
                 task = run_report_async.delay(
                     str(report_def.pk), str(org_id),
-                    export_format=export_format or report_def.default_export_format
+                    export_format=export_format or report_def.default_export_format,
+                    authorized_scope=auth_scope
                 )
                 return Response({
                     'status': 'QUEUED',
@@ -59,7 +63,7 @@ class ReportViewSet(TenantModelViewSet):
             started_at=timezone.now(),
         )
 
-        service = ReportService(org_id)
+        service = ReportService(org_id, authorized_scope=auth_scope)
 
         try:
             if export_format:

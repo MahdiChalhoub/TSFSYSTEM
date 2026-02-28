@@ -1,132 +1,154 @@
 import Link from 'next/link';
 import { erpFetch } from "@/lib/erp-api";
-import { Plus, Search, Layers, Globe, ChevronLeft, ChevronRight, Edit2, Copy, Barcode } from 'lucide-react';
+import { Plus, Search, Layers, ChevronLeft, ChevronRight, Filter, ShieldCheck, Database } from 'lucide-react';
+import ProductDashboardStats from './ProductStats';
+import { ProductRow, GroupRow } from './ProductRows';
 
 export const dynamic = 'force-dynamic';
 
 const PAGE_SIZE = 50;
 
-async function getProducts(page: number) {
+async function getProductsData(page: number, isGrouped: boolean, search?: string) {
     try {
-        // Backend pagination expected: ?page=X (DRF default)
-        // We assume backend page_size is consistent or we pass it if supported.
-        // Standard DRF PageNumberPagination returns { count, next, previous, results }
-        const data = await erpFetch(`products/?page=${page}&page_size=${PAGE_SIZE}`);
+        const endpoint = isGrouped ? 'product-groups/' : 'products/';
+        const query = `page=${page}&page_size=${PAGE_SIZE}${search ? `&search=${search}` : ''}`;
+
+        const [data, stats] = await Promise.all([
+            erpFetch(`${endpoint}?${query}`),
+            erpFetch('inventory/products/data-quality/')
+        ]);
+
         const results = data.results || [];
         const total = data.count || 0;
 
         return {
             data: results,
             total,
-            totalPages: Math.ceil(total / PAGE_SIZE)
+            totalPages: Math.ceil(total / PAGE_SIZE),
+            stats
         };
     } catch (e) {
         console.error("Failed to fetch products:", e);
-        return { data: [], total: 0, totalPages: 0 };
+        return { data: [], total: 0, totalPages: 0, stats: null };
     }
 }
 
-async function getGroups(page: number) {
-    try {
-        const data = await erpFetch(`product-groups/?page=${page}&page_size=${PAGE_SIZE}`);
-        const results = data.results || [];
-        const total = data.count || 0;
-
-        return {
-            data: results,
-            total,
-            totalPages: Math.ceil(total / PAGE_SIZE)
-        };
-    } catch (e) {
-        console.error("Failed to fetch product groups:", e);
-        return { data: [], total: 0, totalPages: 0 };
-    }
-}
-
-export default async function ProductsPage({ searchParams }: { searchParams: Promise<{ view?: string, page?: string }> }) {
+export default async function ProductsPage({
+    searchParams
+}: {
+    searchParams: Promise<{ view?: string, page?: string, search?: string }>
+}) {
     const params = await searchParams;
     const isGrouped = params.view === 'grouped';
     const page = Number(params.page) || 1;
+    const search = params.search || '';
 
-    const { data, total, totalPages } = isGrouped ? await getGroups(page) : await getProducts(page);
+    const { data, total, totalPages, stats } = await getProductsData(page, isGrouped, search);
 
     return (
-        <div className="p-8 space-y-10 animate-in fade-in duration-500 max-w-[1600px] mx-auto">
-            {/* Header */}
-            <header className="flex flex-col md:flex-row justify-between items-center gap-6">
-                <div>
-                    <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-[1.5rem] bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200 text-white">
-                            <Layers size={28} />
+        <div className="p-8 space-y-10 animate-in fade-in duration-700 max-w-[1600px] mx-auto pb-24">
+            {/* 1. Header Section */}
+            <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 bg-white/40 p-8 rounded-[3rem] border border-white/60 shadow-xl shadow-gray-200/20 backdrop-blur-xl">
+                <div className="flex items-center gap-6">
+                    <div className="w-20 h-20 rounded-[2rem] bg-emerald-600 flex items-center justify-center shadow-2xl shadow-emerald-500/30 text-white transform hover:rotate-6 transition-transform">
+                        <Database size={38} strokeWidth={2.5} />
+                    </div>
+                    <div>
+                        <div className="flex items-center gap-3">
+                            <h1 className="text-5xl font-black tracking-tighter text-gray-900">
+                                Product <span className="text-emerald-600">Master</span>
+                            </h1>
+                            <div className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-200 shadow-sm">
+                                V2.5 Registry
+                            </div>
                         </div>
-                        Product <span className="text-emerald-600">Registry</span>
-                    </h1>
-                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Global Catalog & Master Data Management</p>
+                        <p className="text-sm font-bold text-gray-400 mt-2 uppercase tracking-[0.2em] flex items-center gap-2">
+                            <ShieldCheck size={14} className="text-emerald-500" />
+                            Certified Master Data Management System
+                        </p>
+                    </div>
                 </div>
-                <div className="flex gap-4">
+
+                <div className="flex items-center gap-3">
                     <Link
                         href="/products/new"
-                        className="bg-white border border-gray-100 text-gray-700 px-6 h-12 rounded-2xl font-bold shadow-sm hover:bg-gray-50 hover:border-gray-200 transition-all flex items-center gap-2 group"
+                        className="bg-white border-2 border-emerald-100 text-emerald-700 px-8 h-14 rounded-2xl font-black shadow-xl shadow-emerald-500/5 hover:bg-emerald-50 hover:border-emerald-200 transition-all flex items-center gap-3 group active:scale-95"
                     >
-                        <Plus size={18} className="text-emerald-600 group-hover:scale-110 transition-transform" />
-                        <span>Single Product</span>
+                        <Plus size={20} className="group-hover:rotate-90 transition-transform" />
+                        <span>SINGLE PRODUCT</span>
                     </Link>
                     <Link
                         href="/products/create-group"
-                        className="bg-emerald-600 text-white px-6 h-12 rounded-2xl font-bold shadow-lg shadow-emerald-100 hover:bg-emerald-700 hover:shadow-xl hover:scale-105 transition-all flex items-center gap-2"
+                        className="bg-emerald-600 text-white px-8 h-14 rounded-2xl font-black shadow-2xl shadow-emerald-500/20 hover:bg-emerald-700 hover:shadow-emerald-500/40 hover:-translate-y-1 transition-all flex items-center gap-3 active:scale-95"
                     >
-                        <Layers size={18} />
-                        <span>Create Group</span>
+                        <Layers size={20} />
+                        <span>VARIANT GROUP</span>
                     </Link>
                 </div>
             </header>
 
-            {/* View Toggle & Filters Header */}
-            <div className="flex flex-col sm:flex-row gap-6 items-center justify-between bg-white/50 p-6 rounded-[2.5rem] border border-gray-100 shadow-sm">
-                <div className="flex p-1.5 bg-gray-100/80 rounded-2xl">
+            {/* 2. Intelligence Section */}
+            {stats && <ProductDashboardStats stats={stats} />}
+
+            {/* 3. Toolbar Section */}
+            <div className="flex flex-col lg:flex-row gap-6 items-center justify-between bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-2xl shadow-gray-200/10">
+                <div className="flex p-2 bg-gray-50 rounded-2xl border border-gray-100">
                     <Link
-                        href="/products?view=flat"
-                        className={`px-5 py-2.5 rounded-xl text-sm font-black tracking-tight transition-all ${!isGrouped ? 'bg-white shadow-lg shadow-gray-200/50 text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+                        href={`/products?view=flat&search=${search}`}
+                        className={`px-8 py-3 rounded-xl text-xs font-black tracking-widest transition-all uppercase flex items-center gap-2 ${!isGrouped ? 'bg-white shadow-xl shadow-gray-200/50 text-gray-900 border border-gray-100' : 'text-gray-400 hover:text-gray-600'}`}
                     >
-                        DETAILED (SKUs)
+                        <Search size={14} /> Detailed (SKUs)
                     </Link>
                     <Link
-                        href="/products?view=grouped"
-                        className={`px-5 py-2.5 rounded-xl text-sm font-black tracking-tight transition-all ${isGrouped ? 'bg-white shadow-lg shadow-gray-200/50 text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+                        href={`/products?view=grouped&search=${search}`}
+                        className={`px-8 py-3 rounded-xl text-xs font-black tracking-widest transition-all uppercase flex items-center gap-2 ${isGrouped ? 'bg-white shadow-xl shadow-gray-200/50 text-gray-900 border border-gray-100' : 'text-gray-400 hover:text-gray-600'}`}
                     >
-                        GROUPED (MASTER)
+                        <Layers size={14} /> Grouped (Master)
                     </Link>
                 </div>
 
-                <div className="flex gap-4 w-full max-w-xl">
-                    <div className="relative flex-1 group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none group-focus-within:text-emerald-500 transition-colors" size={20} />
+                <div className="flex gap-4 w-full max-w-2xl">
+                    <form action="/products" className="relative flex-1 group">
+                        <input type="hidden" name="view" value={isGrouped ? 'grouped' : 'flat'} />
+                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none group-focus-within:text-emerald-500 transition-colors" size={22} />
                         <input
                             type="text"
-                            placeholder="Search master catalog..."
-                            className="w-full pl-12 pr-4 h-12 bg-white rounded-2xl border border-gray-100 focus:border-emerald-500/50 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all shadow-sm"
+                            name="search"
+                            defaultValue={search}
+                            placeholder="Find product by name, SKU or barcode..."
+                            className="w-full pl-14 pr-6 h-16 bg-gray-50/50 rounded-3xl border-2 border-transparent focus:border-emerald-500/20 focus:bg-white focus:ring-8 focus:ring-emerald-500/5 outline-none transition-all font-bold text-gray-800 placeholder:text-gray-300 placeholder:font-medium text-lg"
                         />
-                    </div>
+                    </form>
+                    <button className="h-16 w-16 bg-white border-2 border-gray-50 rounded-3xl flex items-center justify-center text-gray-400 hover:text-emerald-600 hover:border-emerald-100 shadow-sm transition-all hover:rotate-12">
+                        <Filter size={24} />
+                    </button>
                 </div>
             </div>
 
-            {/* Table */}
-            <div className="card-premium p-0 overflow-hidden shadow-xl border border-white/50">
+            {/* 4. Table Section */}
+            <div className="bg-white rounded-[3rem] overflow-hidden shadow-2xl shadow-gray-200/20 border border-gray-100">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="bg-gray-50/50 border-b border-gray-200 text-xs uppercase tracking-wider text-gray-500 font-semibold text-left">
-                                <th className="py-5 px-8">Product / Master</th>
-                                <th className="py-5 px-8">Origin / Variants</th>
-                                <th className="py-5 px-8">Code / SKU</th>
-                                <th className="py-5 px-8">Stock Level</th>
-                                <th className="py-5 px-8 text-right">Actions</th>
+                            <tr className="bg-gray-50/30 border-b border-gray-100 text-[10px] uppercase tracking-[0.2em] text-gray-400 font-black">
+                                <th className="py-8 px-10">Entity Identity</th>
+                                <th className="py-8 px-10">Origin & Attributes</th>
+                                <th className="py-8 px-10">Logistics Codes</th>
+                                <th className="py-8 px-10">Current Inventory</th>
+                                <th className="py-8 px-10 text-right">Master Control</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
+                        <tbody className="divide-y divide-gray-50">
                             {data.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="py-12 text-center text-gray-500">No products found.</td>
+                                    <td colSpan={5} className="py-32 text-center">
+                                        <div className="flex flex-col items-center gap-4 opacity-20">
+                                            <div className="w-20 h-20 rounded-full border-4 border-emerald-600 flex items-center justify-center">
+                                                <Search size={40} className="text-emerald-600" />
+                                            </div>
+                                            <p className="text-xl font-black uppercase tracking-widest text-emerald-900">No results found</p>
+                                        </div>
+                                    </td>
                                 </tr>
                             ) : (
                                 data.map((item: Record<string, any>) => isGrouped ? <GroupRow key={item.id} group={item} /> : <ProductRow key={item.id} product={item} />)
@@ -135,141 +157,46 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
                     </table>
                 </div>
 
-                {/* Pagination Controls */}
-                <div className="bg-white border-t border-gray-100 px-8 py-6 flex items-center justify-between text-sm text-gray-600">
-                    <div className="flex items-center gap-2">
-                        <span className="font-semibold text-gray-900 text-base">{total}</span>
-                        <span className="text-gray-500 text-base">items total</span>
-                    </div>
-                    {totalPages > 1 && (
-                        <div className="flex items-center gap-3">
-                            <Link
-                                href={`/products?view=${isGrouped ? 'grouped' : 'flat'}&page=${page > 1 ? page - 1 : 1}`}
-                                className={`px-4 py-2 flex items-center gap-2 border border-gray-200 rounded-xl font-semibold hover:bg-gray-50 transition-all ${page <= 1 ? 'opacity-50 pointer-events-none' : ''}`}
-                            >
-                                <ChevronLeft size={16} /> Previous
-                            </Link>
-                            <span className="font-mono bg-gray-100 px-3 py-2 rounded-lg">Page {page} of {totalPages}</span>
-                            <Link
-                                href={`/products?view=${isGrouped ? 'grouped' : 'flat'}&page=${page < totalPages ? page + 1 : totalPages}`}
-                                className={`px-4 py-2 flex items-center gap-2 border border-gray-200 rounded-xl font-semibold hover:bg-gray-50 transition-all ${page >= totalPages ? 'opacity-50 pointer-events-none' : ''}`}
-                            >
-                                Next <ChevronRight size={16} />
-                            </Link>
+                {/* 5. Pagination Layer */}
+                <div className="bg-gray-50/30 px-10 py-10 flex flex-col md:flex-row items-center justify-between gap-6 border-t border-gray-50">
+                    <div className="flex items-center gap-4 bg-white px-6 py-3 rounded-2xl border border-gray-100 shadow-sm">
+                        <div className="flex flex-col">
+                            <span className="text-2xl font-black text-gray-900 leading-none">{total.toLocaleString()}</span>
+                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Total Artifacts</span>
                         </div>
+                        <div className="w-px h-8 bg-gray-100 mx-2" />
+                        <div className="flex flex-col">
+                            <span className="text-2xl font-black text-emerald-600 leading-none">{totalPages}</span>
+                            <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mt-1">Master Pages</span>
+                        </div>
+                    </div>
+
+                    {totalPages > 1 && (
+                        <nav className="flex items-center gap-3">
+                            <Link
+                                href={`/products?view=${isGrouped ? 'grouped' : 'flat'}&page=${page > 1 ? page - 1 : 1}&search=${search}`}
+                                className={`h-14 px-6 flex items-center gap-3 bg-white border border-gray-100 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-gray-50 hover:border-gray-200 transition-all shadow-sm active:translate-y-1 ${page <= 1 ? 'opacity-30 pointer-events-none' : ''}`}
+                            >
+                                <ChevronLeft size={18} /> Prev
+                            </Link>
+
+                            <div className="flex h-14 items-center bg-white px-6 rounded-2xl border border-gray-100 shadow-sm font-black text-sm tabular-nums">
+                                <span className="text-gray-400">PAGE</span>
+                                <span className="mx-2 text-gray-900">{page}</span>
+                                <span className="text-gray-200 mx-1">/</span>
+                                <span className="text-gray-400">{totalPages}</span>
+                            </div>
+
+                            <Link
+                                href={`/products?view=${isGrouped ? 'grouped' : 'flat'}&page=${page < totalPages ? page + 1 : totalPages}&search=${search}`}
+                                className={`h-14 px-6 flex items-center gap-3 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-500/20 active:translate-y-1 ${page >= totalPages ? 'opacity-30 pointer-events-none' : ''}`}
+                            >
+                                Next <ChevronRight size={18} />
+                            </Link>
+                        </nav>
                     )}
                 </div>
             </div>
         </div>
-    );
-}
-
-function ProductRow({ product }: { product: Record<string, any> }) {
-    const totalStock = product.inventory?.reduce((acc: number, inv: Record<string, any>) => acc + Number(inv.quantity), 0) || 0;
-
-    return (
-        <tr className="hover:bg-gray-50/60 transition-colors">
-            <td className="py-6 px-8">
-                <div className="flex flex-col gap-1">
-                    <span className="font-bold text-gray-900">{product.name}</span>
-                    <span className="text-xs text-gray-500">{product.brand?.name} ΓÇó {product.category?.name}</span>
-                    {product.productGroupId && <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 rounded w-fit">Part of Group</span>}
-                </div>
-            </td>
-            <td className="py-6 px-8">
-                {product.country ? (
-                    <div className="flex items-center gap-1.5">
-                        <Globe size={14} className="text-gray-400" />
-                        <span className="text-sm font-medium">{product.country.name}</span>
-                        <span className="text-xs bg-gray-100 px-1 rounded text-gray-500">{product.country.code}</span>
-                    </div>
-                ) : <span className="text-gray-400">ΓÇ—</span>}
-
-                {Number(product.size) > 0 && (
-                    <div className="text-xs text-gray-500 mt-1">{Number(product.size)} {product.sizeUnit?.shortName}</div>
-                )}
-            </td>
-            <td className="py-6 px-8">
-                <div className="flex flex-col gap-1">
-                    <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded w-fit">{product.sku}</span>
-                    {product.barcode && <span className="text-xs text-gray-400 flex items-center gap-1"><Barcode size={10} /> {product.barcode}</span>}
-                </div>
-            </td>
-            <td className="py-6 px-8">
-                <span className={`font-bold ${totalStock > 0 ? 'text-emerald-700' : 'text-red-500'}`}>
-                    {totalStock} {product.unit?.shortName}
-                </span>
-            </td>
-            <td className="py-6 px-8 text-right">
-                <div className="flex items-center justify-end gap-2">
-                    <Link
-                        href={`/products/new?cloneId=${product.id}`}
-                        className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
-                        title="Clone Product"
-                    >
-                        <Copy size={18} />
-                    </Link>
-                    <Link
-                        href={`/products/${product.id}/edit`}
-                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                        title="Edit Product"
-                    >
-                        <Edit2 size={18} />
-                    </Link>
-                </div>
-            </td>
-        </tr>
-    );
-}
-
-function GroupRow({ group }: { group: Record<string, any> }) {
-    // Aggregate Stock
-    const totalVarStock = group.products?.reduce((acc: number, p: Record<string, any>) => {
-        const pStock = p.inventory?.reduce((invAcc: number, inv: Record<string, any>) => invAcc + Number(inv.quantity), 0) || 0;
-        return acc + pStock;
-    }, 0) || 0;
-
-    const variantCount = group.products?.length || 0;
-    // Extract Unique Countries
-    const uniqueCountries = Array.from(new Set(group.products?.map((p: any) => p.country?.code).filter(Boolean)));
-
-    return (
-        <tr className="hover:bg-gray-50/60 transition-colors bg-gray-50/30">
-            <td className="py-6 px-8">
-                <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-2">
-                        <Layers size={16} className="text-emerald-600" />
-                        <span className="font-bold text-gray-900 text-lg">{group.name}</span>
-                    </div>
-                    <span className="text-xs text-gray-500 pl-6">{group.brand?.name} ΓÇó {group.category?.name}</span>
-                </div>
-            </td>
-            <td className="py-6 px-8">
-                <div className="flex flex-col gap-1">
-                    <span className="text-sm font-medium text-gray-900">{variantCount} Variants</span>
-                    <div className="flex gap-1 flex-wrap">
-                        {uniqueCountries.map((c: any) => (
-                            <span key={c} className="text-[10px] bg-white border border-gray-200 px-1.5 py-0.5 rounded shadow-sm flex items-center gap-0.5">
-                                <Globe size={8} className="text-gray-400" /> {c}
-                            </span>
-                        ))}
-                    </div>
-                </div>
-            </td>
-            <td className="py-6 px-8">
-                <span className="text-xs text-gray-400 italic">Var. SKUs</span>
-            </td>
-            <td className="py-6 px-8">
-                <div className="flex flex-col">
-                    <span className="font-bold text-emerald-800 text-lg">{totalVarStock}</span>
-                    <span className="text-xs text-emerald-600">Total Units</span>
-                </div>
-            </td>
-            <td className="py-6 px-8 text-right">
-                <Link href={`/products/groups/${group.id}/edit`} className="text-sm font-semibold text-emerald-600 hover:text-emerald-700 flex items-center justify-end gap-1">
-                    <Edit2 size={16} /> Edit
-                </Link>
-            </td>
-        </tr>
     );
 }

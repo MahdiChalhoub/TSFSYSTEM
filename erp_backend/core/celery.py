@@ -18,8 +18,17 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 # Auto-discover tasks from all installed apps
 app.autodiscover_tasks()
 
+# ── Celery Beat Schedule ─────────────────────────────────────────────────────
+app.conf.beat_schedule = {
+    'detect-stalled-migrations': {
+        'task': 'apps.migration.detect_stalled_jobs',
+        'schedule': 300.0,  # Every 5 minutes
+    },
+}
+
 
 @app.task(bind=True, ignore_result=True)
 def debug_task(self):
     """Debug task to verify Celery is working."""
     print(f'Request: {self.request!r}')
+

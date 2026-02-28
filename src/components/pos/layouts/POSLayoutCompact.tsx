@@ -5,17 +5,20 @@ import { ProductGrid } from '@/components/pos/ProductGrid';
 import { CompactClientHeader } from '@/components/pos/CompactClientHeader';
 import { ManagerOverride } from '@/components/pos/ManagerOverride';
 import { ReceiptModal } from '@/components/pos/ReceiptModal';
+import { POSToolbar } from '@/components/pos/POSToolbar';
 import {
     Search, ShoppingCart, Plus, X, Minus, Trash2, User, ChevronDown,
     Layout, Maximize, Minimize, FileText, Settings, Wallet, Save,
     Book, File, ArrowLeft, CreditCard, Banknote, Zap, Calculator,
-    History, GripHorizontal
+    History, GripHorizontal, Wifi, WifiOff, MapPin, RefreshCw
 } from 'lucide-react';
 import clsx from 'clsx';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { useRef, useState, useEffect } from 'react';
 import { Numpad as POSNumpad } from '@/components/pos/Numpad';
+import { MultiPaymentHub } from '@/components/pos/MultiPaymentHub';
+
 
 const formatNumber = (num: number | string) => {
     const val = Number(num) || 0;
@@ -43,8 +46,22 @@ export function POSLayoutCompact(props: POSLayoutProps) {
         onClearCart, onCreateNewSession, onRemoveSession, onUpdateActiveSession,
         onToggleFullscreen, onCharge, onSync, onSetIsOnline,
         onSetClientSearchQuery, onSetDeliveryZone, onOpenLayoutSelector,
-        onSetOverrideOpen, onSetReceiptOpen
+        onSetOverrideOpen, onSetReceiptOpen,
+        onSetNotes,
+        currentLayout, onSearchClients
     } = props;
+    const registerConfig = (props as any).registerConfig;
+    const onLockRegister = (props as any).onLockRegister || (() => { });
+    const paymentMethods = (props as any).paymentMethods || [
+        { key: 'CASH', label: 'CASH' },
+        { key: 'CARD', label: 'CARD' },
+        { key: 'WALLET', label: 'WALLET' },
+        { key: 'OM', label: 'OM' },
+        { key: 'WAVE', label: 'WAVE' },
+        { key: 'MULTI', label: 'MULTI' }
+    ];
+    const [isMultiPayMode, setIsMultiPayMode] = useState(false);
+
     const receivedNum = Number(cashReceived) || 0;
     const changeDue = receivedNum > totalAmount ? receivedNum - totalAmount : 0;
 
@@ -91,108 +108,44 @@ export function POSLayoutCompact(props: POSLayoutProps) {
         };
     }, [isDragging]);
 
-    const filteredClients = clients.filter(c =>
-        c.name.toLowerCase().includes(clientSearchQuery.toLowerCase()) ||
-        c.phone.includes(clientSearchQuery)
-    );
+    const filteredClients = clients;
 
     return (
         <div className={clsx(
             "flex flex-col bg-[#0f1117] overflow-hidden select-none h-full text-gray-100",
             isFullscreen ? "fixed inset-0 z-[1000] h-screen w-screen" : "absolute inset-0"
         )}>
-            {/* ═══════ HEADER — FULL FEATURE (Dark) ═══════ */}
-            <header className="h-12 bg-[#1a1d27] border-b border-[#2a2d37] flex items-center justify-between px-4 shrink-0 z-50">
-                <div className="flex items-center gap-4">
-                    <h1 className="text-lg font-black tracking-tighter text-gray-100 flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
-                            <Zap size={16} className="text-white" />
-                        </div>
-                        <span className="text-amber-400">Speed</span> Terminal
-                    </h1>
-
-                    {/* Session Tabs */}
-                    <div className="flex gap-1 ml-2 overflow-x-auto max-w-md no-scrollbar">
-                        {sessions.map(s => (
-                            <div key={s.id} className="flex shrink-0 group">
-                                <button
-                                    onClick={() => onSetActiveSessionId(s.id)}
-                                    className={clsx(
-                                        "flex items-center gap-1 px-2.5 py-1 rounded text-[8px] font-black uppercase tracking-widest transition-all font-mono",
-                                        activeSessionId === s.id
-                                            ? "bg-amber-500 text-black"
-                                            : "bg-[#2a2d37] text-gray-500 hover:bg-[#333640]"
-                                    )}
-                                >
-                                    {s.name}
-                                </button>
-                                <button onClick={() => onRemoveSession(s.id)} className="ml-[-4px] p-0.5 text-gray-600 hover:text-rose-400 transition-all opacity-0 group-hover:opacity-100">
-                                    <X size={8} />
-                                </button>
-                            </div>
-                        ))}
-                        <button onClick={onCreateNewSession} className="w-6 h-6 flex items-center justify-center bg-[#2a2d37] text-gray-500 rounded hover:bg-amber-500/20 hover:text-amber-400 transition-all">
-                            <Plus size={11} />
-                        </button>
-                    </div>
-                </div>
-
-                <div className="flex items-center gap-1.5">
-                    <div className="flex bg-[#0f1117] p-0.5 rounded gap-0.5 border border-[#2a2d37]">
-                        <button
-                            onClick={() => onSetIsOnline(!isOnline)}
-                            className={clsx(
-                                "h-6 px-2 rounded text-[8px] font-black flex items-center gap-1 transition-all outline-none font-mono",
-                                isOnline ? "bg-amber-500 text-black shadow-sm" : "bg-rose-500/10 text-rose-500"
-                            )}
-                        >
-                            {isOnline ? <Wifi size={10} /> : <WifiOff size={10} />}
-                            {isOnline ? 'ON' : 'OFF'}
-                        </button>
-                        <button
-                            onClick={onSync}
-                            className="h-6 px-2 rounded text-[8px] font-black text-gray-500 hover:bg-white/5 hover:text-amber-400 transition-all flex items-center gap-1 font-mono"
-                        >
-                            <RefreshCw size={10} className={isProcessing ? "animate-spin" : ""} />
-                            SYNC
-                        </button>
-                    </div>
-
-                    <button onClick={onToggleFullscreen} className="bg-amber-500/10 border border-amber-500/20 text-amber-400 h-7 px-2.5 rounded font-bold hover:bg-amber-500 hover:text-black transition-all flex items-center gap-1">
-                        {isFullscreen ? <Minimize size={12} /> : <Maximize size={12} />}
-                        <span className="text-[8px] uppercase tracking-widest font-black font-mono">{isFullscreen ? 'Exit' : 'Full'}</span>
-                    </button>
-                    <div className="h-4 w-px bg-[#2a2d37] mx-0.5" />
-                    <button onClick={onOpenLayoutSelector} className="w-7 h-7 flex items-center justify-center bg-[#1a1d27] border border-[#2a2d37] rounded text-gray-500 hover:text-amber-400 hover:border-amber-500/30 transition-all" title="Switch Layout">
-                        <Layout size={13} />
-                    </button>
-                    <Link
-                        href="/sales/history"
-                        className="w-7 h-7 flex items-center justify-center bg-amber-500 text-black rounded hover:bg-amber-400 transition-all shadow-lg shadow-amber-500/10"
-                        title="Registry Stream"
-                    >
-                        <History size={13} />
-                    </Link>
-                    {[Settings, Wallet, Save, Book, File].map((Icon, i) => (
-                        <button key={i} className="w-7 h-7 flex items-center justify-center bg-[#1a1d27] border border-[#2a2d37] rounded text-gray-500 hover:text-amber-400 hover:border-amber-500/30 transition-all">
-                            <Icon size={13} />
-                        </button>
-                    ))}
-                    <button
-                        onClick={() => setShowNumpad(!showNumpad)}
-                        className={clsx(
-                            "w-7 h-7 flex items-center justify-center rounded border transition-all",
-                            showNumpad ? "bg-amber-500 text-black border-amber-500" : "bg-[#1a1d27] border-[#2a2d37] text-gray-500 hover:text-amber-400"
-                        )}
-                        title="Floating Speed Calc"
-                    >
-                        <Calculator size={13} />
-                    </button>
-                    <button className="w-7 h-7 flex items-center justify-center bg-white/5 text-gray-400 rounded hover:bg-white/10 transition-all ml-0.5">
-                        <ArrowLeft size={13} />
-                    </button>
-                </div>
-            </header>
+            {/* ═══════ SHARED TOOLBAR ═══════ */}
+            <POSToolbar
+                sessions={sessions}
+                activeSessionId={activeSessionId}
+                onSetActiveSessionId={onSetActiveSessionId}
+                onCreateNewSession={onCreateNewSession}
+                onRemoveSession={onRemoveSession}
+                registerConfig={registerConfig}
+                selectedClient={selectedClient}
+                clients={clients}
+                clientSearchQuery={clientSearchQuery}
+                onSetClientSearchQuery={onSetClientSearchQuery}
+                onSelectClient={(id: number) => { onUpdateActiveSession({ clientId: id }); }}
+                currency={currency}
+                deliveryZone={deliveryZone}
+                deliveryZones={deliveryZones}
+                onSetDeliveryZone={onSetDeliveryZone}
+                isOnline={isOnline}
+                isProcessing={isProcessing}
+                isFullscreen={isFullscreen}
+                totalPieces={totalPieces}
+                uniqueItems={uniqueItems}
+                currentLayout={currentLayout}
+                onSetIsOnline={onSetIsOnline}
+                onSync={onSync}
+                onToggleFullscreen={onToggleFullscreen}
+                onOpenLayoutSelector={onOpenLayoutSelector}
+                onLockRegister={onLockRegister}
+                onCloseRegister={(props as any).onCloseRegister}
+                onOpenReturn={(props as any).onOpenReturn}
+            />
 
             {/* ═══════ CLIENT INFO (Dark) ═══════ */}
             <div className="h-10 bg-[#15171f] border-b border-[#2a2d37] px-4 flex items-center gap-3 shrink-0">
@@ -202,7 +155,11 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                         type="text"
                         placeholder="Find customer..."
                         value={clientSearchQuery}
-                        onChange={(e) => onSetClientSearchQuery(e.target.value)}
+                        onChange={(e) => {
+                            const v = e.target.value;
+                            onSetClientSearchQuery(v);
+                            if (onSearchClients) onSearchClients(v);
+                        }}
                         className="w-full pl-6 pr-3 py-1 bg-transparent border border-[#2a2d37] rounded text-[9px] font-black text-gray-300 outline-none focus:border-amber-500/50 transition-all placeholder:text-gray-700"
                     />
                     {clientSearchQuery && (
@@ -245,7 +202,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                 <div className="flex items-center gap-3">
                     <span className="text-[9px] font-black text-gray-200 uppercase tracking-widest truncate max-w-[100px]">{selectedClient?.name}</span>
                     <span className="text-[8px] font-mono text-gray-600">|</span>
-                    <span className="text-[8px] font-mono text-amber-500/60 font-black">BAL: {currency}{formatNumber(selectedClient.balance)}</span>
+                    <span className="text-[8px] font-mono text-amber-500/60 font-black">BAL: {currency}{formatNumber(selectedClient?.balance || 0)}</span>
                     <span className="text-[8px] font-mono text-gray-600">|</span>
                     <span className="text-[8px] font-mono text-gray-500 font-bold">{formatNumber(totalPieces)} PCS</span>
                 </div>
@@ -360,7 +317,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                         <div className="flex items-center gap-2">
                             <span className="text-[8px] font-mono font-bold text-amber-500">{uniqueItems}L · {totalPieces}P</span>
                             {cart.length > 0 && (
-                                <button onClick={onClearCart} className="text-[7px] font-black text-gray-600 hover:text-rose-400 uppercase tracking-widest font-mono transition-colors">
+                                <button onClick={() => onClearCart(false)} className="text-[7px] font-black text-gray-600 hover:text-rose-400 uppercase tracking-widest font-mono transition-colors">
                                     CLR
                                 </button>
                             )}
@@ -403,6 +360,23 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                                                     {item.barcode && <span className="text-[10px] font-bold text-gray-600 font-mono">#{item.barcode}</span>}
                                                     <span className="text-[10px] font-bold text-amber-500/80 bg-amber-500/5 px-1 rounded border border-amber-500/10">STK: {item.stock || 0}</span>
                                                 </div>
+                                                {/* Line Note Input */}
+                                                {(highlightedItemId === item.productId || lastAddedItemId === item.productId || item.note) && (
+                                                    <div className="mt-1" onClick={(e) => e.stopPropagation()}>
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Note..."
+                                                            defaultValue={item.note || ''}
+                                                            className="w-full text-[10px] bg-[#1a1d27] border border-[#2a2d37] rounded px-1.5 py-1 outline-none text-gray-300 placeholder:text-gray-600 focus:border-amber-500/50 transition-all font-mono"
+                                                            onBlur={(e) => { (props as any).onUpdateLineNote?.(item.productId, e.target.value); }}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter') {
+                                                                    (props as any).onUpdateLineNote?.(item.productId, (e.target as HTMLInputElement).value);
+                                                                }
+                                                            }}
+                                                        />
+                                                    </div>
+                                                )}
                                             </td>
                                             <td className="px-2 py-2 text-center tabular-nums text-gray-500 text-[12px] font-mono">{Number(item.price).toFixed(2)}</td>
                                             <td className="px-2 py-2">
@@ -474,36 +448,60 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                             </div>
                         )}
 
-                        {/* Payment Method */}
-                        <div className="flex gap-1.5 mb-3">
-                            <button
-                                onClick={() => onSetPaymentMethod('CASH')}
-                                className={clsx(
-                                    "flex-1 py-2 rounded-lg text-[8px] font-black uppercase tracking-widest font-mono flex items-center justify-center gap-1.5 transition-all",
-                                    paymentMethod === 'CASH' ? 'bg-emerald-500 text-black' : 'bg-[#2a2d37] text-gray-500 hover:text-emerald-400'
-                                )}
-                            >
-                                <Banknote size={12} /> CASH
-                            </button>
-                            <button
-                                onClick={() => onSetPaymentMethod('CARD')}
-                                className={clsx(
-                                    "flex-1 py-2 rounded-lg text-[8px] font-black uppercase tracking-widest font-mono flex items-center justify-center gap-1.5 transition-all",
-                                    paymentMethod === 'CARD' ? 'bg-blue-500 text-black' : 'bg-[#2a2d37] text-gray-500 hover:text-blue-400'
-                                )}
-                            >
-                                <CreditCard size={12} /> CARD
-                            </button>
-                            <button
-                                onClick={() => onSetPaymentMethod('WALLET')}
-                                className={clsx(
-                                    "flex-1 py-2 rounded-lg text-[8px] font-black uppercase tracking-widest font-mono flex items-center justify-center gap-1.5 transition-all",
-                                    paymentMethod === 'WALLET' ? 'bg-indigo-500 text-black' : 'bg-[#2a2d37] text-gray-500 hover:text-indigo-400'
-                                )}
-                            >
-                                <Wallet size={12} /> WALLET
-                            </button>
+                        {/* Payment Method — dynamic from register config */}
+                        <div className="flex gap-1.5 mb-3 flex-wrap">
+                            {paymentMethods.map((m: any) => {
+                                const key = typeof m === 'string' ? m : m.key;
+                                const label = typeof m === 'string' ? m : (m.label || key);
+                                const alwaysAllowed = ['MULTI', 'DELIVERY', 'CREDIT'].includes(key);
+                                const isLinked = alwaysAllowed || (typeof m === 'object' && m.accountId);
+                                const isActive = paymentMethod === key;
+
+                                // Icon mapping
+                                let Icon: any = Banknote;
+                                if (key.includes('CARD')) Icon = CreditCard;
+                                if (key.includes('WALLET')) Icon = Wallet;
+                                if (key.includes('MULTI') || key.includes('CALC')) Icon = Calculator;
+
+                                // Color mapping per method
+                                const activeColor = key.includes('CARD') ? 'bg-blue-500 text-black'
+                                    : key.includes('WALLET') ? 'bg-indigo-500 text-black'
+                                        : key.includes('CREDIT') ? 'bg-amber-500 text-black'
+                                            : 'bg-emerald-500 text-black';
+
+                                if (key === 'MULTI') {
+                                    return (
+                                        <button
+                                            key={key}
+                                            onClick={() => setIsMultiPayMode(true)}
+                                            className="flex-1 py-2 rounded-lg text-[8px] font-black uppercase tracking-widest font-mono flex items-center justify-center gap-1.5 transition-all bg-[#2a2d37] text-gray-400 hover:bg-amber-500/20 hover:text-amber-400"
+                                        >
+                                            <Icon size={12} /> {label}
+                                        </button>
+                                    );
+                                }
+
+                                return (
+                                    <button
+                                        key={key}
+                                        disabled={!isLinked}
+                                        title={!isLinked ? `⚠️ ${label}: not linked to a ledger account` : label}
+                                        onClick={() => isLinked && onSetPaymentMethod(key)}
+                                        className={clsx(
+                                            'flex-1 py-2 rounded-lg text-[8px] font-black uppercase tracking-widest font-mono flex items-center justify-center gap-1.5 transition-all',
+                                            !isLinked
+                                                ? 'bg-[#2a2d37] text-gray-600 opacity-40 cursor-not-allowed'
+                                                : isActive
+                                                    ? activeColor
+                                                    : 'bg-[#2a2d37] text-gray-500 hover:text-emerald-400'
+                                        )}
+                                    >
+                                        <Icon size={12} /> {label}
+                                    </button>
+                                );
+                            })}
                         </div>
+
 
                         {/* Cash Input */}
                         <div className="flex items-center gap-2 mb-3">
@@ -601,8 +599,8 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                                     onUpdateQuantity(target.productId, delta);
                                 } else if (mode === 'price' && (props as any).onUpdatePrice) {
                                     (props as any).onUpdatePrice(target.productId, val);
-                                } else if (mode === 'disc' && onSetDiscount) {
-                                    onSetDiscount(val);
+                                } else if (mode === 'disc' && props.onUpdateLineDiscount) {
+                                    props.onUpdateLineDiscount(target.productId, val);
                                 }
                             } else {
                                 toast.error("Add an item first");
@@ -612,18 +610,34 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                 </div>
             )}
 
-            <ManagerOverride
-                isOpen={isOverrideOpen}
-                actionLabel="Authorize Change"
-                onClose={() => onSetOverrideOpen(false)}
-                onSuccess={() => toast.success("Action authorized")}
-            />
+
             <ReceiptModal
                 isOpen={isReceiptOpen}
                 onClose={() => onSetReceiptOpen(false)}
                 orderId={lastOrder?.id || null}
                 refCode={lastOrder?.ref || null}
             />
+            <MultiPaymentHub
+                isOpen={isMultiPayMode}
+                onClose={() => setIsMultiPayMode(false)}
+                totalAmount={totalAmount}
+                currency={currency}
+                paymentMethods={paymentMethods}
+                client={selectedClient}
+                isProcessing={isProcessing}
+                allowedAccounts={registerConfig?.allowedAccounts || []}
+                onConfirm={(legs: { method: string; amount: number }[]) => {
+                    const legsNote = legs.map((l: { method: string; amount: number }) => `${l.method}:${l.amount.toFixed(2)}`).join(' | ');
+                    if (onSetNotes) onSetNotes(legsNote);
+                    if (props.onSetPaymentLegs) props.onSetPaymentLegs(legs);
+                    const totalPaid = legs.reduce((sum: number, l: { amount: number }) => sum + l.amount, 0);
+                    onSetCashReceived(String(totalPaid));
+                    if (legs.length > 0) onSetPaymentMethod(legs[0].method);
+                    setIsMultiPayMode(false);
+                    setTimeout(() => onCharge(), 300);
+                }}
+            />
         </div>
+
     );
 }

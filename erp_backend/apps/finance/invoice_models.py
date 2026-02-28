@@ -98,7 +98,7 @@ class Invoice(TenantModel):
     contact_address = models.TextField(null=True, blank=True)
     contact_vat_id = models.CharField(max_length=100, null=True, blank=True)
     site = models.ForeignKey(
-        'erp.Site', on_delete=models.SET_NULL, null=True, blank=True
+        'inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True
     )
 
     # ── Source Document ──────────────────────────────────────────────────────
@@ -246,6 +246,13 @@ class Invoice(TenantModel):
         return f"{self.invoice_number or f'INV-{self.id}'} ({self.status})"
 
     def save(self, *args, **kwargs):
+        bypass = kwargs.pop('force_audit_bypass', False)
+        if self.pk and not bypass:
+            original = Invoice.objects.get(pk=self.pk)
+            if original.status in ('SENT', 'PARTIAL_PAID', 'PAID', 'WRITTEN_OFF') and self.status in ('SENT', 'PARTIAL_PAID', 'PAID', 'WRITTEN_OFF'):
+                if original.total_amount != self.total_amount or original.tax_amount != self.tax_amount:
+                    raise ValidationError(f"Immutable Invoice: Cannot alter financial totals of a non-DRAFT invoice ({original.status}).")
+
         # Auto-generate invoice number on first save
         if not self.invoice_number and self.status != 'DRAFT':
             from apps.finance.models import TransactionSequence
@@ -262,6 +269,11 @@ class Invoice(TenantModel):
             self.total_in_functional_currency = self.total_amount * self.exchange_rate
 
         super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        if self.status not in ('DRAFT', 'CANCELLED'):
+            raise ValidationError(f"Immutable Invoice: Cannot delete invoice in '{self.status}' state. Cancel or write it off instead.")
+        super().delete(*args, **kwargs)
 
     def recalculate_totals(self):
         """Recalculate totals from line items."""
@@ -379,7 +391,12 @@ class InvoiceLine(TenantModel):
         return f"Line {self.sort_order}: {self.description[:50]}"
 
     def save(self, *args, **kwargs):
-        """Auto-calculate line totals based on display mode."""
+        """Auto-calculate line totals based on display mode and restrict mutation."""
+        bypass = kwargs.pop('force_audit_bypass', False)
+        if self.invoice_id and not bypass:
+            if self.invoice.status not in ('DRAFT', 'CANCELLED'):
+                raise ValidationError(f"Immutable Invoice: Cannot modify lines of invoice {self.invoice.invoice_number} ({self.invoice.status}).")
+
         display_mode = self.invoice.display_mode if self.invoice_id else 'TTC'
         rate = self.tax_rate / Decimal('100')
         discount_mult = (Decimal('100') - self.discount_percent) / Decimal('100')
@@ -398,6 +415,11 @@ class InvoiceLine(TenantModel):
             self.line_total_ttc = ht_after_discount + self.tax_amount
 
         super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        if self.invoice_id and self.invoice.status not in ('DRAFT', 'CANCELLED'):
+            raise ValidationError(f"Immutable Invoice: Cannot delete lines from invoice {self.invoice.invoice_number} ({self.invoice.status}).")
+        super().delete(*args, **kwargs)
 
 
 # =============================================================================
@@ -426,3 +448,15 @@ class PaymentAllocation(TenantModel):
 
     def __str__(self):
         return f"PAY-{self.payment_id} → {self.invoice}: {self.allocated_amount}"
+
+    def save(self, *args, **kwargs):
+        bypass = kwargs.pop('force_audit_bypass', False)
+        if self.pk and not bypass:
+            if self.payment and self.payment.status == 'POSTED':
+                raise ValidationError("Immutable Allocation: Cannot modify payment allocation after payment is POSTED.")
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        if self.payment and self.payment.status == 'POSTED':
+            raise ValidationError("Immutable Allocation: Cannot delete payment allocation from a POSTED payment.")
+        super().delete(*args, **kwargs)

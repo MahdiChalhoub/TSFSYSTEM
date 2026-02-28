@@ -34,6 +34,8 @@ export async function createContact(prevState: Record<string, any>, formData: Fo
         // Customer-specific
         if (type === 'CUSTOMER') {
             data.customer_tier = formData.get('customerTier') || 'STANDARD';
+            const homeZoneId = formData.get('homeZoneId');
+            if (homeZoneId) data.home_zone = parseInt(homeZoneId as string);
         }
         await erpFetch('contacts/', { method: 'POST', body: JSON.stringify(data) });
         return { success: true, message: 'Contact created successfully' };

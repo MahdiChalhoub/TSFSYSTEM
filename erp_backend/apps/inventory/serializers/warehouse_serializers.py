@@ -1,26 +1,34 @@
 from rest_framework import serializers
 from apps.inventory.models import Warehouse, Inventory, InventoryMovement
-from erp.models import Site
 
 class WarehouseSerializer(serializers.ModelSerializer):
-    site_name = serializers.CharField(source='site.name', read_only=True, default=None)
+    site_name = serializers.SerializerMethodField()
+    parent_name = serializers.CharField(source='parent.name', read_only=True, default=None)
     inventory_count = serializers.SerializerMethodField()
-    site = serializers.PrimaryKeyRelatedField(
-        queryset=Site.objects.all(), required=False, allow_null=True
-    )
+    children_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Warehouse
         fields = [
-            'id', 'site', 'name', 'code', 'type',
+            'id', 'parent', 'name', 'code', 'location_type',
+            'address', 'city', 'phone', 'vat_number',
             'can_sell', 'is_active',
-            'site_name', 'inventory_count',
-            'organization',
+            'site_name', 'parent_name', 'inventory_count', 'children_count',
+            'organization', 'created_at', 'updated_at',
         ]
-        read_only_fields = ['organization']
+        read_only_fields = ['organization', 'created_at', 'updated_at']
 
     def get_inventory_count(self, obj):
         return obj.inventory_set.count()
+
+    def get_children_count(self, obj):
+        return obj.children.count()
+
+    def get_site_name(self, obj):
+        """Backward compat: return the branch/parent name."""
+        if obj.parent:
+            return obj.parent.name
+        return obj.name if obj.location_type == 'BRANCH' else None
 
 
 class InventorySerializer(serializers.ModelSerializer):

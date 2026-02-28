@@ -9,9 +9,10 @@ import { ReceiptModal } from './ReceiptModal';
 import { ManagerOverride } from './ManagerOverride';
 import clsx from 'clsx';
 
-export function TicketSidebar({ cart, onUpdateQuantity, onClear, currency = '$', client }: {
+export function TicketSidebar({ cart, onUpdateQuantity, onUpdateLineDiscount, onClear, currency = '$', client }: {
     cart: CartItem[],
     onUpdateQuantity: (id: number, delta: number) => void,
+    onUpdateLineDiscount: (id: number, discountRate: number) => void,
     onClear: () => void,
     currency?: string,
     client: any
@@ -30,19 +31,30 @@ export function TicketSidebar({ cart, onUpdateQuantity, onClear, currency = '$',
 
     const total = cart.reduce((acc, item) => {
         const itemPrice = Number(item.price) || 0;
-        return acc + (itemPrice * item.quantity);
+        const lineDiscount = item.discountRate ? itemPrice * (item.discountRate / 100) : 0;
+        const discountedPrice = itemPrice - lineDiscount;
+        return acc + (discountedPrice * item.quantity);
     }, 0);
 
     const uniqueItems = cart.length;
     const totalPieces = cart.reduce((acc, item) => acc + item.quantity, 0);
-    const discount = 0; // Mocked for UI
+    const discount = 0;
     const totalAmount = Math.max(0, total - discount);
     const receivedAmount = Number(cashReceived) || totalAmount;
     const changeDue = Math.max(0, receivedAmount - totalAmount);
+    const isCreditPayment = paymentMethod === 'CREDIT';
 
     const handleCharge = useCallback((override?: boolean | React.MouseEvent) => {
         const confirmedOverride = override === true;
         if (cart.length === 0 || isPending) return;
+
+        // CREDIT payment: confirm before processing
+        if (isCreditPayment) {
+            const confirmed = window.confirm(
+                `⚠️ CREDIT SALE\n\nAmount: ${currency}${totalAmount.toFixed(2)}\n\nNo cash will be collected. The client will owe this amount.\n\nConfirm credit sale?`
+            );
+            if (!confirmed) return;
+        }
         startTransition(async () => {
             try {
                 const result = await processSale({
@@ -78,7 +90,7 @@ export function TicketSidebar({ cart, onUpdateQuantity, onClear, currency = '$',
                 toast.error("Process Logic Failure.");
             }
         });
-    }, [cart, isPending, paymentMethod, totalAmount, onClear]);
+    }, [cart, isPending, paymentMethod, totalAmount, onClear, isCreditPayment, currency]);
 
     return (
         <div className="flex flex-col h-full bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden animate-in slide-in-from-right-4 duration-500">
@@ -155,36 +167,55 @@ export function TicketSidebar({ cart, onUpdateQuantity, onClear, currency = '$',
                                 </td>
                             </tr>
                         ) : (
-                            cart.map((item) => (
-                                <tr key={item.productId} className="hover:bg-gray-50/50 transition-colors">
-                                    <td className="p-4 pl-6">
-                                        <div className="font-bold text-gray-900">{item.name}</div>
-                                        <div className="text-[10px] text-gray-400 font-mono mt-0.5">1234567890123 ΓÇó Stock: 50</div>
-                                    </td>
-                                    <td className="p-4">
-                                        <div className="flex items-center justify-center gap-2">
-                                            <button onClick={() => onUpdateQuantity(item.productId, -1)} className="w-6 h-6 flex items-center justify-center border border-gray-200 rounded-lg text-gray-400 hover:bg-gray-100"><Minus size={12} /></button>
-                                            <span className="w-4 text-center">{item.quantity}</span>
-                                            <button onClick={() => onUpdateQuantity(item.productId, 1)} className="w-6 h-6 flex items-center justify-center border border-gray-200 rounded-lg text-gray-400 hover:bg-gray-100"><Plus size={12} /></button>
-                                        </div>
-                                    </td>
-                                    <td className="p-4 text-right tabular-nums">{currency}{(Number(item.price) || 0).toFixed(2)}</td>
-                                    <td className="p-4 text-center text-gray-400">0%</td>
-                                    <td className="p-4 text-right tabular-nums">{currency}{(Number(item.price) || 0).toFixed(2)}</td>
-                                    <td className="p-4 text-right tabular-nums font-black text-gray-900">{currency}{((Number(item.price) || 0) * item.quantity).toFixed(2)}</td>
-                                    <td className="p-4 pr-6 text-center">
-                                        <button
-                                            onClick={() => {
-                                                setPendingAction({ type: 'delete', data: item.productId });
-                                                setIsOverrideOpen(true);
-                                            }}
-                                            className="p-1.5 text-gray-300 hover:text-rose-500 transition-all"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))
+                            cart.map((item) => {
+                                const itemPrice = Number(item.price) || 0;
+                                const currentDiscount = item.discountRate || 0;
+                                const discountedPrice = itemPrice - (itemPrice * (currentDiscount / 100));
+
+                                return (
+                                    <tr key={item.productId} className="hover:bg-gray-50/50 transition-colors">
+                                        <td className="p-4 pl-6">
+                                            <div className="font-bold text-gray-900">{item.name}</div>
+                                            <div className="text-[10px] text-gray-400 font-mono mt-0.5">{item.barcode || '123456789'} • Stock: {item.stock || 0}</div>
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <button onClick={() => onUpdateQuantity(item.productId, -1)} className="w-6 h-6 flex items-center justify-center border border-gray-200 rounded-lg text-gray-400 hover:bg-gray-100"><Minus size={12} /></button>
+                                                <span className="w-4 text-center">{item.quantity}</span>
+                                                <button onClick={() => onUpdateQuantity(item.productId, 1)} className="w-6 h-6 flex items-center justify-center border border-gray-200 rounded-lg text-gray-400 hover:bg-gray-100"><Plus size={12} /></button>
+                                            </div>
+                                        </td>
+                                        <td className="p-4 text-right tabular-nums">{currency}{itemPrice.toFixed(2)}</td>
+                                        <td className="p-4 text-center">
+                                            <div className="flex items-center justify-center gap-1 group">
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    max="100"
+                                                    value={currentDiscount || ''}
+                                                    placeholder="0"
+                                                    onChange={(e) => onUpdateLineDiscount(item.productId, Number(e.target.value) || 0)}
+                                                    className="w-10 text-center bg-transparent border-b border-dashed border-gray-300 focus:border-indigo-500 focus:outline-none text-indigo-600 font-bold transition-all"
+                                                />
+                                                <span className="text-[10px] text-gray-400">%</span>
+                                            </div>
+                                        </td>
+                                        <td className="p-4 text-right tabular-nums text-indigo-600">{currency}{discountedPrice.toFixed(2)}</td>
+                                        <td className="p-4 text-right tabular-nums font-black text-gray-900">{currency}{(discountedPrice * item.quantity).toFixed(2)}</td>
+                                        <td className="p-4 pr-6 text-center">
+                                            <button
+                                                onClick={() => {
+                                                    setPendingAction({ type: 'delete', data: item.productId });
+                                                    setIsOverrideOpen(true);
+                                                }}
+                                                className="p-1.5 text-gray-300 hover:text-rose-500 transition-all"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                );
+                            })
                         )}
                     </tbody>
                     {cart.length > 0 && (
@@ -261,12 +292,19 @@ export function TicketSidebar({ cart, onUpdateQuantity, onClear, currency = '$',
                             { id: 'CASH', label: 'Cash', icon: Banknote },
                             { id: 'WAVE', label: 'Wave', icon: Smartphone },
                             { id: 'OM', label: 'Orange Money', icon: Landmark },
-                            { id: 'CARD', label: 'Card', icon: CreditCard }
+                            { id: 'CARD', label: 'Card', icon: CreditCard },
+                            { id: 'WALLET', label: 'Wallet', icon: Wallet },
+                            { id: 'CREDIT', label: 'Credit', icon: Landmark },
                         ].map((m) => (
                             <button
                                 key={m.id}
                                 onClick={() => setPaymentMethod(m.id)}
-                                className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border transition-all ${paymentMethod === m.id ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100' : 'bg-white border-gray-100 text-gray-400 hover:border-indigo-100 hover:bg-gray-50'}`}
+                                className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border transition-all ${paymentMethod === m.id
+                                        ? m.id === 'CREDIT'
+                                            ? 'bg-amber-500 border-amber-500 text-white shadow-lg shadow-amber-100'
+                                            : 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100'
+                                        : 'bg-white border-gray-100 text-gray-400 hover:border-indigo-100 hover:bg-gray-50'
+                                    }`}
                             >
                                 <m.icon size={20} className={paymentMethod === m.id ? 'text-white' : 'text-gray-300'} />
                                 <span className={`text-[8px] font-black uppercase tracking-widest ${paymentMethod === m.id ? 'text-white' : 'text-gray-500'}`}>{m.label}</span>

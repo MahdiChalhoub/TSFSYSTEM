@@ -78,7 +78,7 @@ class StockService:
                         LedgerService.create_journal_entry(
                             organization=organization, transaction_date=timezone.now(), 
                             description=f"Stock Reception: {product.name}", reference=reference, 
-                            status='POSTED', scope=scope, site_id=warehouse.site_id, user=user, lines=[
+                            status='POSTED', scope=scope, site_id=warehouse.parent_id or warehouse.id, user=user, lines=[
                                 {"account_id": inv_acc, "debit": inbound_value, "credit": Decimal('0')},
                                 {"account_id": susp_acc, "debit": Decimal('0'), "credit": inbound_value}
                             ]
@@ -183,7 +183,7 @@ class StockService:
                         LedgerService.create_journal_entry(
                             organization=organization, transaction_date=timezone.now(),
                             description=desc, reference=reference, status='POSTED',
-                            scope=scope, site_id=warehouse.site_id, user=user, lines=lines
+                            scope=scope, site_id=warehouse.parent_id or warehouse.id, user=user, lines=lines
                         )
                     except (ImportError, Exception):
                         pass

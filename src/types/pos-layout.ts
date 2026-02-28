@@ -7,6 +7,8 @@ export interface POSClient {
     name: string;
     phone: string;
     balance: number;
+    creditLimit: number;
+    currentBalance: number;
     loyalty: number;
     address: string;
     zone: string;
@@ -55,6 +57,7 @@ export interface POSLayoutProps {
     cashReceived: string;
     isProcessing: boolean;
     isOverrideOpen: boolean;
+    pendingOverrideAction: { label: string; execute: () => void } | null;
     isReceiptOpen: boolean;
     lastOrder: { id: number; ref: string } | null;
     storeChangeInWallet: boolean;
@@ -74,15 +77,17 @@ export interface POSLayoutProps {
     onSetDiscount: (v: number) => void;
     onSetDiscountType: (type: 'fixed' | 'percentage') => void;
     onSetOverrideOpen: (v: boolean) => void;
+    onSetPendingOverrideAction: (action: { label: string; execute: () => void } | null) => void;
     onSetReceiptOpen: (v: boolean) => void;
     onSetStoreChangeInWallet: (v: boolean) => void;
     onSetPointsRedeemed: (v: number) => void;
     onAddToCart: (product: Record<string, any>) => void;
     onUpdateQuantity: (productId: number, delta: number) => void;
     onUpdatePrice: (productId: number, price: number) => void;
-    onClearCart: () => void;
+    onUpdateLineDiscount: (productId: number, discountRate: number) => void;
+    onClearCart: (force?: boolean) => void;
     onCreateNewSession: () => void;
-    onRemoveSession: (id: string) => void;
+    onRemoveSession: (id: string, force?: boolean) => void;
     onUpdateActiveSession: (updates: any) => void;
     onToggleFullscreen: () => void;
     onCycleSidebarMode: () => void;
@@ -90,8 +95,26 @@ export interface POSLayoutProps {
     onSync: () => void;
     onSetIsOnline: (v: boolean) => void;
     onSetClientSearchQuery: (v: string) => void;
+    onSearchClients?: (query: string) => Promise<void>;
     onSetDeliveryZone: (v: string) => void;
     onSetNotes: (v: string) => void;
+    onSetPaymentLegs?: (legs: Array<{ method: string; amount: number }>) => void;
+    onUpdateLineNote?: (productId: number, note: string) => void;
+
+    // Register context
+    registerConfig?: {
+        registerId: number;
+        registerName: string;
+        sessionId: number;
+        cashierId: number;
+        cashierName: string;
+        warehouseId: number | null;
+        cashAccountId: number | null;
+        allowedAccounts: any[];
+        siteName: string;
+        paymentMethods: Array<{ key: string; label: string; accountId: number | null }>;
+    } | null;
+    onCloseRegister?: () => void;
 
     // Layout switching
     currentLayout: POSLayoutVariant;

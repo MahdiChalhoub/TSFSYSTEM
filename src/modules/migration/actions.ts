@@ -55,11 +55,19 @@ export async function startMigration(
     jobId: number,
     params?: { source_business_id?: number; source_business_name?: string; migration_mode?: string }
 ) {
-    const res = await erpFetch(`migration/jobs/${jobId}/start/`, {
-        method: 'POST',
-        body: params ? JSON.stringify(params) : undefined,
-    });
-    return res;
+    try {
+        const res = await erpFetch(`migration/jobs/${jobId}/start/`, {
+            method: 'POST',
+            body: params ? JSON.stringify(params) : undefined,
+        });
+        return res;
+    } catch (error: any) {
+        console.error(`[MIGRATION_ACTION] Start failed for job ${jobId}:`, error);
+        return {
+            success: false,
+            error: error.message || 'Failed to start migration. Please check if analysis is complete.'
+        };
+    }
 }
 
 export async function getMigrationLogs(jobId: number, entityType?: string) {
@@ -76,10 +84,53 @@ export async function rollbackMigration(jobId: number) {
     return res;
 }
 
+export async function getMigrationPipeline(jobId: number) {
+    const res = await erpFetch(`migration/jobs/${jobId}/pipeline/`);
+    return res;
+}
+
+export async function resumeMigration(jobId: number) {
+    const res = await erpFetch(`migration/jobs/${jobId}/resume/`, {
+        method: 'POST',
+    });
+    return res;
+}
+
+export async function getMigrationReview(jobId: number) {
+    const res = await erpFetch(`migration/jobs/${jobId}/review/`);
+    return res;
+}
+
+export async function approveMigrationEntity(jobId: number, entityType: string) {
+    const res = await erpFetch(`migration/jobs/${jobId}/review/`, {
+        method: 'POST',
+        body: JSON.stringify({ entity_type: entityType, action: 'approve' }),
+    });
+    return res;
+}
+
+export async function getMigrationSamples(jobId: number, entityType: string) {
+    const res = await erpFetch(`migration/jobs/${jobId}/samples/?entity_type=${entityType}`);
+    return res;
+}
+
 export async function linkMigrationFile(params: { file_uuid: string; name: string }) {
     const res = await erpFetch('migration/jobs/link/', {
         method: 'POST',
         body: JSON.stringify(params),
+    });
+    return res;
+}
+
+export async function getAccountMapping(jobId: number) {
+    const res = await erpFetch(`migration/jobs/${jobId}/account-mapping/`);
+    return res;
+}
+
+export async function saveAccountMapping(jobId: number, mappings: { target_id: number; coa_id: number }[]) {
+    const res = await erpFetch(`migration/jobs/${jobId}/account-mapping/`, {
+        method: 'POST',
+        body: JSON.stringify({ mappings }),
     });
     return res;
 }

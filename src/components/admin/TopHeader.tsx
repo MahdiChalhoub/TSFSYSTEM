@@ -12,14 +12,14 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: { si
     const [profileOpen, setProfileOpen] = useState(false);
 
     return (
-        <header className="h-20 glass sticky top-0 z-40 flex items-center justify-between px-4 md:px-8 shrink-0 transition-all border-b border-gray-100">
+        <header className="h-11 glass sticky top-0 z-40 flex items-center justify-between px-3 md:px-5 shrink-0 transition-all border-b border-gray-100">
             <div className="flex items-center gap-1.5 md:gap-4 flex-1">
                 <button
                     onClick={toggleSidebar}
                     suppressHydrationWarning={true}
-                    className="p-2.5 hover:bg-gray-100/50 hover:scale-105 active:scale-95 rounded-xl text-gray-600 transition-all duration-200"
+                    className="p-1 px-1.5 hover:bg-gray-100/50 hover:scale-105 active:scale-95 rounded-lg text-gray-600 transition-all duration-200"
                 >
-                    <Menu size={22} className="text-gray-700" />
+                    <Menu size={18} className="text-gray-700" />
                 </button>
 
                 {/* Switchers - Handle visibility based on screen size */}
@@ -63,11 +63,11 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: { si
                     <button
                         type="button"
                         onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
-                        className="w-full flex items-center gap-3 pl-4 pr-4 py-3 bg-gray-100/30 border border-transparent hover:bg-white hover:border-gray-200 rounded-2xl text-sm transition-all group cursor-text"
+                        className="w-full flex items-center gap-3 pl-3 pr-3 py-1.5 bg-gray-100/30 border border-transparent hover:bg-white hover:border-gray-200 rounded-xl text-xs transition-all group cursor-text"
                     >
-                        <Search size={18} className="text-gray-400 group-hover:text-emerald-500 transition-colors" />
+                        <Search size={16} className="text-gray-400 group-hover:text-emerald-500 transition-colors" />
                         <span className="flex-1 text-left text-gray-400">Search pages, settings, reports...</span>
-                        <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-1 text-[10px] font-mono font-bold text-gray-400 bg-gray-100 rounded-lg border border-gray-200">
+                        <kbd className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-mono font-bold text-gray-400 bg-gray-100 rounded-lg border border-gray-200">
                             Ctrl+K
                         </kbd>
                     </button>
@@ -90,18 +90,18 @@ export function TopHeader({ sites, organizations = [], currentSlug, user }: { si
                 <div className="relative">
                     <div
                         onClick={() => setProfileOpen(!profileOpen)}
-                        className="flex items-center gap-3 pl-1 cursor-pointer group p-1.5 hover:bg-white/50 rounded-2xl border border-transparent hover:border-gray-200/50 transition-all"
+                        className="flex items-center gap-2 pl-1 cursor-pointer group p-1 hover:bg-white/50 rounded-xl border border-transparent hover:border-gray-200/50 transition-all"
                     >
                         <div className="text-right hidden sm:block">
-                            <div className="text-sm font-bold text-gray-800 group-hover:text-emerald-800 transition-colors truncate max-w-[120px]">
+                            <div className="text-xs font-bold text-gray-800 group-hover:text-emerald-800 transition-colors truncate max-w-[100px]">
                                 {user?.first_name ? `${user.first_name}` : (user?.username || 'User')}
                             </div>
-                            <div className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">
+                            <div className="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">
                                 {user?.is_superuser ? 'Admin' : 'Member'}
                             </div>
                         </div>
-                        <div className="w-10 h-10 bg-gradient-to-br from-emerald-100 to-teal-100 border border-emerald-200 text-emerald-700 rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-all shrink-0">
-                            <User size={20} />
+                        <div className="w-8 h-8 bg-gradient-to-br from-emerald-100 to-teal-100 border border-emerald-200 text-emerald-700 rounded-lg flex items-center justify-center shadow-sm group-hover:shadow-md transition-all shrink-0">
+                            <User size={16} />
                         </div>
                     </div>
 

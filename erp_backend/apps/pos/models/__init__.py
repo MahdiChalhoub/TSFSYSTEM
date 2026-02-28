@@ -1,4 +1,5 @@
 from .pos_models import Order, OrderLine, PosTicket
+from .register_models import POSRegister, RegisterSession, CashierAddressBook, SessionAccountReconciliation, POSSettings
 from .returns_models import SalesReturn, SalesReturnLine, CreditNote, PurchaseReturn, PurchaseReturnLine
 from .quotation_models import Quotation, QuotationLine
 from .delivery_models import DeliveryZone, DeliveryOrder
@@ -6,9 +7,11 @@ from .discount_models import DiscountRule, DiscountUsageLog
 from .consignment_models import ConsignmentSettlement, ConsignmentSettlementLine
 from .sourcing_models import ProductSupplier, SupplierPriceHistory
 from .purchase_order_models import PurchaseOrder, PurchaseOrderLine
+from .audit_models import POSAuditRule, POSAuditEvent
 
 __all__ = [
     'Order', 'OrderLine', 'PosTicket',
+    'POSRegister', 'RegisterSession', 'CashierAddressBook', 'SessionAccountReconciliation', 'POSSettings',
     'SalesReturn', 'SalesReturnLine', 'CreditNote', 'PurchaseReturn', 'PurchaseReturnLine',
     'Quotation', 'QuotationLine',
     'DeliveryZone', 'DeliveryOrder',
@@ -16,4 +19,5 @@ __all__ = [
     'ConsignmentSettlement', 'ConsignmentSettlementLine',
     'ProductSupplier', 'SupplierPriceHistory',
     'PurchaseOrder', 'PurchaseOrderLine',
+    'POSAuditRule', 'POSAuditEvent',
 ]

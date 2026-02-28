@@ -1,7 +1,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from decimal import Decimal
-from erp.models import TenantModel, Site, User
+from erp.models import TenantModel, User
 from apps.finance.models.coa_models import ChartOfAccount
 from apps.finance.models.fiscal_models import FiscalYear, FiscalPeriod
 
@@ -13,7 +13,7 @@ class JournalEntry(TenantModel):
     status = models.CharField(max_length=20, default='DRAFT')
     reference = models.CharField(max_length=100, null=True, blank=True)
     scope = models.CharField(max_length=20, default='OFFICIAL')
-    site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True)
+    site = models.ForeignKey('inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True)
     is_locked = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
     posted_at = models.DateTimeField(null=True, blank=True)
@@ -74,3 +74,18 @@ class JournalEntryLine(TenantModel):
             models.Index(fields=['journal_entry']),
             models.Index(fields=['organization', 'debit', 'credit']),
         ]
+
+    def save(self, *args, **kwargs):
+        bypass = kwargs.pop('force_audit_bypass', False)
+        if self.journal_entry_id and not bypass:
+            if self.journal_entry.status == 'POSTED':
+                from django.core.exceptions import ValidationError
+                raise ValidationError(f"Immutable Ledger: Cannot modify lines of a POSTED JournalEntry {self.journal_entry.reference or self.journal_entry.id}.")
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        if self.journal_entry_id:
+            if self.journal_entry.status == 'POSTED':
+                from django.core.exceptions import ValidationError
+                raise ValidationError(f"Immutable Ledger: Cannot delete lines of a POSTED JournalEntry {self.journal_entry.reference or self.journal_entry.id}.")
+        super().delete(*args, **kwargs)

@@ -99,8 +99,10 @@ class PurchaseOrder(TenantModel):
                                      help_text='Supplier quote/reference number')
 
     # Location
-    site = models.ForeignKey('erp.Site', on_delete=models.SET_NULL, null=True, blank=True)
+    site = models.ForeignKey('inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True,
+                              related_name='purchase_orders_as_site')
     warehouse = models.ForeignKey('inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True,
+                                   related_name='purchase_orders_as_warehouse',
                                    help_text='Default receiving warehouse')
 
     # Dates
@@ -272,13 +274,25 @@ class PurchaseOrderLine(TenantModel):
         return f"{self.product} × {self.quantity}"
 
     def save(self, *args, **kwargs):
-        """Auto-calculate line totals."""
+        """Auto-calculate line totals and validate mutability."""
+        bypass = kwargs.pop('force_audit_bypass', False)
+        
+        if self.order_id and not bypass:
+            if self.order.status in ['RECEIVED', 'INVOICED', 'COMPLETED', 'CANCELLED']:
+                raise ValidationError(f"Immutable PO: Cannot modify lines for PurchaseOrder {self.order.po_number or self.order.id} ({self.order.status}).")
+
         base = self.quantity * self.unit_price
         discount = base * (self.discount_percent / Decimal('100'))
         net = base - discount
         self.tax_amount = net * (self.tax_rate / Decimal('100'))
         self.line_total = net
         super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        if self.order_id:
+            if self.order.status in ['RECEIVED', 'INVOICED', 'COMPLETED', 'CANCELLED']:
+                raise ValidationError(f"Immutable PO: Cannot delete lines for PurchaseOrder {self.order.po_number or self.order.id} ({self.order.status}).")
+        super().delete(*args, **kwargs)
 
     def receive(self, qty):
         """Record received quantity for this line."""

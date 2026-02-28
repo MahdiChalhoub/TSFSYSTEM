@@ -1,0 +1,47 @@
+{
+    "code": "mcp",
+    "name": "AI Intelligence",
+    "version": "1.0.0",
+    "description": "Autonomous AI agents, virtual employees and LLM tool integration.",
+    "dependencies": [],
+    "required": false,
+    "icon": "Bot",
+    "sidebar_items": [
+        {
+            "title": "AI Assistant",
+            "path": "/mcp/chat",
+            "icon": "Bot",
+            "visibility": "tenant"
+        },
+        {
+            "title": "Virtual Employees",
+            "path": "/mcp/agents",
+            "icon": "Sparkles",
+            "visibility": "tenant"
+        },
+        {
+            "title": "AI Providers",
+            "path": "/mcp/providers",
+            "icon": "Cloud",
+            "visibility": "tenant"
+        },
+        {
+            "title": "AI Tool Registry",
+            "path": "/mcp/tools",
+            "icon": "Wrench",
+            "visibility": "tenant"
+        },
+        {
+            "title": "Conversations",
+            "path": "/mcp/conversations",
+            "icon": "MessageSquare",
+            "visibility": "tenant"
+        },
+        {
+            "title": "Usage Stats",
+            "path": "/mcp/usage",
+            "icon": "BarChart3",
+            "visibility": "tenant"
+        }
+    ]
+}

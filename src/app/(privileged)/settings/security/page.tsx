@@ -1,6 +1,7 @@
 import React from 'react';
 import { Shield, Key, Lock, Fingerprint } from 'lucide-react';
 import { TwoFactorSettings } from './TwoFactorSettings';
+import { POSPinSettings } from './POSPinSettings';
 import { meAction } from '@/app/actions/auth';
 import { headers } from 'next/headers';
 
@@ -42,6 +43,14 @@ export default async function SecurityPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-8">
                     <TwoFactorSettings initialEnabled={user.is_2fa_enabled} />
+
+                    {/* POS Access PINs — self-service for all users */}
+                    <POSPinSettings
+                        userId={user.id}
+                        hasPosPin={!!(user as any).pos_pin}
+                        hasOverridePin={!!(user as any).has_override_pin}
+                        canSetOverride={(user as any).is_staff || (user as any).is_superuser || (user as any).role === 'manager'}
+                    />
 
                     <div className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm">
                         <div className="flex items-center gap-4 mb-6">

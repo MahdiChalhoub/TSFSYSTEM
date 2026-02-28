@@ -1,6 +1,6 @@
 from django.db import models
 from decimal import Decimal
-from erp.models import TenantModel, Site
+from erp.models import TenantModel
 
 class ChartOfAccount(TenantModel):
     code = models.CharField(max_length=50)
@@ -44,7 +44,7 @@ class FinancialAccount(TenantModel):
     balance = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
     description = models.TextField(null=True, blank=True)
     is_pos_enabled = models.BooleanField(default=False, help_text='Whether this account is available for POS transactions')
-    site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True)
+    site = models.ForeignKey('inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True)
     linked_coa = models.ForeignKey(ChartOfAccount, on_delete=models.SET_NULL, null=True, blank=True, db_column='ledger_account_id')
 
     class Meta:

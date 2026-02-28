@@ -85,12 +85,9 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
     const context = await getTenantContext();
     const headersRaw = new Headers(options.headers || {});
 
-    // [AUTH RESTORATION]
-    // Crucial: Inject auth token from cookies if not already present
-    // EXCEPT for login endpoint - sending stale token causes "Invalid token" error
     const isLoginEndpoint = path.includes('auth/login');
-
     if (!isClient && !headersRaw.has('Authorization') && !isLoginEndpoint) {
+        // Server-side: read auth_token from Next.js cookie store
         try {
             const { cookies } = await import('next/headers');
             const cookieStore = await cookies();
@@ -98,6 +95,11 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
             if (token) {
                 headersRaw.set('Authorization', `Token ${token}`);
                 debug(`[ERP_API] Token injected for ${path}`);
+            }
+
+            const scope = cookieStore.get('tsf_view_scope')?.value;
+            if (scope) {
+                headersRaw.set('X-Scope', scope.toUpperCase());
             }
         } catch (e) {
             // Cookies not available (static generation)
@@ -112,7 +114,12 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
         debug(`[DEBUG] erpFetch Context: SaaS/Root (No Tenant ID sent)`);
     }
 
-    let url = `${DJANGO_URL}/api/${path.startsWith('/') ? path.slice(1) : path}`;
+    // Client-side: route through Next.js API proxy (which injects auth from httpOnly cookie)
+    // Server-side: call Django directly
+    const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+    let url = isClient
+        ? `/api/proxy/${cleanPath}`
+        : `${DJANGO_URL}/api/${cleanPath}`;
 
     // Support for complex query params (UDLE Filtering)
     if (options.body === undefined && (options.method === 'GET' || !options.method)) {
@@ -146,7 +153,7 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
         // 2. Default to no-store for authenticated requests to avoid cross-user leakage in Next.js Data Cache
         // 3. Allow manual override via options.cache
 
-        const sensitivePaths = ['auth/', 'users/', 'organizations/', 'saas/', 'settings/'];
+        const sensitivePaths = ['auth/', 'users/', 'organizations/', 'saas/', 'settings/', 'pos/', 'orders/', 'purchases/'];
         const isSensitive = sensitivePaths.some(p => path.includes(p));
 
         const fetchOptions: RequestInit & { next?: { revalidate?: number | false } } = {
@@ -240,7 +247,8 @@ export async function erpFetch(path: string, options: RequestInit = {}) {
             return await response.blob();
         }
 
-        const data = await response.json();
+        const text = await response.text();
+        const data = text ? JSON.parse(text) : null;
 
         // [PAGINATION AUTO-UNWRAP]
         // Industry-standard DRF responses with 'results' key are unwrapped by default.

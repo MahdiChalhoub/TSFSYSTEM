@@ -2,6 +2,8 @@
 
 | Date | Agent | Version | Changes |
 | :--- | :--- | :--- | :--- |
+| 2026-02-28 | Antigravity | 3.1.3-AG-260228.2341 | **Finance Powerhouse Module Upgrade**: Deployed the Enterprise Fixed Assets Studio (Dual-pane, live projections, QR tracking) and the Bank Reconciliation Match-Maker Engine (Automation Linker, Dual-pane Studio). |
+| 2026-02-28 | Antigravity | 3.1.3-AG-260228.2336 | **SaaS Hub Infrastructure Refinement**: Refactored organization data fetching for instant UI updates after plan switching. Injected premium PWA icons and manifest. Implemented Module Hot-Reload and Kernel Rollback API/Logic. Enhanced Global Registry with visual dependency status tracking. |
 | 2026-02-28 | Antigravity | 3.1.3-AG-260228.2259 | **Finance/CRM Sync Fix**: Resolved "silently failing" subscription updates by fixing `SaaSClient.sync_to_crm_contact()` (prevented balance resets) and adding automatic sync on `save()`. Backfilled existing Demo client. **Inventory Audit**: Verified all 25 inventory pages and 20 action files (up from 16). Updated `MODULE_INVENTORY.md` documentation. |
 | 2026-02-28 | Antigravity | 3.1.3-AG-260228.2236 | **Direct CRM Profile Link**: `billing` endpoint now resolves and returns `crm_contact_id` for the linked SaaS client. Frontend "View CRM Profile" button navigates directly to `/crm/contacts/{id}` instead of a search-based fallback. Added `SaasBillingClient` TypeScript interface with explicit `crm_contact_id` typing. Addresses WORKMAP `[OPEN] Direct CRM Profile Link`. |
 | 2026-02-28 | Antigravity | 3.1.2-AG-260228.0323 | **Chart of Accounts UI Fix**: Resolved issue where imported clients/suppliers (sub-accounts) were not visible in the Chart of Accounts hierarchy due to a snake_case to camelCase mapping mismatch. |
@@ -20,6 +22,18 @@
 | 2026-02-27 | Antigravity | 3.0.1-AG-260227.1830 | **POS Layout & Scope Integration**: Fixed floating numpad build error, implemented client-side hydration safety for draggable overlays, and integrated `viewScope` from `AdminContext` into the POS checkout flow. |
 | 2026-02-27 | Antigravity | 3.0.0-AG-260227.1645 | **Global Scope Filtering (Official vs Internal)**: Implemented robust data isolation for migrated historical records vs live data. |
 | 2026-02-27 | Antigravity | 2.9.0-AG-260227.0830 | **Master Hub Launch**: Initial infrastructure for multi-domain orchestration. |
+
+## v3.1.3-AG-260228.2341 - Finance Powerhouse Module Upgrade
+- **Enterprise Fixed Assets Studio**: 
+    - Implemented a **Dual-Pane Acquisition Studio** with real-time **Net Book Value projections** using `recharts`.
+    - Added **Asset Intelligence Strategies** (Basic, Professional, Enterprise) to settings.
+    - Integrated **QR-Code Asset Tagging** for physical-to-digital audit synergy.
+    - Full support for Linear, Declining (1.5x), Double-Declining (2x), and Units of Production depreciation methods.
+- **Bank Reconciliation Match-Maker Engine**:
+    - Transformed the static reconciliation list into an automated **Match-Maker Studio**.
+    - Implemented **"Run Magic Linker"** automation with 3-tier probability scoring for bulk settlement.
+    - Added **Dual-Desk Workspace** for manual exception resolution with residual gap monitoring.
+    - Hardened the settlement guard for monetary balance integrity.
 
 ## v3.1.2-AG-260228.0323 - Chart of Accounts UI Fix
 - **Backend Data Mapping**: Fixed a mapping issue in `src/app/actions/finance/accounts.ts` where the backend serialized DRF JSON `parent`, `sub_type`, `syscohada_code`, `syscohada_class`, and `is_active` were not correctly mapped to their camelCase equivalents (`parentId`, `subType`, etc.) expected by the `ChartOfAccountsViewer`. 

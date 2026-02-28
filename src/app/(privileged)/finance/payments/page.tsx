@@ -43,7 +43,10 @@ const METHOD_ICONS: Record<string, any> = {
     CARD: CreditCard,
 }
 
+import { useAdmin } from "@/context/AdminContext"
+
 export default function PaymentsPage() {
+    const { viewScope } = useAdmin()
     const { fmt } = useCurrency()
     const [payments, setPayments] = useState<Payment[]>([])
     const [accounts, setAccounts] = useState<FinancialAccount[]>([])
@@ -64,7 +67,7 @@ export default function PaymentsPage() {
         pageSize: 25, sortKey: 'payment_date', sortDir: 'desc'
     })
 
-    useEffect(() => { loadData() }, [])
+    useEffect(() => { loadData() }, [viewScope])
 
     async function loadData() {
         try {
@@ -107,7 +110,7 @@ export default function PaymentsPage() {
     useEffect(() => {
         if (activeView === 'AGED_AR' || activeView === 'AGED_AP') loadAgedReports()
         if (activeView === 'BALANCES') loadBalances()
-    }, [activeView])
+    }, [activeView, viewScope])
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()

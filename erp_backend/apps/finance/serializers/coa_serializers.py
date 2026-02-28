@@ -20,5 +20,5 @@ class FinancialAccountSerializer(serializers.ModelSerializer):
         return None
     def get_assignedUsers(self, obj):
         from erp.models import User
-        users = User.objects.filter(cash_register=obj)
+        users = User.objects.filter(cash_register_id=obj.id)
         return [{'id': u.id, 'name': u.get_full_name() or u.username} for u in users]

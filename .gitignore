@@ -73,6 +73,8 @@ pg_data_bak_*/
 tmp/
 temp/
 /media/
+media/
+erp_backend/media/
 /static/root/
 
 # Temp scripts

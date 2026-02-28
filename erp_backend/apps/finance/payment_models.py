@@ -88,6 +88,21 @@ class Payment(TenantModel):
     def __str__(self):
         return f"PAY-{self.id} ({self.type}: {self.amount})"
 
+    def save(self, *args, **kwargs):
+        bypass = kwargs.pop('force_audit_bypass', False)
+        if self.pk and not bypass:
+            original = Payment.objects.get(pk=self.pk)
+            if original.status == 'POSTED' and self.status == 'POSTED':
+                from django.core.exceptions import ValidationError
+                raise ValidationError(f"Immutable Payment: Cannot modify a POSTED payment (PAY-{self.id}). Use reversals instead.")
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        if self.status == 'POSTED':
+            from django.core.exceptions import ValidationError
+            raise ValidationError(f"Immutable Payment: Cannot delete a POSTED payment (PAY-{self.id}).")
+        super().delete(*args, **kwargs)
+
 
 # =============================================================================
 # RUNNING BALANCES

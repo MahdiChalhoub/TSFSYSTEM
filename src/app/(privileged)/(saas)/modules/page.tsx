@@ -290,12 +290,25 @@ export default function SaaSModulesPage() {
                                         <span className="text-emerald-600 font-mono font-bold leading-none">{m.total_installs} Tenants</span>
                                     </div>
                                     {m.dependencies && m.dependencies.length > 0 && (
-                                        <div className="flex flex-wrap gap-2">
-                                            {m.dependencies.map((dep: string) => (
-                                                <span key={dep} className="px-3 py-1 bg-white border border-gray-200 text-[10px] text-gray-400 rounded-xl font-mono shadow-sm">
-                                                    +{dep}
-                                                </span>
-                                            ))}
+                                        <div className="flex flex-col gap-2 p-4 bg-gray-50/50 rounded-2xl border border-gray-100/50">
+                                            <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest px-1">Dependencies</span>
+                                            <div className="flex flex-wrap gap-2">
+                                                {m.dependencies.map((dep: string) => {
+                                                    const depExists = modules.some(mod => mod.code === dep);
+                                                    return (
+                                                        <Tooltip key={dep} text={depExists ? "Dependency satisfied" : "Dependency missing! System will block activation."}>
+                                                            <span className={`px-3 py-1 bg-white border ${depExists ? 'border-gray-200 text-gray-500' : 'border-red-300 text-red-600 bg-red-50'} text-[10px] rounded-xl font-mono shadow-sm flex items-center gap-1.5 transition-all`}>
+                                                                {depExists ? (
+                                                                    <ShieldCheck size={10} className="text-emerald-500" />
+                                                                ) : (
+                                                                    <XCircle size={10} className="animate-pulse" />
+                                                                )}
+                                                                {dep}
+                                                            </span>
+                                                        </Tooltip>
+                                                    )
+                                                })}
+                                            </div>
                                         </div>
                                     )}
                                     <div className="grid grid-cols-2 gap-3">
@@ -441,6 +454,18 @@ function BackupList({ moduleCode, onRollback, currentVersion }: { moduleCode: st
                         )}
                     </div>
                 ))}
+            </div>
+        </div>
+    )
+}
+
+function Tooltip({ children, text }: { children: React.ReactNode, text: string }) {
+    return (
+        <div className="relative group flex items-center">
+            {children}
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-[10px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-xl font-bold border border-gray-800">
+                {text}
+                <div className="absolute top-full left-1/2 -translate-x-1/2 border-x-4 border-x-transparent border-t-4 border-t-gray-900" />
             </div>
         </div>
     )

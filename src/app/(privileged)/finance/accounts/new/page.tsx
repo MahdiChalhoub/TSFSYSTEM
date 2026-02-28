@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { createFinancialAccount, getOrgCurrency } from "../actions"
+import { createFinancialAccount, getOrgCurrency, getChartOfAccounts } from "../actions"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { ArrowLeft, Link as LinkIcon, Loader2 , WalletCards } from "lucide-react"
+import { ArrowLeft, Link as LinkIcon, Loader2, WalletCards } from "lucide-react"
 import Link from "next/link"
 
 const ACCOUNT_TYPES = [
@@ -48,6 +48,8 @@ export default function NewFinancialAccountPage() {
 
     const [loading, setLoading] = useState(false)
     const [currencyLoading, setCurrencyLoading] = useState(true)
+    const [coaList, setCoaList] = useState<any[]>([])
+    const [loadingCoa, setLoadingCoa] = useState(true)
     const type = watch('type')
     const currency = watch('currency')
 
@@ -56,6 +58,11 @@ export default function NewFinancialAccountPage() {
             setValue('currency', code)
             setCurrencyLoading(false)
         }).catch(() => setCurrencyLoading(false))
+
+        getChartOfAccounts().then(data => {
+            setCoaList(data || [])
+            setLoadingCoa(false)
+        }).catch(() => setLoadingCoa(false))
     }, [setValue])
 
     const onSubmit = async (data: Record<string, any>) => {
@@ -143,13 +150,31 @@ export default function NewFinancialAccountPage() {
                             <Textarea placeholder="Notes about this account..." {...register('description')} rows={2} />
                         </div>
 
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Ledger Sub-account Selection <span className="text-red-500">*</span></label>
+                            <Select onValueChange={v => setValue('parent_coa_id', parseInt(v))} required>
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder={loadingCoa ? "Loading accounts..." : "Select Parent Chart of Account..."} />
+                                </SelectTrigger>
+                                <SelectContent className="max-h-[300px]">
+                                    {coaList.map(coa => (
+                                        <SelectItem key={coa.id} value={coa.id.toString()}>
+                                            {coa.code} - {coa.name} <span className="text-gray-400 text-xs ml-2">({coa.type})</span>
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <p className="text-xs text-muted-foreground">
+                                This account will be created as a child of the selected ledger account.
+                            </p>
+                        </div>
+
                         <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-100 flex gap-3 items-start">
                             <LinkIcon className="h-5 w-5 text-emerald-600 mt-0.5" />
                             <div>
-                                <h4 className="text-sm font-bold text-emerald-900 leading-none mb-1">Automated Ledger Link</h4>
+                                <h4 className="text-sm font-bold text-emerald-900 leading-none mb-1">Strict Ledger Link</h4>
                                 <p className="text-xs text-emerald-700">
-                                    A matching account will be created automatically in your Chart of Accounts (COA) under
-                                    {' '}{COA_MAPPINGS[type] || 'the appropriate parent'}.
+                                    A matching account will be created exactly under your selected parent, categorizing it properly (e.g., Asset, Liability, Supplier) directly derived from it.
                                 </p>
                             </div>
                         </div>

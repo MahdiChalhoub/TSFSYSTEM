@@ -8,15 +8,18 @@ logger = logging.getLogger(__name__)
 
 class FinancialAccountService:
     @staticmethod
-    def create_account(organization, name, type, currency, site_id=None):
+    def create_account(organization, name, type, currency, site_id=None, parent_coa_id=None):
         from apps.finance.models import ChartOfAccount, FinancialAccount
-        parent = ChartOfAccount.objects.filter(organization=organization, sub_type=type).first()
-        if not parent: raise ValidationError(f"No parent for {type}")
+        if parent_coa_id:
+            parent = ChartOfAccount.objects.get(id=parent_coa_id, organization=organization)
+        else:
+            parent = ChartOfAccount.objects.filter(organization=organization, sub_type=type).first()
+            if not parent: raise ValidationError(f"No parent for {type}")
         with transaction.atomic():
             last = ChartOfAccount.objects.filter(organization=organization, code__startswith=f"{parent.code}.").order_by('-code').first()
             suffix = (int(last.code.split('.')[-1]) + 1) if last else 1
             code = f"{parent.code}.{str(suffix).zfill(3)}"
-            acc = ChartOfAccount.objects.create(organization=organization, code=code, name=name, type='ASSET', parent=parent, is_system_only=True, is_active=True, balance=Decimal('0.00'))
+            acc = ChartOfAccount.objects.create(organization=organization, code=code, name=name, type=parent.type, parent=parent, is_system_only=True, is_active=True, balance=Decimal('0.00'))
             account = FinancialAccount.objects.create(
                 organization=organization, name=name, type=type, currency=currency,
                 site_id=site_id, linked_coa=acc

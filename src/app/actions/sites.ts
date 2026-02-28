@@ -18,13 +18,11 @@ export async function getSites() {
         return sites.map((site: Record<string, any>) => ({
             ...site,
             _count: {
-                warehouses: 0,
+                warehouses: site.children_count || 0,
                 users: 0
             }
         }))
     } catch (error: unknown) {
-        // Suppress auth errors or 404s (e.g. valid for root domain or logged out state)
-        // We just return empty list so the Layout doesn't crash
         if ((error instanceof Error ? error.message : String(error)) && (
             (error instanceof Error ? error.message : String(error)).includes('Authentication credentials') ||
             (error instanceof Error ? error.message : String(error)).includes('Not Found') ||
@@ -38,8 +36,6 @@ export async function getSites() {
 }
 
 export async function initializeMultiSite() {
-    // Migration logic should be on backend. 
-    // For compatibility with old code, we return success.
     return { success: true, siteId: 1 };
 }
 
@@ -50,8 +46,9 @@ export async function createSite(prevState: SiteState, formData: FormData): Prom
         address: formData.get('address') as string,
         city: formData.get('city') as string,
         phone: formData.get('phone') as string,
-        vat_number: formData.get('vatNumber') as string, // snake_case for Django
-        is_active: formData.get('isActive') === 'on'
+        vat_number: formData.get('vatNumber') as string,
+        is_active: formData.get('isActive') === 'on',
+        location_type: 'BRANCH',  // Sites are always BRANCH type in the unified model
     }
 
     if (!data.name || data.name.length < 2) {
@@ -64,7 +61,7 @@ export async function createSite(prevState: SiteState, formData: FormData): Prom
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         })
-        revalidatePath('/settings/sites');
+        revalidatePath('/inventory/warehouses');
         return { message: 'success' };
     } catch (e: unknown) {
         return { message: 'Database Error: ' + (e instanceof Error ? e.message : String(e)) };
@@ -79,7 +76,8 @@ export async function updateSite(id: number, prevState: SiteState, formData: For
         city: formData.get('city') as string,
         phone: formData.get('phone') as string,
         vat_number: formData.get('vatNumber') as string,
-        is_active: formData.get('isActive') === 'on'
+        is_active: formData.get('isActive') === 'on',
+        location_type: 'BRANCH',
     }
 
     try {
@@ -88,7 +86,7 @@ export async function updateSite(id: number, prevState: SiteState, formData: For
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         })
-        revalidatePath('/settings/sites');
+        revalidatePath('/inventory/warehouses');
         return { message: 'success' };
     } catch (e: unknown) {
         return { message: 'Database Error: ' + (e instanceof Error ? e.message : String(e)) };
@@ -100,7 +98,7 @@ export async function deleteSite(id: number) {
         await erpFetch(`sites/${id}/`, {
             method: 'DELETE'
         })
-        revalidatePath('/settings/sites');
+        revalidatePath('/inventory/warehouses');
         return { success: true };
     } catch (e: unknown) {
         return { success: false, message: (e instanceof Error ? e.message : String(e)) };

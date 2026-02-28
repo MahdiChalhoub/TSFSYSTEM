@@ -1,5 +1,5 @@
 import { erpFetch } from "@/lib/erp-api";
-import { formatCurrency } from "@/lib/utils/currency";
+import { formatCurrency } from "@/lib/utils/currency-core";
 import Link from "next/link";
 import {
     ArrowLeft, Calendar, User, Tag, MapPin,
@@ -11,13 +11,15 @@ export const dynamic = 'force-dynamic';
 
 async function getOrderDetails(id: string) {
     try {
-        return await erpFetch(`orders/${id}/`);
+        // Use namespaced path for consistent tenant isolation routing
+        return await erpFetch(`pos/orders/${id}/`);
     } catch (e) {
         console.error("Order Fetch Error:", e);
         return null;
     }
 }
 
+import { OrderActions } from "./OrderActions";
 
 export default async function SaleDetailPage({ params }: { params: { id: string } }) {
     const { id } = await params;
@@ -33,12 +35,26 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
             <div className="flex flex-col items-center justify-center p-20 gap-4">
                 <AlertCircle size={48} className="text-gray-200" />
                 <h1 className="text-2xl font-black text-gray-900 tracking-tighter">Sale Not Found</h1>
-                <Link href="/sales/history" className="text-emerald-500 font-bold hover:underline">Return to History</Link>
+                <p className="text-gray-400 text-sm max-w-md text-center">
+                    The record could not be found in your current organization context.
+                    This could be due to strict tenant isolation or the record being deleted.
+                </p>
+                <div className="flex gap-4 mt-6">
+                    <Link href="/sales/history" className="bg-emerald-500 text-white px-6 py-2 rounded-xl font-bold shadow-lg shadow-emerald-100">Return to History</Link>
+                </div>
+                <div className="text-[10px] text-gray-400 font-mono mt-20 p-4 border border-dashed border-gray-100 rounded-lg">
+                    Diagnostic Info:<br />
+                    Attempted ID: {id}<br />
+                    Path: /sales/[id]<br />
+                    Mode: Production
+                </div>
             </div>
         );
     }
 
     const isReturnable = ['COMPLETED', 'INVOICED'].includes(order.status);
+    const totalAmount = parseFloat(order.total_amount || '0');
+    const taxAmount = parseFloat(order.tax_amount || '0');
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
@@ -55,7 +71,13 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
                     </div>
                 </div>
 
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
+                    <OrderActions
+                        orderId={order.id}
+                        isLocked={order.is_locked}
+                        isVerified={order.is_verified}
+                    />
+
                     <button className="p-3.5 bg-white border border-gray-100 rounded-2xl text-gray-400 hover:text-emerald-600 hover:border-emerald-100 transition-all shadow-sm flex items-center gap-2">
                         <Printer size={20} />
                         <span className="text-xs font-bold uppercase tracking-wider">Print Invoice</span>
@@ -77,7 +99,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
             <div className="grid md:grid-cols-4 gap-6">
                 <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm">
                     <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Status</div>
-                    <div className="text-xl font-black text-gray-900">{order.status}</div>
+                    <div className="text-xl font-black text-gray-900">{order.status || 'DRAFT'}</div>
                 </div>
                 <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm">
                     <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Date</div>
@@ -89,7 +111,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
                 </div>
                 <div className="bg-white p-6 rounded-[2rem] border border-emerald-100 bg-emerald-50/30 shadow-sm">
                     <div className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">Total Amount</div>
-                    <div className="text-xl font-black text-emerald-700">{fmt(parseFloat(order.total_amount))}</div>
+                    <div className="text-xl font-black text-emerald-700">{fmt(totalAmount)}</div>
                 </div>
             </div>
 
@@ -114,7 +136,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-50">
-                                    {order.lines?.map((line: Record<string, any>) => (
+                                    {(order.lines || []).map((line: Record<string, any>) => (
                                         <tr key={line.id} className="text-sm">
                                             <td className="p-6">
                                                 <div className="font-bold text-gray-900">{line.product_name}</div>
@@ -124,16 +146,23 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
                                                 {line.quantity}
                                             </td>
                                             <td className="p-6 text-right font-medium text-gray-500">
-                                                {fmt(parseFloat(line.unit_price))}
+                                                {fmt(parseFloat(line.unit_price || '0'))}
                                             </td>
                                             <td className="p-6 text-right text-gray-400">
                                                 {fmt(parseFloat(line.vat_amount || 0))}
                                             </td>
                                             <td className="p-6 text-right font-black text-gray-900">
-                                                {fmt(parseFloat(line.total))}
+                                                {fmt(parseFloat(line.total || '0'))}
                                             </td>
                                         </tr>
                                     ))}
+                                    {(!order.lines || order.lines.length === 0) && (
+                                        <tr>
+                                            <td colSpan={5} className="p-10 text-center text-gray-400 italic">
+                                                Aucun article trouvé pour cette vente.
+                                            </td>
+                                        </tr>
+                                    )}
                                 </tbody>
                             </table>
                         </div>
@@ -144,16 +173,16 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
                         <div className="flex gap-8">
                             <div>
                                 <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Subtotal</div>
-                                <div className="text-xl font-bold">{fmt(parseFloat(order.total_amount) - parseFloat(order.tax_amount))}</div>
+                                <div className="text-xl font-bold">{fmt(totalAmount - taxAmount)}</div>
                             </div>
                             <div>
                                 <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Total Tax</div>
-                                <div className="text-xl font-bold">{fmt(parseFloat(order.tax_amount))}</div>
+                                <div className="text-xl font-bold">{fmt(taxAmount)}</div>
                             </div>
                         </div>
                         <div className="text-right">
                             <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Grand Total Collected</div>
-                            <div className="text-5xl font-black text-emerald-400 tracking-tighter">{fmt(parseFloat(order.total_amount))}</div>
+                            <div className="text-5xl font-black text-emerald-400 tracking-tighter">{fmt(totalAmount)}</div>
                         </div>
                     </div>
                 </div>

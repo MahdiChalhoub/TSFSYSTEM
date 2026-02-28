@@ -277,7 +277,7 @@ def run_scheduled_reports():
 # ── On-Demand Report Execution (Background) ──────────────────
 
 @shared_task(name='erp.tasks.run_report_async', bind=True, max_retries=2)
-def run_report_async(self, report_def_id, organization_id, export_format='EXCEL'):
+def run_report_async(self, report_def_id, organization_id, export_format='EXCEL', authorized_scope='official'):
     """
     Run a report in the background and store the result.
     Called from ReportViewSet.run with background=True.
@@ -287,7 +287,7 @@ def run_report_async(self, report_def_id, organization_id, export_format='EXCEL'
         from apps.finance.report_service import ReportService
 
         report_def = ReportDefinition.objects.get(pk=report_def_id)
-        service = ReportService(organization_id)
+        service = ReportService(organization_id, authorized_scope=authorized_scope)
         result = service.run_and_export(report_def, export_format=export_format)
 
         # Record execution

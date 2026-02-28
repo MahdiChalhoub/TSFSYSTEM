@@ -4,6 +4,7 @@ import { useState, useEffect, useTransition } from "react"
 import type { Asset, FinancialAccount, DepreciationScheduleItem } from '@/types/erp'
 import { getAssets, getAssetSchedule, createAsset, postDepreciation, AssetInput } from "@/app/actions/finance/assets"
 import { getFinancialAccounts } from "@/app/actions/finance/financial-accounts"
+import { getFinancialSettings, FinancialSettingsState } from "@/app/actions/finance/settings"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
@@ -12,28 +13,63 @@ import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
+import { AssetTag } from "@/components/finance/assets/asset-tag"
+import jsPDF from "jspdf"
+import html2canvas from "html2canvas"
+import { simulateDepreciation, ProjectedPoint } from "@/lib/finance/depreciation-sim"
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import {
     Landmark, Plus, Search, TrendingDown, Package, CheckCircle2,
-    AlertTriangle, XCircle, Eye, Calendar, X
+    AlertTriangle, XCircle, Eye, Calendar, X, QrCode, Wrench, ShieldCheck,
+    Activity
 } from "lucide-react"
 
 export default function AssetsPage() {
     const [assets, setAssets] = useState<Asset[]>([])
     const [accounts, setAccounts] = useState<FinancialAccount[]>([])
+    const [settings, setSettings] = useState<FinancialSettingsState | null>(null)
     const [loading, setLoading] = useState(true)
     const [dialogOpen, setDialogOpen] = useState(false)
     const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null)
+    const [tagPreviewAsset, setTagPreviewAsset] = useState<Asset | null>(null)
     const [schedule, setSchedule] = useState<DepreciationScheduleItem[]>([])
     const [searchQuery, setSearchQuery] = useState("")
     const [isPending, startTransition] = useTransition()
+    const [printing, setPrinting] = useState(false)
+    const [selectedMethod, setSelectedMethod] = useState("LINEAR")
+
+    // Live Preview Form State
+    const [previewCost, setPreviewCost] = useState(0)
+    const [previewLife, setPreviewLife] = useState(5)
+    const [previewResidual, setPreviewResidual] = useState(0)
+    const [previewCapacity, setPreviewCapacity] = useState(100)
+    const [projection, setProjection] = useState<ProjectedPoint[]>([])
+
+    useEffect(() => {
+        if (previewCost > 0 && previewLife > 0) {
+            const data = simulateDepreciation(
+                selectedMethod,
+                previewCost,
+                previewLife,
+                previewResidual,
+                previewCapacity
+            )
+            setProjection(data)
+        }
+    }, [previewCost, previewLife, previewResidual, previewCapacity, selectedMethod])
 
     useEffect(() => { loadData() }, [])
 
     async function loadData() {
         try {
-            const [a, accs] = await Promise.all([getAssets(), getFinancialAccounts()])
+            const [a, accs, s] = await Promise.all([
+                getAssets(),
+                getFinancialAccounts(),
+                getFinancialSettings()
+            ])
             setAssets(Array.isArray(a) ? a : [])
             setAccounts(Array.isArray(accs) ? accs : [])
+            setSettings(s)
         } catch {
             setAssets([]); setAccounts([])
             toast.error("Failed to load assets")
@@ -55,6 +91,8 @@ export default function AssetsPage() {
             residual_value: Number(fd.get("residual_value") || 0),
             depreciation_method: fd.get("depreciation_method") as string,
             source_account_id: Number(fd.get("source_account_id")),
+            total_production_capacity: fd.get("total_production_capacity") ? Number(fd.get("total_production_capacity")) : undefined,
+            production_unit_name: fd.get("production_unit_name") as string || undefined,
         }
 
         startTransition(async () => {
@@ -69,7 +107,7 @@ export default function AssetsPage() {
         })
     }
 
-    async function viewSchedule(asset: Record<string, any>) {
+    async function viewSchedule(asset: Asset) {
         setSelectedAsset(asset)
         try {
             const s = await getAssetSchedule(asset.id)
@@ -85,12 +123,43 @@ export default function AssetsPage() {
             try {
                 await postDepreciation(assetId, scheduleId)
                 toast.success("Depreciation posted")
-                viewSchedule(selectedAsset)
+                if (selectedAsset) viewSchedule(selectedAsset)
                 loadData()
             } catch (err: unknown) {
                 toast.error((err instanceof Error ? err.message : String(err)) || "Failed to post depreciation")
             }
         })
+    }
+
+    async function handlePrintTag(asset: Asset) {
+        setPrinting(true)
+        const tagElement = document.getElementById(`asset-tag-preview-${asset.id}`)
+        if (!tagElement) {
+            setPrinting(false)
+            return
+        }
+
+        try {
+            const canvas = await html2canvas(tagElement, {
+                scale: 4,
+                useCORS: true,
+                backgroundColor: null,
+                logging: false
+            })
+            const imgData = canvas.toDataURL('image/png')
+            const pdf = new jsPDF({
+                orientation: 'landscape',
+                unit: 'px',
+                format: [canvas.width / 4, canvas.height / 4]
+            })
+            pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 4, canvas.height / 4)
+            pdf.save(`Asset_Tag_${asset.id}.pdf`)
+            toast.success("Print-ready tag generated")
+        } catch (err) {
+            toast.error("Failed to generate tag PDF")
+        } finally {
+            setPrinting(false)
+        }
     }
 
     const categories = ["VEHICLE", "EQUIPMENT", "IT", "FURNITURE", "BUILDING", "LAND", "OTHER"]
@@ -105,7 +174,7 @@ export default function AssetsPage() {
     const totalBook = assets.reduce((s, a) => s + Number(a.book_value || 0), 0)
     const fullyDepreciated = assets.filter(a => a.status === "FULLY_DEPRECIATED").length
 
-    const statusConfig: Record<string, { icon: Record<string, any>; color: string; bg: string }> = {
+    const statusConfig: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
         ACTIVE: { icon: CheckCircle2, color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
         FULLY_DEPRECIATED: { icon: AlertTriangle, color: "text-stone-600", bg: "bg-stone-100 border-stone-200" },
         DISPOSED: { icon: XCircle, color: "text-rose-700", bg: "bg-rose-50 border-rose-200" },
@@ -131,7 +200,17 @@ export default function AssetsPage() {
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-4xl font-bold text-stone-900 font-serif tracking-tight">Fixed Assets</h1>
+                    <div className="flex items-center gap-3">
+                        <h1 className="text-4xl font-bold text-stone-900 font-serif tracking-tight">Fixed Assets</h1>
+                        {settings?.assetTrackingMode && (
+                            <Badge className={`rounded-xl px-3 py-1 text-[10px] font-black uppercase tracking-widest border-2 ${settings.assetTrackingMode === 'ENTERPRISE' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                settings.assetTrackingMode === 'PROFESSIONAL' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
+                                    'bg-stone-50 text-stone-500 border-stone-200'
+                                }`}>
+                                <ShieldCheck size={12} className="mr-1.5" /> {settings.assetTrackingMode} Engine
+                            </Badge>
+                        )}
+                    </div>
                     <p className="text-stone-500 font-medium mt-1">Track assets, depreciation schedules, and book values</p>
                 </div>
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -140,63 +219,210 @@ export default function AssetsPage() {
                             <Plus size={16} /> Acquire Asset
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-xl">
+                    <DialogContent className="sm:max-w-4xl bg-stone-50 border-stone-200">
                         <DialogHeader>
                             <DialogTitle className="flex items-center gap-2"><Landmark size={20} /> Acquire New Asset</DialogTitle>
                             <DialogDescription>Register a fixed asset and configure its depreciation schedule.</DialogDescription>
                         </DialogHeader>
-                        <form onSubmit={handleCreate} className="grid grid-cols-2 gap-4 pt-2">
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Name *</label>
-                                <Input name="name" required placeholder="Delivery Truck" className="rounded-xl" />
+                        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 pt-2">
+                            {/* Left: Form Controls */}
+                            <form onSubmit={handleCreate} className="lg:col-span-3 grid grid-cols-1 gap-4 bg-white p-5 rounded-3xl border border-stone-200 shadow-sm overflow-y-auto max-h-[65vh] custom-scrollbar">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-stone-500 uppercase tracking-tighter ml-1">Asset Name *</label>
+                                        <Input name="name" required placeholder="Delivery Truck" className="rounded-xl bg-stone-50/50 border-stone-100" />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-stone-500 uppercase tracking-tighter ml-1">Asset Category *</label>
+                                        <select name="category" required className="w-full px-3 py-2 border rounded-xl bg-stone-50/50 border-stone-100 text-sm outline-none focus:ring-2 focus:ring-black/5">
+                                            {categories.map(c => <option key={c} value={c}>{c.replace(/_/g, " ")}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-stone-500 uppercase tracking-tighter ml-1">Depreciation Method</label>
+                                        <select
+                                            name="depreciation_method"
+                                            onChange={(e) => setSelectedMethod(e.target.value)}
+                                            className="w-full px-3 py-2 border rounded-xl bg-stone-50/50 border-stone-100 text-sm outline-none focus:ring-2 focus:ring-black/5"
+                                        >
+                                            {(!settings?.allowedDepreciationMethods || settings.allowedDepreciationMethods.includes('LINEAR')) && (
+                                                <option value="LINEAR">Linear (Straight-Line)</option>
+                                            )}
+                                            {settings?.allowedDepreciationMethods?.includes('DECLINING') && (
+                                                <option value="DECLINING">Declining Balance (1.5x)</option>
+                                            )}
+                                            {settings?.allowedDepreciationMethods?.includes('DOUBLE_DECLINING') && (
+                                                <option value="DOUBLE_DECLINING">Double-Declining (2x)</option>
+                                            )}
+                                            {settings?.allowedDepreciationMethods?.includes('PRODUCTION') && (
+                                                <option value="PRODUCTION">Units of Production</option>
+                                            )}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-stone-500 uppercase tracking-tighter ml-1">Purchase Value *</label>
+                                        <Input
+                                            name="purchase_value"
+                                            type="number" step="0.01" min="0.01" required
+                                            onChange={(e) => setPreviewCost(Number(e.target.value))}
+                                            placeholder="50,000.00"
+                                            className="rounded-xl border-emerald-200 bg-emerald-50/10 focus:ring-emerald-500/10"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-stone-500 uppercase tracking-tighter ml-1">Purchase Date *</label>
+                                        <Input name="purchase_date" type="date" required className="rounded-xl bg-stone-50/50 border-stone-100" />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-stone-500 uppercase tracking-tighter ml-1">Useful Life (Years) *</label>
+                                        <Input
+                                            name="useful_life_years"
+                                            type="number" min="1" max="50" required
+                                            defaultValue={previewLife}
+                                            onChange={(e) => setPreviewLife(Number(e.target.value))}
+                                            placeholder="5"
+                                            className="rounded-xl bg-stone-50/50 border-stone-100"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-stone-500 uppercase tracking-tighter ml-1">Residual Value</label>
+                                        <Input
+                                            name="residual_value"
+                                            type="number" step="0.01" min="0" defaultValue="0"
+                                            onChange={(e) => setPreviewResidual(Number(e.target.value))}
+                                            placeholder="5,000.00"
+                                            className="rounded-xl bg-stone-50/50 border-stone-100"
+                                        />
+                                    </div>
+
+                                    {selectedMethod === 'PRODUCTION' && (
+                                        <>
+                                            <div className="space-y-1.5 animate-in slide-in-from-top-2">
+                                                <label className="text-xs font-bold text-indigo-500 uppercase tracking-tighter ml-1 italic">Total Capacity *</label>
+                                                <Input
+                                                    name="total_production_capacity"
+                                                    type="number" min="1" required
+                                                    onChange={(e) => setPreviewCapacity(Number(e.target.value))}
+                                                    placeholder="100,000"
+                                                    className="rounded-xl border-indigo-200 bg-indigo-50/20"
+                                                />
+                                            </div>
+                                            <div className="space-y-1.5 animate-in slide-in-from-top-2">
+                                                <label className="text-xs font-bold text-indigo-500 uppercase tracking-tighter ml-1 italic">Unit Name *</label>
+                                                <Input name="production_unit_name" required placeholder="Miles / Hours" className="rounded-xl border-indigo-200 bg-indigo-50/20" />
+                                            </div>
+                                        </>
+                                    )}
+
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-stone-500 uppercase tracking-tighter ml-1">Source Account</label>
+                                        <select name="source_account_id" className="w-full px-3 py-2 border rounded-xl bg-stone-50/50 border-stone-100 text-sm outline-none focus:ring-2 focus:ring-black/5">
+                                            <option value="">Select account...</option>
+                                            {accounts.map((a: Record<string, any>) => <option key={a.id} value={a.id}>{a.name} ({a.type})</option>)}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-stone-500 uppercase tracking-tighter ml-1">Acquisition Description</label>
+                                    <Input name="description" placeholder="Optional description..." className="rounded-xl bg-stone-50/50 border-stone-100" />
+                                </div>
+                                <div className="flex justify-end gap-2 pt-3 border-t mt-2">
+                                    <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} className="rounded-xl px-6 h-11 text-stone-400 font-bold uppercase text-[10px] tracking-widest border-stone-100 hover:bg-stone-50">Cancel</Button>
+                                    <Button type="submit" disabled={isPending} className="rounded-xl px-8 h-11 gap-2 shadow-lg shadow-black/10 bg-black hover:bg-stone-800 transition-all text-[10px] font-black uppercase tracking-widest text-white">
+                                        {isPending ? "Acquiring..." : <><Landmark size={14} /> Finish Acquisition</>}
+                                    </Button>
+                                </div>
+                            </form>
+
+                            {/* Right: Projection Preview */}
+                            <div className="lg:col-span-2 space-y-4">
+                                <div className="bg-white p-6 rounded-3xl border border-stone-200 shadow-sm h-full flex flex-col">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <div className="flex items-center gap-2">
+                                            <div className="p-1.5 bg-indigo-50 rounded-lg text-indigo-600">
+                                                <TrendingDown size={14} />
+                                            </div>
+                                            <h4 className="text-[10px] font-black text-stone-900 uppercase tracking-[0.2em] leading-none">Book Value Projection</h4>
+                                        </div>
+                                        <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-700 border-emerald-100">Dynamic UI</Badge>
+                                    </div>
+
+                                    {previewCost > 0 ? (
+                                        <div className="flex-1 flex flex-col justify-between">
+                                            <div className="h-56 w-full">
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <AreaChart data={projection}>
+                                                        <defs>
+                                                            <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                                                                <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.15} />
+                                                                <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
+                                                            </linearGradient>
+                                                        </defs>
+                                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f5f5f5" />
+                                                        <XAxis
+                                                            dataKey="period"
+                                                            axisLine={false}
+                                                            tickLine={false}
+                                                            tick={{ fontSize: 9, fontWeight: 700, fill: '#a8a29e' }}
+                                                        />
+                                                        <YAxis hide domain={[0, 'auto']} />
+                                                        <Tooltip
+                                                            content={({ active, payload }) => {
+                                                                if (active && payload && payload.length) {
+                                                                    return (
+                                                                        <div className="bg-black/90 text-white p-3 rounded-2xl text-[10px] shadow-2xl backdrop-blur-md border border-white/10 scale-110">
+                                                                            <p className="font-black uppercase tracking-widest opacity-50 mb-1 text-[8px]">Year {payload[0].payload.period}</p>
+                                                                            <p className="font-black flex justify-between gap-6 text-sm">
+                                                                                Value: <span className="text-emerald-400 font-serif">${Number(payload[0].value).toLocaleString()}</span>
+                                                                            </p>
+                                                                        </div>
+                                                                    );
+                                                                }
+                                                                return null;
+                                                            }}
+                                                        />
+                                                        <Area
+                                                            type="monotone"
+                                                            dataKey="bookValue"
+                                                            stroke="#4f46e5"
+                                                            strokeWidth={4}
+                                                            fillOpacity={1}
+                                                            fill="url(#colorValue)"
+                                                            animationDuration={2000}
+                                                        />
+                                                    </AreaChart>
+                                                </ResponsiveContainer>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4 mt-6">
+                                                <div className="p-4 bg-emerald-50/30 rounded-2xl border border-emerald-100 flex flex-col">
+                                                    <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1">Total Savings</span>
+                                                    <span className="text-lg font-black text-stone-900 tracking-tighter">
+                                                        ${(previewCost - previewResidual).toLocaleString()}
+                                                    </span>
+                                                </div>
+                                                <div className="p-4 bg-stone-50/50 rounded-2xl border border-stone-100 flex flex-col">
+                                                    <span className="text-[9px] font-black text-stone-400 uppercase tracking-widest mb-1">Floor Value</span>
+                                                    <span className="text-lg font-black text-stone-900 tracking-tighter">
+                                                        ${previewResidual.toLocaleString()}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-stone-50/50 rounded-[2.5rem] border-4 border-dashed border-stone-100">
+                                            <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-4 shadow-xl border border-stone-50">
+                                                <Activity size={24} className="text-indigo-200 animate-pulse" />
+                                            </div>
+                                            <p className="text-[10px] font-black text-stone-400 uppercase tracking-[0.3em]">Initialize Engine</p>
+                                            <p className="text-[9px] text-stone-400 mt-2 uppercase font-bold tracking-tight leading-relaxed max-w-[15ch]">
+                                                Enter acquisition cost to generate value projection
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Category *</label>
-                                <select name="category" required className="w-full px-3 py-2 border rounded-xl bg-background text-sm">
-                                    {categories.map(c => <option key={c} value={c}>{c.replace(/_/g, " ")}</option>)}
-                                </select>
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Depreciation Method</label>
-                                <select name="depreciation_method" className="w-full px-3 py-2 border rounded-xl bg-background text-sm">
-                                    <option value="LINEAR">Linear (Straight-Line)</option>
-                                    <option value="DECLINING">Declining Balance</option>
-                                </select>
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Purchase Value *</label>
-                                <Input name="purchase_value" type="number" step="0.01" min="0.01" required placeholder="50,000.00" className="rounded-xl" />
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Purchase Date *</label>
-                                <Input name="purchase_date" type="date" required className="rounded-xl" />
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Useful Life (Years) *</label>
-                                <Input name="useful_life_years" type="number" min="1" max="50" required placeholder="5" className="rounded-xl" />
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Residual Value</label>
-                                <Input name="residual_value" type="number" step="0.01" min="0" defaultValue="0" placeholder="5,000.00" className="rounded-xl" />
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Source Account</label>
-                                <select name="source_account_id" className="w-full px-3 py-2 border rounded-xl bg-background text-sm">
-                                    <option value="">Select account...</option>
-                                    {accounts.map((a: Record<string, any>) => <option key={a.id} value={a.id}>{a.name} ({a.type})</option>)}
-                                </select>
-                            </div>
-                            <div className="col-span-2 space-y-1.5">
-                                <label className="text-xs font-bold text-stone-500 uppercase">Description</label>
-                                <Input name="description" placeholder="Optional description..." className="rounded-xl" />
-                            </div>
-                            <div className="col-span-2 flex justify-end gap-2 pt-3 border-t">
-                                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} className="rounded-xl">Cancel</Button>
-                                <Button type="submit" disabled={isPending} className="rounded-xl gap-2">
-                                    {isPending ? "Acquiring..." : <><Landmark size={14} /> Acquire Asset</>}
-                                </Button>
-                            </div>
-                        </form>
+                        </div>
                     </DialogContent>
                 </Dialog>
             </div>
@@ -317,7 +543,26 @@ export default function AssetsPage() {
                                             <StatusIcon size={12} /> {(asset.status || "").replace(/_/g, " ")}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell className="text-right">
+                                    <TableCell className="text-right space-x-2">
+                                        {settings?.enableAssetQR && (
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => setTagPreviewAsset(asset as Asset)}
+                                                className="rounded-xl gap-1 h-8 text-xs font-semibold border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                                            >
+                                                <QrCode size={12} /> QR
+                                            </Button>
+                                        )}
+                                        {settings?.enableAssetMaintenance && (
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                className="rounded-xl gap-1 h-8 text-xs font-semibold border-amber-200 text-amber-700 hover:bg-amber-50"
+                                            >
+                                                <Wrench size={12} /> Service
+                                            </Button>
+                                        )}
                                         <Button
                                             size="sm"
                                             variant="outline"
@@ -415,6 +660,49 @@ export default function AssetsPage() {
                     </div>
                 </Card>
             )}
+            {/* Asset Tag Preview Modal */}
+            <Dialog open={!!tagPreviewAsset} onOpenChange={(open) => !open && setTagPreviewAsset(null)}>
+                <DialogContent className="sm:max-w-md bg-stone-50 border-stone-200">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2"><QrCode size={20} className="text-indigo-600" /> Physical Asset Tag</DialogTitle>
+                        <DialogDescription>Generate a print-ready sticker for physical asset identification.</DialogDescription>
+                    </DialogHeader>
+
+                    <div className="flex flex-col items-center py-6">
+                        <div id={tagPreviewAsset ? `asset-tag-preview-${tagPreviewAsset.id}` : ''}>
+                            {tagPreviewAsset && <AssetTag asset={tagPreviewAsset} size="md" />}
+                        </div>
+
+                        <div className="mt-8 grid grid-cols-2 gap-4 w-full">
+                            <div className="p-4 bg-white rounded-2xl border border-stone-100 shadow-sm flex flex-col items-center text-center">
+                                <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600 mb-2">
+                                    <ShieldCheck size={18} />
+                                </div>
+                                <h4 className="text-[10px] font-black uppercase text-stone-900">High-Res PDF</h4>
+                                <p className="text-[8px] text-stone-400 font-bold uppercase mt-1">Sticker Sheet Optimized</p>
+                            </div>
+                            <div className="p-4 bg-white rounded-2xl border border-stone-100 shadow-sm flex flex-col items-center text-center">
+                                <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600 mb-2">
+                                    <QrCode size={18} />
+                                </div>
+                                <h4 className="text-[10px] font-black uppercase text-stone-900">Audit Ready</h4>
+                                <p className="text-[8px] text-stone-400 font-bold uppercase mt-1">Global Mobile Sync</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex gap-3 pt-4 border-t border-stone-200">
+                        <Button variant="outline" onClick={() => setTagPreviewAsset(null)} className="flex-1 rounded-xl">Cancel</Button>
+                        <Button
+                            onClick={() => tagPreviewAsset && handlePrintTag(tagPreviewAsset)}
+                            disabled={printing}
+                            className="flex-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 gap-2"
+                        >
+                            {printing ? 'Generating...' : <><Calendar size={14} /> Download Tag</>}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

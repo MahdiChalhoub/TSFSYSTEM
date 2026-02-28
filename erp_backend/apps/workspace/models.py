@@ -167,17 +167,27 @@ class AutoTaskRule(TenantModel):
     Example: price change → 'Update shelf label for Product X'
     """
     TRIGGER_CHOICES = (
-        ('PRICE_CHANGE', 'Product Price Changed'),
-        ('LOW_STOCK', 'Low Stock Alert'),
-        ('NEW_INVOICE', 'New Invoice Received'),
-        ('EXPIRY_APPROACHING', 'Product Expiry Approaching'),
-        ('PO_APPROVED', 'Purchase Order Approved'),
-        ('CLIENT_COMPLAINT', 'Client Complaint Filed'),
-        ('NEW_SUPPLIER', 'New Supplier Onboarded'),
-        ('DELIVERY_COMPLETED', 'Delivery Completed'),
-        ('ORDER_COMPLETED', 'Order Completed'),
-        ('INVENTORY_COUNT', 'Inventory Count Needed'),
-        ('CUSTOM', 'Custom Event'),
+        # General
+        ('PRICE_CHANGE',        'Product Price Changed'),
+        ('LOW_STOCK',           'Low Stock Alert'),
+        ('NEW_INVOICE',         'New Invoice Received'),
+        ('EXPIRY_APPROACHING',  'Product Expiry Approaching'),
+        ('PO_APPROVED',         'Purchase Order Approved'),
+        ('CLIENT_COMPLAINT',    'Client Complaint Filed'),
+        ('NEW_SUPPLIER',        'New Supplier Onboarded'),
+        ('DELIVERY_COMPLETED',  'Delivery Completed'),
+        ('ORDER_COMPLETED',     'Order Completed'),
+        ('INVENTORY_COUNT',     'Inventory Count Needed'),
+        # Finance / POS triggers
+        ('CREDIT_SALE',         'Credit Sale — No Cash Collected'),
+        ('HIGH_VALUE_SALE',     'High-Value Sale Threshold Crossed'),
+        ('POS_RETURN',          'POS Return / Refund Processed'),
+        ('OVERDUE_INVOICE',     'Invoice Overdue'),
+        ('LATE_PAYMENT',        'Late Payment Detected'),
+        ('CASHIER_DISCOUNT',    'Cashier Applied Discount'),
+        ('NEGATIVE_STOCK',      'Negative Stock Sale'),
+        ('DAILY_SUMMARY',       'End-of-Day Financial Summary'),
+        ('CUSTOM',              'Custom Event'),
     )
     name = models.CharField(max_length=200)
     trigger_event = models.CharField(max_length=30, choices=TRIGGER_CHOICES)
@@ -186,10 +196,17 @@ class AutoTaskRule(TenantModel):
         help_text='Event code for CUSTOM trigger type'
     )
     template = models.ForeignKey(TaskTemplate, on_delete=models.CASCADE, related_name='auto_rules')
-    # Conditions (JSON filter)
+    # Conditions — filter by amount, site, client, cashier, payment_method, or any combo
+    # e.g. {"min_amount": 500000, "site_id": 3, "client_id": 12, "payment_method": "CREDIT"}
     conditions = models.JSONField(
         default=dict, blank=True,
-        help_text='JSON filter conditions, e.g. {"category_id": 5, "min_value": 1000}'
+        help_text='Conditions: min_amount, max_amount, site_id, client_id, cashier_id, payment_method'
+    )
+    # Assign to specific user (overrides template assign_to_role if set)
+    assign_to_user = models.ForeignKey(
+        'erp.User', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='auto_task_rules_assigned',
+        help_text='Assign generated task to this specific user (overrides role)'
     )
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)

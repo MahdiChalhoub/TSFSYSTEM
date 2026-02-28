@@ -171,35 +171,37 @@ export default function OrganizationDetailPage() {
     const [showNewClient, setShowNewClient] = useState(false)
     const [newClient, setNewClient] = useState({ first_name: '', last_name: '', email: '', phone: '', company_name: '' })
     const [savingClient, setSavingClient] = useState(false)
-    useEffect(() => {
-        async function load() {
-            try {
-                const [orgData, usageData, billingData, modulesData, usersData, sitesData, addonsData] = await Promise.all([
-                    getOrganization(orgId),
-                    getOrgUsage(orgId),
-                    getOrgBilling(orgId),
-                    getOrgModules(orgId),
-                    getOrgUsers(orgId),
-                    getOrgSites(orgId),
-                    getOrgAddons(orgId),
-                ])
-                setOrg(orgData)
-                setUsage(usageData)
-                setBilling(billingData?.history ? billingData : { history: Array.isArray(billingData) ? billingData : [], balance: { total_paid: '0.00', total_credits: '0.00', net_balance: '0.00' }, client: null })
-                setModules(Array.isArray(modulesData) ? modulesData : [])
-                setUsers(Array.isArray(usersData) ? usersData : [])
-                setSites(Array.isArray(sitesData) ? sitesData : [])
-                setAddons(addonsData || { purchased: [], available: [] })
-                // Load encryption status
-                getOrgEncryptionStatus(orgId).then(s => setEncryptionStatus(s)).catch(() => { })
-            } catch {
-                toast.error("Failed to load organization details")
-            } finally {
-                setLoading(false)
-            }
+    const reloadData = useCallback(async (forceLoading = false) => {
+        if (forceLoading) setLoading(true)
+        try {
+            const [orgData, usageData, billingData, modulesData, usersData, sitesData, addonsData] = await Promise.all([
+                getOrganization(orgId),
+                getOrgUsage(orgId),
+                getOrgBilling(orgId),
+                getOrgModules(orgId),
+                getOrgUsers(orgId),
+                getOrgSites(orgId),
+                getOrgAddons(orgId),
+            ])
+            setOrg(orgData)
+            setUsage(usageData)
+            setBilling(billingData?.history ? billingData : { history: Array.isArray(billingData) ? billingData : [], balance: { total_paid: '0.00', total_credits: '0.00', net_balance: '0.00' }, client: null })
+            setModules(Array.isArray(modulesData) ? modulesData : [])
+            setUsers(Array.isArray(usersData) ? usersData : [])
+            setSites(Array.isArray(sitesData) ? sitesData : [])
+            setAddons(addonsData || { purchased: [], available: [] })
+            // Load encryption status separately
+            getOrgEncryptionStatus(orgId).then(s => setEncryptionStatus(s)).catch(() => { })
+        } catch {
+            toast.error("Data synchronization failed")
+        } finally {
+            if (forceLoading) setLoading(false)
         }
-        load()
     }, [orgId])
+
+    useEffect(() => {
+        reloadData(true)
+    }, [reloadData])
     async function handleToggle(code: string, currentStatus: string) {
         setToggling(code)
         try {
@@ -1293,13 +1295,9 @@ export default function OrganizationDetailPage() {
                                     if (result.modules_disabled?.length > 0) {
                                         toast.info(`Disabled modules: ${result.modules_disabled.join(', ')}`)
                                     }
-                                    // Refresh usage + billing data
-                                    const [newUsage, newBilling] = await Promise.all([
-                                        getOrgUsage(orgId),
-                                        getOrgBilling(orgId),
-                                    ])
-                                    setUsage(newUsage)
-                                    setBilling(newBilling?.history ? newBilling : { history: Array.isArray(newBilling) ? newBilling : [], balance: { total_paid: '0.00', total_credits: '0.00', net_balance: '0.00' }, client: null })
+                                    // Refresh all data + global router state
+                                    await reloadData()
+                                    router.refresh()
                                     setPlanSwitchTarget(null)
                                 } catch (err: unknown) {
                                     toast.error((err instanceof Error ? err.message : String(err)) || 'Failed to change plan')

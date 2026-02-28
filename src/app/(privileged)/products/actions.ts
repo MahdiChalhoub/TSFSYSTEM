@@ -5,26 +5,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
-// Validation Schema
-const productSchema = z.object({
-    name: z.string().min(2, "Name must be at least 2 characters"),
-    description: z.string().optional(),
-    sku: z.string().min(3, "SKU is required"),
-    barcode: z.string().optional(),
-    categoryId: z.coerce.number().optional(),
-    unitId: z.coerce.number().optional(),
-    brandId: z.coerce.number().optional(),
-    countryId: z.coerce.number().optional(),
-
-    costPrice: z.coerce.number().min(0),
-    basePrice: z.coerce.number().min(0),
-    taxRate: z.coerce.number().min(0).max(1),
-    isTaxIncluded: z.boolean(),
-
-    minStockLevel: z.coerce.number().int().min(0),
-    isExpiryTracked: z.boolean(),
-});
-
 export type ProductFormState = {
     errors?: {
         [key: string]: string[];
@@ -33,63 +13,73 @@ export type ProductFormState = {
 };
 
 export async function createProduct(prevState: ProductFormState, formData: FormData) {
-    // 1. Extract Data
+    // 1. Extract Core Data
     const rawData = {
         name: formData.get('name'),
-        description: (formData.get('description') as string) || undefined,
-        sku: formData.get('sku'),
-        barcode: formData.get('barcode'),
+        shortName: formData.get('shortName') || undefined,
+        description: formData.get('description') || undefined,
         categoryId: formData.get('categoryId') || undefined,
-        unitId: formData.get('unitId') || undefined,
         brandId: formData.get('brandId') || undefined,
         countryId: formData.get('countryId') || undefined,
+        productType: formData.get('productType') || 'SINGLE',
 
-        // Grouping fields for backend logic
-        parfumName: formData.get('parfumName') || undefined,
-
+        // Attributes & Packaging
         size: formData.get('size') || undefined,
         sizeUnitId: formData.get('sizeUnitId') || undefined,
+        unitId: formData.get('unitId') || undefined,
 
+        // Variations Data (JSON array string)
+        variationsData: formData.get('variationsData') || '[]',
+
+        // Pricing
         costPrice: formData.get('costPrice') || 0,
-        costPriceHT: formData.get('costPriceHT') || 0,
-        costPriceTTC: formData.get('costPriceTTC') || 0,
-
-        basePrice: formData.get('sellingPriceTTC') || 0,
-        sellingPriceHT: formData.get('sellingPriceHT') || 0,
-        sellingPriceTTC: formData.get('sellingPriceTTC') || 0,
-
+        basePrice: formData.get('basePrice') || 0,
         taxRate: formData.get('taxRate') || 0,
         isTaxIncluded: formData.get('isTaxIncluded') === 'on',
+
+        // Rules
         minStockLevel: formData.get('minStockLevel') || 0,
         isExpiryTracked: formData.get('isExpiryTracked') === 'on',
+        isForSale: formData.get('isForSale') === 'on',
+        isForPurchasing: formData.get('isForPurchasing') === 'on',
+        isSerialized: formData.get('isSerialized') === 'on',
+
+        // Advanced Levels
+        packagingLevels: formData.get('packagingLevels') || '[]',
+        
+        // Supplier
+        supplierId: formData.get('supplierId') || undefined,
+        supplierSku: formData.get('supplierSku') || undefined,
+        supplierPrice: formData.get('supplierPrice') || undefined,
+        supplierLeadTime: formData.get('supplierLeadTime') || undefined,
     };
 
-    // 2. Validate
-    const validatedFields = productSchema.extend({
-        size: z.coerce.number().optional(),
-        sizeUnitId: z.coerce.number().optional(),
-        // Backend specific fields
-        parfumName: z.string().optional(),
-        costPriceHT: z.coerce.number().min(0),
-        costPriceTTC: z.coerce.number().min(0),
-        sellingPriceHT: z.coerce.number().min(0),
-        sellingPriceTTC: z.coerce.number().min(0),
-    }).safeParse(rawData);
-
-    if (!validatedFields.success) {
-        return {
-            errors: validatedFields.error.flatten().fieldErrors,
-            message: 'Missing Fields. Failed to Create Product.',
-        };
-    }
-
     try {
+        // Parse JSON fields securely
+        let parsedVariations = [];
+        try { parsedVariations = JSON.parse(rawData.variationsData as string); } catch(e){}
+        
+        let parsedPackaging = [];
+        try { parsedPackaging = JSON.parse(rawData.packagingLevels as string); } catch(e){}
+
+        const payload = {
+            ...rawData,
+            variations: parsedVariations,
+            packagingLevels: parsedPackaging
+        };
+
         // 3. Delegation to Django
-        await erpFetch('products/create_complex/', {
+        // NOTE: The endpoint needs to be able to handle this massive complex payload.
+        // If 'products/create_complex/' doesn't exist yet, it will need to be built to accept this structure!
+        const response = await erpFetch('products/create_complex/', {
             method: 'POST',
-            body: JSON.stringify(validatedFields.data),
+            body: JSON.stringify(payload),
             headers: { 'Content-Type': 'application/json' }
         });
+
+        if (response.error) {
+            return { message: response.error };
+        }
 
     } catch (e: unknown) {
         console.error("Backend Create Error:", e);

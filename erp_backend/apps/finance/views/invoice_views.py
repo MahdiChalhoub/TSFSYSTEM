@@ -35,6 +35,10 @@ class InvoiceViewSet(TenantModelViewSet):
             return Response({"error": "Tenant context missing"}, status=400)
         organization = Organization.objects.get(id=organization_id)
 
+        # --- STRICT SCOPE ENFORCEMENT ---
+        scope = request.data.get('scope', 'OFFICIAL')
+        self.check_scope_permission(scope)
+
         try:
             lines_data = request.data.pop('lines', [])
             data = request.data.copy()
@@ -145,13 +149,21 @@ class InvoiceViewSet(TenantModelViewSet):
         invoice = self.get_object()
         if invoice.status not in ('DRAFT',):
             return Response({"error": "Lines can only be added to DRAFT invoices."}, status=400)
+            
         organization_id = get_current_tenant_id()
         organization = Organization.objects.get(id=organization_id)
+        
+        product_id = request.data.get('product')
+        if product_id:
+            from apps.inventory.models import Product
+            if not Product.objects.filter(id=product_id, organization=organization).exists():
+                return Response({"error": "Product not found or access denied."}, status=403)
+                
         try:
             line = InvoiceLine.objects.create(
                 organization=organization,
                 invoice=invoice,
-                **request.data
+                **{k: v for k, v in request.data.items() if k not in ('organization', 'invoice')}
             )
             invoice.recalculate_totals()
             return Response(InvoiceLineSerializer(line).data, status=201)
@@ -186,6 +198,8 @@ class InvoiceViewSet(TenantModelViewSet):
         })
 
 
+from rest_framework.exceptions import ValidationError
+
 class InvoiceLineViewSet(TenantModelViewSet):
     queryset = InvoiceLine.objects.all()
     serializer_class = InvoiceLineSerializer
@@ -197,7 +211,41 @@ class InvoiceLineViewSet(TenantModelViewSet):
             qs = qs.filter(invoice_id=invoice_id)
         return qs
 
+    def perform_create(self, serializer):
+        org_id = get_current_tenant_id()
+        invoice = serializer.validated_data.get('invoice')
+        if invoice and invoice.organization_id != org_id:
+            raise ValidationError("Cross-tenant Invoice assignment blocked.")
+        serializer.save(organization_id=org_id)
+
+    def perform_update(self, serializer):
+        org_id = get_current_tenant_id()
+        invoice = serializer.validated_data.get('invoice')
+        if invoice and invoice.organization_id != org_id:
+            raise ValidationError("Cross-tenant Invoice assignment blocked.")
+        serializer.save(organization_id=org_id)
+
 
 class PaymentAllocationViewSet(TenantModelViewSet):
     queryset = PaymentAllocation.objects.all()
     serializer_class = PaymentAllocationSerializer
+
+    def perform_create(self, serializer):
+        org_id = get_current_tenant_id()
+        invoice = serializer.validated_data.get('invoice')
+        payment = serializer.validated_data.get('payment')
+        if invoice and invoice.organization_id != org_id:
+            raise ValidationError("Cross-tenant Invoice assignment blocked.")
+        if payment and payment.organization_id != org_id:
+            raise ValidationError("Cross-tenant Payment assignment blocked.")
+        serializer.save(organization_id=org_id)
+
+    def perform_update(self, serializer):
+        org_id = get_current_tenant_id()
+        invoice = serializer.validated_data.get('invoice')
+        payment = serializer.validated_data.get('payment')
+        if invoice and invoice.organization_id != org_id:
+            raise ValidationError("Cross-tenant Invoice assignment blocked.")
+        if payment and payment.organization_id != org_id:
+            raise ValidationError("Cross-tenant Payment assignment blocked.")
+        serializer.save(organization_id=org_id)

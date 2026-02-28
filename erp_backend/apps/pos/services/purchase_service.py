@@ -105,7 +105,7 @@ class PurchaseService:
                     reference=f"PO-REC-{order.id}",
                     status='POSTED',
                     scope=scope,
-                    site_id=warehouse.site_id,
+                    site_id=warehouse.parent_id or warehouse.id,
                     user=user,
                     lines=[
                         {"account_id": inv_acc, "debit": total_received_value, "credit": Decimal('0'), "description": "Inventory Value increase"},
@@ -155,7 +155,7 @@ class PurchaseService:
                     product=product,
                     quantity=qty,
                     unit_price=price,
-                    total=line_total
+                    subtotal=line_total
                 )
 
             order.total_amount = total_amount
@@ -164,7 +164,7 @@ class PurchaseService:
 
     @staticmethod
     def quick_purchase(organization, supplier_id, warehouse_id, site_id, scope, invoice_price_type, vat_recoverable, lines, notes=None, ref_code=None, user=None, **kwargs):
-        from apps.inventory.advanced_models import ProductBatch
+        from apps.inventory.models.advanced_models import ProductBatch
         from apps.inventory.models import InventoryMovement
 
         # Gated cross-module imports
@@ -267,20 +267,17 @@ class PurchaseService:
                 if apply_airsi and airsi_capitalized and qty > 0:
                     final_effective_cost += (line_airsi / qty).quantize(Decimal('0.01'))
 
-                OrderLine.objects.create(
+                line_obj = OrderLine(
                     organization=organization,
                     order=order,
                     product=product,
                     quantity=qty,
                     unit_price=final_effective_cost,
-                    unit_cost_ht=unit_cost_ht,
-                    unit_cost_ttc=unit_cost_ttc,
-                    vat_amount=line_tax / qty if qty > 0 else 0,
-                    airsi_amount=line_airsi / qty if qty > 0 else 0,
-                    effective_cost=final_effective_cost,
                     tax_rate=tax_rate,
-                    total=line_total_ttc
+                    airsi_rate=airsi_rate if apply_airsi else Decimal('0'),
+                    subtotal=line_total_ttc
                 )
+                line_obj.save(force_audit_bypass=True)
 
                 batch = ProductBatch.objects.create(
                     organization=organization,

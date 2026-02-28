@@ -159,3 +159,52 @@ class KernelManager:
             for byte_block in iter(lambda: f.read(4096), b""):
                 sha256_hash.update(byte_block)
         return sha256_hash.hexdigest()
+
+    @staticmethod
+    def list_backups():
+        """Lists available kernel backups."""
+        backups_dir = os.path.join(settings.BASE_DIR, 'backups')
+        if not os.path.exists(backups_dir):
+            return []
+        
+        results = []
+        for d in os.listdir(backups_dir):
+            if d.startswith("kernel_"):
+                parts = d.split('_')
+                if len(parts) >= 3:
+                    version = parts[1]
+                    timestamp_str = parts[2]
+                    results.append({
+                        'version': version,
+                        'timestamp': timestamp_str,
+                        'folder': d
+                    })
+        return sorted(results, key=lambda x: x['timestamp'], reverse=True)
+
+    @staticmethod
+    @transaction.atomic
+    def rollback(backup_folder):
+        """Restores a kernel from a backup folder."""
+        backup_path = os.path.join(settings.BASE_DIR, 'backups', backup_folder)
+        if not os.path.exists(backup_path):
+            raise ValidationError(f"Backup {backup_folder} not found.")
+
+        core_dirs = ['erp', 'lib', 'apps_core']
+        
+        print(f"🔄 Rolling back Kernel to {backup_folder}...")
+        for d in core_dirs:
+            src = os.path.join(backup_path, d)
+            if os.path.exists(src):
+                shutil.copytree(src, os.path.join(settings.BASE_DIR, d), dirs_exist_ok=True)
+        
+        # Update latest record or create a rollback record
+        version = backup_folder.split('_')[1]
+        SystemUpdate.objects.create(
+            version=version,
+            changelog=f"Rollback to {backup_folder}",
+            is_applied=True,
+            applied_at=timezone.now(),
+            metadata={'rollback_from': backup_folder}
+        )
+        print(f"✅ Kernel successfully rolled back to v{version}")
+        return version

@@ -1,6 +1,7 @@
 from .product_models import (
     Unit, Category, Brand, Parfum, ProductGroup, Product,
-    ProductAttribute, ProductAttributeValue, ProductVariant, ComboComponent
+    ProductAttribute, ProductAttributeValue, ProductVariant, ComboComponent,
+    ProductPackaging
 )
 from .warehouse_models import Warehouse, Inventory, InventoryMovement
 from .order_models import (
@@ -20,6 +21,7 @@ from .location_models import (
 __all__ = [
     'Unit', 'Category', 'Brand', 'Parfum', 'ProductGroup', 'Product',
     'ProductAttribute', 'ProductAttributeValue', 'ProductVariant', 'ComboComponent',
+    'ProductPackaging',
     'Warehouse', 'Inventory', 'InventoryMovement',
     'StockAdjustmentOrder', 'StockAdjustmentLine',
     'StockTransferOrder', 'StockTransferLine',

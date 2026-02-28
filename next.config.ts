@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
       bodySizeLimit: '2mb',
-      allowedOrigins: ['tsf.ci', '*.tsf.ci', 'localhost:3000'],
+      allowedOrigins: ['tsf.ci', '*.tsf.ci', 'localhost:3000', 'localhost:3001'],
     },
   },
 
@@ -53,11 +53,11 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com https://js.stripe.com",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com https://*.cloudflareinsights.com https://js.stripe.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' data: https://fonts.gstatic.com https://fonts.googleapis.com",
-              "img-src 'self' data: blob: https:",
-              "connect-src 'self' https://*.tsf.ci https://tsf.ci https://cloudflareinsights.com https://static.cloudflareinsights.com https://api.stripe.com",
+              "img-src 'self' data: blob: https: https://*.unsplash.com",
+              "connect-src 'self' https://*.tsf.ci https://tsf.ci https://cloudflareinsights.com https://*.cloudflareinsights.com https://static.cloudflareinsights.com https://api.stripe.com https://*.unsplash.com",
               "frame-src 'self' https://js.stripe.com",
               "frame-ancestors 'self'",
             ].join('; '),

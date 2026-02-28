@@ -1,0 +1,36 @@
+# TSF PLATFORM | STRICT AUDIT & MODIFICATION RULES
+
+## 🛑 MANDATORY APPROVAL FOR LOCKED/FINALIZED FILES
+**NEVER MODIFY ANY FILE MARKED AS "LOCKED", "FINALIZED", OR IN A "PRODUCTION READY" STATE WITHOUT EXPLICIT USER APPROVAL.**
+
+If a file contains a header or comment indicating it is finalized (e.g., `// STATUS: FINALIZED`, `// LOCKED`), or if the user has previously stated the module is complete, you MUST:
+1. Explain exactly what change you want to make and why.
+2. Wait for the user to reply with "Approved" or "Yes" before executing any editing tool (`replace_file_content`, `multi_replace_file_content`, etc.).
+3. Failure to secure permission before editing a locked file is a critical violation of protocol.
+
+## 🛡️ TSF SYSTEM AUDIT PLAN
+Before presenting any UI component, endpoint, or feature as "complete", the following Audit Plan must be executed and verified:
+
+### 1. The "Dead Button" Check (Action Verification)
+Every interactive element (Buttons, Checkboxes, Table Rows, Icons) MUST be verified:
+- Does this button have an `onClick` handler or `href` attribute?
+- If it's a link, does the route actually exist in the Next.js `app/` directory (e.g., `/purchases/123/edit`)?
+- Are placeholder actions (e.g., `onClick={() => console.log('todo')}`) strictly prohibited in final code?
+
+### 2. The "Ghost Data" Check (Relational Integrity)
+Every list view and detail view MUST be verified for referential integrity:
+- Are lists properly linked to their parent/child records? (e.g., "List of purchases" must click through to the *actual* purchase reference).
+- Are foreign keys populated, or does the UI crash/show blank spaces when a relation is `null` (e.g., deleted users or unassigned categories)? Provide fallback rendering (`Unknown`, `N/A`).
+
+### 3. The "Iron Wall" Check (Tenant & Scope Isolation)
+Every endpoint and data-fetching component MUST be verified for security:
+- **Backend:** Is the QuerySet strictly filtered by `organization` AND `scope` (Internal/Official)? (Enforced via `TenantModelViewSet`).
+- **Frontend:** Is the component pulling the correct `tsf_view_scope` and passing it via the `X-Scope` header or query path?
+- Can a standard user access administrative settings or cross-tenant data by manipulating the URL?
+
+### 4. The "Type Safety" Check (Data Accuracy)
+- Are numeric fields (prices, quantities, discounts) strictly typed and parsed?
+- Is math being done securely (avoiding floating-point errors by using `Decimal` on backend and explicit formatting libraries on frontend)?
+- Are "Wrong Data" scenarios (like negative quantities or NaN totals) explicitly caught or prevented by UI validation?
+
+**By reading these rules, the Agent acknowledges that stability and strict isolation are the highest priorities of the TSF System.**

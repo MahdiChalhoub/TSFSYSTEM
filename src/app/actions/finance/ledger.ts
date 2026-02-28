@@ -128,7 +128,7 @@ export async function getLedgerEntries(
     try {
         let path = 'journal/'
         const params = new URLSearchParams()
-        if (scope === 'OFFICIAL') params.append('scope', 'OFFICIAL')
+        params.append('scope', scope)
         if (filters?.status) params.append('status', filters.status)
         if (filters?.q) params.append('search', filters.q)
         if (filters?.fiscal_year) params.append('fiscal_year', filters.fiscal_year)

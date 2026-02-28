@@ -1,4 +1,5 @@
 from .pos_views import POSViewSet, PosTicketViewSet
+from .register_views import POSRegisterViewSet
 from .purchase_views import PurchaseViewSet, PurchaseOrderViewSet, PurchaseOrderLineViewSet
 from .returns_views import SalesReturnViewSet, CreditNoteViewSet, PurchaseReturnViewSet
 from .quotation_views import QuotationViewSet
@@ -7,9 +8,11 @@ from .discount_views import DiscountRuleViewSet
 from .consignment_views import ConsignmentSettlementViewSet
 from .order_views import OrderViewSet
 from .sourcing_views import ProductSupplierViewSet, SupplierPriceHistoryViewSet
+from .audit_views import POSAuditRuleViewSet, POSAuditEventViewSet
+from .settings_views import POSSettingsViewSet
 
 __all__ = [
-    'POSViewSet', 'PosTicketViewSet',
+    'POSViewSet', 'PosTicketViewSet', 'POSRegisterViewSet',
     'PurchaseViewSet', 'PurchaseOrderViewSet', 'PurchaseOrderLineViewSet',
     'SalesReturnViewSet', 'CreditNoteViewSet', 'PurchaseReturnViewSet',
     'QuotationViewSet',
@@ -18,4 +21,6 @@ __all__ = [
     'ConsignmentSettlementViewSet',
     'OrderViewSet',
     'ProductSupplierViewSet', 'SupplierPriceHistoryViewSet',
+    'POSAuditRuleViewSet', 'POSAuditEventViewSet',
+    'POSSettingsViewSet',
 ]

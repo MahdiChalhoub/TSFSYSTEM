@@ -81,7 +81,21 @@ class ModuleManager:
                     except Exception as e:
                         print(f"⚠️ Failed to register {item}: {e}")
         
+        ModuleManager.trigger_reload()
         return found_modules
+
+    @staticmethod
+    def trigger_reload():
+        """Touches settings.py to trigger a Django reload in dev/production."""
+        try:
+            settings_path = os.path.join(settings.BASE_DIR, 'core', 'settings.py')
+            if os.path.exists(settings_path):
+                os.utime(settings_path, None)
+                print(f"🔥 System HOT-RELOAD triggered via {settings_path}")
+                return True
+        except Exception as e:
+            print(f"⚠️ Hot-reload trigger failed: {e}")
+        return False
 
     @staticmethod
     def get_checksum(file_path):
@@ -257,6 +271,7 @@ class ModuleManager:
                 performed_by=user
             )
             
+            ModuleManager.trigger_reload()
             print(f"✅ Module {module_name} successfully hardened to {new_version}")
 
         except Exception as e:

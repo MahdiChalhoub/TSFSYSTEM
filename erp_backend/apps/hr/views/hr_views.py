@@ -1,8 +1,10 @@
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError
 from erp.views import TenantModelViewSet
-from apps.hr.models import Department, Shift, Attendance, Leave
+from erp.middleware import get_current_tenant_id
+from apps.hr.models import Department, Shift, Attendance, Leave, Employee
 from apps.hr.serializers import DepartmentSerializer, ShiftSerializer, AttendanceSerializer, LeaveSerializer
 
 class DepartmentViewSet(TenantModelViewSet):
@@ -26,6 +28,22 @@ class ShiftViewSet(TenantModelViewSet):
 class AttendanceViewSet(TenantModelViewSet):
     queryset = Attendance.objects.all().select_related('employee', 'shift')
     serializer_class = AttendanceSerializer
+
+    def _validate_employee_ownership(self, data, org_id):
+        employee = data.get('employee')
+        if employee and hasattr(employee, 'organization_id') and employee.organization_id != org_id:
+            raise ValidationError("Cross-tenant employee assignment blocked.")
+
+    def perform_create(self, serializer):
+        org_id = get_current_tenant_id()
+        self._validate_employee_ownership(serializer.validated_data, org_id)
+        serializer.save(organization_id=org_id)
+
+    def perform_update(self, serializer):
+        org_id = get_current_tenant_id()
+        self._validate_employee_ownership(serializer.validated_data, org_id)
+        serializer.save()
+
     @action(detail=True, methods=['post'], url_path='check-in')
     def check_in(self, request, pk=None):
         from django.utils import timezone
@@ -45,6 +63,22 @@ class AttendanceViewSet(TenantModelViewSet):
 class LeaveViewSet(TenantModelViewSet):
     queryset = Leave.objects.all().select_related('employee', 'approved_by')
     serializer_class = LeaveSerializer
+
+    def _validate_employee_ownership(self, data, org_id):
+        employee = data.get('employee')
+        if employee and hasattr(employee, 'organization_id') and employee.organization_id != org_id:
+            raise ValidationError("Cross-tenant employee assignment blocked.")
+
+    def perform_create(self, serializer):
+        org_id = get_current_tenant_id()
+        self._validate_employee_ownership(serializer.validated_data, org_id)
+        serializer.save(organization_id=org_id)
+
+    def perform_update(self, serializer):
+        org_id = get_current_tenant_id()
+        self._validate_employee_ownership(serializer.validated_data, org_id)
+        serializer.save()
+
     @action(detail=True, methods=['post'])
     def approve(self, request, pk=None):
         leave = self.get_object()

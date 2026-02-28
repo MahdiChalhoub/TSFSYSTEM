@@ -19,7 +19,7 @@ class Quotation(TenantModel):
     reference = models.CharField(max_length=100, null=True, blank=True)
     contact = models.ForeignKey('crm.Contact', on_delete=models.SET_NULL, null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='quotations')
-    site = models.ForeignKey('erp.Site', on_delete=models.SET_NULL, null=True, blank=True)
+    site = models.ForeignKey('inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True, related_name='quotations_at_site')
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
     valid_until = models.DateField(null=True, blank=True)
