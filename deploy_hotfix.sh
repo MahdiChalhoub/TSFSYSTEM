@@ -2,7 +2,7 @@
 set -e
 
 # Version Configuration
-AGENT_VERSION="2.9.2-AG-$(date +'%y%m%d.%H%M')"
+AGENT_VERSION="3.1.3-AG-$(date +'%y%m%d.%H%M')"
 echo "🚀 Preparing deployment for version: $AGENT_VERSION"
 
 # Update version in branding
@@ -22,6 +22,9 @@ rsync -avz -e "ssh -i ~/.ssh/id_deploy" \
     --exclude 'db_data' \
     --exclude 'postgres_data' \
     --exclude 'deploy_hotfix.sh' \
+    --exclude 'src/components/app-sidebar.tsx' \
+    --exclude 'src/components/admin/Sidebar.tsx' \
+    --exclude 'src/lib/branding.ts' \
     --update \
     root@91.99.186.183:/root/TSFSYSTEM/ /root/.gemini/antigravity/scratch/TSFSYSTEM/
 
@@ -44,15 +47,15 @@ echo "📊 Applying Database Migrations..."
 ssh -i ~/.ssh/id_deploy root@91.99.186.183 "docker exec tsfsystem-backend-1 python manage.py makemigrations"
 ssh -i ~/.ssh/id_deploy root@91.99.186.183 "docker exec tsfsystem-backend-1 python manage.py migrate"
 
-echo "🔄 Restarting Backend Service..."
-ssh -i ~/.ssh/id_deploy root@91.99.186.183 "docker restart tsfsystem-backend-1"
+echo "🔄 Restarting Backend & Celery Services..."
+ssh -i ~/.ssh/id_deploy root@91.99.186.183 "docker restart tsfsystem-backend-1 tsfsystem-celery_worker-1 tsfsystem-celery_beat-1"
 
 echo "🏗️  Rebuilding Frontend Image (Clean Production Build)..."
 # Rebuilding image is safer than exec build as it clears .next and starts fresh
 ssh -i ~/.ssh/id_deploy root@91.99.186.183 "cd /root/TSFSYSTEM && docker-compose build --no-cache frontend"
 
-echo "🚀 Deploying New Frontend Container..."
-ssh -i ~/.ssh/id_deploy root@91.99.186.183 "cd /root/TSFSYSTEM && docker-compose up -d frontend"
+echo "🚀 Deploying New Frontend & Agent Pulse..."
+ssh -i ~/.ssh/id_deploy root@91.99.186.183 "cd /root/TSFSYSTEM && docker-compose up -d frontend mcp_agent_pulse"
 
 echo "🔄 Restarting Nginx Gateway..."
 ssh -i ~/.ssh/id_deploy root@91.99.186.183 "docker restart tsf_gateway"

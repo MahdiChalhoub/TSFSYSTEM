@@ -70,9 +70,9 @@ export default function MCPDashboardPage() {
                             <Bot size={28} />
                         </div>
                     </div>
-                    <h2 className="text-3xl font-black text-gray-900 tracking-tight">AI Integration</h2>
+                    <h2 className="text-3xl font-black text-gray-900 tracking-tight">AI Intelligence</h2>
                     <p className="text-gray-500 mt-2 font-medium">
-                        MCP Connector for AI-powered automation
+                        Autonomous agents and AI-powered automation
                     </p>
                 </div>
                 <div className="flex gap-3">
@@ -94,7 +94,7 @@ export default function MCPDashboardPage() {
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <Card className="rounded-2xl shadow-lg border-gray-100">
                     <CardContent className="p-6">
                         <div className="flex items-center justify-between mb-4">
@@ -109,6 +109,23 @@ export default function MCPDashboardPage() {
                             {data?.providers_count || 0}
                         </div>
                         <p className="text-sm text-gray-500 mt-1">AI providers configured</p>
+                    </CardContent>
+                </Card>
+
+                <Card className="rounded-2xl shadow-lg border-gray-100">
+                    <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="p-3 rounded-xl bg-emerald-100 text-emerald-600">
+                                <Sparkles size={24} />
+                            </div>
+                            <Badge variant="outline" className="text-emerald-600 border-emerald-200">
+                                Agents
+                            </Badge>
+                        </div>
+                        <div className="text-3xl font-black text-gray-900">
+                            {data?.agents_count || 0}
+                        </div>
+                        <p className="text-sm text-gray-500 mt-1">Active virtual employees</p>
                     </CardContent>
                 </Card>
 

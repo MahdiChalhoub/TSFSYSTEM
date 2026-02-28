@@ -9,7 +9,7 @@ from .views import (
     OrganizationViewSet, SiteViewSet, SettingsViewSet, health_check,
     TenantResolutionView, DashboardViewSet, CountryViewSet, RoleViewSet,
     UserViewSet, RecordHistoryViewSet, EntityGraphViewSet, CurrencyViewSet,
-    NotificationViewSet, PermissionViewSet, import_sales_csv_view
+    NotificationViewSet, PermissionViewSet, import_sales_csv_view, BusinessTypeViewSet
 )
 from .views_auth import (
     login_view, logout_view, me_view, PublicConfigView, register_business_view,
@@ -32,7 +32,7 @@ from .list_preferences_views import (
 router = DefaultRouter()
 router.register(r'tenant', TenantResolutionView, basename='tenant')
 router.register(r'organizations', OrganizationViewSet)
-router.register(r'sites', SiteViewSet)
+router.register(r'sites', SiteViewSet, basename='sites')
 router.register(r'settings', SettingsViewSet, basename='settings')
 router.register(r'dashboard', DashboardViewSet, basename='dashboard')
 router.register(r'countries', CountryViewSet)
@@ -45,6 +45,7 @@ router.register(r'currencies', CurrencyViewSet, basename='currencies')
 router.register(r'notifications', NotificationViewSet, basename='notifications')
 router.register(r'permissions', PermissionViewSet, basename='permissions')
 router.register(r'udle-views', UDLESavedViewViewSet, basename='udle-views')
+router.register(r'business-types', BusinessTypeViewSet, basename='business-types')
 
 # SaaS Management
 router.register(r'saas/modules', SaaSModuleViewSet, basename='saas-modules')
@@ -114,28 +115,40 @@ try:
 except Exception:
     pass  # Already registered or DRF not available
 
+# --- Automatic Module Discovery & Registration ---
+_namespaced_module_patterns = []
+_flat_module_patterns = []
+
 if _APPS_DIR.exists():
+    # Sort for deterministic registration order
     for _app_dir in sorted(_APPS_DIR.iterdir()):
-        if not _app_dir.is_dir():
+        if not _app_dir.is_dir() or not (_app_dir / 'urls.py').exists():
             continue
-        if not (_app_dir / 'urls.py').exists():
-            continue
-        
+            
         _module_code = _app_dir.name
         if _module_code in _KERNEL_MANAGED:
             continue
-        
+            
         _module_path = f'apps.{_module_code}.urls'
         try:
-            # Verify the module can be imported before adding
             importlib.import_module(_module_path)
             
-            # 1. Flat mount (backward compatible) — /api/accounts/
-            urlpatterns.insert(0, path('', include(_module_path)))
-            # 2. Namespaced mount (new standard) — /api/finance/accounts/
-            urlpatterns.insert(1, path(f'{_module_code}/', include(_module_path)))
+            # 1. Namespaced mount (specific) — e.g., /api/inventory/inventory-movements/
+            # Put namespaced routes in a separate list to ensure they have priority
+            _namespaced_module_patterns.append(path(f'{_module_code}/', include(_module_path)))
+            
+            # 2. Flat mount (backward compatible) — e.g., /api/inventory-movements/
+            # Put flat routes in another list, checked later
+            _flat_module_patterns.append(path('', include(_module_path)))
             
             _logger.info(f"[URLs] Registered module: {_module_code} (flat + namespaced)")
         except Exception as _e:
             _logger.warning(f"[URLs] Skipping module {_module_code}: {_e}")
+
+# FINAL URL HIERARCHY (Priority Order):
+# 1. Namespaced Module URLs (Specific paths like /api/inventory/...)
+# 2. Kernel URLs (Infrastructure like /api/auth/, /api/health/)
+# 3. Flat Module URLs (Legacy paths for backward compatibility)
+urlpatterns = _namespaced_module_patterns + urlpatterns + _flat_module_patterns
+
 

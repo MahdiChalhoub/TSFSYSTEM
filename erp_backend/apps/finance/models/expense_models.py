@@ -1,6 +1,7 @@
 from django.db import models
 from decimal import Decimal
 from erp.models import TenantModel
+from django.core.exceptions import ValidationError
 from apps.finance.models.coa_models import ChartOfAccount, FinancialAccount
 from apps.finance.models.ledger_models import JournalEntry
 from apps.finance.models.loan_models import FinancialEvent
@@ -38,9 +39,19 @@ class DeferredExpense(TenantModel):
     class Meta:
         db_table = 'deferredexpense'
     def save(self, *args, **kwargs):
+        bypass = kwargs.pop('force_audit_bypass', False)
+        if self.pk and not bypass:
+            original = DeferredExpense.objects.get(pk=self.pk)
+            if original.status in ('COMPLETED', 'CANCELLED'):
+                raise ValidationError(f"Immutable Expense: Cannot modify a {original.status} deferred expense.")
         if self.duration_months > 0:
             self.monthly_amount = (self.total_amount / self.duration_months).quantize(Decimal('0.01'))
         super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        if self.status in ('COMPLETED', 'CANCELLED'):
+            raise ValidationError(f"Immutable Expense: Cannot delete a {self.status} deferred expense.")
+        super().delete(*args, **kwargs)
 
 class DirectExpense(TenantModel):
     CATEGORIES = (
@@ -80,3 +91,16 @@ class DirectExpense(TenantModel):
         ordering = ['-date', '-created_at']
     def __str__(self):
         return f"{self.name} — {self.amount}"
+
+    def save(self, *args, **kwargs):
+        bypass = kwargs.pop('force_audit_bypass', False)
+        if self.pk and not bypass:
+            original = DirectExpense.objects.get(pk=self.pk)
+            if original.status == 'POSTED' and self.status == 'POSTED':
+                raise ValidationError(f"Immutable Expense: Cannot modify a POSTED direct expense ('{self.name}').")
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        if self.status == 'POSTED':
+            raise ValidationError(f"Immutable Expense: Cannot delete a POSTED direct expense ('{self.name}').")
+        super().delete(*args, **kwargs)

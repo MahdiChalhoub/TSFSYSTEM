@@ -89,6 +89,12 @@ async function proxyRequest(req: NextRequest, pathParts: string[]) {
     if (tenantId) headers.set('X-Tenant-Id', tenantId);
     if (tenantSlug) headers.set('X-Tenant-Slug', tenantSlug);
 
+    // 4. Extract scope from cookies (Official vs Internal)
+    const scope = req.cookies.get('tsf_view_scope')?.value || req.headers.get('x-scope');
+    if (scope) {
+        headers.set('X-Scope', scope.toUpperCase());
+    }
+
     console.log(`[ERP_PROXY] ${req.method} ${targetUrl} | Tenant: ${tenantSlug || 'None'} | Auth: ${headers.has('Authorization') ? 'Present' : 'Missing'}`);
 
     try {

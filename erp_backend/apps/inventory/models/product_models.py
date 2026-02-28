@@ -217,3 +217,36 @@ class ComboComponent(TenantModel):
         db_table = 'combo_component'
         unique_together = ('combo_product', 'component_product', 'organization')
         ordering = ['sort_order']
+
+
+class ProductPackaging(TenantModel):
+    """
+    Multi-level packaging hierarchy for a product.
+    Each level maps a higher-level unit (e.g., Carton) to the base product,
+    with its own barcode and optional custom selling price.
+
+    Example:
+      Level 1: Pack   = 6 pieces,  barcode=6001234000001, price=5500
+      Level 2: Carton = 24 pieces, barcode=6001234000002, price=20000
+      Level 3: Pallet = 480 pieces, barcode=6001234000003, price=380000
+    """
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='packaging_levels')
+    unit = models.ForeignKey(Unit, on_delete=models.SET_NULL, null=True, blank=True, related_name='packaging_levels')
+    level = models.PositiveIntegerField(default=1, help_text="Hierarchy level (1=first above base, 2=second, etc.)")
+    ratio = models.DecimalField(max_digits=15, decimal_places=4, default=1, help_text="How many BASE units this level contains")
+    barcode = models.CharField(max_length=100, null=True, blank=True, help_text="Unique barcode for this packaging level")
+    custom_selling_price = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True, help_text="Override selling price for this level")
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+
+    class Meta:
+        db_table = 'product_packaging'
+        ordering = ['level']
+        constraints = [
+            models.UniqueConstraint(fields=['product', 'unit', 'organization'], name='unique_packaging_per_unit'),
+            models.UniqueConstraint(fields=['barcode', 'organization'], name='unique_packaging_barcode', condition=Q(barcode__isnull=False)),
+        ]
+
+    def __str__(self):
+        unit_name = self.unit.name if self.unit else 'Unknown'
+        return f"{self.product.name} - {unit_name} (x{self.ratio})"

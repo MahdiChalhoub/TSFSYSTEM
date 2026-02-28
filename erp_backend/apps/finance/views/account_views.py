@@ -77,7 +77,8 @@ class FinancialAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):
                 name=request.data.get('name'),
                 type=request.data.get('type'),
                 currency=request.data.get('currency', 'USD'),
-                site_id=request.data.get('site_id')
+                site_id=request.data.get('site_id'),
+                parent_coa_id=request.data.get('parent_coa_id')
             )
             serializer = self.get_serializer(account)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -145,7 +146,15 @@ class ChartOfAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):
             return Response([], status=status.HTTP_200_OK)
         
         organization = Organization.objects.get(id=organization_id)
-        scope = request.query_params.get('scope', 'INTERNAL')
+        
+        # --- STRICT SCOPE ISOLATION ---
+        from erp.middleware import get_authorized_scope
+        authorized = get_authorized_scope() or 'official'
+        requested = (request.query_params.get('scope') or 'OFFICIAL').upper()
+        if authorized == 'official' and requested == 'INTERNAL':
+            requested = 'OFFICIAL'
+        scope = requested
+        
         include_inactive = request.query_params.get('include_inactive') == 'true'
         
         accounts = LedgerService.get_chart_of_accounts(organization, scope, include_inactive)
@@ -214,7 +223,14 @@ class ChartOfAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):
         organization = Organization.objects.get(id=organization_id)
         start_date = request.query_params.get('start_date')
         end_date = request.query_params.get('end_date')
-        scope = request.query_params.get('scope', 'INTERNAL')
+        
+        # --- STRICT SCOPE ISOLATION ---
+        from erp.middleware import get_authorized_scope
+        authorized = get_authorized_scope() or 'official'
+        requested = (request.query_params.get('scope') or 'OFFICIAL').upper()
+        if authorized == 'official' and requested == 'INTERNAL':
+            requested = 'OFFICIAL'
+        scope = requested
         
         result = LedgerService.get_account_statement(organization, pk, start_date, end_date, scope)
         
@@ -236,7 +252,14 @@ class ChartOfAccountViewSet(UDLEViewSetMixin, TenantModelViewSet):
         
         organization = Organization.objects.get(id=organization_id)
         as_of = request.query_params.get('as_of')
-        scope = request.query_params.get('scope', 'INTERNAL')
+        
+        # --- STRICT SCOPE ISOLATION ---
+        from erp.middleware import get_authorized_scope
+        authorized = get_authorized_scope() or 'official'
+        requested = (request.query_params.get('scope') or 'OFFICIAL').upper()
+        if authorized == 'official' and requested == 'INTERNAL':
+            requested = 'OFFICIAL'
+        scope = requested
         
         accounts = LedgerService.get_trial_balance(organization, as_of, scope)
         

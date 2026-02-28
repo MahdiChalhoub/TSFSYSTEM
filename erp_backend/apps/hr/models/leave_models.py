@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 from erp.models import TenantModel, User
 
 class Leave(TenantModel):
@@ -33,6 +34,24 @@ class Leave(TenantModel):
 
     def __str__(self):
         return f"{self.employee} | {self.leave_type} | {self.start_date} to {self.end_date}"
+
+    def save(self, *args, **kwargs):
+        bypass = kwargs.pop('force_audit_bypass', False)
+        if self.pk and not bypass:
+            original = Leave.objects.get(pk=self.pk)
+            if original.status in ('APPROVED', 'REJECTED'):
+                # Only allow status transitions (e.g. APPROVED -> CANCELLED)
+                allowed_fields = {'status'}
+                changed = {f for f in ['leave_type', 'start_date', 'end_date', 'reason', 'employee_id']
+                           if getattr(original, f) != getattr(self, f)}
+                if changed:
+                    raise ValidationError(f"Immutable HR: Cannot modify fields {changed} on a {original.status} leave request.")
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        if self.status in ('APPROVED', 'REJECTED'):
+            raise ValidationError(f"Immutable HR: Cannot delete a {self.status} leave request. Cancel it instead.")
+        super().delete(*args, **kwargs)
 
     @property
     def duration_days(self):

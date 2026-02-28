@@ -277,8 +277,8 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                 />
             )}
             {/* ─── LEFT COLUMN: Main Form ─── */}
-            <div className={`space-y-8 transition-all duration-300 ${showCompare ? 'w-1/2 shrink-0' : 'max-w-3xl w-full'}`}>
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border border-stone-200">
+            <div className={`space-y-4 transition-all duration-300 ${showCompare ? 'w-1/2 shrink-0' : 'max-w-3xl w-full'}`}>
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 bg-white p-4 rounded-xl shadow-sm border border-stone-200">
                     {/* Lock Status Warning */}
                     {lock.isLocked && (
                         <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex gap-3 items-start">
@@ -348,8 +348,8 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                             </p>
                             {/* Selected Type Detail */}
                             {selectedType && (
-                                <div className="mt-3">
-                                    <TypeDetailCard type={selectedType} />
+                                <div className="mt-2">
+                                    <TypeDetailCard type={selectedType} compact />
                                 </div>
                             )}
                         </div>
@@ -788,6 +788,128 @@ export default function FinancialSettingsForm({ settings, lock, currencies, acco
                             Configure Auto-Mapping
                         </button>
                     </div>
+                    {/* ─── FIXED ASSET INTELLIGENCE STRATEGY ─── */}
+                    <div className="p-6 bg-gradient-to-br from-indigo-50/50 via-white to-stone-50 border border-indigo-100 rounded-3xl shadow-sm space-y-6">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 bg-indigo-600 rounded-xl text-white shadow-lg shadow-indigo-100">
+                                    <Package size={22} />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-black text-stone-900 uppercase tracking-tight">Asset Intelligence Strategy</h3>
+                                    <p className="text-xs text-indigo-600 font-bold uppercase tracking-widest">Universal Asset Management Engine</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-indigo-100 rounded-xl shadow-inner">
+                                <Activity size={14} className="text-indigo-400 animate-pulse" />
+                                <span className="text-[10px] font-black text-indigo-900 uppercase">Live Engine Configuration</span>
+                            </div>
+                        </div>
+
+                        {/* Complexity Mode Selection */}
+                        <div className="space-y-3">
+                            <label className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] ml-1">Complexity Mode</label>
+                            <div className="grid grid-cols-3 gap-3">
+                                {[
+                                    { key: 'BASIC', label: 'Basic', desc: 'Simple list and linear depreciation', icon: Package, color: 'stone' },
+                                    { key: 'PROFESSIONAL', label: 'Professional', desc: 'Adds revaluation and schedules', icon: Landmark, color: 'indigo' },
+                                    { key: 'ENTERPRISE', label: 'Enterprise', desc: 'Full QR, Maintenance & IFRS', icon: Zap, color: 'emerald' },
+                                ].map(mode => (
+                                    <button
+                                        key={mode.key}
+                                        type="button"
+                                        onClick={() => setValue('assetTrackingMode', mode.key as any)}
+                                        className={`relative group p-4 rounded-2xl border-2 transition-all text-left overflow-hidden ${watch('assetTrackingMode') === mode.key
+                                            ? 'border-indigo-600 bg-white shadow-xl shadow-indigo-100'
+                                            : 'border-stone-100 bg-stone-50/50 hover:border-stone-200 hover:bg-white'
+                                            }`}
+                                    >
+                                        <div className={`p-2 rounded-lg w-fit mb-3 transition-colors ${watch('assetTrackingMode') === mode.key ? 'bg-indigo-600 text-white' : 'bg-stone-200 text-stone-500 group-hover:bg-stone-300'}`}>
+                                            <mode.icon size={18} />
+                                        </div>
+                                        <h4 className="text-xs font-black text-stone-900 uppercase tracking-tighter">{mode.label}</h4>
+                                        <p className="text-[9px] text-stone-500 font-medium leading-tight mt-1">{mode.desc}</p>
+                                        {watch('assetTrackingMode') === mode.key && (
+                                            <div className="absolute top-2 right-2 flex gap-0.5">
+                                                <div className="w-1 h-3 bg-indigo-600 rounded-full" />
+                                                <div className="w-1 h-3 bg-indigo-400 rounded-full" />
+                                            </div>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Power Toggles */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="p-4 bg-white rounded-2xl border border-stone-100 shadow-sm space-y-4">
+                                <h4 className="text-[9px] font-black text-stone-400 uppercase tracking-widest flex items-center gap-2">
+                                    <Activity size={12} className="text-indigo-400" /> Operational Powers
+                                </h4>
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between p-1">
+                                        <div className="flex flex-col">
+                                            <span className="text-[11px] font-bold text-stone-800">QR-Code Tracking</span>
+                                            <span className="text-[9px] text-stone-400">Generate physical audit stickers</span>
+                                        </div>
+                                        <input {...register('enableAssetQR')} type="checkbox" className="h-5 w-5 text-indigo-600 border-stone-300 rounded-lg focus:ring-indigo-500" />
+                                    </div>
+                                    <div className="flex items-center justify-between p-1">
+                                        <div className="flex flex-col">
+                                            <span className="text-[11px] font-bold text-stone-800">Maintenance Logic</span>
+                                            <span className="text-[9px] text-stone-400">Link assets to service records</span>
+                                        </div>
+                                        <input {...register('enableAssetMaintenance')} type="checkbox" className="h-5 w-5 text-indigo-600 border-stone-300 rounded-lg focus:ring-indigo-500" />
+                                    </div>
+                                    <div className="flex items-center justify-between p-1">
+                                        <div className="flex flex-col">
+                                            <span className="text-[11px] font-bold text-stone-800">Automatic Posting</span>
+                                            <span className="text-[9px] text-stone-400">Post depreciation logs automatically</span>
+                                        </div>
+                                        <input {...register('autoDepreciationPosting')} type="checkbox" className="h-5 w-5 text-emerald-600 border-stone-300 rounded-lg focus:ring-emerald-500" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="p-4 bg-white rounded-2xl border border-stone-100 shadow-sm space-y-4">
+                                <h4 className="text-[9px] font-black text-stone-400 uppercase tracking-widest flex items-center gap-2">
+                                    <GitCompareArrows size={12} className="text-amber-400" /> Accounting Weapons
+                                </h4>
+                                <div className="space-y-2">
+                                    <label className="text-[9px] font-bold text-stone-400 leading-tight">Select depreciation methods available for this organization:</label>
+                                    <div className="flex flex-wrap gap-2 pt-1">
+                                        {[
+                                            { key: 'LINEAR', label: 'Straight-Line' },
+                                            { key: 'DECLINING', label: 'Declining' },
+                                            { key: 'DOUBLE_DECLINING', label: 'Double-Declining' },
+                                            { key: 'PRODUCTION', label: 'Units of Prod.' },
+                                        ].map(method => (
+                                            <button
+                                                key={method.key}
+                                                type="button"
+                                                onClick={() => {
+                                                    const current = watch('allowedDepreciationMethods') || [];
+                                                    if (current.includes(method.key)) {
+                                                        setValue('allowedDepreciationMethods', current.filter(m => m !== method.key));
+                                                    } else {
+                                                        setValue('allowedDepreciationMethods', [...current, method.key]);
+                                                    }
+                                                }}
+                                                className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all ${(watch('allowedDepreciationMethods') || []).includes(method.key)
+                                                        ? 'bg-amber-100 text-amber-700 border border-amber-200'
+                                                        : 'bg-stone-50 text-stone-400 border border-stone-100 hover:border-amber-100'
+                                                    }`}
+                                            >
+                                                {method.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <p className="text-[8px] text-stone-300 italic mt-2 uppercase tracking-tighter">Enterprise mode forces revaluation logic regardless of selection.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* ─── TRADE SUB-TYPES TOGGLE ─── */}
                     <div className="p-4 bg-indigo-50 rounded-md border border-indigo-100 flex items-center justify-between">
                         <div className="flex gap-3 items-center">

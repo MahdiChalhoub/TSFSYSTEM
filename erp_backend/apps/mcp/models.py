@@ -410,3 +410,111 @@ class MCPRateLimit(models.Model):
             self.reset_at = now + timedelta(hours=1)
         else:
             self.reset_at = now + timedelta(days=1)
+
+
+class MCPAgent(models.Model):
+    """
+    Autonomous AI Agent (Virtual Employee).
+    Runs periodic tasks using LLM and MCP Tools.
+    """
+    objects = TenantManager()
+    original_objects = models.Manager()
+
+    ROLE_CHOICES = [
+        ('inventory_manager', 'Inventory Manager'),
+        ('finance_specialist', 'Finance Specialist'),
+        ('sales_analyst', 'Sales Analyst'),
+        ('customer_support', 'Customer Support'),
+        ('system_admin', 'System Administrator'),
+    ]
+
+    STATUS_CHOICES = [
+        ('idle', 'Idle'),
+        ('running', 'Running'),
+        ('paused', 'Paused'),
+        ('error', 'Error'),
+    ]
+
+    organization = models.ForeignKey(
+        'erp.Organization',
+        on_delete=models.CASCADE,
+        related_name='mcp_agents'
+    )
+    
+    name = models.CharField(max_length=100)
+    role = models.CharField(max_length=50, choices=ROLE_CHOICES)
+    persona = models.TextField(
+        help_text="The system prompt/personality of this virtual employee"
+    )
+    
+    provider = models.ForeignKey(
+        MCPProvider,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="Specific AI provider for this agent (uses default if null)"
+    )
+
+    # Execution control
+    is_active = models.BooleanField(default=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='idle')
+    auto_execute = models.BooleanField(
+        default=False,
+        help_text="If true, agent can execute tools without human approval"
+    )
+    
+    # Schedule (minutes between runs)
+    frequency_minutes = models.IntegerField(default=60)
+    last_run_at = models.DateTimeField(null=True, blank=True)
+    next_run_at = models.DateTimeField(null=True, blank=True)
+
+    # Memory/State
+    context = models.JSONField(default=dict, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'mcpagent'
+        verbose_name = 'MCP Agent'
+        verbose_name_plural = 'MCP Agents'
+
+    def __str__(self):
+        return f"{self.name} ({self.get_role_display()})"
+
+
+class MCPAgentLog(models.Model):
+    """Execution logs and decisions made by agents."""
+    objects = TenantManager()
+    original_objects = models.Manager()
+
+    LEVEL_CHOICES = [
+        ('info', 'Information'),
+        ('thought', 'Internal Thought'),
+        ('action', 'Action Taken'),
+        ('error', 'Error'),
+        ('decision', 'Decision Made'),
+    ]
+
+    agent = models.ForeignKey(
+        MCPAgent,
+        on_delete=models.CASCADE,
+        related_name='logs'
+    )
+    organization = models.ForeignKey(
+        'erp.Organization',
+        on_delete=models.CASCADE
+    )
+    
+    level = models.CharField(max_length=20, choices=LEVEL_CHOICES, default='info')
+    message = models.TextField()
+    data = models.JSONField(default=dict, blank=True, help_text="Structured data about the action/decision")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'mcpagentlog'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"[{self.agent.name}] {self.level}: {self.message[:50]}"

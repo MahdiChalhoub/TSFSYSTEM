@@ -351,7 +351,7 @@ function ProductRow({ product, isSelected, toggle }: Record<string, any>) {
                         <span className="font-mono bg-gray-100 px-1.5 rounded text-[10px]">{product.sku}</span>
                         {product.country && (
                             <span className="flex items-center gap-1 text-gray-600">
-                                ΓÇó {product.country.name}
+                                • {product.country.name}
                             </span>
                         )}
                     </div>

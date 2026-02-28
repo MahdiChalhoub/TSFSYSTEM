@@ -41,7 +41,14 @@ export async function getContact(id: number) {
 }
 
 export async function getContactSummary(contactId: number) {
-    return await erpFetch(`contacts/${contactId}/summary/`)
+    try {
+        const data = await erpFetch(`contacts/${contactId}/summary/`)
+        // Backend returns {error, detail} on 5xx
+        if (data?.error) throw new Error(`Backend: ${data.error}`)
+        return data
+    } catch (e: unknown) {
+        throw e  // Re-throw so loadData's catch can show a toast
+    }
 }
 
 export async function createContact(data: unknown) {
@@ -64,4 +71,19 @@ export async function deleteContact(id: number) {
     return await erpFetch(`contacts/${id}/`, {
         method: 'DELETE'
     })
+}
+
+export async function searchContacts(query: string = '', limit: number = 20) {
+    try {
+        const queryParams = new URLSearchParams();
+        if (query) queryParams.append('search', query);
+        queryParams.append('limit', String(limit));
+        // POS should only show clients (customers), not suppliers or other contact types
+        queryParams.append('type', 'CUSTOMER');
+
+        const data = await erpFetch(`contacts/?${queryParams.toString()}`);
+        return Array.isArray(data) ? data : (data?.results || []);
+    } catch {
+        return [];
+    }
 }

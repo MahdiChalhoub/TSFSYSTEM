@@ -4,7 +4,7 @@ Extracted from Kernel (erp/models.py) → Module Layer (apps/crm/models.py)
 """
 from django.db import models
 from decimal import Decimal
-from erp.models import TenantModel, Site
+from erp.models import TenantModel
 
 
 class Contact(TenantModel):
@@ -39,7 +39,7 @@ class Contact(TenantModel):
     credit_limit = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     # Decoupled from finance module — uses IntegerField to avoid hard dependency
     linked_account_id = models.IntegerField(null=True, blank=True, db_column='linked_account_id')
-    home_site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True)
+    home_site = models.ForeignKey('inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True)
 
     # Supplier-specific fields
     supplier_category = models.CharField(
@@ -56,6 +56,13 @@ class Contact(TenantModel):
         help_text='Client pricing tier: Standard, VIP, Wholesale, Retail'
     )
     loyalty_points = models.IntegerField(default=0, help_text='Accumulated loyalty points')
+    home_zone = models.ForeignKey(
+        'pos.DeliveryZone',
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='clients',
+        help_text='Default delivery zone for this client (auto-selected in POS)'
+    )
     wallet_balance = models.DecimalField(
         max_digits=15, decimal_places=2, default=Decimal('0.00'),
         help_text='Customer wallet balance from stored change or top-ups'

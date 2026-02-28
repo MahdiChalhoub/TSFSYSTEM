@@ -119,76 +119,9 @@ class Country(models.Model):
 
 
 # =============================================================================
-# SAAS CLIENT (ACCOUNT OWNER)
+# SAAS CLIENT (extracted to erp/models_saas.py)
 # =============================================================================
-
-class SaaSClient(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
-    email = models.EmailField(unique=True)
-    phone = models.CharField(max_length=50, blank=True, default='')
-    company_name = models.CharField(max_length=255, blank=True, default='', help_text='Legal company name if different from person name')
-    address = models.TextField(blank=True, default='')
-    city = models.CharField(max_length=100, blank=True, default='')
-    country = models.CharField(max_length=100, blank=True, default='')
-    is_active = models.BooleanField(default=True)
-    notes = models.TextField(blank=True, default='')
-    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
-    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
-
-    class Meta:
-        db_table = 'saasclient'
-        ordering = ['-created_at']
-
-    def __str__(self):
-        name = f"{self.first_name} {self.last_name}".strip()
-        if self.company_name:
-            return f"{name} ({self.company_name})"
-        return name
-
-    @property
-    def full_name(self):
-        return f"{self.first_name} {self.last_name}".strip()
-
-    @property
-    def organization_count(self):
-        return self.organizations.count()
-
-    def sync_to_crm_contact(self):
-        """
-        Create or update a CRM Contact record in the SaaS org for this client.
-        This ensures the client appears in /crm/contacts for the SaaS admin.
-        """
-        try:
-            from apps.crm.models import Contact
-            from decimal import Decimal
-            saas_org = Organization.objects.filter(slug='saas').first()
-            if not saas_org:
-                return None
-
-            display_name = self.full_name
-            if self.company_name:
-                display_name = f"{self.full_name} ({self.company_name})"
-
-            contact, created = Contact.objects.update_or_create(
-                email=self.email,
-                organization=saas_org,
-                defaults={
-                    'name': display_name,
-                    'type': 'CUSTOMER',
-                    'phone': self.phone or '',
-                    'address': self.address or '',
-                    'customer_type': 'SAAS',
-                    'balance': Decimal('0.00'),
-                    'credit_limit': Decimal('0.00'),
-                    'airsi_tax_rate': Decimal('0.00'),
-                    'is_airsi_subject': False,
-                }
-            )
-            return contact
-        except Exception:
-            return None
+from .models_saas import SaaSClient  # noqa: E402, F401
 
 
 # =============================================================================
@@ -457,7 +390,7 @@ class User(AbstractUser):
     
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True, blank=True, related_name='users')
     role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True, related_name='users')
-    home_site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True, related_name='home_users')
+    home_site = models.ForeignKey('inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True, related_name='home_users')
     # cash_register FK — uses IntegerField to avoid hard dependency on finance module
     cash_register_id = models.IntegerField(null=True, blank=True, db_column='cash_register_id')
     is_active_account = models.BooleanField(default=True)
@@ -474,6 +407,14 @@ class User(AbstractUser):
     # Manager Override PIN — for authorizing sensitive POS operations
     override_pin = models.CharField(max_length=128, null=True, blank=True,
         help_text='Hashed PIN for manager-level overrides (void, refund, discount override)')
+
+    # POS Cashier PIN — for quick login at registers
+    pos_pin = models.CharField(max_length=128, null=True, blank=True,
+        help_text='Hashed 4-6 digit PIN for POS cashier login and user switching')
+
+    # User Category Tags — role-independent markers for specific functions
+    is_driver = models.BooleanField(default=False,
+        help_text='Tag: this user is a delivery driver. Used to filter the driver list in POS delivery.')
 
     # 2FA (Advanced Security)
     two_factor_secret = models.CharField(max_length=32, null=True, blank=True)
@@ -509,6 +450,18 @@ class User(AbstractUser):
             return False  # No override PIN = not a manager
         return check_password(raw_pin, self.override_pin)
 
+    def set_pos_pin(self, raw_pin: str | None):
+        """Set or clear the POS cashier PIN."""
+        from django.contrib.auth.hashers import make_password
+        self.pos_pin = make_password(raw_pin) if raw_pin else None
+
+    def check_pos_pin(self, raw_pin: str) -> bool:
+        """Verify POS cashier PIN."""
+        from django.contrib.auth.hashers import check_password
+        if not self.pos_pin:
+            return False  # No PIN = cannot authenticate via PIN
+        return check_password(raw_pin, self.pos_pin)
+
     def __str__(self):
         return self.email if self.email else self.username
 
@@ -540,136 +493,12 @@ class ManagerOverrideLog(TenantModel):
 
 
 # =============================================================================
-# SAAS PLATFORM MODELS
+# SAAS PLATFORM MODELS (extracted to erp/models_saas.py)
 # =============================================================================
-
-class PlanCategory(models.Model):
-    name = models.CharField(max_length=255)
-    type = models.CharField(max_length=20)
-    country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True, blank=True)
-    parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='children')
-    # Bridge to inventory — uses IntegerField to avoid hard cross-app dependency
-    linked_inventory_category = models.IntegerField(null=True, blank=True,
-        help_text='FK to inventory Category.id for catalog integration')
-
-    class Meta:
-        db_table = 'plancategory'
-
-
-class SubscriptionPlan(models.Model):
-    category = models.ForeignKey(PlanCategory, on_delete=models.CASCADE, related_name='plans')
-    name = models.CharField(max_length=255)
-    description = models.TextField(null=True, blank=True)
-    monthly_price = models.DecimalField(max_digits=15, decimal_places=2)
-    annual_price = models.DecimalField(max_digits=15, decimal_places=2)
-    modules = models.JSONField(default=list)       # List of module codes included
-    features = models.JSONField(default=dict)      # {module_code: [active_feature_codes]}
-    limits = models.JSONField(default=dict)        # {"max_users": 5, "max_sites": 1, ...}
-    is_active = models.BooleanField(default=True)
-    is_public = models.BooleanField(default=True, help_text="Public plans show on landing/pricing page. Private plans are org-specific.")
-    sort_order = models.IntegerField(default=0, help_text="Display order on pricing pages (lower = first)")
-    trial_days = models.IntegerField(default=0, help_text="Free trial duration in days. 0 = no trial.")
-    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
-    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
-    # Filter plans by organization business type (#15)
-    business_types = models.ManyToManyField(BusinessType, blank=True, related_name='plans',
-        help_text='Business types this plan is available for. Empty = available to all.')
-
-    class Meta:
-        db_table = 'subscriptionplan'
-        ordering = ['sort_order', 'monthly_price']
-
-    def __str__(self):
-        return f"{self.name} (${self.monthly_price}/mo)"
-
-
-class SubscriptionPayment(models.Model):
-    TYPE_CHOICES = (
-        ('PURCHASE', 'Purchase Invoice'),
-        ('CREDIT_NOTE', 'Credit Note'),
-        ('RENEWAL', 'Renewal'),
-    )
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
-    plan = models.ForeignKey(SubscriptionPlan, on_delete=models.PROTECT, related_name='payments')
-    previous_plan = models.ForeignKey(SubscriptionPlan, on_delete=models.SET_NULL, null=True, blank=True, related_name='upgrade_payments', help_text="Plan before the switch (for audit)")
-    amount = models.DecimalField(max_digits=15, decimal_places=2)
-    billing_cycle = models.CharField(max_length=20, default='MONTHLY', blank=True, help_text="MONTHLY, ANNUAL, ONE_TIME")
-    type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='PURCHASE')
-    status = models.CharField(max_length=20, default='PENDING')
-    notes = models.TextField(blank=True, default='')
-    # Decoupled from finance module — uses IntegerField to avoid hard dependency
-    journal_entry_id = models.IntegerField(null=True, blank=True, db_column='journal_entry_id', help_text="Linked accounting journal entry")
-    paid_at = models.DateTimeField(null=True, blank=True, help_text="When payment was confirmed")
-    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
-
-    class Meta:
-        db_table = 'subscriptionpayment'
-
-    def __str__(self):
-        return f"{self.organization.name} — {self.type} — ${self.amount}"
-
-
-class PlanAddon(models.Model):
-    ADDON_TYPES = [
-        ('users', 'Extra Users'),
-        ('sites', 'Extra Sites'),
-        ('storage', 'Extra Storage (GB)'),
-        ('products', 'Extra Products'),
-        ('invoices', 'Extra Invoices/Month'),
-        ('customers', 'Extra Customers'),
-        ('encryption', 'AES-256 Encryption'),
-    ]
-    name = models.CharField(max_length=255)
-    addon_type = models.CharField(max_length=20, choices=ADDON_TYPES)
-    quantity = models.IntegerField(help_text="How much this add-on provides (e.g. 10 users, 50 GB)")
-    monthly_price = models.DecimalField(max_digits=15, decimal_places=2)
-    annual_price = models.DecimalField(max_digits=15, decimal_places=2)
-    is_active = models.BooleanField(default=True)
-    plans = models.ManyToManyField(SubscriptionPlan, related_name='addons', blank=True, help_text="Plans that can use this add-on. Empty = available to all.")
-    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
-    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
-
-    class Meta:
-        db_table = 'planaddon'
-        ordering = ['addon_type', 'monthly_price']
-
-    def __str__(self):
-        return f"{self.name} (+{self.quantity} {self.addon_type}) ${self.monthly_price}/mo"
-
-
-class OrganizationAddon(models.Model):
-    """Tracks add-ons purchased by a specific organization."""
-    STATUS_CHOICES = [
-        ('active', 'Active'),
-        ('cancelled', 'Cancelled'),
-        ('expired', 'Expired'),
-    ]
-    BILLING_CYCLES = [
-        ('MONTHLY', 'Monthly'),
-        ('ANNUAL', 'Annual'),
-    ]
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='purchased_addons')
-    addon = models.ForeignKey(PlanAddon, on_delete=models.PROTECT, related_name='purchases')
-    quantity = models.IntegerField(default=1, help_text="Number of units purchased")
-    billing_cycle = models.CharField(max_length=20, choices=BILLING_CYCLES, default='MONTHLY')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
-    purchased_at = models.DateTimeField(auto_now_add=True)
-    cancelled_at = models.DateTimeField(null=True, blank=True)
-    notes = models.TextField(blank=True, default='')
-
-    class Meta:
-        db_table = 'organizationaddon'
-        ordering = ['-purchased_at']
-
-    def __str__(self):
-        return f"{self.organization.name} — {self.addon.name} ({self.status})"
-
-    @property
-    def effective_price(self):
-        """Returns the effective price based on billing cycle."""
-        if self.billing_cycle == 'ANNUAL':
-            return self.addon.annual_price * self.quantity
-        return self.addon.monthly_price * self.quantity
+from .models_saas import (  # noqa: E402, F401
+    SaaSClient, PlanCategory, SubscriptionPlan, SubscriptionPayment,
+    PlanAddon, OrganizationAddon,
+)
 
 
 # =============================================================================
@@ -678,12 +507,9 @@ class OrganizationAddon(models.Model):
 
 # PackageUpload is now managed in apps.packages.models
 try:
-    from apps.packages.models import PackageUpload
+    from apps.packages.models import PackageUpload  # noqa: F401
 except ImportError:
     pass
-    
-    def __str__(self):
-        return f"{self.name} v{self.version} ({self.get_package_type_display()})"
 
 
 # =============================================================================
@@ -746,55 +572,12 @@ except ImportError:
 # List Preferences
 from .list_preferences import OrgListDefault, UserListPreference  # noqa: E402, F401
 
-class Notification(models.Model):
-    NOTIFICATION_TYPES = (
-        ('INFO', 'Information'),
-        ('SUCCESS', 'Success'),
-        ('WARNING', 'Warning'),
-        ('ERROR', 'Error'),
-    )
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
-    title = models.CharField(max_length=255)
-    message = models.TextField()
-    type = models.CharField(max_length=10, choices=NOTIFICATION_TYPES, default='INFO')
-    link = models.CharField(max_length=255, null=True, blank=True)
-    read_at = models.DateTimeField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        db_table = 'notification'
-        ordering = ['-created_at']
-
-    def __str__(self):
-        return f"{self.title} for {self.user}"
-
-    def mark_as_read(self):
-        from django.utils import timezone
-        self.read_at = timezone.now()
-        self.save(update_fields=['read_at'])
-
-
-class UDLESavedView(models.Model):
-    """
-    Persists user customizations for a specific model/view in UDLE.
-    Stores visible columns, filters, and sorting preferences.
-    """
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='udle_views')
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
-    model_name = models.CharField(max_length=100)  # e.g., 'Product', 'InventoryMovement'
-    name = models.CharField(max_length=100)
-    config = models.JSONField(default=dict)  # {columns: [], filters: {}, sorting: {}}
-    is_default = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = 'udle_saved_view'
-        unique_together = ('user', 'model_name', 'name')
-        verbose_name = "UDLE Saved View"
-        verbose_name_plural = "UDLE Saved Views"
-
-    def __str__(self):
-        return f"{self.name} ({self.model_name}) for {self.user}"
+# =============================================================================
+# UI MODELS (extracted to erp/models_ui.py)
+# =============================================================================
+from .models_ui import Notification, UDLESavedView  # noqa: E402, F401
 
 # Import domain models so Django discovers them for migrations
 from .models_domains import CustomDomain  # noqa: E402, F401
+

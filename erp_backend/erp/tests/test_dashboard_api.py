@@ -7,7 +7,7 @@ from decimal import Decimal
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
-from erp.models import Organization, User, Site
+from erp.models import Organization, User
 from apps.inventory.models import Product, Inventory, Warehouse
 from apps.crm.models import Contact
 from apps.finance.models import FinancialAccount, Transaction, JournalEntry, JournalEntryLine, ChartOfAccount
@@ -15,7 +15,6 @@ from apps.finance.models import FinancialAccount, Transaction, JournalEntry, Jou
 class DashboardAPITests(APITestCase):
     def setUp(self):
         self.org = Organization.objects.create(name="Dashboard Org", slug="dash")
-        self.site = Site.objects.create(organization=self.org, name="Main", code="MN")
         self.admin = User.objects.create_user(
             username="dashadmin", password="password123", 
             email="admin@dash.com", organization=self.org
@@ -31,7 +30,7 @@ class DashboardAPITests(APITestCase):
         """realtime_kpis should return 200 and expected structure."""
         # Create some data
         p = Product.objects.create(organization=self.org, name="KPI Product", cost_price=Decimal("10.00"), is_active=True)
-        w = Warehouse.objects.create(organization=self.org, name="W1", site=self.site)
+        w = Warehouse.objects.create(organization=self.org, name="W1")
         Inventory.objects.create(organization=self.org, product=p, warehouse=w, quantity=5) # Low stock
         
         Contact.objects.create(organization=self.org, name="KPI Customer", type="CUSTOMER")

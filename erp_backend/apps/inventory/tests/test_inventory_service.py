@@ -12,7 +12,7 @@ from django.test import TestCase
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-from erp.models import Organization, User, Site
+from erp.models import Organization, User
 from apps.inventory.models import (
     Product, Unit, Category, Warehouse, Inventory, InventoryMovement,
 )
@@ -31,9 +31,7 @@ class InventoryTestBase(TestCase):
             username='inv_admin', password='test123',
             email='inv@test.com', organization=cls.org,
         )
-        cls.site = Site.objects.create(
-            name='Main Store', code='MS', organization=cls.org,
-        )
+
 
         # ── Product Setup ────────────────────────────────────
         cls.unit = Unit.objects.create(
@@ -73,11 +71,9 @@ class InventoryTestBase(TestCase):
         # ── Warehouses ───────────────────────────────────────
         cls.warehouse_a = Warehouse.objects.create(
             organization=cls.org, name='Warehouse A',
-            site=cls.site,
         )
         cls.warehouse_b = Warehouse.objects.create(
             organization=cls.org, name='Warehouse B',
-            site=cls.site,
         )
 
 

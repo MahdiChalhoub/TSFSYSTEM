@@ -36,6 +36,11 @@ class PriceGroupViewSet(TenantModelViewSet):
             if not contact_id:
                 return Response({"error": "contact_id required"}, status=400)
 
+            # Cross-tenant guard: ensure contact belongs to this org
+            from apps.crm.models import Contact
+            if not Contact.objects.filter(id=contact_id, organization_id=organization_id).exists():
+                return Response({"error": "Contact not found or access denied."}, status=403)
+
             member, created = PriceGroupMember.objects.get_or_create(
                 price_group=price_group,
                 contact_id=contact_id,
@@ -74,6 +79,32 @@ class PriceGroupViewSet(TenantModelViewSet):
 class ClientPriceRuleViewSet(TenantModelViewSet):
     queryset = ClientPriceRule.objects.all()
     serializer_class = ClientPriceRuleSerializer
+
+    def _validate_fk_ownership(self, data, org_id):
+        """Validate that contact_id, product_id, and price_group belong to this org."""
+        from rest_framework.exceptions import ValidationError
+        from apps.crm.models import Contact
+        contact_id = data.get('contact_id')
+        if contact_id and not Contact.objects.filter(id=contact_id, organization_id=org_id).exists():
+            raise ValidationError("Cross-tenant contact assignment blocked.")
+        product_id = data.get('product_id')
+        if product_id:
+            from apps.inventory.models import Product
+            if not Product.objects.filter(id=product_id, organization_id=org_id).exists():
+                raise ValidationError("Cross-tenant product assignment blocked.")
+        price_group = data.get('price_group')
+        if price_group and hasattr(price_group, 'organization_id') and price_group.organization_id != org_id:
+            raise ValidationError("Cross-tenant price group assignment blocked.")
+
+    def perform_create(self, serializer):
+        org_id = get_current_tenant_id()
+        self._validate_fk_ownership(serializer.validated_data, org_id)
+        serializer.save(organization_id=org_id)
+
+    def perform_update(self, serializer):
+        org_id = get_current_tenant_id()
+        self._validate_fk_ownership(serializer.validated_data, org_id)
+        serializer.save()
 
     @action(detail=False, methods=['get'], url_path='for-contact/(?P<contact_id>[0-9]+)')
     def for_contact(self, request, contact_id=None):

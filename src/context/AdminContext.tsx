@@ -92,13 +92,13 @@ export function AdminProvider({ children, contextKey = 'default', initialScopeAc
         if (!isLoaded) return;
         localStorage.setItem(SCOPE_KEY, viewScope);
         document.cookie = `tsf_view_scope=${viewScope}; path=/; max-age=31536000; SameSite=Lax`;
-    }, [viewScope, isLoaded, SCOPE_KEY]);
+        router.refresh(); // Ensure server components see the new cookie
+    }, [viewScope, isLoaded, SCOPE_KEY, router]);
 
     const handleSetViewScope = (scope: 'OFFICIAL' | 'INTERNAL') => {
         // If official-only access, cannot switch to internal
         if (scopeAccess === 'official' && scope === 'INTERNAL') return;
         setViewScope(scope);
-        router.refresh();
     };
 
     // Toggle is visible only if user has internal (full) access

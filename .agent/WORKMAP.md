@@ -44,11 +44,10 @@
 
 ## 🟡 MEDIUM
 
-### [OPEN] Plan Switch UI Refresh
-- **Discovered**: 2026-02-09
-- **Impact**: After confirming plan switch, usage/billing data may not visually update without page refresh
+### [DONE 2026-02-28] Plan Switch UI Refresh (v3.1.3-AG-260228.2336)
+- **Impact**: After confirming plan switch, usage/billing data now visually updates instantly via `reloadData()` and `router.refresh()`.
 - **Files**: `src/app/(privileged)/(saas)/organizations/[id]/page.tsx`
-- **Notes**: The state refresh logic works but may have race conditions with large data loads
+- **Fix**: Centralized data fetching into `reloadData` and ensured it's called after successful plan changes.
 
 ### [DONE 2026-02-28] Direct CRM Profile Link (v3.1.3-AG-260228.2236)
 - **Discovered**: 2026-02-09
@@ -56,29 +55,26 @@
 - **Files**: `erp_backend/erp/views_saas_org_billing.py`, `src/app/(privileged)/(saas)/organizations/[id]/page.tsx`, `src/types/erp.ts`
 - **Fix**: billing endpoint now resolves `crm_contact_id` via CRM Contact lookup by email in the SaaS org. Frontend uses it to navigate directly to `/crm/contacts/{id}`.
 
-### [OPEN] PWA Icon Missing
-- **Discovered**: 2026-02-09
-- **Impact**: Console warning about missing manifest icon at `/icons/icon-192.png`
+### [DONE 2026-02-28] PWA Icon Missing (v3.1.3-AG-260228.2336)
+- **Impact**: Replaced missing/corrupt icons with premium 512x512 and 192x192 PNGs at `/icons/icon-*.png`.
 - **Files**: `public/icons/`, `public/manifest.json`
+- **Fix**: Icons generated using Antigravity design system and correctly linked.
 
 ---
 
 ## 🟢 LOW
 
-### [OPEN] Module Hot-Reload
-- **Discovered**: 2026-02-05
-- **Impact**: Modules require server restart after installation
-- **Notes**: Deferred backlog item from engine.md
+### [DONE 2026-02-28] Module Hot-Reload (v3.1.3-AG-260228.2336)
+- **Impact**: Modules no longer require manual process restart for registry/manifest changes.
+- **Notes**: Added `trigger_reload()` to `ModuleManager` which touches `settings.py` to trigger Django's auto-reloader.
 
-### [OPEN] Kernel Rollback Functionality
-- **Discovered**: 2026-02-05
-- **Impact**: No way to rollback kernel updates
-- **Notes**: Deferred backlog item from engine.md
+### [DONE 2026-02-28] Kernel Rollback Functionality (v3.1.3-AG-260228.2336)
+- **Impact**: Added ability to list and restore from core kernel backups in the SaaS Hub.
+- **Notes**: Implemented in `KernelManager` and exposed via API endpoints.
 
-### [OPEN] Module Dependency Resolution UI
-- **Discovered**: 2026-02-05
-- **Impact**: No visual dependency graph between modules
-- **Notes**: Deferred backlog item from engine.md
+### [DONE 2026-02-28] Module Dependency Resolution UI (v3.1.3-AG-260228.2336)
+- **Impact**: Clear visual feedback on dependency status (Installed/Missing) in the Global Registry.
+- **Notes**: Added status icons and tooltips to the Registry UI.
 
 ---
 

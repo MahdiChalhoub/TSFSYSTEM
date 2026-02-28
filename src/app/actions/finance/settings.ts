@@ -42,6 +42,14 @@ export type FinancialSettingsState = {
     autoDeclareDailyLimit?: number // Max daily amount to route to OFFICIAL
     controllableAccountIds?: number[] // Wallets/Banks that MUST be OFFICIAL
     integrityAlertEnabled?: boolean // Alert cashier when daily limit reached
+
+    // Fixed Asset Intelligence Strategy
+    assetTrackingMode?: 'BASIC' | 'PROFESSIONAL' | 'ENTERPRISE'
+    enableAssetQR?: boolean
+    enableAssetMaintenance?: boolean
+    autoDepreciationPosting?: boolean
+    allowedDepreciationMethods?: string[] // e.g., ['LINEAR', 'DECLINING', 'DOUBLE_DECLINING', 'PRODUCTION']
+    assetCategoryLimit?: number // Max assets per category if restricted
 }
 
 export async function getSettingsLockStatus() {

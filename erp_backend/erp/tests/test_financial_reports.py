@@ -11,6 +11,17 @@ class FinancialReportTests(APITestCase):
     def setUp(self):
         self.org = ProvisioningService.provision_organization(name="Report Corp", slug="report-corp")
         self.client.defaults['HTTP_X_TENANT_ID'] = str(self.org.id)
+
+        # Directly trigger finance setup (no SystemModule records in test DB)
+        from apps.finance.events import handle_event
+        from apps.inventory.models import Warehouse
+        branch = Warehouse.objects.filter(organization=self.org, location_type='BRANCH').first()
+        handle_event('org:provisioned', {
+            'org_id': str(self.org.id),
+            'org_name': self.org.name,
+            'org_slug': self.org.slug,
+            'site_id': str(branch.id) if branch else '',
+        }, organization_id=self.org.id)
         
         # Post some transactions to have data
         cash = ChartOfAccount.objects.get(organization=self.org, code='1310')

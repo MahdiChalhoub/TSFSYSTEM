@@ -15,11 +15,15 @@ import {
 } from 'recharts'
 import { Badge } from "@/components/ui/badge"
 import { useCurrency } from "@/lib/utils/currency"
+import { useAdmin } from "@/context/AdminContext"
+
 export default function AdvancedIntelligenceDashboard() {
+    const { viewScope } = useAdmin()
     const { fmt } = useCurrency()
     const [data, setData] = useState<any>(null)
     const [loading, setLoading] = useState(true)
-    useEffect(() => { loadAll() }, [])
+
+    useEffect(() => { loadAll() }, [viewScope])
     async function loadAll() {
         setLoading(true)
         try {
@@ -56,11 +60,15 @@ export default function AdvancedIntelligenceDashboard() {
         recentMovements
     } = useMemo(() => {
         if (!data) return { revenueLiquidity: 0, economicExposure: 0, chartData: [], terminalPerformance: [], topSellers: [], recentMovements: [] }
-        // 1. Calculate Liquidity vs Exposure
-        const liquidity = data.accounts
+        // 1. Calculate Liquidity vs Exposure (Leaf-Only to avoid double counting root/parents)
+        const allAccountIds = new Set(data.accounts.map((a: any) => a.id))
+        const parentIds = new Set(data.accounts.map((a: any) => a.parentId).filter(Boolean))
+        const leafAccounts = data.accounts.filter((a: any) => !parentIds.has(a.id))
+
+        const liquidity = leafAccounts
             .filter((a: any) => a.type === 'ASSET' && (a.name.toLowerCase().includes('cash') || a.name.toLowerCase().includes('bank')))
             .reduce((s: number, a: any) => s + Math.abs(parseFloat(a.balance || 0)), 0)
-        const exposure = data.accounts
+        const exposure = leafAccounts
             .filter((a: any) => a.type === 'LIABILITY')
             .reduce((s: number, a: any) => s + Math.abs(parseFloat(a.balance || 0)), 0) +
             data.employees.reduce((s: number, e: any) => s + parseFloat(e.salary || 0), 0)

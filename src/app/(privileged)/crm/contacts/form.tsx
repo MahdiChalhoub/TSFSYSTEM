@@ -7,11 +7,13 @@ import { User, X, Briefcase, Phone, Mail, MapPin, Building2, CreditCard, Globe, 
 export default function ContactModal({
     sites,
     type = 'CUSTOMER',
-    onClose
+    onClose,
+    deliveryZones = []
 }: {
     sites: Record<string, any>[],
     type?: string,
-    onClose: () => void
+    onClose: () => void,
+    deliveryZones?: Record<string, any>[]
 }) {
     const [state, action, isPending] = useActionState(
         createContact as (prevState: Record<string, any>, formData: FormData) => Promise<{ success: boolean; message: string }>,
@@ -120,6 +122,25 @@ export default function ContactModal({
                                         <option value="VIP">VIP</option>
                                         <option value="WHOLESALE">Wholesale</option>
                                         <option value="RETAIL">Retail</option>
+                                    </select>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Home Delivery Zone — only for customers */}
+                        {type === 'CUSTOMER' && (
+                            <div className="col-span-2 md:col-span-1">
+                                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Home Delivery Zone</label>
+                                <div className="relative">
+                                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                                    <select
+                                        name="homeZoneId"
+                                        className="w-full pl-12 pr-6 py-4 rounded-2xl bg-gray-50 border-none focus:ring-4 focus:ring-blue-100 outline-none transition-all font-bold text-gray-800 appearance-none"
+                                    >
+                                        <option value="">No Zone Assigned</option>
+                                        {deliveryZones.map(z => (
+                                            <option key={z.id} value={z.id}>{z.name}{z.base_fee > 0 ? ` (+${z.base_fee})` : ''}</option>
+                                        ))}
                                     </select>
                                 </div>
                             </div>

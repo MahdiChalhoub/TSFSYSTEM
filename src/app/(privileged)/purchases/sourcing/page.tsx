@@ -17,7 +17,7 @@ async function getOrgCurrency(): Promise<string> {
 
 async function getSourcingData() {
     try {
-        return await erpFetch('sourcing/comparison/');
+        return await erpFetch('sourcing/comparison-dashboard/');
     } catch (e) {
         console.error("Sourcing Fetch Error:", e);
         return [];

@@ -108,7 +108,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 4G
+        reservations:
+          memory: 1G
 
   celery_beat:
     build:
@@ -133,6 +135,35 @@ services:
       db:
         condition: service_healthy
       redis:
+        condition: service_healthy
+    networks:
+      - tsf_network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  mcp_agent_pulse:
+    build:
+      context: ./erp_backend
+      dockerfile: Dockerfile.backend
+    restart: unless-stopped
+    command: python /scripts/agent_pulse.py
+    volumes:
+      - ./erp_backend:/app
+      - ./scripts:/scripts
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-tsfdb}
+      - DB_NAME=${DB_NAME:-tsfdb}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DJANGO_DEBUG=${DJANGO_DEBUG:-False}
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - PYTHONPATH=/app
+    depends_on:
+      db:
         condition: service_healthy
     networks:
       - tsf_network

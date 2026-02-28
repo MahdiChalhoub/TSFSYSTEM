@@ -4,12 +4,19 @@ from contextvars import ContextVar
 logger = logging.getLogger('erp.security')
 
 _tenant_id: ContextVar[str | None] = ContextVar('_tenant_id', default=None)
+_authorized_scope: ContextVar[str | None] = ContextVar('_authorized_scope', default=None)
 
 def set_current_tenant_id(tenant_id):
     _tenant_id.set(tenant_id)
 
 def get_current_tenant_id():
     return _tenant_id.get(None)
+
+def set_authorized_scope(scope):
+    _authorized_scope.set(scope)
+
+def get_authorized_scope():
+    return _authorized_scope.get(None)
 
 
 # ─── Paths that bypass tenant isolation (public endpoints) ───
@@ -136,12 +143,35 @@ class TenantMiddleware:
         set_current_tenant_id(tenant_id)
         request.organization_id = tenant_id
 
+        # ─── 4. RESOLVE AUTHORIZED SCOPE ───
+        authorized_scope = 'official' # Default to strict
+        token_key = self._get_token_key(request)
+        if token_key:
+            from django.core.cache import cache
+            authorized_scope = cache.get(f"token_scope:{token_key}")
+            
+        if not authorized_scope:
+             if user and (user.is_staff or user.is_superuser):
+                 authorized_scope = 'internal'
+             else:
+                 authorized_scope = 'official'
+        
+        set_authorized_scope(authorized_scope)
+        request.authorized_scope = authorized_scope
+
         try:
             response = self.get_response(request)
         finally:
             set_current_tenant_id(None)
+            set_authorized_scope(None)
 
         return response
+
+    def _get_token_key(self, request):
+        auth_header = request.headers.get('Authorization', '')
+        if auth_header.startswith('Token '):
+            return auth_header[6:].strip()
+        return None
 
     def _resolve_user_from_token(self, request):
         """Manually resolve user from DRF Token auth header or existing session."""

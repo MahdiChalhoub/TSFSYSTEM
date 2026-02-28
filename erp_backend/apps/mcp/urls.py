@@ -7,7 +7,8 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
     MCPProviderViewSet, MCPToolViewSet, MCPConversationViewSet,
-    MCPUsageLogViewSet, MCPChatView, MCPToolExecuteView, MCPDashboardView
+    MCPUsageLogViewSet, MCPChatView, MCPToolExecuteView, MCPDashboardView,
+    MCPAgentViewSet, MCPAgentLogViewSet
 )
 
 router = DefaultRouter()
@@ -15,6 +16,8 @@ router.register(r'providers', MCPProviderViewSet, basename='mcp-providers')
 router.register(r'tools', MCPToolViewSet, basename='mcp-tools')
 router.register(r'conversations', MCPConversationViewSet, basename='mcp-conversations')
 router.register(r'usage', MCPUsageLogViewSet, basename='mcp-usage')
+router.register(r'agents', MCPAgentViewSet, basename='mcp-agents')
+router.register(r'agent-logs', MCPAgentLogViewSet, basename='mcp-agent-logs')
 
 urlpatterns = [
     path('chat/', MCPChatView.as_view(), name='mcp-chat'),

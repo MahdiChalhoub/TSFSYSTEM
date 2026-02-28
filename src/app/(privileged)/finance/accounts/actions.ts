@@ -8,6 +8,7 @@ export type FinancialAccountInput = {
     currency: string
     description?: string
     siteId?: number | null
+    parent_coa_id?: number | null
 }
 
 import { serialize } from "@/lib/utils"
@@ -19,6 +20,15 @@ export async function getFinancialAccounts() {
         return await erpFetch('accounts/')
     } catch (error) {
         console.error("Failed to fetch financial accounts:", error)
+        return []
+    }
+}
+
+export async function getChartOfAccounts() {
+    try {
+        return await erpFetch('coa/coa/')
+    } catch (error) {
+        console.error("Failed to fetch COA:", error)
         return []
     }
 }

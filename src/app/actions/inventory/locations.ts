@@ -63,6 +63,13 @@ export async function assignProductLocation(data: Record<string, any>) {
     return await erpFetch('inventory/product-locations/', { method: 'POST', body: JSON.stringify(data) })
 }
 
+export async function getWarehouses() {
+    try {
+        const data = await erpFetch('inventory/warehouses/');
+        return Array.isArray(data) ? data : (data?.results ?? []);
+    } catch { return [] }
+}
+
 // ── Consignment Settlements ───────────────────────────────────────
 
 export async function getConsignmentSettlements() {
@@ -107,5 +114,14 @@ export async function getPurchaseOrder(id: number) {
 export async function createPurchaseOrder(data: Record<string, any>) {
     const r = await erpFetch('pos/purchase-orders/', { method: 'POST', body: JSON.stringify(data) })
     revalidatePath('/purchases/purchase-orders')
+    return r
+}
+
+export async function receivePOLine(poId: number, data: { line_id: number, quantity: number }) {
+    const r = await erpFetch(`pos/purchase-orders/${poId}/receive-line/`, {
+        method: 'POST',
+        body: JSON.stringify(data)
+    })
+    revalidatePath('/purchases/receipts')
     return r
 }

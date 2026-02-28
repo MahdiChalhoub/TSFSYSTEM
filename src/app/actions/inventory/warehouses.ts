@@ -12,18 +12,25 @@ export type WarehouseState = {
     errors?: {
         name?: string[];
         code?: string[];
-        type?: string[];
+        location_type?: string[];
     };
 };
 
 export async function createWarehouse(prevState: WarehouseState, formData: FormData): Promise<WarehouseState> {
-    const data = {
+    const data: Record<string, any> = {
         name: formData.get('name') as string,
-        code: (formData.get('code') as string)?.toUpperCase(),
-        type: formData.get('type') as string,
+        code: (formData.get('code') as string)?.toUpperCase() || undefined,
+        location_type: formData.get('location_type') as string || 'WAREHOUSE',
         can_sell: formData.get('canSell') === 'on',
-        is_active: formData.get('isActive') === 'on'
+        is_active: formData.get('isActive') === 'on',
+        address: formData.get('address') as string || '',
+        city: formData.get('city') as string || '',
+        phone: formData.get('phone') as string || '',
+        vat_number: formData.get('vat_number') as string || '',
     }
+
+    const parentId = formData.get('parent');
+    if (parentId) data.parent = Number(parentId);
 
     if (!data.name || data.name.length < 2) {
         return { message: 'Validation Error', errors: { name: ['Name must be at least 2 characters'] } };
@@ -43,13 +50,21 @@ export async function createWarehouse(prevState: WarehouseState, formData: FormD
 }
 
 export async function updateWarehouse(id: number, prevState: WarehouseState, formData: FormData): Promise<WarehouseState> {
-    const data = {
+    const data: Record<string, any> = {
         name: formData.get('name') as string,
-        code: (formData.get('code') as string)?.toUpperCase(),
-        type: formData.get('type') as string,
+        code: (formData.get('code') as string)?.toUpperCase() || undefined,
+        location_type: formData.get('location_type') as string || 'WAREHOUSE',
         can_sell: formData.get('canSell') === 'on',
-        is_active: formData.get('isActive') === 'on'
+        is_active: formData.get('isActive') === 'on',
+        address: formData.get('address') as string || '',
+        city: formData.get('city') as string || '',
+        phone: formData.get('phone') as string || '',
+        vat_number: formData.get('vat_number') as string || '',
     }
+
+    const parentId = formData.get('parent');
+    if (parentId) data.parent = Number(parentId);
+    else data.parent = null;
 
     try {
         await erpFetch(`warehouses/${id}/`, {

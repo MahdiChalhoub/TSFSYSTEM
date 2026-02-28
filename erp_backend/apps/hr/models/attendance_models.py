@@ -7,7 +7,7 @@ class Shift(TenantModel):
     start_time = models.TimeField()
     end_time = models.TimeField()
     break_minutes = models.IntegerField(default=0)
-    site = models.ForeignKey('erp.Site', on_delete=models.SET_NULL, null=True, blank=True, related_name='shifts')
+    site = models.ForeignKey('inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True, related_name='shifts')
     is_active = models.BooleanField(default=True)
 
     class Meta:

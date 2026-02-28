@@ -369,7 +369,7 @@ export function TypicalListView<T, D = any>({
                                             )}
 
                                             {activeColumns.map(c => (
-                                                <TableCell key={c.key} className={`px-4 py-4 text-sm ${c.align === 'right' ? 'text-right font-mono' : c.align === 'center' ? 'text-center' : 'text-left'}`}>
+                                                <TableCell key={c.key} className={`px-3 py-2 text-sm ${c.align === 'right' ? 'text-right font-mono' : c.align === 'center' ? 'text-center' : 'text-left'}`}>
                                                     {c.render ? c.render(row) : (row as any)[c.key]}
                                                 </TableCell>
                                             ))}
@@ -406,7 +406,7 @@ export function TypicalListView<T, D = any>({
 
                                             {/* Row Actions */}
                                             {actions && (
-                                                <TableCell className="px-4 py-3 text-right">
+                                                <TableCell className="px-3 py-2 text-right">
                                                     <div className="flex items-center justify-end gap-0.5" onClick={e => e.stopPropagation()}>
                                                         {(lifecycle?.onApprove || lifecycle?.onCancel) && (
                                                             <DropdownMenu>

@@ -1,5 +1,5 @@
 from django.db import models
-from erp.models import TenantModel, Site
+from erp.models import TenantModel
 from apps.finance.models.coa_models import FinancialAccount
 
 class Transaction(TenantModel):
@@ -10,7 +10,7 @@ class Transaction(TenantModel):
     description = models.CharField(max_length=255, null=True, blank=True)
     reference = models.CharField(max_length=100, null=True, blank=True)
     reference_id = models.CharField(max_length=100, null=True, blank=True)
-    site = models.ForeignKey(Site, on_delete=models.SET_NULL, null=True, blank=True)
+    site = models.ForeignKey('inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     class Meta:
         db_table = 'transaction'

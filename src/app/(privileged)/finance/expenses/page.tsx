@@ -10,7 +10,10 @@ import { DollarSign, BarChart3, AlertTriangle, Percent, Receipt } from "lucide-r
 import { TypicalListView, ColumnDef } from "@/components/common/TypicalListView"
 import { useListViewSettings } from '@/hooks/useListViewSettings'
 
+import { useAdmin } from "@/context/AdminContext"
+
 export default function ExpenseTrackerPage() {
+    const { viewScope } = useAdmin()
     const { fmt } = useCurrency()
     const [accounts, setAccounts] = useState<ChartOfAccount[]>([])
     const [journals, setJournals] = useState<JournalEntry[]>([])
@@ -20,7 +23,7 @@ export default function ExpenseTrackerPage() {
         pageSize: 25, sortKey: 'absBalance', sortDir: 'desc'
     })
 
-    useEffect(() => { loadData() }, [])
+    useEffect(() => { loadData() }, [viewScope])
 
     async function loadData() {
         setLoading(true)

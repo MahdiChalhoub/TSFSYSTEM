@@ -278,6 +278,11 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False,
         },
+        'apps': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
     },
 }
 
@@ -337,7 +342,7 @@ STORAGE_R2_ENDPOINT = os.getenv('STORAGE_R2_ENDPOINT', '')
 STORAGE_R2_ACCESS_KEY = os.getenv('STORAGE_R2_ACCESS_KEY', '')
 STORAGE_R2_SECRET_KEY = os.getenv('STORAGE_R2_SECRET_KEY', '')
 STORAGE_R2_BUCKET = os.getenv('STORAGE_R2_BUCKET', 'tsf-files')
-STORAGE_MAX_FILE_SIZE_MB = int(os.getenv('STORAGE_MAX_FILE_SIZE_MB', '50'))
+STORAGE_MAX_FILE_SIZE_MB = int(os.getenv('STORAGE_MAX_FILE_SIZE_MB', '500'))
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -423,6 +428,8 @@ AUTH_USER_MODEL = 'erp.User'
 # ── Upload Limits ─────────────────────────────────────────────
 DATA_UPLOAD_MAX_MEMORY_SIZE = 500 * 1024 * 1024  # 500MB
 FILE_UPLOAD_MAX_MEMORY_SIZE = 500 * 1024 * 1024  # 500MB
+# Note: For production security, we use chunked uploads for large files, 
+# but we keep the global limit high enough for standard backup restores.
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 5000
 
 import sys

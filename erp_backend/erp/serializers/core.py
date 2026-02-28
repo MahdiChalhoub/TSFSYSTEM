@@ -5,7 +5,7 @@ Business serializers have been migrated to their respective modules.
 """
 from rest_framework import serializers
 from erp.models import (
-    Organization, Site, User, Role, Country, Permission,
+    Organization, User, Role, Country, Permission,
     SystemModule, OrganizationModule, SystemUpdate,
     BusinessType, GlobalCurrency, Notification
 )
@@ -37,7 +37,11 @@ class OrganizationSerializer(serializers.ModelSerializer):
                             'currency_code', 'currency_symbol']
 
     def get_site_count(self, obj):
-        return Site.original_objects.filter(organization=obj).count()
+        try:
+            from apps.inventory.models import Warehouse
+            return Warehouse.objects.filter(organization=obj, location_type='BRANCH').count()
+        except Exception:
+            return 0
 
     def get_user_count(self, obj):
         return User.objects.filter(organization=obj).count()
@@ -67,8 +71,10 @@ class OrganizationSerializer(serializers.ModelSerializer):
 
 
 class SiteSerializer(serializers.ModelSerializer):
+    """Backward-compat: now uses Warehouse model for branches/sites."""
     class Meta:
-        model = Site
+        from apps.inventory.models import Warehouse
+        model = Warehouse
         fields = '__all__'
 
 
@@ -87,18 +93,28 @@ class GlobalCurrencySerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     has_official_pin = serializers.SerializerMethodField()
     has_internal_pin = serializers.SerializerMethodField()
+    pos_pin = serializers.SerializerMethodField()
+    has_override_pin = serializers.SerializerMethodField()
+    role_name = serializers.SlugRelatedField(source='role', slug_field='name', read_only=True)
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'organization', 'role',
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'organization', 'role', 'role_name',
                   'is_staff', 'is_superuser', 'has_official_pin', 'has_internal_pin',
-                  'is_2fa_enabled', 'registration_status', 'correction_notes']
+                  'is_2fa_enabled', 'registration_status', 'correction_notes', 'pos_pin',
+                  'has_override_pin', 'is_driver']
 
     def get_has_official_pin(self, obj):
         return bool(obj.scope_pin_official)
 
     def get_has_internal_pin(self, obj):
         return bool(obj.scope_pin_internal)
+
+    def get_pos_pin(self, obj):
+        return bool(obj.pos_pin)
+
+    def get_has_override_pin(self, obj):
+        return bool(obj.override_pin)
 
 
 class CountrySerializer(serializers.ModelSerializer):

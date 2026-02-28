@@ -43,10 +43,9 @@ class JournalEntryViewSet(UDLEViewSetMixin, TenantModelViewSet):
         if status_filter:
             qs = qs.filter(status=status_filter)
 
-        # Filter by scope
-        scope = params.get('scope')
-        if scope:
-            qs = qs.filter(scope=scope)
+        # Filter by scope is already handled by TenantModelViewSet.get_queryset()
+        # but we can add more specific filtering if needed here.
+        pass
 
         # Filter by entry type (opening vs manual vs auto)
         entry_type = params.get('entry_type')
@@ -99,6 +98,10 @@ class JournalEntryViewSet(UDLEViewSetMixin, TenantModelViewSet):
             return Response({"error": "No organization context found"}, status=status.HTTP_400_BAD_REQUEST)
         
         organization = Organization.objects.get(id=organization_id)
+        
+        # --- STRICT SCOPE ENFORCEMENT ---
+        scope = request.data.get('scope', 'OFFICIAL')
+        self.check_scope_permission(scope)
         
         try:
             entry = LedgerService.create_journal_entry(
@@ -156,6 +159,10 @@ class JournalEntryViewSet(UDLEViewSetMixin, TenantModelViewSet):
 
     @action(detail=False, methods=['post'])
     def clear_all(self, request):
+        """DANGEROUS: Clears all financial data. Restricted to superusers."""
+        if not request.user or not request.user.is_superuser:
+            return Response({"error": "Forbidden: Only superusers can clear financial data."}, status=status.HTTP_403_FORBIDDEN)
+        
         organization_id = get_current_tenant_id()
         if not organization_id:
             return Response({"error": "No organization context found"}, status=status.HTTP_400_BAD_REQUEST)
@@ -171,6 +178,10 @@ class JournalEntryViewSet(UDLEViewSetMixin, TenantModelViewSet):
         
         organization = Organization.objects.get(id=organization_id)
         
+        # --- STRICT SCOPE ENFORCEMENT ---
+        if 'scope' in request.data:
+            self.check_scope_permission(request.data.get('scope'))
+
         try:
             lines = request.data.get('lines')
             if lines:
@@ -432,9 +443,14 @@ class FinancialEventViewSet(TenantModelViewSet):
             return Response({"error": str(e)}, status=400)
 
 
-class TransactionSequenceViewSet(TenantModelViewSet):
+class TransactionSequenceViewSet(viewsets.ReadOnlyModelViewSet):
+    """Read-only: Sequence generators must not be manually modified via API."""
     queryset = TransactionSequence.objects.all()
     serializer_class = TransactionSequenceSerializer
+
+    def get_queryset(self):
+        org_id = get_current_tenant_id()
+        return super().get_queryset().filter(organization_id=org_id)
 
 
 class ForensicAuditLogViewSet(TenantModelViewSet):
@@ -443,7 +459,16 @@ class ForensicAuditLogViewSet(TenantModelViewSet):
     http_method_names = ['get'] # Strictly read-only
 
     def get_queryset(self):
-        return super().get_queryset().order_by('-timestamp')
+        qs = super().get_queryset().order_by('-timestamp')
+        
+        # --- STRICT SCOPE ISOLATION ---
+        from erp.middleware import get_authorized_scope
+        auth_scope = get_authorized_scope() or 'official'
+        if auth_scope == 'official':
+             from django.db.models import Q
+             # Filter payload for _scope='OFFICIAL' or no _scope (legacy)
+             qs = qs.filter(Q(payload___scope='OFFICIAL') | Q(payload___scope__isnull=True))
+        return qs
 
 
 class AuditVerificationViewSet(viewsets.ViewSet):

@@ -1,20 +1,35 @@
 from .base import serializers
 from apps.pos.models import DeliveryZone, DeliveryOrder
 
+
 class DeliveryZoneSerializer(serializers.ModelSerializer):
     organization = serializers.PrimaryKeyRelatedField(read_only=True)
+    # How many clients have this zone as their home zone
+    client_count = serializers.SerializerMethodField()
+    client_list  = serializers.SerializerMethodField()
 
     class Meta:
         model = DeliveryZone
         fields = '__all__'
 
+    def get_client_count(self, obj):
+        return obj.clients.count()
+
+    def get_client_list(self, obj):
+        """Lightweight list of clients in this zone for zone management views."""
+        return list(obj.clients.values('id', 'name', 'phone', 'customer_tier'))
+
 
 class DeliveryOrderSerializer(serializers.ModelSerializer):
-    organization = serializers.PrimaryKeyRelatedField(read_only=True)
-    order_ref = serializers.ReadOnlyField(source='order.ref_code')
-    zone_name = serializers.ReadOnlyField(source='zone.name')
-    driver_name = serializers.SerializerMethodField()
-    contact_name = serializers.ReadOnlyField(source='order.contact.name')
+    organization        = serializers.PrimaryKeyRelatedField(read_only=True)
+    order_ref           = serializers.ReadOnlyField(source='order.ref_code')
+    order_total         = serializers.ReadOnlyField(source='order.total_amount')
+    zone_name           = serializers.ReadOnlyField(source='zone.name')
+    zone_fee            = serializers.ReadOnlyField(source='zone.base_fee')
+    driver_name         = serializers.SerializerMethodField()
+    contact_name        = serializers.ReadOnlyField(source='order.contact.name')
+    session_ref         = serializers.ReadOnlyField(source='session.id')
+    is_payment_pending  = serializers.ReadOnlyField()
 
     class Meta:
         model = DeliveryOrder

@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react'
 import { getLedgerEntries, getLedgerUsers } from '@/app/actions/finance/ledger'
 import { getFiscalYears } from '@/app/actions/finance/fiscal-year'
 import { LedgerEntryActions } from './ledger-actions'
+import { useAdmin } from '@/context/AdminContext'
 import { useCurrency } from '@/lib/utils/currency'
 import Link from 'next/link'
 import {
@@ -46,10 +47,12 @@ export default function GeneralLedgerPage() {
     const [search, setSearch] = useState('')
     const [showFilters, setShowFilters] = useState(false)
     const [users, setUsers] = useState<any[]>([])
+    const { viewScope } = useAdmin()
+
     const loadEntries = useCallback(async () => {
         setLoading(true)
         try {
-            const data = await getLedgerEntries('INTERNAL', {
+            const data = await getLedgerEntries(viewScope, {
                 status: status === 'ALL' ? undefined : status,
                 fiscal_year: fiscalYear === 'ALL' ? undefined : fiscalYear,
                 date_from: dateFrom || undefined,
@@ -67,11 +70,13 @@ export default function GeneralLedgerPage() {
         } finally {
             setLoading(false)
         }
-    }, [status, fiscalYear, dateFrom, dateTo, entryType, verified, locked, user, autoSource, search])
+    }, [status, fiscalYear, dateFrom, dateTo, entryType, verified, locked, user, autoSource, search, viewScope])
+
     useEffect(() => {
         getFiscalYears().then(setFiscalYears).catch(() => { })
         getLedgerUsers().then(setUsers).catch(() => { })
     }, [])
+
     useEffect(() => {
         loadEntries()
     }, [loadEntries])

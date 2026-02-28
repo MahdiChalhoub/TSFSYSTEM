@@ -642,10 +642,36 @@ export default function AdvancedProductForm({
 
                             {/* ── Stock Tab ── */}
                             {activeTab === 'stock' && (
-                                <div className="flex flex-col items-center justify-center py-12 text-center">
-                                    <History className="w-10 h-10 text-gray-200 mb-3" />
-                                    <p className="text-[13px] text-gray-600 font-semibold">No Stock Data</p>
-                                    <p className="text-[11px] text-gray-400 mt-1 max-w-[200px]">Save product first. Batch merging & splitting will be available here.</p>
+                                <div className="space-y-4">
+                                    <div className="p-4 bg-white rounded-lg border border-gray-200">
+                                        <h4 className="text-[12px] font-semibold text-gray-800 flex items-center gap-1.5 mb-3">
+                                            <Warehouse className="w-3.5 h-3.5 text-amber-500" />
+                                            Reorder Settings
+                                        </h4>
+                                        <div>
+                                            <label className="block text-[10px] font-medium text-gray-400 mb-1.5 uppercase tracking-wider">
+                                                Minimum Stock Level (Alert)
+                                            </label>
+                                            <div className="relative">
+                                                <input
+                                                    type="number"
+                                                    name="minStockLevel"
+                                                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-[13px] outline-none font-semibold text-gray-800"
+                                                    placeholder="e.g. 10"
+                                                    defaultValue={initialData?.minStockLevel || "10"}
+                                                />
+                                            </div>
+                                            <p className="text-[10px] text-gray-400 mt-2 leading-relaxed">
+                                                The system will trigger an alert when stock drops below this value.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-col items-center justify-center py-8 text-center bg-gray-50/50 rounded-lg border border-dashed border-gray-200">
+                                        <History className="w-8 h-8 text-gray-200 mb-2" />
+                                        <p className="text-[12px] text-gray-600 font-semibold">No Live Stock Data</p>
+                                        <p className="text-[10px] text-gray-400 mt-1 max-w-[180px]">Batch merging & splitting available after first stock-in.</p>
+                                    </div>
                                 </div>
                             )}
                         </div>

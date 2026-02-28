@@ -142,8 +142,9 @@ class ReportService:
         file_path = service.export(report_definition, data, format='EXCEL')
     """
 
-    def __init__(self, organization_id):
+    def __init__(self, organization_id, authorized_scope='official'):
         self.organization_id = organization_id
+        self.authorized_scope = authorized_scope
         _build_registry()
 
     def execute(self, report_def):
@@ -162,6 +163,10 @@ class ReportService:
 
         # Build base queryset (tenant-filtered)
         qs = model_class.objects.filter(organization_id=self.organization_id)
+        
+        # --- STRICT ISOLATION ---
+        if hasattr(model_class, 'scope') and self.authorized_scope == 'official':
+            qs = qs.filter(scope='OFFICIAL')
 
         # Apply filters
         for f in (report_def.filters or []):
@@ -216,6 +221,10 @@ class ReportService:
                     agg_kwargs[label] = func(agg['field'])
             if agg_kwargs:
                 base_qs = model_class.objects.filter(organization_id=self.organization_id)
+                
+                # --- STRICT ISOLATION ---
+                if hasattr(model_class, 'scope') and self.authorized_scope == 'official':
+                    base_qs = base_qs.filter(scope='OFFICIAL')
                 for f in (report_def.filters or []):
                     field = f.get('field')
                     op = f.get('op', 'eq')

@@ -15,7 +15,8 @@ class Order(TenantModel):
     ref_code = models.CharField(max_length=100, null=True, blank=True)
     contact = models.ForeignKey('crm.Contact', on_delete=models.SET_NULL, null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    site = models.ForeignKey('erp.Site', on_delete=models.SET_NULL, null=True, blank=True)
+    site = models.ForeignKey('inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='orders', help_text='Branch/location where this order was made')
     total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     tax_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
     airsi_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
@@ -67,8 +68,26 @@ class OrderLine(TenantModel):
     tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'))
     airsi_rate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'))
     discount_rate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'))
-    subtotal = models.DecimalField(max_digits=15, decimal_places=2)
+    subtotal = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    
+    # Tracking Fields
+    expiry_date = models.DateField(null=True, blank=True)
+    batch_number = models.CharField(max_length=100, null=True, blank=True)
+    serial_number = models.CharField(max_length=200, null=True, blank=True)
+    
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    
+    def save(self, *args, **kwargs):
+        bypass = kwargs.pop('force_audit_bypass', False)
+        if self.order and self.order.status in ['COMPLETED', 'INVOICED', 'RECEIVED'] and not bypass:
+            raise ValidationError(f"Immutable POS: Lines belonging to order {self.order.id} ({self.order.status}) cannot be modified.")
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        if self.order and self.order.status in ['COMPLETED', 'INVOICED', 'RECEIVED']:
+            raise ValidationError(f"Immutable POS: Lines belonging to order {self.order.id} ({self.order.status}) cannot be deleted.")
+        super().delete(*args, **kwargs)
+
     class Meta:
         db_table = 'pos_orderline'
 
@@ -78,8 +97,8 @@ class PosTicket(TenantModel):
     ticket_id = models.CharField(max_length=100)
     data = models.JSONField(default=dict)
     is_synced = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
     class Meta:
         db_table = 'pos_ticket'
         unique_together = ('user', 'ticket_id')

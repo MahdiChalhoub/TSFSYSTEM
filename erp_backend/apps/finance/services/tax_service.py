@@ -52,14 +52,15 @@ class TaxService:
             total_ttc = Decimal('0')
             
             for line in purchase_lines:
-                qty = line.quantity
-                ht = line.unit_cost_ht * qty
-                vat = line.vat_amount * qty
-                ttc = line.total
+                ttc = line.subtotal
+                rate = line.tax_rate  # stored directly as fraction e.g. 0.18
                 
-                total_ht += ht
-                total_vat_recoverable += vat
-                total_ttc += ttc
+                ht = (ttc / (Decimal('1') + rate)) if rate else ttc
+                vat = ttc - ht
+                
+                total_ht += ht.quantize(Decimal('0.01'))
+                total_vat_recoverable += vat.quantize(Decimal('0.01'))
+                total_ttc += ttc.quantize(Decimal('0.01'))
                 
             return {
                 "type": "STANDARD_RECLASSIFIED",

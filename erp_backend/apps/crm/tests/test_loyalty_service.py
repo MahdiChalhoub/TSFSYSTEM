@@ -10,7 +10,7 @@ from django.utils import timezone
 
 from erp.models import Organization, User, Site
 from apps.crm.models import Contact
-from apps.crm.loyalty_service import LoyaltyService
+from apps.crm.services.loyalty_service import LoyaltyService
 
 
 class LoyaltyTestBase(TestCase):

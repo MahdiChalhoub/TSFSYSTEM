@@ -59,6 +59,8 @@ class AuditLogMixin:
         user = self.request.user if self.request.user.is_authenticated else None
 
         new_data = self._serialize_instance(instance) if action != 'DELETE' else None
+        scope = getattr(instance, 'scope', None)
+        metadata = {'scope': scope} if scope else {}
 
         try:
             # Use a savepoint so that if the auditlog table doesn't exist
@@ -75,6 +77,7 @@ class AuditLogMixin:
                     old_value=old_data,
                     ip_address=self.request.META.get('REMOTE_ADDR'),
                     user_agent=self.request.META.get('HTTP_USER_AGENT', '')[:500],
+                    metadata=metadata,
                 )
         except Exception as e:
             # Don't fail the request if audit logging fails

@@ -16,6 +16,7 @@ import { getSites } from '@/app/actions/sites';
 import { getOrganizations } from '@/app/(privileged)/(saas)/organizations/actions';
 import { getUser } from '@/app/actions/auth';
 import { getGlobalFinancialSettings } from '@/app/actions/settings';
+import { checkSetupReadiness } from '@/app/actions/setup-wizard';
 
 import { headers, cookies } from 'next/headers';
 
@@ -91,8 +92,25 @@ export default async function AdminLayout({
     const [sites, organizations, financialSettings] = await Promise.all([
         getSites(),
         getOrganizations(),
-        getGlobalFinancialSettings()
+        getGlobalFinancialSettings(),
     ]);
+
+    // ── HARD GATE: Setup Wizard for TENANT subdomains only ──
+    // SaaS panel never gets gated. Only tenant orgs need fiscal regime + currency + fiscal year.
+    if (!isSaas) {
+        const pathname = headerList.get('x-pathname') || '';
+        const isOnWizard = pathname.startsWith('/setup-wizard');
+        if (!isOnWizard) {
+            try {
+                const setupReadiness = await checkSetupReadiness();
+                if (!setupReadiness.ready) {
+                    redirect('/setup-wizard');
+                }
+            } catch {
+                // If check fails, don't block — let user through
+            }
+        }
+    }
 
 
 
@@ -120,7 +138,7 @@ export default async function AdminLayout({
                         <TabNavigator />
 
                         {/* 3. The Page Content */}
-                        <main className="flex-1 overflow-auto relative p-6 md:p-8">
+                        <main className="flex-1 overflow-auto relative p-4 md:p-5">
                             <Suspense fallback={null}>
                                 {children}
                             </Suspense>

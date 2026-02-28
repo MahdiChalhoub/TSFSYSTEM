@@ -2,12 +2,13 @@ from .base import (
     viewsets, status, Response, action, get_current_tenant_id,
     Organization, PDFService, HttpResponse
 )
-from apps.pos.models import Order
-from apps.pos.models import PurchaseOrder, PurchaseOrderLine
+from apps.pos.models import Order, PurchaseOrder, PurchaseOrderLine
 from apps.pos.services import PurchaseService
 from apps.pos.serializers import (
     OrderSerializer, PurchaseOrderSerializer, PurchaseOrderLineSerializer
 )
+from decimal import Decimal
+from apps.pos.services.base import _safe_import
 
 class PurchaseViewSet(viewsets.ViewSet):
     """Handles Purchase Order (PO) operations."""
@@ -122,7 +123,7 @@ class PurchaseViewSet(viewsets.ViewSet):
 class PurchaseOrderViewSet(viewsets.ModelViewSet):
     """ViewSet for the dedicated PurchaseOrder model with 10-state lifecycle."""
     queryset = PurchaseOrder.objects.select_related(
-        'supplier', 'site', 'warehouse', 'created_by', 'assigned_to', 'approved_by'
+        'supplier', 'site', 'warehouse', 'created_by', 'approved_by'
     ).prefetch_related('lines', 'lines__product').all()
     serializer_class = PurchaseOrderSerializer
 
@@ -190,24 +191,46 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], url_path='receive-line')
     def receive_line(self, request, pk=None):
-        """Receive goods for a specific line."""
+        """Receive goods for a specific line and update inventory."""
         po = self.get_object()
         line_id = request.data.get('line_id')
         qty = Decimal(str(request.data.get('quantity', 0)))
         
+        # Gated import of StockService for cross-module loose coupling
+        (StockService,) = _safe_import('apps.inventory.services.stock_service', ['StockService'])
+        if not StockService:
+            return Response({"error": "Inventory module required for receiving"}, status=501)
+
         try:
             line = po.lines.get(id=line_id)
-            line.received_quantity += qty
-            line.save(update_fields=['received_quantity'])
             
-            # Check if all lines fully received
-            if all(l.received_quantity >= l.quantity for l in po.lines.all()):
-                po.status = 'RECEIVED'
-                po.save(update_fields=['status'])
+            # 1. Update Inventory Stock
+            warehouse = line.warehouse or po.warehouse
+            if not warehouse:
+                return Response({"error": "No warehouse defined for line or PO"}, status=400)
+
+            StockService.receive_stock(
+                organization=po.organization,
+                product=line.product,
+                warehouse=warehouse,
+                quantity=qty,
+                cost_price_ht=line.unit_price,
+                reference=f"PO-REC-{po.po_number or po.id}",
+                user=request.user
+            )
+
+            # 2. Record receiving on the PO line (updates status automatically)
+            line.receive(qty)
                 
             return Response(PurchaseOrderSerializer(po).data)
         except PurchaseOrderLine.DoesNotExist:
             return Response({"error": "Line not found"}, status=404)
+        except ValidationError as e:
+            return Response({"error": str(e)}, status=400)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return Response({"error": f"Internal Error: {str(e)}"}, status=500)
 
     @action(detail=True, methods=['post'])
     def cancel(self, request, pk=None):
@@ -268,10 +291,12 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
         from django.db.models import Count, Sum
         stats = PurchaseOrder.objects.filter(organization_id=org_id).values('status').annotate(
             count=Count('id'),
-            total=Sum('total_ttc')
+            total=Sum('total_amount')
         )
         return Response(list(stats))
 
+
+from rest_framework.exceptions import ValidationError
 
 class PurchaseOrderLineViewSet(viewsets.ModelViewSet):
     """Direct CRUD for PO lines."""
@@ -281,3 +306,17 @@ class PurchaseOrderLineViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         org_id = get_current_tenant_id()
         return self.queryset.filter(organization_id=org_id)
+
+    def perform_create(self, serializer):
+        org_id = get_current_tenant_id()
+        order = serializer.validated_data.get('order')
+        if order and order.organization_id != org_id:
+            raise ValidationError("Cross-tenant PO assignment blocked.")
+        serializer.save(organization_id=org_id)
+
+    def perform_update(self, serializer):
+        org_id = get_current_tenant_id()
+        order = serializer.validated_data.get('order')
+        if order and order.organization_id != org_id:
+            raise ValidationError("Cross-tenant PO assignment blocked.")
+        serializer.save(organization_id=org_id)

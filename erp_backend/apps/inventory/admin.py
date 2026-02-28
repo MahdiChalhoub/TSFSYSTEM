@@ -59,8 +59,8 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(Warehouse)
 class WarehouseAdmin(admin.ModelAdmin):
-    list_display = ('name', 'code', 'site', 'type', 'can_sell', 'is_active', 'organization')
-    list_filter = ('type', 'is_active', 'organization', 'site')
+    list_display = ('name', 'code', 'location_type', 'can_sell', 'is_active', 'organization')
+    list_filter = ('location_type', 'is_active', 'organization')
     search_fields = ('name', 'code')
 
 

@@ -26,7 +26,7 @@ class FinancialModuleTests(APITestCase):
         self.org = ProvisioningService.provision_organization(name="Test Corp", slug="test-corp")
         self.client.defaults['HTTP_X_TENANT_ID'] = str(self.org.id)
 
-        # Determine the current FY created by provisioner
+        # Determine the current FY created by the handler
         self.current_year = FiscalYear.objects.get(organization=self.org)
 
         # 2. Create and Authenticate User
@@ -67,7 +67,7 @@ class FinancialModuleTests(APITestCase):
         # 3. Close Period
         period = FiscalPeriod.objects.filter(fiscal_year=self.current_year).first()
         period_url = reverse('fiscalperiod-detail', args=[period.id])
-        self.client.patch(period_url, {"is_closed": True}, format='json')
+        response = self.client.patch(period_url, {"is_closed": True}, format='json')
         period.refresh_from_db()
         self.assertTrue(period.is_closed)
         print(f"[OK] Period {period.name} Closed.")

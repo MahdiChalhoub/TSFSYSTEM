@@ -4,14 +4,13 @@ from apps.inventory.serializers import WarehouseSerializer
 from .base import (
     Organization,
     Response,
-    Site,
     TenantModelViewSet,
     get_current_tenant_id,
     status,
 )
 
 class WarehouseViewSet(TenantModelViewSet):
-    queryset = Warehouse.objects.select_related('site').all()
+    queryset = Warehouse.objects.select_related('parent').all()
     serializer_class = WarehouseSerializer
 
     def create(self, request, *args, **kwargs):
@@ -40,7 +39,7 @@ class WarehouseViewSet(TenantModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_create(self, serializer):
-        """Auto-resolve site from organization if not provided by the frontend."""
+        """Save with organization context."""
         user = self.request.user
         header_tenant_id = get_current_tenant_id()
 
@@ -53,23 +52,5 @@ class WarehouseViewSet(TenantModelViewSet):
             from rest_framework import serializers
             raise serializers.ValidationError({"error": "Organization context missing."})
 
-        # Auto-resolve site: use provided site, or fall back to org's first site
-        site_id = serializer.validated_data.get('site')
-        if isinstance(site_id, models.Model):
-            site_id = site_id.id
+        serializer.save(organization_id=organization_id)
 
-        if not site_id:
-            site = Site.objects.filter(organization_id=organization_id).first()
-            if not site:
-                org = Organization.objects.get(id=organization_id)
-                site = Site.objects.create(
-                    name=f"{org.name} - Main Site",
-                    organization_id=organization_id,
-                    is_active=True,
-                )
-            site_id = site.id
-        else:
-            # Reattach correctly if serializer.validated_data populated an object
-            site_id = site_id if isinstance(site_id, int) else getattr(site_id, 'id', None)
-
-        serializer.save(organization_id=organization_id, site_id=site_id)

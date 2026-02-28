@@ -17,12 +17,15 @@ const PAYMENT_ICONS: Record<string, string> = {
     CASH: '💵', CARD: '💳', MOBILE: '📱', TRANSFER: '🏦', CHECK: '📝', CREDIT: '🧾'
 }
 
+import { useAdmin } from "@/context/AdminContext"
+
 export default function DailySummaryPage() {
+    const { viewScope } = useAdmin()
     const { fmt } = useCurrency()
     const [data, setData] = useState<SalesAnalyticsData | null>(null)
     const [loading, setLoading] = useState(true)
 
-    useEffect(() => { loadData() }, [])
+    useEffect(() => { loadData() }, [viewScope])
 
     async function loadData() {
         setLoading(true)

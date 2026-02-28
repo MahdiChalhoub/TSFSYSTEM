@@ -171,12 +171,9 @@ export default async function middleware(req: NextRequest) {
 
     if (!hasAuthToken && !isPublicRoute && !url.pathname.startsWith('/saas/login')) {
         const loginUrl = url.clone();
-        // On tenant subdomains, redirect to /login on the SAME subdomain.
-        // /login is the employee/admin ERP login for this workspace.
-        // (Customer login is at /shop/login — a separate storefront route.)
         loginUrl.hostname = hostname;
+        loginUrl.port = ""; // Ensure we don't redirect to internal port 3000
         loginUrl.pathname = '/login';
-        loginUrl.port = "";
         loginUrl.searchParams.set('error', 'session_expired');
         return NextResponse.redirect(loginUrl);
     }
@@ -321,7 +318,6 @@ export default async function middleware(req: NextRequest) {
         url.pathname.startsWith('/health') ||
         url.pathname.startsWith('/subscription') ||
         url.pathname.startsWith('/updates') ||
-        url.pathname.startsWith('/migration') ||
         url.pathname.startsWith('/apps') ||
         url.pathname.startsWith('/currencies') ||
         url.pathname.startsWith('/kernel') ||
@@ -357,9 +353,11 @@ export default async function middleware(req: NextRequest) {
         url.pathname.startsWith('/hr') ||
         url.pathname.startsWith('/products') ||
         url.pathname.startsWith('/ecommerce') ||
+        url.pathname.startsWith('/migration') ||
         url.pathname.startsWith('/settings') ||
         url.pathname.startsWith('/workspace') ||
         url.pathname.startsWith('/users') ||
+        url.pathname.startsWith('/setup-wizard') ||
         url.pathname.startsWith('/supplier-portal');
 
     if (url.pathname.startsWith('/tenant')) {
@@ -367,7 +365,9 @@ export default async function middleware(req: NextRequest) {
     }
 
     if (isTenantAdminRoute) {
-        return NextResponse.next();
+        const response = NextResponse.next();
+        response.headers.set('x-pathname', url.pathname);
+        return response;
     }
 
     // ─── STOREFRONT ROUTES ─────────────────────────────────────────────

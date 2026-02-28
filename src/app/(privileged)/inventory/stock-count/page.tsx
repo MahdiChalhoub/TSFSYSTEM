@@ -52,7 +52,7 @@ interface FilterOptions {
     warehouses: { id: number; name: string; code: string | null }[]
 }
 // ─── Page ────────────────────────────────────────────────────────
-export default function StockGovernanceConsolePage() {
+export default function StockCountPage() {
     const settings = useListViewSettings('inv_stock_count', {
         columns: ['reference', 'location', 'section', 'date', 'compliance'],
         pageSize: 25,
@@ -78,7 +78,7 @@ export default function StockGovernanceConsolePage() {
                 setSessions(Array.isArray(data) ? data : data?.results || [])
             } catch {
                 setSessions([])
-                toast.error("Governance engine failure")
+                toast.error("Failed to load stock count sessions")
             } finally {
                 setLoading(false)
             }
@@ -90,12 +90,12 @@ export default function StockGovernanceConsolePage() {
     const pendingReview = sessions.filter(s => s.status === 'WAITING_VERIFICATION').length
     const auditCompletion = sessions.length > 0 ? (sessions.filter(s => s.status === 'VERIFIED' || s.status === 'ADJUSTED').length / sessions.length * 100).toFixed(1) : '0.0'
     const columns: ColumnDef<Session>[] = [
-        { key: 'reference', label: 'Governance Ref', sortable: true, alwaysVisible: true, render: r => <span className="font-mono font-bold text-gray-900">COUNT-{r.reference || r.id}</span> },
-        { key: 'location', label: 'Terminal Node', render: r => <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200 uppercase text-[9px] font-black">{r.warehouse_name || r.location}</Badge> },
-        { key: 'section', label: 'Scope', render: r => <span className="text-xs font-medium text-gray-400 italic">{r.section}</span> },
-        { key: 'date', label: 'Audit Date', render: r => <span className="text-gray-500 font-medium">{r.session_date}</span> },
+        { key: 'reference', label: 'Reference', sortable: true, alwaysVisible: true, render: r => <span className="font-mono font-bold text-gray-900">COUNT-{r.reference || r.id}</span> },
+        { key: 'location', label: 'Warehouse', render: r => <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200 uppercase text-[9px] font-black">{r.warehouse_name || r.location}</Badge> },
+        { key: 'section', label: 'Category', render: r => <span className="text-xs font-medium text-gray-400 italic">{r.section}</span> },
+        { key: 'date', label: 'Count Date', render: r => <span className="text-gray-500 font-medium">{r.session_date}</span> },
         {
-            key: 'compliance', label: 'Compliance', align: 'center', render: r => (
+            key: 'progress', label: 'Progress', align: 'center', render: r => (
                 <div className="flex flex-col items-center gap-1">
                     <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">Verified</span>
                     <span className={`text-sm font-black ${r.verified_count === r.products_count ? 'text-emerald-600' : 'text-orange-500'}`}>{r.verified_count}/{r.products_count}</span>
@@ -113,7 +113,7 @@ export default function StockGovernanceConsolePage() {
         startTransition(async () => {
             try {
                 await deleteCountingSession(deleteTarget)
-                toast.success("Audit Session Purged")
+                toast.success("Count session deleted")
                 fetchSessions()
             } catch { toast.error("Failed to purge session") }
         })
@@ -135,20 +135,20 @@ export default function StockGovernanceConsolePage() {
                 <div>
                     <h1 className="text-4xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
                         <div className="w-14 h-14 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200">
-                            <ShieldCheck size={28} className="text-white" />
+                            <ClipboardList size={28} className="text-white" />
                         </div>
-                        Stock <span className="text-indigo-600">Governance</span>
+                        Stock <span className="text-indigo-600">Count</span>
                     </h1>
-                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">High-Fidelity Audit & Verification Hub</p>
+                    <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Inventory Verification & Adjustment</p>
                 </div>
                 <div className="flex items-center gap-2 bg-indigo-50 px-4 py-2 rounded-2xl border border-indigo-100">
                     <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
-                    <span className="text-[10px] font-black uppercase text-indigo-700 tracking-widest">Audit Terminal Active</span>
+                    <span className="text-[10px] font-black uppercase text-indigo-700 tracking-widest">Count System Active</span>
                 </div>
             </header>
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 <div className="lg:col-span-3 space-y-6">
-                    {/* Governance Intelligence */}
+                    {/* Count Session Stats */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                         <Card className="rounded-[2rem] border-0 shadow-sm bg-white overflow-hidden group hover:shadow-md transition-all">
                             <CardContent className="p-6 flex items-center gap-5">
@@ -156,7 +156,7 @@ export default function StockGovernanceConsolePage() {
                                     <Clock size={28} />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">In-Field Audit</p>
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">In Progress</p>
                                     <h2 className="text-3xl font-black text-gray-900 mt-0.5">{inProgress}</h2>
                                 </div>
                             </CardContent>
@@ -178,15 +178,15 @@ export default function StockGovernanceConsolePage() {
                                     <Sparkles size={28} />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Audit Completion</p>
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Completion Rate</p>
                                     <h2 className="text-3xl font-black text-gray-900 mt-0.5">{auditCompletion}%</h2>
                                 </div>
                             </CardContent>
                         </Card>
                     </div>
                     <TypicalListView<Session>
-                        title="Audit Logs"
-                        addLabel="INIT AUDIT"
+                        title="Count Sessions"
+                        addLabel="NEW COUNT"
                         onAdd={() => setShowCreate(true)}
                         data={filtered}
                         loading={loading}
@@ -206,7 +206,7 @@ export default function StockGovernanceConsolePage() {
                         }}
                         bulkActions={
                             <Button variant="ghost" size="sm" className="text-rose-600 hover:bg-rose-50 font-bold px-4 uppercase" onClick={handleBulkDelete}>
-                                <Trash2 className="h-4 w-4 mr-2" /> Purge Selected
+                                <Trash2 className="h-4 w-4 mr-2" /> Delete Selected
                             </Button>
                         }
                         headerExtra={
@@ -217,11 +217,11 @@ export default function StockGovernanceConsolePage() {
                         lifecycle={{
                             getStatus: r => {
                                 const m: Record<string, any> = {
-                                    IN_PROGRESS: { label: 'In Field', variant: 'warning' },
-                                    WAITING_VERIFICATION: { label: 'Verification Req.', variant: 'info' },
-                                    VERIFIED: { label: 'Audit Clear', variant: 'success' },
-                                    ADJUSTED: { label: 'Governance Reconciled', variant: 'success' },
-                                    CANCELLED: { label: 'Audit Aborted', variant: 'danger' }
+                                    IN_PROGRESS: { label: 'Counting', variant: 'warning' },
+                                    WAITING_VERIFICATION: { label: 'Pending Verification', variant: 'info' },
+                                    VERIFIED: { label: 'Verified', variant: 'success' },
+                                    ADJUSTED: { label: 'Stock Adjusted', variant: 'success' },
+                                    CANCELLED: { label: 'Cancelled', variant: 'danger' }
                                 }
                                 return m[r.status] || { label: r.status, variant: 'default' }
                             },
@@ -233,17 +233,17 @@ export default function StockGovernanceConsolePage() {
                                 <div className="flex items-center gap-1">
                                     {s.status === 'IN_PROGRESS' && (
                                         <Button size="sm" variant="outline" className="h-8 px-3 rounded-xl border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold text-[10px]" onClick={() => router.push(`/inventory/stock-count/${s.id}/count`)}>
-                                            <ClipboardList size={14} className="mr-1" /> FIELD COUNT
+                                            <ClipboardList size={14} className="mr-1" /> COUNT
                                         </Button>
                                     )}
                                     {(s.status === 'WAITING_VERIFICATION' || s.status === 'VERIFIED') && (
                                         <Button size="sm" variant="outline" className="h-8 px-3 rounded-xl border-emerald-100 text-emerald-600 hover:bg-emerald-50 font-bold text-[10px]" onClick={() => router.push(`/inventory/stock-count/${s.id}/verify`)}>
-                                            <ShieldCheck size={14} className="mr-1" /> VERIFY AUDIT
+                                            <ShieldCheck size={14} className="mr-1" /> VERIFY
                                         </Button>
                                     )}
                                     {s.status === 'ADJUSTED' && (
                                         <Button size="sm" variant="outline" className="h-8 px-3 rounded-xl border-stone-200 text-stone-600 hover:bg-stone-50 font-bold text-[10px]" onClick={() => router.push(`/inventory/stock-count/${s.id}/verify`)}>
-                                            <Eye size={14} className="mr-1" /> VIEW RECON
+                                            <Eye size={14} className="mr-1" /> VIEW RESULTS
                                         </Button>
                                     )}
                                     <Button size="sm" variant="ghost" className="h-8 w-8 p-1 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg" onClick={() => setDeleteTarget(s.id)}>
@@ -254,12 +254,12 @@ export default function StockGovernanceConsolePage() {
                         }}
                     >
                         <TypicalFilter
-                            search={{ placeholder: 'Ref or Terminal Node...', value: search, onChange: setSearch }}
+                            search={{ placeholder: 'Search by reference or warehouse...', value: search, onChange: setSearch }}
                             filters={[
                                 {
-                                    key: 'status', label: 'Audit Status', type: 'select', options: [
-                                        { value: 'ALL', label: 'All Protocols' },
-                                        { value: 'IN_PROGRESS', label: 'In Field' },
+                                    key: 'status', label: 'Status', type: 'select', options: [
+                                        { value: 'ALL', label: 'All Statuses' },
+                                        { value: 'IN_PROGRESS', label: 'In Progress' },
                                         { value: 'WAITING_VERIFICATION', label: 'Pending Review' },
                                         { value: 'VERIFIED', label: 'Verified' },
                                         { value: 'ADJUSTED', label: 'Adjusted' }
@@ -285,9 +285,9 @@ export default function StockGovernanceConsolePage() {
                 open={deleteTarget !== null}
                 onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
                 onConfirm={handleDelete}
-                title="Purge Audit Session?"
-                description="This protocol permanently removes all field data and verification logs for this session. This action is recorded in the High-Fidelity Audit Log."
-                confirmText="Purge Protocol"
+                title="Delete Count Session?"
+                description="This will permanently remove all count data and verification records for this session. This action cannot be undone."
+                confirmText="Delete Session"
                 variant="danger"
             />
         </div>
@@ -349,7 +349,7 @@ function CreateSessionDialog({ onClose, onCreated }: { onClose: () => void; onCr
             try {
                 const res = await createCountingSession(data)
                 if (res && res.id) {
-                    toast.success("Governance Audit Initiated")
+                    toast.success("Stock count session created")
                     onCreated(res.id, res.reference)
                 } else {
                     onCreated(0)
@@ -363,15 +363,15 @@ function CreateSessionDialog({ onClose, onCreated }: { onClose: () => void; onCr
         <Dialog open onOpenChange={onClose}>
             <DialogContent className="max-w-xl rounded-[2rem] border-0 shadow-2xl overflow-y-auto max-h-[85vh]">
                 <DialogHeader>
-                    <DialogTitle className="text-2xl font-black">Audit Protocol Initiation</DialogTitle>
-                    <DialogDescription className="text-gray-400 font-medium pt-1">Configure scope and personnel for higher-fidelity verification.</DialogDescription>
+                    <DialogTitle className="text-2xl font-black">New Stock Count Session</DialogTitle>
+                    <DialogDescription className="text-gray-400 font-medium pt-1">Configure the scope and assign counters for this inventory count.</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Target Terminal</Label>
+                            <Label className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Warehouse</Label>
                             <Select value={form.warehouse_id} onValueChange={v => setForm(f => ({ ...f, warehouse_id: v }))}>
-                                <SelectTrigger className="rounded-xl border-gray-100 h-11"><SelectValue placeholder="Select location" /></SelectTrigger>
+                                <SelectTrigger className="rounded-xl border-gray-100 h-11"><SelectValue placeholder="Select warehouse" /></SelectTrigger>
                                 <SelectContent className="rounded-xl border-gray-100">
                                     {filterOpts?.warehouses.map(w => (
                                         <SelectItem key={w.id} value={w.id.toString()}>{w.name}</SelectItem>
@@ -380,9 +380,9 @@ function CreateSessionDialog({ onClose, onCreated }: { onClose: () => void; onCr
                             </Select>
                         </div>
                         <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Asset Collective (Category)</Label>
+                            <Label className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Category</Label>
                             <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v }))}>
-                                <SelectTrigger className="rounded-xl border-gray-100 h-11"><SelectValue placeholder="Global Assets" /></SelectTrigger>
+                                <SelectTrigger className="rounded-xl border-gray-100 h-11"><SelectValue placeholder="All categories" /></SelectTrigger>
                                 <SelectContent className="rounded-xl border-gray-100">
                                     <SelectItem value=" ">All Categories</SelectItem>
                                     {filterOpts?.categories.map(c => (
@@ -393,9 +393,9 @@ function CreateSessionDialog({ onClose, onCreated }: { onClose: () => void; onCr
                         </div>
                     </div>
                     <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Supplier Filtration</Label>
+                        <Label className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Supplier</Label>
                         <Select value={form.supplier_id} onValueChange={v => setForm(f => ({ ...f, supplier_id: v }))}>
-                            <SelectTrigger className="rounded-xl border-gray-100 h-11"><SelectValue placeholder="All Origins" /></SelectTrigger>
+                            <SelectTrigger className="rounded-xl border-gray-100 h-11"><SelectValue placeholder="All suppliers" /></SelectTrigger>
                             <SelectContent className="rounded-xl border-gray-100">
                                 <SelectItem value=" ">All Suppliers</SelectItem>
                                 {filterOpts?.suppliers.map(s => (
@@ -406,14 +406,14 @@ function CreateSessionDialog({ onClose, onCreated }: { onClose: () => void; onCr
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Volume Protocol</Label>
+                            <Label className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Quantity Filter</Label>
                             <Select value={form.qty_filter} onValueChange={v => setForm(f => ({ ...f, qty_filter: v }))}>
                                 <SelectTrigger className="rounded-xl border-gray-100 h-11"><SelectValue placeholder="All Volumes" /></SelectTrigger>
                                 <SelectContent className="rounded-xl border-gray-100">
                                     <SelectItem value=" ">All Quantities</SelectItem>
                                     <SelectItem value="zero">Zero Only</SelectItem>
                                     <SelectItem value="non_zero">Active Only</SelectItem>
-                                    <SelectItem value="custom">Range Specification</SelectItem>
+                                    <SelectItem value="custom">Custom Range</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -424,7 +424,7 @@ function CreateSessionDialog({ onClose, onCreated }: { onClose: () => void; onCr
                             </div>
                         ) : (
                             <div className="border border-dashed border-gray-100 rounded-xl flex items-center justify-center bg-gray-50/50">
-                                <span className="text-[10px] font-bold text-gray-300">SYSTEM BALANCED SCAN</span>
+                                <span className="text-[10px] font-bold text-gray-300">ALL QUANTITIES</span>
                             </div>
                         )}
                     </div>
@@ -432,27 +432,27 @@ function CreateSessionDialog({ onClose, onCreated }: { onClose: () => void; onCr
                         <div className="flex items-center gap-4 p-5 bg-indigo-50/50 rounded-[1.5rem] border border-indigo-100">
                             <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200"><Package size={22} className="text-white" /></div>
                             <div>
-                                <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Protocol Delta Coverage</p>
-                                <p className="text-2xl font-black text-indigo-900 leading-none mt-1">{productPreview.toLocaleString()} <span className="text-xs font-bold opacity-40 uppercase tracking-tighter">Assets Identidied</span></p>
+                                <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Products to Count</p>
+                                <p className="text-2xl font-black text-indigo-900 leading-none mt-1">{productPreview.toLocaleString()} <span className="text-xs font-bold opacity-40 uppercase tracking-tighter">products matched</span></p>
                             </div>
                         </div>
                     )}
                     <div className="grid grid-cols-2 gap-4 pt-2">
                         <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Verifier Prime (Counter 1)</Label>
-                            <Input className="rounded-xl border-gray-100 h-11" value={form.person1_name} onChange={e => setForm(f => ({ ...f, person1_name: e.target.value }))} placeholder="Protocol ID or Name" />
+                            <Label className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Counter 1</Label>
+                            <Input className="rounded-xl border-gray-100 h-11" value={form.person1_name} onChange={e => setForm(f => ({ ...f, person1_name: e.target.value }))} placeholder="Name of first counter" />
                         </div>
                         <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Verifier Alpha (Counter 2)</Label>
-                            <Input className="rounded-xl border-gray-100 h-11" value={form.person2_name} onChange={e => setForm(f => ({ ...f, person2_name: e.target.value }))} placeholder="Protocol ID or Name" />
+                            <Label className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Counter 2</Label>
+                            <Input className="rounded-xl border-gray-100 h-11" value={form.person2_name} onChange={e => setForm(f => ({ ...f, person2_name: e.target.value }))} placeholder="Name of second counter" />
                         </div>
                     </div>
                 </div>
                 <DialogFooter className="pt-6">
-                    <Button variant="ghost" onClick={onClose} className="rounded-xl font-bold">Abort Setup</Button>
+                    <Button variant="ghost" onClick={onClose} className="rounded-xl font-bold">Cancel</Button>
                     <Button onClick={handleSubmit} disabled={isPending} className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-8 font-bold h-12 shadow-lg shadow-indigo-200">
-                        {isPending ? <Loader2 size={16} className="animate-spin mr-2" /> : <ShieldCheck size={16} className="mr-2" />}
-                        Initiate Audit Protocol
+                        {isPending ? <Loader2 size={16} className="animate-spin mr-2" /> : <ClipboardList size={16} className="mr-2" />}
+                        Start Count Session
                     </Button>
                 </DialogFooter>
             </DialogContent>

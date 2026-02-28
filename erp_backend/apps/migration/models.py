@@ -18,6 +18,7 @@ class MigrationJob(TenantModel):
         ('RUNNING', 'Running Migration'),
         ('COMPLETED', 'Completed'),
         ('FAILED', 'Failed'),
+        ('STALLED', 'Stalled / Crashed'),
         ('ROLLED_BACK', 'Rolled Back'),
     )
 
@@ -37,7 +38,19 @@ class MigrationJob(TenantModel):
     db_port = models.IntegerField(null=True, blank=True, default=3306)
     db_name = models.CharField(max_length=255, null=True, blank=True)
     db_user = models.CharField(max_length=255, null=True, blank=True)
-    db_password = models.CharField(max_length=255, null=True, blank=True)
+    db_password_encrypted = models.TextField(null=True, blank=True, help_text='Encrypted direct DB password')
+
+    def set_db_password(self, raw_password: str):
+        """Encrypt and store the DB password."""
+        from erp.encryption import encrypt_value
+        self.db_password_encrypted = encrypt_value(raw_password)
+
+    def get_db_password(self) -> str | None:
+        """Decrypt and return the DB password."""
+        from erp.encryption import decrypt_value
+        if not self.db_password_encrypted:
+            return None
+        return decrypt_value(self.db_password_encrypted)
 
     # Business selection — which UPOS business to migrate
     source_business_id = models.IntegerField(
@@ -76,6 +89,20 @@ class MigrationJob(TenantModel):
     # Progress tracking (0-100)
     progress = models.IntegerField(default=0)
     current_step = models.CharField(max_length=100, null=True, blank=True)
+    current_step_detail = models.CharField(
+        max_length=200, null=True, blank=True,
+        help_text='Sub-step progress detail e.g. "35,000/53,752 transactions"'
+    )
+    last_heartbeat = models.DateTimeField(null=True, blank=True)
+    
+    error_summary = models.JSONField(
+        null=True, blank=True,
+        help_text='Counts of errors by type'
+    )
+    completed_steps = models.JSONField(
+        null=True, blank=True, default=list,
+        help_text='List of step names that completed successfully'
+    )
 
     error_log = models.TextField(null=True, blank=True)
     created_by = models.ForeignKey(
@@ -111,6 +138,11 @@ class MigrationMapping(models.Model):
         ('INVENTORY', 'Inventory'),
         ('SITE', 'Site'),
         ('TAX_GROUP', 'Tax Group'),
+        ('PAYMENT', 'Payment'),
+        ('EXPENSE', 'Expense'),
+        ('COMBO_LINK', 'Combo Component Link'),
+        ('USER', 'User'),
+        ('JOURNAL_ENTRY', 'Journal Entry'),
     )
 
     job = models.ForeignKey(MigrationJob, on_delete=models.CASCADE, related_name='mappings')

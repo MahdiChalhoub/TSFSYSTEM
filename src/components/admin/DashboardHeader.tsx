@@ -7,17 +7,17 @@ export function DashboardHeader() {
     const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
     return (
-        <div className="relative mb-12 p-8 rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden group">
-            <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+        <div className="relative mb-4 p-4 rounded-[1.5rem] bg-slate-900 border border-slate-800 shadow-xl overflow-hidden group">
+            <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-3">
                 <div>
-                    <div className="flex items-center gap-2 text-emerald-400 font-bold tracking-wider text-xs uppercase mb-2">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <div className="flex items-center gap-2 text-emerald-400 font-bold tracking-wider text-[10px] uppercase mb-0.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                         System Operational
                     </div>
-                    <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-2">
+                    <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight mb-1">
                         Command Center
                     </h1>
-                    <p className="text-slate-400 text-lg max-w-xl">
+                    <p className="text-slate-400 text-sm max-w-xl">
                         Real-time overview of your enterprise performance and module status.
                     </p>
                 </div>

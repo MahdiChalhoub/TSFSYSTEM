@@ -45,6 +45,9 @@ self.addEventListener('fetch', (event) => {
 
     const url = new URL(event.request.url);
 
+    // Skip cross-origin requests to prevent connect-src CSP blocking on images/CDN imports
+    if (url.origin !== self.location.origin) return;
+
     // Skip non-GET requests (POST orders etc. handled by sync queue)
     if (event.request.method !== 'GET') return;
 

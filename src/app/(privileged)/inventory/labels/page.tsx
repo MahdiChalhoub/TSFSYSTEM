@@ -124,7 +124,7 @@ export default function LabelPrintingPage() {
 
     if (loading) {
         return (
-            <div className="p-6 space-y-6">
+            <div className="p-6 space-y-6 max-w-[1400px] mx-auto animate-in fade-in duration-500">
                 <Skeleton className="h-10 w-64" />
                 <div className="grid grid-cols-4 gap-4">{[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-28" />)}</div>
                 <Skeleton className="h-96" />
@@ -136,7 +136,7 @@ export default function LabelPrintingPage() {
     const withoutBarcode = products.length - withBarcode
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-6 max-w-[1400px] mx-auto animate-in fade-in duration-500">
             <header className="flex items-center justify-between">
                 <div>
                     <h1 className="text-4xl font-black text-gray-900 tracking-tighter flex items-center gap-4">

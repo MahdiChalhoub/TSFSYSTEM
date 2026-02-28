@@ -129,9 +129,10 @@ class ReturnsService:
             for line in sales_return.lines.all():
                 if InventoryService and order.site:
                     from apps.inventory.models import Warehouse
+                    # order.site is now a Warehouse (BRANCH); find child warehouse or use itself
                     warehouse = Warehouse.objects.filter(
-                        site=order.site, organization=organization, is_active=True
-                    ).first()
+                        parent=order.site, organization=organization, is_active=True, location_type='WAREHOUSE'
+                    ).first() or order.site
                     if warehouse:
                         InventoryService.receive_stock(
                             organization=organization,
@@ -344,8 +345,8 @@ class ReturnsService:
                         warehouse = Warehouse.objects.get(id=warehouse_id, organization=organization)
                     elif order.site:
                         warehouse = Warehouse.objects.filter(
-                            site=order.site, organization=organization, is_active=True
-                        ).first()
+                            parent=order.site, organization=organization, is_active=True, location_type='WAREHOUSE'
+                        ).first() or order.site
 
                     if warehouse:
                         InventoryService.reduce_stock(
