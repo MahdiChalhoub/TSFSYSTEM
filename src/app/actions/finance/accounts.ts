@@ -34,11 +34,11 @@ export async function getChartOfAccounts(includeInactive: boolean = false, scope
         const result = await erpFetch(`coa/coa/?${query}`)
         return serialize(result.map((acc: Record<string, any>) => ({
             ...acc,
-            parentId: acc.parent,
-            subType: acc.sub_type,
-            syscohadaCode: acc.syscohada_code,
-            syscohadaClass: acc.syscohada_class,
-            isActive: acc.is_active,
+            parentId: acc.parentId ?? acc.parent_id ?? acc.parent,
+            subType: acc.subType ?? acc.sub_type,
+            syscohadaCode: acc.syscohadaCode ?? acc.syscohada_code,
+            syscohadaClass: acc.syscohadaClass ?? acc.syscohada_class,
+            isActive: acc.isActive ?? acc.is_active ?? true,
             balance: Number(acc.rollup_balance ?? 0),
             directBalance: Number(acc.temp_balance ?? 0)
         })))
@@ -158,11 +158,11 @@ export async function getTrialBalanceReport(asOfDate?: Date, legalReport: boolea
         const result = await erpFetch(`coa/trial_balance/?${query}`)
         return serialize(result.map((acc: Record<string, any>) => ({
             ...acc,
-            parentId: acc.parent,
-            subType: acc.sub_type,
-            syscohadaCode: acc.syscohada_code,
-            syscohadaClass: acc.syscohada_class,
-            isActive: acc.is_active,
+            parentId: acc.parentId ?? acc.parent_id ?? acc.parent,
+            subType: acc.subType ?? acc.sub_type,
+            syscohadaCode: acc.syscohadaCode ?? acc.syscohada_code,
+            syscohadaClass: acc.syscohadaClass ?? acc.syscohada_class,
+            isActive: acc.isActive ?? acc.is_active ?? true,
             balance: Number(acc.rollup_balance ?? 0),
             directBalance: Number(acc.temp_balance ?? 0)
         })))
@@ -186,11 +186,11 @@ export async function getProfitAndLossReport(startDate: Date, endDate: Date, sco
                 .filter((acc: Record<string, any>) => acc.type === 'INCOME' || acc.type === 'EXPENSE')
                 .map((acc: Record<string, any>) => ({
                     ...acc,
-                    parentId: acc.parent,
-                    subType: acc.sub_type,
-                    syscohadaCode: acc.syscohada_code,
-                    syscohadaClass: acc.syscohada_class,
-                    isActive: acc.is_active,
+                    parentId: acc.parentId ?? acc.parent_id ?? acc.parent,
+                    subType: acc.subType ?? acc.sub_type,
+                    syscohadaCode: acc.syscohadaCode ?? acc.syscohada_code,
+                    syscohadaClass: acc.syscohadaClass ?? acc.syscohada_class,
+                    isActive: acc.isActive ?? acc.is_active ?? true,
                     balance: Number(acc.rollup_balance ?? 0),
                     directBalance: Number(acc.temp_balance ?? 0)
                 }))
@@ -210,11 +210,11 @@ export async function getBalanceSheetReport(asOfDate: Date, scope: 'OFFICIAL' | 
         const result = await erpFetch(`coa/trial_balance/?${query}`)
         const mapped = result.map((acc: Record<string, any>) => ({
             ...acc,
-            parentId: acc.parent,
-            subType: acc.sub_type,
-            syscohadaCode: acc.syscohada_code,
-            syscohadaClass: acc.syscohada_class,
-            isActive: acc.is_active,
+            parentId: acc.parentId ?? acc.parent_id ?? acc.parent,
+            subType: acc.subType ?? acc.sub_type,
+            syscohadaCode: acc.syscohadaCode ?? acc.syscohada_code,
+            syscohadaClass: acc.syscohadaClass ?? acc.syscohada_class,
+            isActive: acc.isActive ?? acc.is_active ?? true,
             balance: Number(acc.rollup_balance ?? 0),
             directBalance: Number(acc.temp_balance ?? 0)
         }))

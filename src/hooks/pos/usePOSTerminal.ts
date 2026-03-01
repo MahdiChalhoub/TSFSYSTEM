@@ -190,25 +190,53 @@ export function usePOSTerminal() {
         setClientFidelity(null);
     }, []);
 
-    const onCharge = useCallback(async (skipWarning = false) => {
+    const onCharge = useCallback(async (
+        skipWarning = false,
+        overrides?: {
+            paymentMethod?: string;
+            paymentLegs?: any[];
+            notes?: string;
+            cashReceived?: string;
+        }
+    ) => {
         if (!cart.length) return;
-        if (!skipWarning && paymentMethod === 'CREDIT' && !selectedClientId) {
+        const currentMethod = overrides?.paymentMethod || paymentMethod;
+        const currentLegs = overrides?.paymentLegs || paymentLegs;
+        const currentNotes = overrides?.notes !== undefined ? overrides.notes : notes;
+        const currentCash = overrides?.cashReceived || cashReceived;
+
+        if (!skipWarning && currentMethod === 'CREDIT' && !selectedClientId) {
             setShowCreditWarning(true);
             return;
         }
 
         setIsProcessing(true);
         try {
+            // Find accountId from string or configured methods
+            let accId = undefined;
+            if (registerConfig?.payment_methods) {
+                const methodConfig = registerConfig.payment_methods.find((m: any) => typeof m === 'object' && m.key === currentMethod);
+                if (methodConfig) {
+                    accId = methodConfig.accountId;
+                }
+            }
+            if (!accId && currentLegs && currentLegs.length > 0 && registerConfig?.payment_methods) {
+                const multiConfig = registerConfig.payment_methods.find((m: any) => typeof m === 'object' && m.key === currentLegs[0].method);
+                if (multiConfig) accId = multiConfig.accountId;
+            }
+
             const result: any = await processSale({
                 cart: cart, // Restored field name logic
                 clientId: selectedClientId || undefined,
-                paymentMethod,
+                paymentMethod: currentMethod,
+                paymentAccountId: accId,
                 totalAmount,
                 globalDiscount: discount,
-                notes,
-                paymentLegs,
+                notes: currentNotes,
+                paymentLegs: currentLegs,
                 storeChangeInWallet: storeChangeInWallet,
-                pointsRedeemed
+                pointsRedeemed,
+                cashReceived: Number(currentCash) || 0
             });
 
             if (result.success) {
@@ -228,7 +256,7 @@ export function usePOSTerminal() {
         } finally {
             setIsProcessing(false);
         }
-    }, [cart, selectedClientId, paymentMethod, totalAmount, discount, discountType, notes, paymentLegs, storeChangeInWallet, pointsRedeemed, clearCart]);
+    }, [cart, selectedClientId, paymentMethod, totalAmount, discount, discountType, notes, paymentLegs, storeChangeInWallet, pointsRedeemed, cashReceived, clearCart, registerConfig]);
 
     const getClientFidelityData = useCallback(async (clientId: number) => {
         setFidelityLoading(true);

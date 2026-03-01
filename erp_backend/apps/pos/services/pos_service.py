@@ -284,6 +284,7 @@ class POSService:
             (Contact,) = _safe_import('apps.crm.models', ['Contact'])
             (LoyaltyService,) = _safe_import('apps.crm.services.loyalty_service', ['LoyaltyService'])
             contact = None
+            wallet_added = Decimal('0')
             if contact_id and Contact:
                 contact = Contact.objects.select_for_update().filter(id=contact_id, organization=organization).first()
                 if contact:
@@ -301,6 +302,7 @@ class POSService:
                     change_due = max(Decimal('0'), cash_received_dec - order.total_amount)
 
                     if store_change_in_wallet and change_due > 0 and payment_method in ['CASH']:
+                        wallet_added = change_due
                         contact.wallet_balance += change_due
                         contact.save(update_fields=['wallet_balance'])
 
