@@ -34,11 +34,20 @@ class TaskTemplateSerializer(serializers.ModelSerializer):
 class AutoTaskRuleSerializer(serializers.ModelSerializer):
     template_name = serializers.CharField(source='template.name', read_only=True)
     trigger_display = serializers.CharField(source='get_trigger_event_display', read_only=True)
+    module_display = serializers.CharField(source='get_module_display', read_only=True)
+    rule_type_display = serializers.CharField(source='get_rule_type_display', read_only=True)
+    assign_to_user_name = serializers.SerializerMethodField()
+    chain_parent_name = serializers.CharField(source='chain_parent.name', read_only=True, default=None)
 
     class Meta:
         model = AutoTaskRule
         fields = '__all__'
         read_only_fields = ('organization',)
+
+    def get_assign_to_user_name(self, obj):
+        if obj.assign_to_user:
+            return obj.assign_to_user.get_full_name() or obj.assign_to_user.username
+        return None
 
 
 class TaskCommentSerializer(serializers.ModelSerializer):

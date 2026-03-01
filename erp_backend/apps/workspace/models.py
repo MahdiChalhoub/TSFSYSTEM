@@ -163,59 +163,192 @@ class TaskTemplate(TenantModel):
 
 class AutoTaskRule(TenantModel):
     """
-    Rules for automatic task generation from system events.
-    Example: price change → 'Update shelf label for Product X'
+    Rules for automatic task generation from system events OR recurring schedules.
+    Supports:
+    - Event-based: fires when a system event occurs (e.g., price change, purchase entered)
+    - Time-based: fires on a schedule (daily, weekly, monthly)
+    - Task chains: fire when a parent task is completed
     """
-    TRIGGER_CHOICES = (
-        # General
-        ('PRICE_CHANGE',        'Product Price Changed'),
-        ('LOW_STOCK',           'Low Stock Alert'),
-        ('NEW_INVOICE',         'New Invoice Received'),
-        ('EXPIRY_APPROACHING',  'Product Expiry Approaching'),
-        ('PO_APPROVED',         'Purchase Order Approved'),
-        ('CLIENT_COMPLAINT',    'Client Complaint Filed'),
-        ('NEW_SUPPLIER',        'New Supplier Onboarded'),
-        ('DELIVERY_COMPLETED',  'Delivery Completed'),
-        ('ORDER_COMPLETED',     'Order Completed'),
-        ('INVENTORY_COUNT',     'Inventory Count Needed'),
-        # Finance / POS triggers
-        ('CREDIT_SALE',         'Credit Sale — No Cash Collected'),
-        ('HIGH_VALUE_SALE',     'High-Value Sale Threshold Crossed'),
-        ('POS_RETURN',          'POS Return / Refund Processed'),
-        ('OVERDUE_INVOICE',     'Invoice Overdue'),
-        ('LATE_PAYMENT',        'Late Payment Detected'),
-        ('CASHIER_DISCOUNT',    'Cashier Applied Discount'),
-        ('NEGATIVE_STOCK',      'Negative Stock Sale'),
-        ('DAILY_SUMMARY',       'End-of-Day Financial Summary'),
-        ('CUSTOM',              'Custom Event'),
+    # ── Rule Type ────────────────────────────────────────────────────────────
+    RULE_TYPE_CHOICES = (
+        ('EVENT', 'Event-Based'),
+        ('RECURRING', 'Time-Based Recurring'),
     )
+    rule_type = models.CharField(max_length=10, choices=RULE_TYPE_CHOICES, default='EVENT')
+
+    # ── Module Grouping ──────────────────────────────────────────────────────
+    MODULE_CHOICES = (
+        ('inventory', 'Inventory'),
+        ('purchasing', 'Purchasing'),
+        ('finance', 'Finance'),
+        ('crm', 'CRM'),
+        ('sales', 'Sales / POS'),
+        ('hr', 'HR'),
+        ('system', 'System / Admin'),
+    )
+    module = models.CharField(max_length=20, choices=MODULE_CHOICES, default='system')
+    code = models.CharField(
+        max_length=10, null=True, blank=True,
+        help_text='Rule code e.g. INV-01, PUR-03. Unique per organization.'
+    )
+
+    # ── Trigger Events ───────────────────────────────────────────────────────
+    TRIGGER_CHOICES = (
+        # ── Inventory ──
+        ('PRICE_CHANGE',            'Product Price Changed'),
+        ('LOW_STOCK',               'Low Stock Alert'),
+        ('EXPIRY_APPROACHING',      'Product Expiry Approaching'),
+        ('PRODUCT_EXPIRED',         'Product Has Expired'),
+        ('PRODUCT_CREATED',         'New Product Created'),
+        ('BARCODE_MISSING_PURCHASE', 'Product Purchased Without Barcode'),
+        ('BARCODE_MISSING_TRANSFER', 'Product Transferred Without Barcode'),
+        ('BARCODE_DAILY_CHECK',     'Daily: Products Without Barcodes'),
+        ('STOCK_ADJUSTMENT',        'Stock Adjustment Made'),
+        ('INVENTORY_COUNT',         'Inventory Count Needed'),
+        ('NEGATIVE_STOCK',          'Negative Stock Sale'),
+
+        # ── Purchasing ──
+        ('PURCHASE_ENTERED',        'Purchase Order Entered'),
+        ('PURCHASE_NO_ATTACHMENT',  'Purchase Without Invoice Attachment'),
+        ('PO_APPROVED',             'Purchase Order Approved'),
+        ('RECEIPT_VOUCHER',         'Receipt Voucher Arrived'),
+        ('PROFORMA_RECEIVED',       'Proforma Received'),
+        ('TRANSFER_CREATED',        'Transfer Order Created'),
+        ('DELIVERY_COMPLETED',      'Delivery Completed'),
+        ('NEW_SUPPLIER',            'New Supplier Onboarded'),
+
+        # ── Finance / POS ──
+        ('CREDIT_SALE',             'Credit Sale — No Cash Collected'),
+        ('HIGH_VALUE_SALE',         'High-Value Sale Threshold Crossed'),
+        ('ORDER_COMPLETED',         'Order Completed'),
+        ('POS_RETURN',              'POS Return / Refund Processed'),
+        ('CASHIER_DISCOUNT',        'Cashier Applied Discount'),
+        ('OVERDUE_INVOICE',         'Invoice Overdue'),
+        ('LATE_PAYMENT',            'Late Payment Detected'),
+        ('PAYMENT_DUE_SUPPLIER',    'Supplier Payment Due'),
+        ('NEW_INVOICE',             'New Invoice Received'),
+        ('BANK_STATEMENT',          'Bank Statement Received'),
+        ('DAILY_SUMMARY',           'End-of-Day Financial Summary'),
+        ('MONTH_END',               'Month-End Close'),
+
+        # ── CRM ──
+        ('CLIENT_FOLLOWUP_DUE',     'Client Follow-Up Strategy Due'),
+        ('SUPPLIER_FOLLOWUP_DUE',   'Supplier Follow-Up Due'),
+        ('NEW_CLIENT',              'New Client Registered'),
+        ('CLIENT_INACTIVE',         'Client Inactive > X Days'),
+        ('CLIENT_COMPLAINT',        'Client Complaint Filed'),
+        ('ADDRESS_BOOK_VERIFY',     'Address Book Verification'),
+
+        # ── HR ──
+        ('EMPLOYEE_ONBOARD',        'New Employee Onboarded'),
+        ('LEAVE_REQUEST',           'Leave Request Submitted'),
+        ('ATTENDANCE_ANOMALY',      'Attendance Anomaly Detected'),
+
+        # ── System ──
+        ('USER_REGISTRATION',       'New User Registration'),
+        ('REPORT_NEEDS_REVIEW',     'Report Needs Review'),
+        ('ORDER_STALE',             'Order Not Treated After X Days'),
+        ('APPROVAL_PENDING',        'Approval Pending > X Days'),
+
+        # ── Custom ──
+        ('CUSTOM',                  'Custom Event'),
+    )
+
     name = models.CharField(max_length=200)
     trigger_event = models.CharField(max_length=30, choices=TRIGGER_CHOICES)
     custom_event_code = models.CharField(
         max_length=100, null=True, blank=True,
         help_text='Event code for CUSTOM trigger type'
     )
+
     template = models.ForeignKey(TaskTemplate, on_delete=models.CASCADE, related_name='auto_rules')
-    # Conditions — filter by amount, site, client, cashier, payment_method, or any combo
-    # e.g. {"min_amount": 500000, "site_id": 3, "client_id": 12, "payment_method": "CREDIT"}
+
+    # ── Conditions ───────────────────────────────────────────────────────────
+    # Filter by amount, site, client, cashier, payment_method, or any combo
+    # e.g. {"min_amount": 500000, "site_id": 3, "client_id": 12, "stale_days": 3}
     conditions = models.JSONField(
         default=dict, blank=True,
-        help_text='Conditions: min_amount, max_amount, site_id, client_id, cashier_id, payment_method'
+        help_text='Conditions: min_amount, max_amount, site_id, client_id, cashier_id, payment_method, stale_days'
     )
-    # Assign to specific user (overrides template assign_to_role if set)
+
+    # ── Recurrence (for RECURRING type) ──────────────────────────────────────
+    INTERVAL_CHOICES = (
+        ('DAILY', 'Daily'),
+        ('WEEKLY', 'Weekly'),
+        ('MONTHLY', 'Monthly'),
+        ('QUARTERLY', 'Quarterly'),
+    )
+    recurrence_interval = models.CharField(
+        max_length=10, choices=INTERVAL_CHOICES, null=True, blank=True,
+        help_text='How often to fire (for RECURRING rules)'
+    )
+    recurrence_time = models.TimeField(
+        null=True, blank=True,
+        help_text='What time of day to fire (e.g. 08:00)'
+    )
+    recurrence_day_of_week = models.IntegerField(
+        null=True, blank=True,
+        help_text='0=Monday, 6=Sunday (for WEEKLY rules)'
+    )
+    recurrence_day_of_month = models.IntegerField(
+        null=True, blank=True,
+        help_text='1-28 (for MONTHLY rules). Use 28 for end-of-month.'
+    )
+    last_fired_at = models.DateTimeField(null=True, blank=True)
+
+    # ── Task Chain ───────────────────────────────────────────────────────────
+    chain_parent = models.ForeignKey(
+        'self', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='chain_children',
+        help_text='Only fire when this parent rule\'s task is COMPLETED'
+    )
+    chain_delay_minutes = models.IntegerField(
+        default=0,
+        help_text='Wait X minutes after parent task completes before creating this task'
+    )
+
+    # ── Assignment ───────────────────────────────────────────────────────────
     assign_to_user = models.ForeignKey(
         'erp.User', on_delete=models.SET_NULL, null=True, blank=True,
         related_name='auto_task_rules_assigned',
         help_text='Assign generated task to this specific user (overrides role)'
     )
+    broadcast_to_role = models.BooleanField(
+        default=False,
+        help_text='If True, create a task for EVERY user in the assigned role'
+    )
+
+    # ── Priority Override ────────────────────────────────────────────────────
+    priority = models.CharField(
+        max_length=20, null=True, blank=True,
+        help_text='Override the template default priority (URGENT, HIGH, MEDIUM, LOW)'
+    )
+
+    # ── Stale Threshold (for ORDER_STALE, APPROVAL_PENDING triggers) ────────
+    stale_threshold_days = models.IntegerField(
+        default=3,
+        help_text='Number of days after which to trigger (for stale/overdue rules)'
+    )
+
     is_active = models.BooleanField(default=True)
+    is_system_default = models.BooleanField(
+        default=False,
+        help_text='True if this is a pre-seeded system default (user can disable but not delete)'
+    )
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         db_table = 'workspace_auto_task_rule'
+        indexes = [
+            models.Index(fields=['module', 'is_active']),
+            models.Index(fields=['rule_type', 'is_active']),
+            models.Index(fields=['trigger_event']),
+        ]
 
     def __str__(self):
-        return f"{self.name} ({self.get_trigger_event_display()})"
+        prefix = f"[{self.code}] " if self.code else ""
+        return f"{prefix}{self.name} ({self.get_trigger_event_display()})"
+
 
 
 class Task(TenantModel):
@@ -307,10 +440,44 @@ class Task(TenantModel):
         self.status = 'COMPLETED'
         self.completed_at = timezone.now()
         self.save(update_fields=['status', 'completed_at', 'updated_at'])
+        # ── Task Chain: Fire child rules when this task's rule has chain children ──
+        self._fire_chain_children()
 
     def cancel(self):
         self.status = 'CANCELLED'
         self.save(update_fields=['status', 'updated_at'])
+
+    def _fire_chain_children(self):
+        """When this task completes, fire any chain-child rules."""
+        if not self.auto_rule_id:
+            return
+        try:
+            children = AutoTaskRule.objects.filter(
+                chain_parent=self.auto_rule,
+                is_active=True,
+            ).select_related('template')
+            for child_rule in children:
+                Task.objects.create(
+                    organization=self.organization,
+                    title=f"🔗 {child_rule.template.name}" if child_rule.template else f"Chain: {child_rule.name}",
+                    description=f"Auto-created after completing: {self.title}\nChain rule: {child_rule.name}",
+                    priority=child_rule.priority or child_rule.template.default_priority or 'MEDIUM',
+                    status='PENDING',
+                    source='SYSTEM',
+                    auto_rule=child_rule,
+                    template=child_rule.template,
+                    assigned_to=child_rule.assign_to_user or None,
+                    assigned_to_group=child_rule.template.assign_to_role if not child_rule.assign_to_user else None,
+                    parent_task=self,
+                    related_object_type=self.related_object_type,
+                    related_object_id=self.related_object_id,
+                    related_object_label=self.related_object_label,
+                    points=child_rule.template.default_points or 1,
+                    estimated_minutes=child_rule.template.estimated_minutes or 30,
+                )
+        except Exception:
+            pass  # Never crash the caller
+
 
 
 class TaskComment(TenantModel):
