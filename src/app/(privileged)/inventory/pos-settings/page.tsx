@@ -786,7 +786,7 @@ function SecurityTab() {
         enableReconciliation: true,
         controlledAccountsAreTruth: true,
         autoCalibrateToClose: true,
-        enableAddressBook: true,
+        enableAccountBook: true,
         autoTransferExcessToReserve: true,
         autoDeductShortageFromCashier: true,
         requireStatementOnClose: true,
@@ -909,7 +909,7 @@ function SecurityTab() {
                 <ToggleRow label="Controlled Accounts = Truth" desc="Wave, Orange Money, Bank statements are always correct. Any difference is calibrated." field="controlledAccountsAreTruth" />
                 <ToggleRow label="Auto-Calibrate Differences to Cash" desc="When controlled account has a mismatch, auto-adjust the cash account" field="autoCalibrateToClose" />
                 <ToggleRow label="Require Statement Entry on Close" desc="Cashier must enter real amounts from provider statements for each controlled account" field="requireStatementOnClose" />
-                <ToggleRow label="Enable Address Book" desc="Allow cashiers to log offline transactions (payments they can't enter in POS)" field="enableAddressBook" />
+                <ToggleRow label="Enable Address Book" desc="Allow cashiers to log offline transactions (payments they can't enter in POS)" field="enableAccountBook" />
                 <ToggleRow label="Auto-Transfer Excess to Reserve" desc="If more cash in hand than expected, transfer surplus to the reserve account" field="autoTransferExcessToReserve" />
                 <ToggleRow label="Auto-Deduct Shortage from Cashier" desc="If less cash in hand, deduct the difference from the cashier's personal account" field="autoDeductShortageFromCashier" />
             </div>

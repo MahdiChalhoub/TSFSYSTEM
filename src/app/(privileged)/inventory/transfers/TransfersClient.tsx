@@ -29,7 +29,7 @@ export function TransfersClient() {
             // Execution layer showing active movements
             setData(Array.isArray(res) ? res : res?.results || [])
         } catch {
-            toast.error("Logistics engine sync failed")
+            toast.error("Failed to load transfers")
         } finally {
             setLoading(false)
         }

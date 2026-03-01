@@ -37,7 +37,7 @@ export interface POSToolbarProps {
     onCloseRegister?: () => void;
     onOpenReturn?: () => void;
     onHoldCart?: () => void;
-    onOpenAddressBook?: () => void;
+    onOpenAccountBook?: () => void;
     onOpenPendingDeliveries?: () => void;
     // Additional client props still accepted but unused in toolbar itself
     [key: string]: any;
@@ -47,7 +47,7 @@ export function POSToolbar({
     sessions, activeSessionId, onSetActiveSessionId, onCreateNewSession, onRemoveSession,
     registerConfig, isOnline, isProcessing, isFullscreen,
     onSetIsOnline, onSync, onToggleFullscreen, onOpenLayoutSelector,
-    onLockRegister, onCloseRegister, onOpenReturn, onHoldCart, onOpenAddressBook, onOpenPendingDeliveries
+    onLockRegister, onCloseRegister, onOpenReturn, onHoldCart, onOpenAccountBook, onOpenPendingDeliveries
 }: POSToolbarProps) {
     const [pendingDeliveriesCount, setPendingDeliveriesCount] = useState(0);
 

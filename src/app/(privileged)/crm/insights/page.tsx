@@ -60,7 +60,7 @@ export default function StrategicRelationshipIntelligencePage() {
                 .filter((c: any) => c.type === 'CLIENT' || c.type === 'CUSTOMER' || c.type === 'BOTH'));
             setOrders(Array.isArray(ordersData) ? ordersData : ordersData.results || []);
         } catch {
-            toast.error("Relationship intelligence sync failed");
+            toast.error("Failed to load data");
         } finally {
             setLoading(false);
         }

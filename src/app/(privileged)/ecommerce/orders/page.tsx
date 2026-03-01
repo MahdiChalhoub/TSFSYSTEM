@@ -63,7 +63,7 @@ export default function DigitalCommerceStreamPage() {
             setOrders(Array.isArray(data) ? data : (data?.results ?? []))
         } catch {
             setOrders([])
-            toast.error("Commerce stream sync failed")
+            toast.error("Failed to load orders")
         } finally {
             setLoading(false)
         }

@@ -289,7 +289,7 @@ export default function TaxGroupsPage() {
                                     </div>
                                     {editing ? 'Edit Tax Group' : 'Create Tax Group'}
                                 </h3>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1 ml-13">Configuration Parameters & Thresholds</p>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1 ml-13">Settings</p>
                             </div>
                             <Button variant="ghost" onClick={cancelForm} className="h-12 w-12 rounded-2xl p-0 text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all">
                                 <X size={20} />

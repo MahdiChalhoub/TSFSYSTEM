@@ -46,7 +46,7 @@ export default function AdvancedIntelligenceDashboard() {
                 movements: Array.isArray(movements) ? movements : movements?.results || [],
             })
         } catch {
-            toast.error("Intelligence sync failed")
+            toast.error("Failed to load data")
         } finally {
             setLoading(false)
         }

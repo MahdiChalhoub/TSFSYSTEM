@@ -104,7 +104,7 @@ export default function HumanCapitalRegistry({
                             <span className="font-mono font-bold text-emerald-600 text-xs">{r.linkedAccount.code}</span>
                             {r.employeeType && r.employeeType !== 'EMPLOYEE' && (
                                 <Badge className="mt-0.5 bg-violet-50 text-violet-600 border-violet-100 text-[8px] h-4">
-                                    {r.employeeType} PARITY
+                                    {r.employeeType}
                                 </Badge>
                             )}
                         </div>

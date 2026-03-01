@@ -14,7 +14,7 @@ import { erpFetch } from '@/lib/erp-api';
 import clsx from 'clsx';
 
 // ── Types ──────────────────────────────────────────────────
-interface AddressBookEntry {
+interface AccountBookEntry {
     id: number;
     entryType: string;
     direction: 'IN' | 'OUT';
@@ -45,7 +45,7 @@ interface AddressBookEntry {
     createdAt: string;
 }
 
-interface AddressBookSummary {
+interface AccountBookSummary {
     totalIn: number;
     totalOut: number;
     netBalance: number;
@@ -56,7 +56,7 @@ interface AddressBookSummary {
     needInfoCount: number;
 }
 
-interface AddressBookProps {
+interface AccountBookProps {
     isOpen: boolean;
     onClose: () => void;
     sessionId: number | null;
@@ -79,7 +79,7 @@ const ENTRY_TYPES = [
     { key: 'CASH_SHORTAGE', label: 'Cash Shortage', icon: Scale, dir: 'OUT', color: 'rose', fields: [] },
     { key: 'OTHER_IN', label: 'Other (Money In)', icon: ArrowDownLeft, dir: 'IN', color: 'emerald', fields: [] },
     { key: 'OTHER_OUT', label: 'Other (Money Out)', icon: ArrowUpRight, dir: 'OUT', color: 'rose', fields: [] },
-] as const;
+];
 
 const TYPE_MAP = Object.fromEntries(ENTRY_TYPES.map(t => [t.key, t]));
 
@@ -92,9 +92,9 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string; i
 };
 
 // ── Component ──────────────────────────────────────────────
-export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, isManager = false }: AddressBookProps) {
-    const [entries, setEntries] = useState<AddressBookEntry[]>([]);
-    const [summary, setSummary] = useState<AddressBookSummary | null>(null);
+export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, isManager = false }: AccountBookProps) {
+    const [entries, setEntries] = useState<AccountBookEntry[]>([]);
+    const [summary, setSummary] = useState<AccountBookSummary | null>(null);
     const [loading, setLoading] = useState(false);
     const [showAddForm, setShowAddForm] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -353,7 +353,7 @@ export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, i
                                 <BookOpen size={20} />
                             </div>
                             <div>
-                                <h2 className="text-base font-black text-gray-900">Address Book</h2>
+                                <h2 className="text-base font-black text-gray-900">Account Book</h2>
                                 <p className="text-[10px] text-gray-400 font-bold">
                                     Cashier Daily Ledger • {entries.length} entries
                                 </p>

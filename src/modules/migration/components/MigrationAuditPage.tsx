@@ -107,6 +107,7 @@ export function MigrationAuditPage() {
         : records;
 
     const diag = summary?.diagnostics || {};
+    const resolvedMap = summary?.resolved_map || {};
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-50">
@@ -176,46 +177,64 @@ export function MigrationAuditPage() {
                                     ))}
                                 </div>
 
+                                {/* RESOLVED MAP — shows the auto-resolved posting rules */}
+                                {resolvedMap?.customer_root && (
+                                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
+                                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                                            <Zap className="w-3 h-3" /> Auto-Resolved from Posting Rules
+                                        </p>
+                                        <div className="grid grid-cols-2 gap-3 text-xs">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-gray-400 font-bold">Customers →</span>
+                                                <span className="font-black text-blue-700 bg-blue-50 px-2 py-0.5 rounded">
+                                                    {resolvedMap.customer_root?.code} – {resolvedMap.customer_root?.name}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-gray-400 font-bold">Suppliers →</span>
+                                                <span className="font-black text-purple-700 bg-purple-50 px-2 py-0.5 rounded">
+                                                    {resolvedMap.supplier_root?.code} – {resolvedMap.supplier_root?.name}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Warning if not linked */}
                                 {(diag.not_linked || 0) > 0 && (
                                     <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
                                         <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
                                         <div>
                                             <p className="text-sm font-bold text-red-700">{diag.not_linked} contacts have NO ledger sub-account</p>
-                                            <p className="text-xs text-red-500 mt-1">These contacts cannot record financial transactions in the ledger. Use the actions below to link them.</p>
+                                            <p className="text-xs text-red-500 mt-1">These contacts cannot record financial transactions in the ledger. Click below to auto-create COA child accounts using your posting rules.</p>
                                         </div>
                                     </div>
                                 )}
 
-                                {/* Bulk Link Actions — Auto-resolved from posting rules */}
+                                {/* Bulk Link Actions — Dynamic from actions_available */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {/* CUSTOMERS */}
-                                    <div className="border border-blue-200 rounded-xl p-4 bg-blue-50/30">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <Users className="w-4 h-4 text-blue-600" />
-                                            <span className="text-xs font-black text-blue-700 uppercase tracking-wider">Customers → Accounts Receivable</span>
+                                    {(summary?.actions_available || []).filter((a: any) => a.key === 'link_customers' || a.key === 'link_suppliers').map((action: any) => (
+                                        <div key={action.key} className={`border rounded-xl p-4 ${action.key === 'link_customers' ? 'border-blue-200 bg-blue-50/30' : 'border-purple-200 bg-purple-50/30'}`}>
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <Users className={`w-4 h-4 ${action.key === 'link_customers' ? 'text-blue-600' : 'text-purple-600'}`} />
+                                                <span className={`text-xs font-black uppercase tracking-wider ${action.key === 'link_customers' ? 'text-blue-700' : 'text-purple-700'}`}>
+                                                    {action.label}
+                                                </span>
+                                            </div>
+                                            <p className={`text-[11px] mb-3 ${action.key === 'link_customers' ? 'text-blue-500' : 'text-purple-500'}`}>
+                                                Creates COA child sub-accounts (e.g., <code className={`px-1 rounded ${action.key === 'link_customers' ? 'bg-blue-100' : 'bg-purple-100'}`}>
+                                                    {action.key === 'link_customers' ? resolvedMap?.customer_root?.code : resolvedMap?.supplier_root?.code}-0001
+                                                </code>) under the parent, using your posting rules.
+                                            </p>
+                                            <button
+                                                onClick={() => handleLinkContacts(action.key === 'link_customers' ? 'CUSTOMER' : 'SUPPLIER')}
+                                                disabled={processing || action.count === 0}
+                                                className={`w-full py-2.5 text-white text-xs font-black rounded-lg disabled:opacity-30 transition-all flex items-center justify-center gap-2 shadow-lg ${action.key === 'link_customers' ? 'bg-blue-600 hover:bg-blue-500 shadow-blue-600/20' : 'bg-purple-600 hover:bg-purple-500 shadow-purple-600/20'}`}>
+                                                {processing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Link2 className="w-3.5 h-3.5" />}
+                                                Auto-Link {action.count} {action.key === 'link_customers' ? 'Customers' : 'Suppliers'}
+                                            </button>
                                         </div>
-                                        <p className="text-[11px] text-blue-500 mb-3">Creates a COA child sub-account (e.g., <code className="bg-blue-100 px-1 rounded">1110-0001</code>) for each customer under the Accounts Receivable parent, using your posting rules.</p>
-                                        <button onClick={() => handleLinkContacts('CUSTOMER')} disabled={processing}
-                                            className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-black rounded-lg disabled:opacity-30 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20">
-                                            {processing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Link2 className="w-3.5 h-3.5" />}
-                                            Auto-Link {summary?.actions_available?.find((a: any) => a.key === 'link_customers')?.count || diag.customers || 0} Customers
-                                        </button>
-                                    </div>
-
-                                    {/* SUPPLIERS */}
-                                    <div className="border border-purple-200 rounded-xl p-4 bg-purple-50/30">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <Users className="w-4 h-4 text-purple-600" />
-                                            <span className="text-xs font-black text-purple-700 uppercase tracking-wider">Suppliers → Accounts Payable</span>
-                                        </div>
-                                        <p className="text-[11px] text-purple-500 mb-3">Creates a COA child sub-account (e.g., <code className="bg-purple-100 px-1 rounded">2101-0001</code>) for each supplier under the Accounts Payable parent, using your posting rules.</p>
-                                        <button onClick={() => handleLinkContacts('SUPPLIER')} disabled={processing}
-                                            className="w-full py-2.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-black rounded-lg disabled:opacity-30 transition-all flex items-center justify-center gap-2 shadow-lg shadow-purple-600/20">
-                                            {processing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Link2 className="w-3.5 h-3.5" />}
-                                            Auto-Link {summary?.actions_available?.find((a: any) => a.key === 'link_suppliers')?.count || diag.suppliers || 0} Suppliers
-                                        </button>
-                                    </div>
+                                    ))}
                                 </div>
                             </div>
                         )}
@@ -223,13 +242,12 @@ export function MigrationAuditPage() {
                         {/* TRANSACTIONS Strategy */}
                         {entityType === 'TRANSACTION' && (
                             <div className="p-5 space-y-4">
-                                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                     {[
                                         { label: 'Completed', value: diag.completed || 0, color: 'text-emerald-600', bg: 'bg-emerald-50' },
                                         { label: 'Draft', value: diag.draft || 0, color: diag.draft > 0 ? 'text-amber-600' : 'text-gray-400', bg: diag.draft > 0 ? 'bg-amber-50' : 'bg-gray-50' },
-                                        { label: 'With Journal Entry', value: diag.with_journal_entry || 0, color: 'text-blue-600', bg: 'bg-blue-50' },
-                                        { label: 'Missing Journal', value: diag.missing_journal_entry || 0, color: diag.missing_journal_entry > 0 ? 'text-red-600' : 'text-emerald-600', bg: diag.missing_journal_entry > 0 ? 'bg-red-50' : 'bg-emerald-50' },
-                                        { label: 'Journal Rate', value: `${diag.journal_rate || 0}%`, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                                        { label: 'Migration JEs', value: (diag.migration_journal_entries || 0).toLocaleString(), color: 'text-blue-600', bg: 'bg-blue-50' },
+                                        { label: 'Using Suspense?', value: diag.uses_suspense_accounts ? 'YES ⚠️' : 'No', color: diag.uses_suspense_accounts ? 'text-red-600' : 'text-emerald-600', bg: diag.uses_suspense_accounts ? 'bg-red-50' : 'bg-emerald-50' },
                                     ].map(s => (
                                         <div key={s.label} className={`${s.bg} p-3 rounded-xl border border-gray-100`}>
                                             <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{s.label}</p>
@@ -238,12 +256,37 @@ export function MigrationAuditPage() {
                                     ))}
                                 </div>
 
-                                {(diag.missing_journal_entry || 0) > 0 && (
-                                    <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
-                                        <BookOpen className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                                {/* Resolved posting rules for transactions */}
+                                {resolvedMap?.revenue && (
+                                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
+                                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                                            <Zap className="w-3 h-3" /> Transaction Posting Rules Map
+                                        </p>
+                                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 text-[11px]">
+                                            {[
+                                                { label: 'Revenue', data: resolvedMap.revenue, color: 'text-emerald-700 bg-emerald-50' },
+                                                { label: 'Receivable (AR)', data: resolvedMap.receivable, color: 'text-blue-700 bg-blue-50' },
+                                                { label: 'Company of Sales (COGS)', data: resolvedMap.cogs, color: 'text-red-700 bg-red-50' },
+                                                { label: 'Inventory', data: resolvedMap.inventory, color: 'text-amber-700 bg-amber-50' },
+                                                { label: 'Payable (AP)', data: resolvedMap.payable, color: 'text-purple-700 bg-purple-50' },
+                                            ].map(r => r.data && (
+                                                <div key={r.label} className="flex items-center gap-1.5">
+                                                    <span className="text-gray-400 font-bold shrink-0">{r.label} →</span>
+                                                    <span className={`font-black px-1.5 py-0.5 rounded truncate ${r.color}`}>
+                                                        {r.data.code} {r.data.name}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {diag.uses_suspense_accounts && (
+                                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+                                        <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
                                         <div>
-                                            <p className="text-sm font-bold text-red-700">{(diag.missing_journal_entry || 0).toLocaleString()} transactions have NO journal entry</p>
-                                            <p className="text-xs text-red-500 mt-1">These transactions are not recorded in the ledger. They need to be posted to create proper journal vouchers.</p>
+                                            <p className="text-sm font-bold text-amber-700">Migration JEs use suspense accounts (5700/6000)</p>
+                                            <p className="text-xs text-amber-500 mt-1">These journal entries were created during migration with generic accounts, not the posting rules above. They should be re-posted using the correct accounts for accurate Trial Balance.</p>
                                         </div>
                                     </div>
                                 )}
@@ -253,7 +296,7 @@ export function MigrationAuditPage() {
                                         <button onClick={handleBulkApprove} disabled={processing}
                                             className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-600/20 transition-all disabled:opacity-50">
                                             {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                                            Approve {diag.draft} Draft Transactions
+                                            Approve {(diag.draft || 0).toLocaleString()} Draft Transactions
                                         </button>
                                     )}
                                 </div>

@@ -139,7 +139,7 @@ export default function AuditTrailPage() {
                             Secured
                         </Badge>
                         <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] flex items-center gap-2">
-                            <Clock size={14} className="text-emerald-400" /> Live Forensic Feed
+                            <Clock size={14} className="text-emerald-400" /> Live Feed
                         </span>
                     </div>
                     <h1 className="page-header-title flex items-center gap-6">
