@@ -262,8 +262,8 @@ export function POSDeliveryModal({
                                 <Truck size={24} className="text-white fill-white/20" />
                             </div>
                             <div>
-                                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.4em] block mb-1">Logistics Orchestration</span>
-                                <h1 className="text-2xl font-black text-white uppercase tracking-tighter">New Delivery Nexus</h1>
+                                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.4em] block mb-1">Delivery Details</span>
+                                <h1 className="text-2xl font-black text-white uppercase tracking-tighter">New Delivery</h1>
                             </div>
                         </div>
                         <button onClick={onClose} className="w-10 h-10 rounded-2xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all border border-white/5">

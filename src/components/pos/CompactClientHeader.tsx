@@ -18,7 +18,7 @@ export function CompactClientHeader({ client, currency = '$', uniqueItems, total
             <div className="flex items-center gap-4 relative z-10">
                 <div className="w-2.5 h-2.5 rounded-full bg-slate-800 animate-pulse border border-white/5" />
                 <div className="flex flex-col">
-                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] leading-none mb-1">Operational Context</span>
+                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] leading-none mb-1">Customer</span>
                     <span className="text-[13px] font-black text-white/40 uppercase tracking-tighter italic">Walk-in Customer</span>
                 </div>
             </div>

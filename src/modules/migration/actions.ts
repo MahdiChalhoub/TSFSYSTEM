@@ -114,6 +114,11 @@ export async function getMigrationSamples(jobId: number, entityType: string) {
     return res;
 }
 
+export async function getAllMigrationRecords(jobId: number, entityType: string, page: number = 1, pageSize: number = 50) {
+    const res = await erpFetch(`migration/jobs/${jobId}/all-records/?entity_type=${entityType}&page=${page}&page_size=${pageSize}`);
+    return res;
+}
+
 export async function linkMigrationFile(params: { file_uuid: string; name: string }) {
     const res = await erpFetch('migration/jobs/link/', {
         method: 'POST',

@@ -223,7 +223,7 @@ export default function TaxGroupsPage() {
                         Tax <span className="text-emerald-700">Policies</span>
                     </h1>
                     <p className="page-header-subtitle">
-                        Create and orchestrate tax groups, set rates, and enforce fiscal standards across your organization.
+                        Create and manage tax groups, set rates, and enforce fiscal standards across your organization.
                     </p>
                 </div>
                 <div className="flex items-center gap-3">

@@ -2,7 +2,7 @@
 import { Badge } from '@/components/ui/badge'
 import { useState, useEffect } from 'react'
 import { getSupplierProformas, getPriceChangeRequests, approvePriceRequest } from '@/app/actions/portal'
-import { Truck, FileText, Tag, RefreshCw, CheckCircle, XCircle, Clock, DollarSign, TrendingUp, Package, Activity} from 'lucide-react'
+import { Truck, FileText, Tag, RefreshCw, CheckCircle, XCircle, Clock, DollarSign, TrendingUp, Package, Activity } from 'lucide-react'
 type Proforma = { id: number; proforma_number?: string; supplier?: { id: number; name: string }; supplier_name?: string; status: string; total_amount: number; created_at?: string }
 type PriceRequest = { id: number; supplier?: { id: number; name: string }; supplier_name?: string; product?: { name: string; sku?: string }; product_name?: string; current_price: number; requested_price: number; status: string; reason?: string }
 const STATUS_BADGE: Record<string, string> = {
@@ -48,12 +48,12 @@ export default function SupplierPortalAdminPage() {
                     {toast.msg}
                 </div>
             )}
-            {/* Header: Global Sourcing Intelligence */}
+            {/* Header: Supplier Operations */}
             <header className="flex justify-between items-end">
                 <div>
                     <div className="flex items-center gap-3 mb-2">
                         <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 font-black text-[10px] uppercase tracking-widest px-3 py-1">
-                            Supply Chain: Synchronized
+                            Active
                         </Badge>
                         <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest flex items-center gap-1">
                             <Activity size={12} /> Sync: Direct
@@ -68,7 +68,7 @@ export default function SupplierPortalAdminPage() {
                 </div>
                 <div className="flex gap-3">
                     <button onClick={load} className="h-12 px-6 rounded-2xl bg-white border border-gray-100 shadow-sm font-bold text-gray-600 flex items-center gap-2 hover:bg-gray-50 transition-all">
-                        <RefreshCw size={18} /> Refresh Hub
+                        <RefreshCw size={18} /> Refresh
                     </button>
                     <button className="h-12 px-6 rounded-2xl bg-emerald-600 text-white font-bold flex items-center gap-2 hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200">
                         Vendor Audit <ChevronRight size={18} />
@@ -86,7 +86,7 @@ export default function SupplierPortalAdminPage() {
                             PROFORMA
                         </Badge>
                     </div>
-                    <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Exposure Value</p>
+                    <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Total Value</p>
                     <h2 className="text-3xl font-black text-gray-900">${totalProformaValue.toFixed(2)}</h2>
                 </div>
                 <div className="bg-amber-900 p-7 rounded-[2.5rem] shadow-sm border-0 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-white">

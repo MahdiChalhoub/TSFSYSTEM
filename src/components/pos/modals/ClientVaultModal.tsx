@@ -149,7 +149,7 @@ export function ClientVaultModal({ isOpen, onClose, clientName, currency, fideli
                     {[
                         { id: 'overview', label: 'Overview', icon: BarChart3 },
                         { id: 'points', label: 'Fidelity & Rewards', icon: Gift },
-                        { id: 'history', label: 'Purchase Genome', icon: History }
+                        { id: 'history', label: 'Purchase History', icon: History }
                     ].map(tab => (
                         <button
                             key={tab.id}
@@ -320,7 +320,7 @@ export function ClientVaultModal({ isOpen, onClose, clientName, currency, fideli
                             {activeTab === 'history' && (
                                 <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                        {/* Purchase Genome (Top Products) */}
+                                        {/* Purchase History (Top Products) */}
                                         <div className="space-y-4">
                                             <div className="flex items-center justify-between">
                                                 <h3 className="text-sm font-black text-white uppercase tracking-widest">Favorite Products</h3>
@@ -347,7 +347,7 @@ export function ClientVaultModal({ isOpen, onClose, clientName, currency, fideli
                                             </div>
                                         </div>
 
-                                        {/* Recent Orders Genome */}
+                                        {/* Recent Orders */}
                                         <div className="space-y-4">
                                             <div className="flex items-center justify-between">
                                                 <h3 className="text-sm font-black text-white uppercase tracking-widest">Transaction Log</h3>

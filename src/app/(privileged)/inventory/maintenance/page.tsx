@@ -85,7 +85,7 @@ export default async function MaintenancePage(props: {
                                 Inventory <span className="text-emerald-700">Maintenance</span>
                             </h1>
                             <p className="page-header-subtitle mt-1">
-                                Orchestrate and reorganize your products across categories, brands, and logistical nodes.
+                                Manage and reorganize your products across categories, brands, and warehouses.
                             </p>
                         </div>
                     </div>
@@ -139,7 +139,7 @@ export default async function MaintenancePage(props: {
                                         <div className="w-2 h-6 bg-emerald-500 rounded-full" />
                                         {currentEntityName}
                                     </h2>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 ml-5">Operational Context: Maintenance Mode</p>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 ml-5">Mode: Maintenance</p>
                                 </div>
                                 <Badge variant="secondary" className="bg-white border-0 text-emerald-600 font-black text-[10px] px-4 py-1.5 rounded-full shadow-sm">
                                     {products.length} Node Variants Detected

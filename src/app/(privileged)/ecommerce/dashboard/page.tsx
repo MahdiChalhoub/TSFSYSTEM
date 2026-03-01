@@ -88,7 +88,7 @@ export default function EcommerceDashboardPage() {
                                 Market <span className="text-emerald-700">Intelligence</span>
                             </h1>
                             <p className="page-header-subtitle mt-1">
-                                High-fidelity ecommerce orchestrator and transactional flow analytics.
+                                Sales tracking and order analytics.
                             </p>
                         </div>
                     </div>
