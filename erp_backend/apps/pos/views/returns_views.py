@@ -27,6 +27,19 @@ class SalesReturnViewSet(TenantModelViewSet):
                 reason=request.data.get('reason'),
                 user=request.user if request.user.is_authenticated else None
             )
+            # ── Auto-Task: POS_RETURN ──
+            try:
+                from apps.workspace.signals import trigger_finance_event
+                trigger_finance_event(
+                    organization, 'POS_RETURN',
+                    reference=f'RET-{result.id}',
+                    amount=float(getattr(result, 'total_amount', 0) or 0),
+                    cashier_id=request.user.id if request.user.is_authenticated else None,
+                    user=request.user if request.user.is_authenticated else None,
+                    extra={'reason': request.data.get('reason', '')},
+                )
+            except Exception:
+                pass
             return Response(SalesReturnSerializer(result).data, status=201)
         except Exception as e:
             return Response({"error": str(e)}, status=400)

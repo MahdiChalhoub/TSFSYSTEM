@@ -37,7 +37,7 @@ function TerminalLog({ logs, visible }: { logs: string[], visible: boolean }) {
                     <div className="w-2.5 h-2.5 rounded-full bg-amber-500/20 border border-amber-500/50" />
                     <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/20 border border-emerald-500/50" />
                 </div>
-                <span className="text-slate-500 font-bold uppercase tracking-widest text-[9px]">Kernel Console</span>
+                <span className="text-slate-500 font-bold uppercase tracking-widest text-[9px]">Update Console</span>
             </div>
             <div className="space-y-1 max-h-[200px] overflow-y-auto custom-scrollbar">
                 {logs.map((log, i) => (
@@ -83,7 +83,7 @@ export default function SystemUpdatesPage() {
         const formData = new FormData()
         formData.append('file', file)
         setSyncing(true)
-        setLogs(["INIT: Uploading kernel sequence...", "CHECK: Validating checksums..."])
+        setLogs(["INIT: Uploading update...", "CHECK: Validating files..."])
         try {
             const res = await uploadKernelUpdate(formData)
             if (res.error) throw new Error(res.error)
@@ -100,7 +100,7 @@ export default function SystemUpdatesPage() {
     }
     async function handleApply(id: number, version: string) {
         setApplying(id)
-        setLogs([`START: Initiating upgrade to v${version}...`, "PREPARE: Snapshotting current filesystem...", "KERNEL: Entering atomic swap mode..."])
+        setLogs([`START: Initiating upgrade to v${version}...`, "PREPARE: Preparing system...", "UPDATE: Applying update..."])
         try {
             const res = await applyKernelUpdate(id)
             if (res.error) throw new Error(res.error)
@@ -135,7 +135,7 @@ export default function SystemUpdatesPage() {
                         </div>
                         <h2 className="text-3xl md:text-5xl font-black text-gray-900 tracking-tight">System Updates</h2>
                     </div>
-                    <p className="text-gray-500 mt-2 font-medium text-sm md:text-base max-w-md">Privileged update channel for the Dajingo Platform Kernel. Ensuring zero-downtime atomic upgrades.</p>
+                    <p className="text-gray-500 mt-2 font-medium text-sm md:text-base max-w-md">Platform update manager. Ensuring seamless upgrades.</p>
                 </div>
                 <div className="flex flex-wrap gap-3 w-full sm:w-auto">
                     <Button
@@ -144,7 +144,7 @@ export default function SystemUpdatesPage() {
                         className="flex-1 sm:flex-none justify-center bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-7 rounded-2xl flex gap-2 font-black transition-all shadow-xl shadow-indigo-100 hover:scale-[1.02] active:scale-95"
                     >
                         <UploadCloud size={20} />
-                        {syncing ? "Uploading..." : "Stage Kernel"}
+                        {syncing ? "Uploading..." : "Upload Update"}
                     </Button>
                     <Button
                         onClick={loadData}
@@ -193,7 +193,7 @@ export default function SystemUpdatesPage() {
                                 <h4 className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Security Active</h4>
                             </div>
                             <p className="text-[11px] text-slate-300 leading-relaxed font-medium">
-                                Atomic swap mechanisms ensure system stability during privileged kernel writes.
+                                Updates are applied with zero downtime.
                             </p>
                         </div>
                     </CardContent>
@@ -205,7 +205,7 @@ export default function SystemUpdatesPage() {
                             <div className="space-y-1">
                                 <CardTitle className="text-xl font-black text-gray-900 flex items-center gap-2">
                                     <HistoryIcon className="text-indigo-600 shrink-0" size={20} />
-                                    Kernel Registry
+                                    Update History
                                 </CardTitle>
                                 <CardDescription className="text-gray-500 font-medium">History of platform transformations</CardDescription>
                             </div>
@@ -294,7 +294,7 @@ export default function SystemUpdatesPage() {
                 <div className="relative z-10 text-center md:text-left">
                     <h4 className="text-xl md:text-2xl font-black text-white uppercase tracking-tight">Privileged Action Safety</h4>
                     <p className="text-sm md:text-base text-red-50/80 font-bold leading-relaxed mt-2 max-w-2xl">
-                        Kernel upgrades are destructive operations that replace binary system logic.
+                        Updates will restart services briefly.
                         Always ensure a full backup of the <strong>Tenant Registry</strong> and <strong>Master Database</strong> is active before initiating a swap.
                     </p>
                 </div>

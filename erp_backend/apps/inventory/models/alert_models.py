@@ -230,7 +230,7 @@ class StockAlertService:
         if existing:
             return None
 
-        return StockAlert.objects.create(
+        alert = StockAlert.objects.create(
             organization=self.organization,
             product=product,
             alert_type=alert_type,
@@ -240,3 +240,26 @@ class StockAlertService:
             reorder_qty=reorder_qty,
             message=message
         )
+
+        # ── Auto-Task: fire inventory triggers ──
+        try:
+            from apps.workspace.signals import trigger_inventory_event
+            if alert_type in ('LOW_STOCK', 'REORDER'):
+                trigger_inventory_event(
+                    self.organization, 'LOW_STOCK',
+                    product_name=str(product),
+                    product_id=product.id,
+                    amount=float(current_stock),
+                    extra={'threshold': float(threshold), 'reorder_qty': float(reorder_qty)},
+                )
+            elif alert_type == 'OUT_OF_STOCK':
+                trigger_inventory_event(
+                    self.organization, 'NEGATIVE_STOCK',
+                    product_name=str(product),
+                    product_id=product.id,
+                    amount=float(current_stock),
+                )
+        except Exception:
+            pass
+
+        return alert

@@ -173,7 +173,7 @@ export default function DeliveryZonesPage() {
                     <CardHeader className="p-8 border-b border-stone-50 flex flex-row items-center justify-between">
                         <div>
                             <CardTitle className="text-xl font-black tracking-tight text-stone-900">
-                                {editId ? 'Modify Zone Architecture' : 'Deploy New Zone'}
+                                {editId ? 'Edit Zone' : 'New Zone'}
                             </CardTitle>
                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mt-1">Coverage Settings</p>
                         </div>

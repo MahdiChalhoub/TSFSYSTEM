@@ -53,12 +53,12 @@ export default async function SaasMasterDashboard() {
                     <div className="hidden lg:flex items-center gap-4">
                         <Link href="/updates">
                             <button className="h-14 px-8 rounded-2xl bg-white border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] font-black text-[11px] uppercase tracking-widest text-slate-600 flex items-center gap-3 hover:bg-slate-50 transition-all active:scale-95">
-                                <Zap size={18} className="text-amber-500 fill-amber-500/20" /> Kernel Updates
+                                <Zap size={18} className="text-amber-500 fill-amber-500/20" /> Platform Updates
                             </button>
                         </Link>
                         <Link href="/organizations">
                             <button className="h-14 px-8 rounded-2xl bg-slate-900 text-white font-black text-[11px] uppercase tracking-widest flex items-center gap-3 hover:bg-black transition-all shadow-xl shadow-slate-900/20 active:scale-95 border-b-4 border-b-slate-950">
-                                Provision Node <Plus size={18} className="text-emerald-400" />
+                                Add Tenant <Plus size={18} className="text-emerald-400" />
                             </button>
                         </Link>
                     </div>

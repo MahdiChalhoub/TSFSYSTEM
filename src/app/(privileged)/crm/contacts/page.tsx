@@ -133,7 +133,7 @@ export default async function ContactsPage() {
                     </div>
                     <h4 className="text-sm font-black text-gray-900 uppercase tracking-tight mb-1.5">Trusted Data</h4>
                     <p className="text-gray-500 text-[11px] font-medium leading-relaxed">
-                        Autonomous verification ensures that contact identity remains consistent across all modules.
+                        Contact information stays consistent across all modules.
                     </p>
                 </div>
             </div>

@@ -231,7 +231,7 @@ export default function ReceiptsPage() {
                             </div>
                             <div>
                                 <p className="text-xl font-black uppercase tracking-widest text-center">Ready for Processing</p>
-                                <p className="text-sm font-medium text-center mt-2">Select an order shipment from the repository to audit its payload</p>
+                                <p className="text-sm font-medium text-center mt-2">Select an order shipment to review its contents</p>
                             </div>
                         </div>
                     ) : (
@@ -269,7 +269,7 @@ export default function ReceiptsPage() {
                                     </div>
                                     <div className="text-right">
                                         <div className="text-5xl font-black text-gray-900 tracking-tighter tabular-nums">${selected.total_amount.toLocaleString()}</div>
-                                        <p className="text-[11px] font-black text-emerald-500 uppercase tracking-[0.3em] mt-3">Verified Financial Artifact</p>
+                                        <p className="text-[11px] font-black text-emerald-500 uppercase tracking-[0.3em] mt-3">Verified Document</p>
                                     </div>
                                 </div>
 
@@ -293,7 +293,7 @@ export default function ReceiptsPage() {
                                         <div key={i} className="h-28 bg-gray-50 rounded-3xl animate-pulse" />
                                     )) : detail.lines?.length === 0 ? (
                                         <div className="p-12 bg-gray-50 rounded-3xl text-center font-bold text-gray-400">
-                                            No manifest data attached to this PO.
+                                            No shipment data attached to this PO.
                                         </div>
                                     ) : detail.lines?.map(line => {
                                         const received = Number(line.qty_received || 0);
@@ -370,8 +370,8 @@ export default function ReceiptsPage() {
                                         <AlertCircle size={24} />
                                     </div>
                                     <div>
-                                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Status Oracle</div>
-                                        <div className="text-sm font-black text-gray-700 mt-1 uppercase tracking-tighter">System Awaiting Manual Audit Verification</div>
+                                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Status</div>
+                                        <div className="text-sm font-black text-gray-700 mt-1 uppercase tracking-tighter">Awaiting Review</div>
                                     </div>
                                 </div>
                                 <div className="flex gap-4">
@@ -382,7 +382,7 @@ export default function ReceiptsPage() {
                                         onClick={() => setSelected(null)}
                                         className="h-14 px-8 rounded-2xl bg-gray-900 text-white font-black text-xs uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-gray-900/10"
                                     >
-                                        Close Manifest
+                                        Close
                                     </button>
                                 </div>
                             </div>

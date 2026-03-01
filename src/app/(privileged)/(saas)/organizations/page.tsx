@@ -186,7 +186,7 @@ export default function OrganizationsPage() {
                         <div>
                             <div className="flex items-center gap-3 mb-2">
                                 <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-100 font-black text-[10px] uppercase tracking-widest px-4 py-1.5 rounded-full">
-                                    Enterprise Node Registry: Online
+                                    Organization Directory
                                 </Badge>
                                 <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] flex items-center gap-2">
                                     <Activity size={14} className="text-emerald-400" /> Infrastructure Sync: Real-time
@@ -322,7 +322,7 @@ export default function OrganizationsPage() {
                 <div className="flex flex-wrap items-center gap-4 p-6 bg-white/70 backdrop-blur-xl rounded-[2rem] border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-8">
                     <div className="relative flex-1 min-w-[280px]">
                         <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
-                        <input type="text" placeholder="Scan by business name or node slug..." value={search} onChange={e => setSearch(e.target.value)}
+                        <input type="text" placeholder="Search by name or domain..." value={search} onChange={e => setSearch(e.target.value)}
                             className="w-full pl-11 pr-4 h-12 text-[13px] font-black border border-slate-50 rounded-xl bg-slate-50/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:bg-white transition-all placeholder:text-slate-300 placeholder:font-bold" />
                     </div>
                     <div className="flex flex-wrap items-center gap-3">
