@@ -185,16 +185,32 @@ export async function saveFinancialSetup(data: {
             })
         }
 
-        // 2. Apply COA template if selected
+        // 2. Apply COA template if selected — ONLY if no COA entries exist yet
         if (data.coa_template) {
-            await erpFetch('coa/apply_template/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    template_key: data.coa_template,
-                    reset: false,
-                }),
-            })
+            try {
+                const existingCoa = await erpFetch('coa/').catch(() => ({ results: [] }))
+                const coaList = Array.isArray(existingCoa) ? existingCoa : existingCoa?.results || []
+                if (coaList.length === 0) {
+                    await erpFetch('coa/apply_template/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            template_key: data.coa_template,
+                            reset: false,
+                        }),
+                    })
+                }
+            } catch {
+                // If check fails, try applying anyway
+                await erpFetch('coa/apply_template/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        template_key: data.coa_template,
+                        reset: false,
+                    }),
+                })
+            }
         }
 
         // 3. Create fiscal year (MANDATORY)

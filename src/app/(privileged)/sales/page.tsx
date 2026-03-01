@@ -24,17 +24,52 @@ import CloseRegisterModal from '@/components/pos/CloseRegisterModal';
 import ReturnOrderModal from '@/components/pos/ReturnOrderModal';
 import POSKeyboardShortcuts from '@/components/pos/POSKeyboardShortcuts';
 import { saveHold } from '@/components/pos/POSQuickHold';
-import { TerminalProvider, useTerminalContext } from '@/context/TerminalContext';
+import { useTerminal } from '@/hooks/pos/useTerminal';
 import { useBarcodeScanner } from '@/hooks/pos/useBarcodeScanner';
 import { POSLayoutVariant } from '@/types/pos-layout';
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
+import { AlertCircle, RefreshCw } from 'lucide-react';
+
+// ─── Error Boundary ──────────────────────────────────────────────
+class POSErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error: string }> {
+    constructor(props: { children: React.ReactNode }) {
+        super(props);
+        this.state = { hasError: false, error: '' };
+    }
+    static getDerivedStateFromError(error: Error) {
+        return { hasError: true, error: error.message };
+    }
+    render() {
+        if (this.state.hasError) {
+            return (
+                <div className="min-h-[60vh] flex items-center justify-center p-8">
+                    <div className="text-center max-w-md">
+                        <div className="w-16 h-16 rounded-full bg-rose-500/20 flex items-center justify-center mx-auto mb-4">
+                            <AlertCircle size={32} className="text-rose-400" />
+                        </div>
+                        <h2 className="text-xl font-black text-gray-900 mb-2">POS Terminal Error</h2>
+                        <p className="text-gray-500 text-sm mb-4">{this.state.error || 'An unexpected error occurred. This is usually caused by a stale browser cache after a deployment.'}</p>
+                        <button
+                            onClick={() => { window.location.reload(); }}
+                            className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all flex items-center gap-2 mx-auto"
+                        >
+                            <RefreshCw size={16} /> Hard Reload
+                        </button>
+                        <p className="text-gray-400 text-xs mt-4">If this persists, try Ctrl+Shift+R or clear your browser cache.</p>
+                    </div>
+                </div>
+            );
+        }
+        return this.props.children;
+    }
+}
 
 const LAYOUT_STORAGE_KEY = 'pos-layout-preference';
 
-// ─── Inner component (consumes context) ──────────────────────────
+// ─── Inner component (uses terminal hook directly) ──────────────
 function POSTerminalInner() {
-    const terminal = useTerminalContext();
+    const terminal = useTerminal();
 
     // Barcode scanner integration
     useBarcodeScanner(terminal);
@@ -276,11 +311,11 @@ function POSTerminalInner() {
     );
 }
 
-// ─── Root Export (with Provider) ─────────────────────────────────
+// ─── Root Export (with Error Boundary) ───────────────────────────
 export default function POSPage() {
     return (
-        <TerminalProvider>
+        <POSErrorBoundary>
             <POSTerminalInner />
-        </TerminalProvider>
+        </POSErrorBoundary>
     );
 }
