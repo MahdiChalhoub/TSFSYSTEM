@@ -14,7 +14,7 @@ import { erpFetch } from '@/lib/erp-api';
 import clsx from 'clsx';
 
 // ── Types ──────────────────────────────────────────────────
-interface AccountBookEntry {
+interface AddressBookEntry {
     id: number;
     entryType: string;
     direction: 'IN' | 'OUT';
@@ -45,27 +45,18 @@ interface AccountBookEntry {
     createdAt: string;
 }
 
-interface AccountBookSummary {
+interface AddressBookSummary {
     totalIn: number;
     totalOut: number;
     netBalance: number;
-    // Not yet posted
-    pendingIn: number;
-    pendingOut: number;
-    pendingBalance: number;
-    // Already posted
-    approvedIn: number;
-    approvedOut: number;
     approvedBalance: number;
-    // Counts
     pendingCount: number;
     approvedCount: number;
     rejectedCount: number;
     needInfoCount: number;
-    totalCount: number;
 }
 
-interface AccountBookProps {
+interface AddressBookProps {
     isOpen: boolean;
     onClose: () => void;
     sessionId: number | null;
@@ -101,9 +92,9 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string; i
 };
 
 // ── Component ──────────────────────────────────────────────
-export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, isManager = false }: AccountBookProps) {
-    const [entries, setEntries] = useState<AccountBookEntry[]>([]);
-    const [summary, setSummary] = useState<AccountBookSummary | null>(null);
+export function AddressBook({ isOpen, onClose, sessionId, cashierId, currency, isManager = false }: AddressBookProps) {
+    const [entries, setEntries] = useState<AddressBookEntry[]>([]);
+    const [summary, setSummary] = useState<AddressBookSummary | null>(null);
     const [loading, setLoading] = useState(false);
     const [showAddForm, setShowAddForm] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -373,72 +364,26 @@ export function AccountBook({ isOpen, onClose, sessionId, cashierId, currency, i
                         </button>
                     </div>
 
-                    {/* ── Audit Summary: Pending (not posted) vs Approved (posted) ── */}
+                    {/* Summary strip */}
                     {summary && (
-                        <div className="mt-3 space-y-2">
-                            {/* Pending balance — NOT YET POSTED */}
-                            {summary.pendingCount > 0 && (
-                                <div className="bg-amber-100/80 border border-amber-200/60 rounded-xl p-2.5">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-1.5">
-                                            <Clock size={10} className="text-amber-600" />
-                                            <span className="text-[9px] font-black text-amber-700 uppercase tracking-widest">
-                                                Awaiting Approval ({summary.pendingCount})
-                                            </span>
-                                        </div>
-                                        <span className={clsx(
-                                            "text-sm font-black",
-                                            summary.pendingBalance >= 0 ? 'text-emerald-700' : 'text-rose-700'
-                                        )}>
-                                            {summary.pendingBalance >= 0 ? '+' : ''}{formatMoney(summary.pendingBalance)}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-3 mt-1">
-                                        <span className="text-[9px] text-emerald-600 font-bold">↓ In: {formatMoney(summary.pendingIn)}</span>
-                                        <span className="text-[9px] text-rose-600 font-bold">↑ Out: {formatMoney(summary.pendingOut)}</span>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Approved balance — ALREADY POSTED */}
-                            {summary.approvedCount > 0 && (
-                                <div className="bg-emerald-50/80 border border-emerald-200/60 rounded-xl p-2.5">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-1.5">
-                                            <Check size={10} className="text-emerald-600" />
-                                            <span className="text-[9px] font-black text-emerald-700 uppercase tracking-widest">
-                                                Posted ({summary.approvedCount})
-                                            </span>
-                                        </div>
-                                        <span className={clsx(
-                                            "text-sm font-black",
-                                            summary.approvedBalance >= 0 ? 'text-emerald-700' : 'text-rose-700'
-                                        )}>
-                                            {summary.approvedBalance >= 0 ? '+' : ''}{formatMoney(summary.approvedBalance)}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-3 mt-1">
-                                        <span className="text-[9px] text-emerald-600 font-bold">↓ In: {formatMoney(summary.approvedIn)}</span>
-                                        <span className="text-[9px] text-rose-600 font-bold">↑ Out: {formatMoney(summary.approvedOut)}</span>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Status counts */}
-                            <div className="flex items-center gap-2 justify-center">
-                                {summary.rejectedCount > 0 && (
-                                    <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-rose-50 text-rose-500">
-                                        {summary.rejectedCount} rejected
-                                    </span>
-                                )}
-                                {summary.needInfoCount > 0 && (
-                                    <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-500">
-                                        {summary.needInfoCount} need info
-                                    </span>
-                                )}
-                                <span className="text-[8px] font-bold text-gray-400">
-                                    {summary.totalCount} total entries
+                        <div className="mt-3 grid grid-cols-4 gap-2">
+                            <div className="bg-white/80 rounded-lg p-2 text-center">
+                                <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest block">In</span>
+                                <span className="text-sm font-black text-emerald-600">{formatMoney(summary.totalIn)}</span>
+                            </div>
+                            <div className="bg-white/80 rounded-lg p-2 text-center">
+                                <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest block">Out</span>
+                                <span className="text-sm font-black text-rose-600">{formatMoney(summary.totalOut)}</span>
+                            </div>
+                            <div className="bg-white/80 rounded-lg p-2 text-center">
+                                <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest block">Balance</span>
+                                <span className={`text-sm font-black ${summary.netBalance >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                    {summary.netBalance >= 0 ? '+' : '-'}{formatMoney(summary.netBalance)}
                                 </span>
+                            </div>
+                            <div className="bg-white/80 rounded-lg p-2 text-center">
+                                <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest block">Pending</span>
+                                <span className="text-sm font-black text-amber-600">{summary.pendingCount}</span>
                             </div>
                         </div>
                     )}

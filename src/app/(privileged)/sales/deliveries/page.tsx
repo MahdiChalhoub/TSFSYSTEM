@@ -206,7 +206,7 @@ export default function DeliveryOrdersPage() {
                     </Button>
                     <div className="flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-2xl border border-emerald-100">
                         <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                        <span className="text-[10px] font-black uppercase text-emerald-700 tracking-widest">Logistics Engine Active</span>
+                        <span className="text-[10px] font-black uppercase text-emerald-700 tracking-widest">Active</span>
                     </div>
                 </div>
             </header>

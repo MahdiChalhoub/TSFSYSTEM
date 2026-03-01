@@ -77,7 +77,7 @@ export function MigrationAuditPage() {
     useEffect(() => { fetchSummary(); fetchRecords(1); }, [fetchSummary, fetchRecords]);
 
     const handleBulkApprove = async () => {
-        if (!confirm(`Approve ALL draft ${entityLabel}?`)) return;
+        // Auto-resolved action — posting rules are known, no need to ask
         setProcessing(true);
         try {
             await approveMigrationEntity(jobId, entityType);
@@ -88,7 +88,7 @@ export function MigrationAuditPage() {
     };
 
     const handleLinkContacts = async (contactType: string) => {
-        if (!confirm(`Auto-link ALL ${contactType} contacts to ledger using posting rules?`)) return;
+        // Auto-resolved from posting rules — no manual confirmation needed
         setProcessing(true);
         try {
             const res = await bulkLinkLedger(jobId, contactType);

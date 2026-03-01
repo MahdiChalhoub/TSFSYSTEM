@@ -387,7 +387,7 @@ export default function BankReconciliationPage() {
                         <p className="text-blue-200 text-xs font-black uppercase tracking-[0.2em]">Total Amount</p>
                         <h2 className="text-5xl font-black mt-2 tracking-tighter">{fmt(totalBalance)}</h2>
                         <div className="flex items-center gap-2 mt-4">
-                            <Badge className="bg-blue-800 text-blue-200 border-none font-black text-[10px] px-3">{accounts.length} ACTIVE CHANNELS</Badge>
+                            <Badge className="bg-blue-800 text-blue-200 border-none font-black text-[10px] px-3">{accounts.length} Accounts</Badge>
                         </div>
                     </div>
                 </CardContent>

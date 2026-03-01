@@ -175,7 +175,7 @@ export default function DeliveryZonesPage() {
                             <CardTitle className="text-xl font-black tracking-tight text-stone-900">
                                 {editId ? 'Modify Zone Architecture' : 'Deploy New Zone'}
                             </CardTitle>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mt-1">Coverage Engineering Terminal</p>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mt-1">Coverage Settings</p>
                         </div>
                         <button onClick={() => setShowForm(false)} className="w-10 h-10 rounded-2xl hover:bg-stone-50 flex items-center justify-center text-stone-300 hover:text-stone-900 transition-all"><X size={20} /></button>
                     </CardHeader>
