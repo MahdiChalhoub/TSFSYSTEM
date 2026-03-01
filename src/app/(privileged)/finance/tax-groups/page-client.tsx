@@ -247,7 +247,7 @@ export default function TaxGroupsPage() {
                             <p className="text-3xl font-black mt-1 tracking-tighter text-slate-900">{stats.total}</p>
                             <div className="flex items-center gap-2 mt-1">
                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest">Active Matrix</p>
+                                <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest">Active Rules</p>
                             </div>
                         </div>
                     </CardContent>
@@ -329,7 +329,7 @@ export default function TaxGroupsPage() {
                 </div>
             )}
             <TypicalListView
-                title="Regulatory Authority Matrix"
+                title="Tax Groups"
                 data={groups}
                 loading={loading}
                 getRowId={(tg) => tg.id}

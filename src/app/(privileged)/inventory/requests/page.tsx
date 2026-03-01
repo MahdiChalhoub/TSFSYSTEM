@@ -216,7 +216,7 @@ export default function OperationalRequestsPage() {
                             )}
                             {req.status === 'APPROVED' && (
                                 <Button size="sm" variant="outline" className="h-8 px-3 rounded-xl border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-black text-[10px]" onClick={() => setConvertDialog(req)} disabled={isPending}>
-                                    <ArrowRightCircle size={14} className="mr-1" /> PROMOTE TO STRATEGY
+                                    <ArrowRightCircle size={14} className="mr-1" /> CREATE TRANSFER
                                 </Button>
                             )}
                         </div>
@@ -352,7 +352,7 @@ export default function OperationalRequestsPage() {
             < Dialog open={!!convertDialog} onOpenChange={() => setConvertDialog(null)}>
                 <DialogContent className="sm:max-w-md rounded-[2.5rem] border-0">
                     <DialogHeader>
-                        <DialogTitle className="text-2xl font-black text-gray-900 tracking-tighter">Promote to Strategy</DialogTitle>
+                        <DialogTitle className="text-2xl font-black text-gray-900 tracking-tighter">Create Transfer</DialogTitle>
                         <DialogDescription className="text-xs font-medium text-gray-400">Convert this approved request into an internal transfer.</DialogDescription>
                     </DialogHeader>
                     <form onSubmit={async (e) => {

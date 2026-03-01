@@ -60,7 +60,7 @@ export default function DiscountRulesPage() {
             const data = await erpFetch('pos/discount-rules/')
             setRules(Array.isArray(data) ? data : data.results || [])
         } catch {
-            toast.error("Failed to load discount engine rules")
+            toast.error("Failed to load discounts")
         } finally {
             setLoading(false)
         }
@@ -165,7 +165,7 @@ export default function DiscountRulesPage() {
         try {
             const { erpFetch } = await import("@/lib/erp-api")
             await erpFetch(`pos/discount-rules/${deleteTarget}/`, { method: 'DELETE' })
-            toast.success("Rule purged from engine")
+            toast.success("Discount deleted")
             await loadData()
         } catch { toast.error("Failed to delete rule") }
         setDeleteTarget(null)
@@ -291,7 +291,7 @@ export default function DiscountRulesPage() {
                         <div className="w-14 h-14 rounded-[1.5rem] bg-amber-600 flex items-center justify-center shadow-lg shadow-amber-200">
                             <Tags size={28} className="text-white" />
                         </div>
-                        Discount <span className="text-amber-600">Engine</span>
+                        Discount <span className="text-amber-600">Rules</span>
                     </h1>
                     <p className="text-sm font-medium text-gray-400 mt-2 uppercase tracking-widest">Promotions & Loyalty Logic</p>
                 </div>
@@ -364,7 +364,7 @@ export default function DiscountRulesPage() {
                                 <CardTitle className="text-2xl font-black tracking-tight text-stone-900">
                                     {editId ? 'Modify Rule Architecture' : 'Deploy New Rule'}
                                 </CardTitle>
-                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mt-1">Promotion Engineering Terminal</p>
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mt-1">Promotion Settings</p>
                             </div>
                             <Button onClick={() => setShowForm(false)} variant="ghost" size="icon" className="rounded-2xl hover:bg-stone-50 text-stone-300 hover:text-stone-900">
                                 <X size={24} />
@@ -475,7 +475,7 @@ export default function DiscountRulesPage() {
                                         <div className="pt-4 flex flex-col gap-3">
                                             <div className="flex items-center gap-3 bg-stone-50 p-3 rounded-2xl border border-stone-100">
                                                 <input type="checkbox" id="is_active" className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500" checked={form.is_active} onChange={e => setForm({ ...form, is_active: e.target.checked })} />
-                                                <label htmlFor="is_active" className="text-[10px] font-black uppercase text-stone-700 tracking-wider">Engine Status: LIVE</label>
+                                                <label htmlFor="is_active" className="text-[10px] font-black uppercase text-stone-700 tracking-wider">Active</label>
                                             </div>
                                             <div className="flex items-center gap-3 bg-stone-50 p-3 rounded-2xl border border-stone-100">
                                                 <input type="checkbox" id="auto_apply" className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500" checked={form.auto_apply} onChange={e => setForm({ ...form, auto_apply: e.target.checked })} />
@@ -572,7 +572,7 @@ export default function DiscountRulesPage() {
                 onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
                 onConfirm={handleDelete}
                 title="Rule Decommission Sequence?"
-                description="This will permanently purge this promotion rule and associated redemption logs from the primary engine."
+                description="This will permanently delete this discount rule and all associated records."
                 confirmText="Purge Rule"
                 variant="danger"
             />

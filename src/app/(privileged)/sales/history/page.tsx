@@ -99,7 +99,7 @@ export default function OrderHistoryPage() {
         }
     }
     async function downloadInvoice(orderId: number, ref: string) {
-        toast.loading(`Synchronizing invoice engine for #${ref}...`)
+        toast.loading(`Generating invoice for #${ref}...`)
         try {
             const { erpFetch } = await import("@/lib/erp-api")
             const blob = await erpFetch(`pos/${orderId}/invoice-pdf/`)

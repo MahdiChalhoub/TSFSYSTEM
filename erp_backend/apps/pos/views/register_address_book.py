@@ -113,17 +113,41 @@ class RegisterAddressBookMixin:
         total_in = sum(e['amountIn'] for e in data)
         total_out = sum(e['amountOut'] for e in data)
 
+        # ── Per-status balances for audit ──
+        pending_entries = [e for e in data if e['status'] in ('PENDING', 'MODIFIED')]
+        approved_entries = [e for e in data if e['status'] == 'APPROVED']
+        rejected_entries = [e for e in data if e['status'] == 'REJECTED']
+        need_info_entries = [e for e in data if e['status'] == 'NEED_INFO']
+
+        pending_in = sum(e['amountIn'] for e in pending_entries)
+        pending_out = sum(e['amountOut'] for e in pending_entries)
+        approved_in = sum(e['amountIn'] for e in approved_entries)
+        approved_out = sum(e['amountOut'] for e in approved_entries)
+
         return Response({
             'entries': data,
             'summary': {
+                # Overall totals
                 'totalIn': total_in,
                 'totalOut': total_out,
                 'netBalance': total_in - total_out,
-                'approvedBalance': sum(e['net'] for e in data if e['status'] == 'APPROVED'),
-                'pendingCount': sum(1 for e in data if e['status'] == 'PENDING'),
-                'approvedCount': sum(1 for e in data if e['status'] == 'APPROVED'),
-                'rejectedCount': sum(1 for e in data if e['status'] == 'REJECTED'),
-                'needInfoCount': sum(1 for e in data if e['status'] == 'NEED_INFO'),
+
+                # ── NOT YET POSTED (Pending + Modified) ──
+                'pendingIn': pending_in,
+                'pendingOut': pending_out,
+                'pendingBalance': pending_in - pending_out,
+
+                # ── ALREADY POSTED (Approved) ──
+                'approvedIn': approved_in,
+                'approvedOut': approved_out,
+                'approvedBalance': approved_in - approved_out,
+
+                # Counts
+                'pendingCount': len(pending_entries),
+                'approvedCount': len(approved_entries),
+                'rejectedCount': len(rejected_entries),
+                'needInfoCount': len(need_info_entries),
+                'totalCount': len(data),
             },
             'entryTypes': [
                 {'key': k, 'label': v} for k, v in CashierAddressBook.ENTRY_TYPE_CHOICES

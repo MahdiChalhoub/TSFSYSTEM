@@ -147,7 +147,7 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
                             <Settings2 size={24} />
                         </div>
                         <div>
-                            <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter">Step 2: Engine Configuration</h2>
+                            <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter">Step 2: Import Settings</h2>
                             <p className="text-xs text-gray-400 font-medium tracking-tight">Bridge columns and set destination parameters</p>
                         </div>
                     </div>
@@ -255,7 +255,7 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
                                     className="w-full h-16 bg-slate-900 hover:bg-black text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-2xl shadow-slate-900/40 transition-all flex items-center gap-3"
                                 >
                                     {loading ? <Loader2 className="animate-spin" /> : <CheckCircle2 size={18} />}
-                                    {loading ? "Processing Engine..." : "Initialize Batch Import"}
+                                    {loading ? "Processing..." : "Start Import"}
                                 </Button>
                             </div>
                         </div>
@@ -273,7 +273,7 @@ export function SalesMapper({ warehouses, accounts }: SalesMapperProps) {
                             </div>
                             <div>
                                 <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter">Sync Results</h2>
-                                <p className="text-xs text-gray-400 font-medium tracking-tight">Execution report for batch sync</p>
+                                <p className="text-xs text-gray-400 font-medium tracking-tight">Import results</p>
                             </div>
                         </div>
 

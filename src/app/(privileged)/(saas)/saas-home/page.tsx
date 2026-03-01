@@ -19,7 +19,7 @@ export default async function SaasMasterDashboard() {
     let stats: any = {};
     try { stats = await getSaasStats(); } catch { }
     const quickStats = [
-        { label: "Provisioned Tenants", value: stats?.tenants || "0", icon: Building, color: "emerald", trend: "Stable" },
+        { label: "Active Tenants", value: stats?.tenants || "0", icon: Building, color: "emerald", trend: "Stable" },
         { label: "Pending Registrations", value: stats?.pendingRegistrations || "0", icon: Activity, color: "amber", trend: "Review Required", href: "/organizations/registrations" },
         { label: "Module Registries", value: stats?.modules || "0", icon: Database, color: "purple", trend: "Global" },
         { label: "Active Modules", value: stats?.deployments || "0", icon: Zap, color: "orange", trend: "Active" },

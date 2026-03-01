@@ -164,7 +164,7 @@ export default function AuditTrailPage() {
             </header>
 
             <TypicalListView
-                title="System Activity Matrix"
+                title="Activity Log"
                 data={data.results || []}
                 loading={loading}
                 getRowId={(log) => log.id}

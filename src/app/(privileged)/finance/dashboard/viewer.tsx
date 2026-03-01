@@ -135,7 +135,7 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
                 <Card className="rounded-[2.5rem] bg-slate-900 border-0 shadow-2xl shadow-slate-900/40 p-10 text-white flex flex-col justify-between relative overflow-hidden group hover:scale-[1.02] transition-all duration-500">
                     <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/10 rounded-full -mr-24 -mt-24 blur-3xl group-hover:bg-emerald-500/20 transition-colors"></div>
                     <div className="relative z-10">
-                        <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 mb-8">Node P&L Matrix: {new Date().toLocaleString('en-US', { month: 'long' })}</h3>
+                        <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 mb-8">P&L Summary: {new Date().toLocaleString('en-US', { month: 'long' })}</h3>
                         <div className="space-y-8">
                             <div className="flex justify-between items-center group/row">
                                 <span className="text-slate-400 text-sm font-black uppercase tracking-tight">Monthly Gross</span>
@@ -176,7 +176,7 @@ export default function FinanceDashboardViewer({ initialStats }: { initialStats:
                             <tr>
                                 <th className="px-10 py-6 text-left">Date Node</th>
                                 <th className="px-10 py-6 text-left">Entity Dispatch</th>
-                                <th className="px-10 py-6 text-left">Account Matrix</th>
+                                <th className="px-10 py-6 text-left">Account</th>
                                 <th className="px-10 py-6 text-right">Verification</th>
                             </tr>
                         </thead>

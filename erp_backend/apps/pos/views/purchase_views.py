@@ -161,6 +161,18 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
         po = self.get_object()
         po.status = 'SUBMITTED'
         po.save(update_fields=['status'])
+        # ── Auto-Task: PURCHASE_ENTERED ──
+        try:
+            from apps.workspace.signals import trigger_purchasing_event
+            trigger_purchasing_event(
+                po.organization, 'PURCHASE_ENTERED',
+                reference=po.po_number or f'PO-{po.pk}',
+                amount=float(po.total_amount or 0),
+                site_id=po.site_id,
+                user=request.user if request.user.is_authenticated else None,
+            )
+        except Exception:
+            pass
         return Response(PurchaseOrderSerializer(po).data)
 
     @action(detail=True, methods=['post'])
@@ -170,6 +182,17 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
         po.status = 'APPROVED'
         po.approved_by = request.user if request.user.is_authenticated else None
         po.save(update_fields=['status', 'approved_by'])
+        # ── Auto-Task: PO_APPROVED ──
+        try:
+            from apps.workspace.signals import trigger_purchasing_event
+            trigger_purchasing_event(
+                po.organization, 'PO_APPROVED',
+                reference=po.po_number or f'PO-{po.pk}',
+                amount=float(po.total_amount or 0),
+                user=request.user if request.user.is_authenticated else None,
+            )
+        except Exception:
+            pass
         return Response(PurchaseOrderSerializer(po).data)
 
     @action(detail=True, methods=['post'])
@@ -221,7 +244,42 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
 
             # 2. Record receiving on the PO line (updates status automatically)
             line.receive(qty)
-                
+
+            # ── Auto-Task: check if product needs barcode ──
+            try:
+                if line.product and not line.product.barcode:
+                    from apps.workspace.signals import trigger_inventory_event
+                    trigger_inventory_event(
+                        po.organization, 'BARCODE_MISSING_PURCHASE',
+                        product_name=str(line.product),
+                        product_id=line.product_id,
+                        amount=float(qty),
+                        reference=po.po_number or f'PO-{po.pk}',
+                        user=request.user,
+                    )
+            except Exception:
+                pass
+
+            # ── Auto-Task: if PO fully received, fire DELIVERY_COMPLETED ──
+            try:
+                po.refresh_from_db()
+                if po.status == 'RECEIVED':
+                    from apps.workspace.signals import trigger_purchasing_event
+                    trigger_purchasing_event(
+                        po.organization, 'DELIVERY_COMPLETED',
+                        reference=po.po_number or f'PO-{po.pk}',
+                        amount=float(po.total_amount or 0),
+                        user=request.user,
+                    )
+                    # Also check for missing attachment
+                    if not po.invoice:
+                        trigger_purchasing_event(
+                            po.organization, 'PURCHASE_NO_ATTACHMENT',
+                            reference=po.po_number or f'PO-{po.pk}',
+                        )
+            except Exception:
+                pass
+
             return Response(PurchaseOrderSerializer(po).data)
         except PurchaseOrderLine.DoesNotExist:
             return Response({"error": "Line not found"}, status=404)

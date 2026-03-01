@@ -318,7 +318,7 @@ export default function OrganizationsPage() {
                         </Dialog>
                     </div>
                 </div>
-                {/* ─── Universal Filter Matrix ────────────────────────── */}
+                {/* ─── Filters ────────────────────────── */}
                 <div className="flex flex-wrap items-center gap-4 p-6 bg-white/70 backdrop-blur-xl rounded-[2rem] border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-8">
                     <div className="relative flex-1 min-w-[280px]">
                         <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
@@ -347,7 +347,7 @@ export default function OrganizationsPage() {
                         {hasFilters && (
                             <button onClick={() => { setSearch(''); setFilterPlan('all'); setFilterType('all'); setFilterCountry('all'); setFilterStatus('all') }}
                                 className="h-12 px-5 text-[10px] font-black text-rose-500 uppercase tracking-widest flex items-center gap-2 rounded-xl border border-rose-50 bg-rose-50/30 hover:bg-rose-500 hover:text-white transition-all">
-                                <X size={14} /> Clear Matrix
+                                <X size={14} /> Clear Filters
                             </button>
                         )}
                     </div>
@@ -478,7 +478,7 @@ export default function OrganizationsPage() {
                     <div className="p-10 bg-emerald-gradient text-white relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl opacity-50" />
                         <DialogTitle className="text-3xl font-black tracking-tighter flex items-center gap-4 relative z-10">
-                            <Layers size={32} className="text-emerald-300" /> Feature Matrix
+                            <Layers size={32} className="text-emerald-300" /> Features
                         </DialogTitle>
                         <p className="text-emerald-100 text-[11px] font-black uppercase tracking-[0.2em] opacity-80 mt-2 relative z-10">
                             Managing Entitlements for: <span className="underline underline-offset-4">{selectedOrg?.name}</span>
@@ -528,7 +528,7 @@ export default function OrganizationsPage() {
                                 {m.status === 'INSTALLED' && m.available_features?.length > 0 && (
                                     <div className="mt-6 pt-5 border-t border-slate-50 pl-2">
                                         <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-4 flex items-center gap-2">
-                                            <Settings2 size={12} className="text-emerald-500" /> Extended Capabilities Matrix
+                                            <Settings2 size={12} className="text-emerald-500" /> Extended Features
                                         </p>
                                         <div className="grid grid-cols-2 gap-3">
                                             {m.available_features.map((f: Record<string, any>) => (
