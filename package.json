@@ -12,7 +12,18 @@
     "build": "node scripts/check-kernel-integrity.js && next build",
     "start": "next start",
     "lint": "eslint",
-    "kernel-check": "node scripts/check-kernel-integrity.js"
+    "kernel-check": "node scripts/check-kernel-integrity.js",
+    "typecheck": "npx tsc --noEmit 2>&1 | grep '^src/' || echo '✅ No TypeScript errors in src/'",
+    "typecheck:pos": "npx tsc --noEmit 2>&1 | grep -E '(POSLayout|usePOSTerminal|TerminalContext|POSToolbar)' || echo '✅ POS clean'",
+    "typecheck:finance": "npx tsc --noEmit 2>&1 | grep -E 'finance' || echo '✅ Finance clean'",
+    "verify": "npm run typecheck && npm run build",
+    "test": "node scripts/run-tests.js",
+    "test:smoke": "node scripts/smoke-tests.js",
+    "test:all": "node scripts/run-tests.js && node scripts/smoke-tests.js",
+    "security:scan": "node scripts/security-scan.js",
+    "health": "bash scripts/health-monitor.sh",
+    "health:watch": "bash scripts/health-monitor.sh --watch",
+    "agent:verify": "bash scripts/agent-verify.sh"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

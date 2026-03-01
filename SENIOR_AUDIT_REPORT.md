@@ -244,18 +244,19 @@ Multiple instances of ad-hoc font sizes (`text-[10px]`, `text-[11px]`, `text-[13
 | 8 | Replaced all dashboard jargon with human-readable labels | `dashboard/page.tsx` | ✅ Done |
 | 9 | Cleaned up unused imports (icons, recharts) | `dashboard/page.tsx`, `invoices/page.tsx` | ✅ Done |
 
-### Phase 2: DESIGN SYSTEM UNIFICATION (2-3 days) 🎨
-> Make every page look like it was built by the same team.
+### Phase 2: DESIGN SYSTEM UNIFICATION 🎨 (In Progress)
+> Establishing a single visual language across the platform.
 
-| # | Task | Impact |
+| # | Task | Status |
 |---|------|--------|
-| 7 | Create `design-tokens.css` with vars for radius, colors, spacing | Foundation |
-| 8 | Create `<KPICard>` shared component | All dashboards |
-| 9 | Standardize page headers with `page-header-title` class | All 91 pages |
-| 10 | Pick ONE gray scale (slate) and refactor | All pages |
-| 11 | Pick ONE accent strategy (emerald=financial, indigo=admin) | All pages |
-| 12 | Create `<PageSkeleton>` loading component | All pages |
-| 13 | Standardize page container to `page-container` | All pages |
+| 7 | Extended `globals.css` with page-container, page-header, label-micro, card-kpi, badge-status utility classes | ✅ Done |
+| 8 | Created `<KPICard>` shared component in `src/components/common/KPICard.tsx` | ✅ Done |
+| 9 | Standardized page headers (Dashboard, Contacts, Products, Invoices) with `page-header-title` | ✅ Done |
+| 10 | Unified gray scale to `slate` across key pages | ✅ Done |
+| 11 | Unified accent to emerald across all 4 key pages (was: Contacts=indigo, Invoices=stone) | ✅ Done |
+| 12 | Created `<PageSkeleton>` loading component in `src/components/common/PageSkeleton.tsx` | ✅ Done |
+| 13 | Standardized all 4 key pages to `page-container` class | ✅ Done |
+| — | Remaining: apply design system to 87 more pages | ⏳ Pending |
 
 ### Phase 3: ARCHITECTURE CLEANUP (3-5 days) 🏗️
 > Make the codebase maintainable.

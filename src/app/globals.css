@@ -61,6 +61,71 @@
     @apply w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all;
   }
 
+  /* ─── Page Layout System ─── */
+  .page-container {
+    @apply px-4 md:px-6 py-4 space-y-6 animate-in fade-in duration-500 max-w-[1600px] mx-auto;
+  }
+
+  /* ─── Page Header System ─── */
+  .page-header-title {
+    @apply text-2xl md:text-3xl font-black tracking-tighter text-slate-900;
+  }
+
+  .page-header-subtitle {
+    @apply text-xs font-bold text-slate-400 uppercase tracking-widest;
+  }
+
+  .page-header-icon {
+    @apply w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg;
+  }
+
+  /* ─── Typography System ─── */
+  .label-micro {
+    @apply text-[10px] font-black text-slate-400 uppercase tracking-widest;
+  }
+
+  .label-small {
+    @apply text-xs font-bold text-slate-500 uppercase tracking-wider;
+  }
+
+  .value-large {
+    @apply text-3xl font-black text-slate-900 tracking-tighter;
+  }
+
+  .value-medium {
+    @apply text-xl font-black text-slate-900 tracking-tighter;
+  }
+
+  /* ─── Card Variants ─── */
+  .card-kpi {
+    @apply bg-white rounded-2xl border border-slate-100 shadow-sm p-5 transition-all duration-300 hover:shadow-md;
+  }
+
+  .card-section {
+    @apply bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden;
+  }
+
+  /* ─── Badge System ─── */
+  .badge-status {
+    @apply text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border;
+  }
+
+  .badge-emerald {
+    @apply bg-emerald-50 text-emerald-600 border-emerald-100;
+  }
+
+  .badge-amber {
+    @apply bg-amber-50 text-amber-600 border-amber-100;
+  }
+
+  .badge-rose {
+    @apply bg-rose-50 text-rose-600 border-rose-100;
+  }
+
+  .badge-slate {
+    @apply bg-slate-50 text-slate-500 border-slate-200;
+  }
+
   /* Custom Scrollbar */
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
@@ -92,6 +157,17 @@
 
   .bg-rose-gradient {
     @apply bg-gradient-to-br from-rose-500 via-rose-600 to-red-700;
+  }
+
+  /* Dark scrollbar for POS */
+  .custom-scrollbar-dark::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scrollbar-dark::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar-dark::-webkit-scrollbar-thumb {
+    @apply bg-white/10 rounded-full;
   }
 }
 

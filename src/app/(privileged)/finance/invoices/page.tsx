@@ -246,23 +246,18 @@ export default function InvoicesPage() {
     }
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500 max-w-7xl mx-auto">
+        <div className="page-container">
             {/* Header */}
             <header className="flex justify-between items-end">
                 <div>
                     <div className="flex items-center gap-3 mb-2">
-                        <Badge className="bg-blue-50 text-blue-600 border-blue-100 font-black text-[10px] uppercase tracking-widest px-3 py-1">
-                            Node: Billing Active
-                        </Badge>
-                        <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest flex items-center gap-1">
-                            <TrendingUp size={12} /> Revenue Velocity
-                        </span>
+                        <span className="badge-status badge-emerald">Billing Active</span>
                     </div>
-                    <h1 className="text-5xl font-black tracking-tighter text-gray-900 flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-[1.8rem] bg-stone-900 flex items-center justify-center shadow-2xl shadow-stone-200">
-                            <FileText size={32} className="text-white" />
+                    <h1 className="page-header-title flex items-center gap-4">
+                        <div className="page-header-icon bg-emerald-600 text-white">
+                            <FileText size={24} />
                         </div>
-                        Invoice <span className="text-indigo-600">Suite</span>
+                        Invoice <span className="text-emerald-600">Suite</span>
                     </h1>
                 </div>
                 <div className="flex gap-3">

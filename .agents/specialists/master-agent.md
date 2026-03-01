@@ -24,8 +24,9 @@ Before touching any file, you MUST:
 
 1. **Read `WORKMAP.md`** — Check for related open/done items.
 2. **Read `WORK_IN_PROGRESS.md`** — Check for warnings from previous sessions.
-3. **Read `DESIGN_CRITERIA.md`** — Ensure you know the visual/architectural standards.
-4. **Identify the affected module** and read its documentation in `DOCUMENTATION/`.
+3. **Read `LESSONS_LEARNED.md`** — Check for gotchas related to the module/area you're working on.
+4. **Read `DESIGN_CRITERIA.md`** — Ensure you know the visual/architectural standards.
+5. **Identify the affected module** and read its documentation in `DOCUMENTATION/`.
 5. **Review applicable `.agent/rules/`** — These are ALWAYS-ON mandatory rules:
    - `architecture.md` — Module structure, file organization, Engine vs Kernel
    - `security.md` — 14 security rules (auth, XSS, CSRF, secrets)
@@ -36,6 +37,7 @@ Before touching any file, you MUST:
    - `cleanup.md` — Code cleanup standards
    - `plan.md` — Task naming and documentation rules
 6. **Select the right `.agent/workflows/`** for the task type:
+   - `auto-scope.md` — **When the user gives a vague request** (research first, ask 1-2 questions max)
    - `new-feature.md` — Full-stack feature development checklist
    - `new-api.md` — New API endpoint design protocol
    - `new-module.md` — Creating a new business module
@@ -43,6 +45,7 @@ Before touching any file, you MUST:
    - `dev-module.md` — Working within an existing module
    - `engine.md` — Module packaging and versioning
    - `deploy-smart.md` — Deployment procedures
+   - `security-audit.md` — Security vulnerability scanning and audit
    - `cleanup-project.md` — Tech debt and cleanup
    - `branching-strategy.md` — Git branching rules
 
@@ -81,10 +84,16 @@ After every non-trivial edit:
 
 ### Phase 4: Final Verification
 After all changes are complete:
-1. Run full TypeScript check: `npx tsc --noEmit 2>&1 | grep "src/"`
-2. Run build check: `npx next build` (if structural changes)
+1. Run the full verification pipeline: `bash scripts/agent-verify.sh [module]`
+   - This runs: Business logic tests → TypeScript check → Code quality scan → Build check
+2. Or run individual checks:
+   - `npm run typecheck` — TypeScript errors in src/
+   - `npm run typecheck:pos` — POS-specific TypeScript check
+   - `npm run test` — Business logic tests (34 tests across 7 suites)
+   - `npm run verify` — Typecheck + full build
 3. Update `WORK_IN_PROGRESS.md` with session summary
 4. Update `WORKMAP.md` if items were completed or discovered
+5. Update `LESSONS_LEARNED.md` if new gotchas were discovered
 
 ---
 
