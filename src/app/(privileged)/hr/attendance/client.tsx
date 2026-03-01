@@ -14,11 +14,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 type AttendanceRecord = Record<string, any>;
 
 const ALL_COLUMNS: ColumnDef<AttendanceRecord>[] = [
-    { key: 'employee', label: 'Identity', sortable: true, alwaysVisible: true },
-    { key: 'date', label: 'Protocol Date', sortable: true },
-    { key: 'check_in', label: 'Check-In Entry' },
-    { key: 'check_out', label: 'Check-Out Exit' },
-    { key: 'duration', label: 'Ops Duration', align: 'right' },
+    { key: 'employee', label: 'Employee', sortable: true, alwaysVisible: true },
+    { key: 'date', label: 'Date', sortable: true },
+    { key: 'check_in', label: 'Check-In' },
+    { key: 'check_out', label: 'Check-Out' },
+    { key: 'duration', label: 'Duration', align: 'right' },
 ];
 
 export default function TimeAttendanceLedger({
@@ -52,14 +52,14 @@ export default function TimeAttendanceLedger({
     const handleCheckIn = (id: string) => startTransition(async () => {
         try {
             await checkIn(id);
-            toast.success('Protocol Initiated: Check-In Verified');
+            toast.success('Checked in');
         } catch (err: any) { toast.error(err.message) }
     });
 
     const handleCheckOut = (id: string) => startTransition(async () => {
         try {
             await checkOut(id);
-            toast.success('Protocol Terminated: Check-Out Verified');
+            toast.success('Checked out');
         } catch (err: any) { toast.error(err.message) }
     });
 
@@ -70,7 +70,7 @@ export default function TimeAttendanceLedger({
                     <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
                         <Fingerprint size={16} />
                     </div>
-                    <span className="font-bold text-gray-900 uppercase tracking-tight">{r.employee_name || 'Personnel Resource'}</span>
+                    <span className="font-bold text-gray-900 uppercase tracking-tight">{r.employee_name || 'Employee'}</span>
                 </div>
             ),
             date: r => (
@@ -115,7 +115,7 @@ export default function TimeAttendanceLedger({
                     shift: fd.get('shift') || null,
                     date: fd.get('date'),
                 });
-                toast.success('Personnel Attendance Record Synchronized');
+                toast.success('Attendance recorded');
                 setIsDialogOpen(false);
             } catch (err: any) { toast.error(err.message || 'Sync Failed') }
         });
@@ -124,7 +124,7 @@ export default function TimeAttendanceLedger({
     return (
         <div className="space-y-6">
             <TypicalListView<AttendanceRecord>
-                title="Operational Presence Ledger"
+                title="Attendance Log"
                 data={filtered}
                 getRowId={r => r.id}
                 columns={columns}
@@ -140,7 +140,7 @@ export default function TimeAttendanceLedger({
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                         <DialogTrigger asChild>
                             <Button className="h-10 px-6 bg-emerald-600 text-white hover:bg-emerald-700 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-100 transition-all">
-                                <Plus size={18} className="mr-2" /> Manual Protocol Entry
+                                <Plus size={18} className="mr-2" /> Add Record
                             </Button>
                         </DialogTrigger>
                         <DialogContent className="rounded-[2.5rem] border-0 shadow-2xl p-0 overflow-hidden max-w-lg">
@@ -148,15 +148,15 @@ export default function TimeAttendanceLedger({
                                 <div className="absolute top-0 right-0 p-8 opacity-10">
                                     <Fingerprint size={80} />
                                 </div>
-                                <h2 className="text-3xl font-black tracking-tighter">Initiate <span className="opacity-60">Protocol</span></h2>
-                                <p className="text-emerald-100 text-[10px] font-black uppercase tracking-[0.2em] mt-1">Personnel Presence Synchronization</p>
+                                <h2 className="text-3xl font-black tracking-tighter">New <span className="opacity-60">Record</span></h2>
+                                <p className="text-emerald-100 text-[10px] font-black uppercase tracking-[0.2em] mt-1">Record Attendance</p>
                             </div>
                             <form onSubmit={handleCreate} className="p-8 space-y-6 bg-white">
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Personnel Entity</label>
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Employee</label>
                                         <select name="employee" required className="w-full bg-gray-50 border-0 rounded-2xl px-5 py-4 text-sm font-bold focus:ring-4 focus:ring-emerald-100 outline-none appearance-none">
-                                            <option value="">Select Resource...</option>
+                                            <option value="">Select Employee...</option>
                                             {employees.map(e => <option key={e.id} value={e.id}>{e.first_name} {e.last_name}</option>)}
                                         </select>
                                     </div>
@@ -169,7 +169,7 @@ export default function TimeAttendanceLedger({
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Protocol Date</label>
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Date</label>
                                             <input name="date" type="date" defaultValue={today} required className="w-full bg-gray-50 border-0 rounded-2xl px-5 py-4 text-sm font-bold focus:ring-4 focus:ring-emerald-100 outline-none" />
                                         </div>
                                     </div>
@@ -177,7 +177,7 @@ export default function TimeAttendanceLedger({
                                 <div className="flex gap-3 pt-4">
                                     <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="flex-1 h-12 rounded-2xl font-black uppercase text-[10px] tracking-widest border border-gray-100">Cancel</Button>
                                     <Button type="submit" disabled={isPending} className="flex-1 h-12 bg-emerald-600 text-white hover:bg-emerald-700 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-emerald-100">
-                                        {isPending ? 'Synchronizing...' : 'Authorize Entry'}
+                                        {isPending ? 'Saving...' : 'Submit'}
                                     </Button>
                                 </div>
                             </form>
@@ -188,9 +188,9 @@ export default function TimeAttendanceLedger({
                     getStatus: r => {
                         const hasIn = !!r.check_in;
                         const hasOut = !!r.check_out;
-                        if (!hasIn) return { label: 'Awaiting Entry', variant: 'warning' };
-                        if (hasOut) return { label: 'Terminated', variant: 'success' };
-                        return { label: 'Active Presence', variant: 'default' };
+                        if (!hasIn) return { label: 'Not clocked in', variant: 'warning' };
+                        if (hasOut) return { label: 'Completed', variant: 'success' };
+                        return { label: 'Clocked In', variant: 'default' };
                     }
                 }}
                 actions={{
@@ -206,7 +206,7 @@ export default function TimeAttendanceLedger({
                                 )}
                                 {hasIn && !hasOut && (
                                     <Button onClick={() => handleCheckOut(r.id)} disabled={isPending} variant="ghost" className="h-8 px-3 bg-amber-50 text-amber-700 hover:bg-amber-600 hover:text-white rounded-lg text-[10px] font-black uppercase tracking-widest">
-                                        <LogOut size={12} className="mr-1.5" /> Terminate
+                                        <LogOut size={12} className="mr-1.5" /> Clock Out
                                     </Button>
                                 )}
                                 {hasIn && hasOut && (
@@ -220,12 +220,12 @@ export default function TimeAttendanceLedger({
                 }}
             >
                 <TypicalFilter
-                    search={{ placeholder: 'Search Personnel Identities...', value: search, onChange: setSearch }}
+                    search={{ placeholder: 'Search employees...', value: search, onChange: setSearch }}
                     filters={[
                         {
                             key: 'period', label: 'Time Period', type: 'select', options: [
-                                { value: 'today', label: 'Current Log (Today)' },
-                                { value: 'all', label: 'Historical Archive (All)' }
+                                { value: 'today', label: 'Today' },
+                                { value: 'all', label: 'All Records' }
                             ]
                         }
                     ]}

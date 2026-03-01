@@ -481,7 +481,7 @@ export default function OrganizationsPage() {
                             <Layers size={32} className="text-emerald-300" /> Feature Matrix
                         </DialogTitle>
                         <p className="text-emerald-100 text-[11px] font-black uppercase tracking-[0.2em] opacity-80 mt-2 relative z-10">
-                            Orchestrating Entitlements for: <span className="underline underline-offset-4">{selectedOrg?.name}</span>
+                            Managing Entitlements for: <span className="underline underline-offset-4">{selectedOrg?.name}</span>
                         </p>
                     </div>
                     <div className="p-10 max-h-[50vh] overflow-y-auto space-y-4">

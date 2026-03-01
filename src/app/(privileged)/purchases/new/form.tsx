@@ -489,7 +489,7 @@ export default function PurchaseForm({
                     </div>
                 </div>
 
-                {/* 2. Intelligent Product Matrix */}
+                {/* 2. Product Search */}
                 <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/60 border border-slate-100 overflow-hidden">
                     <div className="p-8 bg-gradient-to-r from-slate-50 to-white border-b border-slate-100 flex items-center gap-6">
                         <div className="relative flex-1 group flex items-center gap-3">
@@ -503,7 +503,7 @@ export default function PurchaseForm({
                                 onClick={() => setIsDiscoveryOpen(true)}
                             >
                                 <LayoutGrid size={16} />
-                                Discovery Hub
+                                Search Products
                             </button>
                         </div>
                         <div className="hidden md:flex flex-col items-end">
@@ -676,7 +676,7 @@ export default function PurchaseForm({
                     </div>
                 </div>
 
-                {/* 3. Global Financial Orchestration */}
+                {/* 3. Financial Details */}
                 <div className="grid lg:grid-cols-2 gap-8 pt-6">
                     {/* 3.1 Context & Audit Trail */}
                     <div className="space-y-6">
@@ -853,7 +853,7 @@ export default function PurchaseForm({
                                     <Info size={24} />
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-black text-white leading-tight underline decoration-blue-500 decoration-4 underline-offset-4">Product Genome</h3>
+                                    <h3 className="text-lg font-black text-white leading-tight underline decoration-blue-500 decoration-4 underline-offset-4">Product Details</h3>
                                     <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">Real-time Sourcing Intel</p>
                                 </div>
                             </div>
@@ -1127,7 +1127,7 @@ function DiscoveryHubModal({
                 <DialogHeader className="p-8 bg-white border-b border-slate-100 shrink-0">
                     <div className="flex justify-between items-center">
                         <div>
-                            <DialogTitle className="text-2xl font-black text-slate-900 leading-tight">Catalog Discovery Hub</DialogTitle>
+                            <DialogTitle className="text-2xl font-black text-slate-900 leading-tight">Product Search</DialogTitle>
                             <p className="text-xs font-black text-slate-400 uppercase tracking-widest mt-1 italic">Enterprise Product Engine Core</p>
                         </div>
                         <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-all"><X size={20} /></button>

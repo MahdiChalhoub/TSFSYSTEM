@@ -205,7 +205,7 @@ export function POSDeliveryModal({
 
                         <h2 className="text-white text-2xl font-black text-center mb-2 uppercase tracking-tighter">Client Required</h2>
                         <p className="text-white/40 text-sm text-center mb-8 font-medium max-w-[300px] mx-auto leading-relaxed">
-                            Delivery logistics require verified recipient metrics including contact authority and geophysical location.
+                            Delivery requires customer name, phone number, and delivery address.
                         </p>
 
                         <div className="space-y-4">

@@ -98,7 +98,7 @@ export default function HROverviewPage() {
                                 <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Realtime</span>
                             </div>
                         </div>
-                        <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Registered Personnel</p>
+                        <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Active Employees</p>
                         <h2 className="text-4xl font-black text-gray-900 tracking-tighter">{employees.length}</h2>
                     </CardContent>
                 </Card>

@@ -27,7 +27,7 @@ const ALL_COLUMNS: ColumnDef<LeaveRequest>[] = [
     { key: 'employee', label: 'Employee', sortable: true, alwaysVisible: true },
     { key: 'type', label: 'Leave Type' },
     { key: 'duration', label: 'Duration' },
-    { key: 'reason', label: 'Disposition / Reason' },
+    { key: 'reason', label: 'Reason' },
 ];
 
 export default function LeaveManagementHub({

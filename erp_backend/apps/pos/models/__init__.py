@@ -1,5 +1,5 @@
 from .pos_models import Order, OrderLine, PosTicket
-from .register_models import POSRegister, RegisterSession, CashierAddressBook, SessionAccountReconciliation, POSSettings
+from .register_models import POSRegister, RegisterSession, CashierAddressBook, SessionAccountReconciliation, POSSettings, DailyAddressBookSnapshot
 from .returns_models import SalesReturn, SalesReturnLine, CreditNote, PurchaseReturn, PurchaseReturnLine
 from .quotation_models import Quotation, QuotationLine
 from .delivery_models import DeliveryZone, DeliveryOrder
@@ -11,7 +11,7 @@ from .audit_models import POSAuditRule, POSAuditEvent
 
 __all__ = [
     'Order', 'OrderLine', 'PosTicket',
-    'POSRegister', 'RegisterSession', 'CashierAddressBook', 'SessionAccountReconciliation', 'POSSettings',
+    'POSRegister', 'RegisterSession', 'CashierAddressBook', 'SessionAccountReconciliation', 'POSSettings', 'DailyAddressBookSnapshot',
     'SalesReturn', 'SalesReturnLine', 'CreditNote', 'PurchaseReturn', 'PurchaseReturnLine',
     'Quotation', 'QuotationLine',
     'DeliveryZone', 'DeliveryOrder',

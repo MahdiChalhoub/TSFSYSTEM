@@ -119,6 +119,19 @@ export async function getAllMigrationRecords(jobId: number, entityType: string, 
     return res;
 }
 
+export async function getAuditSummary(jobId: number, entityType: string) {
+    const res = await erpFetch(`migration/jobs/${jobId}/audit-summary/?entity_type=${entityType}`);
+    return res;
+}
+
+export async function bulkLinkLedger(jobId: number, contactType: string) {
+    const res = await erpFetch(`migration/jobs/${jobId}/bulk-link-ledger/`, {
+        method: 'POST',
+        body: JSON.stringify({ contact_type: contactType }),
+    });
+    return res;
+}
+
 export async function linkMigrationFile(params: { file_uuid: string; name: string }) {
     const res = await erpFetch('migration/jobs/link/', {
         method: 'POST',

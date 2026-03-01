@@ -15,11 +15,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 type Personnel = Record<string, any>;
 const ALL_COLUMNS: ColumnDef<Personnel>[] = [
-    { key: 'identity', label: 'Human Identity', sortable: true, alwaysVisible: true },
+    { key: 'identity', label: 'Name', sortable: true, alwaysVisible: true },
     { key: 'id', label: 'Record ID', sortable: true },
-    { key: 'role', label: 'Functional Role' },
-    { key: 'attribution', label: 'Node Attribution' },
-    { key: 'ledger', label: 'Ledger Alignment', align: 'right' },
+    { key: 'role', label: 'Job Title' },
+    { key: 'attribution', label: 'Site' },
+    { key: 'ledger', label: 'GL Account', align: 'right' },
 ];
 export default function HumanCapitalRegistry({
     employees,
@@ -87,12 +87,12 @@ export default function HumanCapitalRegistry({
             role: r => (
                 <div className="flex flex-col gap-0.5">
                     <span className="text-xs font-black text-gray-700 uppercase tracking-widest">{r.jobTitle || 'Unassigned Role'}</span>
-                    <span className="text-[10px] text-gray-400 font-medium">Resource UID: {r.id}</span>
+                    <span className="text-[10px] text-gray-400 font-medium">ID: {r.id}</span>
                 </div>
             ),
             attribution: r => (
                 <Badge variant="outline" className="text-[10px] font-bold border-stone-200 text-stone-600 bg-stone-50">
-                    <Building2 size={10} className="mr-1" /> {r.homeSite?.name || 'Global Node'}
+                    <Building2 size={10} className="mr-1" /> {r.homeSite?.name || 'All Sites'}
                 </Badge>
             ),
             ledger: r => (
@@ -131,7 +131,7 @@ export default function HumanCapitalRegistry({
     return (
         <div className="space-y-6">
             <TypicalListView<Personnel>
-                title="Personnel Register"
+                title="Employee Directory"
                 data={filtered}
                 getRowId={r => r.id}
                 columns={columns}
@@ -148,7 +148,7 @@ export default function HumanCapitalRegistry({
                         onClick={() => setIsModalOpen(true)}
                         className="h-10 px-6 bg-gray-900 text-white hover:bg-indigo-600 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl transition-all"
                     >
-                        <Plus size={18} className="mr-2" /> Enroll New Resource
+                        <Plus size={18} className="mr-2" /> Add Employee
                     </Button>
                 }
                 lifecycle={{
@@ -182,7 +182,7 @@ export default function HumanCapitalRegistry({
                 }}
             >
                 <TypicalFilter
-                    search={{ placeholder: 'Search Human Identity or Record ID...', value: search, onChange: setSearch }}
+                    search={{ placeholder: 'Search by name or ID...', value: search, onChange: setSearch }}
                 />
             </TypicalListView>
             {isModalOpen && (

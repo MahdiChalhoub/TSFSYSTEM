@@ -56,7 +56,7 @@ function LoginContent() {
         ? "Platform administration & management."
         : (isRoot
             ? PLATFORM_CONFIG.tagline
-            : "Secure enterprise gateway. Authorized personnel only.");
+            : "Secure enterprise gateway. Authorized users only.");
     return (
         <div className="min-h-screen w-full grid grid-cols-1 lg:grid-cols-2">
             {/* Left Column: Visual Branding */}
