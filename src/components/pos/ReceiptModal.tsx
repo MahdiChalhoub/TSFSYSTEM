@@ -13,6 +13,16 @@ export function ReceiptModal({ orderId, refCode, isOpen, onClose }: {
 }) {
     const [loading, setLoading] = useState(false)
 
+    useEffect(() => {
+        if (isOpen) {
+            // Auto print receipt by default when the modal opens
+            const timer = setTimeout(() => {
+                handlePrint();
+            }, 700);
+            return () => clearTimeout(timer);
+        }
+    }, [isOpen]);
+
     async function handleDownload() {
         if (!orderId) return
         setLoading(true)

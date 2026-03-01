@@ -265,9 +265,10 @@ export function POSLayoutModern(props: POSLayoutProps) {
                                 if (onSetNotes) onSetNotes(legsNote);
                                 const totalPaid = legs.reduce((sum, l) => sum + l.amount, 0);
                                 onSetCashReceived(String(totalPaid));
-                                if (legs.length > 0) onSetPaymentMethod(legs[0].method);
+                                let firstMethod = legs.length > 0 ? legs[0].method : undefined;
+                                if (firstMethod) onSetPaymentMethod(firstMethod);
                                 setIsMultiPayMode(false);
-                                setTimeout(() => onCharge(), 300);
+                                setTimeout(() => onCharge(false, { paymentLegs: legs, notes: legsNote, paymentMethod: firstMethod || "CASH", cashReceived: String(totalPaid) }), 300);
                             }}
                         />
                     ) : (

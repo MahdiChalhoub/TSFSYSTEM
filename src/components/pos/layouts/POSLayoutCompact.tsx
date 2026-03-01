@@ -119,8 +119,8 @@ export function POSLayoutCompact(props: POSLayoutProps) {
 
     const handleOpenVault = async () => {
         if (!selectedClient) return;
-        setIsVaultOpen(true);
-        await getClientFidelityData(selectedClient.id);
+        if (setIsVaultOpen) setIsVaultOpen(true);
+        if (getClientFidelityData) await getClientFidelityData(selectedClient.id);
     };
 
     return (
@@ -139,7 +139,7 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                 onSetActiveSessionId={onSetActiveSessionId}
                 onCreateNewSession={onCreateNewSession}
                 onRemoveSession={onRemoveSession}
-                registerConfig={registerConfig}
+                registerConfig={registerConfig as any}
                 selectedClient={selectedClient}
                 clients={clients}
                 clientSearchQuery={clientSearchQuery}
@@ -159,9 +159,9 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                 onSync={onSync}
                 onToggleFullscreen={onToggleFullscreen}
                 onOpenLayoutSelector={onOpenLayoutSelector}
-                onLockRegister={onLockRegister}
-                onCloseRegister={onCloseRegister}
-                onOpenReturn={onOpenReturn}
+                onLockRegister={onLockRegister || (() => { })}
+                onCloseRegister={onCloseRegister || (() => { })}
+                onOpenReturn={onOpenReturn || (() => { })}
             />
 
             {/* ═══════ CLIENT INFO (Premium Dark) ═══════ */}
@@ -542,12 +542,12 @@ export function POSLayoutCompact(props: POSLayoutProps) {
 
             {/* Loyalty Vault Modal */}
             <ClientVaultModal
-                isOpen={isVaultOpen}
-                onClose={() => setIsVaultOpen(false)}
+                isOpen={isVaultOpen || false}
+                onClose={() => { if (setIsVaultOpen) setIsVaultOpen(false); }}
                 clientName={selectedClient?.name || 'Walk-in'}
                 currency={currency}
                 fidelity={clientFidelity}
-                loading={fidelityLoading}
+                loading={fidelityLoading || false}
             />
 
             {/* Floating Speed Calc Overlay */}
@@ -620,9 +620,10 @@ export function POSLayoutCompact(props: POSLayoutProps) {
                     if (props.onSetPaymentLegs) props.onSetPaymentLegs(legs);
                     const totalPaid = legs.reduce((sum: number, l: { amount: number }) => sum + l.amount, 0);
                     onSetCashReceived(String(totalPaid));
-                    if (legs.length > 0) onSetPaymentMethod(legs[0].method);
+                    let firstMethod = legs.length > 0 ? legs[0].method : undefined;
+                    if (firstMethod) onSetPaymentMethod(firstMethod);
                     setIsMultiPayMode(false);
-                    setTimeout(() => onCharge(), 300);
+                    setTimeout(() => onCharge(false, { paymentLegs: legs, notes: legsNote, paymentMethod: firstMethod || "CASH", cashReceived: String(totalPaid) }), 300);
                 }}
             />
         </div>

@@ -289,11 +289,11 @@ export default function SaaSModulesPage() {
                                         <span className="text-[10px] text-gray-400 uppercase font-black tracking-widest leading-none">Global Coverage</span>
                                         <span className="text-emerald-600 font-mono font-bold leading-none">{m.total_installs} Tenants</span>
                                     </div>
-                                    {m.dependencies && m.dependencies.length > 0 && (
+                                    {Array.isArray(m.dependencies) && m.dependencies.length > 0 && (
                                         <div className="flex flex-col gap-2 p-4 bg-gray-50/50 rounded-2xl border border-gray-100/50">
                                             <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest px-1">Dependencies</span>
                                             <div className="flex flex-wrap gap-2">
-                                                {m.dependencies.map((dep: string) => {
+                                                {(m.dependencies as string[]).map((dep: string) => {
                                                     const depExists = modules.some(mod => mod.code === dep);
                                                     return (
                                                         <Tooltip key={dep} text={depExists ? "Dependency satisfied" : "Dependency missing! System will block activation."}>
@@ -348,7 +348,7 @@ export default function SaaSModulesPage() {
                                                         Select a previous version to restore. This will replace the source code but <strong>will not revert database schemas</strong>.
                                                     </DialogDescription>
                                                 </DialogHeader>
-                                                <BackupList moduleCode={m.code} onRollback={(v) => setPendingRollback({ code: m.code, version: v })} currentVersion={m.version} />
+                                                <BackupList moduleCode={m.code} onRollback={(v) => setPendingRollback({ code: m.code, version: v })} currentVersion={m.version as string} />
                                             </DialogContent>
                                         </Dialog>
                                         <Button
@@ -423,7 +423,7 @@ function BackupList({ moduleCode, onRollback, currentVersion }: { moduleCode: st
     const [loading, setLoading] = useState(true)
     useEffect(() => {
         getModuleBackups(moduleCode).then((data: Record<string, any>[]) => {
-            setBackups(data)
+            setBackups(data as SaasBackup[])
             setLoading(false)
         }).catch(() => setLoading(false))
     }, [moduleCode])
@@ -435,14 +435,14 @@ function BackupList({ moduleCode, onRollback, currentVersion }: { moduleCode: st
                 {backups.map((b, i) => (
                     <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-gray-900 border border-gray-800">
                         <div>
-                            <div className="font-bold text-white text-sm">v{b.version}</div>
-                            <div className="text-xs text-gray-500 mt-0.5">{b.date}</div>
+                            <div className="font-bold text-white text-sm">v{b.version as string}</div>
+                            <div className="text-xs text-gray-500 mt-0.5">{b.date as string}</div>
                         </div>
                         {b.version !== currentVersion && (
                             <Button
                                 size="sm"
                                 variant="secondary"
-                                onClick={() => onRollback(b.version)}
+                                onClick={() => onRollback(b.version as string)}
                                 className="h-8 text-xs font-bold"
                             >
                                 <RotateCcw size={12} className="mr-2" />

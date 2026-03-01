@@ -101,6 +101,8 @@ export interface POSLayoutProps {
     onSetStoreChangeInWallet: (v: boolean) => void;
     onSetPointsRedeemed: (v: number) => void;
     onSetIsVaultOpen: (v: boolean) => void;
+    setIsVaultOpen?: (v: boolean) => void;
+    getClientFidelityData?: (clientId: number) => Promise<void>;
     onAddToCart: (product: Record<string, any>) => void;
     onUpdateQuantity: (productId: number, delta: number) => void;
     onUpdatePrice: (productId: number, price: number) => void;
@@ -111,7 +113,7 @@ export interface POSLayoutProps {
     onUpdateActiveSession: (updates: any) => void;
     onToggleFullscreen: () => void;
     onCycleSidebarMode: () => void;
-    onCharge: () => void;
+    onCharge: (skipWarning?: boolean, overrides?: { paymentMethod?: string; paymentLegs?: any[]; notes?: string; cashReceived?: string; }) => void;
     onSync: () => void;
     onSetIsOnline: (v: boolean) => void;
     onSetClientSearchQuery: (v: string) => void;
@@ -133,7 +135,7 @@ export interface POSLayoutProps {
         cashAccountId: number | null;
         allowedAccounts: any[];
         siteName: string;
-        paymentMethods: Array<{ key: string; label: string; accountId: number | null }>;
+        payment_methods: Array<{ key: string; label: string; accountId: number | null }>;
     } | null;
     onCloseRegister?: () => void;
 
