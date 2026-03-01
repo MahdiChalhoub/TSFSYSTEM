@@ -76,7 +76,9 @@ class MigrationReviewMixin:
 
     @action(detail=True, methods=['get'], url_path='audit-summary')
     def audit_summary(self, request, pk=None):
-        """Returns aggregate diagnostic info for a given entity type."""
+        """Returns aggregate diagnostic info for a given entity type.
+        Automatically resolves all maps (posting rules, account maps) so the
+        client never has to manually choose a mapping target."""
         job = self.get_object()
         entity_type = request.query_params.get('entity_type', 'TRANSACTION')
         
@@ -84,13 +86,30 @@ class MigrationReviewMixin:
             job=job, entity_type=entity_type
         ).values_list('target_id', flat=True))
         
+        # Load organization + posting rules
+        from erp.models import Organization
+        from erp.services import ConfigurationService
+        organization = Organization.objects.get(id=job.organization_id)
+        rules = ConfigurationService.get_posting_rules(organization)
+        
         summary = {
             'entity_type': entity_type,
             'total': len(mapping_ids),
             'diagnostics': {},
             'actions_available': [],
-            'coa_options': [],
+            'resolved_map': {},  # Shows the auto-resolved map to the user
         }
+        
+        # Helper: resolve COA name from ID
+        def coa_label(coa_id):
+            if not coa_id:
+                return None
+            from apps.finance.models.coa_models import ChartOfAccount
+            try:
+                c = ChartOfAccount.objects.get(id=coa_id)
+                return {'id': c.id, 'code': c.code, 'name': c.name, 'type': c.type}
+            except ChartOfAccount.DoesNotExist:
+                return {'id': coa_id, 'code': '?', 'name': 'NOT FOUND', 'type': '?'}
         
         try:
             if entity_type == 'CONTACT':
@@ -103,6 +122,18 @@ class MigrationReviewMixin:
                 linked = contacts.filter(linked_account_id__isnull=False).count()
                 unlinked = contacts.filter(linked_account_id__isnull=True).count()
                 
+                # Resolve the auto-map from posting rules
+                customer_root_id = rules.get('automation', {}).get('customerRoot') or \
+                                   rules.get('sales', {}).get('receivable')
+                supplier_root_id = rules.get('automation', {}).get('supplierRoot') or \
+                                   rules.get('purchases', {}).get('payable')
+                
+                summary['resolved_map'] = {
+                    'customer_root': coa_label(customer_root_id),
+                    'supplier_root': coa_label(supplier_root_id),
+                    'source': 'posting_rules.automation.customerRoot / supplierRoot',
+                }
+                
                 summary['diagnostics'] = {
                     'customers': customers.count(),
                     'suppliers': suppliers.count(),
@@ -111,18 +142,33 @@ class MigrationReviewMixin:
                     'not_linked': unlinked,
                     'link_rate': round((linked / max(len(mapping_ids), 1)) * 100, 1),
                 }
-                summary['actions_available'] = [
-                    {'key': 'link_customers', 'label': 'Link ALL Customers to COA Parent', 'count': customers.filter(linked_account_id__isnull=True).count()},
-                    {'key': 'link_suppliers', 'label': 'Link ALL Suppliers to COA Parent', 'count': suppliers.filter(linked_account_id__isnull=True).count()},
-                    {'key': 'link_both', 'label': 'Link ALL "Both" to COA Parents', 'count': both.filter(linked_account_id__isnull=True).count()},
-                ]
                 
-                # Provide COA options for linking
-                from apps.finance.models.coa_models import ChartOfAccount
-                coa_qs = ChartOfAccount.objects.filter(
-                    type__in=['ASSET', 'LIABILITY']
-                ).values('id', 'code', 'name', 'type').order_by('code')
-                summary['coa_options'] = list(coa_qs)
+                unlinked_customers = customers.filter(linked_account_id__isnull=True).count()
+                unlinked_suppliers = suppliers.filter(linked_account_id__isnull=True).count()
+                unlinked_both = both.filter(linked_account_id__isnull=True).count()
+                
+                summary['actions_available'] = []
+                if unlinked_customers > 0:
+                    summary['actions_available'].append({
+                        'key': 'link_customers', 
+                        'label': f'Auto-link {unlinked_customers} Customers → {coa_label(customer_root_id)["code"] if customer_root_id else "?"} {coa_label(customer_root_id)["name"] if customer_root_id else "NOT SET"}',
+                        'count': unlinked_customers,
+                        'auto_resolved': True,
+                    })
+                if unlinked_suppliers > 0:
+                    summary['actions_available'].append({
+                        'key': 'link_suppliers', 
+                        'label': f'Auto-link {unlinked_suppliers} Suppliers → {coa_label(supplier_root_id)["code"] if supplier_root_id else "?"} {coa_label(supplier_root_id)["name"] if supplier_root_id else "NOT SET"}',
+                        'count': unlinked_suppliers,
+                        'auto_resolved': True,
+                    })
+                if unlinked_both > 0:
+                    summary['actions_available'].append({
+                        'key': 'link_both',
+                        'label': f'Auto-link {unlinked_both} "Both" → {coa_label(customer_root_id)["code"] if customer_root_id else "?"}',
+                        'count': unlinked_both,
+                        'auto_resolved': True,
+                    })
                 
             elif entity_type == 'TRANSACTION':
                 from apps.pos.models import Order
@@ -130,22 +176,31 @@ class MigrationReviewMixin:
                 draft = orders.filter(status='DRAFT').count()
                 completed = orders.filter(status='COMPLETED').count()
                 
-                # Check journal entries
+                # Show the posting rules map for transactions
+                summary['resolved_map'] = {
+                    'receivable': coa_label(rules.get('sales', {}).get('receivable')),
+                    'revenue': coa_label(rules.get('sales', {}).get('revenue')),
+                    'cogs': coa_label(rules.get('sales', {}).get('cogs')),
+                    'inventory': coa_label(rules.get('sales', {}).get('inventory')),
+                    'payable': coa_label(rules.get('purchases', {}).get('payable')),
+                    'source': 'posting_rules.sales / posting_rules.purchases',
+                }
+                
+                # Check journal entries by reference pattern
                 from apps.finance.models.ledger_models import JournalEntry
-                with_je = JournalEntry.objects.filter(
-                    reference_type='SALE', reference_id__in=mapping_ids
-                ).values('reference_id').distinct().count()
+                mig_je_count = JournalEntry.objects.filter(
+                    organization=organization,
+                    reference__startswith=f'MIG-AT-{job.id}-'
+                ).count()
                 
                 summary['diagnostics'] = {
                     'draft': draft,
                     'completed': completed,
-                    'with_journal_entry': with_je,
-                    'missing_journal_entry': len(mapping_ids) - with_je,
-                    'journal_rate': round((with_je / max(len(mapping_ids), 1)) * 100, 1),
+                    'migration_journal_entries': mig_je_count,
+                    'uses_suspense_accounts': mig_je_count > 0,
                 }
                 summary['actions_available'] = [
-                    {'key': 'approve_drafts', 'label': 'Approve ALL Draft Transactions', 'count': draft},
-                    {'key': 'post_to_ledger', 'label': 'Post Missing Journal Entries', 'count': len(mapping_ids) - with_je},
+                    {'key': 'approve_drafts', 'label': f'Approve {draft} Draft Transactions', 'count': draft, 'auto_resolved': True},
                 ]
                 
             elif entity_type == 'ACCOUNT':
@@ -153,6 +208,19 @@ class MigrationReviewMixin:
                 accounts = FinancialAccount.objects.filter(id__in=mapping_ids)
                 linked = accounts.filter(ledger_account_id__isnull=False).count()
                 unlinked = accounts.filter(ledger_account_id__isnull=True).count()
+                
+                # Show which accounts are auto-mapped
+                mapped_accounts = []
+                for fa in accounts.filter(ledger_account_id__isnull=False)[:5]:
+                    mapped_accounts.append({
+                        'account': fa.name,
+                        'coa': coa_label(fa.ledger_account_id),
+                    })
+                
+                summary['resolved_map'] = {
+                    'auto_mapped_samples': mapped_accounts,
+                    'source': 'migration _migrate_accounts() auto-match by name/code',
+                }
                 
                 summary['diagnostics'] = {
                     'linked_to_coa': linked,
@@ -174,7 +242,7 @@ class MigrationReviewMixin:
                     'posted': posted,
                 }
                 summary['actions_available'] = [
-                    {'key': 'approve_drafts', 'label': 'Post ALL Draft Expenses', 'count': draft},
+                    {'key': 'approve_drafts', 'label': f'Post {draft} Draft Expenses', 'count': draft, 'auto_resolved': True},
                 ]
                 
             elif entity_type == 'PRODUCT':
@@ -188,10 +256,12 @@ class MigrationReviewMixin:
                     'active': active,
                 }
                 summary['actions_available'] = [
-                    {'key': 'approve_drafts', 'label': 'Activate ALL Draft Products', 'count': draft},
+                    {'key': 'approve_drafts', 'label': f'Activate {draft} Draft Products', 'count': draft, 'auto_resolved': True},
                 ]
         except Exception as e:
+            import traceback
             summary['diagnostics']['error'] = str(e)
+            summary['diagnostics']['trace'] = traceback.format_exc()
 
         return Response(summary)
 

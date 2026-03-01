@@ -384,7 +384,7 @@ export default function BankReconciliationPage() {
                 </div>
                 <CardContent className="p-8 relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
-                        <p className="text-blue-200 text-xs font-black uppercase tracking-[0.2em]">Total Market Exposure</p>
+                        <p className="text-blue-200 text-xs font-black uppercase tracking-[0.2em]">Total Amount</p>
                         <h2 className="text-5xl font-black mt-2 tracking-tighter">{fmt(totalBalance)}</h2>
                         <div className="flex items-center gap-2 mt-4">
                             <Badge className="bg-blue-800 text-blue-200 border-none font-black text-[10px] px-3">{accounts.length} ACTIVE CHANNELS</Badge>

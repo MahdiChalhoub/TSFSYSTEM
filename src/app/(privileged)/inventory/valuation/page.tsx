@@ -52,7 +52,7 @@ export default function AssetValuationEnginePage() {
             setData(valData)
             setWarehouses(wh)
         } catch {
-            toast.error("Valuation sync failed")
+            toast.error("Failed to load valuation data")
         } finally {
             setLoading(false)
         }
@@ -67,11 +67,11 @@ export default function AssetValuationEnginePage() {
     }
 
     const columns: ColumnDef<any>[] = [
-        { key: 'product_name', label: 'Asset Entity', sortable: true, alwaysVisible: true, render: r => <span className="font-bold text-gray-900">{r.product_name}</span> },
+        { key: 'product_name', label: 'Product', sortable: true, alwaysVisible: true, render: r => <span className="font-bold text-gray-900">{r.product_name}</span> },
         { key: 'sku', label: 'SKU/Code', render: r => <span className="font-mono text-[10px] text-gray-400 font-black tracking-tighter uppercase">{r.product_sku || '—'}</span> },
-        { key: 'quantity', label: 'Reserved Volume', align: 'right', sortable: true, render: r => <span className="font-black text-gray-900">{fmtQty(r.quantity)} <span className="text-[10px] text-gray-300">U</span></span> },
-        { key: 'avg_cost', label: 'Asset Basis', align: 'right', sortable: true, render: r => <span className="text-gray-500 font-medium">{fmt(r.avg_cost)}</span> },
-        { key: 'total_value', label: 'Market Exposure', align: 'right', sortable: true, render: r => <span className="font-black text-emerald-600">{fmt(r.total_value)}</span> },
+        { key: 'quantity', label: 'Qty', align: 'right', sortable: true, render: r => <span className="font-black text-gray-900">{fmtQty(r.quantity)} <span className="text-[10px] text-gray-300">U</span></span> },
+        { key: 'avg_cost', label: 'Avg. Cost', align: 'right', sortable: true, render: r => <span className="text-gray-500 font-medium">{fmt(r.avg_cost)}</span> },
+        { key: 'total_value', label: 'Total Value', align: 'right', sortable: true, render: r => <span className="font-black text-emerald-600">{fmt(r.total_value)}</span> },
         {
             key: 'method', label: 'Valuation Method', render: r => (
                 <Badge variant="outline" className={`${METHOD_BADGES[r.method] || 'bg-gray-100'} text-[9px] font-black uppercase tracking-tighter py-0.5`}>

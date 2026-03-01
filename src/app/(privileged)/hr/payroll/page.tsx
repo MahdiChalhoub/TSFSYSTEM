@@ -54,7 +54,7 @@ export default function CompensationEnginePage() {
             const data = await erpFetch('hr/employees/');
             setEmployees(Array.isArray(data) ? data : data.results || []);
         } catch {
-            toast.error("Compensation engine sync failed");
+            toast.error("Failed to load payroll data");
         } finally {
             setLoading(false);
         }

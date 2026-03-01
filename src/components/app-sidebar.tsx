@@ -55,6 +55,7 @@ const defaultNav = [
             { title: "Dashboard", url: "/dashboard" },
             { title: "Setup Wizard", url: "/setup-wizard" },
             { title: "TaskBoard", url: "/workspace/tasks" },
+            { title: "Auto-Tasks", url: "/workspace/auto-task-settings" },
             { title: "Import Data", url: "/migration" },
         ]
     },

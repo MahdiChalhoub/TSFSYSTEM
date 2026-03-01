@@ -39,7 +39,7 @@ export function ExpiryAlertsClient({ initialData }: { initialData: any }) {
             const res = await getExpiryAlerts(severity)
             setData(res?.alerts || [])
         } catch {
-            toast.error("Cloud batch sync failed")
+            toast.error("Failed to load alerts")
         } finally {
             setLoading(false)
         }

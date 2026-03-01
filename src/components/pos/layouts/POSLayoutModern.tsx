@@ -4,7 +4,7 @@ import { POSLayoutProps } from '@/types/pos-layout';
 import { ProductGrid } from '@/components/pos/ProductGrid';
 import { ManagerOverride } from '@/components/pos/ManagerOverride';
 import { ReceiptModal } from '@/components/pos/ReceiptModal';
-import { AddressBook } from '@/components/pos/AddressBook';
+import { AccountBook } from '@/components/pos/AccountBook';
 import { POSToolbar } from '@/components/pos/POSToolbar';
 import {
     RefreshCw, ShieldCheck, UserPlus, Coins, AlertCircle, Lock,
@@ -63,7 +63,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
     const [selectedCartIdx, setSelectedCartIdx] = useState<number | null>(null);
     // ── Multi-Payment State ──
     const [isMultiPayMode, setIsMultiPayMode] = useState(false);
-    const [isAddressBookOpen, setIsAddressBookOpen] = useState(false);
+    const [isAccountBookOpen, setIsAccountBookOpen] = useState(false);
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
     const [isPendingDeliveriesOpen, setIsPendingDeliveriesOpen] = useState(false);
@@ -222,7 +222,7 @@ export function POSLayoutModern(props: POSLayoutProps) {
                 onLockRegister={onLockRegister}
                 onCloseRegister={(props as any).onCloseRegister}
                 onOpenReturn={(props as any).onOpenReturn}
-                onOpenAddressBook={() => setIsAddressBookOpen(true)}
+                onOpenAccountBook={() => setIsAccountBookOpen(true)}
                 onOpenPendingDeliveries={() => setIsPendingDeliveriesOpen(true)}
             />
 
@@ -802,11 +802,11 @@ export function POSLayoutModern(props: POSLayoutProps) {
                         </button>
 
                         <button
-                            onClick={() => setIsAddressBookOpen(true)}
+                            onClick={() => setIsAccountBookOpen(true)}
                             className="group flex flex-col items-center justify-center p-2 rounded-xl transition-all w-14 h-14 border-2 relative bg-white border-transparent text-gray-400 hover:bg-gray-50 hover:text-gray-600"
                         >
                             <BookOpen size={20} className="transition-transform group-hover:scale-110" />
-                            <span className="text-[8px] font-black mt-1 uppercase truncate w-full text-center tracking-tighter">Address</span>
+                            <span className="text-[8px] font-black mt-1 uppercase truncate w-full text-center tracking-tighter">Acct Book</span>
                         </button>
                     </div>
                 </div>
@@ -1059,9 +1059,9 @@ export function POSLayoutModern(props: POSLayoutProps) {
                 orderId={lastOrder?.id || null}
                 refCode={lastOrder?.ref || null}
             />
-            <AddressBook
-                isOpen={isAddressBookOpen}
-                onClose={() => setIsAddressBookOpen(false)}
+            <AccountBook
+                isOpen={isAccountBookOpen}
+                onClose={() => setIsAccountBookOpen(false)}
                 sessionId={registerConfig?.sessionId || null}
                 cashierId={registerConfig?.cashierId || null}
                 currency={currency}

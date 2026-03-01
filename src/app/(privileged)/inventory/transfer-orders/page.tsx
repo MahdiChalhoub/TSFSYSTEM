@@ -77,7 +77,7 @@ export default function LogisticsStrategyPage() {
             const [o, w] = await Promise.all([getTransferOrders(), getWarehouses()])
             setOrders(Array.isArray(o) ? o : o?.results || [])
             setWarehouses(Array.isArray(w) ? w : [])
-        } catch { toast.error('Logistics engine sync failed') }
+        } catch { toast.error('Failed to load') }
         finally { setLoading(false) }
     }, [])
 

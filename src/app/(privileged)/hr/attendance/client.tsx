@@ -117,7 +117,7 @@ export default function TimeAttendanceLedger({
                 });
                 toast.success('Attendance recorded');
                 setIsDialogOpen(false);
-            } catch (err: any) { toast.error(err.message || 'Sync Failed') }
+            } catch (err: any) { toast.error(err.message || 'Failed to save') }
         });
     };
 

@@ -548,7 +548,7 @@ export default function OrganizationsPage() {
                                                                     const data = await getOrgModules(selectedOrg.id)
                                                                     setOrgModules(data)
                                                                 } catch {
-                                                                    toast.error("Handshake failed")
+                                                                    toast.error("Connection failed")
                                                                 }
                                                             }}
                                                         />

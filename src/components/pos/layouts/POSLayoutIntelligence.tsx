@@ -4,7 +4,7 @@ import { POSLayoutProps } from '@/types/pos-layout';
 import { ProductGrid } from '@/components/pos/ProductGrid';
 import { ManagerOverride } from '@/components/pos/ManagerOverride';
 import { ReceiptModal } from '@/components/pos/ReceiptModal';
-import { AddressBook } from '@/components/pos/AddressBook';
+import { AccountBook } from '@/components/pos/AccountBook';
 import { POSToolbar } from '@/components/pos/POSToolbar';
 import {
     RefreshCw, ShieldCheck, UserPlus, Coins, AlertCircle, Lock,
@@ -70,7 +70,7 @@ export function POSLayoutIntelligence(props: POSLayoutProps) {
     const [selectedCartIdx, setSelectedCartIdx] = useState<number | null>(null);
     // ── Multi-Payment State ──
     const [isMultiPayMode, setIsMultiPayMode] = useState(false);
-    const [isAddressBookOpen, setIsAddressBookOpen] = useState(false);
+    const [isAccountBookOpen, setIsAccountBookOpen] = useState(false);
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
     const [isPendingDeliveriesOpen, setIsPendingDeliveriesOpen] = useState(false);
@@ -229,7 +229,7 @@ export function POSLayoutIntelligence(props: POSLayoutProps) {
                 onLockRegister={onLockRegister || (() => { })}
                 onCloseRegister={onCloseRegister}
                 onOpenReturn={onOpenReturn}
-                onOpenAddressBook={() => setIsAddressBookOpen(true)}
+                onOpenAccountBook={() => setIsAccountBookOpen(true)}
                 onOpenPendingDeliveries={() => setIsPendingDeliveriesOpen(true)}
             />
 
@@ -886,9 +886,9 @@ export function POSLayoutIntelligence(props: POSLayoutProps) {
                 orderId={lastOrder?.id || null}
                 refCode={lastOrder?.ref || null}
             />
-            <AddressBook
-                isOpen={isAddressBookOpen}
-                onClose={() => setIsAddressBookOpen(false)}
+            <AccountBook
+                isOpen={isAccountBookOpen}
+                onClose={() => setIsAccountBookOpen(false)}
                 sessionId={registerConfig?.sessionId || null}
                 cashierId={registerConfig?.cashierId || null}
                 currency={currency}

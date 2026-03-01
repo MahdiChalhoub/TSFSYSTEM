@@ -183,7 +183,7 @@ export default function SystemUpdatesPage() {
                                 </span>
                             </div>
                             <div className="flex justify-between items-center py-4 border-b border-gray-50">
-                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Deployment Env</span>
+                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Environment</span>
                                 <span className="text-indigo-600 font-black text-[10px] bg-indigo-50 px-2 py-0.5 rounded-full">{status?.environment || "PRODUCTION"}</span>
                             </div>
                         </div>

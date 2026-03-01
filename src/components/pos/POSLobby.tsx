@@ -107,7 +107,7 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
     }>>();
     const [cashSoftware, setCashSoftware] = useState('0');
     const [cashReal, setCashReal] = useState('0');
-    const [addressBookBalance, setAddressBookBalance] = useState('0');
+    const [accountBookBalance, setAccountBookBalance] = useState('0');
 
     // Initialize recon entries when entering advanced mode
     const initReconEntries = () => {
@@ -124,7 +124,7 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
         setReconEntries(entries);
         setCashSoftware('0');
         setCashReal('0');
-        setAddressBookBalance('0');
+        setAccountBookBalance('0');
     };
 
     // Load lobby data
@@ -215,7 +215,7 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
                     })),
                     cash_counted: parseFloat(cashReal) || 0,
                     cash_software: parseFloat(cashSoftware) || 0,
-                    address_book_balance: parseFloat(addressBookBalance) || 0,
+                    account_book_balance: parseFloat(accountBookBalance) || 0,
                 };
             }
 
@@ -693,7 +693,7 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
                     const cashRL = parseFloat(cashReal) || 0;
                     const cashExpected = cashSW - totalCalibration; // calibrated expected
                     const cashGap = cashRL - cashExpected;
-                    const abBal = parseFloat(addressBookBalance) || 0;
+                    const abBal = parseFloat(accountBookBalance) || 0;
                     const finalGap = cashGap - abBal;
 
                     return (
@@ -736,7 +736,7 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
                                                         account_reconciliations: reconEntries.map(e => ({ account_id: e.account_id, software_amount: parseFloat(e.software) || 0, statement_amount: parseFloat(e.real) || 0 })),
                                                         cash_counted: parseFloat(cashReal) || 0,
                                                         cash_software: parseFloat(cashSoftware) || 0,
-                                                        address_book_balance: parseFloat(addressBookBalance) || 0,
+                                                        account_book_balance: parseFloat(accountBookBalance) || 0,
                                                     };
                                                 }
                                                 const result = await openRegisterSession(selectedRegister.id, verifiedUser.id, parseFloat(openingBalance) || 0, openingNotes, advancedData, true, forceClosePin);
@@ -1009,8 +1009,8 @@ export default function POSLobby({ currency, onEnterPOS }: POSLobbyProps) {
                                                     {managerUnlocked && <span className="text-xs text-white/20 text-center">—</span>}
                                                     <input
                                                         type="number"
-                                                        value={addressBookBalance}
-                                                        onChange={(e) => setAddressBookBalance(e.target.value)}
+                                                        value={accountBookBalance}
+                                                        onChange={(e) => setAccountBookBalance(e.target.value)}
                                                         className="w-full px-2 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-300 text-xs font-bold text-center outline-none focus:border-amber-500"
                                                     />
                                                     {managerUnlocked && <span className="text-xs text-white/20 text-center">—</span>}
