@@ -42,7 +42,7 @@ class MigrationReviewMixin:
     @action(detail=True, methods=['get'], url_path='all-records')
     def all_records(self, request, pk=None):
         """Returns ALL migrated records (paginated) for a specific entity type.
-        Used by the full-page audit view. Each row has source_raw + target_state."""
+        Each row has enriched source_raw + target_state with ledger info."""
         job = self.get_object()
         entity_type = request.query_params.get('entity_type', 'TRANSACTION')
         page = int(request.query_params.get('page', 1))
@@ -51,11 +51,11 @@ class MigrationReviewMixin:
         total_qs = MigrationMapping.objects.filter(job=job, entity_type=entity_type)
         total_count = total_qs.count()
         offset = (page - 1) * page_size
-        mappings = total_qs.order_by('id')[offset:offset + page_size]
+        mappings = list(total_qs.order_by('id')[offset:offset + page_size])
 
         records = []
         for m in mappings:
-            target_data = self._load_target_data(entity_type, m.target_id)
+            target_data = self._load_target_enriched(entity_type, m.target_id)
             records.append({
                 'mapping_id': m.id,
                 'source_id': m.source_id,
@@ -74,48 +74,325 @@ class MigrationReviewMixin:
             'records': records,
         })
 
-    def _load_target_data(self, entity_type, target_id):
-        """Load the target record data for a given entity type and ID."""
+    @action(detail=True, methods=['get'], url_path='audit-summary')
+    def audit_summary(self, request, pk=None):
+        """Returns aggregate diagnostic info for a given entity type."""
+        job = self.get_object()
+        entity_type = request.query_params.get('entity_type', 'TRANSACTION')
+        
+        mapping_ids = list(MigrationMapping.objects.filter(
+            job=job, entity_type=entity_type
+        ).values_list('target_id', flat=True))
+        
+        summary = {
+            'entity_type': entity_type,
+            'total': len(mapping_ids),
+            'diagnostics': {},
+            'actions_available': [],
+            'coa_options': [],
+        }
+        
+        try:
+            if entity_type == 'CONTACT':
+                from apps.crm.models import Contact
+                contacts = Contact.objects.filter(id__in=mapping_ids)
+                customers = contacts.filter(type='CUSTOMER')
+                suppliers = contacts.filter(type='SUPPLIER')
+                both = contacts.filter(type='BOTH')
+                
+                linked = contacts.filter(linked_account_id__isnull=False).count()
+                unlinked = contacts.filter(linked_account_id__isnull=True).count()
+                
+                summary['diagnostics'] = {
+                    'customers': customers.count(),
+                    'suppliers': suppliers.count(),
+                    'both': both.count(),
+                    'linked_to_ledger': linked,
+                    'not_linked': unlinked,
+                    'link_rate': round((linked / max(len(mapping_ids), 1)) * 100, 1),
+                }
+                summary['actions_available'] = [
+                    {'key': 'link_customers', 'label': 'Link ALL Customers to COA Parent', 'count': customers.filter(linked_account_id__isnull=True).count()},
+                    {'key': 'link_suppliers', 'label': 'Link ALL Suppliers to COA Parent', 'count': suppliers.filter(linked_account_id__isnull=True).count()},
+                    {'key': 'link_both', 'label': 'Link ALL "Both" to COA Parents', 'count': both.filter(linked_account_id__isnull=True).count()},
+                ]
+                
+                # Provide COA options for linking
+                from apps.finance.models.coa_models import ChartOfAccount
+                coa_qs = ChartOfAccount.objects.filter(
+                    type__in=['ASSET', 'LIABILITY']
+                ).values('id', 'code', 'name', 'type').order_by('code')
+                summary['coa_options'] = list(coa_qs)
+                
+            elif entity_type == 'TRANSACTION':
+                from apps.pos.models import Order
+                orders = Order.objects.filter(id__in=mapping_ids)
+                draft = orders.filter(status='DRAFT').count()
+                completed = orders.filter(status='COMPLETED').count()
+                
+                # Check journal entries
+                from apps.finance.models.ledger_models import JournalEntry
+                with_je = JournalEntry.objects.filter(
+                    reference_type='SALE', reference_id__in=mapping_ids
+                ).values('reference_id').distinct().count()
+                
+                summary['diagnostics'] = {
+                    'draft': draft,
+                    'completed': completed,
+                    'with_journal_entry': with_je,
+                    'missing_journal_entry': len(mapping_ids) - with_je,
+                    'journal_rate': round((with_je / max(len(mapping_ids), 1)) * 100, 1),
+                }
+                summary['actions_available'] = [
+                    {'key': 'approve_drafts', 'label': 'Approve ALL Draft Transactions', 'count': draft},
+                    {'key': 'post_to_ledger', 'label': 'Post Missing Journal Entries', 'count': len(mapping_ids) - with_je},
+                ]
+                
+            elif entity_type == 'ACCOUNT':
+                from apps.finance.models import FinancialAccount
+                accounts = FinancialAccount.objects.filter(id__in=mapping_ids)
+                linked = accounts.filter(ledger_account_id__isnull=False).count()
+                unlinked = accounts.filter(ledger_account_id__isnull=True).count()
+                
+                summary['diagnostics'] = {
+                    'linked_to_coa': linked,
+                    'not_linked': unlinked,
+                    'link_rate': round((linked / max(len(mapping_ids), 1)) * 100, 1),
+                }
+                summary['actions_available'] = [
+                    {'key': 'open_mapping', 'label': 'Open COA Mapping Tool', 'count': unlinked},
+                ]
+                
+            elif entity_type == 'EXPENSE':
+                from apps.finance.models import DirectExpense
+                expenses = DirectExpense.objects.filter(id__in=mapping_ids)
+                draft = expenses.filter(status='DRAFT').count()
+                posted = expenses.filter(status='POSTED').count()
+                
+                summary['diagnostics'] = {
+                    'draft': draft,
+                    'posted': posted,
+                }
+                summary['actions_available'] = [
+                    {'key': 'approve_drafts', 'label': 'Post ALL Draft Expenses', 'count': draft},
+                ]
+                
+            elif entity_type == 'PRODUCT':
+                from apps.inventory.models import Product
+                products = Product.objects.filter(id__in=mapping_ids)
+                draft = products.filter(status='DRAFT').count()
+                active = products.filter(status='ACTIVE').count()
+                
+                summary['diagnostics'] = {
+                    'draft': draft,
+                    'active': active,
+                }
+                summary['actions_available'] = [
+                    {'key': 'approve_drafts', 'label': 'Activate ALL Draft Products', 'count': draft},
+                ]
+        except Exception as e:
+            summary['diagnostics']['error'] = str(e)
+
+        return Response(summary)
+
+    @action(detail=True, methods=['post'], url_path='bulk-link-ledger')
+    def bulk_link_ledger(self, request, pk=None):
+        """Bulk link contacts to COA sub-ledger accounts using posting rules.
+        
+        Uses LedgerService.create_linked_account() which creates proper 
+        ChartOfAccount children under the parent (e.g., 1110-0001 for customers).
+        Auto-reads posting rules — no manual COA selection needed.
+        """
+        job = self.get_object()
+        contact_type = request.data.get('contact_type', 'CUSTOMER')  # CUSTOMER | SUPPLIER | BOTH
+        
+        from apps.crm.models import Contact
+        from apps.finance.models.coa_models import ChartOfAccount
+        from apps.finance.services import LedgerService
+        from erp.services import ConfigurationService
+        from erp.models import Organization
+        
+        org_id = job.organization_id
+        organization = Organization.objects.get(id=org_id)
+        rules = ConfigurationService.get_posting_rules(organization)
+        
+        # Resolve the COA parent from posting rules (exactly like ContactViewSet.create)
+        if contact_type == 'CUSTOMER':
+            parent_account_id = rules.get('automation', {}).get('customerRoot') or \
+                                rules.get('sales', {}).get('receivable')
+        elif contact_type == 'SUPPLIER':
+            parent_account_id = rules.get('automation', {}).get('supplierRoot') or \
+                                rules.get('purchases', {}).get('payable')
+        else:
+            # For BOTH, we link to customer root
+            parent_account_id = rules.get('automation', {}).get('customerRoot') or \
+                                rules.get('sales', {}).get('receivable')
+        
+        if not parent_account_id:
+            # Fallback to well-known codes
+            fallback_code = '1110' if contact_type == 'CUSTOMER' else '2101'
+            parent = ChartOfAccount.objects.filter(organization=organization, code=fallback_code).first()
+            if parent:
+                parent_account_id = parent.id
+        
+        if not parent_account_id:
+            return Response({'error': 'Cannot determine COA parent. Configure posting rules first.'}, 
+                            status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            parent_coa = ChartOfAccount.objects.get(id=parent_account_id)
+        except ChartOfAccount.DoesNotExist:
+            return Response({'error': f'COA parent account {parent_account_id} not found'}, status=404)
+        
+        mapping_ids = list(MigrationMapping.objects.filter(
+            job=job, entity_type='CONTACT'
+        ).values_list('target_id', flat=True))
+        
+        contacts = Contact.objects.filter(
+            id__in=mapping_ids,
+            type=contact_type,
+            linked_account_id__isnull=True,
+        )
+        
+        linked_count = 0
+        errors = []
+        sub_type = 'RECEIVABLE' if contact_type == 'CUSTOMER' else 'PAYABLE'
+        suffix = 'AR' if contact_type == 'CUSTOMER' else 'AP'
+        
+        with transaction.atomic():
+            for contact in contacts:
+                try:
+                    # Use LedgerService — creates COA child with parent_id + sequential code
+                    linked_acc = LedgerService.create_linked_account(
+                        organization=organization,
+                        name=f"{contact.name} ({suffix})",
+                        type=parent_coa.type,
+                        sub_type=sub_type,
+                        parent_id=parent_account_id
+                    )
+                    contact.linked_account_id = linked_acc.id
+                    contact.save(update_fields=['linked_account_id'])
+                    linked_count += 1
+                except Exception as e:
+                    errors.append(f"{contact.name}: {str(e)}")
+        
+        return Response({
+            'linked': linked_count,
+            'contact_type': contact_type,
+            'coa_parent': parent_coa.name,
+            'coa_parent_code': parent_coa.code,
+            'errors': errors[:20],
+        })
+
+    def _load_target_enriched(self, entity_type, target_id):
+        """Load enriched target data for audit view."""
         try:
             if entity_type == 'TRANSACTION':
-                from apps.pos.serializers import OrderSerializer
                 from apps.pos.models import Order
-                obj = Order.objects.get(id=target_id)
-                return OrderSerializer(obj).data
-            elif entity_type == 'PRODUCT':
-                from apps.inventory.serializers import ProductSerializer
-                from apps.inventory.models import Product
-                obj = Product.objects.get(id=target_id)
-                return ProductSerializer(obj).data
+                obj = Order.objects.select_related('contact').get(id=target_id)
+                data = {
+                    'id': obj.id,
+                    'ref': getattr(obj, 'ref', '') or getattr(obj, 'reference', ''),
+                    'date': str(obj.created_at) if hasattr(obj, 'created_at') else '',
+                    'type': getattr(obj, 'type', 'SALE'),
+                    'status': obj.status,
+                    'total_ht': float(getattr(obj, 'total_ht', 0) or 0),
+                    'total_tax': float(getattr(obj, 'total_tax', 0) or 0),
+                    'total_ttc': float(getattr(obj, 'final_total', 0) or getattr(obj, 'total', 0) or 0),
+                    'payment_method': getattr(obj, 'payment_method', ''),
+                    'contact_name': obj.contact.name if obj.contact else 'Walk-In',
+                    'contact_id': obj.contact_id,
+                }
+                # Check journal entries
+                from apps.finance.models.ledger_models import JournalEntry
+                jes = JournalEntry.objects.filter(reference_type='SALE', reference_id=obj.id)
+                data['journal_entries'] = list(jes.values('id', 'description', 'total_debit', 'total_credit', 'status'))
+                data['has_journal'] = jes.exists()
+                return data
+
             elif entity_type == 'CONTACT':
-                from apps.crm.serializers import ContactSerializer
                 from apps.crm.models import Contact
                 obj = Contact.objects.get(id=target_id)
-                data = ContactSerializer(obj).data
-                data['has_ledger_link'] = bool(obj.linked_account_id)
+                data = {
+                    'id': obj.id,
+                    'name': obj.name,
+                    'type': obj.type,
+                    'phone': getattr(obj, 'phone', ''),
+                    'email': getattr(obj, 'email', ''),
+                    'company_name': getattr(obj, 'company_name', ''),
+                    'linked_account_id': obj.linked_account_id,
+                    'has_ledger_link': bool(obj.linked_account_id),
+                }
+                if obj.linked_account_id:
+                    from apps.finance.models import FinancialAccount
+                    try:
+                        fa = FinancialAccount.objects.get(id=obj.linked_account_id)
+                        data['ledger_account_name'] = fa.name
+                        data['ledger_coa_id'] = fa.ledger_account_id
+                        if fa.ledger_account_id:
+                            from apps.finance.models.coa_models import ChartOfAccount
+                            try:
+                                coa = ChartOfAccount.objects.get(id=fa.ledger_account_id)
+                                data['coa_parent_name'] = coa.name
+                                data['coa_parent_code'] = coa.code
+                            except:
+                                pass
+                    except:
+                        pass
                 return data
-            elif entity_type == 'CATEGORY':
-                from apps.inventory.serializers import CategorySerializer
-                from apps.inventory.models import Category
-                obj = Category.objects.get(id=target_id)
-                return CategorySerializer(obj).data
-            elif entity_type == 'UNIT':
-                from apps.inventory.serializers import UnitSerializer
-                from apps.inventory.models import Unit
-                obj = Unit.objects.get(id=target_id)
-                return UnitSerializer(obj).data
+
             elif entity_type == 'ACCOUNT':
-                from apps.finance.serializers import FinancialAccountSerializer
                 from apps.finance.models import FinancialAccount
                 obj = FinancialAccount.objects.get(id=target_id)
-                data = FinancialAccountSerializer(obj).data
-                data['is_linked_to_coa'] = bool(obj.ledger_account_id)
+                data = {
+                    'id': obj.id,
+                    'name': obj.name,
+                    'type': getattr(obj, 'type', ''),
+                    'currency': getattr(obj, 'currency', ''),
+                    'balance': float(getattr(obj, 'balance', 0) or 0),
+                    'ledger_account_id': obj.ledger_account_id,
+                    'is_linked_to_coa': bool(obj.ledger_account_id),
+                }
+                if obj.ledger_account_id:
+                    from apps.finance.models.coa_models import ChartOfAccount
+                    try:
+                        coa = ChartOfAccount.objects.get(id=obj.ledger_account_id)
+                        data['coa_name'] = coa.name
+                        data['coa_code'] = coa.code
+                    except:
+                        pass
                 return data
+
+            elif entity_type == 'PRODUCT':
+                from apps.inventory.models import Product
+                obj = Product.objects.get(id=target_id)
+                return {
+                    'id': obj.id,
+                    'name': obj.name,
+                    'sku': getattr(obj, 'sku', ''),
+                    'barcode': getattr(obj, 'barcode', ''),
+                    'status': getattr(obj, 'status', ''),
+                    'selling_price': float(getattr(obj, 'selling_price', 0) or 0),
+                    'purchase_price': float(getattr(obj, 'purchase_price', 0) or 0),
+                    'product_type': getattr(obj, 'product_type', ''),
+                }
+
             elif entity_type == 'EXPENSE':
-                from apps.finance.serializers import DirectExpenseSerializer
                 from apps.finance.models import DirectExpense
                 obj = DirectExpense.objects.get(id=target_id)
-                return DirectExpenseSerializer(obj).data
+                data = {
+                    'id': obj.id,
+                    'reference': getattr(obj, 'reference', ''),
+                    'amount': float(getattr(obj, 'amount', 0) or 0),
+                    'status': getattr(obj, 'status', ''),
+                    'date': str(getattr(obj, 'date', '')),
+                    'payment_method': getattr(obj, 'payment_method', ''),
+                }
+                from apps.finance.models.ledger_models import JournalEntry
+                jes = JournalEntry.objects.filter(reference_type='EXPENSE', reference_id=obj.id)
+                data['journal_entries'] = list(jes.values('id', 'description', 'total_debit', 'total_credit', 'status'))
+                data['has_journal'] = jes.exists()
+                return data
             else:
                 return {'id': target_id}
         except Exception as e:

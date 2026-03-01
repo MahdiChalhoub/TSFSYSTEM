@@ -142,7 +142,7 @@ export default async function MaintenancePage(props: {
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 ml-5">Mode: Maintenance</p>
                                 </div>
                                 <Badge variant="secondary" className="bg-white border-0 text-emerald-600 font-black text-[10px] px-4 py-1.5 rounded-full shadow-sm">
-                                    {products.length} Node Variants Detected
+                                    {products.length} Products Found
                                 </Badge>
                             </div>
 

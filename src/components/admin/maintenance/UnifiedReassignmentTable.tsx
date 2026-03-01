@@ -257,7 +257,7 @@ function GroupModal({ isOpen, onClose, productIds, onSuccess }: Record<string, a
 
                 <div className="bg-blue-50/50 rounded-2xl p-5 border border-blue-100/50 mb-8">
                     <p className="text-[11px] text-blue-700 font-bold leading-relaxed uppercase tracking-tight">
-                        Orchestrating <span className="text-blue-900 font-black">{productIds.length} Variant Nodes</span> into a unified abstraction.
+                        Merging <span className="text-blue-900 font-black">{productIds.length} products</span> into one.
                         Inheritance logic will be derived from the progenitor (first item).
                     </p>
                 </div>

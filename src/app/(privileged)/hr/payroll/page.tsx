@@ -196,7 +196,7 @@ export default function CompensationEnginePage() {
                         }}
                     >
                         <TypicalFilter
-                            search={{ placeholder: 'Search Personnel Identifiers...', value: search, onChange: setSearch }}
+                            search={{ placeholder: 'Search employees...', value: search, onChange: setSearch }}
                             filters={[
                                 {
                                     key: 'type', label: 'Entity Category', type: 'select', options: [
